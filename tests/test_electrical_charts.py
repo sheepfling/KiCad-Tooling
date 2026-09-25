@@ -151,7 +151,7 @@ class ElectricalChartsTests(unittest.TestCase):
 
     def test_cli_exports_existing_receipt_as_machine_json(self) -> None:
         self.complete()
-        command = subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.electrical_charts",
+        command = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical_charts",
                                   "--root", str(self.root), "--receipt",
                                   "build/electrical/controller-saved", "--format", "json"),
                                  text=True, capture_output=True, check=False)

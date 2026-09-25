@@ -32,7 +32,7 @@ class ForkWorkflowTests(unittest.TestCase):
         shutil.copytree(reference_root(), self.root, ignore=shutil.ignore_patterns(".git"))
         initialize_git(self.root)
 
-    def test_initialize_empty_fork_is_repeatable_and_retains_reference_tests(self) -> None:
+    def test_initialize_empty_fork_is_repeatable_and_retains_reference_data(self) -> None:
         team_notes = self.root / "docs/team/architecture.md"
         team_notes.write_text("# Team architecture\n\nDurable adopter decision.\n", encoding="utf-8")
         team_readme = self.root / "docs/team/README.md"
@@ -62,8 +62,11 @@ class ForkWorkflowTests(unittest.TestCase):
         self.assertEqual(initialize(self.root, "team-hardware").changed, ())
         self.assertEqual([row.project for row in build_matrix(self.root).include], ["team-signal"])
         self.assertEqual(initialize(self.root, "different-name").status, "FAIL")
-        result = subprocess.run((sys.executable, "-B", "-m", "unittest", "tests.test_governance"),
-                                cwd=self.root, text=True, capture_output=True, check=False)
+        self.assertFalse((self.root / "tests").exists())
+        result = subprocess.run(
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.lint_registry"),
+            cwd=self.root, text=True, capture_output=True, check=False,
+        )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_initialize_never_overwrites_existing_work_or_partially_edits(self) -> None:
@@ -216,9 +219,14 @@ class ForkWorkflowTests(unittest.TestCase):
         self.assertEqual(lint(self.root).status, "PASS", lint(self.root).issues)
         self.assertEqual(product_check(self.root).status, "PASS", product_check(self.root).issues)
         self.assertEqual([row.project for row in build_matrix(self.root).include], ["team-signal"])
-        # A fork's live catalog changes must not rewrite the reference unit expectations.
-        result = subprocess.run((sys.executable, "-B", "-m", "unittest", "tests.test_governance"),
-                                cwd=self.root, text=True, capture_output=True, check=False)
+        # A fork's live catalog changes must not rewrite the independent reference data.
+        self.assertEqual(len(build_matrix(reference_root()).include), 6)
+        self.assertEqual(lint(reference_root()).status, "PASS")
+        self.assertFalse((self.root / "tests").exists())
+        result = subprocess.run(
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.lint_registry"),
+            cwd=self.root, text=True, capture_output=True, check=False,
+        )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 

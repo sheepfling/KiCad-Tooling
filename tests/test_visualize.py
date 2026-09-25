@@ -54,7 +54,7 @@ class VisualizeTests(unittest.TestCase):
 
     def cli(self, project: str, *options: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            (sys.executable, "-B", "-m", "kicad_tooling.visualize", "--root", str(self.root),
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.visualize", "--root", str(self.root),
              "--project", project, *options, "--format", "json"),
             cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True,
             check=False, timeout=60,

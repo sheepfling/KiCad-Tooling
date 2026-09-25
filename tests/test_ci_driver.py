@@ -72,22 +72,12 @@ class CiDriverTests(unittest.TestCase):
                 self.assertEqual(getattr(result, name).returncode, 1)
                 self.assertEqual(result.status, "FAIL")
 
-    def test_markdown_tool_uses_active_python_scripts_directory(self) -> None:
-        for platform, scripts, executable in (
-            ("win32", "C:/hostedtoolcache/windows/Python/3.11.9/x64/Scripts", "rumdl.exe"),
-            ("win32", "C:/work/venv/Scripts", "rumdl.exe"),
-            ("linux", "/opt/venv/bin", "rumdl"),
-        ):
-            with (
-                self.subTest(platform=platform, scripts=scripts),
-                patch("kicad_tooling.ci.sys.platform", platform),
-                patch("kicad_tooling.ci.sysconfig.get_path", return_value=scripts) as lookup,
-                patch("kicad_tooling.ci.run_command", return_value=evidence(0)) as command,
-            ):
-                static_pipeline(ROOT, None)
-            lookup.assert_called_once_with("scripts")
-            self.assertEqual(command.call_args_list[0].args,
-                             (ROOT, str(Path(scripts) / executable), "check", ".", "--no-cache"))
+    def test_markdown_check_uses_the_installed_package_module(self) -> None:
+        with patch("kicad_tooling.ci.run_command", return_value=evidence(0)) as command:
+            static_pipeline(ROOT, None)
+        self.assertEqual(command.call_args_list[0].args,
+                         (ROOT, sys.executable, "-I", "-m", "kicad_tooling.markdown_check",
+                          "check", ".", "--no-cache"))
 
     def test_mdrepo_roots_follow_documentation_roots(self) -> None:
         config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
@@ -104,7 +94,7 @@ class CiDriverTests(unittest.TestCase):
 
     def test_module_entrypoint_scopes_a_local_project_check(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-B", "-m", "kicad_tooling.ci", "--project", "controller"],
+            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--project", "controller"],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -117,7 +107,7 @@ class CiDriverTests(unittest.TestCase):
 
     def test_selected_project_can_print_a_short_human_summary(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-B", "-m", "kicad_tooling.ci", "--project", "controller",
+            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--project", "controller",
              "--format", "text"],
             cwd=ROOT, capture_output=True, text=True, check=False,
         )
@@ -164,7 +154,7 @@ class CiDriverTests(unittest.TestCase):
 
     def test_module_entrypoint_selects_projects_by_metadata_tag(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-B", "-m", "kicad_tooling.ci", "--tag", "status-led"],
+            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--tag", "status-led"],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -179,7 +169,7 @@ class CiDriverTests(unittest.TestCase):
 
     def test_module_entrypoint_selects_an_indexed_product(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-B", "-m", "kicad_tooling.ci", "--product", "status-indicator-system"],
+            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--product", "status-indicator-system"],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -200,7 +190,7 @@ class CiDriverTests(unittest.TestCase):
 
     def test_unknown_product_is_an_explicit_selection_error(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-B", "-m", "kicad_tooling.ci", "--product", "unknown-product"],
+            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--product", "unknown-product"],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -212,7 +202,7 @@ class CiDriverTests(unittest.TestCase):
     def test_native_matrix_honors_product_and_excluded_tag(self) -> None:
         result = subprocess.run(
             [
-                sys.executable, "-B", "-m", "kicad_tooling.ci", "--matrix",
+                sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--matrix",
                 "--product", "status-indicator-system", "--exclude-tag", "arduino",
             ],
             cwd=ROOT,
@@ -248,7 +238,7 @@ class CiDriverTests(unittest.TestCase):
         for arguments, expected in cases:
             with self.subTest(arguments=arguments):
                 result = subprocess.run(
-                    [sys.executable, "-B", "-m", "kicad_tooling.impact", *arguments],
+                    [sys.executable, "-I", "-B", "-m", "kicad_tooling.impact", *arguments],
                     cwd=ROOT,
                     capture_output=True,
                     text=True,
@@ -271,7 +261,7 @@ class CiDriverTests(unittest.TestCase):
         for arguments in cases:
             with self.subTest(arguments=arguments):
                 result = subprocess.run(
-                    [sys.executable, "-B", "-m", "kicad_tooling.impact", *arguments],
+                    [sys.executable, "-I", "-B", "-m", "kicad_tooling.impact", *arguments],
                     cwd=ROOT,
                     capture_output=True,
                     text=True,
@@ -299,7 +289,7 @@ class CiDriverTests(unittest.TestCase):
 
     def test_module_entrypoint_resolves_the_package_without_path_injection(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-B", "-m", "kicad_tooling.ci", "--matrix"],
+            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--matrix"],
             cwd=ROOT,
             capture_output=True,
             text=True,

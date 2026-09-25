@@ -111,7 +111,7 @@ class ModelPopulationTests(unittest.TestCase):
         original_board = self.board.read_bytes()
         result = subprocess.run(
             (
-                sys.executable, "-B", "-m", "kicad_tooling.visualize", "--root", str(self.root),
+                sys.executable, "-I", "-B", "-m", "kicad_tooling.visualize", "--root", str(self.root),
                 "--project", PROJECT, "--init-model-map", "build/model-map.json",
                 "--format", "json",
             ), cwd=reference_root(), capture_output=True, text=True, check=False,

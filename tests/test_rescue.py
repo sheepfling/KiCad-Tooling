@@ -29,7 +29,7 @@ class LocalRescueTests(unittest.TestCase):
 
     def command(self, *extra: str, output_format: str = "json") -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            (sys.executable, "-B", "-m", "kicad_tooling.template", "rescue",
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "rescue",
              "--root", str(self.root), "--project-id", "controller",
              "--format", output_format, *extra),
             cwd=self.root, capture_output=True, text=True, check=False,

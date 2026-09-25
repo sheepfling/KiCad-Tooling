@@ -91,7 +91,7 @@ class VerifyTests(unittest.TestCase):
 
     def test_cli_json_stdout_stays_parseable_while_progress_goes_to_stderr(self) -> None:
         command = subprocess.run(
-            (sys.executable, "-B", "-m", "kicad_tooling.verify", "--root", str(self.root),
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.verify", "--root", str(self.root),
              "--project", "controller", "--format", "json"),
             cwd=self.root, text=True, capture_output=True, check=False,
         )

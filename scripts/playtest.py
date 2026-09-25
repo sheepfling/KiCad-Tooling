@@ -107,7 +107,7 @@ class Playtest:
 
     def cli(self, name: str, root: Path, *arguments: str, expected_exit: int = 0,
             expected_status: str = "PASS", timeout: int = 300) -> dict[str, Any]:
-        return self.run(name, (sys.executable, "-B", "-m", "kicad_tooling", *arguments,
+        return self.run(name, (sys.executable, "-I", "-B", "-m", "kicad_tooling", *arguments,
                               "--root", str(root), "--format", "json"),
                         expected_exit=expected_exit, expected_status=expected_status, timeout=timeout)
 
@@ -129,7 +129,7 @@ class Playtest:
 
         for writable in (False, True):
             label = "mcp-enabled" if writable else "mcp-default"
-            arguments = ["-B", "-m", "kicad_tooling.mcp", "--root", str(root)]
+            arguments = ["-I", "-B", "-m", "kicad_tooling.mcp", "--root", str(root)]
             if writable:
                 arguments += ["--allow-checks", "--allow-writes"]
             parameters = StdioServerParameters(command=sys.executable, args=arguments,
@@ -203,7 +203,7 @@ class Playtest:
         if any(path.is_file() for path in (reference / "tools").rglob("*")):
             raise ValueError("The project still embeds tools/; use the extracted template checkout")
         self.save("source-sha256.json", original)
-        self.run("installed-origin", (sys.executable, "-B", "-c",
+        self.run("installed-origin", (sys.executable, "-I", "-B", "-c",
                  "import kicad_tooling; print(kicad_tooling.__file__)"))
         self.git(reference, "reference")
         inventory = self.cli("inventory", reference, "template", "list")

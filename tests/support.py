@@ -23,11 +23,6 @@ if not configured_template:
 TEMPLATE_ROOT = Path(configured_template).expanduser().resolve()
 if not (TEMPLATE_ROOT / "examples/catalog/projects.json").is_file():
     raise RuntimeError(f"KICAD_TEMPLATE_ROOT has no public reference catalog: {TEMPLATE_ROOT}")
-# Subprocesses exercise the same source or installed package as this test process,
-# independently of the disposable project's current directory.
-os.environ["PYTHONPATH"] = os.pathsep.join(filter(None, (
-    str(SOURCE_ROOT), os.environ.get("PYTHONPATH", ""),
-)))
 
 
 def ignore_local(directory: str, names: list[str]) -> set[str]:

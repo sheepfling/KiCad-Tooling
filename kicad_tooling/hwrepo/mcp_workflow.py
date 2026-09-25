@@ -259,7 +259,7 @@ def export_project(
         dependencies = dependency_path.relative_to(root)
         config = load_config(root, project.config)
         captured_command(root, (
-            sys.executable, "-B", "-m", "kicad_tooling.native_deps", "--root", str(root),
+            sys.executable, "-I", "-B", "-m", "kicad_tooling.native_deps", "--root", str(root),
             "--image", config.image, "--output", dependencies.as_posix(),
         ), directory / "dependencies.command.json", 600)
     source = source_state(root)
@@ -334,7 +334,7 @@ def prepare_review_scope(
         "--portable", portable_path.relative_to(root).as_posix(),
     )
     captured_command(root, (
-        sys.executable, "-B", "-m", "kicad_tooling.release", "prepare", "--root", str(root),
+        sys.executable, "-I", "-B", "-m", "kicad_tooling.release", "prepare", "--root", str(root),
         *selection_args, *variant_args, *portable_args, "--release-id", release_id,
         "--release-class", "engineering_review", "--format", "json",
     ), output.parent / f"{output.name}.command.json", 1800)

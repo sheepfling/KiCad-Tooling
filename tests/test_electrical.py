@@ -280,7 +280,7 @@ class ElectricalTests(unittest.TestCase):
 
     def test_unconfigured_cli_is_explicit_nonzero_and_writes_a_receipt(self) -> None:
         root = self.stage()
-        command = subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.electrical", "--root", str(root),
+        command = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical", "--root", str(root),
                                   "--project", PROJECT, "--format", "json"), capture_output=True, text=True, check=False)
         self.assertEqual(command.returncode, 1, command.stderr)
         self.assertEqual(json.loads(command.stdout)["status"], "NOT_CONFIGURED")
@@ -364,7 +364,7 @@ class ElectricalTests(unittest.TestCase):
         write_model(root / ISLAND / "tests/electrical.json", contract)
         model = root / contract.power.startup[0].deck
         model.write_text(model.read_text() + "\n")
-        command = subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.ci", "--root", str(root),
+        command = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--root", str(root),
                                   "--electrical", "--project", PROJECT), capture_output=True, text=True, check=False)
         self.assertEqual(command.returncode, 1, command.stderr)
         report = json.loads(command.stdout)

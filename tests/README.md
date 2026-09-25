@@ -25,6 +25,10 @@ same tooling package as the parent test process. Temporary source mutations,
 fake native commands, and synthetic release evidence stay in disposable folders.
 These fixtures do not establish electrical approval or manufacturing readiness.
 
+Use a normal editable development install. The package gate checks its import
+origin before the suite; tests do not prepend source directories to `PYTHONPATH`.
+The installed-wheel rehearsal runs separately to prove packaging without editable imports.
+
 Tests must not depend on private designs, hardware, provider credentials, or
 network access. The parts assistant tests open a local loopback server; restricted
 test environments must allow that local socket. Native acceptance runs separately

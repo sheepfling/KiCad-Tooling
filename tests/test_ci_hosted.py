@@ -128,24 +128,13 @@ class HostedCiTests(unittest.TestCase):
                             for item in events))
         self.assertTrue((log.directory / "portable-focused.stderr.log").is_file())
 
-    def test_hosted_markdown_tool_uses_active_python_scripts_directory(self) -> None:
-        log = HostedLog(self.root, "markdown-script-path")
-        for platform, scripts, executable in (
-            ("win32", "C:/hostedtoolcache/windows/Python/3.11.9/x64/Scripts", "rumdl.exe"),
-            ("win32", "C:/work/venv/Scripts", "rumdl.exe"),
-            ("linux", "/opt/venv/bin", "rumdl"),
-        ):
-            with (
-                self.subTest(platform=platform, scripts=scripts),
-                patch("kicad_tooling.ci_hosted.sys.platform", platform),
-                patch("kicad_tooling.ci_hosted.sysconfig.get_path", return_value=scripts) as lookup,
-                patch.object(log, "run") as run,
-            ):
-                markdown_checks(self.root, log)
-            lookup.assert_called_once_with("scripts")
-            self.assertEqual(run.call_args_list[1].args, (
-                "rumdl", (str(Path(scripts) / executable), "check", ".", "--no-cache"),
-            ))
+    def test_hosted_markdown_check_uses_the_installed_package_module(self) -> None:
+        with patch.object(HostedLog, "run") as run:
+            markdown_checks(self.root, HostedLog(self.root, "markdown"))
+        commands = {call.args[0]: call.args[1] for call in run.call_args_list}
+        self.assertEqual(commands["rumdl"],
+                         (sys.executable, "-I", "-m", "kicad_tooling.markdown_check",
+                          "check", ".", "--no-cache"))
 
     def test_failed_command_retains_stdout_stderr_and_exit_code(self) -> None:
         log = HostedLog(self.root, "failure-probe")

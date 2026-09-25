@@ -26,7 +26,7 @@ from kicad_tooling.hwrepo.models import (
     TemplateInventoryReport,
 )
 from tests import test_visualize
-from tests.support import SOURCE_ROOT, initialize_git, reference_root
+from tests.support import initialize_git, reference_root
 
 DEFAULT_TOOLS = {
     "list_projects", "get_project", "doctor", "read_document", "preview_import",
@@ -715,7 +715,7 @@ class McpTests(unittest.IsolatedAsyncioTestCase):
             command=sys.executable,
             args=["-B", "-m", "kicad_tooling.mcp", "--root", str(self.root)],
             cwd=caller,
-            env={"PYTHONPATH": str(SOURCE_ROOT), "PYTHONDONTWRITEBYTECODE": "1"},
+            env={"PYTHONDONTWRITEBYTECODE": "1"},
         )
         async with Client(parameters, mode="legacy", read_timeout_seconds=20) as client:
             self.assertIsNotNone(client.server_info)
@@ -726,11 +726,11 @@ class McpTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(list(caller.iterdir()), [])
 
     def test_cli_refuses_implicit_or_relative_checkout_selection(self) -> None:
-        environment = os.environ | {"PYTHONPATH": str(SOURCE_ROOT), "PYTHONDONTWRITEBYTECODE": "1"}
+        environment = os.environ | {"PYTHONDONTWRITEBYTECODE": "1"}
         for arguments in ((), ("--root", "repository")):
             with self.subTest(arguments=arguments):
                 result = subprocess.run(
-                    (sys.executable, "-B", "-m", "kicad_tooling.mcp", *arguments),
+                    (sys.executable, "-I", "-B", "-m", "kicad_tooling.mcp", *arguments),
                     cwd=self.base, env=environment, capture_output=True, text=True,
                     input="", timeout=20, check=False,
                 )

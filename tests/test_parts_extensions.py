@@ -45,7 +45,7 @@ from kicad_tooling.validate import hashes
 from tests import test_cad_download as download_fixture
 from tests import test_part_picker as picker_fixture
 from tests import test_parts_workflow as parts_fixture
-from tests.support import SOURCE_ROOT, reference_root
+from tests.support import reference_root
 from tests.test_cad_assets import FOOTPRINT, TRANSFORM, board
 
 _REVIEW_URL = "https://www.digikey.com/short/abc1234"
@@ -104,7 +104,7 @@ class PartsExtensionsTests(unittest.IsolatedAsyncioTestCase):
         ))
 
     async def cli(self, model, *arguments, expected_exit=0, stub_http=False):
-        command = [sys.executable, "-B", "-m", "kicad_tooling.parts"]
+        command = [sys.executable, "-I", "-B", "-m", "kicad_tooling.parts"]
         if stub_http:
             # Only the external HTTP exchange is replaced. CLI parsing, persisted
             # review validation, attempt recording and response checks run normally.
@@ -119,7 +119,7 @@ class PartsExtensionsTests(unittest.IsolatedAsyncioTestCase):
         process = await asyncio.to_thread(
             subprocess.run,
             (*command, "--root", str(self.root), "--project", "controller", *arguments, "--format", "json"),
-            cwd=self.base, env={**os.environ, "PYTHONPATH": str(SOURCE_ROOT)},
+            cwd=self.base, env=os.environ.copy(),
             text=True, capture_output=True, check=False, timeout=60,
         )
         self.assertEqual(process.returncode, expected_exit, process.stderr + process.stdout)

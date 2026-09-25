@@ -5,12 +5,13 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import venv
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from unittest.mock import patch
 
 from kicad_tooling import package_version
-from kicad_tooling.native_deps import prepare
+from kicad_tooling.native_deps import copy_runtime, prepare
 
 
 class NativeDependencyTests(unittest.TestCase):
@@ -22,9 +23,11 @@ class NativeDependencyTests(unittest.TestCase):
 
     def test_installs_linux_wheels_for_the_observed_container_abi(self) -> None:
         with patch('kicad_tooling.native_deps.subprocess.run') as run:
-            run.return_value = subprocess.CompletedProcess([], 0, stdout='3.13\n')
+            run.side_effect = [subprocess.CompletedProcess([], 0, stdout='3.13\n'),
+                               subprocess.CompletedProcess([], 0, stdout='/work/build/deps/lib/python3.13/site-packages\n'),
+                               subprocess.CompletedProcess([], 0)]
             prepare(self.root, self.image, Path('build/deps'))
-        probe, install = (call.args[0] for call in run.call_args_list)
+        probe, create, install = (call.args[0] for call in run.call_args_list)
         self.assertIn('linux/amd64', probe)
         self.assertIn('python3', probe)
         self.assertNotIn('pip', probe)
@@ -34,20 +37,24 @@ class NativeDependencyTests(unittest.TestCase):
         self.assertIn("pydantic==2.13.5", install)
         self.assertIn("snakemd==2.4.1", install)
         self.assertNotIn(".", install)
-        package = self.root / "build/deps/kicad_tooling"
+        self.assertIn("-I", create)
+        self.assertNotIn("PYTHONPATH", " ".join(create))
+        package = self.root / "build/deps/lib/python3.13/site-packages/kicad_tooling"
         self.assertTrue((package / "__init__.py").is_file())
         self.assertTrue((package / "tool-surfaces.json").is_file())
         self.assertFalse((self.root / "build/deps/tools").exists())
-        # No site-packages or checkout fallback: the copied runtime must carry
-        # its own distribution identity just as it does in the pip-free image.
-        isolated = subprocess.run((
-            sys.executable, "-I", "-S", "-c",
-            ("import sys; sys.path.insert(0, sys.argv[1]); "
-             "from kicad_tooling import package_version; print(package_version())"),
-            str(self.root / "build/deps"),
-        ), cwd=self.root, capture_output=True, text=True, check=False)
+    def test_copied_runtime_imports_in_a_standard_environment_without_path_injection(self) -> None:
+        environment = self.root / "environment"
+        venv.EnvBuilder(with_pip=False).create(environment)
+        python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+        probe = subprocess.run((str(python), "-I", "-c",
+                                "import sysconfig; print(sysconfig.get_path('purelib'))"),
+                               capture_output=True, text=True, check=True)
+        copy_runtime(Path(probe.stdout.strip()))
+        isolated = subprocess.run((str(python), "-I", "-m", "kicad_tooling", "--version"),
+                                  cwd=self.root, capture_output=True, text=True, check=False)
         self.assertEqual(isolated.returncode, 0, isolated.stderr)
-        self.assertEqual(isolated.stdout.strip(), package_version())
+        self.assertEqual(isolated.stdout.strip(), f"kicad-team-tooling {package_version()}")
 
     def test_missing_package_identity_stops_before_container_or_dependency_download(self) -> None:
         with (patch("kicad_tooling.native_deps.distribution",
@@ -81,6 +88,7 @@ class NativeDependencyTests(unittest.TestCase):
     def test_missing_wheels_fail_the_setup_instead_of_running_an_incomplete_lane(self) -> None:
         with patch('kicad_tooling.native_deps.subprocess.run') as run:
             run.side_effect = [subprocess.CompletedProcess([], 0, stdout='3.13\n'),
+                               subprocess.CompletedProcess([], 0, stdout='/work/build/deps/lib/python3.13/site-packages\n'),
                                subprocess.CalledProcessError(1, ['pip'])]
             with self.assertRaises(subprocess.CalledProcessError):
                 prepare(self.root, self.image, Path('build/deps'))

@@ -225,9 +225,8 @@ library_roots = ["shared/cad"]
     def test_cli_inventory_from_external_cwd(self) -> None:
         self.create()
         environment = os.environ.copy()
-        environment["PYTHONPATH"] = os.pathsep.join((str(SOURCE), environment.get("PYTHONPATH", "")))
         result = subprocess.run(
-            [sys.executable, "-B", "-m", "kicad_tooling", "template", "list", "--format", "json"],
+            [sys.executable, "-I", "-B", "-m", "kicad_tooling", "template", "list", "--format", "json"],
             cwd=self.root, env=environment, capture_output=True, text=True, check=False,
         )
         self.assertEqual(0, result.returncode, result.stderr)

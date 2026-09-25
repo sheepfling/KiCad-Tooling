@@ -223,7 +223,7 @@ class ForeignPcbConversionTests(unittest.TestCase):
         self.assertEqual(read_model(receipt / "conversion.json", ForeignPcbReport), report)
 
     def test_invalid_source_returns_json_failure_with_receipt(self) -> None:
-        command = (sys.executable, "-B", "-m", "kicad_tooling.template", "convert-pcb",
+        command = (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
                    "--root", str(self.root), "--project-id", "vendor-board",
                    "--toolchain", "kicad-10.0.5", "--source", str(self.source.with_suffix(".missing")),
                    "--format", "json")
@@ -238,7 +238,7 @@ class ForeignPcbConversionTests(unittest.TestCase):
         for project_id in ("bad/id", "with space", ""):
             with self.subTest(project_id=project_id):
                 result = subprocess.run((
-                    sys.executable, "-B", "-m", "kicad_tooling.template", "convert-pcb",
+                    sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
                     "--root", str(self.root), "--project-id", project_id,
                     "--toolchain", "kicad-10.0.5", "--source", str(self.source),
                     "--format", "json",
@@ -253,7 +253,7 @@ class ForeignPcbConversionTests(unittest.TestCase):
 
     def test_invalid_toolchain_id_still_returns_typed_json_and_a_receipt(self) -> None:
         result = subprocess.run((
-            sys.executable, "-B", "-m", "kicad_tooling.template", "convert-pcb",
+            sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
             "--root", str(self.root), "--project-id", "vendor-board",
             "--toolchain", "bad/id", "--source", str(self.source),
             "--format", "json",

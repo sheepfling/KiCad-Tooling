@@ -31,7 +31,6 @@ from kicad_tooling.hwrepo.models import (
     ThreeDReport,
 )
 from tests import test_release_evidence, test_visualize
-from tests.support import SOURCE_ROOT
 from tests.test_contract_coach import fake_executable
 
 
@@ -49,7 +48,7 @@ class ArtifactParityTests(unittest.IsolatedAsyncioTestCase):
             subprocess.run,
             (sys.executable, "-B", "-m", module, "--root", str(self.root),
              *arguments, "--format", "json"),
-            cwd=self.base, env={**os.environ, "PYTHONPATH": str(SOURCE_ROOT)},
+            cwd=self.base, env=os.environ.copy(),
             text=True, capture_output=True, check=False, timeout=60,
         )
 

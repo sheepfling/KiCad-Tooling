@@ -8,7 +8,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import sysconfig
 import tarfile
 import tempfile
 import time
@@ -35,6 +34,7 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
         payload = {name: archive.read(name) for name in archive.namelist()
                    if name.startswith("kicad_tooling/") or name == metadata_names[0]}
         required = {"kicad_tooling/tool-surfaces.json", "kicad_tooling/py.typed",
+                    "kicad_tooling/markdown_check/__main__.py",
                     "kicad_tooling/fixtures/foreign-eagle-board.xml",
                     "kicad_tooling/fixtures/scaffold-license.txt",
                     "kicad_tooling/hwrepo/kicad_library_license.txt"}
@@ -237,13 +237,8 @@ def main() -> int:
                         help="Optional separate populated template checkout for integration")
     parser.add_argument("--build-python", default=sys.executable,
                         help="Python with build, setuptools and setuptools-scm for packaging")
-    parser.add_argument("--offline-dependency-path", type=Path,
-                        help="Local site-packages for an offline installed-wheel rehearsal")
     parser.add_argument("--skip-mdrepo", action="store_true",
                         help="Offline local rehearsal only; hosted CI must run mdrepo")
-    parser.add_argument("--rumdl-path", type=Path,
-                        default=Path(sysconfig.get_path("scripts")) / (
-                            "rumdl.exe" if sys.platform == "win32" else "rumdl"))
     args = parser.parse_args()
     logs = ROOT / "build/ci"
     logs.mkdir(parents=True, exist_ok=True)
@@ -251,6 +246,11 @@ def main() -> int:
     try:
         if args.project_root is not None:
             os.environ["KICAD_TEMPLATE_ROOT"] = str(args.project_root.resolve())
+        origin = stage("development-install", (sys.executable, "-I", "-c",
+                       "import kicad_tooling; print(kicad_tooling.__file__)"), output, cwd=output)
+        if Path(origin.stdout.strip()).resolve() != (ROOT / "kicad_tooling/__init__.py").resolve():
+            raise RuntimeError("Install this checkout with python -m pip install -e '.[dev]' "
+                               "before running its regression suite")
         stage("unit", (sys.executable, "-B", "-m", "unittest", "discover", "-s", "tests", "-v"),
               output, cwd=ROOT)
         stage("ruff", (sys.executable, "-m", "ruff", "check", "--no-cache",
@@ -260,7 +260,7 @@ def main() -> int:
         stage("windows-types", (sys.executable, "-m", "pyright", "--pythonpath", sys.executable,
                                  "--pythonplatform", "Windows", "--pythonversion", "3.11"),
               output, cwd=ROOT)
-        stage("rumdl", (str(args.rumdl_path), "check", ".",
+        stage("rumdl", (sys.executable, "-I", "-m", "kicad_tooling.markdown_check", "check", ".",
                         "--no-cache"), output, cwd=ROOT)
         if not args.skip_mdrepo:
             stage("mdrepo", (sys.executable, "-m", "mdrepo", "check", "."),
@@ -272,26 +272,9 @@ def main() -> int:
         command = environment_dir / ("Scripts/kicad-team.exe" if os.name == "nt"
                                      else "bin/kicad-team")
         install = [str(python), "-m", "pip", "install", "--no-cache-dir"]
-        if args.offline_dependency_path is not None:
-            install.append("--no-deps")
         stage("install", (*install, f"{rebuilt_wheel}[project,mcp]"), output, cwd=output)
         external = os.environ.copy()
         external.pop("PYTHONPATH", None)
-        if args.offline_dependency_path is not None:
-            dependencies = args.offline_dependency_path.resolve()
-            if not dependencies.is_dir() or any(char in str(dependencies) for char in "\r\n"):
-                raise ValueError("Offline dependencies must be an ordinary directory path")
-            located = stage("installed-site-packages", (str(python), "-I", "-c",
-                            "import sysconfig; print(sysconfig.get_path('purelib'))"),
-                            output, cwd=output, environment=external)
-            site_packages = Path(located.stdout.strip()).resolve()
-            if not site_packages.is_relative_to(environment_dir.resolve()):
-                raise RuntimeError("Installed interpreter resolved site-packages outside its environment")
-            # Append dependency lookup after this wheel's site-packages. PYTHONPATH
-            # would let an older tooling package in the dependency cache shadow it.
-            (site_packages / "offline_dependencies.pth").write_text(
-                str(dependencies) + "\n", encoding="utf-8",
-            )
         origin = stage("installed-origin", (str(python), "-I", "-c",
                        "import kicad_tooling; print(kicad_tooling.__file__)"),
                        output, cwd=output, environment=external)

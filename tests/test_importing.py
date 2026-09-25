@@ -84,7 +84,7 @@ class ImportTests(unittest.TestCase):
         self.assertNotIn("other.kicad_sch", result.copied_sha256)
 
     def test_cli_never_silently_ignores_dry_run_on_another_command(self) -> None:
-        result = subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.template", "new-project",
+        result = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "new-project",
             "--root", str(self.root), "--project-id", "dry-board", "--toolchain", "kicad-10.0.5", "--dry-run"),
             capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 2)

@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from importlib.metadata import PackageNotFoundError, distribution
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .hwrepo.contracts import repo_path
 
@@ -32,8 +32,8 @@ def runtime_metadata() -> Path:
 def copy_runtime(destination: Path, metadata: Path | None = None) -> None:
     """Copy exact executing package bytes, assets/profiles, and installed identity.
 
-    Container Python uses this directory directly on PYTHONPATH, so source and
-    distribution metadata must both be present without pip or a project tools tree.
+    The destination is the native virtual environment's actual site-packages.
+    No consuming-project source directory is added to Python's import path.
     """
     metadata = runtime_metadata() if metadata is None else metadata
     shutil.copytree(Path(__file__).resolve().parent, destination / "kicad_tooling",
@@ -45,7 +45,7 @@ def prepare(root: Path, image: str, output: Path) -> None:
     """Resolve wheels for the image's Python ABI, not the host's OS or Python."""
     root = root.resolve()
     destination = repo_path(root, output.as_posix())
-    if output.parts[0] != "build" or len(output.parts) < 2:
+    if len(output.parts) < 2 or output.parts[0] != "build":
         raise ValueError("Native dependencies belong in an ignored build/ directory")
     if destination.exists():
         raise ValueError(f"Dependency destination already exists: {output}")
@@ -63,16 +63,40 @@ def prepare(root: Path, image: str, output: Path) -> None:
         raise ValueError(f"Unexpected container Python version: {version!r}")
     if int(parts[1]) < 11:
         raise ValueError(f"Native tooling requires Python >=3.11; image provides {version}")
+    # The image has no pip, but stdlib venv supplies normal interpreter-owned
+    # import paths. Inherit only the digest-pinned image's KiCad Python bindings.
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    user: tuple[str, ...] = ()
+    if sys.platform != "win32":
+        import os
+
+        user = ("--user", f"{os.getuid()}:{os.getgid()}")
+    environment_path = PurePosixPath("/work") / output.as_posix()
+    create = subprocess.run(
+        ("docker", "run", "--rm", "--platform", "linux/amd64", *user,
+         "--entrypoint", "python3", "--mount", f"type=bind,source={root},target=/work",
+         image, "-I", "-c",
+         ("import subprocess,sys,venv; "
+         "venv.EnvBuilder(with_pip=False, system_site_packages=True).create(sys.argv[1]); "
+         "subprocess.run([sys.argv[1] + '/bin/python', '-I', '-c', "
+         "\"import sysconfig; print(sysconfig.get_path('purelib'))\"], check=True)"),
+         str(environment_path)),
+        check=True, capture_output=True, text=True, timeout=120,
+    )
+    native_site = PurePosixPath(create.stdout.strip())
+    if (not native_site.is_absolute() or ".." in native_site.parts
+            or not native_site.is_relative_to(environment_path)
+            or native_site == environment_path):
+        raise ValueError(f"Native environment returned an invalid site-packages path: {native_site}")
+    site_packages = destination / native_site.relative_to(environment_path).as_posix()
     subprocess.run(
-        (sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
-         "--target", str(destination), "--platform", "manylinux2014_x86_64",
+        (sys.executable, "-I", "-m", "pip", "install", "--disable-pip-version-check",
+         "--target", str(site_packages), "--platform", "manylinux2014_x86_64",
          "--implementation", "cp", "--python-version", version, "--abi", "cp" + "".join(parts),
          "--only-binary=:all:", "pydantic==2.13.5", "snakemd==2.4.1"),
         check=True, capture_output=True, text=True, timeout=300,
     )
-    # The image has Python but no pip. Copy the pure Python runtime and its
-    # distribution identity beside the ABI-matched dependencies, not from root.
-    copy_runtime(destination, metadata)
+    copy_runtime(site_packages, metadata)
 
 
 def main() -> int:

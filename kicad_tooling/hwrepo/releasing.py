@@ -79,10 +79,11 @@ def run_native(root: Path, project: ProjectRecord, output: Path, cli: str | None
 
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
     argv = ("docker", "run", "--rm", "--platform", "linux/amd64", *user,
-                    "--entrypoint", "python3", "-e", "HOME=/tmp/kicad-release",
-                    "-e", "PYTHONDONTWRITEBYTECODE=1", "-e", f"PYTHONPATH=/work/{dependencies.as_posix()}",
+                    "--entrypoint", f"/work/{dependencies.as_posix()}/bin/python",
+                    "-e", "HOME=/tmp/kicad-release",
+                    "-e", "PYTHONDONTWRITEBYTECODE=1",
                     "-v", f"{root}:/work", *git_metadata_mounts(root),
-                    "-w", "/work", config.image, "-B", "-m", *command,
+                    "-w", "/work", config.image, "-I", "-B", "-m", *command,
                     "--root", "/work", "--output", output.relative_to(root).as_posix())
     started = datetime.now(UTC).isoformat()
     output.parent.mkdir(parents=True, exist_ok=True)

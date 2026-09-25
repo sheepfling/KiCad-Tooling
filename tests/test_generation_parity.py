@@ -30,7 +30,7 @@ class GenerationParityTests(unittest.IsolatedAsyncioTestCase):
                         ignore=shutil.ignore_patterns(".git", "build", "__pycache__"))
 
     def cli(self, *arguments: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.hardware", "generate",
+        return subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.hardware", "generate",
                                "--root", str(self.root), *arguments),
                               cwd=self.root, text=True, capture_output=True, check=False)
 
@@ -117,7 +117,7 @@ class GenerationParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse((self.root / "catalog/new-output").exists())
 
     def test_selectors_on_other_hardware_commands_are_explicit_errors(self) -> None:
-        result = subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.hardware", "check",
+        result = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.hardware", "check",
                                  "--root", str(self.root), "--project", "controller"),
                                 cwd=self.root, text=True, capture_output=True, check=False)
         self.assertEqual(result.returncode, 2)

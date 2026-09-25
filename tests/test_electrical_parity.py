@@ -33,7 +33,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.spice import expanded_deck
 from tests import test_contract_coach as coach_fixture
-from tests.support import SOURCE_ROOT, initialize_git
+from tests.support import initialize_git
 from tests.test_contract_coach import fake_executable
 from tests.test_electrical import ISLAND, NA, PROJECT, install_fixture
 from tests.test_source_parity import source_bytes
@@ -53,7 +53,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             subprocess.run,
             (sys.executable, "-B", "-m", module, "--root", str(self.root),
              *arguments, "--format", "json"),
-            cwd=self.root.parent, env={**os.environ, "PYTHONPATH": str(SOURCE_ROOT)},
+            cwd=self.root.parent, env=os.environ.copy(),
             text=True, capture_output=True, check=False, timeout=60,
         )
 

@@ -265,7 +265,7 @@ class ContractCoachTests(unittest.TestCase):
 
     def test_cli_json_and_short_text_keep_observations_explicit(self) -> None:
         base = (
-            sys.executable, "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
+            sys.executable, "-I", "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
             "--project-id", self.project_id, "--native-summary", str(self.native),
         )
         machine = subprocess.run(
@@ -296,7 +296,7 @@ class ContractCoachTests(unittest.TestCase):
     def test_cli_capture_missing_executable_is_blocked_with_receipt(self) -> None:
         result = subprocess.run(
             (
-                sys.executable, "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
+                sys.executable, "-I", "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
                 "--project-id", self.project_id, "--capture", "--runner", "local",
                 "--cli", "missing-kicad-cli-test",
                 "--format", "json",
@@ -395,7 +395,7 @@ class ContractCoachTests(unittest.TestCase):
         before = contract_path.read_bytes()
         result = subprocess.run(
             (
-                sys.executable, "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
+                sys.executable, "-I", "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
                 "--project-id", self.project_id, "--capture", "--runner", "container",
                 "--format", "json",
             ),
@@ -440,7 +440,7 @@ class ContractCoachTests(unittest.TestCase):
         before = contract_path.read_bytes()
         result = subprocess.run(
             (
-                sys.executable, "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
+                sys.executable, "-I", "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
                 "--project-id", self.project_id, "--capture", "--cli", str(executable),
                 "--format", "json",
             ),
@@ -468,11 +468,10 @@ class ContractCoachTests(unittest.TestCase):
         )
         environment = {
             **os.environ,
-            "PYTHONPATH": str(self.root) + os.pathsep + os.environ.get("PYTHONPATH", ""),
         }
         result = subprocess.run(
             (
-                sys.executable, "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
+                sys.executable, "-I", "-B", "-m", "kicad_tooling.contract_coach", "--root", str(self.root),
                 "--project-id", self.project_id, "--capture", "--runner", "local",
                 "--cli", f"./bin/{executable.name}", "--format", "json",
             ),

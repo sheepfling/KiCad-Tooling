@@ -69,7 +69,7 @@ class NewWorkflowParityTests(unittest.IsolatedAsyncioTestCase):
         analysis = fixture.complete()
         root = fixture.root
         source = Path(analysis.run_directory).relative_to(root).as_posix()
-        process = await asyncio.to_thread(subprocess.run, (sys.executable, "-B", "-m", "kicad_tooling.electrical_charts",
+        process = await asyncio.to_thread(subprocess.run, (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical_charts",
                                   "--root", str(root), "--receipt", source, "--output",
                                   "build/electrical-charts/cli", "--format", "json"),
                                  cwd=SOURCE_ROOT, text=True, capture_output=True, check=False,
@@ -93,7 +93,7 @@ class NewWorkflowParityTests(unittest.IsolatedAsyncioTestCase):
                                  (Path(mcp.run_directory) / case.csv).read_bytes())
             suite_path = root / "build/electrical-suite.json"
             write_model(suite_path, ElectricalSuiteReport(status="PASS", projects=(analysis,)))
-            process = await asyncio.to_thread(subprocess.run, (sys.executable, "-B", "-m", "kicad_tooling.electrical_charts",
+            process = await asyncio.to_thread(subprocess.run, (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical_charts",
                                       "--root", str(root), "--suite",
                                       "build/electrical-suite.json", "--output",
                                       "build/electrical-charts/cli-suite", "--format", "json"),

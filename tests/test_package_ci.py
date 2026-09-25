@@ -1,6 +1,7 @@
-"""Checks for package CI orchestration independent of native project fixtures."""
+"""Package gates use installed module entry points, never executable overrides."""
 from __future__ import annotations
 
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,36 +11,29 @@ from scripts import ci
 
 
 class PackageCiTests(unittest.TestCase):
-    def test_markdown_default_uses_active_python_scripts_directory(self) -> None:
-        for platform, scripts, executable in (
-            ("win32", "C:/hostedtoolcache/windows/Python/3.11.9/x64/Scripts", "rumdl.exe"),
-            ("win32", "C:/work/venv/Scripts", "rumdl.exe"),
-            ("linux", "/opt/venv/bin", "rumdl"),
-        ):
-            with self.subTest(platform=platform, scripts=scripts):
-                self.assert_rumdl_command(platform, scripts, (), str(Path(scripts) / executable))
-
-    def test_explicit_markdown_tool_override_is_preserved(self) -> None:
-        override = str(Path("custom tools") / "rumdl-custom")
-        self.assert_rumdl_command("linux", "/opt/venv/bin", ("--rumdl-path", override), override)
-
-    def assert_rumdl_command(self, platform: str, scripts: str,
-                             arguments: tuple[str, ...], expected: str) -> None:
+    def test_markdown_check_is_an_isolated_module(self) -> None:
         with (
-            tempfile.TemporaryDirectory(prefix="package-ci-path-") as temporary,
+            tempfile.TemporaryDirectory(prefix="package-ci-module-") as temporary,
             patch.object(ci, "ROOT", Path(temporary)),
-            patch.object(ci.sys, "argv", ["scripts/ci.py", *arguments]),
-            patch.object(ci.sys, "platform", platform),
-            patch.object(ci.sysconfig, "get_path", return_value=scripts) as lookup,
+            patch.object(ci.sys, "argv", ["scripts/ci.py"]),
             patch.object(ci, "stage") as stage,
             patch.object(ci, "build_distributions", side_effect=StopIteration("after checks")),
             self.assertRaisesRegex(StopIteration, "after checks"),
         ):
+            stage.return_value.stdout = str(Path(temporary) / "kicad_tooling/__init__.py")
             ci.main()
-        lookup.assert_called_once_with("scripts")
         commands = {call.args[0]: call.args[1] for call in stage.call_args_list}
-        self.assertEqual(commands["rumdl"], (expected, "check", ".", "--no-cache"))
+        self.assertEqual(commands["rumdl"],
+                         (sys.executable, "-I", "-m", "kicad_tooling.markdown_check",
+                          "check", ".", "--no-cache"))
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_stale_install_is_rejected_before_regressions(self) -> None:
+        with (
+            tempfile.TemporaryDirectory(prefix="package-ci-install-") as temporary,
+            patch.object(ci, "ROOT", Path(temporary)),
+            patch.object(ci.sys, "argv", ["scripts/ci.py"]),
+            patch.object(ci, "stage") as stage,
+        ):
+            stage.return_value.stdout = str(Path(temporary) / "other/kicad_tooling/__init__.py")
+            self.assertEqual(ci.main(), 1)
+        self.assertEqual([call.args[0] for call in stage.call_args_list], ["development-install"])

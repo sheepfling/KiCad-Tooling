@@ -41,11 +41,8 @@ class InstalledPackageTest(unittest.TestCase):
 
     def run_cli(self, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
-        environment["PYTHONPATH"] = os.pathsep.join((
-            str(SOURCE_ROOT), environment.get("PYTHONPATH", ""),
-        ))
         return subprocess.run(
-            (sys.executable, "-B", "-m", "kicad_tooling", *args),
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling", *args),
             cwd=cwd or self.project, env=environment,
             capture_output=True, text=True, check=False,
         )

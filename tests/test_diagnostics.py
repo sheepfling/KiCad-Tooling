@@ -258,7 +258,7 @@ class DiagnosticTests(unittest.TestCase):
         project.write_text("{}")
         (source / "legacy.kicad_sch").write_text('(property "Sheetfile" "lost.kicad_sch")')
         command = (
-            sys.executable, "-B", "-m", "kicad_tooling.template", "diagnose",
+            sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "diagnose",
             "--root", str(reference_root()), "--source", str(project),
             "--project-id", "legacy-board", "--toolchain", "kicad-10.0.5",
         )
@@ -289,12 +289,12 @@ class DiagnosticTests(unittest.TestCase):
                                       capture_output=True, text=True, check=False)
         self.assertEqual(incompatible.returncode, 2)
         self.assertIn("JSON already includes every finding", incompatible.stderr)
-        doctor_text = subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.template", "doctor",
+        doctor_text = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "doctor",
                                       "--root", str(reference_root()), "--format", "text"), capture_output=True,
                                      text=True, check=False)
         self.assertEqual(doctor_text.returncode, 0, doctor_text.stderr)
         self.assertIn("Template doctor: PASS", doctor_text.stdout)
-        unbound_bom = subprocess.run((sys.executable, "-B", "-m", "kicad_tooling.template", "diagnose",
+        unbound_bom = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "diagnose",
                                       "--project-id", "controller", "--bom", str(self.root / "bom.csv")),
                                      capture_output=True, text=True, check=False)
         self.assertEqual(unbound_bom.returncode, 2)

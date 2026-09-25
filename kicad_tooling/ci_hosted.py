@@ -11,7 +11,6 @@ import os
 import shutil
 import subprocess
 import sys
-import sysconfig
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -173,10 +172,9 @@ def matrix_lane(root: Path, projects: tuple[str, ...] | None, log: HostedLog) ->
 
 
 def markdown_checks(root: Path, log: HostedLog) -> None:
-    log.run("docs-policy", (sys.executable, "-B", "-m", "kicad_tooling.docs_policy"), cwd=root)
-    rumdl = Path(sysconfig.get_path("scripts")) / (
-        "rumdl.exe" if sys.platform == "win32" else "rumdl")
-    log.run("rumdl", (str(rumdl), "check", ".", "--no-cache"), cwd=root)
+    log.run("docs-policy", (sys.executable, "-I", "-B", "-m", "kicad_tooling.docs_policy"), cwd=root)
+    log.run("rumdl", (sys.executable, "-I", "-m", "kicad_tooling.markdown_check",
+                       "check", ".", "--no-cache"), cwd=root)
     log.run("mdrepo", (sys.executable, "-B", "-m", "mdrepo", "check", "."), cwd=root)
 
 
@@ -187,14 +185,14 @@ def portable_lane(root: Path, scope: str, projects: tuple[str, ...],
     elif scope == "focused":
         if not projects:
             raise ValueError("Focused portable lane requires selected projects")
-        argv = (sys.executable, "-B", "-m", "kicad_tooling.ci", *(
+        argv = (sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", *(
             part for project in projects for part in ("--project", project)
         ), "--jobs", str(jobs), "--output", "build/portable")
         log.run("portable-focused", argv, cwd=root)
         if docs_changed:
             markdown_checks(root, log)
     elif scope == "full":
-        log.run("portable-full", (sys.executable, "-B", "-m", "kicad_tooling.ci",
+        log.run("portable-full", (sys.executable, "-I", "-B", "-m", "kicad_tooling.ci",
                                   "--jobs", str(jobs), "--output", "build/portable"), cwd=root)
     else:
         raise ValueError(f"Unknown portable scope: {scope}")
@@ -208,10 +206,10 @@ def windows_types(root: Path, log: HostedLog) -> None:
 
 
 def windows_smoke(root: Path, log: HostedLog) -> None:
-    log.run("windows-inventory", (sys.executable, "-B", "-m", "kicad_tooling.template", "list",
+    log.run("windows-inventory", (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "list",
                                   "--format", "json"), cwd=root,
             stdout_path=root / "build/portable/windows-inventory.json")
-    log.run("windows-policy", (sys.executable, "-B", "-m", "kicad_tooling.ci",
+    log.run("windows-policy", (sys.executable, "-I", "-B", "-m", "kicad_tooling.ci",
                                "--format", "json"), cwd=root,
             stdout_path=root / "build/portable/windows-policy.json")
 
@@ -241,19 +239,19 @@ def native_lane(root: Path, *, project: str, image: str, pr_head: str,
         "docker", "run", "--rm", "--platform", "linux/amd64", "--user",
         f"{os.getuid()}:{os.getgid()}", "--entrypoint", "sh",
         "-e", "HOME=/tmp/kicad-template", "-e", "PYTHONDONTWRITEBYTECODE=1",
-        "-e", "PYTHONPATH=/work/build/policy-deps", "-e", "CHECKED_SHA",
+        "-e", "CHECKED_SHA",
         "-e", "PR_HEAD_SHA", "-e", "PROJECT_ID", "-v", f"{root}:/work",
         "-w", "/work", image, "-ec",
     )
     try:
         log.run("docker-pull", ("docker", "pull", image), cwd=root)
-        log.run("native-deps", (sys.executable, "-B", "-m", "kicad_tooling.native_deps",
+        log.run("native-deps", (sys.executable, "-I", "-B", "-m", "kicad_tooling.native_deps",
                                 "--image", image), cwd=root)
         log.run("native-check", (*docker,
-                                 'python3 -m kicad_tooling.ci --kicad --project "$PROJECT_ID" '
+                                 '/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --kicad --project "$PROJECT_ID" '
                                  + "--output build/review"), cwd=root, env=environment)
         if fault_probes:
-            log.run("fault-probes", (*docker, "python3 -m kicad_tooling.ci --fault-probes --output build/fault-probes"), cwd=root, env=environment)
+            log.run("fault-probes", (*docker, "/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --fault-probes --output build/fault-probes"), cwd=root, env=environment)
     finally:
         checked_source(root, log)
 
@@ -352,11 +350,11 @@ def release_lane(root: Path, log: HostedLog) -> None:
                              "build/releases/ci-review/manifest.json", "--output", "build/ci-review.zip")),
         ("release-verify", ("kicad_tooling.release", "verify", "--archive", "build/ci-review.zip")),
     ):
-        log.run(stage, (sys.executable, "-B", "-m", *command), cwd=target)
+        log.run(stage, (sys.executable, "-I", "-B", "-m", *command), cwd=target)
     checked_source(target, log)
     fixture = Path(__file__).resolve().parent / "fixtures/foreign-eagle-board.xml"
     conversion = log.run("foreign-conversion", (
-        sys.executable, "-B", "-m", "kicad_tooling.template", "convert-pcb",
+        sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
         "--source", str(fixture), "--project-id",
         "foreign-smoke", "--toolchain", "kicad-10.0.5", "--input-format", "eagle",
         "--runner", "container", "--format", "json",
@@ -373,7 +371,7 @@ def release_lane(root: Path, log: HostedLog) -> None:
     ) != 4:
         raise ValueError("Foreign PCB edge geometry changed")
     imported_path = log.run("foreign-import", (
-        sys.executable, "-B", "-m", "kicad_tooling.template", "import-project", "--source",
+        sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "import-project", "--source",
         str(source), "--project-id", "foreign-smoke", "--toolchain", "kicad-10.0.5",
         "--format", "json",
     ), cwd=target)

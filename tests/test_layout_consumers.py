@@ -101,9 +101,7 @@ library_roots = ["cad/libraries"]
 
     def cli(self, *args: str) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
-        environment["PYTHONPATH"] = os.pathsep.join(
-            (str(PACKAGE_ROOT), environment.get("PYTHONPATH", "")))
-        return subprocess.run((sys.executable, "-B", "-m", "kicad_tooling", *args),
+        return subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling", *args),
                               cwd=self.root, env=environment, capture_output=True, text=True,
                               check=False)
 

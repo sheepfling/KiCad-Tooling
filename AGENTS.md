@@ -9,6 +9,13 @@ Project manifests, KiCad source, requirements, and approvals belong to the
 project repository. Reusable Python services, CLI/MCP mappings, and regression
 tests belong here.
 
+Use normal installed imports and the active interpreter's `-I -m` entry points
+for Python subprocesses. Install this checkout with `python -m pip install -e '.[dev]'`
+before regression tests. Do not add project/source directories to `PYTHONPATH` or
+`sys.path`, guess executable prefixes, or borrow another environment's site-packages.
+Keep unavoidable native-tool adapters in the tooling package; see the
+[execution contract](docs/PACKAGING.md#execution-and-import-boundaries).
+
 Keep CLI and MCP operations backed by the same typed service. Update
 `kicad_tooling/tool-surfaces.json` when adding or changing either surface, and
 retain an explicit parity test or documented adapter exception. Run the

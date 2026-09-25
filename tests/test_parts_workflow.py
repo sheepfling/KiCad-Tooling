@@ -125,7 +125,7 @@ class PartsWorkflowTests(unittest.TestCase):
 
     def cli(self, *arguments: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run((
-            sys.executable, "-B", "-m", "kicad_tooling.parts", "--root", str(self.root),
+            sys.executable, "-I", "-B", "-m", "kicad_tooling.parts", "--root", str(self.root),
             "--project", self.project_id, *arguments,
         ), cwd=self.root, text=True, capture_output=True, check=False)
 

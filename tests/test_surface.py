@@ -285,9 +285,9 @@ class ToolSurfaceTests(unittest.TestCase):
 
     def test_cli_uses_explicit_root_from_an_unrelated_directory(self) -> None:
         result = subprocess.run(
-            (sys.executable, "-B", "-m", "kicad_tooling.surface", "--root", str(reference_root()),
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.surface", "--root", str(reference_root()),
              "--format", "json", "--require-live-mcp"),
-            cwd=self.root, env={**os.environ, "PYTHONPATH": str(SOURCE_ROOT)},
+            cwd=self.root, env=os.environ.copy(),
             text=True, capture_output=True, check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)

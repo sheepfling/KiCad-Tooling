@@ -48,7 +48,7 @@ class ElectricalSetupTests(unittest.TestCase):
 
     def command(self, *args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            (sys.executable, "-B", "-m", "kicad_tooling.electrical", "--root", str(self.root),
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical", "--root", str(self.root),
              "--project", PROJECT, *args), text=True, capture_output=True, check=False,
         )
 

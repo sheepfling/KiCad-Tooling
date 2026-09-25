@@ -14,7 +14,7 @@ distribution. A plain source archive without Git or source-distribution metadata
 cannot establish a version and fails the build. CI fetches full Git history.
 
 ```sh
-python3.11 -m pip install '.[dev]'
+python3.11 -m pip install -e '.[dev]'
 python3.11 -m build
 kicad-team --version
 ```
@@ -39,7 +39,32 @@ CLI/MCP surface check. The reference controller also gets portable verification
 when present in the acceptance checkout. A second disposable copy relocates its
 project groups and catalogs and must pass the same inventory, surface, and portable
 verification. The rehearsal checks that imports come from the newly installed
-wheel, including when an offline dependency directory is provided.
+wheel. It does not borrow another environment's site-packages or modify import paths.
+
+## Execution and import boundaries
+
+Install the tooling normally for project use, or use pip's editable installation
+for development. The package gate first verifies that an isolated Python process
+imports this checkout's installed package. Tests do not inject `PYTHONPATH` or
+modify `sys.path` to make an uninstalled checkout appear usable.
+
+First-party subprocesses use the active interpreter and `-I -m` module entry points.
+Project roots select engineering data, never Python import roots. Normal imports
+share services between the CLI and MCP. Package checks install a fresh wheel with
+its declared dependencies; there is no custom executable or site-packages override.
+
+The pinned `rumdl` dependency is a Rust executable, and its Python module launcher
+does not work in the installed 0.2.77 wheel. The small
+`python -I -m kicad_tooling.markdown_check` adapter resolves exactly one binary from
+that installed distribution's file metadata. It never searches PATH, guesses a
+Scripts/bin location, or looks for a development build. Missing metadata fails the check.
+
+Native KiCad checks create a standard virtual environment inside the digest-pinned
+image. Its own Python reports the site-packages location; ABI-matched dependencies
+and the exact executing tooling package with its version metadata are deployed
+there. Launches use that environment's Python with `-I -m`, without `PYTHONPATH`.
+The environment deliberately inherits the pinned image's KiCad Python bindings;
+it does not inherit packages from the host or consuming project's directories.
 
 The hosted workflow runs for pull requests, main, and `v*` tags. It does not publish
 a package. Native and release acceptance runs against the separately pinned template.

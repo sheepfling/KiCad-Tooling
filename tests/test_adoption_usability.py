@@ -87,7 +87,7 @@ class AdoptionUsabilityTests(unittest.TestCase):
             with self.subTest(runner=runner), self.assertRaisesRegex(ValueError, "requires native"):
                 doctor(self.root, runner=runner)
         command = subprocess.run(
-            (sys.executable, "-B", "-m", "kicad_tooling.template", "doctor", "--root", str(self.root),
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "doctor", "--root", str(self.root),
              "--runner", "local", "--format", "text"),
             cwd=self.root, capture_output=True, text=True, check=False,
         )

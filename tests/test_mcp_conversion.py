@@ -71,7 +71,7 @@ if "source-drift" in text:
     async def cli(self, source: Path, project: str, input_format: str = "auto",
                   toolchain: str = "kicad-10.0.5") -> tuple[int, ForeignPcbReport]:
         result = await asyncio.to_thread(subprocess.run, (
-            sys.executable, "-B", "-m", "kicad_tooling.template", "convert-pcb", "--root", str(self.root),
+            sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb", "--root", str(self.root),
             "--source", str(source), "--project-id", project, "--toolchain", toolchain,
             "--input-format", input_format, "--runner", "local", "--format", "json",
         ), cwd=SOURCE_ROOT, text=True, capture_output=True, check=False, timeout=60)

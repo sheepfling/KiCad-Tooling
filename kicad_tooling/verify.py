@@ -68,11 +68,11 @@ def container_command(
     if sys.platform != "win32":
         command.extend(("--user", f"{os.getuid()}:{os.getgid()}"))
     command.extend((
-        "--entrypoint", "python3", "-e", "HOME=/tmp/kicad-template",
-        "-e", "PYTHONDONTWRITEBYTECODE=1", "-e", f"PYTHONPATH=/work/{deps}",
+        "--entrypoint", f"/work/{deps}/bin/python", "-e", "HOME=/tmp/kicad-template",
+        "-e", "PYTHONDONTWRITEBYTECODE=1",
         "--mount", f"type=bind,source={root},target=/work", *git_metadata_mounts(root),
         "-w", "/work", image,
-        "-B", "-m", "kicad_tooling.ci", "--kicad", "--project", project_id,
+        "-I", "-B", "-m", "kicad_tooling.ci", "--kicad", "--project", project_id,
         "--output", output,
     ))
     return tuple(command)
@@ -185,7 +185,7 @@ def verify(
                     dep_relative = dependencies.relative_to(root).as_posix()
                     with journal.stage("container-dependencies"):
                         dependency_command = run_command(root, (
-                            sys.executable, "-B", "-m", "kicad_tooling.native_deps", "--root", str(root),
+                            sys.executable, "-I", "-B", "-m", "kicad_tooling.native_deps", "--root", str(root),
                             "--image", config.image, "--output", dep_relative,
                         ), 600)
                         journal.save_model("dependency-command", dependency_command)
