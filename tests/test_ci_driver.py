@@ -72,6 +72,23 @@ class CiDriverTests(unittest.TestCase):
                 self.assertEqual(getattr(result, name).returncode, 1)
                 self.assertEqual(result.status, "FAIL")
 
+    def test_markdown_tool_uses_active_python_scripts_directory(self) -> None:
+        for platform, scripts, executable in (
+            ("win32", "C:/hostedtoolcache/windows/Python/3.11.9/x64/Scripts", "rumdl.exe"),
+            ("win32", "C:/work/venv/Scripts", "rumdl.exe"),
+            ("linux", "/opt/venv/bin", "rumdl"),
+        ):
+            with (
+                self.subTest(platform=platform, scripts=scripts),
+                patch("kicad_tooling.ci.sys.platform", platform),
+                patch("kicad_tooling.ci.sysconfig.get_path", return_value=scripts) as lookup,
+                patch("kicad_tooling.ci.run_command", return_value=evidence(0)) as command,
+            ):
+                static_pipeline(ROOT, None)
+            lookup.assert_called_once_with("scripts")
+            self.assertEqual(command.call_args_list[0].args,
+                             (ROOT, str(Path(scripts) / executable), "check", ".", "--no-cache"))
+
     def test_mdrepo_roots_follow_documentation_roots(self) -> None:
         config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
         configured = tuple(config["tool"]["mdrepo"]["orphans"]["roots"])

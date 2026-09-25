@@ -8,6 +8,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import sysconfig
 import tarfile
 import tempfile
 import time
@@ -241,7 +242,8 @@ def main() -> int:
     parser.add_argument("--skip-mdrepo", action="store_true",
                         help="Offline local rehearsal only; hosted CI must run mdrepo")
     parser.add_argument("--rumdl-path", type=Path,
-                        default=Path(sys.executable).with_name("rumdl"))
+                        default=Path(sysconfig.get_path("scripts")) / (
+                            "rumdl.exe" if sys.platform == "win32" else "rumdl"))
     args = parser.parse_args()
     logs = ROOT / "build/ci"
     logs.mkdir(parents=True, exist_ok=True)

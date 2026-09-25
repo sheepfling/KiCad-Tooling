@@ -11,6 +11,7 @@ import os
 import shutil
 import subprocess
 import sys
+import sysconfig
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -173,7 +174,8 @@ def matrix_lane(root: Path, projects: tuple[str, ...] | None, log: HostedLog) ->
 
 def markdown_checks(root: Path, log: HostedLog) -> None:
     log.run("docs-policy", (sys.executable, "-B", "-m", "kicad_tooling.docs_policy"), cwd=root)
-    rumdl = Path(sys.executable).with_name("rumdl.exe" if sys.platform == "win32" else "rumdl")
+    rumdl = Path(sysconfig.get_path("scripts")) / (
+        "rumdl.exe" if sys.platform == "win32" else "rumdl")
     log.run("rumdl", (str(rumdl), "check", ".", "--no-cache"), cwd=root)
     log.run("mdrepo", (sys.executable, "-B", "-m", "mdrepo", "check", "."), cwd=root)
 

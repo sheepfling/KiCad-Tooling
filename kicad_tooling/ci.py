@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import sysconfig
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -114,7 +115,7 @@ def static_pipeline(
     registry = phase(journal, "registry", lambda: lint(root))
     repository = phase(journal, "repository", lambda: check_repository(root))
     documentation = phase(journal, "documentation", lambda: documentation_check(root))
-    rumdl_path = Path(sys.executable).with_name(
+    rumdl_path = Path(sysconfig.get_path("scripts")) / (
         "rumdl.exe" if sys.platform == "win32" else "rumdl")
     rumdl = phase(journal, "rumdl", lambda: run_command(
         root, str(rumdl_path), "check", ".", "--no-cache"))
