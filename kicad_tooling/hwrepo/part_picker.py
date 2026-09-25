@@ -15,6 +15,7 @@ from .contract_coach import NetlistRunner, capture, inspect_summary, project_con
 from .contracts import read_model, repo_path, update_project_manifest_parts
 from .discovery import load_config, load_registry
 from .evidence import digest
+from .layout import CONFIG_NAME, layout
 from .model_population import (
     _model_path,  # pyright: ignore[reportPrivateUsage]
     _require_shared_consumer_inventory,  # pyright: ignore[reportPrivateUsage]
@@ -106,10 +107,11 @@ def _snapshot(root: Path, project_id: str) -> dict[str, str | None]:
     config = load_config(root, project.config)
     result: dict[str, str | None] = dict(hashes(root, config.source_roots))
     manifest = read_model(repo_path(root, project.config), ProjectManifest)
-    names = {"catalog/projects.json", registry.catalogs.parts, registry.catalogs.libraries,
+    names = {layout(root).discovery, registry.catalogs.parts, registry.catalogs.libraries,
              registry.catalogs.toolchains, registry.catalogs.interfaces,
              registry.catalogs.release_policies, project.config,
              (Path(project.config).parent / manifest.checks).as_posix()}
+    names.add(CONFIG_NAME)
     # Shared model review reads every consumer manifest, not only the selected one.
     names.update(record.config for record in registry.projects)
     names.add(preferences_path(root, project_id, None).relative_to(root).as_posix())

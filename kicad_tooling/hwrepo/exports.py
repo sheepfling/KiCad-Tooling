@@ -16,6 +16,7 @@ from .contracts import (
 from .discovery import load_config, load_registry
 from .evidence import digest, evidence_path, source_state, verify_source
 from .generation import csv_cell
+from .kicad_compatibility import require_cli_profile
 from .models import (
     EvidenceFile,
     PartsCatalog,
@@ -86,6 +87,7 @@ def export(root: Path, manifest_path: str, output: Path, cli: str,
     if not relative.startswith("build/"):
         raise ValueError("Release exports belong under the ignored build/ directory")
     config = load_config(root, manifest_path)
+    require_cli_profile(config)
     manifest = read_model(repo_path(root, manifest_path), ProjectManifest)
     settings = manifest.release_exports
     if settings is None or manifest.kind.value != "pcb":
@@ -187,6 +189,7 @@ def verify_exports(root: Path, reference: EvidenceFile, source: SourceState,
     path = evidence_path(root, reference)
     report = read_model(path, ReleaseExportReport)
     config = load_config(root, manifest_path)
+    require_cli_profile(config)
     manifest = read_model(repo_path(root, manifest_path), ProjectManifest)
     verify_source(report.source, source)
     settings = manifest.release_exports

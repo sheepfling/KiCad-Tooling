@@ -18,6 +18,7 @@ from ..validate import hashes, read_netlist
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
 from .evidence import digest
+from .kicad_compatibility import require_cli_profile
 from .models import (
     CommandEvidence,
     ContractCoachReport,
@@ -172,6 +173,7 @@ def project_context(root: Path, project_id: str) -> tuple[ProjectConfig, Netlist
     if project.kind not in {ProjectKind.PCB, ProjectKind.SCHEMATIC}:
         raise ValueError("Contract coaching is for pcb or schematic projects only")
     config = load_config(root, project.config)
+    require_cli_profile(config)
     if config.project_id != project_id or config.kind is not project.kind:
         raise ValueError("Project manifest and resolved configuration disagree")
     validation = config.validation

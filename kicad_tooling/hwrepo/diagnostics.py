@@ -14,6 +14,7 @@ from .contracts import read_model, repo_path
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry, settings
 from .importing import import_project
+from .layout import workflow_guide
 from .model_inventory import inspect_models
 from .models import (
     DiagnosticFinding,
@@ -55,8 +56,15 @@ def finding(
 
 def report(
     project_id: str, scope: str, findings: list[DiagnosticFinding], next_command: str,
-    follow_up_command: str | None = None,
+    follow_up_command: str | None = None, root: Path | None = None,
 ) -> DiagnosticReport:
+    if root is not None:
+        try:
+            findings = [row.model_copy(update={"guide": workflow_guide(root, row.guide)})
+                        for row in findings]
+        except (OSError, ValueError):
+            # Discovery diagnostics must remain readable when the adapter itself is invalid.
+            pass
     return DiagnosticReport.model_validate({
         "project_id": project_id,
         "scope": scope,
@@ -186,7 +194,7 @@ def diagnose_import(
         + f"--project-id {quote_argument(project_id)} "
         + f"--toolchain {quote_argument(toolchain_id)}"
     )
-    return report(project_id, "import", findings, command)
+    return report(project_id, "import", findings, command, root=root)
 
 
 def repository_guidance(issue: str, kicad_major: str | None = None) -> DiagnosticFinding:
@@ -699,7 +707,7 @@ def diagnose_project(
             f"python -B -m kicad_tooling.verify --root {quote_argument(str(root))} "
             f"--project {quote_argument(project_id)}"
         )
-    return report(project_id, "project", findings, next_command, follow_up_command)
+    return report(project_id, "project", findings, next_command, follow_up_command, root=root)
 
 
 def format_text(result: DiagnosticReport, detail: Literal["brief", "full"] = "brief") -> str:

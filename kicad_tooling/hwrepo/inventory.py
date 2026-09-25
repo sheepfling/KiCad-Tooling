@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .contracts import read_model, repo_path
 from .discovery import load_registry
+from .layout import layout
 from .models import (
     InventoryGroup,
     InventoryProject,
@@ -26,7 +27,7 @@ def inventory(root: Path) -> TemplateInventoryReport:
     try:
         registry = load_registry(root)
         toolchains = read_model(repo_path(root, registry.catalogs.toolchains), ToolchainsCatalog)
-        products = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+        products = read_model(repo_path(root, layout(root).products), ProductIndex)
         toolchain_ids = {record.id for record in toolchains.toolchains}
         folded_toolchain_ids = [record.id.casefold() for record in toolchains.toolchains]
         if len(folded_toolchain_ids) != len(set(folded_toolchain_ids)):
@@ -39,10 +40,10 @@ def inventory(root: Path) -> TemplateInventoryReport:
             if product.id != entry.id:
                 raise ValueError(f"{entry.path}: product ID {product.id} differs from index ID {entry.id}")
             if len({name.casefold() for name in entry.project_ids}) != len(entry.project_ids):
-                raise ValueError("catalog/products.json: duplicate project IDs in product index")
+                raise ValueError(f"{layout(root).products}: duplicate project IDs in product index")
             unknown = sorted(set(entry.project_ids) - known_projects)
             if unknown:
-                raise ValueError(f"catalog/products.json: unknown project IDs: {unknown}")
+                raise ValueError(f"{layout(root).products}: unknown project IDs: {unknown}")
             product_rows.append(InventoryGroup(id=entry.id, project_ids=entry.project_ids))
             for project_id in entry.project_ids:
                 project_products[project_id].append(entry.id)

@@ -14,6 +14,7 @@ from typing import Protocol, TypeVar
 
 from .contracts import read_model, repo_path
 from .discovery import load_config, load_registry
+from .layout import RepositoryLayout, layout, within_roots
 from .models import (
     AssemblyKind,
     Assurance,
@@ -454,7 +455,8 @@ def load_repository(
     interfaces: Mapping[str, InterfaceRecord] = {}
     projects: Mapping[str, ProjectRecord] = {}
     try:
-        index = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+        configuration = layout(root)
+        index = read_model(repo_path(root, configuration.products), ProductIndex)
         registry = load_registry(root)
         parts_catalog = read_model(repo_path(root, registry.catalogs.parts), PartsCatalog)
         interfaces_catalog = read_model(
@@ -467,7 +469,7 @@ def load_repository(
             issues.append(
                 PolicyIssue(
                     code="PROJECT_SELECTION",
-                    location="catalog/projects.json",
+                    location=configuration.discovery,
                     message=f"Unknown selected project IDs: {sorted(unknown)}",
                 )
             )
@@ -510,16 +512,16 @@ def load_repository(
             product_project_ids[entry.id] = entry.project_ids
             path = repo_path(root, entry.path)
             if (
-                not (
-                    entry.path.startswith("products/")
-                    or entry.path.startswith("examples/products/")
+                not any(
+                    within_roots(entry.path, (directory,))
+                    and len(Path(entry.path).relative_to(directory).parts) == 2
+                    for directory in configuration.product_roots
                 )
                 or path.suffix != ".json"
                 or entry.path in declared
             ):
                 raise ValueError(
-                    "Products need unique products/*.json paths "
-                    "(or examples/products/*.json in the template)"
+                    "Products need unique .json paths in direct child directories of product_roots"
                 )
             declared.add(entry.path)
             if len(set(entry.project_ids)) != len(entry.project_ids):
@@ -602,16 +604,18 @@ def load_repository(
         if selected is None:
             found = {
                 path.relative_to(root).as_posix()
-                for product_root in ("products", "examples/products")
-                if product_root == "products" or any(name.startswith("examples/") for name in declared)
-                for path in (root / product_root).glob("*/product.json")
-                if (root / product_root).is_dir()
+                for product_root in configuration.product_roots
+                if not (configuration.product_roots == RepositoryLayout().product_roots
+                        and product_root == "examples/products"
+                        and not any(name.startswith("examples/") for name in declared))
+                for path in repo_path(root, product_root).glob("*/product.json")
+                if repo_path(root, path.relative_to(root).as_posix()).is_file()
             }
             if declared != found:
                 issues.append(
                     PolicyIssue(
                         code="PRODUCT_DISCOVERY",
-                        location="products",
+                        location=", ".join(configuration.product_roots),
                         message=f"Unregistered or missing products: {sorted(declared ^ found)}",
                     )
                 )

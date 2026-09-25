@@ -11,8 +11,9 @@ from pathlib import Path
 from typing import Literal, NamedTuple
 
 from .contracts import parse_model_text, read_model, repo_path, validate_json_object
-from .discovery import settings
+from .discovery import manifest_paths, settings
 from .electrical import simulation_cases
+from .layout import layout, within_roots
 from .models import (
     ElectricalAnalysisContract,
     McpArtifactEntry,
@@ -55,11 +56,24 @@ def artifact_path(root: Path, value: str) -> Path:
     boundary: int | None = None
     if parts[0] == "build":
         boundary = 0
-    elif len(parts) >= 3 and parts[0] in {"projects", "products"} and parts[2] == "build":
-        boundary = 2
-    elif (len(parts) >= 4 and parts[0] == "examples"
-          and parts[1] in {"projects", "products"} and parts[3] == "build"):
-        boundary = 3
+    else:
+        for index, component in enumerate(parts):
+            if component != "build" or index == 0:
+                continue
+            owner = "/".join(parts[:index])
+            # Project paths must resolve to an actual configured island. Product
+            # artifact scope retains its configured source-root boundary.
+            if any(path.parent == root.resolve() / owner for path in manifest_paths(root)):
+                boundary = index
+                break
+            if within_roots(owner, layout(root).product_roots):
+                from .contracts import read_model
+                from .models import ProductIndex
+
+                products = read_model(repo_path(root, layout(root).products), ProductIndex)
+                if any(Path(entry.path).parent.as_posix() == owner for entry in products.products):
+                    boundary = index
+                    break
     if boundary is None or "restores" in parts[boundary + 1:]:
         raise ValueError("Artifacts must be under a direct repository/project/product build/; "
                          "restored source is not an artifact read scope")
@@ -192,17 +206,19 @@ def read_artifact(root: Path, path: str, offset: int = 0,
 def _island(root: Path, project_id: str) -> Path:
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", project_id) is None:
         raise ValueError("Invalid project ID")
-    matches: list[Path] = []
-    for source_root in settings(root).project_roots:
-        if source_root not in {"projects", "examples/projects"}:
-            raise ValueError("Unsupported configured project root")
-        candidate = repo_path(root, f"{source_root}/{project_id}")
-        if repo_path(candidate, "project.json").is_file():
-            matches.append(candidate)
+    matches = [path.parent for path in manifest_paths(root, project_id)]
     if len(matches) != 1:
-        raise ValueError(f"Need one direct project island for {project_id}; found {len(matches)}")
+        raise ValueError(f"Need one configured project island for {project_id}; found {len(matches)}")
     # Do not parse the manifest here: this reader/editor also repairs malformed JSON.
     return matches[0]
+
+
+def _test_contract(island: Path, value: str) -> bool:
+    if value == "tests/contract.json":
+        return True
+    if not value.endswith(".json"):
+        return False
+    return read_model(repo_path(island, "project.json"), ProjectManifest).checks == value
 
 
 def _electrical_sidecar(island: Path, value: str) -> bool:
@@ -240,13 +256,14 @@ def project_file_path(root: Path, project_id: str, value: str) -> Path:
     if any(part.startswith(".") or part.casefold() in FORBIDDEN_SOURCE_PARTS for part in parts):
         raise ValueError("Local state, build outputs, releases and hidden paths are not editable source")
     allowed = (value in {"project.json", "tests/contract.json", "README.md", "docs/purchasing.json"}
+               or _test_contract(island, value)
                or _electrical_sidecar(island, value)
                or path.suffix.lower() == ".cir"
                or (parts[0] == "docs" and path.suffix.lower() == ".md")
                or path.suffix.lower() in CAD_TEXT_SUFFIXES
                or path.name in {"fp-lib-table", "sym-lib-table"})
     if not allowed:
-        raise ValueError("Only authored KiCad text, project.json, tests/contract.json and "
+        raise ValueError("Only authored KiCad text, project.json, the declared check contract and "
                          "electrical requirements/models, docs/purchasing.json and project Markdown are available")
     if not path.is_file() or path.stat().st_mode & 0o111:
         raise ValueError("Select an existing non-executable source file")
@@ -284,7 +301,7 @@ def _validate_edit(root: Path, project_id: str, path: Path,
         if manifest.toolchain_id not in {item.id for item in catalog.toolchains}:
             raise ValueError("The proposed toolchain is not catalogued")
         return "JSON_MODEL"
-    if relative == "tests/contract.json":
+    if _test_contract(island, relative):
         contract = parse_model_text(text, ProjectTestContract)
         manifest = read_model(repo_path(island, "project.json"), ProjectManifest)
         if contract.validation.kind is not manifest.kind:

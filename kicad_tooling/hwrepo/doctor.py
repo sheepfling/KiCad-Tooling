@@ -11,6 +11,7 @@ from typing import Literal
 from kicad_tooling.check_toolchain import assessment, observed_version, toolchain
 
 from .discovery import load_config, load_registry
+from .kicad_compatibility import require_cli_profile
 from .models import EnvironmentCheck, TemplateDoctorReport
 from .template import preflight
 
@@ -149,6 +150,7 @@ def doctor(
     local_version: str | None = None
     local_ok = False
     image_ok = False
+    profile_ok = False
     expected_local = "Optional exact local KiCad CLI"
     if selected_toolchain is not None:
         try:
@@ -159,6 +161,22 @@ def doctor(
                 "Select a toolchain ID from catalog/toolchains.json.",
             ))
             expected_local = f"KiCad {record.kicad_version} for {selected_toolchain}"
+            if native:
+                try:
+                    profile = require_cli_profile(record)
+                    profile_ok = True
+                    profile_action = (
+                        "The CLI/report adapter is selected; an explicit profile is an author "
+                        "compatibility declaration, not tested-version certification. Run native "
+                        "acceptance for the exact catalogued version before adoption."
+                    )
+                except ValueError as exc:
+                    profile = None
+                    profile_action = str(exc)
+                checks.append(environment_check(
+                    "cli-profile", True, "Supported KiCad CLI/report compatibility profile",
+                    profile, profile_ok, profile_action, profile_action,
+                ))
             image_ok = IMAGE_DIGEST.fullmatch(record.image) is not None
             if runner != "container" or not native:
                 try:
@@ -186,7 +204,7 @@ def doctor(
         selected_runner = "local"
     elif runner != "local" and container_ok:
         selected_runner = "container"
-    if not project_ok:
+    if not project_ok or (native and not profile_ok):
         selected_runner = None
     native_ok = selected_runner is not None
     checks.append(environment_check(

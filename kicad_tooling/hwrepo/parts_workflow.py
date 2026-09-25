@@ -8,6 +8,7 @@ from .contract_coach import NetlistRunner, capture, inspect_summary, project_con
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry
 from .evidence import digest
+from .layout import CONFIG_NAME, layout
 from .models import (
     PartsCatalog,
     ProjectManifest,
@@ -89,8 +90,10 @@ def input_hashes(root: Path, project_id: str, requested: Path | None) -> dict[st
     # in addition to the native design hashes supplied by the capture adapter.
     manifest = read_model(repo_path(root, project.config), ProjectManifest)
     checks = repo_path(root, project.config).parent / manifest.checks
-    paths = {"catalog/projects.json", registry.catalogs.parts, registry.catalogs.toolchains,
+    paths = {layout(root).discovery, registry.catalogs.parts, registry.catalogs.toolchains,
              project.config, checks.relative_to(root).as_posix()}
+    if repo_path(root, CONFIG_NAME).exists():
+        paths.add(CONFIG_NAME)
     path = preferences_path(root, project_id, requested)
     if path.exists():
         paths.add(path.relative_to(root).as_posix())

@@ -2,6 +2,9 @@
 
 Use Python 3.11 syntax. Run commands from a project checkout or pass an
 explicit `--root`; never assume that package files live inside that checkout.
+Read [layout and toolchain configuration](docs/CONFIGURATION.md) before assuming
+folder names or KiCad versions. Keep adapters declarative and preserve portable
+path, source ownership, and exact native-version checks.
 Project manifests, KiCad source, requirements, and approvals belong to the
 project repository. Reusable Python services, CLI/MCP mappings, and regression
 tests belong here.

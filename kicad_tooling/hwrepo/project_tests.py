@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .contracts import read_model, repo_path
 from .discovery import load_registry
+from .layout import layout
 from .models import CommandEvidence, ProductIndex, ProjectTestsReport
 
 
@@ -39,7 +40,7 @@ def run_tests(root: Path, selected: tuple[str, ...] | None = None,
         for project in registry.projects
         if selected is None or project.id in selected
     }
-    index = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+    index = read_model(repo_path(root, layout(root).products), ProductIndex)
     directories.update({
         f"product-{entry.id}": repo_path(root, entry.path).parent / "tests"
         for entry in index.products

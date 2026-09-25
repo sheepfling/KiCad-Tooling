@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .contracts import read_model, repo_path
 from .discovery import load_registry
+from .layout import CONFIG_NAME, layout
 from .models import ImpactPlan, LibrariesCatalog, ProductIndex, ProductRecord, ProjectManifest
 
 # These authored root documents affect the workflow's policy or agent behavior.
@@ -51,14 +52,17 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
     """
     root = root.resolve()
     registry = load_registry(root)
+    configuration = layout(root)
     catalog_paths = {
         registry.catalogs.parts,
         registry.catalogs.interfaces,
         registry.catalogs.libraries,
         registry.catalogs.toolchains,
         registry.catalogs.release_policies,
-        "catalog/projects.json",
-        "catalog/products.json",
+        configuration.discovery,
+        configuration.products,
+        configuration.team_policy,
+        CONFIG_NAME,
     }
     all_ids = tuple(project.id for project in registry.projects)
     paths = tuple(sorted(set(changed_paths)))
@@ -74,7 +78,7 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
                 all_ids, paths, {f"Unsafe or nonportable changed path: {path!r}"}, docs_changed
             )
 
-    products = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+    products = read_model(repo_path(root, layout(root).products), ProductIndex)
     libraries = read_model(repo_path(root, registry.catalogs.libraries), LibrariesCatalog)
     manifests: dict[str, ProjectManifest] = {
         project.id: read_model(repo_path(root, project.config), ProjectManifest)
@@ -163,6 +167,7 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
             if (
                 path in DOCUMENTATION_ROOT_FILES
                 or path.startswith("docs/")
+                or _within(path, configuration.workflow_docs)
                 or project_owners
                 or product_owners
             ):

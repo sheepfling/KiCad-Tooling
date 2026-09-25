@@ -15,7 +15,8 @@ from pydantic import BaseModel
 
 from . import __version__
 from .contracts import read_model, repo_path, write_model
-from .discovery import load_registry
+from .discovery import load_registry, settings
+from .layout import CONFIG_NAME, layout
 from .models import (
     AssemblyKind,
     BomRow,
@@ -327,7 +328,7 @@ def expected_outputs(
                 SourcingSnapshot
             ),
         }
-    index = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+    index = read_model(repo_path(root, layout(root).products), ProductIndex)
     product_paths = {entry.id: Path(entry.path).parent.as_posix() for entry in index.products}
     for product in repository.products:
         for variant in product.variants:
@@ -359,7 +360,7 @@ def drift(
         for name, expected in sorted(outputs.items())
         if not (path := repo_path(destination, name)).is_file() or path.read_bytes() != expected
     ]
-    index = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+    index = read_model(repo_path(root, layout(root).products), ProductIndex)
     directories = ["generated", "schemas"] if selected_project_ids is None else []
     directories.extend(
         f"{Path(entry.path).parent.as_posix()}/build"
@@ -423,35 +424,41 @@ def snapshot(root: Path, output: Path) -> SnapshotManifest:
     repository = load_repository(root)
     if repository.issues:
         raise ValueError(str(repository.issues))
+    configuration = layout(root)
+    policy = settings(root)
     sources: set[Path] = set()
-    for directory in (
-        "catalog",
-        "products",
-        "projects",
-        "examples",
-        "libraries",
-        "tools",
-        "tests",
-        ".github",
-        "docs",
-        "templates",
+    directories = {
+        "catalog", "products", "projects", "examples", "libraries", "tools", "tests",
+        ".github", "docs", "templates", *policy.project_roots,
+        *configuration.product_roots, *configuration.library_roots,
+        configuration.templates, configuration.workflow_docs,
+    }
+    for directory in sorted(directories):
+        for path in repo_path(root, directory).rglob("*"):
+            name = path.relative_to(root).as_posix()
+            if ephemeral(name):
+                continue
+            path = repo_path(root, name)
+            if path.is_file():
+                sources.add(path)
+    for name in (
+        configuration.discovery, configuration.products, configuration.team_policy, policy.catalogs.parts,
+        policy.catalogs.interfaces, policy.catalogs.libraries, policy.catalogs.toolchains,
+        policy.catalogs.release_policies,
     ):
-        sources.update(
-            path
-            for path in (root / directory).rglob("*")
-            if path.is_file()
-            and not ephemeral(path.relative_to(root).as_posix())
-        )
+        path = repo_path(root, name)
+        if path.is_file():
+            sources.add(path)
     source_hashes = {
         path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
         for path in sorted(sources)
     }
     for name in (
         "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md", ".gitattributes",
-        ".gitignore", "pyproject.toml", "template-adoption.json",
+        ".gitignore", "pyproject.toml", "template-adoption.json", CONFIG_NAME,
     ):
-        if (root / name).is_file():
-            source_hashes[name] = hashlib.sha256((root / name).read_bytes()).hexdigest()
+        if (path := repo_path(root, name)).is_file():
+            source_hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
     manifest = SnapshotManifest(
         commit=_git(root, "rev-parse", "HEAD"),
         working_tree_clean=not bool(

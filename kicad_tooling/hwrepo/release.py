@@ -11,6 +11,7 @@ from pathlib import Path
 from .contracts import read_model, repo_path
 from .discovery import load_config, load_registry
 from .evidence import source_state, verify_native, verify_release_portable
+from .layout import layout
 from .models import (
     Assurance,
     DeviationStatus,
@@ -113,7 +114,7 @@ def load_release_repository(root: Path, manifest: ReleaseManifest) -> ProductRep
     the scoped product repository. An unrelated legacy island is not a release
     dependency merely because it appears in the project registry.
     """
-    index = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+    index = read_model(repo_path(root, layout(root).products), ProductIndex)
     indexed = {product.id: product for product in index.products}
     if len(indexed) != len(index.products):
         raise ValueError("Product index has duplicate IDs")
@@ -141,7 +142,7 @@ def load_release_repository(root: Path, manifest: ReleaseManifest) -> ProductRep
             entry is None or project.id not in entry.project_ids
         ):
             raise ValueError(
-                f"catalog/products.json: product {validation.product_id} omits "
+                f"{layout(root).products}: product {validation.product_id} omits "
                 f"product-view project {project.id} declared by {project.config}"
             )
     return load_repository(root, tuple(sorted(selected)))
@@ -595,7 +596,7 @@ def check(root: Path, manifest: ReleaseManifest, today: date | None = None) -> R
         if approval.approved_at > effective_today:
             findings.append(issue("RELEASE_APPROVAL", "approval", "Approval date is in the future"))
         try:
-            policy = read_model(root / "catalog/team-policy.json", TeamPolicy)
+            policy = read_model(repo_path(root, layout(root).team_policy), TeamPolicy)
             actors = {actor.casefold() for actor in (approval.electrical_reviewer,
                       approval.mechanical_reviewer, approval.integrator, approval.release_authority) if actor is not None}
             if len(actors) < policy.minimum_actors:

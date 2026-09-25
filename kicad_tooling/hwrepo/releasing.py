@@ -11,6 +11,7 @@ from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
 from .evidence import digest, evidence_path, source_state, verify_release_portable
 from .generation import expected_outputs
+from .layout import layout
 from .markdown import release_review, write_markdown
 from .models import (
     CommandEvidence,
@@ -101,10 +102,10 @@ def resolve_variants(root: Path, values: tuple[str, ...]) -> tuple[ReleaseVarian
     """Resolve explicit PRODUCT:VARIANT choices to current typed revision identities."""
     if not values:
         return ()
-    index = read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+    index = read_model(repo_path(root, layout(root).products), ProductIndex)
     indexed = {entry.id: entry for entry in index.products}
     if len(indexed) != len(index.products):
-        raise ValueError("catalog/products.json has duplicate product IDs")
+        raise ValueError(f"{layout(root).products} has duplicate product IDs")
     selections: list[ReleaseVariant] = []
     for value in values:
         product_id, separator, variant_id = value.partition(":")
@@ -112,10 +113,10 @@ def resolve_variants(root: Path, values: tuple[str, ...]) -> tuple[ReleaseVarian
             raise ValueError("Variant selection uses PRODUCT:VARIANT")
         entry = indexed.get(product_id)
         if entry is None:
-            raise ValueError(f"Unknown release product {product_id!r} in catalog/products.json")
+            raise ValueError(f"Unknown release product {product_id!r} in {layout(root).products}")
         product = read_model(repo_path(root, entry.path), ProductRecord)
         if product.id != product_id:
-            raise ValueError(f"{entry.path}: product ID differs from catalog/products.json")
+            raise ValueError(f"{entry.path}: product ID differs from {layout(root).products}")
         variant = next((item for item in product.variants if item.id == variant_id), None)
         if variant is None:
             raise ValueError(f"Unknown variant {variant_id!r} for product {product_id!r}")

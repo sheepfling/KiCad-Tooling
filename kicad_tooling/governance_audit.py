@@ -10,7 +10,7 @@ from .hwrepo.hosted_governance import audit, format_text
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd(),
-                        help="Local repository containing catalog/team-policy.json")
+                        help="Local repository containing the configured team policy")
     parser.add_argument("--repo", help="GitHub OWNER/REPO (default: current gh repository)")
     parser.add_argument("--record", help="Optional project governance record relative to --root")
     parser.add_argument("--format", choices=("json", "text"), default="json")

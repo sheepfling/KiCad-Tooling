@@ -8,7 +8,8 @@ from typing import Literal
 from .contracts import read_model, repo_path
 from .diagnostic_journal import DiagnosticJournal
 from .diagnostics import finding, quote_argument, repository_guidance
-from .discovery import load_config, settings
+from .discovery import load_config, manifest_paths
+from .layout import layout, within_roots, workflow_guide
 from .models import DiagnosticFinding, LocalRescueReport, ProjectManifest
 from .repository import cad_dependencies
 
@@ -22,22 +23,13 @@ OMITTED = (
 
 
 def selected_manifest(root: Path, project_id: str) -> Path:
-    """Find only a one-level island in an allowed configured root; never glob peers."""
+    """Find a configured island without parsing potentially malformed peer manifests."""
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", project_id) is None:
         raise ValueError("Project ID must be one portable directory name")
-    policy = settings(root)
-    candidates: list[Path] = []
-    for source_root in policy.project_roots:
-        if source_root not in {"projects", "examples/projects"}:
-            raise ValueError(f"Unsupported project discovery root: {source_root}")
-        path = repo_path(root, f"{source_root}/{project_id}/project.json")
-        if path.exists():
-            if not path.is_file():
-                raise ValueError(f"Selected manifest is not a regular file: {path}")
-            candidates.append(path)
+    candidates = list(manifest_paths(root, project_id))
     if not candidates:
         raise ValueError(
-            f"No direct project.json for {project_id!r} in configured project roots"
+            f"No project.json for {project_id!r} in configured project roots"
         )
     if len(candidates) != 1:
         raise ValueError(
@@ -93,7 +85,7 @@ def selected_findings(
         ))
 
     for shared in manifest.shared_source_roots:
-        if not shared.startswith(("libraries/", "examples/libraries/")):
+        if not within_roots(shared, layout(root).library_roots):
             findings.append(finding(
                 "BLOCKING", "SELECTED_SHARED_ROOT", relative, shared,
                 "Shared roots must be named libraries, not another project's private files. "
@@ -191,6 +183,11 @@ def rescue_project(root: Path, project_id: str, journal: DiagnosticJournal) -> L
             "Do not bypass an unsafe or ambiguous manifest path.",
             DIAGNOSTICS_GUIDE,
         )]
+    try:
+        findings = [row.model_copy(update={"guide": workflow_guide(root, row.guide)})
+                    for row in findings]
+    except (OSError, ValueError):
+        pass  # Preserve repair guidance even when the layout file is invalid.
     command = (
         "python -B -m kicad_tooling.template diagnose"
         f" --root {quote_argument(str(root))} --project-id {quote_argument(project_id)}"

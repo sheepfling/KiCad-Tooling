@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 from .contracts import read_model, repo_path, write_model
+from .layout import layout
 from .licensing import template_license
 from .models import (
     PolicyIssue,
@@ -32,7 +33,7 @@ def finding(code: str, location: str, message: str) -> PolicyIssue:
 
 def load_contract(root: Path) -> TemplateContract:
     """Load the one authoritative template contract at the file boundary."""
-    return read_model(repo_path(root, CONTRACT_PATH), TemplateContract)
+    return read_model(repo_path(root, f"{layout(root).templates}/template-contract.json"), TemplateContract)
 
 
 def preflight(root: Path) -> TemplatePreflightReport:

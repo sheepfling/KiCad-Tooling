@@ -15,6 +15,7 @@ from .cad_library import _native_footprint, inspect_bundle  # pyright: ignore[re
 from .cad_source import _cached  # pyright: ignore[reportPrivateUsage]
 from .contracts import parse_easyeda_identity, repo_path, write_model
 from .discovery import load_config
+from .kicad_compatibility import require_cli_profile
 from .models import CadSourceReport, CadStepReport, CommandEvidence
 from .part_cad import _nodes, _quote, _root, _tokens  # pyright: ignore[reportPrivateUsage]
 from .parts_workflow import selected_project
@@ -174,6 +175,7 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
         bundle_sha256, step_sha256 = before[str(directory / "bundle.json")], before[str(step)]
         record = selected_project(root, project_id)
         config = load_config(root, record.config)
+        require_cli_profile(config)
         image, version = config.image, config.kicad_version
         (output / "model.wrl").write_bytes(wrl.read_bytes())
         (output / "model.step").write_bytes(step.read_bytes())

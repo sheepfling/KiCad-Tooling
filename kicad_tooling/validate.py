@@ -18,6 +18,7 @@ from .check_toolchain import cli_executable, toolchain
 from .hwrepo.contracts import repo_path, write_model
 from .hwrepo.discovery import load_config
 from .hwrepo.generation import csv_cell
+from .hwrepo.kicad_compatibility import require_cli_profile
 from .hwrepo.models import (
     CheckEvidence,
     CommandEvidence,
@@ -84,6 +85,7 @@ def check_report(
     if not isinstance(version, str) or not version:
         raise ValueError("Missing KiCad report identity")
     if config is not None:
+        require_cli_profile(config)
         if version != config.kicad_version:
             raise ValueError("Report toolchain identity differs")
         if data.get("$schema") != f"https://schemas.kicad.org/{kind}.v1.json":
@@ -301,6 +303,7 @@ def validate(
                 f"Repository preflight failed: {governance.issues}; {repository.issues}; {product_policy.issues}"
             )
         declared_toolchain = toolchain(root, config.toolchain_id)
+        require_cli_profile(declared_toolchain)
         if (
             config.kicad_version != declared_toolchain.kicad_version
             or config.image != declared_toolchain.image

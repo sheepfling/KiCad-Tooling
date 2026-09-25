@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from .contracts import repo_path, write_model
+from .discovery import project_destination
 from .markdown import imported_project_readme, write_markdown
 from .models import ComponentIdentity, ProjectImportReport, ProjectKind
 from .repository import ephemeral, generated_artifact, unmanaged_artifact
@@ -66,7 +67,7 @@ def import_project(root: Path, source_project: Path, project_id: str,
         else:
             raise ValueError("A matching .kicad_sch or .kicad_pcb source is required")
         manifest = prepare_manifest(root, project_id, kind, toolchain_id)
-        destination = repo_path(root, f"projects/{manifest.id}")
+        destination = project_destination(root, manifest.id)
         if source == root or source in destination.parents or destination in source.parents:
             raise ValueError("Source and destination directories must not overlap")
         sheets: set[Path] = set()
@@ -122,7 +123,7 @@ def import_project(root: Path, source_project: Path, project_id: str,
         )
         report = ProjectImportReport(
             status="PASS",
-            directory=f"projects/{manifest.id}",
+            directory=destination.relative_to(root).as_posix(),
             source_project=project.name,
             dry_run=dry_run,
             copied_sha256=copied,
@@ -156,7 +157,7 @@ def import_project(root: Path, source_project: Path, project_id: str,
         stage = None
         return report
     except (OSError, ValueError) as exc:
-        return ProjectImportReport(status="FAIL", directory=f"projects/{project_id}",
+        return ProjectImportReport(status="FAIL", directory=project_id,
             source_project=source_project.name, dry_run=dry_run, copied_sha256=copied,
             excluded=excluded, issues=(str(exc),))
     finally:

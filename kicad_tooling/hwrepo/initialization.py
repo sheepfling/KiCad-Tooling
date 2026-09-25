@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .contracts import read_model, repo_path
+from .layout import RepositoryLayout, layout
 from .licensing import template_license
 from .markdown import markdown_text, retitled_document
 from .models import (
@@ -25,6 +26,8 @@ def initialize(root: Path, project_id: str) -> TemplateInitReport:
     root = root.resolve()
     before: dict[Path, bytes | None] = {}
     try:
+        if layout(root) != RepositoryLayout():
+            raise ValueError("Template init requires the default layout; initialize before adapting paths")
         contract = read_model(root / "templates/template-contract.json", TemplateContract)
         adoption = TemplateAdoptionRecord(template_version=contract.template_version,
                                           project_id=project_id, status="initialized")

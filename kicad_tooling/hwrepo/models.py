@@ -150,6 +150,7 @@ class LibrarySbom(StrictModel):
 class ToolchainRecord(StrictModel):
     id: Identifier
     kicad_version: NonEmptyText
+    cli_profile: Literal["kicad-10"] | None = None
     image: NonEmptyText
     desktop_edit_policy: NonEmptyText
     installer_source: NonEmptyText
@@ -333,6 +334,7 @@ class ProjectConfig(StrictModel):
     component_identity: ComponentIdentity
     toolchain_id: Identifier
     kicad_version: NonEmptyText
+    cli_profile: Literal["kicad-10"] | None = None
     image: NonEmptyText
     project: RepositoryPath
     source_roots: tuple[RepositoryPath, ...]
@@ -352,12 +354,13 @@ class ProjectDiscovery(StrictModel):
 
     schema_version: Literal["1"] = "1"
     catalogs: CatalogPaths
-    project_roots: tuple[RepositoryPath, ...]
+    project_roots: Annotated[tuple[RepositoryPath, ...], Field(min_length=1)]
+    project_depth: Annotated[int, Field(ge=1, le=8)] = 1
 
     @model_validator(mode="after")
-    def live_projects_are_always_discovered(self) -> ProjectDiscovery:
-        if "projects" not in self.project_roots or len(set(self.project_roots)) != len(self.project_roots):
-            raise ValueError("Discovery must include projects exactly once; examples/projects is optional")
+    def unique_project_roots(self) -> ProjectDiscovery:
+        if len({name.casefold() for name in self.project_roots}) != len(self.project_roots):
+            raise ValueError("Discovery roots must be unique")
         return self
 
 

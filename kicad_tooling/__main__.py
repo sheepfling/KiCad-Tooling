@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import importlib
 import sys
+from importlib.metadata import PackageNotFoundError
+
+from kicad_tooling import package_version
 
 COMMANDS = (
     "check_all", "check_toolchain", "ci", "ci_hosted", "ci_matrix", "contract_coach",
@@ -13,10 +16,18 @@ COMMANDS = (
 
 
 def main() -> int:
+    if sys.argv[1:] == ["--version"]:
+        try:
+            print(f"kicad-team-tooling {package_version()}")
+        except PackageNotFoundError:
+            print("Package version unavailable: install kicad-team-tooling first.", file=sys.stderr)
+            return 1
+        return 0
     if len(sys.argv) < 2 or sys.argv[1] in {"-h", "--help"}:
         print("Usage: kicad-team COMMAND [options]\n")
         print("Commands: " + ", ".join(COMMANDS))
         print("Run 'kicad-team COMMAND --help' for command options.")
+        print("Run 'kicad-team --version' for the installed tooling version.")
         return 0 if len(sys.argv) > 1 else 2
     command = sys.argv[1].replace("-", "_")
     if command not in COMMANDS:

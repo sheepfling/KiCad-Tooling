@@ -10,6 +10,7 @@ from typing import Protocol, TypeVar
 
 from .hwrepo.contracts import read_model, repo_path, write_model
 from .hwrepo.discovery import load_config, load_registry, settings
+from .hwrepo.layout import layout
 from .hwrepo.models import (
     GovernanceLintReport,
     GovernanceRecord,
@@ -75,7 +76,7 @@ def lint_governance_record(
         return
     try:
         record = read_model(path, GovernanceRecord)
-        policy = read_model(root / "catalog/team-policy.json", TeamPolicy)
+        policy = read_model(repo_path(root, layout(root).team_policy), TeamPolicy)
     except (OSError, ValueError) as exc:
         issues.append(f"project {identifier}: invalid governance record: {exc}")
         return
@@ -123,7 +124,7 @@ def lint(
     requested = tuple(selected or ())
     try:
         registry = load_registry(root)
-        read_model(root / "catalog/team-policy.json", TeamPolicy)
+        read_model(repo_path(root, layout(root).team_policy), TeamPolicy)
         parts = records_by_id(
             read_model(repo_path(root, registry.catalogs.parts), PartsCatalog).parts,
             "parts catalog",
@@ -268,15 +269,8 @@ def lint(
         libraries[identifier] for identifier in sorted(library_ids) if identifier in libraries
     ):
         try:
-            library_parts = Path(library.path).parts
-            if not (
-                (len(library_parts) == 2 and library_parts[0] == "libraries")
-                or (len(library_parts) == 3 and library_parts[:2] == ("examples", "libraries"))
-            ):
-                issues.append(
-                    f"library {library.id}: path must be a named directory under libraries/ "
-                    "or examples/libraries/"
-                )
+            if Path(library.path).parent.as_posix() not in layout(root).library_roots:
+                issues.append(f"library {library.id}: path must be a named directory under library_roots")
             if not repo_path(root, library.path).is_dir():
                 issues.append(
                     f"library {library.id}: declared path is missing: {library.path}"
@@ -352,15 +346,10 @@ def lint(
             issues.append(f"project {identifier}: config project_id must match registry id")
         if config.kind is not project.kind:
             issues.append(f"project {identifier}: config kind must match registry kind")
-        project_path = Path(project.project).as_posix()
-        if not any(
-            project_path == design_root or project_path.startswith(f"{design_root}/")
-            for design_root in project.kind.accepted_roots
-        ):
-            issues.append(
-                f"project {identifier}: {project.kind.value} projects belong under "
-                f"{project.kind.design_root}/ (fixtures may use {project.kind.example_root}/)"
-            )
+        # Discovery already confines each manifest to a configured root/depth.
+        # Its native design must additionally remain inside that same island.
+        if not project_file.is_relative_to(repo_path(root, project.config).parent):
+            issues.append(f"project {identifier}: native project must belong to its manifest island")
         if config.project != project.project:
             issues.append(f"project {identifier}: config project path must match registry")
         if config.assurance_profile != project.assurance_profile:

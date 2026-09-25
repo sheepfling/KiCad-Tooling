@@ -30,6 +30,7 @@ from .doctor import doctor as inspect_environment
 from .import_inventory import scan_imports as scan_designs
 from .importing import import_project as import_design
 from .inventory import inventory
+from .layout import layout, workflow_guide
 from .models import (
     AutoCadReport,
     CadImportReport,
@@ -166,8 +167,8 @@ def create_server(
     """Bind one server to a trusted checkout; tool calls cannot change its authority."""
     declared_root = root.expanduser().absolute()
     root = declared_root.resolve(strict=True)
-    if not root.is_dir() or not repo_path(root, "catalog/projects.json").is_file():
-        raise ValueError("MCP root must be a KiCad workflow checkout with catalog/projects.json")
+    if not root.is_dir() or not repo_path(root, layout(root).discovery).is_file():
+        raise ValueError("MCP root must have the configured project discovery catalog")
     scopes = [declared_root, root]
     for path in import_roots:
         declared = path.expanduser().absolute()
@@ -287,7 +288,7 @@ def create_server(
     def document(name: DocumentName) -> str:
         with operation:
             try:
-                return repo_path(root, DOCUMENTS[name]).read_text(encoding="utf-8")
+                return repo_path(root, workflow_guide(root, DOCUMENTS[name])).read_text(encoding="utf-8")
             except (OSError, ValueError) as exc:
                 raise ResourceError(str(exc)) from exc
 

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .contracts import read_model, repo_path
 from .discovery import load_registry
+from .layout import layout
 from .models import ProductIndex, ProjectRecord, ProjectRegistry
 
 
@@ -57,7 +58,7 @@ def select_projects(
     product_members: set[str] = set()
     if selector.product_ids:
         if product_index is None:
-            raise ValueError("Product selection requires catalog/products.json")
+            raise ValueError("Product selection requires the configured product index")
         indexed: dict[str, tuple[str, ...]] = {}
         for product in product_index.products:
             if product.id.casefold() in indexed:
@@ -96,7 +97,7 @@ def resolve_project_ids(root: Path, selector: ProjectSelector) -> tuple[str, ...
     """Load the authoritative registry and return selected project identities."""
     registry = load_registry(root)
     product_index = (
-        read_model(repo_path(root, "catalog/products.json"), ProductIndex)
+        read_model(repo_path(root, layout(root).products), ProductIndex)
         if selector.product_ids else None
     )
     return tuple(project.id for project in select_projects(registry, selector, product_index))

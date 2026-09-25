@@ -12,6 +12,7 @@ from typing import Literal
 from .contracts import read_model, repo_path, update_project_manifest_inputs
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry
+from .layout import layout
 from .model_inventory import (
     _atoms,  # pyright: ignore[reportPrivateUsage]
     _children,  # pyright: ignore[reportPrivateUsage]
@@ -94,11 +95,7 @@ def _validate_shared_roots(root: Path, registry: ProjectRegistry,
             "Project shared_source_roots must match its registered library_ids catalog paths"
         )
     for name in expected:
-        parts = Path(name).parts
-        if not (
-            (len(parts) == 2 and parts[0] == "libraries")
-            or (len(parts) == 3 and parts[:2] == ("examples", "libraries"))
-        ):
+        if Path(name).parent.as_posix() not in layout(root).library_roots:
             raise ValueError(f"Shared model root is not a registered library island: {name}")
         repo_path(root, name)
 

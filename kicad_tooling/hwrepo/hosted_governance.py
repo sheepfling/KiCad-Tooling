@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ..lint_registry import reviewed_value
 from .contracts import read_model, repo_path
+from .layout import layout
 from .models import GovernanceRecord, HostedGovernanceCheck, HostedGovernanceReport, TeamPolicy
 
 REPOSITORY_NAME = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
@@ -340,7 +341,7 @@ def audit(root: Path, repository: str | None = None, record_path: str | None = N
     """Compare live default-branch controls with local policy; never mutate GitHub."""
     root = root.resolve()
     try:
-        policy = read_model(repo_path(root, "catalog/team-policy.json"), TeamPolicy)
+        policy = read_model(repo_path(root, layout(root).team_policy), TeamPolicy)
         record = (None if record_path is None else
                   read_model(repo_path(root, record_path), GovernanceRecord))
     except (OSError, ValueError) as exc:

@@ -15,12 +15,15 @@ from .hwrepo.models import ToolchainAssessment, ToolchainRecord, ToolchainsCatal
 MACOS_KICAD_CLI = Path("/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli")
 
 
-def toolchain(root: Path, identifier: str) -> ToolchainRecord:
+def toolchain(root: Path, identifier: str | None) -> ToolchainRecord:
     catalog = read_model(repo_path(root, settings(root).catalogs.toolchains), ToolchainsCatalog)
-    for record in catalog.toolchains:
-        if record.id == identifier:
-            return record
-    raise ValueError(f"Unknown toolchain {identifier!r}")
+    matching = [record for record in catalog.toolchains if identifier is None or record.id == identifier]
+    if len(matching) == 1:
+        return matching[0]
+    if identifier is not None:
+        raise ValueError(f"Need one declared toolchain {identifier!r}; found {len(matching)}")
+    available = ", ".join(record.id for record in catalog.toolchains) or "(none)"
+    raise ValueError(f"Select --toolchain <id>; available catalogued toolchains: {available}")
 
 
 def assessment(
@@ -85,13 +88,17 @@ def observed_version(cli: str) -> str | None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--toolchain", default="kicad-10.0.0")
+    parser.add_argument("--toolchain", help="Catalogued ID; may be omitted only for a single toolchain")
     parser.add_argument(
         "--cli", default="kicad-cli",
         help="KiCad CLI command or path (relative paths use the caller's cwd)",
     )
     args = parser.parse_args()
-    result = assessment(toolchain(args.root.resolve(), args.toolchain), observed_version(args.cli))
+    try:
+        record = toolchain(args.root.resolve(), args.toolchain)
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
+    result = assessment(record, observed_version(args.cli))
     print(result.model_dump_json(indent=2))
     return 0 if result.status == "PASS" else 1
 
