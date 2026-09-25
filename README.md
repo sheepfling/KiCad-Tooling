@@ -21,7 +21,7 @@ From a project checkout, install this repository into a Python 3.11 or newer
 environment. Replace the path with the location of your tooling checkout:
 
 ```sh
-python3 -m venv .venv
+python3.11 -m venv .venv
 .venv/bin/python -m pip install -e /path/to/KiCad-Tooling
 .venv/bin/kicad-team template list --format text
 .venv/bin/kicad-team verify --project <id> --format text
@@ -34,10 +34,11 @@ default is the current working directory. The inventory reports input presence;
 `--depth native` after a KiCad source change, using the exact selected local CLI
 or digest-pinned image.
 
-MCP is an optional extra. After installing `.[mcp]`, start it with an absolute
-project root:
+MCP is an optional extra. Install it from the tooling checkout, then start it
+with an absolute project root:
 
 ```sh
+.venv/bin/python -m pip install -e '/path/to/KiCad-Tooling[mcp]'
 .venv/bin/kicad-team-mcp --root /absolute/path/to/project
 ```
 
