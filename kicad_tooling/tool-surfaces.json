@@ -1,0 +1,1847 @@
+{
+  "schema_version": "2",
+  "cli": [
+    {
+      "module": "kicad_tooling.check_all",
+      "commands": [],
+      "options": [
+        "--all",
+        "--cli",
+        "--exclude-tag",
+        "--output",
+        "--product",
+        "--project",
+        "--root",
+        "--tag"
+      ]
+    },
+    {
+      "module": "kicad_tooling.check_toolchain",
+      "commands": [],
+      "options": [
+        "--cli",
+        "--root",
+        "--toolchain"
+      ]
+    },
+    {
+      "module": "kicad_tooling.ci",
+      "commands": [],
+      "options": [
+        "--cli",
+        "--electrical",
+        "--exclude-tag",
+        "--fault-probes",
+        "--format",
+        "--jobs",
+        "--kicad",
+        "--manifest",
+        "--matrix",
+        "--metrics",
+        "--ngspice",
+        "--output",
+        "--product",
+        "--project",
+        "--release",
+        "--root",
+        "--shard",
+        "--tag"
+      ]
+    },
+    {
+      "module": "kicad_tooling.ci_hosted",
+      "commands": [
+        "gate",
+        "matrix",
+        "native",
+        "plan",
+        "portable",
+        "release",
+        "source-clean",
+        "windows-smoke",
+        "windows-types"
+      ],
+      "options": [
+        "--base",
+        "--docs-changed",
+        "--event",
+        "--exclude-tag",
+        "--fault-probes",
+        "--focus",
+        "--has-projects",
+        "--head",
+        "--image",
+        "--jobs",
+        "--kicad-result",
+        "--matrix-result",
+        "--pr-head",
+        "--project",
+        "--projects",
+        "--release-result",
+        "--root",
+        "--scope",
+        "--scope-result",
+        "--shard",
+        "--unit-result",
+        "--value"
+      ]
+    },
+    {
+      "module": "kicad_tooling.ci_matrix",
+      "commands": [],
+      "options": [
+        "--exclude-tag",
+        "--product",
+        "--project",
+        "--root",
+        "--tag"
+      ]
+    },
+    {
+      "module": "kicad_tooling.contract_coach",
+      "commands": [],
+      "options": [
+        "--capture",
+        "--cli",
+        "--detail",
+        "--format",
+        "--native-summary",
+        "--output",
+        "--project-id",
+        "--root",
+        "--runner"
+      ]
+    },
+    {
+      "module": "kicad_tooling.docs_policy",
+      "commands": [],
+      "options": [
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.electrical",
+      "commands": [],
+      "options": [
+        "--capture-inputs",
+        "--cli",
+        "--detail",
+        "--format",
+        "--init",
+        "--model",
+        "--native-summary",
+        "--ngspice",
+        "--ngspice-version",
+        "--output",
+        "--project",
+        "--root",
+        "--runner"
+      ]
+    },
+    {
+      "module": "kicad_tooling.electrical_charts",
+      "commands": [],
+      "options": [
+        "--format",
+        "--output",
+        "--receipt",
+        "--root",
+        "--suite"
+      ]
+    },
+    {
+      "module": "kicad_tooling.fault_probe",
+      "commands": [],
+      "options": [
+        "--output"
+      ]
+    },
+    {
+      "module": "kicad_tooling.governance_audit",
+      "commands": [],
+      "options": [
+        "--format",
+        "--record",
+        "--repo",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.hardware",
+      "commands": [
+        "check",
+        "generate",
+        "snapshot",
+        "verify-snapshot"
+      ],
+      "options": [
+        "--exclude-tag",
+        "--format",
+        "--output",
+        "--product",
+        "--project",
+        "--release",
+        "--root",
+        "--tag"
+      ]
+    },
+    {
+      "module": "kicad_tooling.impact",
+      "commands": [],
+      "options": [
+        "--base",
+        "--exclude-tag",
+        "--format",
+        "--full",
+        "--head",
+        "--path",
+        "--root",
+        "--select-product",
+        "--select-project",
+        "--select-tag",
+        "--shard"
+      ]
+    },
+    {
+      "module": "kicad_tooling.lint_registry",
+      "commands": [],
+      "options": [
+        "--all",
+        "--exclude-tag",
+        "--output",
+        "--product",
+        "--project",
+        "--root",
+        "--tag"
+      ]
+    },
+    {
+      "module": "kicad_tooling.mcp",
+      "commands": [],
+      "options": [
+        "--allow-checks",
+        "--allow-downloads",
+        "--allow-edits",
+        "--allow-exports",
+        "--allow-supplier-submissions",
+        "--allow-writes",
+        "--import-root",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.metrics",
+      "commands": [],
+      "options": [
+        "--format",
+        "--manifest",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.native_deps",
+      "commands": [],
+      "options": [
+        "--image",
+        "--output",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.parts",
+      "commands": [],
+      "options": [
+        "--allow-supplier-submissions",
+        "--apply",
+        "--assist",
+        "--auto-models",
+        "--boards",
+        "--cad-plan",
+        "--check-step",
+        "--cli",
+        "--expected-mpn",
+        "--expected-sha256",
+        "--format",
+        "--import-cad",
+        "--init-preferences",
+        "--native-summary",
+        "--no-browser",
+        "--output",
+        "--picker",
+        "--port",
+        "--preferences",
+        "--prepare-handoff",
+        "--project",
+        "--refresh-cad",
+        "--root",
+        "--runner",
+        "--save-preferences",
+        "--selection",
+        "--source-cad",
+        "--spare-minimum",
+        "--spare-percent",
+        "--submit-handoff",
+        "--sync-models"
+      ]
+    },
+    {
+      "module": "kicad_tooling.release",
+      "commands": [
+        "check",
+        "export",
+        "package",
+        "prepare",
+        "restore",
+        "verify"
+      ],
+      "options": [
+        "--archive",
+        "--assembly-variant",
+        "--cli",
+        "--destination",
+        "--format",
+        "--json",
+        "--manifest",
+        "--output",
+        "--portable",
+        "--project",
+        "--release-class",
+        "--release-id",
+        "--root",
+        "--variant"
+      ]
+    },
+    {
+      "module": "kicad_tooling.sourcing",
+      "commands": [],
+      "options": [
+        "--format",
+        "--root",
+        "--snapshot"
+      ]
+    },
+    {
+      "module": "kicad_tooling.surface",
+      "commands": [],
+      "options": [
+        "--format",
+        "--require-live-mcp",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.template",
+      "commands": [
+        "adopt",
+        "bootstrap",
+        "convert-pcb",
+        "diagnose",
+        "doctor",
+        "import-project",
+        "init",
+        "list",
+        "new-project",
+        "preflight",
+        "rescue",
+        "scan-imports",
+        "upgrade-plan"
+      ],
+      "options": [
+        "--bom",
+        "--cli",
+        "--destination",
+        "--detail",
+        "--dry-run",
+        "--electrical",
+        "--format",
+        "--input-format",
+        "--kind",
+        "--log-dir",
+        "--native",
+        "--native-report",
+        "--ngspice",
+        "--project-id",
+        "--root",
+        "--runner",
+        "--source",
+        "--source-dir",
+        "--target-version",
+        "--toolchain"
+      ]
+    },
+    {
+      "module": "kicad_tooling.validate",
+      "commands": [],
+      "options": [
+        "--cli",
+        "--config",
+        "--output",
+        "--root"
+      ]
+    },
+    {
+      "module": "kicad_tooling.verify",
+      "commands": [],
+      "options": [
+        "--cli",
+        "--depth",
+        "--detail",
+        "--format",
+        "--ngspice",
+        "--output",
+        "--project",
+        "--root",
+        "--runner"
+      ]
+    },
+    {
+      "module": "kicad_tooling.visualize",
+      "commands": [],
+      "options": [
+        "--apply",
+        "--assembly-variant",
+        "--check-models",
+        "--cli",
+        "--detail",
+        "--format",
+        "--init-model-map",
+        "--map-models",
+        "--output",
+        "--project",
+        "--root",
+        "--runner"
+      ]
+    }
+  ],
+  "mcp": [
+    {
+      "name": "analyze_electrical",
+      "parameters": [
+        "native_summary",
+        "project_id",
+        "runner",
+        "view_id"
+      ]
+    },
+    {
+      "name": "apply_auto_cad",
+      "parameters": [
+        "expected_sha256",
+        "plan",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "apply_cad_import",
+      "parameters": [
+        "expected_sha256",
+        "plan",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "apply_model_population",
+      "parameters": [
+        "plan",
+        "project_id"
+      ]
+    },
+    {
+      "name": "apply_part_selection",
+      "parameters": [
+        "expected_sha256",
+        "project_id",
+        "selection_map",
+        "view_id"
+      ]
+    },
+    {
+      "name": "apply_project_edit",
+      "parameters": [
+        "expected_sha256",
+        "new_text",
+        "old_text",
+        "path",
+        "project_id"
+      ]
+    },
+    {
+      "name": "capture_contract",
+      "parameters": [
+        "project_id",
+        "runner"
+      ]
+    },
+    {
+      "name": "capture_electrical_inputs",
+      "parameters": [
+        "models",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "check_electrical_scope",
+      "parameters": [
+        "exclude_tags",
+        "product_ids",
+        "project_ids",
+        "tags"
+      ]
+    },
+    {
+      "name": "check_native_scope",
+      "parameters": [
+        "exclude_tags",
+        "product_ids",
+        "project_ids",
+        "tags",
+        "view_id"
+      ]
+    },
+    {
+      "name": "check_project",
+      "parameters": [
+        "depth",
+        "project_id",
+        "runner"
+      ]
+    },
+    {
+      "name": "check_release",
+      "parameters": [
+        "manifest"
+      ]
+    },
+    {
+      "name": "check_scope",
+      "parameters": [
+        "exclude_tags",
+        "jobs",
+        "product_ids",
+        "project_ids",
+        "shard",
+        "tags"
+      ]
+    },
+    {
+      "name": "check_step_alignment",
+      "parameters": [
+        "expected_mpn",
+        "project_id",
+        "refresh",
+        "source_report",
+        "supplier_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "convert_pcb",
+      "parameters": [
+        "input_format",
+        "project_id",
+        "runner",
+        "source",
+        "toolchain_id"
+      ]
+    },
+    {
+      "name": "diagnose_import",
+      "parameters": [
+        "project_id",
+        "source",
+        "toolchain_id"
+      ]
+    },
+    {
+      "name": "diagnose_project",
+      "parameters": [
+        "bom",
+        "native_report",
+        "project_id"
+      ]
+    },
+    {
+      "name": "doctor",
+      "parameters": [
+        "electrical",
+        "native",
+        "project_id",
+        "runner",
+        "toolchain_id"
+      ]
+    },
+    {
+      "name": "export_3d",
+      "parameters": [
+        "assembly_variant",
+        "project_id",
+        "runner",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_electrical_chart_suite",
+      "parameters": [
+        "suite",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_electrical_charts",
+      "parameters": [
+        "receipt",
+        "view_id"
+      ]
+    },
+    {
+      "name": "export_project",
+      "parameters": [
+        "assembly_variant",
+        "export_id",
+        "project_id",
+        "runner"
+      ]
+    },
+    {
+      "name": "generate_views",
+      "parameters": [
+        "exclude_tags",
+        "product_ids",
+        "project_ids",
+        "tags",
+        "view_id"
+      ]
+    },
+    {
+      "name": "get_project",
+      "parameters": [
+        "project_id"
+      ]
+    },
+    {
+      "name": "import_project",
+      "parameters": [
+        "project_id",
+        "source",
+        "toolchain_id"
+      ]
+    },
+    {
+      "name": "init_electrical",
+      "parameters": [
+        "ngspice_version",
+        "project_id"
+      ]
+    },
+    {
+      "name": "init_model_map",
+      "parameters": [
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "inspect_3d_models",
+      "parameters": [
+        "project_id"
+      ]
+    },
+    {
+      "name": "inspect_contract",
+      "parameters": [
+        "native_summary",
+        "project_id"
+      ]
+    },
+    {
+      "name": "inspect_sourcing_snapshot",
+      "parameters": [
+        "path"
+      ]
+    },
+    {
+      "name": "inspect_tool_surfaces",
+      "parameters": []
+    },
+    {
+      "name": "list_artifacts",
+      "parameters": [
+        "directory",
+        "limit",
+        "offset"
+      ]
+    },
+    {
+      "name": "list_projects",
+      "parameters": []
+    },
+    {
+      "name": "new_project",
+      "parameters": [
+        "kind",
+        "project_id",
+        "toolchain_id"
+      ]
+    },
+    {
+      "name": "package_release",
+      "parameters": [
+        "manifest",
+        "package_id"
+      ]
+    },
+    {
+      "name": "plan_impact",
+      "parameters": [
+        "base",
+        "exclude_tag",
+        "full",
+        "head",
+        "paths",
+        "select_product",
+        "select_project",
+        "select_tag",
+        "shard"
+      ]
+    },
+    {
+      "name": "prepare_part_picker",
+      "parameters": [
+        "native_summary",
+        "project_id",
+        "runner",
+        "view_id"
+      ]
+    },
+    {
+      "name": "prepare_parts",
+      "parameters": [
+        "boards",
+        "native_summary",
+        "preferences",
+        "project_id",
+        "runner",
+        "spare_minimum",
+        "spare_percent",
+        "view_id"
+      ]
+    },
+    {
+      "name": "prepare_review",
+      "parameters": [
+        "project_id",
+        "release_id",
+        "runner"
+      ]
+    },
+    {
+      "name": "prepare_review_scope",
+      "parameters": [
+        "portable",
+        "project_ids",
+        "release_id",
+        "runner",
+        "variants"
+      ]
+    },
+    {
+      "name": "prepare_supplier_handoff",
+      "parameters": [
+        "parts_report",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "preview_auto_cad",
+      "parameters": [
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "preview_cad_import",
+      "parameters": [
+        "project_id",
+        "source_report",
+        "view_id"
+      ]
+    },
+    {
+      "name": "preview_import",
+      "parameters": [
+        "project_id",
+        "source",
+        "toolchain_id"
+      ]
+    },
+    {
+      "name": "preview_model_population",
+      "parameters": [
+        "assignments",
+        "board_sha256",
+        "project_id"
+      ]
+    },
+    {
+      "name": "preview_model_sync",
+      "parameters": [
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "preview_part_selection",
+      "parameters": [
+        "assignments",
+        "picker_report",
+        "project_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "preview_project_edit",
+      "parameters": [
+        "expected_sha256",
+        "new_text",
+        "old_text",
+        "path",
+        "project_id"
+      ]
+    },
+    {
+      "name": "read_artifact",
+      "parameters": [
+        "limit",
+        "offset",
+        "path"
+      ]
+    },
+    {
+      "name": "read_document",
+      "parameters": [
+        "name"
+      ]
+    },
+    {
+      "name": "read_project_file",
+      "parameters": [
+        "limit",
+        "offset",
+        "path",
+        "project_id"
+      ]
+    },
+    {
+      "name": "rescue_project",
+      "parameters": [
+        "project_id"
+      ]
+    },
+    {
+      "name": "restore_package",
+      "parameters": [
+        "archive",
+        "restore_id"
+      ]
+    },
+    {
+      "name": "save_parts_preferences",
+      "parameters": [
+        "expected_sha256",
+        "preferences",
+        "project_id"
+      ]
+    },
+    {
+      "name": "scan_imports",
+      "parameters": [
+        "source_directory",
+        "toolchain_id"
+      ]
+    },
+    {
+      "name": "source_cad",
+      "parameters": [
+        "expected_mpn",
+        "project_id",
+        "refresh",
+        "supplier_id",
+        "view_id"
+      ]
+    },
+    {
+      "name": "submit_supplier_handoff",
+      "parameters": [
+        "expected_sha256",
+        "handoff"
+      ]
+    },
+    {
+      "name": "verify_package",
+      "parameters": [
+        "archive"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "project-inventory",
+      "cli": [
+        "kicad_tooling.template list"
+      ],
+      "mcp": [
+        "list_projects"
+      ],
+      "alignment": "aligned",
+      "reason": "Both return the same typed project, product, tag and toolchain inventory.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_inventory_parity"
+      ]
+    },
+    {
+      "id": "selected-project-record",
+      "cli": [],
+      "mcp": [
+        "get_project"
+      ],
+      "alignment": "mcp_only",
+      "reason": "MCP combines selected inventory, manifest and contract; CLI users read source files after inventory.",
+      "scope": "adapter",
+      "gaps": [],
+      "constraints": [],
+      "exception": "MCP combines selected inventory, manifest and contract; CLI users read source files after inventory.",
+      "parity_tests": []
+    },
+    {
+      "id": "environment-doctor",
+      "cli": [
+        "kicad_tooling.template doctor"
+      ],
+      "mcp": [
+        "doctor"
+      ],
+      "alignment": "aligned",
+      "reason": "Both inspect project and native-runner readiness.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "CLI --cli/--ngspice selects an executable; MCP uses the startup environment and fixed command."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_doctor_failure_parity",
+        "tests.test_electrical_parity.ElectricalParityTests.test_doctor_and_verification_electrical_preflight_match_cli"
+      ]
+    },
+    {
+      "id": "project-scaffold",
+      "cli": [
+        "kicad_tooling.template new-project"
+      ],
+      "mcp": [
+        "new_project"
+      ],
+      "alignment": "aligned",
+      "reason": "Both scaffold a fresh island from the selected kind and toolchain; MCP requires allow-writes.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_new_project_parity"
+      ]
+    },
+    {
+      "id": "import-design",
+      "cli": [
+        "kicad_tooling.template import-project"
+      ],
+      "mcp": [
+        "preview_import",
+        "import_project"
+      ],
+      "alignment": "aligned",
+      "reason": "Both preview or copy the same project island with source preservation.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP source paths must stay within the fixed checkout or startup import roots; CLI accepts caller-selected sources.",
+        "CLI uses --dry-run; MCP separates preview from creation and gates creation with allow-writes."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_import_preview_parity",
+        "tests.test_mcp_parity.McpParityTests.test_import_write_parity"
+      ]
+    },
+    {
+      "id": "scan-designs",
+      "cli": [
+        "kicad_tooling.template scan-imports"
+      ],
+      "mcp": [
+        "scan_imports"
+      ],
+      "alignment": "aligned",
+      "reason": "Both inspect candidate designs and report exclusions without copying.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP source directories are restricted to the checkout or configured import roots."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_import_scan_parity"
+      ]
+    },
+    {
+      "id": "diagnose-designs",
+      "cli": [
+        "kicad_tooling.template diagnose"
+      ],
+      "mcp": [
+        "diagnose_import",
+        "diagnose_project"
+      ],
+      "alignment": "aligned",
+      "reason": "Both retain diagnostic receipts for import or registered-project triage.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "CLI chooses --log-dir and --cli; MCP fixes receipt roots and executable selection.",
+        "MCP splits source import diagnosis from project diagnosis; project checks require allow-checks and artifact inputs stay inside allowed repository build paths."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_import_diagnosis_parity",
+        "tests.test_mcp_parity.McpParityTests.test_project_diagnosis_parity"
+      ]
+    },
+    {
+      "id": "rescue-project",
+      "cli": [
+        "kicad_tooling.template rescue"
+      ],
+      "mcp": [
+        "rescue_project"
+      ],
+      "alignment": "aligned",
+      "reason": "Both return an explicitly unverified selected-island repair view.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "CLI can choose --log-dir; MCP retains fresh receipts only under build/diagnostics."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_rescue_parity"
+      ]
+    },
+    {
+      "id": "repository-lifecycle",
+      "cli": [
+        "kicad_tooling.template adopt",
+        "kicad_tooling.template init",
+        "kicad_tooling.template preflight",
+        "kicad_tooling.template bootstrap",
+        "kicad_tooling.template upgrade-plan"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "Repository adoption, initialization, bootstrap and upgrade planning remain explicit operator CLI actions.",
+      "scope": "administration",
+      "gaps": [],
+      "constraints": [],
+      "exception": "Repository adoption, initialization, bootstrap and upgrade planning remain explicit operator CLI actions.",
+      "parity_tests": []
+    },
+    {
+      "id": "project-verification",
+      "cli": [
+        "kicad_tooling.verify"
+      ],
+      "mcp": [
+        "check_project"
+      ],
+      "alignment": "aligned",
+      "reason": "Both dispatch the same portable/native/electrical project verification and preserve failed results.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "CLI accepts --cli, --output and detailed text presentation; MCP uses the fixed executable and fresh diagnostic receipts."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_selected_verification_parity",
+        "tests.test_electrical_parity.ElectricalParityTests.test_doctor_and_verification_electrical_preflight_match_cli"
+      ]
+    },
+    {
+      "id": "scope-checks",
+      "cli": [
+        "kicad_tooling.ci"
+      ],
+      "mcp": [
+        "check_scope"
+      ],
+      "alignment": "aligned",
+      "reason": "CLI and MCP run the same portable project/product/tag selection, optional project shards and bounded project-test concurrency through static_pipeline.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP uses a fresh fixed receipt directory; CLI can choose output and text formatting.",
+        "A shard is a partial focused lane, never full acceptance or release evidence."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_scope_check_parity"
+      ]
+    },
+    {
+      "id": "contract-coach",
+      "cli": [
+        "kicad_tooling.contract_coach"
+      ],
+      "mcp": [
+        "inspect_contract",
+        "capture_contract"
+      ],
+      "alignment": "aligned",
+      "reason": "Both inspect source-bound native evidence and can capture an unreviewed contract candidate.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "CLI selects --cli and --output; MCP fixes the command and capture directory, and existing evidence must be an allowed repository artifact."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_contract_inspection_parity",
+        "tests.test_source_parity.SourceParityTests.test_contract_capture_parity"
+      ]
+    },
+    {
+      "id": "model-coverage",
+      "cli": [
+        "kicad_tooling.visualize"
+      ],
+      "mcp": [
+        "inspect_3d_models"
+      ],
+      "alignment": "aligned",
+      "reason": "CLI --check-models and MCP inspect_3d_models report the same placed-footprint coverage and candidate assets.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_model_coverage_parity"
+      ]
+    },
+    {
+      "id": "model-population",
+      "cli": [
+        "kicad_tooling.visualize"
+      ],
+      "mcp": [
+        "init_model_map",
+        "preview_model_population",
+        "apply_model_population"
+      ],
+      "alignment": "aligned",
+      "reason": "Both preview explicit reviewed assignments and apply a source-bound population plan.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP writes draft maps and plans to fresh ignored receipts; assignments and source hashes remain explicit.",
+        "MCP apply requires a retained reviewed plan plus unchanged board, manifest and model hashes; CLI consumes an explicitly reviewed map."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_planning.McpPlanningTests.test_model_map_cli_and_mcp_match_draft_content_and_authority",
+        "tests.test_source_parity.SourceParityTests.test_model_population_preview_apply_parity"
+      ]
+    },
+    {
+      "id": "three-d-export",
+      "cli": [
+        "kicad_tooling.visualize"
+      ],
+      "mcp": [
+        "export_3d"
+      ],
+      "alignment": "aligned",
+      "reason": "Both export native 3D views and models using the selected exact runner. Both accept declared KiCad assembly variants; fabrication exports retain configured supplier formats and review artifacts.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "CLI accepts --cli and --output; MCP selects a fresh directory by view_id and requires allow-checks plus allow-exports."
+      ],
+      "parity_tests": [
+        "tests.test_artifact_parity.ArtifactParityTests.test_3d_export_parity",
+        "tests.test_artifact_parity.ArtifactParityTests.test_assembly_variant_export_and_3d_parity"
+      ]
+    },
+    {
+      "id": "parts-preparation",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "prepare_parts"
+      ],
+      "alignment": "aligned",
+      "reason": "Both use source-bound native evidence, board/spare preferences and the same purchasing service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "CLI accepts --cli and a fresh --output path; MCP fixes the command and writes build/parts/<view_id>.",
+        "MCP preference paths are restricted to selected-project docs or allowed build artifacts; native_summary must be an allowed build artifact.",
+        "MCP requires allow-exports; fresh native capture additionally requires allow-checks, while retained native evidence can be reused without executing checks."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_parts_quantities_and_native_failure_parity",
+        "tests.test_mcp_parity.McpParityTests.test_parts_stale_evidence_parity"
+      ]
+    },
+    {
+      "id": "purchasing-preferences",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "save_parts_preferences"
+      ],
+      "alignment": "aligned",
+      "reason": "Both create or update the same strict purchasing preferences through a shared guarded writer.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires allow-edits and receives a typed object; CLI --save-preferences reads --preferences plus quantity overrides. Both require the current digest for updates."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_parts_preferences_parity"
+      ]
+    },
+    {
+      "id": "review-views",
+      "cli": [
+        "kicad_tooling.hardware generate"
+      ],
+      "mcp": [
+        "generate_views"
+      ],
+      "alignment": "aligned",
+      "reason": "Both generate catalog-derived product BOMs, harness schedules and review views.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP always creates a fresh build/views/<view_id>; CLI also supports its existing configured output locations. Both accept the same project/product/tag union and exclusions."
+      ],
+      "parity_tests": [
+        "tests.test_generation_parity.GenerationParityTests.test_cli_and_mcp_generate_identical_scoped_files"
+      ]
+    },
+    {
+      "id": "native-release-export",
+      "cli": [
+        "kicad_tooling.release export"
+      ],
+      "mcp": [
+        "export_project"
+      ],
+      "alignment": "aligned",
+      "reason": "Both export source-bound native fabrication and assembly evidence. Both accept declared KiCad assembly variants; fabrication exports retain configured supplier formats and review artifacts.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "Both export one project. MCP selects a fixed executable or pinned container, a fresh output ID and requires clean source plus checks/exports permissions."
+      ],
+      "parity_tests": [
+        "tests.test_artifact_parity.ArtifactParityTests.test_native_fabrication_export_parity",
+        "tests.test_artifact_parity.ArtifactParityTests.test_assembly_variant_export_and_3d_parity"
+      ]
+    },
+    {
+      "id": "engineering-review",
+      "cli": [
+        "kicad_tooling.release prepare"
+      ],
+      "mcp": [
+        "prepare_review",
+        "prepare_review_scope"
+      ],
+      "alignment": "aligned",
+      "reason": "Both assemble a retained review manifest and evidence.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP exposes engineering_review only; manufacture/prototype release authority is an explicit administrative exception.",
+        "MCP uses fixed runners and fresh ignored receipts; both accept multiple projects, product variants and source-bound portable evidence."
+      ],
+      "parity_tests": [
+        "tests.test_review_scope_parity.ReviewScopeParityTests.test_actual_cli_and_mcp_prepare_same_project_variant_scope",
+        "tests.test_review_scope_parity.ReviewScopeParityTests.test_saved_portable_and_valid_native_evidence_support_same_package_lifecycle"
+      ]
+    },
+    {
+      "id": "release-readiness",
+      "cli": [
+        "kicad_tooling.release check"
+      ],
+      "mcp": [
+        "check_release"
+      ],
+      "alignment": "aligned",
+      "reason": "Both check the same release manifest readiness contract.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP manifest inputs must be allowed repository build artifacts; CLI accepts its explicit manifest path."
+      ],
+      "parity_tests": [
+        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity"
+      ]
+    },
+    {
+      "id": "release-packaging",
+      "cli": [
+        "kicad_tooling.release package"
+      ],
+      "mcp": [
+        "package_release"
+      ],
+      "alignment": "aligned",
+      "reason": "Both package retained release evidence with the shared archive service.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP fixes output to a fresh build/packages/<package_id>.zip and requires allow-exports; CLI chooses the archive/output path."
+      ],
+      "parity_tests": [
+        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity"
+      ]
+    },
+    {
+      "id": "package-verification",
+      "cli": [
+        "kicad_tooling.release verify"
+      ],
+      "mcp": [
+        "verify_package"
+      ],
+      "alignment": "aligned",
+      "reason": "Both verify package contents, including a temporary restore when required.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP archive inputs must be allowed repository build artifacts; CLI accepts its explicit archive path."
+      ],
+      "parity_tests": [
+        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity"
+      ]
+    },
+    {
+      "id": "package-restore",
+      "cli": [
+        "kicad_tooling.release restore"
+      ],
+      "mcp": [
+        "restore_package"
+      ],
+      "alignment": "aligned",
+      "reason": "Both restore the same retained package format without granting manufacturing approval.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP fixes destination to fresh build/restores/<restore_id> and requires allow-exports; CLI chooses destination."
+      ],
+      "parity_tests": [
+        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity"
+      ]
+    },
+    {
+      "id": "artifact-browsing",
+      "cli": [],
+      "mcp": [
+        "list_artifacts",
+        "read_artifact"
+      ],
+      "alignment": "mcp_only",
+      "reason": "MCP offers bounded typed browsing of allowed build artifacts; shell/CLI users use filesystem kicad_tooling.",
+      "scope": "adapter",
+      "gaps": [],
+      "constraints": [],
+      "exception": "MCP offers bounded typed browsing of allowed build artifacts; shell/CLI users use filesystem kicad_tooling.",
+      "parity_tests": []
+    },
+    {
+      "id": "source-review-and-edit",
+      "cli": [],
+      "mcp": [
+        "read_project_file",
+        "preview_project_edit",
+        "apply_project_edit"
+      ],
+      "alignment": "mcp_only",
+      "reason": "MCP offers bounded source reads and explicit hash-checked text edits; CLI users edit authoritative files with their editor.",
+      "scope": "adapter",
+      "gaps": [],
+      "constraints": [],
+      "exception": "MCP offers bounded source reads and explicit hash-checked text edits; CLI users edit authoritative files with their editor.",
+      "parity_tests": []
+    },
+    {
+      "id": "workflow-guides",
+      "cli": [],
+      "mcp": [
+        "read_document"
+      ],
+      "alignment": "mcp_only",
+      "reason": "MCP reads named repository guides and matching resources; CLI users read Markdown directly.",
+      "scope": "adapter",
+      "gaps": [],
+      "constraints": [],
+      "exception": "MCP reads named repository guides and matching resources; CLI users read Markdown directly.",
+      "parity_tests": []
+    },
+    {
+      "id": "surface-inventory",
+      "cli": [
+        "kicad_tooling.surface"
+      ],
+      "mcp": [
+        "inspect_tool_surfaces"
+      ],
+      "alignment": "aligned",
+      "reason": "Both return this same checked capability inventory.",
+      "scope": "adapter",
+      "gaps": [],
+      "constraints": [
+        "CLI --require-live-mcp can require the SDK; MCP always has the SDK available and exposes no mode argument."
+      ],
+      "exception": "Both return this same checked capability inventory.",
+      "parity_tests": []
+    },
+    {
+      "id": "mcp-launcher",
+      "cli": [
+        "kicad_tooling.mcp"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "The host starts stdio transport and chooses startup authority; tools cannot restart or widen their own permissions.",
+      "scope": "adapter",
+      "gaps": [],
+      "constraints": [],
+      "exception": "The host starts stdio transport and chooses startup authority; tools cannot restart or widen their own permissions.",
+      "parity_tests": []
+    },
+    {
+      "id": "low-level-policy-and-native-checks",
+      "cli": [
+        "kicad_tooling.check_toolchain",
+        "kicad_tooling.docs_policy",
+        "kicad_tooling.hardware check",
+        "kicad_tooling.lint_registry",
+        "kicad_tooling.validate"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "Dedicated lower-level schema/policy commands remain operator diagnostics; their board-level checks also run through shared core workflows.",
+      "scope": "administration",
+      "gaps": [],
+      "constraints": [],
+      "exception": "Individual policy/debug entry points are administrative diagnostics; grouped native validation has a core MCP counterpart.",
+      "parity_tests": []
+    },
+    {
+      "id": "ci-planning-and-tooling",
+      "cli": [
+        "kicad_tooling.ci_matrix",
+        "kicad_tooling.fault_probe",
+        "kicad_tooling.native_deps"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "Hosted matrix serialization, disposable fault probes and dependency preparation are CI infrastructure operations.",
+      "scope": "administration",
+      "gaps": [],
+      "constraints": [],
+      "exception": "These modes prepare/test CI infrastructure; board change-impact planning and grouped native checks have core MCP counterparts.",
+      "parity_tests": []
+    },
+    {
+      "id": "catalog-snapshots",
+      "cli": [
+        "kicad_tooling.hardware snapshot",
+        "kicad_tooling.hardware verify-snapshot"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "Review-only hardware snapshots use a separate CLI format from MCP engineering-review release packages.",
+      "scope": "administration",
+      "gaps": [],
+      "constraints": [],
+      "exception": "Review-only hardware snapshots use a separate CLI format from MCP engineering-review release packages.",
+      "parity_tests": []
+    },
+    {
+      "id": "repository-audits",
+      "cli": [
+        "kicad_tooling.governance_audit",
+        "kicad_tooling.metrics"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "Hosted governance and repository-wide policy metrics are administrative audit workflows.",
+      "scope": "administration",
+      "gaps": [],
+      "constraints": [],
+      "exception": "Account access/governance inspection and aggregate policy metrics remain explicit operator CLI actions.",
+      "parity_tests": []
+    },
+    {
+      "id": "native-scope-checks",
+      "cli": [
+        "kicad_tooling.ci",
+        "kicad_tooling.check_all"
+      ],
+      "mcp": [
+        "check_native_scope"
+      ],
+      "alignment": "aligned",
+      "reason": "Both run check_all for the selected native scope and preserve per-project failures.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "This grouped lane uses fixed local kicad-cli, like kicad_tooling.ci --kicad. check_project additionally supports auto/container selection."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_native_scope_failure_parity"
+      ]
+    },
+    {
+      "id": "change-impact",
+      "cli": [
+        "kicad_tooling.impact"
+      ],
+      "mcp": [
+        "plan_impact"
+      ],
+      "alignment": "aligned",
+      "reason": "CLI and MCP plan the same changed paths, Git revisions, explicit full scope, manual project/product/tag selection and partial shards.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP uses its fixed checkout and validates Git revisions before invoking a read-only diff."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_planning.McpPlanningTests.test_impact_cli_and_mcp_match_paths_full_and_manual_modes",
+        "tests.test_mcp_planning.McpPlanningTests.test_impact_cli_and_mcp_match_git_refs_and_block_option_injection"
+      ]
+    },
+    {
+      "id": "supplier-snapshots",
+      "cli": [
+        "kicad_tooling.sourcing"
+      ],
+      "mcp": [
+        "inspect_sourcing_snapshot"
+      ],
+      "alignment": "aligned",
+      "reason": "Both validate the same manually captured supplier snapshot without live sourcing or purchasing authority.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP snapshot files must be bounded build artifacts. Neither surface updates offers or places orders."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_planning.McpPlanningTests.test_sourcing_cli_and_mcp_match_artifact_and_semantic_failures"
+      ]
+    },
+    {
+      "id": "production-release-administration",
+      "cli": [
+        "kicad_tooling.release prepare"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "Release preparation outside engineering review follows explicit production governance.",
+      "scope": "administration",
+      "gaps": [],
+      "constraints": [],
+      "exception": "Prototype/production classes remain operator actions with production-profile prerequisites; MCP never creates manufacturing approval.",
+      "parity_tests": []
+    },
+    {
+      "id": "foreign-board-conversion",
+      "cli": [
+        "kicad_tooling.template convert-pcb"
+      ],
+      "mcp": [
+        "convert_pcb"
+      ],
+      "alignment": "aligned",
+      "reason": "Both retain guarded native conversion evidence and a separate import preview.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires checks plus exports and reads only checkout/startup import roots; fixed native executables and generated receipt locations."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_conversion.McpConversionTests.test_all_formats_cli_and_mcp_match_without_registering_source",
+        "tests.test_mcp_conversion.McpConversionTests.test_conversion_failure_receipts_match_cli"
+      ]
+    },
+    {
+      "id": "electrical-setup",
+      "cli": [
+        "kicad_tooling.electrical"
+      ],
+      "mcp": [
+        "init_electrical"
+      ],
+      "alignment": "aligned",
+      "reason": "Both create pending electrical requirements without replacing reviewed inputs.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires edits and an explicit project; ngspice version remains UNREVIEWED unless supplied by the engineer."
+      ],
+      "parity_tests": [
+        "tests.test_electrical_parity.ElectricalParityTests.test_init_and_capture_match_cli_without_approving_requirements"
+      ]
+    },
+    {
+      "id": "electrical-input-capture",
+      "cli": [
+        "kicad_tooling.electrical"
+      ],
+      "mcp": [
+        "capture_electrical_inputs"
+      ],
+      "alignment": "aligned",
+      "reason": "Both capture source and model hashes as UNREVIEWED evidence.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports, bounded project/model paths and a fresh receipt ID."
+      ],
+      "parity_tests": [
+        "tests.test_electrical_parity.ElectricalParityTests.test_init_and_capture_match_cli_without_approving_requirements"
+      ]
+    },
+    {
+      "id": "electrical-analysis",
+      "cli": [
+        "kicad_tooling.electrical"
+      ],
+      "mcp": [
+        "analyze_electrical"
+      ],
+      "alignment": "aligned",
+      "reason": "Both run reviewed grounding, power and frequency checks using fresh or saved native evidence.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires checks, fixed KiCad/ngspice executables and bounded saved artifacts; native runner choice matches the CLI."
+      ],
+      "parity_tests": [
+        "tests.test_electrical_parity.ElectricalParityTests.test_saved_native_analysis_is_root_relative_and_preserves_native_failure",
+        "tests.test_electrical_parity.ElectricalParityTests.test_external_fixed_simulator_success_and_wrong_version_match_cli"
+      ]
+    },
+    {
+      "id": "electrical-scope-checks",
+      "cli": [
+        "kicad_tooling.ci"
+      ],
+      "mcp": [
+        "check_electrical_scope"
+      ],
+      "alignment": "aligned",
+      "reason": "Both use the same project/product/tag union and exclusion selectors and preserve per-project outcomes.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires checks and fixed executables; CLI kicad_tooling.ci --electrical provides explicit executable overrides."
+      ],
+      "parity_tests": [
+        "tests.test_electrical_parity.ElectricalParityTests.test_scope_selection_preserves_mixed_outcomes_like_ci"
+      ]
+    },
+    {
+      "id": "reviewed-part-selection",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "prepare_part_picker",
+        "preview_part_selection",
+        "apply_part_selection",
+        "preview_model_sync"
+      ],
+      "alignment": "aligned",
+      "reason": "Both expose catalog choices, preview locked source edits, apply reviewed selections and resume model population after KiCad updates.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP previews require exports, fresh native capture requires checks, and applying requires edits plus the reviewed artifact digest. The CLI can use downloaded selection JSON."
+      ],
+      "parity_tests": [
+        "tests.test_parts_extensions.PartsExtensionsTests.test_picker_selection_and_sync_cli_protocol_parity"
+      ]
+    },
+    {
+      "id": "paired-cad-import",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "preview_auto_cad",
+        "apply_auto_cad"
+      ],
+      "alignment": "aligned",
+      "reason": "Both preview and apply paired footprint/model imports using the same provenance and source guards.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP previews require exports, applications require edits, and external official CAD downloads additionally require allow-downloads. Repository, installed and verified cached assets remain usable without network."
+      ],
+      "parity_tests": [
+        "tests.test_parts_extensions.PartsExtensionsTests.test_auto_cad_cli_protocol_parity"
+      ]
+    },
+    {
+      "id": "supplier-review-handoff",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "prepare_supplier_handoff",
+        "submit_supplier_handoff"
+      ],
+      "alignment": "aligned",
+      "reason": "Both prepare the exact source-bound supplier payload and require an explicit reviewed digest before one external submission attempt.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "Preparation is local under exports. Submission requires a separate supplier-submissions host flag; CLI also needs its explicit submit flag. Neither surface places an order or retries uncertain delivery."
+      ],
+      "parity_tests": [
+        "tests.test_parts_extensions.PartsExtensionsTests.test_supplier_prepare_and_submit_cli_protocol_parity"
+      ]
+    },
+    {
+      "id": "electrical-chart-exports",
+      "cli": [
+        "kicad_tooling.electrical_charts"
+      ],
+      "mcp": [
+        "export_electrical_charts",
+        "export_electrical_chart_suite"
+      ],
+      "alignment": "aligned",
+      "reason": "Both export charts and full precision CSV from retained, hashed individual or suite electrical analysis receipts.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports and checkout build receipts; the CLI accepts an explicit fresh output path. Matplotlib is an optional pinned charts dependency."
+      ],
+      "parity_tests": [
+        "tests.test_new_workflow_parity.NewWorkflowParityTests.test_saved_electrical_charts_and_suite_match_cli"
+      ]
+    },
+    {
+      "id": "exact-cad-sourcing",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "source_cad"
+      ],
+      "alignment": "aligned",
+      "reason": "Both check an exact LCSC identity, retain a frozen source bundle and preview a project-local CAD import.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports; live community-provider downloads also require allow-downloads. Verified cached assets remain usable without network."
+      ],
+      "parity_tests": [
+        "tests.test_new_workflow_parity.NewWorkflowParityTests.test_exact_cad_lookup_preview_and_apply_match_cli",
+        "tests.test_new_workflow_parity.NewWorkflowParityTests.test_network_permission_and_step_review_match_cli"
+      ]
+    },
+    {
+      "id": "sourced-cad-import",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "preview_cad_import",
+        "apply_cad_import"
+      ],
+      "alignment": "aligned",
+      "reason": "Both preview and apply source-bound project-local symbol, footprint and paired WRL imports from exact CAD bundles.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires exports for preview, edits and an exact reviewed plan digest for apply; paths are confined to this checkout."
+      ],
+      "parity_tests": [
+        "tests.test_new_workflow_parity.NewWorkflowParityTests.test_exact_cad_lookup_preview_and_apply_match_cli"
+      ]
+    },
+    {
+      "id": "cad-step-alignment",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [
+        "check_step_alignment"
+      ],
+      "alignment": "aligned",
+      "reason": "Both run pinned KiCad WRL and STEP comparison views for an exact sourced part and preserve REVIEW instead of physical-fit approval.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP requires checks and exports; a fresh provider lookup also requires allow-downloads unless the exact source is cached. Saved source reports can be reused."
+      ],
+      "parity_tests": [
+        "tests.test_new_workflow_parity.NewWorkflowParityTests.test_network_permission_and_step_review_match_cli"
+      ]
+    },
+    {
+      "id": "parts-browser-assistant",
+      "cli": [
+        "kicad_tooling.parts"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "The local browser assistant presents the same reviewed parts services interactively.",
+      "scope": "adapter",
+      "gaps": [],
+      "constraints": [],
+      "exception": "CLI --assist starts a long-running browser session. MCP exposes its bounded underlying operations and never starts a second server that could bypass MCP startup capabilities.",
+      "parity_tests": []
+    },
+    {
+      "id": "hosted-ci-orchestration",
+      "cli": [
+        "kicad_tooling.ci_hosted gate",
+        "kicad_tooling.ci_hosted matrix",
+        "kicad_tooling.ci_hosted native",
+        "kicad_tooling.ci_hosted plan",
+        "kicad_tooling.ci_hosted portable",
+        "kicad_tooling.ci_hosted release",
+        "kicad_tooling.ci_hosted source-clean",
+        "kicad_tooling.ci_hosted windows-smoke",
+        "kicad_tooling.ci_hosted windows-types"
+      ],
+      "mcp": [],
+      "alignment": "cli_only",
+      "reason": "Hosted runner orchestration belongs to Actions and the operator CLI; project selection and portable checks remain available through plan_impact and check_scope in MCP.",
+      "scope": "administration",
+      "gaps": [],
+      "constraints": [],
+      "exception": "MCP does not schedule GitHub jobs, pull Docker images or run the release rehearsal. Its shared planning and check services expose the project, tag and shard decisions.",
+      "parity_tests": []
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kicad-team-tooling"
+version = "0.1.0.dev0"
+description = "CLI and MCP verification workflows for KiCad team projects"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic==2.13.5",
+  "snakemd==2.4.1",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp==2.2.0"]
+charts = ["matplotlib==3.11.2"]
+cad = ["easyeda2kicad==1.0.1"]
+dev = [
+  "mcp==2.2.0",
+  "matplotlib==3.11.2",
+  "pyright==1.1.411",
+  "ruff==0.16.1",
+  "snakemd-stubs==2.4.1.0",
+  "rumdl==0.2.77",
+]
+
+[project.scripts]
+kicad-team = "kicad_tooling.__main__:main"
+kicad-team-mcp = "kicad_tooling.mcp:main"
+
+[tool.setuptools.packages.find]
+include = ["kicad_tooling", "kicad_tooling.*"]
+
+[tool.setuptools.package-data]
+"kicad_tooling" = ["py.typed", "tool-surfaces.json"]
+"kicad_tooling.hwrepo" = ["kicad_library_license.txt"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+include = ["kicad_tooling"]
+
+[tool.rumdl]
+line-length = 100
+extend-enable = ["MD029", "MD060"]
+
+[tool.rumdl.MD013]
+line-length = 100
+code-blocks = false
+tables = false
+reflow = true
+
+[tool.rumdl.MD029]
+style = "ordered"
+
+[tool.rumdl.MD060]
+style = "aligned"
+
+[tool.mdrepo]
+include = ["*.md", "**/*.md"]
+
+[tool.mdrepo.links]
+check-missing-targets = false
+check-case = true
+
+[tool.mdrepo.orphans]
+enabled = true
+roots = ["README.md"]
