@@ -90,6 +90,7 @@ def verify_portable(root: Path, reference: EvidenceFile, source: SourceState) ->
                 *report.project_tests.commands.values())
     if report.status != "PASS" or any(gate.status != "PASS" for gate in gates) or any(
         command.returncode != 0 or command.error is not None for command in commands
+        if command is not None
     ):
         raise ValueError("Portable report contains failed or missing checks")
     if any((report.registry.issues, report.repository.issues, report.documentation.issues,

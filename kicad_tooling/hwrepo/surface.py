@@ -286,8 +286,8 @@ def _test_exists(root: Path, reference: str) -> bool:
     )
 
 
-def parity_issues(root: Path, mappings: tuple[ToolSurfaceMapping, ...]) -> tuple[PolicyIssue, ...]:
-    """Fail missing core capabilities/test references; retain explicit operator exceptions."""
+def parity_issues(root: Path | None, mappings: tuple[ToolSurfaceMapping, ...]) -> tuple[PolicyIssue, ...]:
+    """Check core policy, and resolve test references when package source is available."""
     issues: list[PolicyIssue] = []
     by_id = {mapping.id: mapping for mapping in mappings}
     for identifier in sorted(CORE_WORKFLOWS):
@@ -311,7 +311,7 @@ def parity_issues(root: Path, mappings: tuple[ToolSurfaceMapping, ...]) -> tuple
             issues.append(PolicyIssue(code="missing_parity_tests", location=location,
                 message="Core parity requires referenced behavioral regression tests"))
         for reference in mapping.parity_tests:
-            if (root / "tests/test_mcp_parity.py").is_file() and not _test_exists(root, reference):
+            if root is not None and not _test_exists(root, reference):
                 issues.append(PolicyIssue(code="missing_parity_test", location=location,
                     message=f"Behavioral test does not exist: {reference}"))
     return tuple(issues)
@@ -320,8 +320,9 @@ def parity_issues(root: Path, mappings: tuple[ToolSurfaceMapping, ...]) -> tuple
 def inspect_tool_surfaces(root: Path, *, require_live_mcp: bool = False) -> ToolSurfaceReport:
     """Check declared coverage and compare the optional live full MCP registration.
 
-    PASS requires declaration coverage and the core parity policy. This inspection
-    verifies behavioral test references; it never runs those tests or proves their result.
+    PASS requires declaration coverage and the core parity policy. Developer source
+    inspections also resolve behavioral test references. Installed wheels report those
+    sources unavailable; neither mode executes tests or proves their result.
     """
     root = root.resolve()
     issues: list[PolicyIssue] = []
@@ -329,12 +330,19 @@ def inspect_tool_surfaces(root: Path, *, require_live_mcp: bool = False) -> Tool
     mcp: tuple[ToolMcpSnapshot, ...] = ()
     catalog: ToolSurfacesCatalog | None = None
     verification: Literal["LIVE", "STATIC_ONLY", "UNAVAILABLE"] = "STATIC_ONLY"
+    # The developer checkout owns behavioral tests. Installed wheels deliberately
+    # exclude them; a consuming project's tests cannot satisfy package parity claims.
+    test_root = SOURCE_ROOT if (SOURCE_ROOT / "pyproject.toml").is_file() else None
     notes = ["Core parity is required; administration and adapter exceptions stay explicit.",
-             ("Behavioral tests were NOT_RUN here; the acceptance checkout executes them. "
-             "This inspection checks declarations and test references, not behavior or approval.")]
-    if not (SOURCE_ROOT / "tests/test_mcp_parity.py").is_file():
-        notes.append("Behavioral parity test sources are outside this package; "
-                     "run them in the populated acceptance checkout before a release.")
+             ("Behavioral tests were NOT_RUN here. This inspection checks declarations "
+              "and core parity policy, not behavior or approval.")]
+    if test_root is None:
+        notes.append("Behavioral test sources are NOT_AVAILABLE in this installed package; "
+                     "test references were not resolved. Run the tooling source checkout's "
+                     "acceptance suite with its external project fixture before a release.")
+    else:
+        notes.append("Behavioral test references are resolved in the tooling source checkout; "
+                     "tests in the consuming project do not supply package parity evidence.")
     try:
         catalog = read_model(PACKAGE_ROOT / "tool-surfaces.json", ToolSurfacesCatalog)
         cli = discover_cli(SOURCE_ROOT)
@@ -369,7 +377,7 @@ def inspect_tool_surfaces(root: Path, *, require_live_mcp: bool = False) -> Tool
                 code="live_mcp_unavailable", location="kicad_tooling/hwrepo/mcp_server.py", message=str(exc),
             ))
     coverage_status: Literal["PASS", "FAIL"] = "FAIL" if issues else "PASS"
-    parity = parity_issues(SOURCE_ROOT, () if catalog is None else catalog.capabilities)
+    parity = parity_issues(test_root, () if catalog is None else catalog.capabilities)
     return ToolSurfaceReport(
         status="FAIL" if issues or parity else "PASS", coverage_status=coverage_status,
         parity_status="FAIL" if parity else "PASS", mcp_verification=verification,
@@ -382,7 +390,7 @@ def format_surfaces(report: ToolSurfaceReport) -> str:
     """Show every classification and its concrete lead/lag explanation."""
     lines = [(f"Tool surfaces: {report.status}; coverage: {report.coverage_status}; "
              f"core parity policy: {report.parity_status}; MCP: {report.mcp_verification}"),
-             f"Behavior tests: {report.behavior_verification} (run kicad_tooling.ci)"]
+             f"Behavior tests: {report.behavior_verification} (run the tooling acceptance suite)"]
     for capability in report.capabilities:
         alignment = capability.alignment.replace("_", "-")
         lines.append(f"{capability.scope}/{alignment}: {capability.id} — {capability.reason}")

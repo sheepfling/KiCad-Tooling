@@ -15,6 +15,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+project = [
+  "rumdl==0.2.77",
+  "mdrepo @ git+https://github.com/sheepfling/mdrepo.git@78476e0343f6ae3799606c17024d5aa790c6d688",
+]
 mcp = ["mcp==2.2.0"]
 charts = ["matplotlib==3.11.2"]
 cad = ["easyeda2kicad==1.0.1"]
@@ -28,6 +32,7 @@ dev = [
   "ruff==0.16.1",
   "snakemd-stubs==2.4.1.0",
   "rumdl==0.2.77",
+  "mdrepo @ git+https://github.com/sheepfling/mdrepo.git@78476e0343f6ae3799606c17024d5aa790c6d688",
 ]
 
 [project.scripts]
@@ -40,7 +45,7 @@ kicad-team-mcp = "kicad_tooling.mcp:main"
 include = ["kicad_tooling", "kicad_tooling.*"]
 
 [tool.setuptools.package-data]
-"kicad_tooling" = ["py.typed", "tool-surfaces.json"]
+"kicad_tooling" = ["py.typed", "tool-surfaces.json", "fixtures/*.xml", "fixtures/*.txt"]
 "kicad_tooling.hwrepo" = ["kicad_library_license.txt"]
 
 [tool.ruff]

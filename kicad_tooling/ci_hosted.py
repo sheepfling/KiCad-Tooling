@@ -24,6 +24,7 @@ from .hwrepo.models import (
     ProjectKind,
     ProjectManifest,
 )
+from .hwrepo.repository import ephemeral, generated_artifact
 from .impact import build_plan
 
 
@@ -200,7 +201,7 @@ def portable_lane(root: Path, scope: str, projects: tuple[str, ...],
 def windows_types(root: Path, log: HostedLog) -> None:
     log.run("windows-types", (sys.executable, "-B", "-m", "pyright", "--pythonpath",
                               sys.executable, "--pythonplatform", "Windows",
-                              "--pythonversion", "3.11", "tools"), cwd=root,
+                              "--pythonversion", "3.11", str(Path(__file__).resolve().parent)), cwd=root,
             stdout_path=root / "build/portable/windows-types.txt")
 
 
@@ -208,16 +209,9 @@ def windows_smoke(root: Path, log: HostedLog) -> None:
     log.run("windows-inventory", (sys.executable, "-B", "-m", "kicad_tooling.template", "list",
                                   "--format", "json"), cwd=root,
             stdout_path=root / "build/portable/windows-inventory.json")
-    suites = (
-        "tests.test_ci_driver.CiDriverTests.test_module_entrypoint_resolves_the_package_without_path_injection",
-        "tests.test_product.ProductTests.test_windows_posix_traversal_and_case_paths",
-        "tests.test_contract_coach.ContractCoachTests.test_windows_container_resolves_docker_command_extension",
-        "tests.test_verify.VerifyTests.test_windows_container_command_does_not_request_posix_user",
-        "tests.test_diagnostics.DiagnosticTests.test_next_command_quotes_powershell_apostrophes",
-    )
-    log.run("windows-tests", (sys.executable, "-B", "-m", "unittest", "-v", *suites),
-            cwd=root, stdout_path=root / "build/portable/windows-tests.log",
-            merge_stderr=True)
+    log.run("windows-policy", (sys.executable, "-B", "-m", "kicad_tooling.ci",
+                               "--format", "json"), cwd=root,
+            stdout_path=root / "build/portable/windows-policy.json")
 
 
 def checked_source(root: Path, log: HostedLog) -> None:
@@ -262,15 +256,78 @@ def native_lane(root: Path, *, project: str, image: str, pr_head: str,
         checked_source(root, log)
 
 
+def release_fixture(root: Path, target: Path) -> None:
+    """Restore the public examples in a disposable default-layout repository.
+
+    Live catalogs, design roots and adopter configuration are deliberately absent:
+    release rehearsal exercises the retained public template fixtures, even after
+    adoption has replaced the live catalog or moved private designs elsewhere.
+    """
+    root = root.resolve()
+    if target.exists():
+        raise ValueError(f"Release rehearsal output already exists: {target}")
+    directories = ("docs", "templates", "examples", ".github")
+    files = (
+        "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md",
+        ".gitignore", ".gitattributes", "pyproject.toml", "requirements-tooling.txt",
+        "catalog/documentation-policy.json",
+    )
+    references = (
+        "examples/catalog/projects.json", "examples/catalog/products.json",
+        "examples/catalog/parts.json", "examples/catalog/interfaces.json",
+        "examples/catalog/libraries.json", "examples/catalog/toolchains.json",
+        "examples/catalog/team-policy.json", "examples/catalog/release-policies.json",
+        "examples/projects/arduino-uno-status-led/project.json",
+    )
+    missing = [name for name in (*directories, *files, *references)
+               if not (root / name).exists()]
+    if missing:
+        raise ValueError(
+            "Release rehearsal requires retained public template fixtures; restore these "
+            f"paths from the matching template version: {', '.join(missing)}"
+        )
+
+    def ignore_local(directory: str, names: list[str]) -> set[str]:
+        ignored = {name for name in names if name == ".git" or ephemeral(name)
+                   or generated_artifact((Path(directory) / name).relative_to(root).as_posix())}
+        for name in set(names) - ignored:
+            path = Path(directory) / name
+            if path.is_symlink():
+                raise ValueError(f"Public release fixture must not follow a symlink: {path}")
+        return ignored
+
+    # Validate before creating output, including links in directory ancestors.
+    for name in (*directories, *files):
+        source = root / name
+        if any((root / part).is_symlink() for part in (Path(name), *Path(name).parents)):
+            raise ValueError(f"Public release fixture must not follow a symlink: {source}")
+        if source.is_dir():
+            for directory, children, filenames in os.walk(source):
+                ignored = ignore_local(directory, children + filenames)
+                children[:] = [name for name in children if name not in ignored]
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.mkdir()
+    for directory in directories:
+        shutil.copytree(root / directory, target / directory, ignore=ignore_local)
+    for name in files:
+        destination = target / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(root / name, destination)
+    for directory in ("catalog", "projects", "products", "libraries", "generated", "schemas"):
+        (target / directory).mkdir(exist_ok=True)
+        readme = root / directory / "README.md"
+        if not (root / directory).is_symlink() and readme.is_file() and not readme.is_symlink():
+            shutil.copy2(readme, target / directory / "README.md")
+    shutil.copytree(root / "examples/catalog", target / "catalog", dirs_exist_ok=True,
+                    ignore=ignore_local)
+    shutil.copy2(Path(__file__).resolve().parent / "fixtures/scaffold-license.txt", target / "LICENSE")
+
+
 def release_lane(root: Path, log: HostedLog) -> None:
     """Exercise a committed disposable fixture without changing checked-out source."""
     target = root / "build/rehearsal-source"
-    if target.exists():
-        raise ValueError(f"Release rehearsal output already exists: {target}")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    # The caller's populated acceptance checkout owns its own fixture projects.
-    # Exclude generated evidence so the copy never recurses into itself.
-    shutil.copytree(root, target, ignore=shutil.ignore_patterns(".git", "build", ".venv"))
+    release_fixture(root, target)
     log.event("fixture-copy", "PASS")
     manifest_path = target / "examples/projects/arduino-uno-status-led/project.json"
     manifest = read_model(manifest_path, ProjectManifest)
@@ -295,9 +352,10 @@ def release_lane(root: Path, log: HostedLog) -> None:
     ):
         log.run(stage, (sys.executable, "-B", "-m", *command), cwd=target)
     checked_source(target, log)
+    fixture = Path(__file__).resolve().parent / "fixtures/foreign-eagle-board.xml"
     conversion = log.run("foreign-conversion", (
         sys.executable, "-B", "-m", "kicad_tooling.template", "convert-pcb",
-        "--source", "tests/fixtures/foreign-eagle-board.xml", "--project-id",
+        "--source", str(fixture), "--project-id",
         "foreign-smoke", "--toolchain", "kicad-10.0.5", "--input-format", "eagle",
         "--runner", "container", "--format", "json",
     ), cwd=target, stdout_path=target / "build/foreign-pcb-conversion.json")

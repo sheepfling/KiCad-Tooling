@@ -98,10 +98,10 @@ filenames retain their template names within `workflow_docs`.
 
 `template init` retires the reference template catalogs and therefore requires
 the default layout. Initialize a new template checkout before adapting paths.
-Template-specific fault probes, sample release rehearsals, and the legacy full
-quality gate still belong to the template migration path described in the
-[repository README](../README.md). The adapter does not claim arbitrary repository
-formats or automatic cutover of that gate.
+Template-specific fault probes and sample release rehearsals require the named
+public reference boards. The full project gate checks the selected repository;
+shared Python regression and quality checks run in the tooling repository.
+The adapter does not claim arbitrary repository formats.
 
 Configuration is declarative. It does not execute project-supplied Python or
 shell hooks. Add new behavior as a reviewed tooling service shared by CLI and

@@ -42,8 +42,9 @@ verification. The rehearsal checks that imports come from the newly installed
 wheel, including when an offline dependency directory is provided.
 
 The hosted workflow runs for pull requests, main, and `v*` tags. It does not publish
-a package. Full native and release acceptance remains a prerequisite for the
-first template cutover and PyPI publication; see the [migration boundary](../README.md).
+a package. Native and release acceptance runs against the separately pinned template.
+PyPI publication remains a separate release action. See the
+[repository boundary](../README.md#repository-boundary).
 
 Once published, project repositories should pin an exact tested package version.
 Upgrade that pin through a pull request that runs the project's focused and full

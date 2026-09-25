@@ -6,14 +6,10 @@ project repository created from the
 [KiCad team workflow template](https://github.com/sheepfling/KiCad-Team-Workflow-Template).
 The same installed package provides both command surfaces.
 
-This is the first extraction from the template. It is not published on PyPI yet,
-and the template still carries its original `tools/` implementation while the
-external package and hosted lanes are validated. Do not remove that implementation
-or change a project's CI pin until the migration gate passes.
-The installed-wheel rehearsal currently covers inventory, declared CLI/MCP
-surface alignment, and selected portable verification. Native containers,
-behavioral parity tests, and full release rehearsal still rely on the
-template's in-tree acceptance path.
+The template now consumes this package through an exact dependency pin. It keeps
+project structure, catalogs, engineering contracts, agent guidance, and onboarding
+documents. Shared Python implementation and its regression suite live here.
+The package is not published on PyPI yet; the template pins a reviewed Git commit.
 
 ## Try the separate package
 
@@ -22,7 +18,7 @@ environment. Replace the path with the location of your tooling checkout:
 
 ```sh
 python3.11 -m venv .venv
-.venv/bin/python -m pip install -e /path/to/KiCad-Tooling
+.venv/bin/python -m pip install -e '/path/to/KiCad-Tooling[project,mcp,charts,cad]'
 .venv/bin/kicad-team template list --format text
 .venv/bin/kicad-team verify --project <id> --format text
 .venv/bin/kicad-team surface --format text
@@ -80,13 +76,34 @@ branch or unbounded latest release.
 
 ## Development check
 
+The project-facing extras do not include package regression, lint or build tools.
+From the tooling checkout, create a development environment and install `dev` plus
+CAD support before running these checks. On macOS/Linux:
+
 ```sh
+cd /absolute/path/to/KiCad-Tooling
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e '.[dev,cad]'
+export KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Team-Workflow-Template
 python -B -m unittest discover -s tests -v
 python -m ruff check --no-cache kicad_tooling tests
 ```
 
-The initial package smoke suite builds a disposable project checkout and
-checks that inventory and parity do not read Python source from the project.
-End-to-end project and native tests still run in the template during the
-migration.
+On Windows, create the environment with `py -3.11 -m venv .venv` and activate it
+with `.venv\Scripts\Activate.ps1`. In PowerShell, set the fixture path with
+`$env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"`.
+
+The shared regression suite uses an explicitly selected external template for
+public reference data. It does not copy Python tooling into that checkout:
+
+```sh
+export KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Team-Workflow-Template
+python -B scripts/ci.py --project-root "$KICAD_TEMPLATE_ROOT"
+```
+
+Package CI owns shared lint, typing, regressions and wheel/source-distribution
+checks. Project CI owns project policy, documentation, contracts, local suites and
+pinned native lanes. See [local workflow rehearsal](docs/LOCAL_PLAYTEST.md) for
+CLI/MCP checks across the two repositories and [tests](tests/README.md) for coverage.
 Contributors and coding agents should follow [AGENTS.md](AGENTS.md).

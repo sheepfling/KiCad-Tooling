@@ -5,9 +5,11 @@ import re
 import shutil
 import subprocess
 import sys
+from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from typing import Literal
 
+from kicad_tooling import package_version
 from kicad_tooling.check_toolchain import assessment, observed_version, toolchain
 
 from .discovery import load_config, load_registry
@@ -76,8 +78,18 @@ def doctor(
     python_ok = sys.version_info[:2] >= MINIMUM_PYTHON
     checks.append(environment_check(
         "python", True, "Python 3.11 or newer", python_version, python_ok,
-        "Python can run the supported policy kicad_tooling.",
-        "Install Python 3.11 or newer, recreate the virtual environment, and reinstall .[dev].",
+        "Python can run the supported tooling package.",
+        "Install Python 3.11 or newer, recreate the virtual environment, and install requirements-tooling.txt.",
+    ))
+
+    try:
+        installed = package_version()
+    except PackageNotFoundError:
+        installed = None
+    checks.append(environment_check(
+        "tooling-package", True, "Installed kicad-team-tooling distribution", installed,
+        installed is not None, "Shared tooling is installed independently of project source.",
+        "Activate the project environment and install requirements-tooling.txt.",
     ))
 
     git_path = shutil.which("git")

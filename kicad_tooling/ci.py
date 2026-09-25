@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeVar
 
+from . import package_version
 from .ci_matrix import build_matrix
 from .hwrepo.cli_output import summary
 from .hwrepo.documentation import check as documentation_check
@@ -106,7 +107,7 @@ def static_pipeline(
     root: Path, selected: list[str] | None, workers: int = 1,
     journal: PipelineJournal | None = None,
 ) -> StaticPipelineReport | ProjectStaticPipelineReport:
-    """Run the full shared gate or the fast local lane for selected projects."""
+    """Run all project policy checks or the fast lane for selected projects."""
     if selected is not None:
         return project_static_pipeline(root, tuple(selected), workers, journal)
     before = phase(journal, "source-before", lambda: source_state(root))
@@ -121,12 +122,6 @@ def static_pipeline(
         root, sys.executable, "-m", "mdrepo", "check", "."))
     product = phase(journal, "product", lambda: product_check(root))
     generation = phase(journal, "generation", lambda: generation_report(root))
-    ruff = phase(journal, "ruff", lambda: run_command(
-        root, sys.executable, "-m", "ruff", "check", "--no-cache", "tools", "tests"))
-    pyright = phase(journal, "pyright", lambda: run_command(
-        root, sys.executable, "-m", "pyright", "--pythonpath", sys.executable, "tools"))
-    unit_tests = phase(journal, "unit-tests", lambda: run_command(
-        root, sys.executable, "-B", "-m", "unittest", "discover", "-s", "tests", "-v"))
     project_tests = phase(journal, "project-tests",
                           lambda: checked_project_tests(root, workers=workers))
     passed = (
@@ -137,9 +132,6 @@ def static_pipeline(
         and mdrepo.returncode == 0
         and product.status == "PASS"
         and generation.status == "PASS"
-        and ruff.returncode == 0
-        and pyright.returncode == 0
-        and unit_tests.returncode == 0
         and project_tests.status == "PASS"
     )
     after = phase(journal, "source-after", lambda: source_state(root))
@@ -153,9 +145,8 @@ def static_pipeline(
         mdrepo=mdrepo,
         product=product,
         generation=generation,
-        ruff=ruff,
-        pyright=pyright,
-        unit_tests=unit_tests,
+        scope="repository_static",
+        tooling_version=package_version(),
         project_tests=project_tests,
     )
 

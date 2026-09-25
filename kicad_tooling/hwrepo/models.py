@@ -1377,7 +1377,8 @@ class ProjectTestsReport(StrictModel):
 class StaticPipelineReport(StrictModel):
     status: Literal["PASS", "FAIL"]
     source: SourceState | None = None
-    scope: Literal["static_only"] = "static_only"
+    scope: Literal["static_only", "repository_static"] = "static_only"
+    tooling_version: NonEmptyText | None = None
     build_authorized: Literal[False] = False
     registry: GovernanceLintReport
     repository: RepositoryPolicyReport
@@ -1386,10 +1387,20 @@ class StaticPipelineReport(StrictModel):
     mdrepo: CommandEvidence
     product: ProductPolicyReport
     generation: GenerationReport
-    ruff: CommandEvidence
-    pyright: CommandEvidence
-    unit_tests: CommandEvidence
+    ruff: CommandEvidence | None = None
+    pyright: CommandEvidence | None = None
+    unit_tests: CommandEvidence | None = None
     project_tests: ProjectTestsReport
+
+    @model_validator(mode="after")
+    def explicit_tooling_boundary(self) -> StaticPipelineReport:
+        if self.scope == "static_only" and any(
+            command is None for command in (self.ruff, self.pyright, self.unit_tests)
+        ):
+            raise ValueError("Legacy full reports require all tooling quality commands")
+        if self.scope == "repository_static" and self.tooling_version is None:
+            raise ValueError("Project repository reports must identify the installed tooling version")
+        return self
 
 
 class ProjectStaticPipelineReport(StrictModel):

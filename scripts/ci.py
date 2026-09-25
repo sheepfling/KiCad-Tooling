@@ -34,6 +34,8 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
         payload = {name: archive.read(name) for name in archive.namelist()
                    if name.startswith("kicad_tooling/") or name == metadata_names[0]}
         required = {"kicad_tooling/tool-surfaces.json", "kicad_tooling/py.typed",
+                    "kicad_tooling/fixtures/foreign-eagle-board.xml",
+                    "kicad_tooling/fixtures/scaffold-license.txt",
                     "kicad_tooling/hwrepo/kicad_library_license.txt"}
         if not required <= payload.keys():
             raise ValueError(f"Missing package assets in {wheel}: {required - payload.keys()}")
@@ -245,11 +247,16 @@ def main() -> int:
     logs.mkdir(parents=True, exist_ok=True)
     output = Path(tempfile.mkdtemp(prefix="run-", dir=logs))
     try:
+        if args.project_root is not None:
+            os.environ["KICAD_TEMPLATE_ROOT"] = str(args.project_root.resolve())
         stage("unit", (sys.executable, "-B", "-m", "unittest", "discover", "-s", "tests", "-v"),
               output, cwd=ROOT)
         stage("ruff", (sys.executable, "-m", "ruff", "check", "--no-cache",
                        "kicad_tooling", "tests", "scripts"), output, cwd=ROOT)
         stage("pyright", (sys.executable, "-m", "pyright", "--pythonpath", sys.executable),
+              output, cwd=ROOT)
+        stage("windows-types", (sys.executable, "-m", "pyright", "--pythonpath", sys.executable,
+                                 "--pythonplatform", "Windows", "--pythonversion", "3.11"),
               output, cwd=ROOT)
         stage("rumdl", (str(args.rumdl_path), "check", ".",
                         "--no-cache"), output, cwd=ROOT)
@@ -265,7 +272,7 @@ def main() -> int:
         install = [str(python), "-m", "pip", "install", "--no-cache-dir"]
         if args.offline_dependency_path is not None:
             install.append("--no-deps")
-        stage("install", (*install, f"{rebuilt_wheel}[mcp]"), output, cwd=output)
+        stage("install", (*install, f"{rebuilt_wheel}[project,mcp]"), output, cwd=output)
         external = os.environ.copy()
         external.pop("PYTHONPATH", None)
         if args.offline_dependency_path is not None:
@@ -309,6 +316,9 @@ def main() -> int:
                       "--project", "controller", "--format", "json"), output, cwd=output,
                       environment=external)
                 verify_adapted_project(project, command, output, external)
+                stage("external-playtest", (str(python), "-B", str(ROOT / "scripts/playtest.py"),
+                      "--template", str(project), "--output", str(output / "playtest")),
+                      output, cwd=output, environment=external)
         print(f"tooling-ci: logs {output}")
         return 0
     except (OSError, ValueError, RuntimeError) as exc:

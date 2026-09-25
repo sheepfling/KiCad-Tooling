@@ -21,17 +21,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: sheepfling/KiCad-Team-Workflow-Template
-          ref: 841628ce613715fe46a3cb47a1addc34ac4d1d72
+          ref: codex/tooling-split
           path: build/acceptance-template
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.11'
       - name: Install package check dependencies
-        run: |
-          python -m pip install --disable-pip-version-check '.[dev]'
-          python -m pip install --disable-pip-version-check \
-            'mdrepo @ git+https://github.com/sheepfling/mdrepo.git@78476e0343f6ae3799606c17024d5aa790c6d688'
+        run: python -m pip install --disable-pip-version-check '.[dev]'
       - name: Check tooling and installed wheel against a separate project
         run: python scripts/ci.py --project-root build/acceptance-template
       - name: Keep stage logs
