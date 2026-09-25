@@ -65,6 +65,7 @@ style = "aligned"
 
 [tool.mdrepo]
 include = ["*.md", "**/*.md"]
+exclude = ["build/**"]
 
 [tool.mdrepo.links]
 check-missing-targets = false
