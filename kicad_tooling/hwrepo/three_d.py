@@ -1,4 +1,5 @@
 """Project-focused, source-bound KiCad 3D previews and exchange exports."""
+
 from __future__ import annotations
 
 import hashlib
@@ -50,17 +51,37 @@ def _command(root: Path, argv: tuple[str, ...], timeout: int) -> CommandEvidence
     started = datetime.now(UTC).isoformat()
     try:
         result = subprocess.run(
-            argv, cwd=root, capture_output=True, text=True, timeout=timeout, check=False,
+            argv,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
         )
         return CommandEvidence(
-            argv=argv, started_utc=started, returncode=result.returncode,
-            stdout=result.stdout, stderr=result.stderr,
+            argv=argv,
+            started_utc=started,
+            returncode=result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
         )
     except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else exc.stdout or ""
-        stderr = exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else exc.stderr or ""
+        stdout = (
+            exc.stdout.decode(errors="replace")
+            if isinstance(exc.stdout, bytes)
+            else exc.stdout or ""
+        )
+        stderr = (
+            exc.stderr.decode(errors="replace")
+            if isinstance(exc.stderr, bytes)
+            else exc.stderr or ""
+        )
         return CommandEvidence(
-            argv=argv, started_utc=started, returncode=124, stdout=stdout, stderr=stderr,
+            argv=argv,
+            started_utc=started,
+            returncode=124,
+            stdout=stdout,
+            stderr=stderr,
             error=f"3D command timed out after {timeout} seconds",
         )
     except (OSError, subprocess.SubprocessError) as exc:
@@ -70,20 +91,43 @@ def _command(root: Path, argv: tuple[str, ...], timeout: int) -> CommandEvidence
 def _container_prefix(root: Path, output: Path, config: ProjectConfig) -> tuple[str, ...]:
     if re.fullmatch(r"[^@\s]+@sha256:[a-f0-9]{64}", config.image) is None:
         raise ValueError("Project KiCad image is not digest-pinned")
-    user: tuple[str, ...] = () if sys.platform == "win32" else (
-        "--user", f"{os.getuid()}:{os.getgid()}",
+    user: tuple[str, ...] = (
+        ()
+        if sys.platform == "win32"
+        else (
+            "--user",
+            f"{os.getuid()}:{os.getgid()}",
+        )
     )
     return (
-        "docker", "run", "--rm", "--platform", "linux/amd64", *user,
-        "--entrypoint", "kicad-cli", "-e", "HOME=/tmp/kicad-3d",
-        "-v", f"{os.fspath(root)}:/work:ro", "-v", f"{os.fspath(output)}:/output:rw",
-        "-w", "/work", config.image,
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        *user,
+        "--entrypoint",
+        "kicad-cli",
+        "-e",
+        "HOME=/tmp/kicad-3d",
+        "-v",
+        f"{os.fspath(root)}:/work:ro",
+        "-v",
+        f"{os.fspath(output)}:/output:rw",
+        "-w",
+        "/work",
+        config.image,
     )
 
 
 def _run_kicad(
-    root: Path, output: Path, config: ProjectConfig, selected: Literal["local", "container"],
-    cli: str, args: tuple[str, ...], timeout: int = 300,
+    root: Path,
+    output: Path,
+    config: ProjectConfig,
+    selected: Literal["local", "container"],
+    cli: str,
+    args: tuple[str, ...],
+    timeout: int = 300,
 ) -> CommandEvidence:
     if selected == "container":
         return _command(root, (*_container_prefix(root, output, config), *args), timeout)
@@ -91,8 +135,10 @@ def _run_kicad(
     if executable is None:
         raise ValueError(f"Exact local KiCad CLI is unavailable: {cli}")
     local_args = tuple(
-        str(output / value.removeprefix("/output/")) if value.startswith("/output/")
-        else str(root / value.removeprefix("/work/")) if value.startswith("/work/")
+        str(output / value.removeprefix("/output/"))
+        if value.startswith("/output/")
+        else str(root / value.removeprefix("/work/"))
+        if value.startswith("/work/")
         else value
         for value in args
     )
@@ -153,63 +199,108 @@ def selected_views(views: Iterable[str] | None = None) -> tuple[ThreeDView, ...]
 
 
 def _specifications(
-    board: str, assembly_variant: str | None = None,
+    board: str,
+    assembly_variant: str | None = None,
     views: Iterable[str] | None = None,
 ) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
     source = f"/work/{board}"
     variant = ("--variant", assembly_variant) if assembly_variant else ()
     side_views: dict[ThreeDView, str] = {
-        "top": "top", "bottom": "bottom", "left": "left", "right": "right",
-        "front": "front", "back": "back",
+        "top": "top",
+        "bottom": "bottom",
+        "left": "left",
+        "right": "right",
+        "front": "front",
+        "back": "back",
     }
     rotations = {
-        "angled": "45,0,0", "angled-90": "45,0,90",
-        "angled-180": "45,0,180", "angled-270": "45,0,270",
+        "angled": "45,0,0",
+        "angled-90": "45,0,90",
+        "angled-180": "45,0,180",
+        "angled-270": "45,0,270",
     }
     specifications: list[tuple[str, str, tuple[str, ...]]] = []
     for name in selected_views(views):
         filename = f"{name}.png"
         args: tuple[str, ...] = (
-            "pcb", "render", "-o", f"/output/{filename}", "--width", "1600",
-            "--height", "1600" if name in rotations else "900",
-            "--side", side_views.get(name, "top"),
+            "pcb",
+            "render",
+            "-o",
+            f"/output/{filename}",
+            "--width",
+            "1600",
+            "--height",
+            "1600" if name in rotations else "900",
+            "--side",
+            side_views.get(name, "top"),
         )
         if name in rotations:
             # KiCad frames the unrotated board before applying camera rotation.
             # Square framing plus a margin accommodates the quarter-turn views.
             args += ("--rotate", rotations[name], "--perspective", "--zoom", "0.6")
         specifications.append((name, filename, (*args, *variant, source)))
-    specifications.extend((
-        ("step", "board.step", ("pcb", "export", "step", "--subst-models", "--no-dnp",
-                                  *variant, "-o", "/output/board.step", source)),
-        ("glb", "board.glb", ("pcb", "export", "glb", "--subst-models", "--no-dnp",
-                                *variant, "-o", "/output/board.glb", source)),
-    ))
+    specifications.extend(
+        (
+            (
+                "step",
+                "board.step",
+                (
+                    "pcb",
+                    "export",
+                    "step",
+                    "--subst-models",
+                    "--no-dnp",
+                    *variant,
+                    "-o",
+                    "/output/board.step",
+                    source,
+                ),
+            ),
+            (
+                "glb",
+                "board.glb",
+                (
+                    "pcb",
+                    "export",
+                    "glb",
+                    "--subst-models",
+                    "--no-dnp",
+                    *variant,
+                    "-o",
+                    "/output/board.glb",
+                    source,
+                ),
+            ),
+        )
+    )
     return tuple(specifications)
 
 
 def render_text(report: ThreeDReport, detail: Literal["brief", "full"] = "brief") -> str:
     lines = [
-        f"3D workflow: {report.status}", f"Project: {report.project_id}",
-        f"Mode: {report.mode}", f"Model coverage: {report.models.status if report.models else 'NOT_RUN'}",
-        f"Runner: {report.runner}", f"Receipt: {report.run_directory}",
+        f"3D workflow: {report.status}",
+        f"Project: {report.project_id}",
+        f"Mode: {report.mode}",
+        f"Model coverage: {report.models.status if report.models else 'NOT_RUN'}",
+        f"Runner: {report.runner}",
+        f"Receipt: {report.run_directory}",
     ]
     if report.assembly_variant:
         lines.append(f"KiCad assembly variant: {report.assembly_variant}")
     if report.models is not None:
         lines.append(f"Footprints: {len(report.models.footprints)}")
-        selected_findings = (report.models.findings if detail == "full"
-                             else report.models.findings[:5])
+        selected_findings = (
+            report.models.findings if detail == "full" else report.models.findings[:5]
+        )
         for finding in selected_findings:
             lines.append(f"  {finding.code} at {finding.location}: {finding.observed}")
             lines.append(f"    Fix: {finding.action}")
         if detail == "brief" and len(report.models.findings) > 5:
             lines.append("  More model findings: --detail full or models.json")
         candidates = tuple(
-            item for item in report.models.footprints
-            if not item.models and item.candidate_assets
+            item for item in report.models.footprints if not item.models and item.candidate_assets
         )
-        for footprint in (candidates if detail == "full" else candidates[:5]):
+        for footprint in candidates if detail == "full" else candidates[:5]:
             lines.append(
                 f"  Candidate for {footprint.reference} (verify package): "
                 + ", ".join(footprint.candidate_assets)
@@ -227,8 +318,13 @@ def render_text(report: ThreeDReport, detail: Literal["brief", "full"] = "brief"
 
 
 def generate(
-    root: Path, project_id: str, *, check_models: bool = False,
-    runner: NativeRunner = "auto", cli: str = "kicad-cli", output: Path | None = None,
+    root: Path,
+    project_id: str,
+    *,
+    check_models: bool = False,
+    runner: NativeRunner = "auto",
+    cli: str = "kicad-cli",
+    output: Path | None = None,
     assembly_variant: str | None = None,
     views: Iterable[str] | None = None,
     detail: Literal["brief", "full"] = "brief",
@@ -276,15 +372,24 @@ def generate(
         if inventory.status != "FAIL" and check_models:
             status = "PASS"
             if inventory.status == "REVIEW":
-                actions = ("Review unassigned footprints in models.json; add approved 3D models where needed.",)
+                actions = (
+                    "Review unassigned footprints in models.json; add approved 3D models where needed.",
+                )
         elif inventory.status != "FAIL":
             with journal.stage("runner-readiness"):
-                ready = doctor(root, native=True, toolchain_id=config.toolchain_id,
-                               cli=cli, project_id=project_id, runner=runner)
+                ready = doctor(
+                    root,
+                    native=True,
+                    toolchain_id=config.toolchain_id,
+                    cli=cli,
+                    project_id=project_id,
+                    runner=runner,
+                )
                 journal.save_model("doctor", ready)
             if ready.status != "PASS":
                 actions = ready.next_actions + (
-                    "Use kicad_tooling.template doctor --native --project-id " + project_id
+                    "Use kicad_tooling.template doctor --native --project-id "
+                    + project_id
                     + " to repair the 3D runner.",
                 )
             else:
@@ -295,8 +400,9 @@ def generate(
                     raise ValueError(f"Doctor selected an unknown native runner: {choice!r}")
                 selected_runner = "local" if choice == "local" else "container"
                 with journal.stage("version"):
-                    version = _run_kicad(root, journal.directory, config, selected_runner,
-                                         cli, ("version",))
+                    version = _run_kicad(
+                        root, journal.directory, config, selected_runner, cli, ("version",)
+                    )
                     commands["version"] = version
                     journal.save_model("version-command", version)
                 if version.returncode != 0 or version.stdout.strip() != config.kicad_version:
@@ -305,11 +411,20 @@ def generate(
                     )
                 else:
                     for name, filename, args in _specifications(
-                        board, assembly_variant, resolved_views,
+                        board,
+                        assembly_variant,
+                        resolved_views,
                     ):
                         with journal.stage(name):
-                            result = _run_kicad(root, journal.directory, config, selected_runner,
-                                                cli, args, timeout=600)
+                            result = _run_kicad(
+                                root,
+                                journal.directory,
+                                config,
+                                selected_runner,
+                                cli,
+                                args,
+                                timeout=600,
+                            )
                             commands[name] = result
                             journal.save_model(f"{name}-command", result)
                         if result.returncode != 0 or result.error is not None:
@@ -335,7 +450,9 @@ def generate(
                                 "Inspect PNG and exchange geometry before using them for mechanical decisions.",
                             )
                         else:
-                            actions = ("Inspect PNG and exchange geometry before mechanical approval.",)
+                            actions = (
+                                "Inspect PNG and exchange geometry before mechanical approval.",
+                            )
         if status == "PASS":
             with journal.stage("source-unchanged"):
                 if _source_hashes(root, config) != source:
@@ -352,7 +469,8 @@ def generate(
         journal.event("input", "FAIL", error)
         actions = (
             "Repair the selected project source, manifest or 3D model inputs, then rerun "
-            "into a fresh receipt. Use kicad_tooling.template diagnose --project-id " + project_id
+            "into a fresh receipt. Use kicad_tooling.template diagnose --project-id "
+            + project_id
             + " for the broader repair queue.",
         )
     except Exception as exc:  # noqa: BLE001 - retain a complete receipt on tooling faults
@@ -364,14 +482,21 @@ def generate(
             + f"{journal.directory / 'error.txt'}; repair the input or report a tool defect.",
         )
     report = ThreeDReport(
-        project_id=project_id, mode=mode, status=status,
+        project_id=project_id,
+        mode=mode,
+        status=status,
         run_directory=str(journal.directory),
         toolchain_id=None if config is None else config.toolchain_id,
         kicad_version=None if config is None else config.kicad_version,
-        runner=selected_runner, assembly_variant=assembly_variant,
-        board=board, source_sha256=source,
-        models=inventory, commands=commands, artifacts_sha256=artifacts,
-        next_actions=actions, error=error,
+        runner=selected_runner,
+        assembly_variant=assembly_variant,
+        board=board,
+        source_sha256=source,
+        models=inventory,
+        commands=commands,
+        artifacts_sha256=artifacts,
+        next_actions=actions,
+        error=error,
     )
     human = render_text(report, detail)
     if status == "ERROR":

@@ -1,4 +1,5 @@
 """Recognize the disposable upstream license without touching adopter notices."""
+
 from __future__ import annotations
 
 import hashlib

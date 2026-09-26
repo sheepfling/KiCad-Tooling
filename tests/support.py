@@ -1,4 +1,5 @@
 """Isolated reference repositories, independent of an adopter's live records."""
+
 from __future__ import annotations
 
 import atexit
@@ -26,17 +27,28 @@ if not (TEMPLATE_ROOT / "examples/catalog/projects.json").is_file():
 
 
 def ignore_local(directory: str, names: list[str]) -> set[str]:
-    return {name for name in names if name == ".git" or ephemeral(name)
-            or (Path(directory, name).is_file()
-                and generated_artifact(Path(directory, name).relative_to(TEMPLATE_ROOT).as_posix()))}
+    return {
+        name
+        for name in names
+        if name == ".git"
+        or ephemeral(name)
+        or (
+            Path(directory, name).is_file()
+            and generated_artifact(Path(directory, name).relative_to(TEMPLATE_ROOT).as_posix())
+        )
+    }
 
 
 def initialize_git(root: Path) -> None:
     # Disposable repositories are deleted immediately after each test. Keep Git
     # from starting background maintenance that can recreate .git/objects during
     # TemporaryDirectory cleanup on macOS.
-    for args in (("init", "-q"), ("config", "gc.auto", "0"),
-                 ("config", "maintenance.auto", "false"), ("add", "--all")):
+    for args in (
+        ("init", "-q"),
+        ("config", "gc.auto", "0"),
+        ("config", "maintenance.auto", "false"),
+        ("add", "--all"),
+    ):
         subprocess.run(("git", "-C", str(root), *args), check=True, capture_output=True)
 
 
@@ -50,15 +62,20 @@ def reference_root() -> Path:
     for directory in ("docs", "templates", "examples", ".github"):
         shutil.copytree(TEMPLATE_ROOT / directory, destination / directory, ignore=ignore_local)
     for name in (
-        "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md",
-        ".gitignore", ".gitattributes", "pyproject.toml", "requirements-tooling.txt",
+        "README.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CHANGELOG.md",
+        ".gitignore",
+        ".gitattributes",
+        "pyproject.toml",
+        "requirements-tooling.txt",
     ):
         shutil.copy2(TEMPLATE_ROOT / name, destination / name)
     # Adopters may have their own root license or none yet; shared-tool tests
     # always exercise the original template notice in a disposable checkout.
     shutil.copy2(TEST_ROOT / "fixtures/scaffold-license.txt", destination / "LICENSE")
-    for directory in ("catalog", "projects", "products", "libraries",
-                      "generated", "schemas"):
+    for directory in ("catalog", "projects", "products", "libraries", "generated", "schemas"):
         (destination / directory).mkdir()
         readme = TEMPLATE_ROOT / directory / "README.md"
         if readme.exists():

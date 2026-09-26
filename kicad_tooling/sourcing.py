@@ -1,4 +1,5 @@
 """Validate a typed, manually captured supplier-offer snapshot without network access."""
+
 from __future__ import annotations
 
 import argparse
@@ -29,8 +30,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snapshot", required=True, help="Repository-relative sourcing snapshot")
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--format", choices=("json", "text"), default="json",
-                        help="Machine JSON (default) or a concise human summary")
+    parser.add_argument(
+        "--format",
+        choices=("json", "text"),
+        default="json",
+        help="Machine JSON (default) or a concise human summary",
+    )
     args = parser.parse_args()
     try:
         root = args.root.resolve()

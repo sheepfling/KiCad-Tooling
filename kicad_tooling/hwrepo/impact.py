@@ -1,4 +1,5 @@
 """Resolve changed repository paths into a conservative project check scope."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,8 +38,11 @@ def _full(
     all_ids: tuple[str, ...], paths: tuple[str, ...], reasons: set[str], docs_changed: bool
 ) -> ImpactPlan:
     return ImpactPlan(
-        scope="full", projects=all_ids, changed_paths=paths,
-        reasons=tuple(sorted(reasons)), docs_changed=docs_changed,
+        scope="full",
+        projects=all_ids,
+        changed_paths=paths,
+        reasons=tuple(sorted(reasons)),
+        docs_changed=docs_changed,
     )
 
 
@@ -109,8 +113,10 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
             project.id
             for project in registry.projects
             if path in manifests[project.id].shared_inputs
-            or any(_within(path, shared_root)
-                   for shared_root in manifests[project.id].shared_source_roots)
+            or any(
+                _within(path, shared_root)
+                for shared_root in manifests[project.id].shared_source_roots
+            )
         }
         if consumers:
             selected.update(consumers)
@@ -129,13 +135,15 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
             reasons.add(f"Library metadata {path} affects {', '.join(sorted(library_owners))}")
 
         project_owners = {
-            project.id for project in registry.projects
+            project.id
+            for project in registry.projects
             if _within(path, Path(project.config).parent.as_posix())
         }
         source_owners = {
             project.id
             for project in registry.projects
-            if path in {
+            if path
+            in {
                 _local_path(Path(project.config).parent.as_posix(), relative)
                 for relative in _local_references(manifests[project.id])
             }
@@ -175,7 +183,10 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
             full_reasons.add(f"No declared documentation owner for changed path: {path}")
             continue
         owners = (
-            project_owners | product_owners | source_owners | product_source_owners
+            project_owners
+            | product_owners
+            | source_owners
+            | product_source_owners
             | (library_owners or set())
         )
         if owners:
@@ -188,10 +199,16 @@ def plan_paths(root: Path, changed_paths: tuple[str, ...]) -> ImpactPlan:
         return _full(all_ids, paths, full_reasons, docs_changed)
     if selected:
         return ImpactPlan(
-            scope="focused", projects=tuple(sorted(selected)), changed_paths=paths,
-            reasons=tuple(sorted(reasons)), docs_changed=docs_changed,
+            scope="focused",
+            projects=tuple(sorted(selected)),
+            changed_paths=paths,
+            reasons=tuple(sorted(reasons)),
+            docs_changed=docs_changed,
         )
     return ImpactPlan(
-        scope="docs", projects=(), changed_paths=paths,
-        reasons=("Only ordinary Markdown documentation changed",), docs_changed=docs_changed,
+        scope="docs",
+        projects=(),
+        changed_paths=paths,
+        reasons=("Only ordinary Markdown documentation changed",),
+        docs_changed=docs_changed,
     )

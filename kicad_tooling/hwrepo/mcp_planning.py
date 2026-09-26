@@ -1,4 +1,5 @@
 """Bounded MCP planning adapters over the CLI's non-executing repository services."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,16 +28,28 @@ def init_model_map(root: Path, project_id: str, view_id: str) -> ModelPopulation
 
 
 def plan_impact(
-    root: Path, base: str | None = None, head: str = "HEAD",
-    paths: tuple[str, ...] | None = None, full: bool = False,
-    select_project: str | None = None, select_tag: str | None = None,
-    select_product: str | None = None, exclude_tag: str | None = None,
+    root: Path,
+    base: str | None = None,
+    head: str = "HEAD",
+    paths: tuple[str, ...] | None = None,
+    full: bool = False,
+    select_project: str | None = None,
+    select_tag: str | None = None,
+    select_product: str | None = None,
+    exclude_tag: str | None = None,
     shard: str | None = None,
 ) -> ImpactPlan:
     """Plan Git, explicit-path, full or manual-selection scope without running checks."""
     return build_plan(
-        root, base=base, head=head, paths=paths, full=full, select_project=select_project,
-        select_tag=select_tag, select_product=select_product, exclude_tag=exclude_tag,
+        root,
+        base=base,
+        head=head,
+        paths=paths,
+        full=full,
+        select_project=select_project,
+        select_tag=select_tag,
+        select_product=select_product,
+        exclude_tag=exclude_tag,
         shard=shard,
     )
 
@@ -51,7 +64,9 @@ def inspect_sourcing_snapshot(root: Path, path: str) -> SourcingSnapshotReport:
         snapshot = read_model(source, SourcingSnapshot)
     except (OSError, ValueError) as exc:
         return SourcingSnapshotReport(
-            snapshot_id="unreadable-snapshot", offers=0, status="FAIL",
+            snapshot_id="unreadable-snapshot",
+            offers=0,
+            status="FAIL",
             issues=(PolicyIssue(code="SOURCING_LOAD", location=path, message=str(exc)),),
         )
     return sourcing.check(root, snapshot)

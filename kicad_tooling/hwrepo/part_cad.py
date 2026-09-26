@@ -1,4 +1,5 @@
 """Lossless, read-only plans for reviewed part fields and existing PCB model bodies."""
+
 from __future__ import annotations
 
 import math
@@ -65,15 +66,18 @@ def _root(source: str, kind: str) -> _Span:
     roots = _children(source, 0, len(source))
     if len(roots) != 1 or _atoms(source, roots[0])[:1] != (kind,):
         raise ValueError(f"Expected exactly one {kind} root")
-    for outside in (source[:roots[0].start], source[roots[0].end:]):
+    for outside in (source[: roots[0].start], source[roots[0].end :]):
         if any(line.split("#", 1)[0].strip() for line in outside.splitlines()):
             raise ValueError(f"Unexpected text outside {kind} root")
     return roots[0]
 
 
 def _nodes(source: str, parent: _Span, name: str) -> tuple[_Span, ...]:
-    return tuple(child for child in _children(source, parent.start + 1, parent.end - 1)
-                 if _atoms(source, child)[:1] == (name,))
+    return tuple(
+        child
+        for child in _children(source, parent.start + 1, parent.end - 1)
+        if _atoms(source, child)[:1] == (name,)
+    )
 
 
 def _field(source: str, parent: _Span, name: str, *, required: bool = True) -> tuple[str, ...]:
@@ -116,8 +120,9 @@ def _properties(source: str, parent: _Span) -> dict[str, _Span]:
     return result
 
 
-def _property(source: str, properties: Mapping[str, _Span], name: str,
-              *, required: bool = False) -> str:
+def _property(
+    source: str, properties: Mapping[str, _Span], name: str, *, required: bool = False
+) -> str:
     if name not in properties:
         if required:
             raise ValueError(f"Missing {name} property")
@@ -166,8 +171,10 @@ def _read_schematic(root: Path, project_id: str) -> _Schematic:
     source = path.read_bytes().decode("utf-8")
     parent = _root(source, "kicad_sch")
     if _nodes(source, parent, "sheet"):
-        raise ValueError("Hierarchical or reused sheets require part assignment in KiCad; "
-                         "the picker currently supports a single top-level schematic")
+        raise ValueError(
+            "Hierarchical or reused sheets require part assignment in KiCad; "
+            "the picker currently supports a single top-level schematic"
+        )
     if _nodes(source, parent, "symbol_instances"):
         raise ValueError("Legacy symbol_instances annotation requires review and save in KiCad")
     root_uuid = _uuid(_scalar(source, parent, "uuid"))
@@ -198,20 +205,35 @@ def _read_schematic(root: Path, project_id: str) -> _Schematic:
         paths = _nodes(source, projects[0], "path")
         if len(paths) != 1 or _atoms(source, paths[0]) != ("path", "/" + root_uuid):
             raise ValueError(f"{reference}: ambiguous or hierarchical schematic instance path")
-        if (_scalar(source, paths[0], "reference") != reference
-                or _scalar(source, paths[0], "unit") != unit_text):
-            raise ValueError(f"{reference}: displayed reference/unit differs from its project instance")
+        if (
+            _scalar(source, paths[0], "reference") != reference
+            or _scalar(source, paths[0], "unit") != unit_text
+        ):
+            raise ValueError(
+                f"{reference}: displayed reference/unit differs from its project instance"
+            )
         component = PartCadComponent(
-            reference=reference, symbol_id=symbol_id, value=value,
+            reference=reference,
+            symbol_id=symbol_id,
+            value=value,
             footprint=_property(source, properties, "Footprint"),
             part_id=_property(source, properties, "PART_ID") or None,
-            source_path=path.relative_to(root).as_posix(), uuid=symbol_uuid,
+            source_path=path.relative_to(root).as_posix(),
+            uuid=symbol_uuid,
             dnp=_yes_no(source, span, "dnp", "no"),
             exclude_from_bom=not _yes_no(source, span, "in_bom", "yes"),
         )
-        placed.append(_Placed(component, span, properties, "/" + root_uuid + "/" + symbol_uuid,
-                              unit, symbol_id in multiunit,
-                              _yes_no(source, span, "on_board", "yes")))
+        placed.append(
+            _Placed(
+                component,
+                span,
+                properties,
+                "/" + root_uuid + "/" + symbol_uuid,
+                unit,
+                symbol_id in multiunit,
+                _yes_no(source, span, "on_board", "yes"),
+            )
+        )
     board = repo_path(root, project.with_suffix(".kicad_pcb").relative_to(root).as_posix())
     return _Schematic(path, source, tuple(placed), board)
 
@@ -223,7 +245,9 @@ def _grouped(schematic: _Schematic) -> dict[str, list[_Placed]]:
     for reference, group in grouped.items():
         first = group[0].component.model_dump(exclude={"uuid"})
         if any(item.component.model_dump(exclude={"uuid"}) != first for item in group):
-            raise ValueError(f"{reference}: multi-unit or duplicate references have conflicting fields")
+            raise ValueError(
+                f"{reference}: multi-unit or duplicate references have conflicting fields"
+            )
         units = [item.unit for item in group]
         if len(units) != len(set(units)):
             raise ValueError(f"{reference}: duplicate schematic reference and unit")
@@ -233,8 +257,9 @@ def _grouped(schematic: _Schematic) -> dict[str, list[_Placed]]:
 def read_cad_components(root: Path, project_id: str) -> tuple[PartCadComponent, ...]:
     """Inventory unambiguous top-level instances; selecting multiple units is unsupported."""
     groups = _grouped(_read_schematic(root, project_id))
-    return tuple(min(group, key=lambda item: item.unit).component
-                 for _, group in sorted(groups.items()))
+    return tuple(
+        min(group, key=lambda item: item.unit).component for _, group in sorted(groups.items())
+    )
 
 
 def _tokens(source: str, span: _Span) -> tuple[_Token, ...]:
@@ -265,8 +290,11 @@ def _tokens(source: str, span: _Span) -> tuple[_Token, ...]:
             else:
                 raise ValueError("Unterminated CAD property string")
         else:
-            while (position < span.end - 1 and not source[position].isspace()
-                   and source[position] not in "()"):
+            while (
+                position < span.end - 1
+                and not source[position].isspace()
+                and source[position] not in "()"
+            ):
                 position += 1
         tokens.append(_Token(start, position, quoted))
     return tuple(tokens)
@@ -278,8 +306,9 @@ def _quote(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def _property_change(source: str, properties: Mapping[str, _Span], name: str,
-                     value: str) -> _Change | None:
+def _property_change(
+    source: str, properties: Mapping[str, _Span], name: str, value: str
+) -> _Change | None:
     span = properties.get(name)
     if span is None or _property(source, properties, name) == value:
         return None
@@ -294,7 +323,7 @@ def _insertion(source: str, span: _Span, expressions: list[str]) -> _Change:
     newline = "\r\n" if "\r\n" in source else "\n"
     position = span.end - 1
     start = source.rfind("\n", 0, span.start) + 1
-    indent = source[start:span.start]
+    indent = source[start : span.start]
     if indent.strip():
         indent = ""
     value = "".join(newline + indent + "  " + expression for expression in expressions)
@@ -309,7 +338,7 @@ def _apply(source: str, changes: list[_Change], kind: str) -> str:
         end = change.end
     updated = source
     for change in sorted(changes, key=lambda item: item.start, reverse=True):
-        updated = updated[:change.start] + change.replacement + updated[change.end:]
+        updated = updated[: change.start] + change.replacement + updated[change.end :]
     _root(updated, kind)
     return updated
 
@@ -319,14 +348,20 @@ def _schematic_changes(source: str, symbol: _Placed, part: PartRecord) -> list[_
     if binding is None:
         raise ValueError(f"{part.id}: missing reviewed CAD binding")
     if symbol.multiunit or symbol.unit != 1:
-        raise ValueError(f"{symbol.component.reference}: multi-unit symbols must be assigned in KiCad")
-    if (symbol.component.symbol_id != binding.symbol_id or symbol.component.value != binding.value):
+        raise ValueError(
+            f"{symbol.component.reference}: multi-unit symbols must be assigned in KiCad"
+        )
+    if symbol.component.symbol_id != binding.symbol_id or symbol.component.value != binding.value:
         raise ValueError(f"{symbol.component.reference}: reviewed symbol/value does not match")
     changes: list[_Change] = []
     additions: list[str] = []
-    for name, value in (("PART_ID", part.id), ("Footprint", binding.footprint),
-                        ("Manufacturer", part.manufacturer), ("MPN", part.mpn),
-                        ("Datasheet", part.datasheet_url)):
+    for name, value in (
+        ("PART_ID", part.id),
+        ("Footprint", binding.footprint),
+        ("Manufacturer", part.manufacturer),
+        ("MPN", part.mpn),
+        ("Datasheet", part.datasheet_url),
+    ):
         if name in symbol.properties:
             change = _property_change(source, symbol.properties, name, value)
             if change is not None:
@@ -335,16 +370,21 @@ def _schematic_changes(source: str, symbol: _Placed, part: PartRecord) -> list[_
             at = _field(source, symbol.span, "at")
             if len(at) != 3 or not all(math.isfinite(float(item)) for item in at):
                 raise ValueError("Expected finite schematic symbol position")
-            additions.append(f'(property {_quote(name)} {_quote(value)} (at {at[0]} {at[1]} 0) '
-                             '(effects (font (size 1.27 1.27)) hide))')
+            additions.append(
+                f"(property {_quote(name)} {_quote(value)} (at {at[0]} {at[1]} 0) "
+                "(effects (font (size 1.27 1.27)) hide))"
+            )
     if additions:
         changes.append(_insertion(source, symbol.span, additions))
     return changes
 
 
-def _board_changes(source: str, selected: Mapping[str, PartRecord],
-                   symbols: Mapping[str, _Placed], models: Mapping[str, str],
-                   ) -> tuple[list[_Change], tuple[str, ...]]:
+def _board_changes(
+    source: str,
+    selected: Mapping[str, PartRecord],
+    symbols: Mapping[str, _Placed],
+    models: Mapping[str, str],
+) -> tuple[list[_Change], tuple[str, ...]]:
     parent = _root(source, "kicad_pcb")
     footprints: dict[str, tuple[_Span, Mapping[str, _Span], str]] = {}
     for span in (*_nodes(source, parent, "footprint"), *_nodes(source, parent, "module")):
@@ -353,8 +393,11 @@ def _board_changes(source: str, selected: Mapping[str, PartRecord],
             raise ValueError("Malformed PCB footprint identity")
         properties = _properties(source, span)
         reference = _property(source, properties, "Reference")
-        legacy = tuple(item for item in _nodes(source, span, "fp_text")
-                       if _atoms(source, item)[:2] == ("fp_text", "reference"))
+        legacy = tuple(
+            item
+            for item in _nodes(source, span, "fp_text")
+            if _atoms(source, item)[:2] == ("fp_text", "reference")
+        )
         if len(legacy) > 1:
             raise ValueError("Duplicate PCB reference text")
         if legacy:
@@ -376,8 +419,11 @@ def _board_changes(source: str, selected: Mapping[str, PartRecord],
         span, properties, footprint_id = footprints[reference]
         path = _scalar(source, span, "path", default="")
         value = _property(source, properties, "Value")
-        legacy_values = tuple(item for item in _nodes(source, span, "fp_text")
-                              if _atoms(source, item)[:2] == ("fp_text", "value"))
+        legacy_values = tuple(
+            item
+            for item in _nodes(source, span, "fp_text")
+            if _atoms(source, item)[:2] == ("fp_text", "value")
+        )
         if len(legacy_values) > 1:
             raise ValueError(f"{reference}: duplicate PCB value text")
         if legacy_values:
@@ -386,8 +432,12 @@ def _board_changes(source: str, selected: Mapping[str, PartRecord],
                 raise ValueError(f"{reference}: conflicting PCB value representations")
             value = atoms[2]
         attributes = _field(source, span, "attr", required=False)
-        if (footprint_id != binding.footprint or path != symbols[reference].instance_path
-                or value != binding.value or {"dnp", "exclude_from_bom"}.intersection(attributes)):
+        if (
+            footprint_id != binding.footprint
+            or path != symbols[reference].instance_path
+            or value != binding.value
+            or {"dnp", "exclude_from_bom"}.intersection(attributes)
+        ):
             pending.append(reference)
             continue
         model = models[reference]
@@ -398,8 +448,12 @@ def _board_changes(source: str, selected: Mapping[str, PartRecord],
         if len(assigned) > 1 or (assigned and _atoms(source, assigned[0]) != ("model", model)):
             raise ValueError(f"{reference}: a different existing 3D model needs review in KiCad")
         additions: list[str] = []
-        for name, value in (("PART_ID", part.id), ("Manufacturer", part.manufacturer),
-                            ("MPN", part.mpn), ("Datasheet", part.datasheet_url)):
+        for name, value in (
+            ("PART_ID", part.id),
+            ("Manufacturer", part.manufacturer),
+            ("MPN", part.mpn),
+            ("Datasheet", part.datasheet_url),
+        ):
             if name in properties:
                 change = _property_change(source, properties, name, value)
                 if change is not None:
@@ -409,18 +463,24 @@ def _board_changes(source: str, selected: Mapping[str, PartRecord],
                 if layer not in {"F.Cu", "B.Cu"}:
                     raise ValueError(f"{reference}: unsupported footprint layer")
                 side = "B" if layer == "B.Cu" else "F"
-                additions.append(f'(property {_quote(name)} {_quote(value)} (at 0 0 0) '
-                                 f'(layer "{side}.Fab") (hide yes) '
-                                 '(effects (font (size 1 1) (thickness 0.15))))')
+                additions.append(
+                    f"(property {_quote(name)} {_quote(value)} (at 0 0 0) "
+                    f'(layer "{side}.Fab") (hide yes) '
+                    "(effects (font (size 1 1) (thickness 0.15))))"
+                )
         if additions:
             changes.append(_insertion(source, span, additions))
     return changes, tuple(pending)
 
 
-def _attach_authored_models(root: Path, project_id: str, source: str,
-                            selected: Mapping[str, PartRecord],
-                            model_references: Mapping[str, str],
-                            pending: tuple[str, ...]) -> str:
+def _attach_authored_models(
+    root: Path,
+    project_id: str,
+    source: str,
+    selected: Mapping[str, PartRecord],
+    model_references: Mapping[str, str],
+    pending: tuple[str, ...],
+) -> str:
     # Local import avoids a cycle with the shared lossless S-expression adapter.
     from .cad_assets import plan_model_assignment, resolve_footprint
 
@@ -429,11 +489,18 @@ def _attach_authored_models(root: Path, project_id: str, source: str,
             continue
         parent = _root(source, "kicad_pcb")
         if _nodes(source, parent, "module"):
-            raise ValueError("Upgrade legacy PCB modules in KiCad before automatic model population")
-        footprint = next(span for span in _nodes(source, parent, "footprint")
-                         if _property(source, _properties(source, span), "Reference") == reference
-                         or any(_atoms(source, item) == ("fp_text", "reference", reference)
-                                for item in _nodes(source, span, "fp_text")))
+            raise ValueError(
+                "Upgrade legacy PCB modules in KiCad before automatic model population"
+            )
+        footprint = next(
+            span
+            for span in _nodes(source, parent, "footprint")
+            if _property(source, _properties(source, span), "Reference") == reference
+            or any(
+                _atoms(source, item) == ("fp_text", "reference", reference)
+                for item in _nodes(source, span, "fp_text")
+            )
+        )
         if _nodes(source, footprint, "model"):
             # Existing user-authored transforms remain unchanged. Their presence
             # does not establish paired-source alignment or physical fit.
@@ -443,10 +510,16 @@ def _attach_authored_models(root: Path, project_id: str, source: str,
         resolved = resolve_footprint(root, project_id, binding.footprint)
         expected_model = repo_path(root, binding.model)
         if len(resolved.models) != 1 or resolved.models[0].source_path != expected_model:
-            raise ValueError(f"{reference}: catalog model must match the model paired in the reviewed footprint; "
-                             "update its authored model assignment before selecting this part")
-        source = plan_model_assignment(source, reference, resolved,
-            {resolved.models[0].source_model_reference: model_references[reference]})
+            raise ValueError(
+                f"{reference}: catalog model must match the model paired in the reviewed footprint; "
+                "update its authored model assignment before selecting this part"
+            )
+        source = plan_model_assignment(
+            source,
+            reference,
+            resolved,
+            {resolved.models[0].source_model_reference: model_references[reference]},
+        )
     return source
 
 
@@ -472,7 +545,9 @@ def validate_footprint_binding(root: Path, project_id: str, footprint: str) -> N
         raise ValueError("Declare the project's fp-lib-table before selecting a reviewed footprint")
     table = repo_path(root, table_name)
     if not table.is_file():
-        raise ValueError("Project fp-lib-table is missing; declare a reviewed footprint library in KiCad")
+        raise ValueError(
+            "Project fp-lib-table is missing; declare a reviewed footprint library in KiCad"
+        )
     source = table.read_bytes().decode("utf-8")
     parent = _root(source, "fp_lib_table")
     entries: dict[str, _Span] = {}
@@ -482,16 +557,26 @@ def validate_footprint_binding(root: Path, project_id: str, footprint: str) -> N
             raise ValueError("Duplicate or empty footprint library nickname")
         entries[identifier] = entry
     if library not in entries:
-        raise ValueError(f"Footprint library {library!r} is not in the declared project fp-lib-table; "
-                         "add its reviewed repository library before using the picker")
+        raise ValueError(
+            f"Footprint library {library!r} is not in the declared project fp-lib-table; "
+            "add its reviewed repository library before using the picker"
+        )
     entry = entries[library]
     if _scalar(source, entry, "type") != "KiCad":
         raise ValueError("The picker requires a native KiCad footprint library")
     uri = _scalar(source, entry, "uri")
-    if (not uri or "\\" in uri or Path(uri).is_absolute() or ":" in uri
-            or "$" in uri.replace("${KIPRJMOD}", "") or uri.count("${KIPRJMOD}") > 1):
-        raise ValueError("Footprint library is global, machine-specific or unresolved; "
-                         "declare a reviewed repository library using KIPRJMOD")
+    if (
+        not uri
+        or "\\" in uri
+        or Path(uri).is_absolute()
+        or ":" in uri
+        or "$" in uri.replace("${KIPRJMOD}", "")
+        or uri.count("${KIPRJMOD}") > 1
+    ):
+        raise ValueError(
+            "Footprint library is global, machine-specific or unresolved; "
+            "declare a reviewed repository library using KIPRJMOD"
+        )
     target = Path(uri.replace("${KIPRJMOD}", str(project_dir)))
     if not target.is_absolute():
         target = project_dir / target
@@ -504,7 +589,9 @@ def validate_footprint_binding(root: Path, project_id: str, footprint: str) -> N
     if member_name not in config.required_inputs or not any(
         member_name.startswith(source_root + "/") for source_root in config.source_roots
     ):
-        raise ValueError(f"Reviewed footprint {member_name} must be declared in this project's inputs")
+        raise ValueError(
+            f"Reviewed footprint {member_name} must be declared in this project's inputs"
+        )
     if not member.is_file():
         raise ValueError(f"Reviewed footprint file is missing: {member_name}")
     text = member.read_bytes().decode("utf-8")
@@ -513,8 +600,12 @@ def validate_footprint_binding(root: Path, project_id: str, footprint: str) -> N
         raise ValueError(f"Reviewed footprint file identity differs from {footprint}")
 
 
-def preview_cad(root: Path, project_id: str, selected: Mapping[str, PartRecord],
-                model_references: Mapping[str, str]) -> PartCadChanges:
+def preview_cad(
+    root: Path,
+    project_id: str,
+    selected: Mapping[str, PartRecord],
+    model_references: Mapping[str, str],
+) -> PartCadChanges:
     """Plan part fields and model links without writing or moving any CAD geometry."""
     root = root.resolve()
     if set(selected) != set(model_references):
@@ -532,8 +623,10 @@ def preview_cad(root: Path, project_id: str, selected: Mapping[str, PartRecord],
             raise ValueError(f"{reference}: multi-unit symbols must be assigned in KiCad")
         symbol = group[0]
         if not symbol.on_board:
-            raise ValueError(f"{reference}: off-board components must be assigned in KiCad; "
-                             "the board picker cannot add a PCB footprint for them")
+            raise ValueError(
+                f"{reference}: off-board components must be assigned in KiCad; "
+                "the board picker cannot add a PCB footprint for them"
+            )
         if symbol.component.dnp or symbol.component.exclude_from_bom:
             raise ValueError(f"{reference}: excluded components cannot be selected for purchasing")
         if part.cad is None:
@@ -543,15 +636,25 @@ def preview_cad(root: Path, project_id: str, selected: Mapping[str, PartRecord],
         changes.extend(_schematic_changes(schematic.source, symbol, part))
     after = _apply(schematic.source, changes, "kicad_sch")
     if after != schematic.source:
-        edits.append(PartSourceEdit(path=schematic.path.relative_to(root).as_posix(),
-                                    before=schematic.source, after=after))
+        edits.append(
+            PartSourceEdit(
+                path=schematic.path.relative_to(root).as_posix(),
+                before=schematic.source,
+                after=after,
+            )
+        )
     pending = tuple(sorted(selected))
     if schematic.board.is_file():
         source = schematic.board.read_bytes().decode("utf-8")
         changes, pending = _board_changes(source, selected, symbols, model_references)
         after = _apply(source, changes, "kicad_pcb")
-        after = _attach_authored_models(root, project_id, after, selected, model_references, pending)
+        after = _attach_authored_models(
+            root, project_id, after, selected, model_references, pending
+        )
         if after != source:
-            edits.append(PartSourceEdit(path=schematic.board.relative_to(root).as_posix(),
-                                       before=source, after=after))
+            edits.append(
+                PartSourceEdit(
+                    path=schematic.board.relative_to(root).as_posix(), before=source, after=after
+                )
+            )
     return PartCadChanges(edits=tuple(edits), pending_references=pending)

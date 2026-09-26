@@ -1,4 +1,5 @@
 """Current-state metrics tests; historical tracking remains an external system."""
+
 from __future__ import annotations
 
 import json

@@ -1,4 +1,5 @@
 """Declarative repository adapters; the template layout remains the default."""
+
 from __future__ import annotations
 
 import json
@@ -34,8 +35,10 @@ class ToolingConfiguration(StrictModel):
 def source_directory(root: Path, value: str) -> Path:
     """Keep configurable source scopes out of hidden state and generated trees."""
     path = repo_path(root, value)
-    if any(part.startswith(".") or part.casefold() in RESERVED_DIRECTORIES
-           for part in Path(value).parts):
+    if any(
+        part.startswith(".") or part.casefold() in RESERVED_DIRECTORIES
+        for part in Path(value).parts
+    ):
         raise ValueError(f"Source layout cannot use hidden or generated directories: {value}")
     return path
 
@@ -58,8 +61,16 @@ def layout(root: Path) -> RepositoryLayout:
         except (TypeError, ValueError) as exc:
             raise ValueError(f"{CONFIG_NAME}: invalid configuration: {exc}") from exc
     result = configuration.layout
-    for value in (result.discovery, result.products, result.team_policy, result.templates, result.workflow_docs,
-                  result.new_project_root, *result.product_roots, *result.library_roots):
+    for value in (
+        result.discovery,
+        result.products,
+        result.team_policy,
+        result.templates,
+        result.workflow_docs,
+        result.new_project_root,
+        *result.product_roots,
+        *result.library_roots,
+    ):
         source_directory(root, value)
     for roots in (result.product_roots, result.library_roots):
         if not roots or len({value.casefold() for value in roots}) != len(roots):
@@ -70,4 +81,8 @@ def layout(root: Path) -> RepositoryLayout:
 def workflow_guide(root: Path, value: str) -> str:
     """Map a built-in workflow guide to this checkout's documented guide location."""
     prefix = "docs/workflow/"
-    return f"{layout(root).workflow_docs}/{value[len(prefix):]}" if value.startswith(prefix) else value
+    return (
+        f"{layout(root).workflow_docs}/{value[len(prefix) :]}"
+        if value.startswith(prefix)
+        else value
+    )

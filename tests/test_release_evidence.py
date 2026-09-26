@@ -2,6 +2,7 @@
 
 The hosted native lane separately prepares and restores a package from real KiCad.
 """
+
 from __future__ import annotations
 
 import json
@@ -60,67 +61,135 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.root = self.parent / "source"
         shutil.copytree(reference_root(), self.root, ignore=shutil.ignore_patterns(".git"))
         initialize_git(self.root)
-        self.git("-c", "user.name=Scaffold test fixture", "-c", "user.email=fixture@example.invalid",
-                 "commit", "-qm", "Synthetic release test source")
+        self.git(
+            "-c",
+            "user.name=Scaffold test fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Synthetic release test source",
+        )
         self.project_id = "passive-signal-reference"
         self.config = load_config(self.root, f"examples/projects/{self.project_id}/project.json")
         self.source = source_state(self.root)
         self.assertTrue(self.source.clean)
         self.directory = self.root / "build/releases/test"
         self.directory.mkdir(parents=True)
-        command = CommandEvidence(argv=("synthetic-unit-test-evidence",),
-                                  started_utc="2026-01-01T00:00:00Z", returncode=0)
-        portable = StaticPipelineReport(status="PASS", source=self.source,
-                    registry=lint(self.root), repository=check_repository(self.root),
-                    documentation=check_docs(self.root), rumdl=command, mdrepo=command,
-                    product=check_product(self.root),
-                    generation=GenerationReport(status="PASS", issues=()),
-                    ruff=command, pyright=command, unit_tests=command,
-                    project_tests=ProjectTestsReport(status="PASS", commands={}))
+        command = CommandEvidence(
+            argv=("synthetic-unit-test-evidence",), started_utc="2026-01-01T00:00:00Z", returncode=0
+        )
+        portable = StaticPipelineReport(
+            status="PASS",
+            source=self.source,
+            registry=lint(self.root),
+            repository=check_repository(self.root),
+            documentation=check_docs(self.root),
+            rumdl=command,
+            mdrepo=command,
+            product=check_product(self.root),
+            generation=GenerationReport(status="PASS", issues=()),
+            ruff=command,
+            pyright=command,
+            unit_tests=command,
+            project_tests=ProjectTestsReport(status="PASS", commands={}),
+        )
         write_model(self.directory / "portable.json", portable)
         native = self.directory / "native"
         native.mkdir()
         (native / "schematic").mkdir()
-        (native / "schematic/sheet.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8")
-        (native / "erc.json").write_text(json.dumps({
-            "$schema": "https://schemas.kicad.org/erc.v1.json", "kicad_version": "10.0.5",
-            "included_severities": ["error", "warning", "exclusion"],
-            "ignored_checks": [{"key": name} for name in self.config.validation.expected_ignored_checks.erc],
-            "sheets": [{"violations": []}],
-        }), encoding="utf-8")
+        (native / "schematic/sheet.svg").write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8"
+        )
+        (native / "erc.json").write_text(
+            json.dumps(
+                {
+                    "$schema": "https://schemas.kicad.org/erc.v1.json",
+                    "kicad_version": "10.0.5",
+                    "included_severities": ["error", "warning", "exclusion"],
+                    "ignored_checks": [
+                        {"key": name} for name in self.config.validation.expected_ignored_checks.erc
+                    ],
+                    "sheets": [{"violations": []}],
+                }
+            ),
+            encoding="utf-8",
+        )
         for name in ("version", "erc", "schematic_svg"):
             write_model(native / f"{name}.command.json", command)
         hashes = {name: self.source.files_sha256[name] for name in self.config.required_inputs}
-        checks = {name: CheckEvidence(status="PASS") for name in (
-            "governance", "repository", "product_policy", "erc", "schematic_svg")}
-        checks.update({"source_scope": CheckEvidence(status="PASS", source_hashes=hashes),
-                       "source_unchanged": CheckEvidence(status="PASS", source_hashes=hashes),
-                       "toolchain": CheckEvidence(status="PASS", observed_version="10.0.5", image=self.config.image)})
+        checks = {
+            name: CheckEvidence(status="PASS")
+            for name in ("governance", "repository", "product_policy", "erc", "schematic_svg")
+        }
+        checks.update(
+            {
+                "source_scope": CheckEvidence(status="PASS", source_hashes=hashes),
+                "source_unchanged": CheckEvidence(status="PASS", source_hashes=hashes),
+                "toolchain": CheckEvidence(
+                    status="PASS", observed_version="10.0.5", image=self.config.image
+                ),
+            }
+        )
         self.native_path = native / "summary.json"
-        write_model(self.native_path, ValidationSummary(timestamp_utc="2026-01-01T00:00:00Z",
-                    source=self.source, checked_commit=self.source.commit or "", project_id=self.project_id,
-                    project_kind=self.config.kind, assurance_profile="training", not_for_manufacture=True,
-                    checks=checks, status="PASS", artifacts_sha256={
-                        path.relative_to(native).as_posix(): digest(path) for path in native.rglob("*") if path.is_file()}))
+        write_model(
+            self.native_path,
+            ValidationSummary(
+                timestamp_utc="2026-01-01T00:00:00Z",
+                source=self.source,
+                checked_commit=self.source.commit or "",
+                project_id=self.project_id,
+                project_kind=self.config.kind,
+                assurance_profile="training",
+                not_for_manufacture=True,
+                checks=checks,
+                status="PASS",
+                artifacts_sha256={
+                    path.relative_to(native).as_posix(): digest(path)
+                    for path in native.rglob("*")
+                    if path.is_file()
+                },
+            ),
+        )
         review = self.directory / "review.txt"
-        review.write_text("Synthetic unit-test review record, not hardware approval.", encoding="utf-8")
-        self.manifest = ReleaseManifest(release_id="test", release_class=ReleaseClass.ENGINEERING_REVIEW,
-            status=ReleaseStatus.CANDIDATE, source_commit=self.source.commit or "", toolchain_id="kicad-10.0.5",
-            projects=(self.project_id,), libraries=(), interfaces=(),
-            evidence=ReleaseEvidence(portable=reference(self.root, self.directory / "portable.json"),
-                                     native={self.project_id: reference(self.root, self.native_path)}),
-            artifacts=(ReleaseArtifact(id="review", kind=ReleaseArtifactKind.REVIEW_RECORD,
-                       path=review.relative_to(self.root).as_posix(), sha256=digest(review),
-                       intended_use="Synthetic unit-test record"),))
+        review.write_text(
+            "Synthetic unit-test review record, not hardware approval.", encoding="utf-8"
+        )
+        self.manifest = ReleaseManifest(
+            release_id="test",
+            release_class=ReleaseClass.ENGINEERING_REVIEW,
+            status=ReleaseStatus.CANDIDATE,
+            source_commit=self.source.commit or "",
+            toolchain_id="kicad-10.0.5",
+            projects=(self.project_id,),
+            libraries=(),
+            interfaces=(),
+            evidence=ReleaseEvidence(
+                portable=reference(self.root, self.directory / "portable.json"),
+                native={self.project_id: reference(self.root, self.native_path)},
+            ),
+            artifacts=(
+                ReleaseArtifact(
+                    id="review",
+                    kind=ReleaseArtifactKind.REVIEW_RECORD,
+                    path=review.relative_to(self.root).as_posix(),
+                    sha256=digest(review),
+                    intended_use="Synthetic unit-test record",
+                ),
+            ),
+        )
         self.manifest_name = "build/releases/test/manifest.json"
         write_model(self.root / self.manifest_name, self.manifest)
 
     def git(self, *args: str) -> str:
-        return subprocess.run(("git", "-C", str(self.root), *args), check=True, capture_output=True,
-                              text=True).stdout.strip()
+        return subprocess.run(
+            ("git", "-C", str(self.root), *args), check=True, capture_output=True, text=True
+        ).stdout.strip()
 
     def test_standalone_release_restores_exact_commit_and_verified_evidence(self) -> None:
-        self.assertEqual(check(self.root, self.manifest).status, "PASS", check(self.root, self.manifest).issues)
+        self.assertEqual(
+            check(self.root, self.manifest).status, "PASS", check(self.root, self.manifest).issues
+        )
         archive = self.parent / "release.zip"
         packaged = package(self.root, self.manifest_name, archive)
         self.assertEqual(packaged.status, "PASS")
@@ -152,7 +221,9 @@ class ReleaseEvidenceTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "Legacy full reports require"):
                         verify_portable(self.root, reference(self.root, path), self.source)
 
-    def test_repository_evidence_binds_tooling_version_and_keeps_project_gates_required(self) -> None:
+    def test_repository_evidence_binds_tooling_version_and_keeps_project_gates_required(
+        self,
+    ) -> None:
         path = self.directory / "portable.json"
         original = json.loads(path.read_text())
         original.update(scope="repository_static", tooling_version="0.1.0")
@@ -181,8 +252,17 @@ class ReleaseEvidenceTests(unittest.TestCase):
             verify_portable(self.root, reference(self.root, path), self.source)
 
     def test_tag_is_added_after_source_commit_without_circular_manifest_commit(self) -> None:
-        self.git("-c", "user.name=Scaffold test fixture", "-c", "user.email=fixture@example.invalid",
-                 "tag", "-a", "test-review", "-m", "Synthetic unit-test tag")
+        self.git(
+            "-c",
+            "user.name=Scaffold test fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "tag",
+            "-a",
+            "test-review",
+            "-m",
+            "Synthetic unit-test tag",
+        )
         manifest = self.manifest.model_copy(update={"source_tag": "test-review"})
         write_model(self.root / self.manifest_name, manifest)
         archive = self.parent / "tagged.zip"
@@ -191,9 +271,13 @@ class ReleaseEvidenceTests(unittest.TestCase):
 
     def test_standalone_deviation_uses_retained_release_evidence(self) -> None:
         deviation = ReleaseDeviation(
-            id="DV-standalone", scope=(self.project_id,), owner="Synthetic test owner",
+            id="DV-standalone",
+            scope=(self.project_id,),
+            owner="Synthetic test owner",
             reason="Exercise standalone deviation evidence without a product record.",
-            status=DeviationStatus.APPROVED, expires=date(9999, 12, 31), evidence=("review",),
+            status=DeviationStatus.APPROVED,
+            expires=date(9999, 12, 31),
+            evidence=("review",),
         )
         manifest = self.manifest.model_copy(update={"deviations": (deviation,)})
         report = check(self.root, manifest)
@@ -209,16 +293,19 @@ class ReleaseEvidenceTests(unittest.TestCase):
             ("expires", date(2000, 1, 1), "DEVIATION_EXPIRY"),
         ):
             with self.subTest(field=field):
-                bad = manifest.model_copy(update={"deviations": (
-                    deviation.model_copy(update={field: value}),)})
+                bad = manifest.model_copy(
+                    update={"deviations": (deviation.model_copy(update={field: value}),)}
+                )
                 self.assertIn(code, {issue.code for issue in check(self.root, bad).issues})
 
     def test_release_portable_scope_is_exact_and_cannot_claim_full_coverage(self) -> None:
         selected = (self.project_id,)
         self.assertIsInstance(
             verify_release_portable(
-                self.root, reference(self.root, self.directory / "portable.json"),
-                self.source, selected,
+                self.root,
+                reference(self.root, self.directory / "portable.json"),
+                self.source,
+                selected,
             ),
             StaticPipelineReport,
         )
@@ -230,7 +317,8 @@ class ReleaseEvidenceTests(unittest.TestCase):
         write_model(path, scoped)
         retained = reference(self.root, path)
         self.assertEqual(
-            verify_release_portable(self.root, retained, self.source, selected), scoped,
+            verify_release_portable(self.root, retained, self.source, selected),
+            scoped,
         )
         with self.assertRaisesRegex(ValueError, "scope differs"):
             verify_release_portable(self.root, retained, self.source, ("controller",))
@@ -243,8 +331,9 @@ class ReleaseEvidenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             verify_release_portable(self.root, reference(self.root, path), self.source, selected)
 
-        failing = checks.model_copy(update={"project_tests": checks.project_tests.model_copy(
-            update={"status": "FAIL"})})
+        failing = checks.model_copy(
+            update={"project_tests": checks.project_tests.model_copy(update={"status": "FAIL"})}
+        )
         write_model(path, scoped.model_copy(update={"checks": failing}))
         with self.assertRaisesRegex(ValueError, "failed or missing"):
             verify_release_portable(self.root, reference(self.root, path), self.source, selected)
@@ -262,8 +351,15 @@ class ReleaseEvidenceTests(unittest.TestCase):
             unrelated_library.read_bytes() + b"\nStale unused catalog evidence.\n"
         )
         self.git("add", "--all")
-        self.git("-c", "user.name=Scaffold test fixture", "-c", "user.email=fixture@example.invalid",
-                 "commit", "-qm", "Unrelated legacy island is broken")
+        self.git(
+            "-c",
+            "user.name=Scaffold test fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Unrelated legacy island is broken",
+        )
         self.source = source_state(self.root)
         self.assertTrue(self.source.clean)
         full_lint = lint(self.root)
@@ -273,12 +369,24 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertEqual(selected_lint.status, "PASS", selected_lint.issues)
 
         native = read_model(self.native_path, ValidationSummary)
-        write_model(self.native_path, native.model_copy(update={
-            "source": self.source, "checked_commit": self.source.commit,
-        }))
+        write_model(
+            self.native_path,
+            native.model_copy(
+                update={
+                    "source": self.source,
+                    "checked_commit": self.source.commit,
+                }
+            ),
+        )
 
-        def copy_native(_root: Path, _project: object, output: Path, _cli: str | None,
-                        _dependencies: Path | None, export_only: bool = False) -> None:
+        def copy_native(
+            _root: Path,
+            _project: object,
+            output: Path,
+            _cli: str | None,
+            _dependencies: Path | None,
+            export_only: bool = False,
+        ) -> None:
             self.assertFalse(export_only)
             shutil.copytree(self.native_path.parent, output)
 
@@ -287,7 +395,8 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertEqual(prepared.evidence.portable.path, "build/releases/selected/portable.json")
         self.assertEqual(check(self.root, prepared).status, "PASS")
         portable = read_model(
-            self.root / prepared.evidence.portable.path, ScopedReleasePortableReport,
+            self.root / prepared.evidence.portable.path,
+            ScopedReleasePortableReport,
         )
         self.assertEqual(portable.projects, (self.project_id,))
         self.assertEqual(portable.source, self.source)
@@ -304,7 +413,9 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertEqual(check(self.root, self.manifest).status, "FAIL")
         self.git("restore", "--", self.config.required_inputs[0])
         self.native_path.unlink()
-        self.assertIn("RELEASE_EVIDENCE", {issue.code for issue in check(self.root, self.manifest).issues})
+        self.assertIn(
+            "RELEASE_EVIDENCE", {issue.code for issue in check(self.root, self.manifest).issues}
+        )
 
     def test_assume_unchanged_does_not_hide_modified_source(self) -> None:
         name = self.config.required_inputs[0]
@@ -321,7 +432,9 @@ class ReleaseEvidenceTests(unittest.TestCase):
         bad["erc"] = CheckEvidence(status="FAIL", returncode=5, findings=1)
         write_model(self.native_path, native.model_copy(update={"checks": bad}))
         with self.assertRaisesRegex(ValueError, "failed or missing"):
-            verify_native(self.root, reference(self.root, self.native_path), self.source, self.project_id)
+            verify_native(
+                self.root, reference(self.root, self.native_path), self.source, self.project_id
+            )
 
     def test_tampering_missing_extra_and_unsafe_archive_members_fail(self) -> None:
         archive = self.parent / "good.zip"

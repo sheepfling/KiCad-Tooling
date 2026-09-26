@@ -3,6 +3,7 @@
 This produces disposable boards and paired views. It never installs STEP or
 asserts manufacturer dimensions, pad contact, or mechanical approval.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -89,19 +90,42 @@ def _fixture_footprint(source: str, name: str, model: str) -> str:
     if len(models) != 1:
         raise ValueError("STEP review requires one paired footprint model")
     token = _tokens(native, models[0])[1]
-    return native[:token.start] + _quote(model) + native[token.end:]
+    return native[: token.start] + _quote(model) + native[token.end :]
 
 
-def _docker(output: Path, image: str, entrypoint: str, arguments: tuple[str, ...],
-            timeout: int = 180) -> CommandEvidence:
+def _docker(
+    output: Path, image: str, entrypoint: str, arguments: tuple[str, ...], timeout: int = 180
+) -> CommandEvidence:
     if _IMAGE.fullmatch(image) is None:
         raise ValueError("STEP review requires the project's digest-pinned KiCad image")
-    user: tuple[str, ...] = () if os.name == "nt" else (
-        "--user", f"{os.getuid()}:{os.getgid()}",
+    user: tuple[str, ...] = (
+        ()
+        if os.name == "nt"
+        else (
+            "--user",
+            f"{os.getuid()}:{os.getgid()}",
+        )
     )
-    command = ("docker", "run", "--rm", "--platform", "linux/amd64", "--network", "none",
-               *user, "--entrypoint", entrypoint, "-e", "HOME=/tmp/kicad-step-review",
-               "-v", f"{output}:/output:rw", "-w", "/output", image, *arguments)
+    command = (
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        *user,
+        "--entrypoint",
+        entrypoint,
+        "-e",
+        "HOME=/tmp/kicad-step-review",
+        "-v",
+        f"{output}:/output:rw",
+        "-w",
+        "/output",
+        image,
+        *arguments,
+    )
     return _command(output, command, timeout)
 
 
@@ -113,19 +137,21 @@ def _gallery(report: CadStepReport) -> str:
         f'<td><a href="step-{pose}.png"><img src="step-{pose}.png" alt="STEP {pose} placement"></a></td></tr>'
         for pose in _POSES
     )
-    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
-            f'<meta name="viewport" content="width=device-width,initial-scale=1">'
-            f'<title>{title}</title><link rel="stylesheet" href="index.css"></head>'
-            f'<body><main><h1>{title}</h1>'
-            '<p>Compare the body, contacts, pin-one mark, height and position relative to the pads '
-            'in every view. Select an image to inspect it full size. These are disposable '
-            'test boards, not the project PCB.</p>'
-            '<p>A STEP export and matching view do not certify manufacturer dimensions or physical fit. '
-            'Keep STEP out of the project library until this particular source is reviewed.</p>'
-            '<table><thead><tr><th>View</th><th>Paired WRL</th><th>Raw STEP</th></tr></thead>'
-            f'<tbody>{rows}</tbody></table>'
-            '<p><a href="assembly.step">Download disposable STEP assembly</a></p>'
-            '<p><a href="../">Back to parts assistant</a></p></main></body></html>\n')
+    return (
+        f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        f'<meta name="viewport" content="width=device-width,initial-scale=1">'
+        f'<title>{title}</title><link rel="stylesheet" href="index.css"></head>'
+        f"<body><main><h1>{title}</h1>"
+        "<p>Compare the body, contacts, pin-one mark, height and position relative to the pads "
+        "in every view. Select an image to inspect it full size. These are disposable "
+        "test boards, not the project PCB.</p>"
+        "<p>A STEP export and matching view do not certify manufacturer dimensions or physical fit. "
+        "Keep STEP out of the project library until this particular source is reviewed.</p>"
+        "<table><thead><tr><th>View</th><th>Paired WRL</th><th>Raw STEP</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table>"
+        '<p><a href="assembly.step">Download disposable STEP assembly</a></p>'
+        '<p><a href="../">Back to parts assistant</a></p></main></body></html>\n'
+    )
 
 
 def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -> CadStepReport:
@@ -150,7 +176,9 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
             raise ValueError("Find an exact CAD part before checking STEP alignment")
         bundle = source.bundle
         directory = repo_path(root, Path(source.bundle_directory).relative_to(root).as_posix())
-        parent = repo_path(root, f"build/cad-source-cache/easyeda-{bundle.converter_version}/{bundle.supplier_id}")
+        parent = repo_path(
+            root, f"build/cad-source-cache/easyeda-{bundle.converter_version}/{bundle.supplier_id}"
+        )
         if directory.name != "bundle" or directory.parent.parent != parent:
             raise ValueError("STEP review requires its source-bound local CAD cache")
         if _cached(directory.parent, bundle.supplier_id, bundle.mpn) != bundle:
@@ -160,7 +188,10 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
             raise ValueError("CAD library is not internally consistent: " + "; ".join(check.issues))
         raw = repo_path(directory.parent, f"source/{bundle.supplier_id}.json")
         identity = parse_easyeda_identity(raw.read_text(encoding="utf-8"))
-        if identity.supplier_id != bundle.supplier_id or identity.model_title != Path(bundle.model_file).stem:
+        if (
+            identity.supplier_id != bundle.supplier_id
+            or identity.model_title != Path(bundle.model_file).stem
+        ):
             raise ValueError("Frozen STEP identity differs from the paired WRL model")
         step = repo_path(directory.parent, f"source/{identity.model_uuid}.step")
         if step.stat().st_size == 0:
@@ -183,8 +214,14 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
             library = output / f"{kind}.pretty"
             library.mkdir()
             target = library / f"{bundle.footprint_name}.kicad_mod"
-            target.write_text(_fixture_footprint(footprint.read_text(encoding="utf-8"),
-                              bundle.footprint_name, f"/output/model.{kind}"), encoding="utf-8")
+            target.write_text(
+                _fixture_footprint(
+                    footprint.read_text(encoding="utf-8"),
+                    bundle.footprint_name,
+                    f"/output/model.{kind}",
+                ),
+                encoding="utf-8",
+            )
         (output / "make_boards.py").write_text(_FIXTURE, encoding="utf-8")
         specifications = [
             ("version", "kicad-cli", ("version",), 30),
@@ -197,14 +234,29 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
             if result.returncode != 0 or result.error:
                 raise ValueError(f"Pinned KiCad {name} failed; inspect {name}.command.json")
             if name == "version" and result.stdout.strip() != config.kicad_version:
-                raise ValueError(f"KiCad version {result.stdout.strip()} differs from {config.kicad_version}")
+                raise ValueError(
+                    f"KiCad version {result.stdout.strip()} differs from {config.kicad_version}"
+                )
         for kind in ("wrl", "step"):
             for pose in _POSES:
                 name = f"{kind}-{pose}"
                 side = "bottom" if pose == "bottom" else "top"
-                args = ("pcb", "render", "--width", "1200", "--height", "900",
-                        "--side", side, "--zoom", "2.5", *(("--rotate", "45,0,45") if pose == "angled" else ()) ,
-                        "-o", f"/output/{name}.png", f"/output/{name}.kicad_pcb")
+                args = (
+                    "pcb",
+                    "render",
+                    "--width",
+                    "1200",
+                    "--height",
+                    "900",
+                    "--side",
+                    side,
+                    "--zoom",
+                    "2.5",
+                    *(("--rotate", "45,0,45") if pose == "angled" else ()),
+                    "-o",
+                    f"/output/{name}.png",
+                    f"/output/{name}.kicad_pcb",
+                )
                 result = _docker(output, config.image, "kicad-cli", args, 180)
                 commands[name] = result
                 write_model(output / f"{name}.command.json", result)
@@ -212,9 +264,20 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
                 if result.returncode != 0 or result.error or not _valid_artifact(image_path, "png"):
                     raise ValueError(f"KiCad could not render {name}; inspect {name}.command.json")
                 artifacts[image_path.name] = _sha(image_path)
-        export = _docker(output, config.image, "kicad-cli", (
-            "pcb", "export", "step", "-o", "/output/assembly.step", "/output/step-top.kicad_pcb",
-        ), 180)
+        export = _docker(
+            output,
+            config.image,
+            "kicad-cli",
+            (
+                "pcb",
+                "export",
+                "step",
+                "-o",
+                "/output/assembly.step",
+                "/output/step-top.kicad_pcb",
+            ),
+            180,
+        )
         commands["assembly"] = export
         write_model(output / "assembly.command.json", export)
         assembly = output / "assembly.step"
@@ -224,21 +287,40 @@ def review(root: Path, project_id: str, source: CadSourceReport, output: Path) -
             raise ValueError("KiCad assembly STEP lacks an identifiable component solid")
         artifacts[assembly.name] = _sha(assembly)
         if {str(path): _sha(path) for path in source_paths} != before:
-            raise ValueError("CAD source changed while STEP evidence was generated; discard the receipt")
+            raise ValueError(
+                "CAD source changed while STEP evidence was generated; discard the receipt"
+            )
         status = "REVIEW"
-        issues = ("Compare every STEP and WRL view against the same pads before accepting alignment.",
-                  "The STEP model is not installed by this check; manufacturer fit is unverified.")
+        issues = (
+            "Compare every STEP and WRL view against the same pads before accepting alignment.",
+            "The STEP model is not installed by this check; manufacturer fit is unverified.",
+        )
     except (OSError, ValueError, UnicodeError) as error:
         issues = (str(error),)
-    report = CadStepReport(status=status, project_id=project_id, supplier_id=source.supplier_id,
-        source_bundle_sha256=bundle_sha256, source_step_sha256=step_sha256,
-        kicad_version=version, image=image, artifacts_sha256=artifacts,
-        commands=commands, issues=issues, receipt_directory=str(output))
+    report = CadStepReport(
+        status=status,
+        project_id=project_id,
+        supplier_id=source.supplier_id,
+        source_bundle_sha256=bundle_sha256,
+        source_step_sha256=step_sha256,
+        kicad_version=version,
+        image=image,
+        artifacts_sha256=artifacts,
+        commands=commands,
+        issues=issues,
+        receipt_directory=str(output),
+    )
     if status == "REVIEW":
         (output / "index.html").write_text(_gallery(report), encoding="utf-8")
         (output / "index.css").write_text(_STYLE, encoding="utf-8")
-        report = report.model_copy(update={"artifacts_sha256": {
-            **artifacts, "index.html": _sha(output / "index.html"),
-            "index.css": _sha(output / "index.css")}})
+        report = report.model_copy(
+            update={
+                "artifacts_sha256": {
+                    **artifacts,
+                    "index.html": _sha(output / "index.html"),
+                    "index.css": _sha(output / "index.css"),
+                }
+            }
+        )
     write_model(output / "cad-step-report.json", report)
     return report

@@ -1,4 +1,5 @@
 """Print typed, read-only current metrics for template policy and release deviations."""
+
 from __future__ import annotations
 
 import argparse
@@ -33,8 +34,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--manifest", help="Optional repository-relative release manifest")
-    parser.add_argument("--format", choices=("json", "text"), default="json",
-                        help="Machine JSON (default) or a concise human summary")
+    parser.add_argument(
+        "--format",
+        choices=("json", "text"),
+        default="json",
+        help="Machine JSON (default) or a concise human summary",
+    )
     args = parser.parse_args()
     root = args.root.resolve()
     try:

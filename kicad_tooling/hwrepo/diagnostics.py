@@ -1,4 +1,5 @@
 """Turn existing import, portable, and native findings into repair guidance."""
+
 from __future__ import annotations
 
 import csv
@@ -48,31 +49,47 @@ def quote_argument(value: str, windows: bool | None = None) -> str:
 def finding(
     severity: str, code: str, location: str, observed: str, action: str, guide: str
 ) -> DiagnosticFinding:
-    return DiagnosticFinding.model_validate({
-        "severity": severity, "code": code, "location": location,
-        "observed": observed, "action": action, "guide": guide,
-    })
+    return DiagnosticFinding.model_validate(
+        {
+            "severity": severity,
+            "code": code,
+            "location": location,
+            "observed": observed,
+            "action": action,
+            "guide": guide,
+        }
+    )
 
 
 def report(
-    project_id: str, scope: str, findings: list[DiagnosticFinding], next_command: str,
-    follow_up_command: str | None = None, root: Path | None = None,
+    project_id: str,
+    scope: str,
+    findings: list[DiagnosticFinding],
+    next_command: str,
+    follow_up_command: str | None = None,
+    root: Path | None = None,
 ) -> DiagnosticReport:
     if root is not None:
         try:
-            findings = [row.model_copy(update={"guide": workflow_guide(root, row.guide)})
-                        for row in findings]
+            findings = [
+                row.model_copy(update={"guide": workflow_guide(root, row.guide)})
+                for row in findings
+            ]
         except (OSError, ValueError):
             # Discovery diagnostics must remain readable when the adapter itself is invalid.
             pass
-    return DiagnosticReport.model_validate({
-        "project_id": project_id,
-        "scope": scope,
-        "status": "NEEDS_WORK" if any(row.severity == "BLOCKING" for row in findings) else "PASS",
-        "findings": tuple(findings),
-        "next_command": next_command,
-        "follow_up_command": follow_up_command,
-    })
+    return DiagnosticReport.model_validate(
+        {
+            "project_id": project_id,
+            "scope": scope,
+            "status": "NEEDS_WORK"
+            if any(row.severity == "BLOCKING" for row in findings)
+            else "PASS",
+            "findings": tuple(findings),
+            "next_command": next_command,
+            "follow_up_command": follow_up_command,
+        }
+    )
 
 
 def import_guidance(message: str) -> str:
@@ -115,7 +132,10 @@ def import_guidance(message: str) -> str:
 
 
 def diagnose_import(
-    root: Path, source: Path, project_id: str, toolchain_id: str,
+    root: Path,
+    source: Path,
+    project_id: str,
+    toolchain_id: str,
     journal: DiagnosticJournal | None = None,
 ) -> DiagnosticReport:
     """Preview an import and group omissions without copying the candidate project."""
@@ -125,13 +145,15 @@ def diagnose_import(
         if journal is not None:
             journal.save_model("import-preview", preview)
     findings = [
-        finding("BLOCKING", "IMPORT", source.as_posix(), issue,
-                import_guidance(issue), IMPORT_GUIDE)
+        finding(
+            "BLOCKING", "IMPORT", source.as_posix(), issue, import_guidance(issue), IMPORT_GUIDE
+        )
         for issue in preview.issues
     ]
     if preview.status == "PASS":
         toolchains = read_model(
-            repo_path(root, settings(root).catalogs.toolchains), ToolchainsCatalog,
+            repo_path(root, settings(root).catalogs.toolchains),
+            ToolchainsCatalog,
         )
         toolchain = next(item for item in toolchains.toolchains if item.id == toolchain_id)
         major = toolchain.kicad_version.split(".")[0]
@@ -146,47 +168,63 @@ def diagnose_import(
         for name in sorted(copied):
             path = source_dir / name
             if path.suffix not in {".kicad_pcb", ".kicad_mod"} and path.name not in {
-                "sym-lib-table", "fp-lib-table",
+                "sym-lib-table",
+                "fp-lib-table",
             }:
                 continue
             for issue in cad_dependencies(
-                source_dir, path, source_dir, major, copied,
-                frozenset(source_roots), exposed_inputs=copied,
+                source_dir,
+                path,
+                source_dir,
+                major,
+                copied,
+                frozenset(source_roots),
+                exposed_inputs=copied,
             ):
                 guidance = repository_guidance(issue, major)
                 location = f"{source_dir}/{guidance.location}"
-                findings.append(finding(
-                    "BLOCKING", "CAD_PATH", location, guidance.observed,
-                    guidance.action + " Repair the original source, then preview import again.",
-                    IMPORT_GUIDE,
-                ))
+                findings.append(
+                    finding(
+                        "BLOCKING",
+                        "CAD_PATH",
+                        location,
+                        guidance.observed,
+                        guidance.action + " Repair the original source, then preview import again.",
+                        IMPORT_GUIDE,
+                    )
+                )
     if preview.excluded:
         counts = Counter(preview.excluded.values())
         actions = {
             "generated export": "Regenerate working Gerbers, drills or other exports from the "
-                "imported source under ignored build/; do not commit the old export.",
+            "imported source under ignored build/; do not commit the old export.",
             "local state or build output": "Leave caches, preferences and prior build outputs "
-                "behind. Recreate them locally only if needed.",
-            "artifact restricted by repository hygiene; review separately":
-                "Inspect the excluded list for authored documentation or assets. Move needed "
-                "source into an allowed project path under an explicit team policy; keep vendor "
-                "packages and generated media outside the source repository.",
+            "behind. Recreate them locally only if needed.",
+            "artifact restricted by repository hygiene; review separately": "Inspect the excluded list for authored documentation or assets. Move needed "
+            "source into an allowed project path under an explicit team policy; keep vendor "
+            "packages and generated media outside the source repository.",
             "separate nested project; import independently": "Preview and import that separate "
-                "design using its own .kicad_pro and project ID.",
+            "design using its own .kicad_pro and project ID.",
             "separate sibling project; import independently": "Preview and import that separate "
-                "design using its own .kicad_pro and project ID.",
+            "design using its own .kicad_pro and project ID.",
             "schematic outside the selected hierarchy": "Check whether this is an unused "
-                "backup or a separate design. Never silently discard a sheet referenced "
-                "by the selected schematic.",
+            "backup or a separate design. Never silently discard a sheet referenced "
+            "by the selected schematic.",
         }
         for reason, count in sorted(counts.items()):
             examples = [name for name, value in preview.excluded.items() if value == reason][:3]
-            findings.append(finding(
-                "REVIEW", "IMPORT_EXCLUSIONS", source.parent.as_posix(),
-                f"{count} excluded as {reason}; examples: {', '.join(examples)}",
-                actions.get(reason, "Review the excluded list in import-preview.json before copying."),
-                IMPORT_GUIDE,
-            ))
+            findings.append(
+                finding(
+                    "REVIEW",
+                    "IMPORT_EXCLUSIONS",
+                    source.parent.as_posix(),
+                    f"{count} excluded as {reason}; examples: {', '.join(examples)}",
+                    actions.get(
+                        reason, "Review the excluded list in import-preview.json before copying."
+                    ),
+                    IMPORT_GUIDE,
+                )
+            )
     command = (
         "python -B -m kicad_tooling.template "
         + ("diagnose" if any(row.severity == "BLOCKING" for row in findings) else "import-project")
@@ -202,19 +240,24 @@ def repository_guidance(issue: str, kicad_major: str | None = None) -> Diagnosti
         location, _, observed = issue.removeprefix("CAD_PATH: ").partition(": ")
         if "machine-local dependency" in observed:
             normalized = observed.casefold().replace("\\", "/")
-            installed = any(prefix in normalized for prefix in (
-                "/usr/share/kicad/", "/applications/kicad/", "/program files/kicad/"
-            ))
+            installed = any(
+                prefix in normalized
+                for prefix in ("/usr/share/kicad/", "/applications/kicad/", "/program files/kicad/")
+            )
             if installed:
                 variable = (
-                    "FOOTPRINT_DIR" if "/footprints/" in normalized else
-                    "SYMBOL_DIR" if "/symbols/" in normalized else
-                    "3DMODEL_DIR" if "/3dmodels/" in normalized else None
+                    "FOOTPRINT_DIR"
+                    if "/footprints/" in normalized
+                    else "SYMBOL_DIR"
+                    if "/symbols/" in normalized
+                    else "3DMODEL_DIR"
+                    if "/3dmodels/" in normalized
+                    else None
                 )
                 library = (
                     f"${{KICAD{kicad_major}_{variable}}}"
-                    if kicad_major is not None and variable is not None else
-                    "the pinned versioned KiCad library variable"
+                    if kicad_major is not None and variable is not None
+                    else "the pinned versioned KiCad library variable"
                 )
                 action = (
                     f"Replace the machine-specific installed-library prefix with {library}, "
@@ -241,10 +284,15 @@ def repository_guidance(issue: str, kicad_major: str | None = None) -> Diagnosti
                 "Find and include the intended asset or correct the reference. Do not create "
                 "a placeholder model solely to satisfy this check."
             )
-        elif any(marker in observed for marker in (
-            "not in this project's required_inputs", "no inventoried inputs",
-            "outside this project's source_roots", "exposes unlisted files",
-        )):
+        elif any(
+            marker in observed
+            for marker in (
+                "not in this project's required_inputs",
+                "no inventoried inputs",
+                "outside this project's source_roots",
+                "exposes unlisted files",
+            )
+        ):
             action = (
                 "If this is board-local, add the asset under this project's source_roots and "
                 "required_inputs. If multiple boards use it, move it into a registered "
@@ -253,8 +301,14 @@ def repository_guidance(issue: str, kicad_major: str | None = None) -> Diagnosti
             )
         else:
             action = "Correct the named KiCad dependency and rerun the selected portable check."
-        return finding("BLOCKING", "CAD_PATH", location or "KiCad source",
-                       observed or issue, action, IMPORT_GUIDE)
+        return finding(
+            "BLOCKING",
+            "CAD_PATH",
+            location or "KiCad source",
+            observed or issue,
+            action,
+            IMPORT_GUIDE,
+        )
     code, _, detail = issue.partition(": ")
     if code in {"TRACKED_GENERATED_OUTPUT", "TRACKED_LOCAL_STATE"}:
         action = (
@@ -276,12 +330,15 @@ def repository_guidance(issue: str, kicad_major: str | None = None) -> Diagnosti
         )
     else:
         action = "Inspect the named repository input and correct the source or declaration."
-    return finding("BLOCKING", code or "REPOSITORY", detail or "repository", issue,
-                   action, CHECKS_GUIDE)
+    return finding(
+        "BLOCKING", code or "REPOSITORY", detail or "repository", issue, action, CHECKS_GUIDE
+    )
 
 
 def portable_findings(
-    root: Path, project_id: str, journal: DiagnosticJournal | None = None,
+    root: Path,
+    project_id: str,
+    journal: DiagnosticJournal | None = None,
     portable_report: ProjectStaticPipelineReport | None = None,
 ) -> list[DiagnosticFinding]:
     """Explain captured portable evidence, or run a fresh lane for standalone diagnosis."""
@@ -303,32 +360,48 @@ def portable_findings(
     contract_path = repo_path(manifest_path.parent, manifest.checks).relative_to(root).as_posix()
     findings = [
         finding(
-            "BLOCKING", "ELECTRICAL_SETUP" if ": electrical:" in issue else "REGISTRY",
+            "BLOCKING",
+            "ELECTRICAL_SETUP" if ": electrical:" in issue else "REGISTRY",
             config.electrical or contract_path if ": electrical:" in issue else "project/catalog",
             issue,
-            ("Complete the pending requirements or review stale model bindings; "
-             f"run kicad_tooling.template doctor --electrical --project-id {project_id} --format text. "
-             f"Use kicad_tooling.electrical --project {project_id} --capture-inputs for unreviewed hash candidates; never refresh approvals automatically.")
-            if ": electrical:" in issue else
-            "Correct the named project manifest, inventory, or catalog record; rerun the selected check. "
+            (
+                "Complete the pending requirements or review stale model bindings; "
+                f"run kicad_tooling.template doctor --electrical --project-id {project_id} --format text. "
+                f"Use kicad_tooling.electrical --project {project_id} --capture-inputs for unreviewed hash candidates; never refresh approvals automatically."
+            )
+            if ": electrical:" in issue
+            else "Correct the named project manifest, inventory, or catalog record; rerun the selected check. "
             "Do not relax the contract to hide a source problem.",
             "docs/workflow/ELECTRICAL_ANALYSIS.md" if ": electrical:" in issue else CHECKS_GUIDE,
-        ) for issue in result.registry.issues
+        )
+        for issue in result.registry.issues
     ]
     findings.extend(
         repository_guidance(issue, config.kicad_version.split(".")[0])
         for issue in result.repository.issues
     )
     findings.extend(
-        finding("BLOCKING", issue.code, issue.location, issue.message,
-                "Correct the authored product/catalog relationship, then regenerate and rerun "
-                "the selected check.", "docs/workflow/PRODUCT_WORKFLOW.md")
+        finding(
+            "BLOCKING",
+            issue.code,
+            issue.location,
+            issue.message,
+            "Correct the authored product/catalog relationship, then regenerate and rerun "
+            "the selected check.",
+            "docs/workflow/PRODUCT_WORKFLOW.md",
+        )
         for issue in result.product.issues
     )
     findings.extend(
-        finding("BLOCKING", "GENERATION", "generated view", issue,
-                "Review the source records, regenerate ignored views with "
-                "'python -B -m kicad_tooling.hardware generate', then rerun the check.", CHECKS_GUIDE)
+        finding(
+            "BLOCKING",
+            "GENERATION",
+            "generated view",
+            issue,
+            "Review the source records, regenerate ignored views with "
+            "'python -B -m kicad_tooling.hardware generate', then rerun the check.",
+            CHECKS_GUIDE,
+        )
         for issue in result.generation.issues
     )
     for name, command in result.project_tests.commands.items():
@@ -339,66 +412,99 @@ def portable_findings(
             "Check the island's tests/ directory and discoverable test_*.py files. Nested "
             "test directories need __init__.py; fix the named import or syntax error and rerun "
             "the selected check."
-            if name == "discovery" or "none were discovered" in (command.error or "") else
-            "Open the failing test and its assertion, repair the design or test fixture from "
+            if name == "discovery" or "none were discovered" in (command.error or "")
+            else "Open the failing test and its assertion, repair the design or test fixture from "
             "the requirement, then rerun the selected verification. The complete test stderr "
             "is in this run's portable.json."
         )
-        findings.append(finding(
-            "BLOCKING", "PROJECT_TEST", name, detail or f"exit {command.returncode}",
-            action, "tests/README.md",
-        ))
+        findings.append(
+            finding(
+                "BLOCKING",
+                "PROJECT_TEST",
+                name,
+                detail or f"exit {command.returncode}",
+                action,
+                "tests/README.md",
+            )
+        )
     if config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC} and config.electrical is None:
-        findings.append(finding(
-            "REVIEW", "ELECTRICAL_NOT_CONFIGURED", contract_path,
-            "Grounding requirements, power budgets and transient/frequency analysis are not configured.",
-            "Review applicability with the electrical owner. Start pending requirements with "
-            f"kicad-team electrical --project {quote_argument(project_id)} --init; author reviewed "
-            "limits or explicit not-applicable reasons, then run "
-            f"kicad-team verify --project {quote_argument(project_id)} --depth electrical. "
-            "A portable/native PASS does not assess these missing requirements.",
-            "docs/workflow/ELECTRICAL_ANALYSIS.md",
-        ))
+        findings.append(
+            finding(
+                "REVIEW",
+                "ELECTRICAL_NOT_CONFIGURED",
+                contract_path,
+                "Grounding requirements, power budgets and transient/frequency analysis are not configured.",
+                "Review applicability with the electrical owner. Start pending requirements with "
+                f"kicad-team electrical --project {quote_argument(project_id)} --init; author reviewed "
+                "limits or explicit not-applicable reasons, then run "
+                f"kicad-team verify --project {quote_argument(project_id)} --depth electrical. "
+                "A portable/native PASS does not assess these missing requirements.",
+                "docs/workflow/ELECTRICAL_ANALYSIS.md",
+            )
+        )
     if config.kind is ProjectKind.PCB_ONLY:
-        findings.append(finding(
-            "REVIEW", "PCB_ONLY_SCOPE", project.config,
-            "Board-only validation has no schematic, ERC, netlist, or native assembly BOM.",
-            "Capture the board with DRC, then create or adopt an authoritative schematic "
-            "before product or manufacturing release.", IMPORT_GUIDE,
-        ))
+        findings.append(
+            finding(
+                "REVIEW",
+                "PCB_ONLY_SCOPE",
+                project.config,
+                "Board-only validation has no schematic, ERC, netlist, or native assembly BOM.",
+                "Capture the board with DRC, then create or adopt an authoritative schematic "
+                "before product or manufacturing release.",
+                IMPORT_GUIDE,
+            )
+        )
     elif config.kind is ProjectKind.PCB and isinstance(config.validation, PcbValidationContract):
         if not config.validation.components:
-            findings.append(finding(
-                "BLOCKING", "EMPTY_COMPONENT_CONTRACT", contract_path,
-                "The independent component contract is empty.",
-                "Have an engineer author and review expected references, values, footprints "
-                f"and nets in {contract_path} from design requirements; do not copy the "
-                "export merely to make the check pass.", FIRST_BOARD_GUIDE,
-            ))
+            findings.append(
+                finding(
+                    "BLOCKING",
+                    "EMPTY_COMPONENT_CONTRACT",
+                    contract_path,
+                    "The independent component contract is empty.",
+                    "Have an engineer author and review expected references, values, footprints "
+                    f"and nets in {contract_path} from design requirements; do not copy the "
+                    "export merely to make the check pass.",
+                    FIRST_BOARD_GUIDE,
+                )
+            )
         if not config.validation.nets:
-            findings.append(finding(
-                "REVIEW", "EMPTY_NET_CONTRACT", contract_path,
-                "The independent expected-net list is empty.",
-                "Check the circuit requirements and author the expected nets in "
-                f"{contract_path}. A deliberately net-free design needs an explicit "
-                "engineering review; do not copy the exported netlist as test truth.",
-                FIRST_BOARD_GUIDE,
-            ))
+            findings.append(
+                finding(
+                    "REVIEW",
+                    "EMPTY_NET_CONTRACT",
+                    contract_path,
+                    "The independent expected-net list is empty.",
+                    "Check the circuit requirements and author the expected nets in "
+                    f"{contract_path}. A deliberately net-free design needs an explicit "
+                    "engineering review; do not copy the exported netlist as test truth.",
+                    FIRST_BOARD_GUIDE,
+                )
+            )
         if not manifest.component_identity.required:
-            findings.append(finding(
-                "REVIEW", "PART_ID_SCOPE", project.config,
-                "Controlled component identity is not yet required for this project.",
-                "Assign stable PART_ID fields and reviewed catalog records before generating "
-                "a purchasing BOM or preparing a release.", BOM_GUIDE,
-            ))
+            findings.append(
+                finding(
+                    "REVIEW",
+                    "PART_ID_SCOPE",
+                    project.config,
+                    "Controlled component identity is not yet required for this project.",
+                    "Assign stable PART_ID fields and reviewed catalog records before generating "
+                    "a purchasing BOM or preparing a release.",
+                    BOM_GUIDE,
+                )
+            )
         if manifest.release_exports is None:
-            findings.append(finding(
-                "REVIEW", "EXPORT_SETTINGS", project.config,
-                "No release export settings are declared.",
-                "Review layer, drill-origin and placement settings, then declare "
-                "release_exports before a manufacturing export.",
-                "docs/workflow/RELEASE_READINESS.md",
-            ))
+            findings.append(
+                finding(
+                    "REVIEW",
+                    "EXPORT_SETTINGS",
+                    project.config,
+                    "No release export settings are declared.",
+                    "Review layer, drill-origin and placement settings, then declare "
+                    "release_exports before a manufacturing export.",
+                    "docs/workflow/RELEASE_READINESS.md",
+                )
+            )
     if config.kind in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
         try:
             with journal.stage("model-inventory") if journal is not None else nullcontext():
@@ -407,17 +513,24 @@ def portable_findings(
                     journal.save_model("models", model_inventory)
                 findings.extend(model_inventory.findings)
         except (OSError, ValueError) as exc:
-            findings.append(finding(
-                "BLOCKING", "MODEL_INVENTORY", project.config, str(exc),
-                "Repair the selected board or its declared model paths, then rerun diagnostics. "
-                "Model inspection does not require a native runner or approve mechanical fit.",
-                "docs/workflow/THREE_D_WORKFLOW.md",
-            ))
+            findings.append(
+                finding(
+                    "BLOCKING",
+                    "MODEL_INVENTORY",
+                    project.config,
+                    str(exc),
+                    "Repair the selected board or its declared model paths, then rerun diagnostics. "
+                    "Model inspection does not require a native runner or approve mechanical fit.",
+                    "docs/workflow/THREE_D_WORKFLOW.md",
+                )
+            )
     return findings
 
 
 def native_findings(
-    path: Path, project_id: str, root: Path | None = None,
+    path: Path,
+    project_id: str,
+    root: Path | None = None,
     journal: DiagnosticJournal | None = None,
 ) -> list[DiagnosticFinding]:
     if root is not None:
@@ -426,28 +539,44 @@ def native_findings(
     try:
         summary = read_model(summary_path, ValidationSummary)
     except (OSError, ValueError) as exc:
-        return [finding(
-            "BLOCKING", "NATIVE_REPORT", str(summary_path), str(exc),
-            "Select this project's native summary.json from a fresh KiCad check.", CHECKS_GUIDE,
-        )]
+        return [
+            finding(
+                "BLOCKING",
+                "NATIVE_REPORT",
+                str(summary_path),
+                str(exc),
+                "Select this project's native summary.json from a fresh KiCad check.",
+                CHECKS_GUIDE,
+            )
+        ]
     if journal is not None:
         journal.save_model("native-summary", summary)
     if summary.project_id != project_id:
-        return [finding(
-            "BLOCKING", "NATIVE_REPORT", str(summary_path),
-            f"Report project is {summary.project_id!r}, expected {project_id!r}.",
-            "Use the report from the selected project and exact checked source.", CHECKS_GUIDE,
-        )]
+        return [
+            finding(
+                "BLOCKING",
+                "NATIVE_REPORT",
+                str(summary_path),
+                f"Report project is {summary.project_id!r}, expected {project_id!r}.",
+                "Use the report from the selected project and exact checked source.",
+                CHECKS_GUIDE,
+            )
+        ]
     findings: list[DiagnosticFinding] = []
     if root is not None:
         scope = summary.checks.get("source_scope")
         if scope is None or not scope.source_hashes:
-            findings.append(finding(
-                "BLOCKING", "NATIVE_SOURCE", str(summary_path),
-                "The native report has no declared source hashes.",
-                "Run a fresh selected native check; do not use an unbound report to guide "
-                "release or BOM decisions.", CHECKS_GUIDE,
-            ))
+            findings.append(
+                finding(
+                    "BLOCKING",
+                    "NATIVE_SOURCE",
+                    str(summary_path),
+                    "The native report has no declared source hashes.",
+                    "Run a fresh selected native check; do not use an unbound report to guide "
+                    "release or BOM decisions.",
+                    CHECKS_GUIDE,
+                )
+            )
         else:
             from ..validate import hashes
 
@@ -457,18 +586,29 @@ def native_findings(
                 config = load_config(root, project.config)
                 current = hashes(root, config.source_roots)
                 if current != scope.source_hashes:
-                    findings.append(finding(
-                        "BLOCKING", "STALE_NATIVE_REPORT", str(summary_path),
-                        "The declared design files differ from those checked in this native report.",
-                        "Run a fresh native check against the current source before using its "
-                        "ERC, DRC or netlist findings to guide repairs.", CHECKS_GUIDE,
-                    ))
+                    findings.append(
+                        finding(
+                            "BLOCKING",
+                            "STALE_NATIVE_REPORT",
+                            str(summary_path),
+                            "The declared design files differ from those checked in this native report.",
+                            "Run a fresh native check against the current source before using its "
+                            "ERC, DRC or netlist findings to guide repairs.",
+                            CHECKS_GUIDE,
+                        )
+                    )
             except (OSError, ValueError, StopIteration) as exc:
-                findings.append(finding(
-                    "BLOCKING", "NATIVE_SOURCE", str(summary_path), str(exc),
-                    "Repair project discovery or the declared source inventory, then rerun "
-                    "native validation.", CHECKS_GUIDE,
-                ))
+                findings.append(
+                    finding(
+                        "BLOCKING",
+                        "NATIVE_SOURCE",
+                        str(summary_path),
+                        str(exc),
+                        "Repair project discovery or the declared source inventory, then rerun "
+                        "native validation.",
+                        CHECKS_GUIDE,
+                    )
+                )
     for name, check in summary.checks.items():
         if check.status == "PASS":
             continue
@@ -480,7 +620,11 @@ def native_findings(
             if examples:
                 observed += "; examples: " + "; ".join(examples)
             if "Disabled-check inventory changed" in observed:
-                setup = "Schematic Setup's ERC settings" if name == "erc" else "Board Setup's DRC settings"
+                setup = (
+                    "Schematic Setup's ERC settings"
+                    if name == "erc"
+                    else "Board Setup's DRC settings"
+                )
                 action = (
                     f"In KiCad {setup}, enable the named disabled checks, then resolve "
                     "resulting findings. Do not change the "
@@ -501,9 +645,11 @@ def native_findings(
                     project = next(item for item in registry.projects if item.id == project_id)
                     manifest_path = repo_path(root, project.config)
                     manifest = read_model(manifest_path, ProjectManifest)
-                    contract_path = repo_path(manifest_path.parent, manifest.checks).relative_to(
-                        root
-                    ).as_posix()
+                    contract_path = (
+                        repo_path(manifest_path.parent, manifest.checks)
+                        .relative_to(root)
+                        .as_posix()
+                    )
                 except (OSError, ValueError, StopIteration):
                     pass
             action = (
@@ -519,7 +665,9 @@ def native_findings(
             )
             guide = CHECKS_GUIDE
         elif name == "source_unchanged":
-            action = "Close KiCad, preserve the changed source, and rerun from a stable source state."
+            action = (
+                "Close KiCad, preserve the changed source, and rerun from a stable source state."
+            )
             guide = CHECKS_GUIDE
         else:
             action = (
@@ -529,15 +677,23 @@ def native_findings(
             )
             guide = CHECKS_GUIDE
         location = summary_path.parent / f"{name}.json" if name in {"erc", "drc"} else summary_path
-        findings.append(finding("BLOCKING", "NATIVE_" + name.upper(),
-                                str(location), observed, action, guide))
-    if summary.status == "FAIL" and not any(check.status != "PASS" for check in summary.checks.values()):
-        findings.append(finding(
-            "BLOCKING", "NATIVE_REPORT", str(summary_path),
-            "Native summary failed but contains no failed check to explain why.",
-            "Inspect the full native output and rerun with a fresh directory; retain this "
-            "diagnostic log if the tool itself is faulty.", CHECKS_GUIDE,
-        ))
+        findings.append(
+            finding("BLOCKING", "NATIVE_" + name.upper(), str(location), observed, action, guide)
+        )
+    if summary.status == "FAIL" and not any(
+        check.status != "PASS" for check in summary.checks.values()
+    ):
+        findings.append(
+            finding(
+                "BLOCKING",
+                "NATIVE_REPORT",
+                str(summary_path),
+                "Native summary failed but contains no failed check to explain why.",
+                "Inspect the full native output and rerun with a fresh directory; retain this "
+                "diagnostic log if the tool itself is faulty.",
+                CHECKS_GUIDE,
+            )
+        )
     return findings
 
 
@@ -546,44 +702,68 @@ def bom_findings(root: Path, path: Path) -> list[DiagnosticFinding]:
     try:
         registry = load_registry(root)
         parts = {
-            part.id: part for part in read_model(
-                repo_path(root, registry.catalogs.parts), PartsCatalog
-            ).parts
+            part.id: part
+            for part in read_model(repo_path(root, registry.catalogs.parts), PartsCatalog).parts
         }
         with path.open(newline="", encoding="utf-8-sig") as stream:
             reader = csv.DictReader(stream)
             if reader.fieldnames != ["Reference", "Value", "Footprint", "PartID", "DNP"]:
-                raise ValueError("Expected native BOM columns Reference, Value, Footprint, PartID, DNP")
+                raise ValueError(
+                    "Expected native BOM columns Reference, Value, Footprint, PartID, DNP"
+                )
             rows = list(reader)
         if not rows:
             raise ValueError("Native BOM has no fitted components")
-        if any(None in row or not row["Reference"] or any(value is None for value in row.values())
-               for row in rows):
+        if any(
+            None in row or not row["Reference"] or any(value is None for value in row.values())
+            for row in rows
+        ):
             raise ValueError("Native BOM contains missing or extra cells")
     except (OSError, ValueError, csv.Error) as exc:
-        return [finding("BLOCKING", "BOM_INPUT", str(path), str(exc),
-                        "Select the native assembly/bom.csv from a successful schematic export.",
-                        BOM_GUIDE)]
+        return [
+            finding(
+                "BLOCKING",
+                "BOM_INPUT",
+                str(path),
+                str(exc),
+                "Select the native assembly/bom.csv from a successful schematic export.",
+                BOM_GUIDE,
+            )
+        ]
     missing = [row["Reference"] for row in rows if not row["PartID"]]
     unknown = [row["Reference"] for row in rows if row["PartID"] and row["PartID"] not in parts]
-    training = [row["Reference"] for row in rows
-                if row["PartID"] in parts and parts[row["PartID"]].status is PartStatus.TRAINING]
+    training = [
+        row["Reference"]
+        for row in rows
+        if row["PartID"] in parts and parts[row["PartID"]].status is PartStatus.TRAINING
+    ]
     findings: list[DiagnosticFinding] = []
     if missing or unknown:
         observed = f"{len(missing)} missing PART_ID; {len(unknown)} unknown catalog ID"
         examples = ", ".join((missing + unknown)[:8])
-        findings.append(finding(
-            "BLOCKING", "BOM_PART_ID", str(path), f"{observed}; references: {examples}",
-            "Assign a stable PART_ID in the schematic for each fitted component and add "
-            "reviewed records to catalog/parts.json. Regenerate the native BOM; never hand-edit "
-            "the exported CSV.", BOM_GUIDE,
-        ))
+        findings.append(
+            finding(
+                "BLOCKING",
+                "BOM_PART_ID",
+                str(path),
+                f"{observed}; references: {examples}",
+                "Assign a stable PART_ID in the schematic for each fitted component and add "
+                "reviewed records to catalog/parts.json. Regenerate the native BOM; never hand-edit "
+                "the exported CSV.",
+                BOM_GUIDE,
+            )
+        )
     if training:
-        findings.append(finding(
-            "REVIEW", "BOM_TRAINING_PART", str(path),
-            f"{len(training)} references use not-for-manufacture catalog records.",
-            "Replace training placeholders with reviewed sourceable parts before release.", BOM_GUIDE,
-        ))
+        findings.append(
+            finding(
+                "REVIEW",
+                "BOM_TRAINING_PART",
+                str(path),
+                f"{len(training)} references use not-for-manufacture catalog records.",
+                "Replace training placeholders with reviewed sourceable parts before release.",
+                BOM_GUIDE,
+            )
+        )
     return findings
 
 
@@ -592,11 +772,17 @@ def bom_binding_findings(
 ) -> list[DiagnosticFinding]:
     """Bind BOM rows to a hashed netlist from this project's current native run."""
     if native_report is None:
-        return [finding(
-            "BLOCKING", "BOM_BINDING", str(bom), "No project native report was supplied.",
-            "Run native validation for this project and pass its project summary.json "
-            "with --native-report alongside --bom.", BOM_GUIDE,
-        )]
+        return [
+            finding(
+                "BLOCKING",
+                "BOM_BINDING",
+                str(bom),
+                "No project native report was supplied.",
+                "Run native validation for this project and pass its project summary.json "
+                "with --native-report alongside --bom.",
+                BOM_GUIDE,
+            )
+        ]
     summary_path = native_report / "summary.json" if native_report.is_dir() else native_report
     try:
         from ..validate import hashes, read_netlist
@@ -609,7 +795,11 @@ def bom_binding_findings(
         project = next(item for item in registry.projects if item.id == project_id)
         config = load_config(root, project.config)
         scope = summary.checks.get("source_scope")
-        if scope is None or not scope.source_hashes or hashes(root, config.source_roots) != scope.source_hashes:
+        if (
+            scope is None
+            or not scope.source_hashes
+            or hashes(root, config.source_roots) != scope.source_hashes
+        ):
             raise ValueError("Native report does not match the current declared design files")
         netlist_path = summary_path.parent / "netlist.xml"
         if summary.artifacts_sha256.get("netlist.xml") != digest(netlist_path):
@@ -641,7 +831,8 @@ def bom_binding_findings(
                 f"extra={sorted(set(references) - expected_references)[:8]}"
             )
         mismatched = [
-            str(reference) for reference, row in zip(references, rows)
+            str(reference)
+            for reference, row in zip(references, rows)
             if (component := netlist.components.get(str(reference))) is None
             or row.get("Value") != component.value
             or row.get("Footprint") != component.footprint
@@ -649,20 +840,35 @@ def bom_binding_findings(
         ]
         if mismatched:
             raise ValueError(
-                "BOM rows differ from this project's native netlist: "
-                + ", ".join(mismatched[:8])
+                "BOM rows differ from this project's native netlist: " + ", ".join(mismatched[:8])
             )
-    except (OSError, ValueError, KeyError, TypeError, StopIteration, csv.Error, ET.ParseError) as exc:
-        return [finding(
-            "BLOCKING", "BOM_BINDING", str(bom), str(exc),
-            "Select a fresh BOM from this project's schematic and its matching native "
-            "summary. Do not relabel or hand-edit an export from another board.", BOM_GUIDE,
-        )]
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+        StopIteration,
+        csv.Error,
+        ET.ParseError,
+    ) as exc:
+        return [
+            finding(
+                "BLOCKING",
+                "BOM_BINDING",
+                str(bom),
+                str(exc),
+                "Select a fresh BOM from this project's schematic and its matching native "
+                "summary. Do not relabel or hand-edit an export from another board.",
+                BOM_GUIDE,
+            )
+        ]
     return []
 
 
 def diagnose_project(
-    root: Path, project_id: str, native_report: Path | None = None,
+    root: Path,
+    project_id: str,
+    native_report: Path | None = None,
     bom: Path | None = None,
     journal: DiagnosticJournal | None = None,
     portable_report: ProjectStaticPipelineReport | None = None,
@@ -673,18 +879,24 @@ def diagnose_project(
         with journal.stage("project-selection") if journal is not None else nullcontext():
             selected = (
                 resolve_project_ids(root, ProjectSelector(project_ids=(project_id,)))
-                if portable_report is None else (project_id,)
+                if portable_report is None
+                else (project_id,)
             )
         with journal.stage("portable") if journal is not None else nullcontext():
             findings = portable_findings(root, selected[0], journal, portable_report)
     except (OSError, ValueError, TypeError) as exc:
         if journal is not None:
             journal.event("discovery", "HANDLED", f"{type(exc).__name__}: {exc}")
-        findings = [finding(
-            "BLOCKING", "DISCOVERY", "catalog/projects.json", str(exc),
-            "Repair project discovery or the selected project ID, then rerun diagnostics.",
-            CHECKS_GUIDE,
-        )]
+        findings = [
+            finding(
+                "BLOCKING",
+                "DISCOVERY",
+                "catalog/projects.json",
+                str(exc),
+                "Repair project discovery or the selected project ID, then rerun diagnostics.",
+                CHECKS_GUIDE,
+            )
+        ]
     if native_report is not None:
         with journal.stage("native-report") if journal is not None else nullcontext():
             findings.extend(native_findings(native_report, project_id, root, journal))
@@ -725,8 +937,10 @@ def format_text(result: DiagnosticReport, detail: Literal["brief", "full"] = "br
     """Show a short repair queue or every finding without losing its source location."""
     blocking = sum(row.severity == "BLOCKING" for row in result.findings)
     review = len(result.findings) - blocking
-    lines = [f"{result.status}: {result.scope} diagnostics for {result.project_id}",
-             f"{blocking} blocking finding(s); {review} review task(s)."]
+    lines = [
+        f"{result.status}: {result.scope} diagnostics for {result.project_id}",
+        f"{blocking} blocking finding(s); {review} review task(s).",
+    ]
     if detail == "full":
         number = 0
         for severity in ("BLOCKING", "REVIEW"):
@@ -734,18 +948,22 @@ def format_text(result: DiagnosticReport, detail: Literal["brief", "full"] = "br
                 if row.severity != severity:
                     continue
                 number += 1
-                lines.extend((
-                    f"{number}. [{row.severity}] {row.code} at {row.location}",
-                    f"   Observed: {row.observed}",
-                    f"   Fix: {row.action}",
-                    f"   Guide: {row.guide}",
-                ))
+                lines.extend(
+                    (
+                        f"{number}. [{row.severity}] {row.code} at {row.location}",
+                        f"   Observed: {row.observed}",
+                        f"   Fix: {row.action}",
+                        f"   Guide: {row.guide}",
+                    )
+                )
     else:
         groups: dict[tuple[str, str, str, str], list[DiagnosticFinding]] = {}
         for severity in ("BLOCKING", "REVIEW"):
             for row in result.findings:
                 if row.severity == severity:
-                    groups.setdefault((row.severity, row.code, row.action, row.guide), []).append(row)
+                    groups.setdefault((row.severity, row.code, row.action, row.guide), []).append(
+                        row
+                    )
         for number, ((severity, code, action, guide), rows) in enumerate(groups.items(), 1):
             lines.append(f"{number}. [{severity}] {code} ({len(rows)} finding(s))")
             for row in rows[:3]:
@@ -754,7 +972,9 @@ def format_text(result: DiagnosticReport, detail: Literal["brief", "full"] = "br
                 lines.append(f"   ... and {len(rows) - 3} more in diagnosis.json")
             lines.extend((f"   Fix: {action}", f"   Guide: {guide}"))
     if not result.findings:
-        lines.append("No diagnosed problems in this scope. Continue with the selected verification command.")
+        lines.append(
+            "No diagnosed problems in this scope. Continue with the selected verification command."
+        )
     lines.append(f"Next command: {result.next_command}")
     if result.follow_up_command is not None:
         lines.append(
@@ -763,8 +983,12 @@ def format_text(result: DiagnosticReport, detail: Literal["brief", "full"] = "br
         )
         lines.append(f"Follow-up command: {result.follow_up_command}")
     lines.append("Diagnostic success does not approve the electrical design or a release.")
-    if any(row.code.startswith("NATIVE_") or row.code.startswith("BOM_")
-           or row.code == "STALE_NATIVE_REPORT" for row in result.findings):
+    if any(
+        row.code.startswith("NATIVE_")
+        or row.code.startswith("BOM_")
+        or row.code == "STALE_NATIVE_REPORT"
+        for row in result.findings
+    ):
         lines.append(
             "After changing KiCad source or check settings, use kicad_tooling.verify --depth native "
             "for a fresh report and replace any --native-report/--bom paths above."

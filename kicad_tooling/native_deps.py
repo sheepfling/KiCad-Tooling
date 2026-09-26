@@ -1,4 +1,5 @@
 """Prepare Linux dependency wheels on the host for the pip-free pinned KiCad image."""
+
 from __future__ import annotations
 
 import argparse
@@ -36,8 +37,11 @@ def copy_runtime(destination: Path, metadata: Path | None = None) -> None:
     No consuming-project source directory is added to Python's import path.
     """
     metadata = runtime_metadata() if metadata is None else metadata
-    shutil.copytree(Path(__file__).resolve().parent, destination / "kicad_tooling",
-                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    shutil.copytree(
+        Path(__file__).resolve().parent,
+        destination / "kicad_tooling",
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
     shutil.copytree(metadata, destination / metadata.name)
 
 
@@ -53,9 +57,22 @@ def prepare(root: Path, image: str, output: Path) -> None:
         raise ValueError("Native image must be digest-pinned")
     metadata = runtime_metadata()
     probe = subprocess.run(
-        ("docker", "run", "--rm", "--platform", "linux/amd64", "--entrypoint", "python3", image,
-         "-c", "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"),
-        check=True, capture_output=True, text=True, timeout=120,
+        (
+            "docker",
+            "run",
+            "--rm",
+            "--platform",
+            "linux/amd64",
+            "--entrypoint",
+            "python3",
+            image,
+            "-c",
+            "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')",
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     version = probe.stdout.strip()
     parts = version.split(".")
@@ -73,28 +90,70 @@ def prepare(root: Path, image: str, output: Path) -> None:
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
     environment_path = PurePosixPath("/work") / output.as_posix()
     create = subprocess.run(
-        ("docker", "run", "--rm", "--platform", "linux/amd64", *user,
-         "--entrypoint", "python3", "--mount", f"type=bind,source={root},target=/work",
-         image, "-I", "-c",
-         ("import subprocess,sys,venv; "
-         "venv.EnvBuilder(with_pip=False, system_site_packages=True).create(sys.argv[1]); "
-         "subprocess.run([sys.argv[1] + '/bin/python', '-I', '-c', "
-         "\"import sysconfig; print(sysconfig.get_path('purelib'))\"], check=True)"),
-         str(environment_path)),
-        check=True, capture_output=True, text=True, timeout=120,
+        (
+            "docker",
+            "run",
+            "--rm",
+            "--platform",
+            "linux/amd64",
+            *user,
+            "--entrypoint",
+            "python3",
+            "--mount",
+            f"type=bind,source={root},target=/work",
+            image,
+            "-I",
+            "-c",
+            (
+                "import subprocess,sys,venv; "
+                "venv.EnvBuilder(with_pip=False, system_site_packages=True).create(sys.argv[1]); "
+                "subprocess.run([sys.argv[1] + '/bin/python', '-I', '-c', "
+                "\"import sysconfig; print(sysconfig.get_path('purelib'))\"], check=True)"
+            ),
+            str(environment_path),
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     native_site = PurePosixPath(create.stdout.strip())
-    if (not native_site.is_absolute() or ".." in native_site.parts
-            or not native_site.is_relative_to(environment_path)
-            or native_site == environment_path):
-        raise ValueError(f"Native environment returned an invalid site-packages path: {native_site}")
+    if (
+        not native_site.is_absolute()
+        or ".." in native_site.parts
+        or not native_site.is_relative_to(environment_path)
+        or native_site == environment_path
+    ):
+        raise ValueError(
+            f"Native environment returned an invalid site-packages path: {native_site}"
+        )
     site_packages = destination / native_site.relative_to(environment_path).as_posix()
     subprocess.run(
-        (sys.executable, "-I", "-m", "pip", "install", "--disable-pip-version-check",
-         "--target", str(site_packages), "--platform", "manylinux2014_x86_64",
-         "--implementation", "cp", "--python-version", version, "--abi", "cp" + "".join(parts),
-         "--only-binary=:all:", "pydantic==2.13.5", "snakemd==2.4.1"),
-        check=True, capture_output=True, text=True, timeout=300,
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--target",
+            str(site_packages),
+            "--platform",
+            "manylinux2014_x86_64",
+            "--implementation",
+            "cp",
+            "--python-version",
+            version,
+            "--abi",
+            "cp" + "".join(parts),
+            "--only-binary=:all:",
+            "pydantic==2.13.5",
+            "snakemd==2.4.1",
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=300,
     )
     copy_runtime(site_packages, metadata)
 

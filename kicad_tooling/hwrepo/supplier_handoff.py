@@ -3,6 +3,7 @@
 Preparation is entirely local. Submission discloses the reviewed BOM to DigiKey
 for an external review list; it never purchases parts or retries an uncertain POST.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -63,7 +64,9 @@ def _current(root: Path, expected: dict[str, str | None]) -> None:
             raise ValueError(f"{name} changed after the review; prepare a fresh handoff")
 
 
-def _order(root: Path, project_id: str, path: Path, expected_sha256: str | None = None) -> tuple[PurchasingReport, str]:
+def _order(
+    root: Path, project_id: str, path: Path, expected_sha256: str | None = None
+) -> tuple[PurchasingReport, str]:
     """Recheck actual saved evidence and recompute the purchasing projection."""
     project = selected_project(root, project_id)
     content, _ = read_regular_bytes(path, maximum=_MAX_DOCUMENT)
@@ -73,15 +76,21 @@ def _order(root: Path, project_id: str, path: Path, expected_sha256: str | None 
     report = parse_model_text(content.decode("utf-8"), PurchasingReport)
     if report.project_id != project_id:
         raise ValueError("Parts review belongs to a different project")
-    if (report.status != "READY_FOR_ORDER_REVIEW" or report.plan is None
-            or report.evidence is None or report.evidence.status != "READY_FOR_REVIEW"
-            or report.netlist_sha256 is None):
+    if (
+        report.status != "READY_FOR_ORDER_REVIEW"
+        or report.plan is None
+        or report.evidence is None
+        or report.evidence.status != "READY_FOR_REVIEW"
+        or report.netlist_sha256 is None
+    ):
         raise ValueError("Complete a source-bound parts review before preparing a supplier handoff")
     _, _, current_source = project_context(root, project_id)
-    if (current_source != report.source_hashes
-            or report.evidence.source_hashes != report.source_hashes
-            or report.evidence.netlist_sha256 != report.netlist_sha256
-            or report.evidence.native_status != report.native_status):
+    if (
+        current_source != report.source_hashes
+        or report.evidence.source_hashes != report.source_hashes
+        or report.evidence.netlist_sha256 != report.netlist_sha256
+        or report.evidence.native_status != report.native_status
+    ):
         raise ValueError("Parts evidence changed or does not match the current project")
     # A review can use an explicit preferences file. Require the common policy
     # inputs and verify every recorded input, without guessing which preferences
@@ -97,7 +106,10 @@ def _order(root: Path, project_id: str, path: Path, expected_sha256: str | None 
     registry = load_registry(root)
     catalog = read_model(repo_path(root, registry.catalogs.parts), PartsCatalog)
     recalculated = purchasing_plan(
-        read_components(netlist), catalog, report.plan.preferences, project.component_identity.part_ids,
+        read_components(netlist),
+        catalog,
+        report.plan.preferences,
+        project.component_identity.part_ids,
     )
     if recalculated != report.plan:
         raise ValueError("Parts review differs from its current netlist and catalog")
@@ -105,7 +117,10 @@ def _order(root: Path, project_id: str, path: Path, expected_sha256: str | None 
 
 
 def prepare_supplier_handoff(
-    root: Path, project_id: str, parts_report: str, output: Path,
+    root: Path,
+    project_id: str,
+    parts_report: str,
+    output: Path,
 ) -> SupplierHandoffReport:
     """Retain the exact source-bound payload for review, without contacting a supplier."""
     root = root.resolve()
@@ -125,29 +140,41 @@ def prepare_supplier_handoff(
     if current_source != report.source_hashes:
         raise ValueError("Project source changed during handoff preparation")
     output = repo_path(root, _relative(root, output))
-    if (not output.is_relative_to(root / "build") or output == root / "build"
-            or (output.exists() and (not output.is_dir() or any(output.iterdir())))):
+    if (
+        not output.is_relative_to(root / "build")
+        or output == root / "build"
+        or (output.exists() and (not output.is_dir() or any(output.iterdir())))
+    ):
         raise ValueError("Supplier preparation needs a fresh empty receipt below build/")
     output.mkdir(parents=True, exist_ok=True)
     handoff = output / "handoff.json"
     spec = SupplierHandoffPlan(
-        project_id=project_id, parts_report=parts_report, report_sha256=report_sha,
-        payload=payload, payload_sha256=payload_sha, source_hashes=report.source_hashes,
+        project_id=project_id,
+        parts_report=parts_report,
+        report_sha256=report_sha,
+        payload=payload,
+        payload_sha256=payload_sha,
+        source_hashes=report.source_hashes,
         preconditions=conditions,
     )
     write_model(handoff, spec)
     # A separate wire JSON makes the external disclosure directly inspectable.
     (output / "payload.json").write_bytes(payload.model_dump_json(by_alias=True).encode("utf-8"))
     result = SupplierHandoffReport(
-        status="PREPARED", project_id=project_id, handoff=_relative(root, handoff),
-        handoff_sha256=digest(handoff), payload_sha256=payload_sha,
+        status="PREPARED",
+        project_id=project_id,
+        handoff=_relative(root, handoff),
+        handoff_sha256=digest(handoff),
+        payload_sha256=payload_sha,
     )
     write_model(output / "report.json", result)
     return result
 
 
 def _validate_handoff(
-    root: Path, path: Path, expected_sha256: str,
+    root: Path,
+    path: Path,
+    expected_sha256: str,
 ) -> SupplierHandoffPlan:
     content, _ = read_regular_bytes(path, maximum=_MAX_DOCUMENT)
     if hashlib.sha256(content).hexdigest() != expected_sha256:
@@ -158,8 +185,10 @@ def _validate_handoff(
     if report.source_hashes != spec.source_hashes:
         raise ValueError("Supplier handoff source differs from the parts review")
     assert report.plan is not None
-    if (digikey_handoff.build_payload(report.plan) != spec.payload
-            or _payload_digest(spec.payload) != spec.payload_sha256):
+    if (
+        digikey_handoff.build_payload(report.plan) != spec.payload
+        or _payload_digest(spec.payload) != spec.payload_sha256
+    ):
         raise ValueError("Supplier payload differs from the reviewed parts projection")
     _current(root, dict(spec.preconditions))
     if digest(path) != expected_sha256:
@@ -195,7 +224,9 @@ def _finish(path: Path, result: SupplierHandoffReport) -> None:
 
 
 def submit_supplier_handoff(
-    root: Path, handoff: str, expected_sha256: str,
+    root: Path,
+    handoff: str,
+    expected_sha256: str,
 ) -> SupplierHandoffReport:
     """Submit the exact reviewed payload once; retain uncertain delivery without retry."""
     root = root.resolve()
@@ -206,11 +237,18 @@ def submit_supplier_handoff(
     parent.mkdir(parents=True, exist_ok=True)
     receipt = repo_path(root, f"build/supplier-submissions/{expected_sha256}.json")
     initial = SupplierHandoffReport(
-        status="UNCERTAIN", project_id=spec.project_id, handoff=handoff,
-        handoff_sha256=expected_sha256, payload_sha256=spec.payload_sha256,
+        status="UNCERTAIN",
+        project_id=spec.project_id,
+        handoff=handoff,
+        handoff_sha256=expected_sha256,
+        payload_sha256=spec.payload_sha256,
         attempt_receipt=_relative(root, receipt),
-        issues=(("An external submission attempt was reserved. Delivery is unconfirmed; "
-                 "check DigiKey before preparing a new review. This handoff will not retry."),),
+        issues=(
+            (
+                "An external submission attempt was reserved. Delivery is unconfirmed; "
+                "check DigiKey before preparing a new review. This handoff will not retry."
+            ),
+        ),
     )
     try:
         # Exclusive creation serializes independent processes and copied handles.
@@ -220,30 +258,44 @@ def submit_supplier_handoff(
             os.fsync(stream.fileno())
         _sync_directory(parent)
     except FileExistsError:
-        previous_bytes, _ = read_regular_bytes(_artifact(root, _relative(root, receipt)), maximum=_MAX_DOCUMENT)
+        previous_bytes, _ = read_regular_bytes(
+            _artifact(root, _relative(root, receipt)), maximum=_MAX_DOCUMENT
+        )
         previous = parse_model_text(previous_bytes.decode("utf-8"), SupplierHandoffReport)
-        if (previous.handoff_sha256 != expected_sha256
-                or previous.payload_sha256 != spec.payload_sha256
-                or previous.project_id != spec.project_id
-                or previous.attempt_receipt != _relative(root, receipt)):
-
-            raise ValueError("Supplier attempt receipt does not match this reviewed handoff") from None
+        if (
+            previous.handoff_sha256 != expected_sha256
+            or previous.payload_sha256 != spec.payload_sha256
+            or previous.project_id != spec.project_id
+            or previous.attempt_receipt != _relative(root, receipt)
+        ):
+            raise ValueError(
+                "Supplier attempt receipt does not match this reviewed handoff"
+            ) from None
         return previous.model_copy(update={"handoff": handoff})
     try:
         # Check again after reserving the durable attempt; failed preconditions
         # intentionally consume it instead of risking an ambiguous later retry.
         _validate_handoff(root, path, expected_sha256)
         reply = digikey_handoff.send(spec.payload, list_name=spec.project_id)
-        result = initial.model_copy(update={"status": "SENT", "single_use_url": reply.single_use_url,
-                                            "issues": ()})
+        result = initial.model_copy(
+            update={"status": "SENT", "single_use_url": reply.single_use_url, "issues": ()}
+        )
     except (OSError, ValueError) as error:
         result = initial.model_copy(update={"issues": (str(error), initial.issues[0])})
     try:
         _validate_handoff(root, path, expected_sha256)
     except (OSError, ValueError) as error:
-        result = result.model_copy(update={"status": "BLOCKED", "issues": (
-            str(error), ("DigiKey may already have received the earlier BOM; it no longer "
-                         "represents the current reviewed source. No automatic retry was made."),
-        )})
+        result = result.model_copy(
+            update={
+                "status": "BLOCKED",
+                "issues": (
+                    str(error),
+                    (
+                        "DigiKey may already have received the earlier BOM; it no longer "
+                        "represents the current reviewed source. No automatic retry was made."
+                    ),
+                ),
+            }
+        )
     _finish(receipt, result)
     return result

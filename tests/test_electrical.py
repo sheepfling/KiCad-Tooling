@@ -1,4 +1,5 @@
 """Electrical requirements, negative engineering cases and runner evidence boundaries."""
+
 from __future__ import annotations
 
 import json
@@ -70,49 +71,140 @@ def install_fixture(root: Path, version: str = "47") -> ElectricalAnalysisContra
     startup_model = model("startup.cir")
     signal_model = model("signal.cir")
     startup = TransientAnalysis(
-        id="startup", basis="Synthetic 5 V source ramp into 100 uF through 1 ohm",
-        deck=next(iter(startup_model)), source_sha256=source, model_sha256=startup_model,
-        step_s=1e-6, stop_s=0.005,
-        measures=(SimulationMeasure(id="peak-current", expression="-i(vrail)", statistic="max", unit="A",
-                                    start=0.0, stop=0.001, maximum=5.1),),
-    )
-    steady = startup.model_copy(update={
-        "id": "steady-state", "measures": (
-            SimulationMeasure(id="average-current", expression="-i(vrail)", statistic="avg", unit="A",
-                              start=0.004, stop=0.005, minimum=0.049, maximum=0.051),
-            SimulationMeasure(id="average-power", expression="-v(supply)*i(vrail)", statistic="avg", unit="W",
-                              start=0.004, stop=0.005, minimum=0.24, maximum=0.26),
-            SimulationMeasure(id="rail-minimum", expression="v(out)", statistic="min", unit="V",
-                              start=0.004, stop=0.005, minimum=4.9),
+        id="startup",
+        basis="Synthetic 5 V source ramp into 100 uF through 1 ohm",
+        deck=next(iter(startup_model)),
+        source_sha256=source,
+        model_sha256=startup_model,
+        step_s=1e-6,
+        stop_s=0.005,
+        measures=(
+            SimulationMeasure(
+                id="peak-current",
+                expression="-i(vrail)",
+                statistic="max",
+                unit="A",
+                start=0.0,
+                stop=0.001,
+                maximum=5.1,
+            ),
         ),
-    })
+    )
+    steady = startup.model_copy(
+        update={
+            "id": "steady-state",
+            "measures": (
+                SimulationMeasure(
+                    id="average-current",
+                    expression="-i(vrail)",
+                    statistic="avg",
+                    unit="A",
+                    start=0.004,
+                    stop=0.005,
+                    minimum=0.049,
+                    maximum=0.051,
+                ),
+                SimulationMeasure(
+                    id="average-power",
+                    expression="-v(supply)*i(vrail)",
+                    statistic="avg",
+                    unit="W",
+                    start=0.004,
+                    stop=0.005,
+                    minimum=0.24,
+                    maximum=0.26,
+                ),
+                SimulationMeasure(
+                    id="rail-minimum",
+                    expression="v(out)",
+                    statistic="min",
+                    unit="V",
+                    start=0.004,
+                    stop=0.005,
+                    minimum=4.9,
+                ),
+            ),
+        }
+    )
     sweep = FrequencyAnalysis(
-        id="passband", basis="Synthetic 50 ohm/10 pF first-order low-pass",
-        deck=next(iter(signal_model)), source_sha256=source, model_sha256=signal_model,
-        start_hz=1000.0, stop_hz=1e9,
-        measures=(SimulationMeasure(id="gain", expression="db(v(out)/v(in))", statistic="min", unit="dB",
-                                    start=1000.0, stop=1e6, minimum=-0.1, maximum=0.0),),
+        id="passband",
+        basis="Synthetic 50 ohm/10 pF first-order low-pass",
+        deck=next(iter(signal_model)),
+        source_sha256=source,
+        model_sha256=signal_model,
+        start_hz=1000.0,
+        stop_hz=1e9,
+        measures=(
+            SimulationMeasure(
+                id="gain",
+                expression="db(v(out)/v(in))",
+                statistic="min",
+                unit="dB",
+                start=1000.0,
+                stop=1e6,
+                minimum=-0.1,
+                maximum=0.0,
+            ),
+        ),
     )
     waveform = TransientAnalysis(
-        id="edges", basis="Synthetic 1 MHz source with 1 ns rise and fall times",
-        deck=sweep.deck, source_sha256=source, model_sha256=signal_model,
-        step_s=1e-10, stop_s=3e-6,
-        measures=(SimulationMeasure(id="overshoot", expression="v(out)", statistic="max", unit="V",
-                                    start=0.0, stop=3e-6, minimum=0.99, maximum=1.01),),
+        id="edges",
+        basis="Synthetic 1 MHz source with 1 ns rise and fall times",
+        deck=sweep.deck,
+        source_sha256=source,
+        model_sha256=signal_model,
+        step_s=1e-10,
+        stop_s=3e-6,
+        measures=(
+            SimulationMeasure(
+                id="overshoot",
+                expression="v(out)",
+                statistic="max",
+                unit="V",
+                start=0.0,
+                stop=3e-6,
+                minimum=0.99,
+                maximum=1.01,
+            ),
+        ),
     )
     contract = ElectricalAnalysisContract(
-        project_id=PROJECT, ngspice_version=version,
-        grounding=GroundingAnalysis(basis="Synthetic reference net, not protective earth",
-                                   domains=(GroundDomain(net="PILOT_B", pins=("R1.2", "R2.2")),)),
-        power=PowerAnalysis(
-            rails=(PowerRail(id="supply", basis="Synthetic derated supply and path limits", voltage_v=5.0,
-                             continuous_limit_a=0.1, peak_limit_a=6.0, peak_duration_limit_s=0.002,
-                             loads=(PowerLoad(id="load", basis="Synthetic worst case", steady_a=0.05,
-                                              startup_a=5.0, startup_s=0.001),)),),
-            startup=(startup,), steady_state=(steady,),
+        project_id=PROJECT,
+        ngspice_version=version,
+        grounding=GroundingAnalysis(
+            basis="Synthetic reference net, not protective earth",
+            domains=(GroundDomain(net="PILOT_B", pins=("R1.2", "R2.2")),),
         ),
-        high_frequency=HighFrequencyAnalysis(basis="Synthetic model only", frequency_hz=1e6, rise_time_s=1e-9,
-                                             sweeps=(sweep,), waveforms=(waveform,)),
+        power=PowerAnalysis(
+            rails=(
+                PowerRail(
+                    id="supply",
+                    basis="Synthetic derated supply and path limits",
+                    voltage_v=5.0,
+                    continuous_limit_a=0.1,
+                    peak_limit_a=6.0,
+                    peak_duration_limit_s=0.002,
+                    loads=(
+                        PowerLoad(
+                            id="load",
+                            basis="Synthetic worst case",
+                            steady_a=0.05,
+                            startup_a=5.0,
+                            startup_s=0.001,
+                        ),
+                    ),
+                ),
+            ),
+            startup=(startup,),
+            steady_state=(steady,),
+        ),
+        high_frequency=HighFrequencyAnalysis(
+            basis="Synthetic model only",
+            frequency_hz=1e6,
+            rise_time_s=1e-9,
+            sweeps=(sweep,),
+            waveforms=(waveform,),
+        ),
     )
     path = root / ISLAND / "tests/electrical.json"
     write_model(path, contract)
@@ -132,12 +224,17 @@ class ElectricalTests(unittest.TestCase):
         return root
 
     def ground(self) -> tuple[GroundingAnalysis, NetlistContract]:
-        spec = GroundingAnalysis(basis="Independent pin requirements", domains=(
-            GroundDomain(net="GND", pins=("U1.2", "J1.2")),
-            GroundDomain(net="AGND", pins=("U2.2",)),
-        ))
+        spec = GroundingAnalysis(
+            basis="Independent pin requirements",
+            domains=(
+                GroundDomain(net="GND", pins=("U1.2", "J1.2")),
+                GroundDomain(net="AGND", pins=("U2.2",)),
+            ),
+        )
         observed = NetlistContract(
-            components={ref: ComponentContract(value="fixture", footprint="") for ref in ("U1", "U2", "J1")},
+            components={
+                ref: ComponentContract(value="fixture", footprint="") for ref in ("U1", "U2", "J1")
+            },
             nets={"GND": ("U1.2", "J1.2"), "AGND": ("U2.2",)},
         )
         return spec, observed
@@ -157,9 +254,18 @@ class ElectricalTests(unittest.TestCase):
 
     def test_new_component_requires_ground_review_or_explicit_exemption(self) -> None:
         spec, observed = self.ground()
-        observed = observed.model_copy(update={"components": {**observed.components, "R1": ComponentContract(value="1k", footprint="")}})
+        observed = observed.model_copy(
+            update={
+                "components": {
+                    **observed.components,
+                    "R1": ComponentContract(value="1k", footprint=""),
+                }
+            }
+        )
         self.assertEqual(grounding_checks(spec, observed)[-1].status, "FAIL")
-        spec = spec.model_copy(update={"exempt_components": {"R1": "Series resistor, no ground pin"}})
+        spec = spec.model_copy(
+            update={"exempt_components": {"R1": "Series resistor, no ground pin"}}
+        )
         self.assertEqual(grounding_checks(spec, observed)[-1].status, "PASS")
         spec = spec.model_copy(update={"exempt_components": {"U1": "Contradictory exemption"}})
         self.assertEqual(grounding_checks(spec, observed)[-1].status, "FAIL")
@@ -203,10 +309,14 @@ class ElectricalTests(unittest.TestCase):
         spec = install_fixture(root).power
         assert isinstance(spec, PowerAnalysis)
         self.assertTrue(all(c.status == "PASS" for c in power_budget_checks(spec)))
-        for field, value, expected in (("continuous_limit_a", 0.01, "steady-current"),
-                                       ("peak_limit_a", 1.0, "startup-current"),
-                                       ("peak_duration_limit_s", 1e-5, "startup-duration")):
-            changed = spec.model_copy(update={"rails": (spec.rails[0].model_copy(update={field: value}),)})
+        for field, value, expected in (
+            ("continuous_limit_a", 0.01, "steady-current"),
+            ("peak_limit_a", 1.0, "startup-current"),
+            ("peak_duration_limit_s", 1e-5, "startup-duration"),
+        ):
+            changed = spec.model_copy(
+                update={"rails": (spec.rails[0].model_copy(update={field: value}),)}
+            )
             failures = [c.id for c in power_budget_checks(changed) if c.status == "FAIL"]
             self.assertIn(f"power/supply/{expected}", failures)
 
@@ -215,7 +325,9 @@ class ElectricalTests(unittest.TestCase):
         spec = install_fixture(root).power
         assert isinstance(spec, PowerAnalysis)
         load = spec.rails[0].loads[0].model_copy(update={"startup_a": 0.0})
-        changed = spec.model_copy(update={"rails": (spec.rails[0].model_copy(update={"loads": (load,)}),)})
+        changed = spec.model_copy(
+            update={"rails": (spec.rails[0].model_copy(update={"loads": (load,)}),)}
+        )
         check = next(c for c in power_budget_checks(changed) if c.id.endswith("startup-current"))
         self.assertEqual(check.observed, 0.05)
 
@@ -233,7 +345,10 @@ class ElectricalTests(unittest.TestCase):
                     target = root / ISLAND / "tests/electrical/startup.cir"
                     target.write_text(target.read_text().replace("100u", "200u"))
                 elif kind == "identity":
-                    write_model(root / config.electrical, contract.model_copy(update={"project_id": "wrong"}))
+                    write_model(
+                        root / config.electrical,
+                        contract.model_copy(update={"project_id": "wrong"}),
+                    )
                 else:
                     config = config.model_copy(update={"electrical": "../elsewhere.json"})
                 self.assertTrue(policy_issues(root, config))
@@ -244,22 +359,38 @@ class ElectricalTests(unittest.TestCase):
         assert isinstance(contract.power, PowerAnalysis)
         case = contract.power.startup[0]
         target = root / case.deck
-        for text in ('title\n.include "hidden.lib"\n.end\n', 'title\n.control\nquit\n.endc\n.end\n',
-                     'title\n.lib "hidden.lib" section\n.end\n', 'title\n.end\nR1 a 0 1k\n'):
+        for text in (
+            'title\n.include "hidden.lib"\n.end\n',
+            "title\n.control\nquit\n.endc\n.end\n",
+            'title\n.lib "hidden.lib" section\n.end\n',
+            "title\n.end\nR1 a 0 1k\n",
+        ):
             target.write_text(text)
             changed = case.model_copy(update={"model_sha256": {case.deck: digest(target)}})
             with self.assertRaises(ValueError):
                 expanded_deck(root, changed)
 
-    def test_simulator_failure_missing_duplicate_nonfinite_and_out_of_limit_measurements(self) -> None:
+    def test_simulator_failure_missing_duplicate_nonfinite_and_out_of_limit_measurements(
+        self,
+    ) -> None:
         root = self.stage()
         contract = install_fixture(root)
         assert isinstance(contract.power, PowerAnalysis)
         case = contract.power.startup[0]
-        for stdout in ("", "check0 = nan", "check0 = 2\ncheck0 = 3", "check0 = 9", "check0 = 2\nError: transient failed"):
-            command = CommandEvidence(argv=("ngspice",), started_utc="fixture", returncode=0, stdout=stdout)
+        for stdout in (
+            "",
+            "check0 = nan",
+            "check0 = 2\ncheck0 = 3",
+            "check0 = 9",
+            "check0 = 2\nError: transient failed",
+        ):
+            command = CommandEvidence(
+                argv=("ngspice",), started_utc="fixture", returncode=0, stdout=stdout
+            )
             self.assertTrue(any(c.status == "FAIL" for c in measured_checks(case, command)))
-        command = CommandEvidence(argv=("ngspice",), started_utc="fixture", returncode=0, stdout="check0 = 4.95")
+        command = CommandEvidence(
+            argv=("ngspice",), started_utc="fixture", returncode=0, stdout="check0 = 4.95"
+        )
         self.assertEqual(measured_checks(case, command)[0].status, "PASS")
         deck = simulation_deck(root, case)
         self.assertIn("tran 9.999", deck)
@@ -269,19 +400,48 @@ class ElectricalTests(unittest.TestCase):
     def test_missing_or_wrong_simulator_does_not_pass(self) -> None:
         root = self.stage()
         contract = install_fixture(root)
-        write_model(root / ISLAND / "tests/electrical.json", contract.model_copy(update={"grounding": NA}))
+        write_model(
+            root / ISLAND / "tests/electrical.json", contract.model_copy(update={"grounding": NA})
+        )
         report = analyze(root, PROJECT, ngspice="missing-electrical-simulator")
         self.assertEqual(report.status, "FAIL")
         self.assertTrue(any(c.status == "NOT_RUN" for c in report.checks))
         self.assertTrue((Path(report.run_directory) / "ngspice-version.command.json").is_file())
-        with patch("kicad_tooling.hwrepo.spice.run_command", return_value=CommandEvidence(argv=("ngspice",), started_utc="fixture", returncode=0, stdout="ngspice-46")):
-            self.assertRaisesRegex(ValueError, "Exact ngspice", simulator_version,
-                                   Path(report.run_directory), "ngspice", "47")
+        with patch(
+            "kicad_tooling.hwrepo.spice.run_command",
+            return_value=CommandEvidence(
+                argv=("ngspice",), started_utc="fixture", returncode=0, stdout="ngspice-46"
+            ),
+        ):
+            self.assertRaisesRegex(
+                ValueError,
+                "Exact ngspice",
+                simulator_version,
+                Path(report.run_directory),
+                "ngspice",
+                "47",
+            )
 
     def test_unconfigured_cli_is_explicit_nonzero_and_writes_a_receipt(self) -> None:
         root = self.stage()
-        command = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical", "--root", str(root),
-                                  "--project", PROJECT, "--format", "json"), capture_output=True, text=True, check=False)
+        command = subprocess.run(
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.electrical",
+                "--root",
+                str(root),
+                "--project",
+                PROJECT,
+                "--format",
+                "json",
+            ),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         self.assertEqual(command.returncode, 1, command.stderr)
         self.assertEqual(json.loads(command.stdout)["status"], "NOT_CONFIGURED")
 
@@ -304,7 +464,12 @@ class ElectricalTests(unittest.TestCase):
         assert isinstance(contract.power, PowerAnalysis)
         output = root / "build/spice-test"
         output.mkdir(parents=True)
-        with patch("kicad_tooling.hwrepo.spice.run_command", return_value=CommandEvidence(argv=("ngspice",), started_utc="fixture", returncode=124, error="Timed out")):
+        with patch(
+            "kicad_tooling.hwrepo.spice.run_command",
+            return_value=CommandEvidence(
+                argv=("ngspice",), started_utc="fixture", returncode=124, error="Timed out"
+            ),
+        ):
             _, checks = run_case(root, output, "ngspice", contract.power.startup[0])
         self.assertTrue(all(c.status == "FAIL" for c in checks))
         self.assertTrue((output / "startup/ngspice.command.json").is_file())
@@ -318,8 +483,11 @@ class ElectricalTests(unittest.TestCase):
         content = "Title: test\nFlags: real\nNo. Variables: 2\nNo. Points: 3\nVariables:\n0 time time\n1 v(out) voltage\nValues:\n0 0\n0\n1 0.001\n4.9\n2 0.005\n5\n"
         raw.write_text(content)
         self.assertTrue(all(c.status == "PASS" for c in waveform_checks(raw, case)))
-        for changed in (content.replace("2 0.005\n5\n", ""), content.replace("4.9", "nan"),
-                        content.replace("1 0.001", "1 -0.001")):
+        for changed in (
+            content.replace("2 0.005\n5\n", ""),
+            content.replace("4.9", "nan"),
+            content.replace("1 0.001", "1 -0.001"),
+        ):
             raw.write_text(changed)
             with self.assertRaises(ValueError):
                 waveform_checks(raw, case)
@@ -332,7 +500,7 @@ class ElectricalTests(unittest.TestCase):
         assert isinstance(contract.power, PowerAnalysis)
         case = contract.power.startup[0]
         target = root / case.deck
-        for include in ('startup.cir', '../other.cir', '/tmp/other.cir'):
+        for include in ("startup.cir", "../other.cir", "/tmp/other.cir"):
             target.write_text(f'title\n.include "{include}"\n.end\n')
             changed = case.model_copy(update={"model_sha256": {case.deck: digest(target)}})
             with self.assertRaises(ValueError):
@@ -340,11 +508,19 @@ class ElectricalTests(unittest.TestCase):
         included = target.with_name("passive.lib")
         included.write_text("R1 in out 10\n")
         target.write_text('title\n.include "passive.lib"\n.end\n')
-        case = case.model_copy(update={"model_sha256": {case.deck: digest(target),
-                            included.relative_to(root).as_posix(): digest(included)}})
+        case = case.model_copy(
+            update={
+                "model_sha256": {
+                    case.deck: digest(target),
+                    included.relative_to(root).as_posix(): digest(included),
+                }
+            }
+        )
         self.assertIn("R1 in out 10", expanded_deck(root, case))
         target.write_text("title\nR1 in out 1\n.end\n")
-        case = case.model_copy(update={"model_sha256": {**case.model_sha256, case.deck: digest(target)}})
+        case = case.model_copy(
+            update={"model_sha256": {**case.model_sha256, case.deck: digest(target)}}
+        )
         with self.assertRaisesRegex(ValueError, "Unused model"):
             expanded_deck(root, case)
 
@@ -352,10 +528,17 @@ class ElectricalTests(unittest.TestCase):
         root = self.stage()
         contract = install_fixture(root)
         assert isinstance(contract.power, PowerAnalysis)
-        overloaded = contract.power.model_copy(update={
-            "rails": (contract.power.rails[0].model_copy(update={"continuous_limit_a": 0.001}),),
-        })
-        write_model(root / ISLAND / "tests/electrical.json", contract.model_copy(update={"power": overloaded}))
+        overloaded = contract.power.model_copy(
+            update={
+                "rails": (
+                    contract.power.rails[0].model_copy(update={"continuous_limit_a": 0.001}),
+                ),
+            }
+        )
+        write_model(
+            root / ISLAND / "tests/electrical.json",
+            contract.model_copy(update={"power": overloaded}),
+        )
         from kicad_tooling.ci import project_static_pipeline
 
         result = project_static_pipeline(root, (PROJECT,))
@@ -364,8 +547,23 @@ class ElectricalTests(unittest.TestCase):
         write_model(root / ISLAND / "tests/electrical.json", contract)
         model = root / contract.power.startup[0].deck
         model.write_text(model.read_text() + "\n")
-        command = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--root", str(root),
-                                  "--electrical", "--project", PROJECT), capture_output=True, text=True, check=False)
+        command = subprocess.run(
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.ci",
+                "--root",
+                str(root),
+                "--electrical",
+                "--project",
+                PROJECT,
+            ),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         self.assertEqual(command.returncode, 1, command.stderr)
         report = json.loads(command.stdout)
         self.assertEqual(report["status"], "FAIL")
@@ -380,13 +578,21 @@ class ElectricalTests(unittest.TestCase):
         contract = install_fixture(root).model_copy(update={"power": NA, "high_frequency": NA})
         write_model(root / ISLAND / "tests/electrical.json", contract)
         failed = ElectricalAnalysisReport(
-            project_id=PROJECT, status="FAIL", run_directory=str(root / "build/simulation"),
+            project_id=PROJECT,
+            status="FAIL",
+            run_directory=str(root / "build/simulation"),
             checks=(ElectricalCheck(id="grounding", status="FAIL", detail="Missing pin U1.2"),),
         )
-        with (VerifyTests.runner_environment("10.0.0"),
-              patch("kicad_tooling.verify.check_all", return_value=native_summary()),
-              patch("kicad_tooling.hwrepo.electrical_runner.analyze", return_value=failed) as simulation):
-            result = verify(root, PROJECT, depth="electrical", runner="local", ngspice="approved-ngspice")
+        with (
+            VerifyTests.runner_environment("10.0.0"),
+            patch("kicad_tooling.verify.check_all", return_value=native_summary()),
+            patch(
+                "kicad_tooling.hwrepo.electrical_runner.analyze", return_value=failed
+            ) as simulation,
+        ):
+            result = verify(
+                root, PROJECT, depth="electrical", runner="local", ngspice="approved-ngspice"
+            )
         self.assertEqual(result.status, "FAIL")
         self.assertEqual(result.electrical, failed)
         self.assertEqual(simulation.call_args.args[-1], "approved-ngspice")

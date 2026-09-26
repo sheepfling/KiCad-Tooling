@@ -1,4 +1,5 @@
 """Fork adoption, automatic expansion and source-only generation regressions."""
+
 from __future__ import annotations
 
 import shutil
@@ -34,22 +35,20 @@ class ForkWorkflowTests(unittest.TestCase):
 
     def test_initialize_empty_fork_is_repeatable_and_retains_reference_data(self) -> None:
         team_notes = self.root / "docs/team/architecture.md"
-        team_notes.write_text("# Team architecture\n\nDurable adopter decision.\n", encoding="utf-8")
+        team_notes.write_text(
+            "# Team architecture\n\nDurable adopter decision.\n", encoding="utf-8"
+        )
         team_readme = self.root / "docs/team/README.md"
         team_readme.write_text(
             team_readme.read_text(encoding="utf-8")
             + "\n## Team index\n\n- [Architecture](architecture.md)\n",
             encoding="utf-8",
         )
-        before_team_docs = {
-            path: path.read_bytes() for path in (team_notes, team_readme)
-        }
+        before_team_docs = {path: path.read_bytes() for path in (team_notes, team_readme)}
         result = initialize(self.root, "team-hardware")
         self.assertEqual(result.status, "PASS", result.issues)
         self.assertTrue(
-            (self.root / "README.md").read_text(encoding="utf-8").startswith(
-                "# team-hardware\n\n"
-            )
+            (self.root / "README.md").read_text(encoding="utf-8").startswith("# team-hardware\n\n")
         )
         self.assertEqual(build_matrix(self.root).include, ())
         self.assertEqual(product_check(self.root).status, "PASS")
@@ -65,7 +64,10 @@ class ForkWorkflowTests(unittest.TestCase):
         self.assertFalse((self.root / "tests").exists())
         result = subprocess.run(
             (sys.executable, "-I", "-B", "-m", "kicad_tooling.lint_registry"),
-            cwd=self.root, text=True, capture_output=True, check=False,
+            cwd=self.root,
+            text=True,
+            capture_output=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
@@ -114,7 +116,9 @@ class ForkWorkflowTests(unittest.TestCase):
         )
         report = check_repository(self.root, selected)
         self.assertEqual(report.status, "FAIL")
-        self.assertTrue(any("not in this project's required_inputs" in issue for issue in report.issues))
+        self.assertTrue(
+            any("not in this project's required_inputs" in issue for issue in report.issues)
+        )
 
     def test_focused_repository_check_rejects_undeclared_cad_in_selected_island(self) -> None:
         unselected = self.root / "examples/projects/arduino-uno-status-led/kicad/rogue.kicad_sch"
@@ -131,12 +135,19 @@ class ForkWorkflowTests(unittest.TestCase):
     def test_shared_source_roots_must_match_registered_library_paths(self) -> None:
         path = self.root / "examples/projects/arduino-uno-status-led/project.json"
         manifest = read_model(path, ProjectManifest)
-        write_model(path, manifest.model_copy(update={
-            "shared_source_roots": ("examples/projects/controller/kicad",),
-        }))
+        write_model(
+            path,
+            manifest.model_copy(
+                update={
+                    "shared_source_roots": ("examples/projects/controller/kicad",),
+                }
+            ),
+        )
         report = lint(self.root, ["arduino-uno-status-led"])
         self.assertEqual(report.status, "FAIL")
-        self.assertTrue(any("shared_source_roots must match library_ids" in issue for issue in report.issues))
+        self.assertTrue(
+            any("shared_source_roots must match library_ids" in issue for issue in report.issues)
+        )
 
     def test_library_table_cannot_expose_an_unscoped_parent_directory(self) -> None:
         table = self.root / "examples/projects/arduino-uno-status-led/kicad/fp-lib-table"
@@ -149,7 +160,9 @@ class ForkWorkflowTests(unittest.TestCase):
         )
         report = check_repository(self.root, ("arduino-uno-status-led",))
         self.assertEqual(report.status, "FAIL")
-        self.assertTrue(any("outside this project's source_roots" in issue for issue in report.issues))
+        self.assertTrue(
+            any("outside this project's source_roots" in issue for issue in report.issues)
+        )
 
     def test_library_table_directory_exposes_only_inventoried_files(self) -> None:
         loose = self.root / "examples/libraries/status-led/status-led.pretty/Loose.kicad_mod"
@@ -161,13 +174,20 @@ class ForkWorkflowTests(unittest.TestCase):
     def test_library_catalog_cannot_register_another_project_as_a_library(self) -> None:
         path = self.root / "catalog/libraries.json"
         catalog = read_model(path, LibrariesCatalog)
-        library = catalog.libraries[0].model_copy(update={
-            "path": "examples/projects/controller/kicad",
-        })
+        library = catalog.libraries[0].model_copy(
+            update={
+                "path": "examples/projects/controller/kicad",
+            }
+        )
         write_model(path, catalog.model_copy(update={"libraries": (library,)}))
         report = lint(self.root, ["arduino-uno-status-led"])
         self.assertEqual(report.status, "FAIL")
-        self.assertTrue(any("path must be a named directory under library_roots" in issue for issue in report.issues))
+        self.assertTrue(
+            any(
+                "path must be a named directory under library_roots" in issue
+                for issue in report.issues
+            )
+        )
 
     def test_fresh_policy_generation_needs_no_cached_exports_and_writes_no_source(self) -> None:
         self.assertFalse((self.root / "schemas/product-v1.schema.json").exists())
@@ -209,7 +229,9 @@ class ForkWorkflowTests(unittest.TestCase):
         matrix = build_matrix(self.root)
         self.assertEqual(matrix.include[-1].project, "team-signal")
         self.assertFalse(matrix.include[-1].fault_probes)
-        self.assertTrue(next(row for row in matrix.include if row.project == "controller").fault_probes)
+        self.assertTrue(
+            next(row for row in matrix.include if row.project == "controller").fault_probes
+        )
         self.assertEqual(len(matrix.include), 7)
         path = self.root / "catalog/projects.json"
         discovery = read_model(path, ProjectDiscovery)
@@ -225,7 +247,10 @@ class ForkWorkflowTests(unittest.TestCase):
         self.assertFalse((self.root / "tests").exists())
         result = subprocess.run(
             (sys.executable, "-I", "-B", "-m", "kicad_tooling.lint_registry"),
-            cwd=self.root, text=True, capture_output=True, check=False,
+            cwd=self.root,
+            text=True,
+            capture_output=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 

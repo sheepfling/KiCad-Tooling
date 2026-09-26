@@ -1,4 +1,5 @@
 """Tests for the repository-wide project and catalog lint."""
+
 from __future__ import annotations
 
 import shutil
@@ -33,19 +34,29 @@ class GovernanceLintTests(unittest.TestCase):
             (root / "catalog").mkdir()
             policy = TeamPolicy(rationale="Synthetic two-person unit-test policy")
             write_model(root / "catalog/team-policy.json", policy)
-            record = GovernanceRecord(branch="main", required_status_checks=("Template acceptance",),
-                authors=("author-A",), reviewers=("reviewer-B",), integrators=("author-A",),
-                release_authorities=("author-A",), branch_protection_evidence=("fixture-record",),
-                branch_protection_verified_at="2026-09-08")
+            record = GovernanceRecord(
+                branch="main",
+                required_status_checks=("Template acceptance",),
+                authors=("author-A",),
+                reviewers=("reviewer-B",),
+                integrators=("author-A",),
+                release_authorities=("author-A",),
+                branch_protection_evidence=("fixture-record",),
+                branch_protection_verified_at="2026-09-08",
+            )
             write_model(root / "governance.json", record)
             issues: list[str] = []
             lint_governance_record(root, "governance.json", "board", issues)
             self.assertEqual(issues, [])
-            write_model(root / "governance.json", record.model_copy(update={"reviewers": ("AUTHOR-a",)}))
+            write_model(
+                root / "governance.json", record.model_copy(update={"reviewers": ("AUTHOR-a",)})
+            )
             lint_governance_record(root, "governance.json", "board", issues)
             self.assertTrue(any("independent" in issue for issue in issues))
             write_model(root / "governance.json", record)
-            write_model(root / "catalog/team-policy.json", policy.model_copy(update={"minimum_actors": 3}))
+            write_model(
+                root / "catalog/team-policy.json", policy.model_copy(update={"minimum_actors": 3})
+            )
             issues.clear()
             lint_governance_record(root, "governance.json", "board", issues)
             self.assertTrue(any("3 distinct" in issue for issue in issues))
@@ -55,7 +66,14 @@ class GovernanceLintTests(unittest.TestCase):
         self.assertEqual(result.status, "PASS", result.issues)
         self.assertEqual(
             result.projects,
-            ('arduino-uno-status-led', 'controller', 'passive-signal-reference', 'raspberry-pi-status-led', 'status-indicator-harness-interface', 'status-indicator-wiring'),
+            (
+                "arduino-uno-status-led",
+                "controller",
+                "passive-signal-reference",
+                "raspberry-pi-status-led",
+                "status-indicator-harness-interface",
+                "status-indicator-wiring",
+            ),
         )
 
     def test_individual_project_lint_passes(self) -> None:
@@ -69,16 +87,29 @@ class GovernanceLintTests(unittest.TestCase):
         )
         self.assertEqual(
             resolve_project_ids(ROOT, ProjectSelector(tags=("status-led",))),
-            ('arduino-uno-status-led', 'raspberry-pi-status-led', 'status-indicator-harness-interface', 'status-indicator-wiring'),
+            (
+                "arduino-uno-status-led",
+                "raspberry-pi-status-led",
+                "status-indicator-harness-interface",
+                "status-indicator-wiring",
+            ),
         )
         self.assertEqual(
             resolve_project_ids(ROOT, ProjectSelector(excluded_tags=("legacy",))),
-            ('arduino-uno-status-led', 'passive-signal-reference', 'raspberry-pi-status-led', 'status-indicator-harness-interface', 'status-indicator-wiring'),
+            (
+                "arduino-uno-status-led",
+                "passive-signal-reference",
+                "raspberry-pi-status-led",
+                "status-indicator-harness-interface",
+                "status-indicator-wiring",
+            ),
         )
         with self.assertRaisesRegex(ValueError, "Unknown included tags"):
             resolve_project_ids(ROOT, ProjectSelector(tags=("absent",)))
         with self.assertRaisesRegex(ValueError, "Unknown included tags"):
-            resolve_project_ids(ROOT, ProjectSelector(project_ids=("controller",), tags=("absent",)))
+            resolve_project_ids(
+                ROOT, ProjectSelector(project_ids=("controller",), tags=("absent",))
+            )
         with self.assertRaisesRegex(ValueError, "Unknown excluded tags"):
             resolve_project_ids(ROOT, ProjectSelector(excluded_tags=("absent",)))
 
@@ -90,9 +121,7 @@ class GovernanceLintTests(unittest.TestCase):
             "status-indicator-wiring",
         )
         self.assertEqual(
-            resolve_project_ids(
-                ROOT, ProjectSelector(product_ids=("status-indicator-system",))
-            ),
+            resolve_project_ids(ROOT, ProjectSelector(product_ids=("status-indicator-system",))),
             members,
         )
         self.assertEqual(
@@ -120,9 +149,7 @@ class GovernanceLintTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Duplicate product IDs"):
             resolve_project_ids(
                 ROOT,
-                ProjectSelector(
-                    product_ids=("status-indicator-system", "STATUS-INDICATOR-SYSTEM")
-                ),
+                ProjectSelector(product_ids=("status-indicator-system", "STATUS-INDICATOR-SYSTEM")),
             )
 
         registry = load_registry(ROOT)
@@ -140,9 +167,7 @@ class GovernanceLintTests(unittest.TestCase):
         registry = load_registry(ROOT)
         index = read_model(ROOT / "catalog/products.json", ProductIndex)
         entry = index.products[0]
-        missing = entry.model_copy(
-            update={"project_ids": (*entry.project_ids, "missing-project")}
-        )
+        missing = entry.model_copy(update={"project_ids": (*entry.project_ids, "missing-project")})
         with self.assertRaisesRegex(ValueError, "references unknown project IDs"):
             select_projects(
                 registry,
@@ -185,7 +210,14 @@ class GovernanceLintTests(unittest.TestCase):
         matrix = build_matrix(ROOT)
         self.assertEqual(
             [row.project for row in matrix.include],
-            ['arduino-uno-status-led', 'controller', 'passive-signal-reference', 'raspberry-pi-status-led', 'status-indicator-harness-interface', 'status-indicator-wiring'],
+            [
+                "arduino-uno-status-led",
+                "controller",
+                "passive-signal-reference",
+                "raspberry-pi-status-led",
+                "status-indicator-harness-interface",
+                "status-indicator-wiring",
+            ],
         )
         expected_versions = {
             "controller": "10.0.0",
@@ -251,7 +283,9 @@ class GovernanceLintTests(unittest.TestCase):
             first = catalog.parts[0].model_copy(
                 update={"approved_alternates": (catalog.parts[0].id,)}
             )
-            write_model(catalog_path, catalog.model_copy(update={"parts": (first, *catalog.parts[1:])}))
+            write_model(
+                catalog_path, catalog.model_copy(update={"parts": (first, *catalog.parts[1:])})
+            )
             issues = lint(staged).issues
             self.assertIn(
                 f"part {first.id}: unknown or self approved alternate {first.id}",
@@ -261,16 +295,36 @@ class GovernanceLintTests(unittest.TestCase):
     def test_production_profile_fails_closed_without_identity_or_governance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             staged: Path = Path(temporary) / "template"
-            shutil.copytree(ROOT, staged, ignore=shutil.ignore_patterns(".git", "build", ".evidence", "__pycache__"))
+            shutil.copytree(
+                ROOT,
+                staged,
+                ignore=shutil.ignore_patterns(".git", "build", ".evidence", "__pycache__"),
+            )
             path = staged / "examples/projects/controller/project.json"
             manifest = read_model(path, ProjectManifest)
-            write_model(path, manifest.model_copy(update={
-                "status": "engineering", "assurance_profile": "production",
-                "component_identity": ComponentIdentity(required=False, part_ids=()),
-            }))
+            write_model(
+                path,
+                manifest.model_copy(
+                    update={
+                        "status": "engineering",
+                        "assurance_profile": "production",
+                        "component_identity": ComponentIdentity(required=False, part_ids=()),
+                    }
+                ),
+            )
             issues = lint(staged, ["controller"]).issues
-            self.assertTrue(any("production profile cannot disable ERC or DRC checks" in issue for issue in issues))
-            self.assertTrue(any("production profile must require component identity" in issue for issue in issues))
+            self.assertTrue(
+                any(
+                    "production profile cannot disable ERC or DRC checks" in issue
+                    for issue in issues
+                )
+            )
+            self.assertTrue(
+                any(
+                    "production profile must require component identity" in issue
+                    for issue in issues
+                )
+            )
             self.assertTrue(any("mechanical_handoff" in issue for issue in issues))
             self.assertTrue(any("governance" in issue for issue in issues))
 

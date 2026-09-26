@@ -1,4 +1,5 @@
 """Hosted governance observations must preserve missing controls and API uncertainty."""
+
 from __future__ import annotations
 
 import base64
@@ -28,26 +29,37 @@ def api_response(root: Path, *args: str) -> object:
     if endpoint == f"repos/{REPO}":
         return {"full_name": REPO, "default_branch": "main"}
     if "/rules/branches/main?" in endpoint:
-        return [[
-            {"type": "pull_request", "parameters": {
-                "required_approving_review_count": 1,
-                "dismiss_stale_reviews_on_push": True,
-                "require_code_owner_review": True,
-            }},
-            {"type": "required_status_checks", "parameters": {
-                "required_status_checks": [{"context": name} for name in REQUIRED_CHECKS],
-                "strict_required_status_checks_policy": True,
-            }},
-            {"type": "non_fast_forward"},
-        ]]
+        return [
+            [
+                {
+                    "type": "pull_request",
+                    "parameters": {
+                        "required_approving_review_count": 1,
+                        "dismiss_stale_reviews_on_push": True,
+                        "require_code_owner_review": True,
+                    },
+                },
+                {
+                    "type": "required_status_checks",
+                    "parameters": {
+                        "required_status_checks": [{"context": name} for name in REQUIRED_CHECKS],
+                        "strict_required_status_checks_policy": True,
+                    },
+                },
+                {"type": "non_fast_forward"},
+            ]
+        ]
     if endpoint.endswith("/protection"):
         raise ApiError(endpoint, "HTTP 404: Resource not found", 404)
     if "/codeowners/errors?" in endpoint:
         return {"errors": []}
     if "/contents/.github/CODEOWNERS?" in endpoint:
         contents = "/projects/ @hardware-team\n/tools/ @process-maintainer\n"
-        return {"type": "file", "encoding": "base64",
-                "content": base64.encodebytes(contents.encode()).decode()}
+        return {
+            "type": "file",
+            "encoding": "base64",
+            "content": base64.encodebytes(contents.encode()).decode(),
+        }
     raise AssertionError(f"Unexpected gh call: {args}")
 
 
@@ -64,9 +76,15 @@ class HostedGovernanceAuditTests(unittest.TestCase):
         self.assertEqual(report.hosted_controls_status, "PASS")
         self.assertEqual(report.default_branch, "main")
         for name in (
-            "branch_protected", "pull_requests_required", "required_checks", "approvals",
-            "dismiss_stale_reviews", "up_to_date", "force_push_blocked",
-            "codeowners_file", "code_owner_review",
+            "branch_protected",
+            "pull_requests_required",
+            "required_checks",
+            "approvals",
+            "dismiss_stale_reviews",
+            "up_to_date",
+            "force_push_blocked",
+            "codeowners_file",
+            "code_owner_review",
         ):
             self.assertEqual(checks[name].status, "PASS", name)
         self.assertEqual(checks["team_identities"].status, "UNKNOWN")
@@ -111,8 +129,15 @@ class HostedGovernanceAuditTests(unittest.TestCase):
         checks = {check.id: check for check in report.checks}
         self.assertEqual(report.status, "NEEDS_SETUP")
         self.assertEqual(report.hosted_controls_status, "NEEDS_SETUP")
-        for name in ("required_checks", "approvals", "dismiss_stale_reviews", "up_to_date",
-                     "force_push_blocked", "codeowners_file", "code_owner_review"):
+        for name in (
+            "required_checks",
+            "approvals",
+            "dismiss_stale_reviews",
+            "up_to_date",
+            "force_push_blocked",
+            "codeowners_file",
+            "code_owner_review",
+        ):
             self.assertEqual(checks[name].status, "NEEDS_SETUP", name)
 
     def test_inaccessible_protection_does_not_prove_absence(self) -> None:
@@ -149,40 +174,56 @@ class HostedGovernanceAuditTests(unittest.TestCase):
 
         with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=hidden):
             report = audit(ROOT, REPO)
-        self.assertEqual(next(check for check in report.checks
-                              if check.id == "codeowners_file").status, "UNKNOWN")
+        self.assertEqual(
+            next(check for check in report.checks if check.id == "codeowners_file").status,
+            "UNKNOWN",
+        )
 
     def test_codeowners_email_is_allowed_but_oversized_file_is_not(self) -> None:
         def email_owner(root: Path, *args: str) -> object:
             if "/contents/.github/CODEOWNERS?" in args[-1]:
                 contents = "/projects/ engineer@example.com\n"
-                return {"type": "file", "encoding": "base64", "size": len(contents),
-                        "content": base64.b64encode(contents.encode()).decode()}
+                return {
+                    "type": "file",
+                    "encoding": "base64",
+                    "size": len(contents),
+                    "content": base64.b64encode(contents.encode()).decode(),
+                }
             return api_response(root, *args)
 
         with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=email_owner):
             report = audit(ROOT, REPO)
-        self.assertEqual(next(check for check in report.checks
-                              if check.id == "codeowners_file").status, "PASS")
+        self.assertEqual(
+            next(check for check in report.checks if check.id == "codeowners_file").status, "PASS"
+        )
 
         def oversized(root: Path, *args: str) -> object:
             if "/contents/.github/CODEOWNERS?" in args[-1]:
-                return {"type": "file", "encoding": "base64", "size": 3 * 1024 * 1024,
-                        "content": ""}
+                return {
+                    "type": "file",
+                    "encoding": "base64",
+                    "size": 3 * 1024 * 1024,
+                    "content": "",
+                }
             return api_response(root, *args)
 
         with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=oversized):
             report = audit(ROOT, REPO)
-        self.assertEqual(next(check for check in report.checks
-                              if check.id == "codeowners_file").status, "NEEDS_SETUP")
+        self.assertEqual(
+            next(check for check in report.checks if check.id == "codeowners_file").status,
+            "NEEDS_SETUP",
+        )
 
     def test_malformed_codeowners_entry_never_passes_even_with_other_valid_owners(self) -> None:
         def malformed(root: Path, *args: str) -> object:
             endpoint = args[-1]
             if "/contents/.github/CODEOWNERS?" in endpoint:
                 contents = "/projects/ @hardware-team\n/tools/ @process-maintainer broken-owner\n"
-                return {"type": "file", "encoding": "base64",
-                        "content": base64.b64encode(contents.encode()).decode()}
+                return {
+                    "type": "file",
+                    "encoding": "base64",
+                    "content": base64.b64encode(contents.encode()).decode(),
+                }
             return api_response(root, *args)
 
         with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=malformed):
@@ -195,8 +236,16 @@ class HostedGovernanceAuditTests(unittest.TestCase):
     def test_github_codeowners_errors_and_unavailable_validation_fail_closed(self) -> None:
         def invalid_pattern(root: Path, *args: str) -> object:
             if "/codeowners/errors?" in args[-1]:
-                return {"errors": [{"line": 2, "kind": "Invalid pattern",
-                                    "message": "unsupported pattern", "path": ".github/CODEOWNERS"}]}
+                return {
+                    "errors": [
+                        {
+                            "line": 2,
+                            "kind": "Invalid pattern",
+                            "message": "unsupported pattern",
+                            "path": ".github/CODEOWNERS",
+                        }
+                    ]
+                }
             return api_response(root, *args)
 
         with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=invalid_pattern):
@@ -223,8 +272,10 @@ class HostedGovernanceAuditTests(unittest.TestCase):
 
         with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=malformed_response):
             report = audit(ROOT, REPO)
-        self.assertEqual(next(check for check in report.checks
-                              if check.id == "codeowners_file").status, "UNKNOWN")
+        self.assertEqual(
+            next(check for check in report.checks if check.id == "codeowners_file").status,
+            "UNKNOWN",
+        )
 
     def test_empty_governance_roles_need_setup_even_with_enough_unique_people(self) -> None:
         with tempfile.TemporaryDirectory(prefix="hosted-governance-roles-") as temporary:
@@ -232,27 +283,34 @@ class HostedGovernanceAuditTests(unittest.TestCase):
             (root / "catalog").mkdir()
             shutil.copy2(ROOT / "catalog/team-policy.json", root / "catalog/team-policy.json")
             record = json.loads((ROOT / "templates/github-governance.example.json").read_text())
-            record.update({
-                "authors": ["alice", "bob"],
-                "reviewers": ["carol"],
-                "integrators": ["alice"],
-            })
+            record.update(
+                {
+                    "authors": ["alice", "bob"],
+                    "reviewers": ["carol"],
+                    "integrators": ["alice"],
+                }
+            )
             for missing in ("authors", "reviewers", "integrators"):
                 with self.subTest(missing=missing):
                     variant = {**record, missing: []}
                     (root / "governance.json").write_text(json.dumps(variant))
-                    with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=api_response):
+                    with patch(
+                        "kicad_tooling.hwrepo.hosted_governance._gh", side_effect=api_response
+                    ):
                         report = audit(root, REPO, "governance.json")
-                    identities = next(check for check in report.checks
-                                      if check.id == "team_identities")
+                    identities = next(
+                        check for check in report.checks if check.id == "team_identities"
+                    )
                     self.assertEqual(identities.status, "NEEDS_SETUP")
                     self.assertIn(missing, identities.observed)
                     self.assertEqual(report.hosted_controls_status, "PASS")
                     self.assertEqual(report.status, "NEEDS_SETUP")
 
     def test_invalid_auth_and_governance_branch_mismatch_are_explicit(self) -> None:
-        with patch("kicad_tooling.hwrepo.hosted_governance._gh",
-                   side_effect=ApiError("repos/example/hardware", "HTTP 401: Bad credentials", 401)):
+        with patch(
+            "kicad_tooling.hwrepo.hosted_governance._gh",
+            side_effect=ApiError("repos/example/hardware", "HTTP 401: Bad credentials", 401),
+        ):
             inaccessible = audit(ROOT, REPO)
         self.assertEqual(inaccessible.status, "UNKNOWN")
         self.assertIn("authentication", inaccessible.checks[0].next_action or "")
@@ -267,14 +325,17 @@ class HostedGovernanceAuditTests(unittest.TestCase):
         with patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=trunk):
             mismatch = audit(ROOT, REPO, "templates/github-governance.example.json")
         self.assertEqual(mismatch.status, "NEEDS_SETUP")
-        self.assertEqual(next(check for check in mismatch.checks
-                              if check.id == "governance_branch").status, "NEEDS_SETUP")
+        self.assertEqual(
+            next(check for check in mismatch.checks if check.id == "governance_branch").status,
+            "NEEDS_SETUP",
+        )
 
     def test_cli_exposes_typed_json_and_brief_text(self) -> None:
         with (
             patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=api_response),
-            patch.object(sys, "argv", ["kicad_tooling.governance_audit", "--root", str(ROOT),
-                                       "--repo", REPO]),
+            patch.object(
+                sys, "argv", ["kicad_tooling.governance_audit", "--root", str(ROOT), "--repo", REPO]
+            ),
             patch("sys.stdout", new_callable=StringIO) as output,
         ):
             self.assertEqual(audit_main(), 2)
@@ -284,8 +345,19 @@ class HostedGovernanceAuditTests(unittest.TestCase):
         self.assertEqual(payload["required_status_checks"], list(REQUIRED_CHECKS))
         with (
             patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=api_response),
-            patch.object(sys, "argv", ["kicad_tooling.governance_audit", "--root", str(ROOT),
-                                       "--repo", REPO, "--format", "text"]),
+            patch.object(
+                sys,
+                "argv",
+                [
+                    "kicad_tooling.governance_audit",
+                    "--root",
+                    str(ROOT),
+                    "--repo",
+                    REPO,
+                    "--format",
+                    "text",
+                ],
+            ),
             patch("sys.stdout", new_callable=StringIO) as output,
         ):
             self.assertEqual(audit_main(), 2)

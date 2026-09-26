@@ -1,4 +1,5 @@
 """Local rescue never converts a partial island inspection into CI acceptance."""
+
 from __future__ import annotations
 
 import json
@@ -29,10 +30,25 @@ class LocalRescueTests(unittest.TestCase):
 
     def command(self, *extra: str, output_format: str = "json") -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "rescue",
-             "--root", str(self.root), "--project-id", "controller",
-             "--format", output_format, *extra),
-            cwd=self.root, capture_output=True, text=True, check=False,
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.template",
+                "rescue",
+                "--root",
+                str(self.root),
+                "--project-id",
+                "controller",
+                "--format",
+                output_format,
+                *extra,
+            ),
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+            check=False,
         )
 
     def source_snapshot(self) -> dict[str, bytes]:
@@ -54,8 +70,7 @@ class LocalRescueTests(unittest.TestCase):
         result = json.loads(command.stdout)
         self.assertEqual(result["status"], "UNVERIFIED_GLOBAL")
         self.assertEqual(result["local_inspection"], "CLEAR")
-        self.assertEqual(result["selected_manifest"],
-                         "examples/projects/controller/project.json")
+        self.assertEqual(result["selected_manifest"], "examples/projects/controller/project.json")
         self.assertFalse(result["build_authorized"])
         self.assertFalse(result["ci_eligible"])
         self.assertFalse(result["release_eligible"])
@@ -63,19 +78,29 @@ class LocalRescueTests(unittest.TestCase):
         self.assertEqual(before, self.source_snapshot())
         receipt = Path(result["run_directory"])
         self.assertTrue(receipt.is_relative_to(self.root / "build"))
-        self.assertEqual(json.loads((receipt / "run.json").read_text())["status"],
-                         "UNVERIFIED_GLOBAL")
-        self.assertEqual(json.loads((receipt / "diagnosis.json").read_text())["lane"],
-                         "LOCAL_PROJECT_RESCUE")
+        self.assertEqual(
+            json.loads((receipt / "run.json").read_text())["status"], "UNVERIFIED_GLOBAL"
+        )
+        self.assertEqual(
+            json.loads((receipt / "diagnosis.json").read_text())["lane"], "LOCAL_PROJECT_RESCUE"
+        )
         self.assertIn("selected-island", command.stderr)
 
     def test_rescue_does_not_call_global_registry_even_when_it_is_valid(self) -> None:
-        with patch("kicad_tooling.hwrepo.discovery.load_registry", side_effect=AssertionError(
-            "Global registry must not be loaded",
-        )):
-            report = rescue_project(self.root, "controller", DiagnosticJournal(
-                self.root, "controller",
-            ))
+        with patch(
+            "kicad_tooling.hwrepo.discovery.load_registry",
+            side_effect=AssertionError(
+                "Global registry must not be loaded",
+            ),
+        ):
+            report = rescue_project(
+                self.root,
+                "controller",
+                DiagnosticJournal(
+                    self.root,
+                    "controller",
+                ),
+            )
         self.assertEqual(report.local_inspection, "CLEAR")
         self.assertEqual(report.status, "UNVERIFIED_GLOBAL")
 
@@ -106,16 +131,26 @@ class LocalRescueTests(unittest.TestCase):
     def test_unsafe_or_ambiguous_selection_is_rejected_before_manifest_parse(self) -> None:
         for project_id in ("../other", "team/controller"):
             with self.subTest(project_id=project_id):
-                report = rescue_project(self.root, project_id, DiagnosticJournal(
-                    self.root, project_id,
-                ))
+                report = rescue_project(
+                    self.root,
+                    project_id,
+                    DiagnosticJournal(
+                        self.root,
+                        project_id,
+                    ),
+                )
                 self.assertEqual(report.local_inspection, "NEEDS_REPAIR")
                 self.assertEqual(report.findings[0].code, "RESCUE_SELECTION")
         duplicate = self.root / "projects/controller"
         shutil.copytree(self.root / "examples/projects/controller", duplicate)
-        report = rescue_project(self.root, "controller", DiagnosticJournal(
-            self.root, "controller",
-        ))
+        report = rescue_project(
+            self.root,
+            "controller",
+            DiagnosticJournal(
+                self.root,
+                "controller",
+            ),
+        )
         self.assertIn("ambiguous", report.findings[0].observed)
 
     def test_nested_project_directory_is_not_discovered(self) -> None:
@@ -123,9 +158,14 @@ class LocalRescueTests(unittest.TestCase):
         nested = self.root / "examples/projects/team/controller"
         nested.parent.mkdir()
         controller.rename(nested)
-        report = rescue_project(self.root, "controller", DiagnosticJournal(
-            self.root, "controller",
-        ))
+        report = rescue_project(
+            self.root,
+            "controller",
+            DiagnosticJournal(
+                self.root,
+                "controller",
+            ),
+        )
         self.assertEqual(report.findings[0].code, "RESCUE_SELECTION")
         self.assertIn("No project.json", report.findings[0].observed)
 
@@ -142,8 +182,12 @@ class LocalRescueTests(unittest.TestCase):
 
     def test_unexpected_tool_error_keeps_traceback_in_ignored_receipt(self) -> None:
         argv = [
-            "kicad_tooling.template", "rescue", "--root", str(self.root),
-            "--project-id", "controller",
+            "kicad_tooling.template",
+            "rescue",
+            "--root",
+            str(self.root),
+            "--project-id",
+            "controller",
         ]
         with (
             patch.object(sys, "argv", argv),
@@ -155,8 +199,7 @@ class LocalRescueTests(unittest.TestCase):
         receipts = sorted((self.root / "build/diagnostics").iterdir())
         self.assertEqual(len(receipts), 1)
         self.assertIn("coach bug", (receipts[0] / "error.txt").read_text())
-        self.assertEqual(json.loads((receipts[0] / "run.json").read_text())["status"],
-                         "ERROR")
+        self.assertEqual(json.loads((receipts[0] / "run.json").read_text())["status"], "ERROR")
 
     def test_missing_selected_input_is_reported_without_global_verification(self) -> None:
         source = self.root / "examples/projects/controller/kicad/Pilot.kicad_sym"

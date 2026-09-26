@@ -1,4 +1,5 @@
 """Ignored, per-run evidence for the human-facing diagnostic command."""
+
 from __future__ import annotations
 
 import json
@@ -20,7 +21,10 @@ class DiagnosticJournal:
     """Record stage progress and raw typed results without copying design sources."""
 
     def __init__(
-        self, root: Path, project_id: str, output: Path | None = None,
+        self,
+        root: Path,
+        project_id: str,
+        output: Path | None = None,
         label: str = "diagnose",
     ) -> None:
         root = root.resolve()

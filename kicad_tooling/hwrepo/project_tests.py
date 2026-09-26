@@ -1,4 +1,5 @@
 """Execute project and dependent-product unittest suites in isolated processes."""
+
 from __future__ import annotations
 
 import subprocess
@@ -17,20 +18,27 @@ def _run_suite(root: Path, directory: Path) -> CommandEvidence:
     argv = (sys.executable, "-B", "-m", "unittest", "discover", "-s", str(directory), "-v")
     started = datetime.now(UTC).isoformat()
     try:
-        result = subprocess.run(argv, cwd=root, text=True, capture_output=True,
-                                check=False, timeout=120)
+        result = subprocess.run(
+            argv, cwd=root, text=True, capture_output=True, check=False, timeout=120
+        )
         empty = "Ran 0 tests" in result.stderr
-        return CommandEvidence(argv=argv, started_utc=started,
-                               returncode=1 if empty else result.returncode,
-                               stdout=result.stdout, stderr=result.stderr,
-                               error="Test files exist but none were discovered; check package __init__.py files"
-                               if empty else None)
+        return CommandEvidence(
+            argv=argv,
+            started_utc=started,
+            returncode=1 if empty else result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
+            error="Test files exist but none were discovered; check package __init__.py files"
+            if empty
+            else None,
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return CommandEvidence(argv=argv, started_utc=started, returncode=127, error=str(exc))
 
 
-def run_tests(root: Path, selected: tuple[str, ...] | None = None,
-              max_workers: int = 1) -> ProjectTestsReport:
+def run_tests(
+    root: Path, selected: tuple[str, ...] | None = None, max_workers: int = 1
+) -> ProjectTestsReport:
     if max_workers < 1:
         raise ValueError("Project-test workers must be at least one")
     root = root.resolve()
@@ -41,11 +49,13 @@ def run_tests(root: Path, selected: tuple[str, ...] | None = None,
         if selected is None or project.id in selected
     }
     index = read_model(repo_path(root, layout(root).products), ProductIndex)
-    directories.update({
-        f"product-{entry.id}": repo_path(root, entry.path).parent / "tests"
-        for entry in index.products
-        if selected is None or set(selected).intersection(entry.project_ids)
-    })
+    directories.update(
+        {
+            f"product-{entry.id}": repo_path(root, entry.path).parent / "tests"
+            for entry in index.products
+            if selected is None or set(selected).intersection(entry.project_ids)
+        }
+    )
     suites: list[tuple[str, Path]] = []
     for identifier, directory in sorted(directories.items()):
         if not directory.exists():
@@ -63,8 +73,12 @@ def run_tests(root: Path, selected: tuple[str, ...] | None = None,
         # Each island has its own unittest process. Collect futures in sorted order so
         # JSON evidence remains stable regardless of completion order.
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [(identifier, executor.submit(_run_suite, root, directory))
-                       for identifier, directory in suites]
+            futures = [
+                (identifier, executor.submit(_run_suite, root, directory))
+                for identifier, directory in suites
+            ]
             commands = {identifier: future.result() for identifier, future in futures}
-    return ProjectTestsReport(status="PASS" if all(command.returncode == 0 for command in
-                             commands.values()) else "FAIL", commands=commands)
+    return ProjectTestsReport(
+        status="PASS" if all(command.returncode == 0 for command in commands.values()) else "FAIL",
+        commands=commands,
+    )

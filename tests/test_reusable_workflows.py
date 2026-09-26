@@ -1,4 +1,5 @@
 """Guard the trust boundary of workflows executed inside an adopting repository."""
+
 from __future__ import annotations
 
 import re
@@ -7,7 +8,10 @@ from pathlib import Path
 
 WORKFLOWS = Path(__file__).resolve().parents[1] / ".github/workflows"
 PROJECT_WORKFLOWS = (
-    "kicad-template.yml", "3d-preview.yml", "electrical-analysis.yml", "release-candidate.yml",
+    "kicad-template.yml",
+    "3d-preview.yml",
+    "electrical-analysis.yml",
+    "release-candidate.yml",
 )
 
 
@@ -33,8 +37,14 @@ class ReusableWorkflowTests(unittest.TestCase):
                 workflow = (WORKFLOWS / name).read_text(encoding="utf-8")
                 self.assertIn("  workflow_call:\n", workflow)
                 self.assertIn("permissions:\n  contents: read\n", workflow)
-                for forbidden in ("secrets:", "write-all", ": write", "pull_request_target:",
-                                  "continue-on-error:", "concurrency:"):
+                for forbidden in (
+                    "secrets:",
+                    "write-all",
+                    ": write",
+                    "pull_request_target:",
+                    "continue-on-error:",
+                    "concurrency:",
+                ):
                     self.assertNotIn(forbidden, workflow)
                 for command in re.findall(r"(?ms)^\s+run:.*?(?=^\s+- |\Z)", workflow):
                     self.assertNotIn("${{ inputs.", command)

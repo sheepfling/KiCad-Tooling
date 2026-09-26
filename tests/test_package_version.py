@@ -1,4 +1,5 @@
 """The installed tooling version is independent of the caller's project and policy."""
+
 from __future__ import annotations
 
 import contextlib
@@ -21,18 +22,24 @@ class PackageVersionTest(unittest.TestCase):
 
     def test_version_cli_does_not_require_a_project_checkout(self) -> None:
         output = io.StringIO()
-        with patch("sys.argv", ["kicad-team", "--version"]), \
-                patch("kicad_tooling.__main__.package_version", return_value="2.0.0"), \
-                contextlib.redirect_stdout(output):
+        with (
+            patch("sys.argv", ["kicad-team", "--version"]),
+            patch("kicad_tooling.__main__.package_version", return_value="2.0.0"),
+            contextlib.redirect_stdout(output),
+        ):
             self.assertEqual(0, main())
         self.assertEqual("kicad-team-tooling 2.0.0\n", output.getvalue())
 
     def test_uninstalled_source_does_not_fabricate_a_version(self) -> None:
         error = io.StringIO()
-        with patch("sys.argv", ["kicad-team", "--version"]), \
-                patch("kicad_tooling.__main__.package_version",
-                      side_effect=PackageNotFoundError("kicad-team-tooling")), \
-                contextlib.redirect_stderr(error):
+        with (
+            patch("sys.argv", ["kicad-team", "--version"]),
+            patch(
+                "kicad_tooling.__main__.package_version",
+                side_effect=PackageNotFoundError("kicad-team-tooling"),
+            ),
+            contextlib.redirect_stderr(error),
+        ):
             self.assertEqual(1, main())
         self.assertIn("install kicad-team-tooling", error.getvalue())
 

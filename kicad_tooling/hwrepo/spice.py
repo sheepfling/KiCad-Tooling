@@ -1,4 +1,5 @@
 """Bounded ngspice batch adapter with reviewed inputs and explicit measurement limits."""
+
 from __future__ import annotations
 
 import hashlib
@@ -16,8 +17,17 @@ from .waveform_data import read_waveform
 
 # Analysis/control directives are generated here, never inherited from a model file.
 MODEL_DIRECTIVES = {
-    ".model", ".subckt", ".ends", ".param", ".func", ".global", ".ic", ".nodeset",
-    ".options", ".option", ".temp",
+    ".model",
+    ".subckt",
+    ".ends",
+    ".param",
+    ".func",
+    ".global",
+    ".ic",
+    ".nodeset",
+    ".options",
+    ".option",
+    ".temp",
 }
 
 
@@ -61,7 +71,9 @@ def expanded_deck(root: Path, case: SimulationCase) -> str:
                 included = repo_path(path.parent, parts[1]).relative_to(root).as_posix()
                 output.extend(expand(included, (*ancestors, name)))
             elif token.startswith(".") and token not in MODEL_DIRECTIVES:
-                raise ValueError(f"Unsupported SPICE directive {token} in {name}; use a model-only deck")
+                raise ValueError(
+                    f"Unsupported SPICE directive {token} in {name}; use a model-only deck"
+                )
             else:
                 output.append(line)
         return output
@@ -78,25 +90,46 @@ def simulation_deck(root: Path, case: SimulationCase) -> str:
         analysis = f"tran {case.step_s:.17g} {case.stop_s:.17g} 0 {case.step_s:.17g}"
     else:
         analysis = f"ac dec {case.points_per_decade} {case.start_hz:.17g} {case.stop_hz:.17g}"
-    commands = [".control", "set filetype=ascii", "set numdgt=15",
-                "set measureprec=15", "set rawfileprec=17", analysis]
+    commands = [
+        ".control",
+        "set filetype=ascii",
+        "set numdgt=15",
+        "set measureprec=15",
+        "set rawfileprec=17",
+        analysis,
+    ]
     for index, measure in enumerate(case.measures):
-        commands.extend((
-            f"let value{index} = {measure.expression}",
-            (f"meas {case.analysis} check{index} {measure.statistic} value{index} "
-             f"from={measure.start:.17g} to={measure.stop:.17g}"),
-        ))
+        commands.extend(
+            (
+                f"let value{index} = {measure.expression}",
+                (
+                    f"meas {case.analysis} check{index} {measure.statistic} value{index} "
+                    f"from={measure.start:.17g} to={measure.stop:.17g}"
+                ),
+            )
+        )
     commands.extend(("write waveforms.raw all", "quit", ".endc", ".end"))
-    return f"* Reviewed electrical case {case.id}\n{expanded_deck(root, case)}\n" + "\n".join(commands) + "\n"
+    return (
+        f"* Reviewed electrical case {case.id}\n{expanded_deck(root, case)}\n"
+        + "\n".join(commands)
+        + "\n"
+    )
 
 
 def measured_checks(case: SimulationCase, command: CommandEvidence) -> tuple[ElectricalCheck, ...]:
     results: list[ElectricalCheck] = []
     if command.returncode != 0 or command.error:
-        return (ElectricalCheck(id=case.id, status="FAIL",
-                                detail=command.error or f"ngspice exited {command.returncode}; inspect its log."),)
+        return (
+            ElectricalCheck(
+                id=case.id,
+                status="FAIL",
+                detail=command.error or f"ngspice exited {command.returncode}; inspect its log.",
+            ),
+        )
     for index, measure in enumerate(case.measures):
-        matches = re.findall(rf"^\s*check{index}\s*=\s*(\S+)", command.stdout, re.MULTILINE | re.IGNORECASE)
+        matches = re.findall(
+            rf"^\s*check{index}\s*=\s*(\S+)", command.stdout, re.MULTILINE | re.IGNORECASE
+        )
         try:
             if len(matches) != 1:
                 raise ValueError("Missing or duplicate measurement")
@@ -104,20 +137,35 @@ def measured_checks(case: SimulationCase, command: CommandEvidence) -> tuple[Ele
             if not math.isfinite(value):
                 raise ValueError("Non-finite measurement")
         except ValueError as exc:
-            results.append(ElectricalCheck(id=f"{case.id}/{measure.id}", status="FAIL", detail=str(exc)))
+            results.append(
+                ElectricalCheck(id=f"{case.id}/{measure.id}", status="FAIL", detail=str(exc))
+            )
             continue
-        passed = ((measure.minimum is None or value >= measure.minimum)
-                  and (measure.maximum is None or value <= measure.maximum))
-        results.append(ElectricalCheck(
-            id=f"{case.id}/{measure.id}", status="PASS" if passed else "FAIL",
-            observed=value, unit=measure.unit,
-            detail=f"{measure.statistic}({measure.expression}) in [{measure.start:g}, {measure.stop:g}]; "
-                   f"limits [{measure.minimum}, {measure.maximum}] {measure.unit}.",
-        ))
+        passed = (measure.minimum is None or value >= measure.minimum) and (
+            measure.maximum is None or value <= measure.maximum
+        )
+        results.append(
+            ElectricalCheck(
+                id=f"{case.id}/{measure.id}",
+                status="PASS" if passed else "FAIL",
+                observed=value,
+                unit=measure.unit,
+                detail=f"{measure.statistic}({measure.expression}) in [{measure.start:g}, {measure.stop:g}]; "
+                f"limits [{measure.minimum}, {measure.maximum}] {measure.unit}.",
+            )
+        )
     # ngspice may return zero after a control-language error.
-    if re.search(r"(?im)^\s*(?:fatal\s+)?error\b|simulation interrupted|timestep too small", command.stdout + "\n" + command.stderr):
-        results.append(ElectricalCheck(id=f"{case.id}/simulator", status="FAIL",
-                                      detail="ngspice reported an error; inspect the command receipt."))
+    if re.search(
+        r"(?im)^\s*(?:fatal\s+)?error\b|simulation interrupted|timestep too small",
+        command.stdout + "\n" + command.stderr,
+    ):
+        results.append(
+            ElectricalCheck(
+                id=f"{case.id}/simulator",
+                status="FAIL",
+                detail="ngspice reported an error; inspect the command receipt.",
+            )
+        )
     return tuple(results)
 
 
@@ -128,14 +176,23 @@ def waveform_checks(path: Path, case: SimulationCase) -> tuple[ElectricalCheck, 
     results: list[ElectricalCheck] = []
     for measure in case.measures:
         tolerance = max(abs(measure.stop), 1e-15) * 1e-8
-        covered = (axis[0] <= measure.start + tolerance and axis[-1] >= measure.stop - tolerance
-                   and sum(measure.start - tolerance <= point <= measure.stop + tolerance
-                           for point in axis) >= 2)
-        results.append(ElectricalCheck(
-            id=f"{case.id}/{measure.id}/coverage", status="PASS" if covered else "FAIL",
-            detail="Measured window covered by waveform samples." if covered else
-                   "Actual waveform does not cover the complete requested measurement window.",
-        ))
+        covered = (
+            axis[0] <= measure.start + tolerance
+            and axis[-1] >= measure.stop - tolerance
+            and sum(
+                measure.start - tolerance <= point <= measure.stop + tolerance for point in axis
+            )
+            >= 2
+        )
+        results.append(
+            ElectricalCheck(
+                id=f"{case.id}/{measure.id}/coverage",
+                status="PASS" if covered else "FAIL",
+                detail="Measured window covered by waveform samples."
+                if covered
+                else "Actual waveform does not cover the complete requested measurement window.",
+            )
+        )
     return tuple(results)
 
 
@@ -156,12 +213,15 @@ def simulator_version(output: Path, cli: str, expected: str) -> CommandEvidence:
     write_model(output / "ngspice-version.command.json", command)
     versions = observed_versions(command)
     if command.returncode != 0 or command.error or expected not in versions:
-        raise ValueError(f"Exact ngspice {expected} required; observed {versions or command.error or command.stderr}")
+        raise ValueError(
+            f"Exact ngspice {expected} required; observed {versions or command.error or command.stderr}"
+        )
     return command
 
 
-def run_case(root: Path, output: Path, cli: str, case: SimulationCase,
-             timeout: int = 120) -> tuple[CommandEvidence, tuple[ElectricalCheck, ...]]:
+def run_case(
+    root: Path, output: Path, cli: str, case: SimulationCase, timeout: int = 120
+) -> tuple[CommandEvidence, tuple[ElectricalCheck, ...]]:
     directory = output / case.id
     directory.mkdir(exist_ok=False)
     deck = directory / "simulation.cir"
@@ -171,11 +231,18 @@ def run_case(root: Path, output: Path, cli: str, case: SimulationCase,
     checks = list(measured_checks(case, command))
     raw = directory / "waveforms.raw"
     if not raw.is_file() or raw.stat().st_size == 0:
-        checks.append(ElectricalCheck(id=f"{case.id}/waveforms", status="FAIL",
-                                     detail="Simulation produced no waveform artifact."))
+        checks.append(
+            ElectricalCheck(
+                id=f"{case.id}/waveforms",
+                status="FAIL",
+                detail="Simulation produced no waveform artifact.",
+            )
+        )
     else:
         try:
             checks.extend(waveform_checks(raw, case))
         except (OSError, ValueError) as exc:
-            checks.append(ElectricalCheck(id=f"{case.id}/waveforms", status="FAIL", detail=str(exc)))
+            checks.append(
+                ElectricalCheck(id=f"{case.id}/waveforms", status="FAIL", detail=str(exc))
+            )
     return command, tuple(checks)

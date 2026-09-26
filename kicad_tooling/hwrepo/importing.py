@@ -1,4 +1,5 @@
 """Import an existing native project, preserving local names and recording omissions."""
+
 from __future__ import annotations
 
 import hashlib
@@ -28,8 +29,9 @@ def schematic_files(source: Path, schematic: Path) -> set[Path]:
         if not path.is_file():
             raise ValueError(f"Missing schematic sheet: {path.relative_to(source)}")
         visited.add(path)
-        for match in re.finditer(r'\(property\s+"Sheetfile"\s+"([^"\n]+)"',
-                                 path.read_text(encoding="utf-8")):
+        for match in re.finditer(
+            r'\(property\s+"Sheetfile"\s+"([^"\n]+)"', path.read_text(encoding="utf-8")
+        ):
             name = match.group(1).replace("${KIPRJMOD}/", "")
             if "$" in name:
                 raise ValueError(f"Resolve the schematic sheet variable before import: {name}")
@@ -46,8 +48,9 @@ def schematic_files(source: Path, schematic: Path) -> set[Path]:
     return visited
 
 
-def import_project(root: Path, source_project: Path, project_id: str,
-                   toolchain_id: str, dry_run: bool = False) -> ProjectImportReport:
+def import_project(
+    root: Path, source_project: Path, project_id: str, toolchain_id: str, dry_run: bool = False
+) -> ProjectImportReport:
     """Copy one project atomically; never modify the source or generate test truth."""
     root = root.resolve()
     stage: Path | None = None
@@ -113,7 +116,9 @@ def import_project(root: Path, source_project: Path, project_id: str,
         if kind is ProjectKind.PCB_ONLY:
             required.add(pcb.name)
         if not required.issubset(copied):
-            raise ValueError(f"Required design sources were excluded: {sorted(required - set(copied))}")
+            raise ValueError(
+                f"Required design sources were excluded: {sorted(required - set(copied))}"
+            )
         next_step = (
             f"Review board dependencies and DRC/layout expectations, then run python -B -m kicad_tooling.verify --project {manifest.id}. "
             "Add an authoritative schematic and migrate to pcb before product or manufacturing work."
@@ -134,12 +139,14 @@ def import_project(root: Path, source_project: Path, project_id: str,
             return report
         destination.parent.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix=".import-project-", dir=destination.parent))
-        manifest = manifest.model_copy(update={
-            "project": f"kicad/{project.name}",
-            "required_inputs": tuple(f"kicad/{name}" for name in copied),
-            # Imported designs have not yet been assigned the team's part IDs.
-            "component_identity": ComponentIdentity(required=False, part_ids=()),
-        })
+        manifest = manifest.model_copy(
+            update={
+                "project": f"kicad/{project.name}",
+                "required_inputs": tuple(f"kicad/{name}" for name in copied),
+                # Imported designs have not yet been assigned the team's part IDs.
+                "component_identity": ComponentIdentity(required=False, part_ids=()),
+            }
+        )
         write_scaffold(root, stage, manifest)
         for name, digest in copied.items():
             target = stage / "kicad" / name
@@ -157,9 +164,15 @@ def import_project(root: Path, source_project: Path, project_id: str,
         stage = None
         return report
     except (OSError, ValueError) as exc:
-        return ProjectImportReport(status="FAIL", directory=project_id,
-            source_project=source_project.name, dry_run=dry_run, copied_sha256=copied,
-            excluded=excluded, issues=(str(exc),))
+        return ProjectImportReport(
+            status="FAIL",
+            directory=project_id,
+            source_project=source_project.name,
+            dry_run=dry_run,
+            copied_sha256=copied,
+            excluded=excluded,
+            issues=(str(exc),),
+        )
     finally:
         if stage is not None:
             shutil.rmtree(stage)

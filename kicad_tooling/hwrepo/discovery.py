@@ -1,4 +1,5 @@
 """Discover project islands and adapt local manifests to shared policy contracts."""
+
 from __future__ import annotations
 
 import re
@@ -24,8 +25,11 @@ def settings(root: Path) -> ProjectDiscovery:
         raise ValueError("Project discovery roots must not overlap")
     shared = [source_directory(root, name) for name in layout(root).library_roots]
     products = [source_directory(root, name) for name in layout(root).product_roots]
-    if any(left.is_relative_to(right) or right.is_relative_to(left)
-           for left in bases for right in (*shared, *products)):
+    if any(
+        left.is_relative_to(right) or right.is_relative_to(left)
+        for left in bases
+        for right in (*shared, *products)
+    ):
         raise ValueError("Project discovery roots must not overlap library or product roots")
     return policy
 
@@ -80,10 +84,14 @@ def project_destination(root: Path, project_id: str) -> Path:
     policy = settings(root)
     destination = source_directory(root, f"{layout(root).new_project_root}/{project_id}")
     scopes = [repo_path(root, name) for name in policy.project_roots]
-    if not any(destination.is_relative_to(base)
-               and 1 <= len(destination.relative_to(base).parts) <= policy.project_depth
-               for base in scopes):
-        raise ValueError("new_project_root must place new islands within project_roots/project_depth")
+    if not any(
+        destination.is_relative_to(base)
+        and 1 <= len(destination.relative_to(base).parts) <= policy.project_depth
+        for base in scopes
+    ):
+        raise ValueError(
+            "new_project_root must place new islands within project_roots/project_depth"
+        )
     for ancestor in destination.parents:
         if ancestor == root:
             break
@@ -109,20 +117,35 @@ def load_registry(root: Path) -> ProjectRegistry:
         seen.add(manifest.id.casefold())
         if path.parent.name != manifest.id:
             raise ValueError(f"Project directory must match id {manifest.id}: {path.parent.name}")
-        records.append(ProjectRecord(
-            id=manifest.id, kind=manifest.kind, status=manifest.status,
-            assurance_profile=manifest.assurance_profile,
-            config=path.relative_to(root).as_posix(),
-            project=local_name(root, path.parent, manifest.project),
-            component_identity=manifest.component_identity, tags=manifest.tags,
-            interfaces=manifest.interfaces, library_ids=manifest.library_ids,
-            mechanical_handoff=(None if manifest.mechanical_handoff is None else
-                                local_name(root, path.parent, manifest.mechanical_handoff)),
-            governance_record=(None if manifest.governance_record is None else
-                               local_name(root, path.parent, manifest.governance_record)),
-        ))
-    return ProjectRegistry(schema_version="1", catalogs=policy.catalogs,
-                           projects=tuple(sorted(records, key=lambda record: record.id)))
+        records.append(
+            ProjectRecord(
+                id=manifest.id,
+                kind=manifest.kind,
+                status=manifest.status,
+                assurance_profile=manifest.assurance_profile,
+                config=path.relative_to(root).as_posix(),
+                project=local_name(root, path.parent, manifest.project),
+                component_identity=manifest.component_identity,
+                tags=manifest.tags,
+                interfaces=manifest.interfaces,
+                library_ids=manifest.library_ids,
+                mechanical_handoff=(
+                    None
+                    if manifest.mechanical_handoff is None
+                    else local_name(root, path.parent, manifest.mechanical_handoff)
+                ),
+                governance_record=(
+                    None
+                    if manifest.governance_record is None
+                    else local_name(root, path.parent, manifest.governance_record)
+                ),
+            )
+        )
+    return ProjectRegistry(
+        schema_version="1",
+        catalogs=policy.catalogs,
+        projects=tuple(sorted(records, key=lambda record: record.id)),
+    )
 
 
 def load_config(root: Path, value: str | Path) -> ProjectConfig:
@@ -138,18 +161,27 @@ def load_config(root: Path, value: str | Path) -> ProjectConfig:
     toolchain = matching[0]
     contract = read_model(repo_path(path.parent, manifest.checks), ProjectTestContract)
     return ProjectConfig(
-        schema_version="1", project_id=manifest.id, kind=manifest.kind,
+        schema_version="1",
+        project_id=manifest.id,
+        kind=manifest.kind,
         component_identity=manifest.component_identity,
         assurance_profile=manifest.assurance_profile,
         not_for_manufacture=manifest.assurance_profile != "production",
-        toolchain_id=toolchain.id, kicad_version=toolchain.kicad_version,
-        cli_profile=toolchain.cli_profile, image=toolchain.image,
+        toolchain_id=toolchain.id,
+        kicad_version=toolchain.kicad_version,
+        cli_profile=toolchain.cli_profile,
+        image=toolchain.image,
         project=local_name(root, path.parent, manifest.project),
         source_roots=tuple(local_name(root, path.parent, name) for name in manifest.source_roots)
-                     + manifest.shared_source_roots,
-        required_inputs=tuple(local_name(root, path.parent, name) for name in manifest.required_inputs)
-                        + manifest.shared_inputs,
+        + manifest.shared_source_roots,
+        required_inputs=tuple(
+            local_name(root, path.parent, name) for name in manifest.required_inputs
+        )
+        + manifest.shared_inputs,
         validation=contract.validation,
-        electrical=(None if contract.electrical is None else
-                    local_name(root, path.parent, contract.electrical)),
+        electrical=(
+            None
+            if contract.electrical is None
+            else local_name(root, path.parent, contract.electrical)
+        ),
     )

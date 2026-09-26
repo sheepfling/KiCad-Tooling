@@ -1,4 +1,5 @@
 """Concise terminal summaries for typed CLI reports; JSON remains the full contract."""
+
 from __future__ import annotations
 
 from typing import TypeAlias, cast
@@ -74,12 +75,20 @@ def summary(label: str, report: BaseModel, *, limit: int = 5) -> str:
                         lines.append(
                             f"  {project.get('id', project.get('project_id', '?'))}: {project.get('status', '?')}{receipt}"
                         )
-                        failing = [row for row in (mapping(item) for item in sequence(project.get("checks")))
-                                   if row is not None and row.get("status") in {"FAIL", "NOT_RUN", "NOT_CONFIGURED"}]
+                        failing = [
+                            row
+                            for row in (mapping(item) for item in sequence(project.get("checks")))
+                            if row is not None
+                            and row.get("status") in {"FAIL", "NOT_RUN", "NOT_CONFIGURED"}
+                        ]
                         for row in failing[:limit]:
-                            lines.append(f"    {row.get('id', 'check')}: {row.get('detail', 'Review the receipt.')}")
+                            lines.append(
+                                f"    {row.get('id', 'check')}: {row.get('detail', 'Review the receipt.')}"
+                            )
                         if len(failing) > limit:
-                            lines.append("    More findings are available in the receipt or --format json.")
+                            lines.append(
+                                "    More findings are available in the receipt or --format json."
+                            )
                 else:
                     lines.append(f"{title}: {', '.join(str(item) for item in values)}")
     for key in ("preflight", "initialization", "portable"):
@@ -92,8 +101,7 @@ def summary(label: str, report: BaseModel, *, limit: int = 5) -> str:
             continue
         observed = f" ({check['observed']})" if check.get("observed") else ""
         lines.append(
-            f"  {check.get('id', check.get('name', 'check'))}: "
-            f"{check.get('status', '?')}{observed}"
+            f"  {check.get('id', check.get('name', 'check'))}: {check.get('status', '?')}{observed}"
         )
         if check.get("status") == "FAIL":
             lines.append(f"    Next: {check.get('next_action', 'Review this check.')}")
@@ -123,9 +131,7 @@ def summary(label: str, report: BaseModel, *, limit: int = 5) -> str:
             if command is None or command.get("returncode") == 0:
                 continue
             stderr_lines = str(command.get("stderr", "")).strip().splitlines()
-            detail = command.get("error") or (
-                stderr_lines[-1] if stderr_lines else "nonzero exit"
-            )
+            detail = command.get("error") or (stderr_lines[-1] if stderr_lines else "nonzero exit")
             failures.append(f"{key} {name}: {detail}")
         if stage.get("error"):
             failures.append(f"{key}: {stage['error']}")
@@ -156,8 +162,7 @@ def summary(label: str, report: BaseModel, *, limit: int = 5) -> str:
         projects = sequence(data.get("projects"))
         if len(projects) == 1 and isinstance(projects[0], str):
             lines.append(
-                "Next: python -B -m kicad_tooling.template diagnose "
-                f"--project-id {projects[0]}"
+                f"Next: python -B -m kicad_tooling.template diagnose --project-id {projects[0]}"
             )
     if status != "PASS":
         lines.append("Full structured result: rerun with --format json.")

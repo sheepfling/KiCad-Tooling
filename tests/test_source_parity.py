@@ -1,4 +1,5 @@
 """Real CLI/MCP source-edit parity and fresh capture using an external synthetic CLI."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,9 +25,12 @@ from tests.test_contract_coach import NETLIST, fake_executable
 
 
 def source_bytes(root: Path) -> dict[str, bytes]:
-    return {path.relative_to(root).as_posix(): path.read_bytes()
-            for path in root.rglob("*") if path.is_file()
-            and not {".git", "build", "__pycache__"}.intersection(path.relative_to(root).parts)}
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in root.rglob("*")
+        if path.is_file()
+        and not {".git", "build", "__pycache__"}.intersection(path.relative_to(root).parts)
+    }
 
 
 class SourceParityTests(unittest.IsolatedAsyncioTestCase):
@@ -41,10 +45,23 @@ class SourceParityTests(unittest.IsolatedAsyncioTestCase):
     async def cli(self, module: str, *arguments: str) -> subprocess.CompletedProcess[str]:
         return await asyncio.to_thread(
             subprocess.run,
-            (sys.executable, "-B", "-m", module, "--root", str(self.root),
-             *arguments, "--format", "json"),
-            cwd=self.root.parent, env=os.environ.copy(),
-            text=True, capture_output=True, check=False, timeout=60,
+            (
+                sys.executable,
+                "-B",
+                "-m",
+                module,
+                "--root",
+                str(self.root),
+                *arguments,
+                "--format",
+                "json",
+            ),
+            cwd=self.root.parent,
+            env=os.environ.copy(),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=60,
         )
 
     async def test_model_population_preview_apply_parity(self) -> None:
@@ -52,24 +69,39 @@ class SourceParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(source_bytes(self.mcp_root), original)
         spec = read_model(self.fixture.map, ModelMap)
         preview = await self.cli(
-            "kicad_tooling.visualize", "--project", population_fixture.PROJECT,
-            "--map-models", "build/model-map.json", "--output", "build/cli-plan",
+            "kicad_tooling.visualize",
+            "--project",
+            population_fixture.PROJECT,
+            "--map-models",
+            "build/model-map.json",
+            "--output",
+            "build/cli-plan",
         )
         self.assertEqual(preview.returncode, 0, preview.stderr + preview.stdout)
         cli_plan = ModelPopulationReport.model_validate_json(preview.stdout)
         async with Client(create_server(self.mcp_root, allow_edits=True), mode="legacy") as client:
-            preview_result = await client.call_tool("preview_model_population", {
-                "project_id": population_fixture.PROJECT, "board_sha256": spec.board_sha256,
-                "assignments": [assignment.model_dump(mode="json") for assignment in spec.assignments],
-            })
+            preview_result = await client.call_tool(
+                "preview_model_population",
+                {
+                    "project_id": population_fixture.PROJECT,
+                    "board_sha256": spec.board_sha256,
+                    "assignments": [
+                        assignment.model_dump(mode="json") for assignment in spec.assignments
+                    ],
+                },
+            )
             self.assertFalse(preview_result.is_error, preview_result.content)
-            mcp_plan = ModelPopulationReport.model_validate_json(json.dumps(preview_result.structured_content))
+            mcp_plan = ModelPopulationReport.model_validate_json(
+                json.dumps(preview_result.structured_content)
+            )
             for report in (cli_plan, mcp_plan):
                 self.assertEqual(report.status, "PLAN", report.error)
                 self.assertEqual(report.board_sha256, spec.board_sha256)
                 self.assertEqual(report.manifest_sha256, spec.manifest_sha256)
-                self.assertEqual(report.model_sha256[population_fixture.MODEL],
-                                 hashlib.sha256(self.fixture.model.read_bytes()).hexdigest())
+                self.assertEqual(
+                    report.model_sha256[population_fixture.MODEL],
+                    hashlib.sha256(self.fixture.model.read_bytes()).hexdigest(),
+                )
                 self.assertFalse(report.build_authorized)
                 self.assertTrue(report.checks_required)
             self.assertEqual(cli_plan.board_diff, mcp_plan.board_diff)
@@ -78,17 +110,31 @@ class SourceParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(source_bytes(self.mcp_root), original)
             self.assertIsNotNone(cli_plan.locked_map)
             applied = await self.cli(
-                "kicad_tooling.visualize", "--project", population_fixture.PROJECT,
-                "--map-models", str(cli_plan.locked_map), "--apply", "--output", "build/cli-apply",
+                "kicad_tooling.visualize",
+                "--project",
+                population_fixture.PROJECT,
+                "--map-models",
+                str(cli_plan.locked_map),
+                "--apply",
+                "--output",
+                "build/cli-apply",
             )
             self.assertEqual(applied.returncode, 0, applied.stderr + applied.stdout)
             cli_apply = ModelPopulationReport.model_validate_json(applied.stdout)
-            plan = (Path(mcp_plan.run_directory) / "model-population.json").relative_to(self.mcp_root)
-            applied_result = await client.call_tool("apply_model_population", {
-                "project_id": population_fixture.PROJECT, "plan": plan.as_posix(),
-            })
+            plan = (Path(mcp_plan.run_directory) / "model-population.json").relative_to(
+                self.mcp_root
+            )
+            applied_result = await client.call_tool(
+                "apply_model_population",
+                {
+                    "project_id": population_fixture.PROJECT,
+                    "plan": plan.as_posix(),
+                },
+            )
             self.assertFalse(applied_result.is_error, applied_result.content)
-            mcp_apply = ModelPopulationReport.model_validate_json(json.dumps(applied_result.structured_content))
+            mcp_apply = ModelPopulationReport.model_validate_json(
+                json.dumps(applied_result.structured_content)
+            )
         for report in (cli_apply, mcp_apply):
             self.assertEqual(report.status, "APPLIED", report.error)
             self.assertFalse(report.build_authorized)
@@ -100,15 +146,17 @@ class SourceParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(source_bytes(self.mcp_root), after)
         changed = {name for name in original if original[name] != after[name]}
         self.assertEqual(changed, {population_fixture.BOARD, population_fixture.MANIFEST})
-        self.assertIn(b'${KIPRJMOD}/models/Header_1x02.step', after[population_fixture.BOARD])
+        self.assertIn(b"${KIPRJMOD}/models/Header_1x02.step", after[population_fixture.BOARD])
 
     async def test_model_population_assignment_schema_rejects_malformed_inputs(self) -> None:
         before = source_bytes(self.mcp_root)
         spec = read_model(self.fixture.map, ModelMap)
         assignment = {"reference": "J1", "model": population_fixture.MODEL}
         invalid = (
-            {"candidate_assets": [1]}, {"candidate_assets": [True]},
-            {"candidate_assets": [None]}, {"candidate_assets": [""]},
+            {"candidate_assets": [1]},
+            {"candidate_assets": [True]},
+            {"candidate_assets": [None]},
+            {"candidate_assets": [""]},
             {"candidate_assets": [[population_fixture.MODEL]]},
             {"candidate_assets": population_fixture.MODEL},
             {"candidate_assets": [], "unexpected": "not part of the contract"},
@@ -116,11 +164,14 @@ class SourceParityTests(unittest.IsolatedAsyncioTestCase):
         async with Client(create_server(self.mcp_root, allow_edits=True), mode="legacy") as client:
             for update in invalid:
                 with self.subTest(update=update):
-                    result = await client.call_tool("preview_model_population", {
-                        "project_id": population_fixture.PROJECT,
-                        "board_sha256": spec.board_sha256,
-                        "assignments": [assignment | update],
-                    })
+                    result = await client.call_tool(
+                        "preview_model_population",
+                        {
+                            "project_id": population_fixture.PROJECT,
+                            "board_sha256": spec.board_sha256,
+                            "assignments": [assignment | update],
+                        },
+                    )
                     self.assertTrue(result.is_error, result.content)
                     self.assertEqual(source_bytes(self.mcp_root), before)
                     self.assertFalse((self.mcp_root / "build/diagnostics").exists())
@@ -132,30 +183,49 @@ class SourceParityTests(unittest.IsolatedAsyncioTestCase):
         expected_hashes = hashes(self.root, config.source_roots)
         binary = self.root.parent / "external-bin"
         binary.mkdir()
-        executable = fake_executable(binary / "kicad-cli", (
-            "from pathlib import Path\nimport sys\n"
-            "if sys.argv[1:] == ['version']:\n"
-            f"    print({config.kicad_version!r})\n"
-            "elif sys.argv[1:4] == ['sch', 'export', 'netlist']:\n"
-            f"    Path(sys.argv[sys.argv.index('--output') + 1]).write_text({NETLIST!r}, encoding='utf-8')\n"
-            "    print('Synthetic native export progress')\n"
-            "else:\n    raise SystemExit(2)\n"
-        ))
+        executable = fake_executable(
+            binary / "kicad-cli",
+            (
+                "from pathlib import Path\nimport sys\n"
+                "if sys.argv[1:] == ['version']:\n"
+                f"    print({config.kicad_version!r})\n"
+                "elif sys.argv[1:4] == ['sch', 'export', 'netlist']:\n"
+                f"    Path(sys.argv[sys.argv.index('--output') + 1]).write_text({NETLIST!r}, encoding='utf-8')\n"
+                "    print('Synthetic native export progress')\n"
+                "else:\n    raise SystemExit(2)\n"
+            ),
+        )
         self.assertFalse(executable.is_relative_to(self.root))
         self.assertFalse(executable.is_relative_to(self.mcp_root))
-        with patch.dict(os.environ, {"PATH": str(binary) + os.pathsep + os.environ.get("PATH", "")}):
+        with patch.dict(
+            os.environ, {"PATH": str(binary) + os.pathsep + os.environ.get("PATH", "")}
+        ):
             process = await self.cli(
-                "kicad_tooling.contract_coach", "--project-id", project_id,
-                "--capture", "--runner", "local", "--output", "build/cli-contract",
+                "kicad_tooling.contract_coach",
+                "--project-id",
+                project_id,
+                "--capture",
+                "--runner",
+                "local",
+                "--output",
+                "build/cli-contract",
             )
             self.assertEqual(process.returncode, 0, process.stderr + process.stdout)
             cli_report = ContractCoachReport.model_validate_json(process.stdout)
-            async with Client(create_server(self.mcp_root, allow_checks=True), mode="legacy") as client:
-                result = await client.call_tool("capture_contract", {
-                    "project_id": project_id, "runner": "local",
-                })
+            async with Client(
+                create_server(self.mcp_root, allow_checks=True), mode="legacy"
+            ) as client:
+                result = await client.call_tool(
+                    "capture_contract",
+                    {
+                        "project_id": project_id,
+                        "runner": "local",
+                    },
+                )
             self.assertFalse(result.is_error, result.content)
-            mcp_report = ContractCoachReport.model_validate_json(json.dumps(result.structured_content))
+            mcp_report = ContractCoachReport.model_validate_json(
+                json.dumps(result.structured_content)
+            )
         self.assertEqual(cli_report.observed, mcp_report.observed)
         self.assertEqual(cli_report.authored, mcp_report.authored)
         self.assertEqual(cli_report.differences, mcp_report.differences)

@@ -17,7 +17,7 @@ dependencies = [
 [project.optional-dependencies]
 project = [
   "rumdl==0.2.77",
-  "mdrepo @ git+https://github.com/sheepfling/mdrepo.git@78476e0343f6ae3799606c17024d5aa790c6d688",
+  "mdrepo==0.0.1.post0",
 ]
 mcp = ["mcp==2.2.0"]
 charts = ["matplotlib==3.11.2"]
@@ -32,7 +32,7 @@ dev = [
   "ruff==0.16.1",
   "snakemd-stubs==2.4.1.0",
   "rumdl==0.2.77",
-  "mdrepo @ git+https://github.com/sheepfling/mdrepo.git@78476e0343f6ae3799606c17024d5aa790c6d688",
+  "mdrepo==0.0.1.post0",
 ]
 
 [project.scripts]
@@ -49,10 +49,13 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 "kicad_tooling.hwrepo" = ["kicad_library_license.txt"]
 
 [tool.ruff]
+# Ruff is pinned in the development extra so its default rule set is reproducible.
 target-version = "py311"
 line-length = 100
 
 [tool.pyright]
+# Strict typing covers the shipped runtime package.
+# Scripts and tests are separately linted and exercised.
 pythonVersion = "3.11"
 typeCheckingMode = "strict"
 include = ["kicad_tooling"]
@@ -78,6 +81,7 @@ include = ["*.md", "**/*.md"]
 exclude = ["build/**"]
 
 [tool.mdrepo.links]
+# rumdl MD057 owns ordinary local-target checks; avoid duplicate diagnostics.
 check-missing-targets = false
 check-case = true
 

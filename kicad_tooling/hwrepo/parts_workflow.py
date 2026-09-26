@@ -1,4 +1,5 @@
 """Source-bound parts planning and fresh, local purchasing review receipts."""
+
 from __future__ import annotations
 
 import tempfile
@@ -22,7 +23,9 @@ from .purchasing import plan, read_components, write_csvs
 def selected_project(root: Path, project_id: str) -> ProjectRecord:
     project = next((p for p in load_registry(root).projects if p.id == project_id), None)
     if project is None:
-        raise ValueError(f"Unknown project {project_id!r}; run kicad_tooling.template list --format text")
+        raise ValueError(
+            f"Unknown project {project_id!r}; run kicad_tooling.template list --format text"
+        )
     return project
 
 
@@ -38,12 +41,19 @@ def preferences_path(root: Path, project_id: str, requested: Path | None) -> Pat
 
 
 def load_preferences(
-    root: Path, project_id: str, requested: Path | None,
-    boards: int | None, spare_percent: int | None, spare_minimum: int | None,
+    root: Path,
+    project_id: str,
+    requested: Path | None,
+    boards: int | None,
+    spare_percent: int | None,
+    spare_minimum: int | None,
 ) -> PurchasingPreferences:
     path = preferences_path(root, project_id, requested)
-    saved = (read_model(path, PurchasingPreferences)
-             if requested is not None or path.exists() else PurchasingPreferences())
+    saved = (
+        read_model(path, PurchasingPreferences)
+        if requested is not None or path.exists()
+        else PurchasingPreferences()
+    )
     return PurchasingPreferences(
         boards=saved.boards if boards is None else boards,
         spare_percent=saved.spare_percent if spare_percent is None else spare_percent,
@@ -53,7 +63,10 @@ def load_preferences(
 
 
 def init_preferences(
-    root: Path, project_id: str, requested: Path, preferences: PurchasingPreferences,
+    root: Path,
+    project_id: str,
+    requested: Path,
+    preferences: PurchasingPreferences,
 ) -> Path:
     """Create editable defaults only within the selected island's authored docs."""
     root = root.resolve()
@@ -90,8 +103,13 @@ def input_hashes(root: Path, project_id: str, requested: Path | None) -> dict[st
     # in addition to the native design hashes supplied by the capture adapter.
     manifest = read_model(repo_path(root, project.config), ProjectManifest)
     checks = repo_path(root, project.config).parent / manifest.checks
-    paths = {layout(root).discovery, registry.catalogs.parts, registry.catalogs.toolchains,
-             project.config, checks.relative_to(root).as_posix()}
+    paths = {
+        layout(root).discovery,
+        registry.catalogs.parts,
+        registry.catalogs.toolchains,
+        project.config,
+        checks.relative_to(root).as_posix(),
+    }
     if repo_path(root, CONFIG_NAME).exists():
         paths.add(CONFIG_NAME)
     path = preferences_path(root, project_id, requested)
@@ -101,9 +119,14 @@ def input_hashes(root: Path, project_id: str, requested: Path | None) -> dict[st
 
 
 def prepare(
-    root: Path, project_id: str, output: Path, runner: NetlistRunner,
-    native_summary: Path | None = None, requested_preferences: Path | None = None,
-    boards: int | None = None, spare_percent: int | None = None,
+    root: Path,
+    project_id: str,
+    output: Path,
+    runner: NetlistRunner,
+    native_summary: Path | None = None,
+    requested_preferences: Path | None = None,
+    boards: int | None = None,
+    spare_percent: int | None = None,
     spare_minimum: int | None = None,
 ) -> PurchasingReport:
     """Inspect a saved design and explicit identities without selecting substitutes."""
@@ -112,13 +135,22 @@ def prepare(
     before: dict[str, str] = {}
     try:
         output = local_path(root, output)
-        if (not output.is_relative_to(root / "build") or output == root / "build"
-                or not output.is_dir() or any(output.iterdir())):
+        if (
+            not output.is_relative_to(root / "build")
+            or output == root / "build"
+            or not output.is_dir()
+            or any(output.iterdir())
+        ):
             raise ValueError("Parts planning requires a new empty receipt directory under build/")
         project = selected_project(root, project_id)
         before = input_hashes(root, project_id, requested_preferences)
         preferences = load_preferences(
-            root, project_id, requested_preferences, boards, spare_percent, spare_minimum,
+            root,
+            project_id,
+            requested_preferences,
+            boards,
+            spare_percent,
+            spare_minimum,
         )
         if native_summary is None:
             evidence = capture(root, project_id, output, runner)
@@ -136,9 +168,16 @@ def prepare(
         catalog = read_model(repo_path(root, registry.catalogs.parts), PartsCatalog)
         purchase_plan = plan(components, catalog, preferences, project.component_identity.part_ids)
         _, _, current = project_context(root, project_id)
-        if (current != evidence.source_hashes or before != input_hashes(
-            root, project_id, requested_preferences,
-        ) or digest(netlist) != evidence.netlist_sha256):
+        if (
+            current != evidence.source_hashes
+            or before
+            != input_hashes(
+                root,
+                project_id,
+                requested_preferences,
+            )
+            or digest(netlist) != evidence.netlist_sha256
+        ):
             raise ValueError("Design, catalog or preferences changed during planning; rerun")
         # Preserve the inspected bytes when using an external native receipt.
         if native_summary is not None:
@@ -148,26 +187,43 @@ def prepare(
         artifacts = write_csvs(output, purchase_plan)
         actions = (
             "Open index.html for component details and the next repair steps.",
-            (f"Choose reviewed part/footprint/model bindings with: python -B -m kicad_tooling.parts "
-             f"--project {project_id} --picker. Keep approved identities in the part catalog."),
-            ("Rerun this command after saving changes. Review supplier matches, packaging, "
-             "stock and price in DigiKey myLists before ordering."),
+            (
+                f"Choose reviewed part/footprint/model bindings with: python -B -m kicad_tooling.parts "
+                f"--project {project_id} --picker. Keep approved identities in the part catalog."
+            ),
+            (
+                "Rerun this command after saving changes. Review supplier matches, packaging, "
+                "stock and price in DigiKey myLists before ordering."
+            ),
         )
         return PurchasingReport(
-            project_id=project_id, status=purchase_plan.status, plan=purchase_plan,
-            input_hashes=before, source_hashes=evidence.source_hashes,
-            netlist_sha256=evidence.netlist_sha256, native_status=evidence.native_status,
-            selected_runner=evidence.selected_runner, evidence=evidence,
-            receipt_dir=str(output), artifacts=artifacts, next_actions=actions,
+            project_id=project_id,
+            status=purchase_plan.status,
+            plan=purchase_plan,
+            input_hashes=before,
+            source_hashes=evidence.source_hashes,
+            netlist_sha256=evidence.netlist_sha256,
+            native_status=evidence.native_status,
+            selected_runner=evidence.selected_runner,
+            evidence=evidence,
+            receipt_dir=str(output),
+            artifacts=artifacts,
+            next_actions=actions,
         )
     except (OSError, ValueError, TypeError) as exc:
         return PurchasingReport(
-            project_id=project_id, status="BLOCKED", receipt_dir=str(output),
-            input_hashes=before, evidence=evidence, issues=(str(exc),),
+            project_id=project_id,
+            status="BLOCKED",
+            receipt_dir=str(output),
+            input_hashes=before,
+            evidence=evidence,
+            issues=(str(exc),),
             next_actions=(
                 "Fix the input or runner problem above and rerun kicad_tooling.parts.",
-                (f"Check the runner with: python -B -m kicad_tooling.template doctor --native "
-                 f"--project-id {project_id} --format text"),
+                (
+                    f"Check the runner with: python -B -m kicad_tooling.template doctor --native "
+                    f"--project-id {project_id} --format text"
+                ),
             ),
         )
 
@@ -176,22 +232,34 @@ def text_report(report: PurchasingReport) -> str:
     lines = [f"Parts to order: {report.status}", f"Project: {report.project_id}"]
     if report.plan is not None:
         p = report.plan.preferences
-        lines.append(f"Build: {p.boards} board(s); spares: {p.spare_percent}% or at least "
-                     f"{p.spare_minimum} per part (whichever is larger)")
-        lines.append(f"Purchasing groups: {len(report.plan.lines)}; excluded references: "
-                     f"{len(report.plan.excluded_references)}; issues: {len(report.plan.findings)}")
+        lines.append(
+            f"Build: {p.boards} board(s); spares: {p.spare_percent}% or at least "
+            f"{p.spare_minimum} per part (whichever is larger)"
+        )
+        lines.append(
+            f"Purchasing groups: {len(report.plan.lines)}; excluded references: "
+            f"{len(report.plan.excluded_references)}; issues: {len(report.plan.findings)}"
+        )
         for finding in report.plan.findings[:8]:
             refs = ", ".join(finding.references)
-            lines.append(f"- {finding.code}{' (' + refs + ')' if refs else ''}: "
-                         f"{finding.message} {finding.action}")
+            lines.append(
+                f"- {finding.code}{' (' + refs + ')' if refs else ''}: "
+                f"{finding.message} {finding.action}"
+            )
         if len(report.plan.findings) > 8:
             lines.append("See index.html or report.json for all component findings.")
     lines.extend(f"Blocked: {issue}" for issue in report.issues)
     lines.extend(f"Next: {action}" for action in report.next_actions)
-    lines.extend((f"Review page: {report.receipt_dir}/index.html",
-                  f"Receipt: {report.receipt_dir}",
-                  ("Metadata review only; electrical validation, live sourcing and purchasing "
-                   "approval remain separate.")))
+    lines.extend(
+        (
+            f"Review page: {report.receipt_dir}/index.html",
+            f"Receipt: {report.receipt_dir}",
+            (
+                "Metadata review only; electrical validation, live sourcing and purchasing "
+                "approval remain separate."
+            ),
+        )
+    )
     return "\n".join(lines)
 
 

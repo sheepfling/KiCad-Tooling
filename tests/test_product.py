@@ -1,4 +1,5 @@
 """Mutation tests for product policy. Synthetic fixtures are not engineering proof."""
+
 from __future__ import annotations
 
 import copy
@@ -114,16 +115,16 @@ class ProductTests(unittest.TestCase):
         check_system_wiring_contract(ROOT, config)
         bad = config.model_copy(
             update={
-                "validation": config.validation.model_copy(
-                    update={"harness_ids": ("H-MISSING",)}
-                )
+                "validation": config.validation.model_copy(update={"harness_ids": ("H-MISSING",)})
             }
         )
         with self.assertRaisesRegex(ValueError, "harness coverage"):
             check_system_wiring_contract(ROOT, bad)
 
     def test_harness_interface_contract_and_schedule_are_typed(self):
-        config = load_config(ROOT, ROOT / "examples/projects/status-indicator-harness-interface/project.json")
+        config = load_config(
+            ROOT, ROOT / "examples/projects/status-indicator-harness-interface/project.json"
+        )
         check_harness_interface_contract(ROOT, config)
         schedule = harness_schedule(self.product, self.product.variants[0])
         self.assertEqual(schedule.rows[0].harness_id, "H-STATUS")
@@ -140,7 +141,12 @@ class ProductTests(unittest.TestCase):
             check_harness_interface_contract(ROOT, bad)
 
     def test_strict_schema_rejects_unknown_fields_types_and_versions(self):
-        for key, value in (("schema_version", "2"), ("revision", 2), ("maturity", "uncontrolled"), ("invented_field", True)):
+        for key, value in (
+            ("schema_version", "2"),
+            ("revision", 2),
+            ("maturity", "uncontrolled"),
+            ("invented_field", True),
+        ):
             with self.subTest(key=key):
                 data = {**self.data, key: value}
                 self.assertIn("SCHEMA", self.codes(data))
@@ -168,11 +174,20 @@ class ProductTests(unittest.TestCase):
         self.assertIn("DUPLICATE_ID", self.codes())
 
     def test_duplicate_instance(self):
-        self.data["assemblies"][0]["members"].append(copy.deepcopy(self.data["assemblies"][0]["members"][0]))
+        self.data["assemblies"][0]["members"].append(
+            copy.deepcopy(self.data["assemblies"][0]["members"][0])
+        )
         self.assertIn("DUPLICATE_INSTANCE", self.codes())
 
     def test_cycle_even_when_unreachable(self):
-        self.data["assemblies"].append({"id": "unreachable", "revision": "A", "kind": "built", "members": [{"ref": "SELF", "item": "unreachable", "quantity": 1}]})
+        self.data["assemblies"].append(
+            {
+                "id": "unreachable",
+                "revision": "A",
+                "kind": "built",
+                "members": [{"ref": "SELF", "item": "unreachable", "quantity": 1}],
+            }
+        )
         self.assertIn("ASSEMBLY_GRAPH", self.codes())
 
     def test_missing_root(self):
@@ -180,7 +195,9 @@ class ProductTests(unittest.TestCase):
         self.assertIn("ASSEMBLY_REF", self.codes())
 
     def test_purchased_assembly_cannot_double_count_children(self):
-        self.data["assemblies"][3]["members"] = [{"ref": "EXTRA", "item": "training-generic-cable", "quantity": 1}]
+        self.data["assemblies"][3]["members"] = [
+            {"ref": "EXTRA", "item": "training-generic-cable", "quantity": 1}
+        ]
         self.assertIn("PURCHASED_ASSEMBLY", self.codes())
 
     def test_part_revision_and_units_required(self):
@@ -255,7 +272,13 @@ class ProductTests(unittest.TestCase):
         evidence_path.write_text("SYNTHETIC UNIT TEST ONLY\n", encoding="utf-8")
         claim = self.data["connections"][0]
         claim.update(assurance="verified", evidence=["EV-TEST"])
-        evidence = {"id": "EV-TEST", "kind": "test_report", "path": "docs/unit-test-evidence.txt", "sha256": hashlib.sha256(evidence_path.read_bytes()).hexdigest(), "claims": [claim["id"]]}
+        evidence = {
+            "id": "EV-TEST",
+            "kind": "test_report",
+            "path": "docs/unit-test-evidence.txt",
+            "sha256": hashlib.sha256(evidence_path.read_bytes()).hexdigest(),
+            "claims": [claim["id"]],
+        }
         self.data["evidence"] = [evidence]
         self.assertEqual(self.codes(root=root), set())
         evidence["kind"] = "design_note"
@@ -322,12 +345,11 @@ class ProductTests(unittest.TestCase):
             update={"manufacturer": "=supplier", "mpn": "+1+1"}
         )
         product = self.model()
-        content = csv_bytes(
-            bom_rows(product, {**self.parts, cable.id: cable}, product.variants[0])
-        )
+        content = csv_bytes(bom_rows(product, {**self.parts, cable.id: cable}, product.variants[0]))
         row = next(csv.DictReader(content.decode(encoding="utf-8").splitlines()))
         cable_row = next(
-            item for item in csv.DictReader(content.decode(encoding="utf-8").splitlines())
+            item
+            for item in csv.DictReader(content.decode(encoding="utf-8").splitlines())
             if item["part_id"] == cable.id
         )
         self.assertIn("part_id", row)
@@ -344,9 +366,7 @@ class ProductTests(unittest.TestCase):
         write_model(catalog_path, catalog.model_copy(update={"parts": (part, *catalog.parts[1:])}))
         native = root / "native-bom.csv"
         native.write_text(
-            "Reference,Value,Footprint,PartID,DNP\n@R1,-value,=footprint,"
-            + part.id
-            + ",DNP\n",
+            "Reference,Value,Footprint,PartID,DNP\n@R1,-value,=footprint," + part.id + ",DNP\n",
             encoding="utf-8",
         )
         output = root / "purchasing-bom.csv"
@@ -376,8 +396,9 @@ class ProductTests(unittest.TestCase):
             ("template-contract-v1", TemplateContract),
         ):
             with self.subTest(schema=name):
-                self.assertEqual(json.loads(outputs[f"schemas/{name}.schema.json"]),
-                                 model.model_json_schema())
+                self.assertEqual(
+                    json.loads(outputs[f"schemas/{name}.schema.json"]), model.model_json_schema()
+                )
 
     def test_unregistered_product_discovered(self):
         root = self.stage()
@@ -403,11 +424,16 @@ class ProductTests(unittest.TestCase):
         root = self.stage()
         (root / "examples/projects/forgotten.kicad_pro").write_text("{}", encoding="utf-8")
         self.assertTrue(any("project discovery" in issue for issue in lint(root).issues))
-        self.assertFalse(any("project discovery" in issue for issue in lint(root, ["controller"]).issues))
-        (root / "examples/projects/controller/kicad/forgotten.kicad_pro").write_text(
-            "{}", encoding="utf-8",
+        self.assertFalse(
+            any("project discovery" in issue for issue in lint(root, ["controller"]).issues)
         )
-        self.assertTrue(any("project discovery" in issue for issue in lint(root, ["controller"]).issues))
+        (root / "examples/projects/controller/kicad/forgotten.kicad_pro").write_text(
+            "{}",
+            encoding="utf-8",
+        )
+        self.assertTrue(
+            any("project discovery" in issue for issue in lint(root, ["controller"]).issues)
+        )
 
     def test_selected_lint_retains_global_catalog_path_safety(self):
         root = self.stage()
@@ -445,7 +471,8 @@ class ProductTests(unittest.TestCase):
         discovery["project_roots"] = ["projects"]
         discovery_path.write_text(json.dumps(discovery), encoding="utf-8")
         (repository / "catalog/products.json").write_text(
-            json.dumps({"schema_version": "1", "products": []}), encoding="utf-8")
+            json.dumps({"schema_version": "1", "products": []}), encoding="utf-8"
+        )
         root = ET.Element("export")
         components = ET.SubElement(root, "components")
         fields_by_ref = {}
@@ -458,13 +485,30 @@ class ProductTests(unittest.TestCase):
         path = self.temp / "unit-only-netlist.xml"
         ET.ElementTree(root).write(path)
         self.assertEqual(check_project_netlist(repository, "standalone-led", path).status, "PASS")
-        fields_by_ref["D1"].text, fields_by_ref["R1"].text = fields_by_ref["R1"].text, fields_by_ref["D1"].text
+        fields_by_ref["D1"].text, fields_by_ref["R1"].text = (
+            fields_by_ref["R1"].text,
+            fields_by_ref["D1"].text,
+        )
         ET.ElementTree(root).write(path)
         with self.assertRaisesRegex(ValueError, "PART_ID mismatch"):
             check_project_netlist(repository, "standalone-led", path)
 
     def test_windows_posix_traversal_and_case_paths(self):
-        for value in ("C:/private/model.step", "C:relative.step", "//server/share", "/tmp/file", "../escape", "a/../b", "a\\b", "a//b", "NUL.txt", "a./file", "a?b", "a|b", "."):
+        for value in (
+            "C:/private/model.step",
+            "C:relative.step",
+            "//server/share",
+            "/tmp/file",
+            "../escape",
+            "a/../b",
+            "a\\b",
+            "a//b",
+            "NUL.txt",
+            "a./file",
+            "a?b",
+            "a|b",
+            ".",
+        ):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 repo_path(self.temp, value)
         (self.temp / "Case.txt").write_text("test", encoding="utf-8")
@@ -483,12 +527,20 @@ class ProductTests(unittest.TestCase):
 
     def test_machine_local_cad_paths_and_unknown_variables(self):
         path = self.temp / "fp-lib-table"
-        for value in ("C:/parts/private.pretty", "/home/parts/local.pretty", "${MY_LIBRARY}/part.pretty"):
+        for value in (
+            "C:/parts/private.pretty",
+            "/home/parts/local.pretty",
+            "${MY_LIBRARY}/part.pretty",
+        ):
             with self.subTest(value=value):
                 path.write_text(f'(uri "{value}")', encoding="utf-8")
-                self.assertTrue(cad_dependencies(self.temp, path, self.temp, "10", frozenset(), frozenset()))
+                self.assertTrue(
+                    cad_dependencies(self.temp, path, self.temp, "10", frozenset(), frozenset())
+                )
         path.write_text('(uri "${KICAD10_FOOTPRINT_DIR}/Connector.pretty")', encoding="utf-8")
-        self.assertEqual(cad_dependencies(self.temp, path, self.temp, "10", frozenset(), frozenset()), [])
+        self.assertEqual(
+            cad_dependencies(self.temp, path, self.temp, "10", frozenset(), frozenset()), []
+        )
 
     def test_tracked_local_state_classification(self):
         for value in (
@@ -501,7 +553,11 @@ class ProductTests(unittest.TestCase):
             ".vscode/settings.json",
         ):
             self.assertTrue(ephemeral(value), value)
-        for value in ("examples/projects/a.kicad_pro", "libraries/a.kicad_sym", "generated/product/a/STANDARD.bom.csv"):
+        for value in (
+            "examples/projects/a.kicad_pro",
+            "libraries/a.kicad_sym",
+            "generated/product/a/STANDARD.bom.csv",
+        ):
             self.assertFalse(ephemeral(value), value)
 
     def test_unmanaged_artifacts_are_rejected_but_engineering_records_remain_available(self):
@@ -571,14 +627,28 @@ class ProductTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
 
     def test_governance_placeholders_do_not_count_as_review(self):
-        for value in ("replace-with-reviewer", "replace_with_reviewer", "https://example.invalid/evidence", "unknown"):
+        for value in (
+            "replace-with-reviewer",
+            "replace_with_reviewer",
+            "https://example.invalid/evidence",
+            "unknown",
+        ):
             self.assertFalse(reviewed_value(value))
 
     def test_review_snapshot_hashes_and_write_once(self):
         root = self.stage()
         output = root / "build/review"
+
         def fake_git(argv, **kwargs):
-            return subprocess.CompletedProcess(argv, 0, "a" * 40 if "rev-parse" in argv else " M examples/products/status-indicator-system/product.json\n", "")
+            return subprocess.CompletedProcess(
+                argv,
+                0,
+                "a" * 40
+                if "rev-parse" in argv
+                else " M examples/products/status-indicator-system/product.json\n",
+                "",
+            )
+
         with patch("kicad_tooling.hwrepo.generation.subprocess.run", side_effect=fake_git):
             manifest = snapshot(root, output)
             self.assertFalse(manifest.working_tree_clean)
@@ -587,23 +657,30 @@ class ProductTests(unittest.TestCase):
             self.assertEqual(verify_snapshot(output).status, "PASS")
             with self.assertRaises(FileExistsError):
                 snapshot(root, output)
-        (output / "examples/products/status-indicator-system/build/STANDARD.bom.csv").write_text("tampered", encoding="utf-8")
+        (output / "examples/products/status-indicator-system/build/STANDARD.bom.csv").write_text(
+            "tampered", encoding="utf-8"
+        )
         with self.assertRaisesRegex(ValueError, "hash mismatch"):
             verify_snapshot(output)
 
     def test_generation_does_not_write_invalid_product(self):
         root = self.stage()
         self.data["connections"][0]["to"] = "missing"
-        (root / "examples/products/status-indicator-system/product.json").write_text(json.dumps(self.data), encoding="utf-8")
+        (root / "examples/products/status-indicator-system/product.json").write_text(
+            json.dumps(self.data), encoding="utf-8"
+        )
         with self.assertRaises(ValueError):
             generate(root)
         self.assertFalse((root / "generated").exists())
 
     def test_direct_kicad_validator_cannot_bypass_product_policy(self):
         from kicad_tooling.validate import validate
+
         root = self.stage()
         self.data["connections"][0]["to"] = "missing"
-        (root / "examples/products/status-indicator-system/product.json").write_text(json.dumps(self.data), encoding="utf-8")
+        (root / "examples/products/status-indicator-system/product.json").write_text(
+            json.dumps(self.data), encoding="utf-8"
+        )
         with patch("kicad_tooling.validate.execute") as execute:
             result = validate(
                 root,

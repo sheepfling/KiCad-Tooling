@@ -1,4 +1,5 @@
 """Exact identity, frozen inputs, bounded downloads and honest incomplete CAD failures."""
+
 from __future__ import annotations
 
 import json
@@ -15,27 +16,46 @@ UUID = "a" * 32
 OBJ = b"newmtl body\nendmtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\nusemtl body\nf 1 2 3\n"
 STEP = b"ISO-10303-21;\nEND-ISO-10303-21;\n"
 WRL = b"#VRML V2.0 utf8\nShape { geometry IndexedFaceSet { } }\n"
-SYMBOL = '''(kicad_symbol_lib (version 20211014)
+SYMBOL = """(kicad_symbol_lib (version 20211014)
  (symbol "ExactPart"
   (property "Manufacturer" "Exact Manufacturer")
   (property "MPN" "ExactPart")
   (property "LCSC Part" "C2040")
-  (property "Footprint" "part:Package")))'''
-FOOTPRINT = '''(module easyeda2kicad:Package (layer F.Cu)
+  (property "Footprint" "part:Package")))"""
+FOOTPRINT = """(module easyeda2kicad:Package (layer F.Cu)
  (model "${KIPRJMOD}/library/part.3dshapes/Model.wrl"
-  (offset (xyz 0 0 0)) (scale (xyz 1 1 1)) (rotate (xyz 0 0 90))))'''
+  (offset (xyz 0 0 0)) (scale (xyz 1 1 1)) (rotate (xyz 0 0 90))))"""
 
 
-def response(*, supplier_id: str = "C2040", package: str = "Package", mpn: str = "ExactPart") -> bytes:
-    return json.dumps({
-        "success": True,
-        "result": {"lcsc": {"number": supplier_id}, "dataStr": {"head": {"c_para": {
-            "Supplier Part": supplier_id, "Manufacturer": "Exact Manufacturer",
-            "Manufacturer Part": mpn, "package": package, "name": "ExactPart",
-        }}}, "packageDetail": {"dataStr": {"shape": [
-            "SVGNODE~" + json.dumps({"attrs": {"uuid": UUID, "title": "Model"}}),
-        ]}}},
-    }).encode()
+def response(
+    *, supplier_id: str = "C2040", package: str = "Package", mpn: str = "ExactPart"
+) -> bytes:
+    return json.dumps(
+        {
+            "success": True,
+            "result": {
+                "lcsc": {"number": supplier_id},
+                "dataStr": {
+                    "head": {
+                        "c_para": {
+                            "Supplier Part": supplier_id,
+                            "Manufacturer": "Exact Manufacturer",
+                            "Manufacturer Part": mpn,
+                            "package": package,
+                            "name": "ExactPart",
+                        }
+                    }
+                },
+                "packageDetail": {
+                    "dataStr": {
+                        "shape": [
+                            "SVGNODE~" + json.dumps({"attrs": {"uuid": UUID, "title": "Model"}}),
+                        ]
+                    }
+                },
+            },
+        }
+    ).encode()
 
 
 class CadSourceTests(unittest.TestCase):
@@ -66,10 +86,14 @@ class CadSourceTests(unittest.TestCase):
 
     def convert(self, bundle: Path, supplier_id: str, logs: Path) -> None:
         self.converted += 1
-        self.assertEqual((bundle / f".easyeda_cache/{supplier_id}.json").read_bytes(), self.document)
+        self.assertEqual(
+            (bundle / f".easyeda_cache/{supplier_id}.json").read_bytes(), self.document
+        )
         self.assertEqual((bundle / f".easyeda_cache/{UUID}.obj").read_bytes(), OBJ)
-        self.assertEqual((bundle / f".easyeda_cache/{UUID}.step").read_bytes(),
-                         b"" if self.missing_step else STEP)
+        self.assertEqual(
+            (bundle / f".easyeda_cache/{UUID}.step").read_bytes(),
+            b"" if self.missing_step else STEP,
+        )
         if self.convert_error:
             (logs / "converter.stderr").write_text("Missing source asset")
             raise ValueError("The CAD converter failed")
@@ -84,12 +108,18 @@ class CadSourceTests(unittest.TestCase):
 
     def fetch(self, supplier_id: str = "C2040", **options):
         self.counter += 1
-        with (patch("kicad_tooling.hwrepo.cad_source._download", side_effect=self.download),
-              patch("kicad_tooling.hwrepo.cad_source._converter_digest", return_value="b" * 64),
-              patch("kicad_tooling.hwrepo.cad_source._run_converter", side_effect=self.convert)):
-            return fetch(self.root, supplier_id, self.root / f"build/receipt-{self.counter}", **options)
+        with (
+            patch("kicad_tooling.hwrepo.cad_source._download", side_effect=self.download),
+            patch("kicad_tooling.hwrepo.cad_source._converter_digest", return_value="b" * 64),
+            patch("kicad_tooling.hwrepo.cad_source._run_converter", side_effect=self.convert),
+        ):
+            return fetch(
+                self.root, supplier_id, self.root / f"build/receipt-{self.counter}", **options
+            )
 
-    def test_complete_bundle_preserves_authored_model_and_frozen_source_without_step_substitution(self):
+    def test_complete_bundle_preserves_authored_model_and_frozen_source_without_step_substitution(
+        self,
+    ):
         result = self.fetch(expected_mpn="ExactPart")
         self.assertEqual(result.status, "READY", result.issues)
         self.assertEqual(len(self.calls), 3)
@@ -117,9 +147,13 @@ class CadSourceTests(unittest.TestCase):
         source = self.fetch()
         receipt = self.root / "build/step-review-missing"
         receipt.mkdir()
-        with (patch("kicad_tooling.hwrepo.cad_step._docker") as docker,
-              patch("kicad_tooling.hwrepo.cad_step.inspect_bundle",
-                    return_value=CadBundleCheck(status="READY"))):
+        with (
+            patch("kicad_tooling.hwrepo.cad_step._docker") as docker,
+            patch(
+                "kicad_tooling.hwrepo.cad_step.inspect_bundle",
+                return_value=CadBundleCheck(status="READY"),
+            ),
+        ):
             report = check_step(self.root, "controller", source, receipt)
         self.assertEqual(report.status, "BLOCKED")
         self.assertIn("no source STEP", " ".join(report.issues))
@@ -127,7 +161,9 @@ class CadSourceTests(unittest.TestCase):
         docker.assert_not_called()
         self.missing_step = False
         fresh = self.fetch(refresh=True)
-        Path(fresh.bundle_directory).joinpath("library/part.3dshapes/Model.wrl").write_bytes(b"changed")
+        Path(fresh.bundle_directory).joinpath("library/part.3dshapes/Model.wrl").write_bytes(
+            b"changed"
+        )
         receipt = self.root / "build/step-review-changed"
         receipt.mkdir()
         with patch("kicad_tooling.hwrepo.cad_step._docker") as docker:
@@ -147,8 +183,15 @@ class CadSourceTests(unittest.TestCase):
 
     def test_cached_reuse_is_offline_and_does_not_require_converter_installation(self):
         first = self.fetch()
-        with (patch("kicad_tooling.hwrepo.cad_source._download", side_effect=AssertionError("network")),
-              patch("kicad_tooling.hwrepo.cad_source._converter_digest", side_effect=AssertionError("install"))):
+        with (
+            patch(
+                "kicad_tooling.hwrepo.cad_source._download", side_effect=AssertionError("network")
+            ),
+            patch(
+                "kicad_tooling.hwrepo.cad_source._converter_digest",
+                side_effect=AssertionError("install"),
+            ),
+        ):
             second = fetch(self.root, "C2040", self.root / "build/offline")
         self.assertEqual(second.status, "READY", second.issues)
         self.assertTrue(second.cache_hit)
@@ -224,11 +267,21 @@ class CadSourceTests(unittest.TestCase):
 
     def test_missing_or_wrong_converter_gives_setup_action_without_network(self):
         import importlib.metadata
+
         for missing in [True, False]:
-            with (patch("kicad_tooling.hwrepo.cad_source.importlib.metadata.distribution") as distribution,
-                  patch("kicad_tooling.hwrepo.cad_source._download", side_effect=AssertionError("network"))):
+            with (
+                patch(
+                    "kicad_tooling.hwrepo.cad_source.importlib.metadata.distribution"
+                ) as distribution,
+                patch(
+                    "kicad_tooling.hwrepo.cad_source._download",
+                    side_effect=AssertionError("network"),
+                ),
+            ):
                 if missing:
-                    distribution.side_effect = importlib.metadata.PackageNotFoundError("easyeda2kicad")
+                    distribution.side_effect = importlib.metadata.PackageNotFoundError(
+                        "easyeda2kicad"
+                    )
                 else:
                     distribution.return_value.version = "0.8.0"
                 result = fetch(self.root, "C2040", self.root / f"build/setup-{missing}")
@@ -243,7 +296,9 @@ class CadSourceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "HTTP 302"):
                 _download(url, 100)
             response.status = 200
-            response.getheader.side_effect = lambda name: "101" if name == "Content-Length" else None
+            response.getheader.side_effect = lambda name: (
+                "101" if name == "Content-Length" else None
+            )
             with self.assertRaisesRegex(ValueError, "size limit"):
                 _download(url, 100)
             response.getheader.side_effect = lambda name: None

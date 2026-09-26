@@ -1,4 +1,5 @@
 """Release CLI/MCP parity and archive replay using explicit synthetic applicability."""
+
 from __future__ import annotations
 
 import json
@@ -33,17 +34,30 @@ class ReleaseElectricalTests(unittest.TestCase):
         self.root = fixture.root
         setup = initialize(self.root, fixture.project_id, "47")
         na = AnalysisNotApplicable(mode="not_applicable", reason="Synthetic archive test only")
-        write_model(self.root / setup.contract, ElectricalAnalysisContract(
-            project_id=fixture.project_id, ngspice_version="47", grounding=na, power=na,
-            high_frequency=na,
-        ))
+        write_model(
+            self.root / setup.contract,
+            ElectricalAnalysisContract(
+                project_id=fixture.project_id,
+                ngspice_version="47",
+                grounding=na,
+                power=na,
+                high_frequency=na,
+            ),
+        )
         contract_path = self.root / f"examples/projects/{fixture.project_id}/tests/contract.json"
         contract = json.loads(contract_path.read_text())
         contract["validation"]["components"] = {"R1": {"value": "synthetic", "footprint": ""}}
         contract_path.write_text(json.dumps(contract))
         fixture.git("add", "--all")
-        fixture.git("-c", "user.name=Test fixture", "-c", "user.email=fixture@example.invalid",
-                    "commit", "-qm", "Synthetic electrical applicability")
+        fixture.git(
+            "-c",
+            "user.name=Test fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Synthetic electrical applicability",
+        )
         self.source = source_state(self.root)
         native = read_model(fixture.native_path, ValidationSummary)
         hashes = {name: self.source.files_sha256[name] for name in fixture.config.required_inputs}
@@ -52,17 +66,32 @@ class ReleaseElectricalTests(unittest.TestCase):
         for name in ("source_scope", "source_unchanged"):
             checks[name] = checks[name].model_copy(update={"source_hashes": hashes})
         netlist = fixture.native_path.parent / "netlist.xml"
-        netlist.write_text('<export><components><comp ref="R1"><value>synthetic</value>'
-                           '</comp></components><nets/></export>')
-        shutil.copy2(fixture.native_path.parent / "version.command.json",
-                     fixture.native_path.parent / "netlist.command.json")
+        netlist.write_text(
+            '<export><components><comp ref="R1"><value>synthetic</value>'
+            "</comp></components><nets/></export>"
+        )
+        shutil.copy2(
+            fixture.native_path.parent / "version.command.json",
+            fixture.native_path.parent / "netlist.command.json",
+        )
         artifacts = dict(native.artifacts_sha256)
-        artifacts.update({name: digest(fixture.native_path.parent / name)
-                          for name in ("netlist.xml", "netlist.command.json")})
-        write_model(fixture.native_path, native.model_copy(update={
-            "source": self.source, "checked_commit": self.source.commit, "checks": checks,
-            "artifacts_sha256": artifacts,
-        }))
+        artifacts.update(
+            {
+                name: digest(fixture.native_path.parent / name)
+                for name in ("netlist.xml", "netlist.command.json")
+            }
+        )
+        write_model(
+            fixture.native_path,
+            native.model_copy(
+                update={
+                    "source": self.source,
+                    "checked_commit": self.source.commit,
+                    "checks": checks,
+                    "artifacts_sha256": artifacts,
+                }
+            ),
+        )
 
     def copy_native(self, _root, _project, output, _cli, _dependencies, export_only=False):
         self.assertFalse(export_only)
@@ -70,16 +99,32 @@ class ReleaseElectricalTests(unittest.TestCase):
 
     def command(self, *args: str) -> tuple[int, dict]:
         output = StringIO()
-        with patch.object(sys, "argv", ["release", "--root", str(self.root), *args]), redirect_stdout(output):
+        with (
+            patch.object(sys, "argv", ["release", "--root", str(self.root), *args]),
+            redirect_stdout(output),
+        ):
             code = cli.main()
         return code, json.loads(output.getvalue())
 
     def test_release_electrical_cli_mcp_roundtrip_and_missing_evidence(self) -> None:
-        with (patch("kicad_tooling.hwrepo.releasing.run_native", side_effect=self.copy_native),
-              patch("kicad_tooling.hwrepo.mcp_workflow.doctor", return_value=test_mcp_workflow.runner_report()),
-              patch("kicad_tooling.hwrepo.mcp_workflow.cli_executable", return_value="kicad-cli")):
-            code, prepared = self.command("prepare", "--project", self.fixture.project_id,
-                                          "--release-id", "cli-review", "--cli", "kicad-cli", "--json")
+        with (
+            patch("kicad_tooling.hwrepo.releasing.run_native", side_effect=self.copy_native),
+            patch(
+                "kicad_tooling.hwrepo.mcp_workflow.doctor",
+                return_value=test_mcp_workflow.runner_report(),
+            ),
+            patch("kicad_tooling.hwrepo.mcp_workflow.cli_executable", return_value="kicad-cli"),
+        ):
+            code, prepared = self.command(
+                "prepare",
+                "--project",
+                self.fixture.project_id,
+                "--release-id",
+                "cli-review",
+                "--cli",
+                "kicad-cli",
+                "--json",
+            )
             self.assertEqual(code, 0)
             mcp = workflow.prepare_review(self.root, self.fixture.project_id, "mcp-review", "local")
         self.assertEqual(set(prepared["evidence"]["electrical"]), {self.fixture.project_id})
@@ -89,7 +134,9 @@ class ReleaseElectricalTests(unittest.TestCase):
             name = f"build/releases/{release_id}/manifest.json"
             code, checked = self.command("check", "--manifest", name)
             self.assertEqual(code, 0, checked)
-            self.assertEqual(checked, workflow.check_release(self.root, name).model_dump(mode="json"))
+            self.assertEqual(
+                checked, workflow.check_release(self.root, name).model_dump(mode="json")
+            )
             packaged = workflow.package_release(self.root, name, release_id)
             self.assertEqual(packaged.status, "PASS")
             archive = f"build/packages/{release_id}.zip"
@@ -100,11 +147,15 @@ class ReleaseElectricalTests(unittest.TestCase):
             review = (self.root / f"build/releases/{release_id}/review.md").read_text()
             self.assertIn("PASS", review)
             manifest = read_model(self.root / name, ReleaseManifest)
-            bad = manifest.model_copy(update={"evidence": manifest.evidence.model_copy(update={"electrical": {}})})
+            bad = manifest.model_copy(
+                update={"evidence": manifest.evidence.model_copy(update={"electrical": {}})}
+            )
             write_model(self.root / name, bad)
             code, failed = self.command("check", "--manifest", name)
             self.assertEqual(code, 1)
-            self.assertEqual(failed, workflow.check_release(self.root, name).model_dump(mode="json"))
+            self.assertEqual(
+                failed, workflow.check_release(self.root, name).model_dump(mode="json")
+            )
             self.assertIn("RELEASE_EVIDENCE", {row["code"] for row in failed["issues"]})
             with self.assertRaises(ValueError):
                 workflow.package_release(self.root, name, release_id + "-missing")

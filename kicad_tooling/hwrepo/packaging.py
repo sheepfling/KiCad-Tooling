@@ -1,4 +1,5 @@
 """Package verified releases and restore source plus evidence in an isolated checkout."""
+
 from __future__ import annotations
 
 import os
@@ -30,7 +31,11 @@ def package(root: Path, manifest_name: str, output: Path) -> ReleasePackageRepor
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="kicad-package-") as temporary:
         staging = Path(temporary)
-        refs = ("HEAD",) if manifest.source_tag is None else ("HEAD", f"refs/tags/{manifest.source_tag}")
+        refs = (
+            ("HEAD",)
+            if manifest.source_tag is None
+            else ("HEAD", f"refs/tags/{manifest.source_tag}")
+        )
         git(root, "bundle", "create", str(staging / "source.bundle"), *refs)
         files = {"source.bundle": staging / "source.bundle"}
         for name in retained_paths(root, manifest) | {manifest_name}:
@@ -38,8 +43,11 @@ def package(root: Path, manifest_name: str, output: Path) -> ReleasePackageRepor
             if any(part.casefold() == ".git" for part in Path(name).parts):
                 raise ValueError("Release payload may not contain .git")
             files[f"payload/{name}"] = repo_path(root, name)
-        index = ReleasePackageIndex(source_commit=manifest.source_commit, manifest=manifest_name,
-                                    files_sha256={name: digest(path) for name, path in sorted(files.items())})
+        index = ReleasePackageIndex(
+            source_commit=manifest.source_commit,
+            manifest=manifest_name,
+            files_sha256={name: digest(path) for name, path in sorted(files.items())},
+        )
         write_model(staging / "package.json", index)
         temporary_archive = staging / "release.zip"
         with zipfile.ZipFile(temporary_archive, "x", compression=zipfile.ZIP_DEFLATED) as archive:
@@ -50,9 +58,13 @@ def package(root: Path, manifest_name: str, output: Path) -> ReleasePackageRepor
         restore(temporary_archive, staging / "restore-test")
         with output.open("xb") as stream, temporary_archive.open("rb") as incoming:
             shutil.copyfileobj(incoming, stream)
-    return ReleasePackageReport(status="PASS", source_commit=manifest.source_commit,
-                                package=str(output), package_sha256=digest(output),
-                                manifest=manifest_name)
+    return ReleasePackageReport(
+        status="PASS",
+        source_commit=manifest.source_commit,
+        package=str(output),
+        package_sha256=digest(output),
+        manifest=manifest_name,
+    )
 
 
 def restore(archive_path: Path, destination: Path) -> ReleasePackageReport:
@@ -87,7 +99,8 @@ def restore(archive_path: Path, destination: Path) -> ReleasePackageReport:
         if set(names) != set(index.files_sha256) | {"package.json"}:
             raise ValueError("Release archive inventory differs from its index")
         if "source.bundle" not in index.files_sha256 or any(
-            name != "source.bundle" and not name.startswith("payload/") for name in index.files_sha256
+            name != "source.bundle" and not name.startswith("payload/")
+            for name in index.files_sha256
         ):
             raise ValueError("Release archive has unexpected members")
         for name, expected in index.files_sha256.items():
@@ -97,10 +110,32 @@ def restore(archive_path: Path, destination: Path) -> ReleasePackageReport:
         # Disable machine-specific checkout filters and hooks; this restores data only.
         environment = {**os.environ, "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
         for command in (
-            ("git", "-c", f"core.hooksPath={os.devnull}", "clone", "--no-checkout", "--", str(unpacked / "source.bundle"), str(checkout)),
-            ("git", "-C", str(checkout), "-c", "core.autocrlf=false", "-c", f"core.hooksPath={os.devnull}", "checkout", "--detach", index.source_commit),
+            (
+                "git",
+                "-c",
+                f"core.hooksPath={os.devnull}",
+                "clone",
+                "--no-checkout",
+                "--",
+                str(unpacked / "source.bundle"),
+                str(checkout),
+            ),
+            (
+                "git",
+                "-C",
+                str(checkout),
+                "-c",
+                "core.autocrlf=false",
+                "-c",
+                f"core.hooksPath={os.devnull}",
+                "checkout",
+                "--detach",
+                index.source_commit,
+            ),
         ):
-            subprocess.run(command, env=environment, text=True, capture_output=True, check=True, timeout=120)
+            subprocess.run(
+                command, env=environment, text=True, capture_output=True, check=True, timeout=120
+            )
         for name in index.files_sha256:
             if name.startswith("payload/"):
                 target = repo_path(checkout, name.removeprefix("payload/"))
@@ -117,9 +152,13 @@ def restore(archive_path: Path, destination: Path) -> ReleasePackageReport:
             raise ValueError(f"Restored release verification failed: {result.issues}")
         git(checkout, "remote", "remove", "origin")
         os.replace(checkout, destination)
-    return ReleasePackageReport(status="PASS", source_commit=index.source_commit,
-                                package=str(archive_path), package_sha256=digest(archive_path),
-                                manifest=index.manifest)
+    return ReleasePackageReport(
+        status="PASS",
+        source_commit=index.source_commit,
+        package=str(archive_path),
+        package_sha256=digest(archive_path),
+        manifest=index.manifest,
+    )
 
 
 def verify(archive_path: Path) -> ReleasePackageReport:

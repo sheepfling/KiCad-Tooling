@@ -1,4 +1,5 @@
 """Reviewed grounding requirements, conservative power budgets and model bindings."""
+
 from __future__ import annotations
 
 import hashlib
@@ -32,8 +33,9 @@ def regular_input_bytes(path: Path) -> bytes:
     """Read stable regular analysis input without following links or blocking on a FIFO."""
     if not stat.S_ISREG(path.lstat().st_mode):
         raise ValueError(f"Electrical input must be a regular file: {path}")
-    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-                         | getattr(os, "O_NONBLOCK", 0))
+    descriptor = os.open(
+        path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    )
     with os.fdopen(descriptor, "rb") as stream:
         before = os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode):
@@ -41,7 +43,11 @@ def regular_input_bytes(path: Path) -> bytes:
         data = stream.read()
         after = os.fstat(stream.fileno())
     if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
-        after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns
+        after.st_dev,
+        after.st_ino,
+        after.st_size,
+        after.st_mtime_ns,
+        after.st_ctime_ns,
     ):
         raise ValueError(f"Electrical input changed while reading: {path}")
     return data
@@ -82,8 +88,9 @@ def load_analysis(root: Path, config: ProjectConfig) -> ElectricalAnalysisContra
     return contract
 
 
-def bound_inputs(root: Path, config: ProjectConfig,
-                 contract: ElectricalAnalysisContract) -> dict[str, str]:
+def bound_inputs(
+    root: Path, config: ProjectConfig, contract: ElectricalAnalysisContract
+) -> dict[str, str]:
     """Check reviewed model/design hashes and inventory every input used by this run."""
     root = root.resolve()
     source = hashes(root, config.source_roots)
@@ -102,7 +109,9 @@ def bound_inputs(root: Path, config: ProjectConfig,
         for name, expected in case.model_sha256.items():
             path = repo_path(root, name)
             if not path.is_relative_to(manifest_path.parent) and name not in config.required_inputs:
-                raise ValueError(f"{case.id}: model outside project is not a declared shared input: {name}")
+                raise ValueError(
+                    f"{case.id}: model outside project is not a declared shared input: {name}"
+                )
             if "build" in path.relative_to(root).parts:
                 raise ValueError(f"{case.id}: generated build output cannot be a model source")
             actual = model_digest(path)
@@ -112,8 +121,9 @@ def bound_inputs(root: Path, config: ProjectConfig,
     return inputs
 
 
-def grounding_checks(spec: GroundingAnalysis | AnalysisNotApplicable | AnalysisPending,
-                     observed: NetlistContract) -> tuple[ElectricalCheck, ...]:
+def grounding_checks(
+    spec: GroundingAnalysis | AnalysisNotApplicable | AnalysisPending, observed: NetlistContract
+) -> tuple[ElectricalCheck, ...]:
     if isinstance(spec, AnalysisPending):
         return (ElectricalCheck(id="grounding", status="NOT_CONFIGURED", detail=spec.reason),)
     if isinstance(spec, AnalysisNotApplicable):
@@ -135,27 +145,39 @@ def grounding_checks(spec: GroundingAnalysis | AnalysisNotApplicable | AnalysisP
         )
         covered.update(pin.rsplit(".", 1)[0] for pin in expected)
         failed = bool(missing or extra or multiple or missing_components)
-        results.append(ElectricalCheck(
-            id=f"grounding/{domain.net}", status="FAIL" if failed else "PASS",
-            detail=(f"Missing pins={missing}; unexpected pins={extra}; wrong/ambiguous net={multiple}; "
-                    f"unknown components={missing_components}" if failed else
-                    f"All {len(expected)} declared ground pins match the exported schematic net."),
-        ))
+        results.append(
+            ElectricalCheck(
+                id=f"grounding/{domain.net}",
+                status="FAIL" if failed else "PASS",
+                detail=(
+                    f"Missing pins={missing}; unexpected pins={extra}; wrong/ambiguous net={multiple}; "
+                    f"unknown components={missing_components}"
+                    if failed
+                    else f"All {len(expected)} declared ground pins match the exported schematic net."
+                ),
+            )
+        )
     exemptions = set(spec.exempt_components)
     components = set(observed.components)
     missing_coverage = sorted(components - covered - exemptions)
     stale = sorted((covered | exemptions) - components)
     conflicting = sorted(covered & exemptions)
-    results.append(ElectricalCheck(
-        id="grounding/component-coverage",
-        status="FAIL" if missing_coverage or stale or conflicting else "PASS",
-        detail=(f"Components without ground-pin review={missing_coverage}; "
-                f"unknown components={stale}; grounded and exempt={conflicting}"),
-    ))
+    results.append(
+        ElectricalCheck(
+            id="grounding/component-coverage",
+            status="FAIL" if missing_coverage or stale or conflicting else "PASS",
+            detail=(
+                f"Components without ground-pin review={missing_coverage}; "
+                f"unknown components={stale}; grounded and exempt={conflicting}"
+            ),
+        )
+    )
     return tuple(results)
 
 
-def power_budget_checks(spec: PowerAnalysis | AnalysisNotApplicable | AnalysisPending) -> tuple[ElectricalCheck, ...]:
+def power_budget_checks(
+    spec: PowerAnalysis | AnalysisNotApplicable | AnalysisPending,
+) -> tuple[ElectricalCheck, ...]:
     if isinstance(spec, AnalysisPending):
         return (ElectricalCheck(id="power", status="NOT_CONFIGURED", detail=spec.reason),)
     if isinstance(spec, AnalysisNotApplicable):
@@ -169,25 +191,44 @@ def power_budget_checks(spec: PowerAnalysis | AnalysisNotApplicable | AnalysisPe
         for name, value, limit, unit in (
             ("steady-current", steady, rail.continuous_limit_a, "A"),
             ("startup-current", peak, rail.peak_limit_a, "A"),
-            ("startup-duration", duration if peak > rail.continuous_limit_a else 0.0,
-             rail.peak_duration_limit_s, "s"),
+            (
+                "startup-duration",
+                duration if peak > rail.continuous_limit_a else 0.0,
+                rail.peak_duration_limit_s,
+                "s",
+            ),
         ):
-            results.append(ElectricalCheck(
-                id=f"power/{rail.id}/{name}", status="PASS" if value <= limit else "FAIL",
-                observed=value, unit=unit, detail=f"Simultaneous load budget {value:g} {unit}; limit {limit:g} {unit}.",
-            ))
-        results.append(ElectricalCheck(
-            id=f"power/{rail.id}/steady-power", status="PASS", observed=steady * rail.voltage_v,
-            unit="W", detail="Calculated input demand at the declared nominal rail voltage; not thermal validation.",
-        ))
+            results.append(
+                ElectricalCheck(
+                    id=f"power/{rail.id}/{name}",
+                    status="PASS" if value <= limit else "FAIL",
+                    observed=value,
+                    unit=unit,
+                    detail=f"Simultaneous load budget {value:g} {unit}; limit {limit:g} {unit}.",
+                )
+            )
+        results.append(
+            ElectricalCheck(
+                id=f"power/{rail.id}/steady-power",
+                status="PASS",
+                observed=steady * rail.voltage_v,
+                unit="W",
+                detail="Calculated input demand at the declared nominal rail voltage; not thermal validation.",
+            )
+        )
     return tuple(results)
 
 
 def pending_sections(contract: ElectricalAnalysisContract) -> tuple[str, ...]:
-    return tuple(name for name, section in (
-        ("grounding", contract.grounding), ("power", contract.power),
-        ("high_frequency", contract.high_frequency),
-    ) if isinstance(section, AnalysisPending))
+    return tuple(
+        name
+        for name, section in (
+            ("grounding", contract.grounding),
+            ("power", contract.power),
+            ("high_frequency", contract.high_frequency),
+        )
+        if isinstance(section, AnalysisPending)
+    )
 
 
 def policy_issues(root: Path, config: ProjectConfig) -> tuple[str, ...]:
@@ -198,14 +239,21 @@ def policy_issues(root: Path, config: ProjectConfig) -> tuple[str, ...]:
             return ()
         pending = pending_sections(contract)
         if pending:
-            return ((f"Pending electrical requirements: {', '.join(pending)}. "
-                     "Complete tests/electrical.json using the electrical quickstart."),)
+            return (
+                (
+                    f"Pending electrical requirements: {', '.join(pending)}. "
+                    "Complete tests/electrical.json using the electrical quickstart."
+                ),
+            )
         bound_inputs(root, config, contract)
         from .spice import expanded_deck
 
         for case in simulation_cases(contract):
             expanded_deck(root, case)
-        return tuple(f"{row.id}: {row.detail}" for row in power_budget_checks(contract.power)
-                     if row.status == "FAIL")
+        return tuple(
+            f"{row.id}: {row.detail}"
+            for row in power_budget_checks(contract.power)
+            if row.status == "FAIL"
+        )
     except (OSError, ValueError) as exc:
         return (str(exc),)

@@ -1,4 +1,5 @@
 """Exercise MCP workflow policy with real fixtures and explicitly synthetic native evidence."""
+
 from __future__ import annotations
 
 import json
@@ -29,10 +30,18 @@ from tests.support import initialize_git, reference_root
 
 def runner_report(runner: str = "local") -> TemplateDoctorReport:
     return TemplateDoctorReport(
-        native_requested=True, status="PASS", checks=(EnvironmentCheck(
-            id="native-runner", required=True, status="PASS", expected="Synthetic runner",
-            observed=runner, next_action="Synthetic test evidence only",
-        ),),
+        native_requested=True,
+        status="PASS",
+        checks=(
+            EnvironmentCheck(
+                id="native-runner",
+                required=True,
+                status="PASS",
+                expected="Synthetic runner",
+                observed=runner,
+                next_action="Synthetic test evidence only",
+            ),
+        ),
     )
 
 
@@ -43,9 +52,22 @@ class McpWorkflowTests(unittest.TestCase):
         self.root = Path(temporary.name).resolve() / "repository"
         shutil.copytree(reference_root(), self.root, ignore=shutil.ignore_patterns(".git", "build"))
         initialize_git(self.root)
-        subprocess.run(("git", "-C", str(self.root), "-c", "user.name=Test fixture", "-c",
-                        "user.email=fixture@example.invalid", "commit", "-qm", "Synthetic fixture"),
-                       check=True, capture_output=True)
+        subprocess.run(
+            (
+                "git",
+                "-C",
+                str(self.root),
+                "-c",
+                "user.name=Test fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "Synthetic fixture",
+            ),
+            check=True,
+            capture_output=True,
+        )
 
     def release_fixture(self):
         fixture = test_release_evidence.ReleaseEvidenceTests()
@@ -106,9 +128,13 @@ class McpWorkflowTests(unittest.TestCase):
             self.assertEqual(list(outside.iterdir()), [])
 
     def test_diagnostic_crash_is_recorded_and_propagated(self) -> None:
-        with (patch("kicad_tooling.hwrepo.mcp_workflow.diagnostics.diagnose_project",
-                    side_effect=RuntimeError("Synthetic crash")),
-              self.assertRaisesRegex(RuntimeError, "Synthetic crash")):
+        with (
+            patch(
+                "kicad_tooling.hwrepo.mcp_workflow.diagnostics.diagnose_project",
+                side_effect=RuntimeError("Synthetic crash"),
+            ),
+            self.assertRaisesRegex(RuntimeError, "Synthetic crash"),
+        ):
             workflow.diagnose_project(self.root, "controller")
         receipt = next((self.root / "build/diagnostics").iterdir())
         self.assertIn("Synthetic crash", (receipt / "error.txt").read_text())
@@ -119,7 +145,9 @@ class McpWorkflowTests(unittest.TestCase):
         self.assertEqual(report.status, "PASS")
         self.assertEqual(report.report.projects, ("controller",))
         self.assertTrue((Path(report.run_directory) / "scope.json").is_file())
-        with patch("kicad_tooling.hwrepo.mcp_workflow.static_pipeline", return_value=report.report) as gate:
+        with patch(
+            "kicad_tooling.hwrepo.mcp_workflow.static_pipeline", return_value=report.report
+        ) as gate:
             workflow.check_scope(self.root)
             gate.assert_called_once_with(self.root, None, workers=1)
         with self.assertRaisesRegex(ValueError, "Unknown product"):
@@ -143,7 +171,10 @@ class McpWorkflowTests(unittest.TestCase):
         contract = fixture.root / "examples/projects/controller/tests/contract.json"
         before = contract.read_bytes()
         runner = test_contract_coach.FakeRunner("10.0.0")
-        with patch("kicad_tooling.hwrepo.mcp_workflow.contract_coach.LocalNetlistRunner", return_value=runner) as create:
+        with patch(
+            "kicad_tooling.hwrepo.mcp_workflow.contract_coach.LocalNetlistRunner",
+            return_value=runner,
+        ) as create:
             report = workflow.capture_contract(fixture.root, fixture.project_id, "local")
         create.assert_called_once_with("kicad-cli")
         self.assertEqual(report.status, "READY_FOR_REVIEW", report.issues)
@@ -163,8 +194,11 @@ class McpWorkflowTests(unittest.TestCase):
         except OSError:
             self.skipTest("Symlinks unavailable")
         with self.assertRaisesRegex(ValueError, "Linked"):
-            workflow.inspect_contract(fixture.root, fixture.project_id,
-                                      (fixture.native / "summary.json").relative_to(fixture.root).as_posix())
+            workflow.inspect_contract(
+                fixture.root,
+                fixture.project_id,
+                (fixture.native / "summary.json").relative_to(fixture.root).as_posix(),
+            )
 
     def test_prepare_review_reuses_real_candidate_gate_with_synthetic_native_evidence(self) -> None:
         fixture = self.release_fixture()
@@ -173,15 +207,21 @@ class McpWorkflowTests(unittest.TestCase):
             self.assertFalse(export_only)
             shutil.copytree(fixture.native_path.parent, output)
 
-        with (patch("kicad_tooling.hwrepo.mcp_workflow.doctor", return_value=runner_report()),
-              patch("kicad_tooling.hwrepo.mcp_workflow.cli_executable", return_value="kicad-cli"),
-              patch("kicad_tooling.hwrepo.releasing.run_native", side_effect=copy_native)):
-            report = workflow.prepare_review(fixture.root, fixture.project_id, "mcp-review", "local")
+        with (
+            patch("kicad_tooling.hwrepo.mcp_workflow.doctor", return_value=runner_report()),
+            patch("kicad_tooling.hwrepo.mcp_workflow.cli_executable", return_value="kicad-cli"),
+            patch("kicad_tooling.hwrepo.releasing.run_native", side_effect=copy_native),
+        ):
+            report = workflow.prepare_review(
+                fixture.root, fixture.project_id, "mcp-review", "local"
+            )
         self.assertEqual(report.release_class, ReleaseClass.ENGINEERING_REVIEW)
         self.assertEqual(report.status, ReleaseStatus.CANDIDATE)
         self.assertIsNone(report.approval)
-        self.assertEqual(workflow.check_release(fixture.root, "build/releases/mcp-review/manifest.json").status,
-                         "PASS")
+        self.assertEqual(
+            workflow.check_release(fixture.root, "build/releases/mcp-review/manifest.json").status,
+            "PASS",
+        )
         with self.assertRaisesRegex(ValueError, "already exists"):
             workflow.prepare_review(fixture.root, fixture.project_id, "mcp-review")
         (fixture.root / "README.md").write_text("Changed source\n")
@@ -197,17 +237,36 @@ class McpWorkflowTests(unittest.TestCase):
             self.assertNotIn("--cli", argv)
             output = root / "build/releases/container-review"
             output.mkdir(parents=True)
-            write_model(output / "manifest.json", fixture.manifest.model_copy(update={
-                "release_id": "container-review",
-            }))
-            return CommandEvidence(argv=argv, started_utc="2026-01-01T00:00:00Z", returncode=0,
-                                   stdout="Pip progress is not JSON\n")
+            write_model(
+                output / "manifest.json",
+                fixture.manifest.model_copy(
+                    update={
+                        "release_id": "container-review",
+                    }
+                ),
+            )
+            return CommandEvidence(
+                argv=argv,
+                started_utc="2026-01-01T00:00:00Z",
+                returncode=0,
+                stdout="Pip progress is not JSON\n",
+            )
 
-        with (patch("kicad_tooling.hwrepo.mcp_workflow.doctor", return_value=runner_report("container")),
-              patch("kicad_tooling.hwrepo.mcp_workflow.run_command", side_effect=run)):
-            result = workflow.prepare_review(fixture.root, fixture.project_id, "container-review", "container")
-        self.assertEqual(result, fixture.manifest.model_copy(update={"release_id": "container-review"}))
-        receipt = read_model(fixture.root / "build/releases/container-review.command.json", CommandEvidence)
+        with (
+            patch(
+                "kicad_tooling.hwrepo.mcp_workflow.doctor", return_value=runner_report("container")
+            ),
+            patch("kicad_tooling.hwrepo.mcp_workflow.run_command", side_effect=run),
+        ):
+            result = workflow.prepare_review(
+                fixture.root, fixture.project_id, "container-review", "container"
+            )
+        self.assertEqual(
+            result, fixture.manifest.model_copy(update={"release_id": "container-review"})
+        )
+        receipt = read_model(
+            fixture.root / "build/releases/container-review.command.json", CommandEvidence
+        )
         self.assertIn("not JSON", receipt.stdout)
 
     def test_package_roundtrip_keeps_paths_controlled_and_refuses_overwrites(self) -> None:
@@ -251,23 +310,33 @@ class McpWorkflowTests(unittest.TestCase):
             elif name == "bom":
                 (output / "assembly/bom.csv").write_text(
                     "Reference,Value,Footprint,PartID,DNP\n"
-                    f"R1,1k,Resistor_SMD:R_0805_2012Metric,{part_id},\n")
+                    f"R1,1k,Resistor_SMD:R_0805_2012Metric,{part_id},\n"
+                )
             elif name in {"schematic_pdf", "pcb_pdf"}:
-                (output / "review" / ("schematic.pdf" if name == "schematic_pdf" else "pcb.pdf")).write_bytes(
-                    b"%PDF-1.5\nSynthetic review packet\n")
+                (
+                    output / "review" / ("schematic.pdf" if name == "schematic_pdf" else "pcb.pdf")
+                ).write_bytes(b"%PDF-1.5\nSynthetic review packet\n")
             elif name == "board_stats":
                 (output / "review/board-stats.json").write_text("{}\n")
-            return CommandEvidence(argv=argv, started_utc="2026-01-01T00:00:00Z", returncode=0,
-                                   stdout="10.0.5\n" if name == "version" else "")
+            return CommandEvidence(
+                argv=argv,
+                started_utc="2026-01-01T00:00:00Z",
+                returncode=0,
+                stdout="10.0.5\n" if name == "version" else "",
+            )
 
         # Read the real catalog identity rather than inventing accepted sourcing data.
         catalog = json.loads((self.root / "catalog/parts.json").read_text())
         part_id = catalog["parts"][0]["id"]
 
-        with (patch("kicad_tooling.hwrepo.mcp_workflow.doctor", return_value=runner_report()),
-              patch("kicad_tooling.hwrepo.mcp_workflow.cli_executable", return_value="kicad-cli"),
-              patch("kicad_tooling.hwrepo.exports.execute", side_effect=execute)):
-            report = workflow.export_project(self.root, "arduino-uno-status-led", "local-export", "local")
+        with (
+            patch("kicad_tooling.hwrepo.mcp_workflow.doctor", return_value=runner_report()),
+            patch("kicad_tooling.hwrepo.mcp_workflow.cli_executable", return_value="kicad-cli"),
+            patch("kicad_tooling.hwrepo.exports.execute", side_effect=execute),
+        ):
+            report = workflow.export_project(
+                self.root, "arduino-uno-status-led", "local-export", "local"
+            )
         self.assertIsInstance(report, ReleaseExportReport)
         self.assertEqual(report.status, "PASS")
         self.assertIn("assembly/purchasing-bom.csv", report.artifacts_sha256)
@@ -275,7 +344,9 @@ class McpWorkflowTests(unittest.TestCase):
 
     def test_generate_product_views_include_bom_and_refuse_reuse(self) -> None:
         result = workflow.generate_views(
-            self.root, "product-review", product_ids=("status-indicator-system",),
+            self.root,
+            "product-review",
+            product_ids=("status-indicator-system",),
         )
         self.assertEqual(result.status, "PASS")
         self.assertFalse(result.build_authorized)
@@ -285,16 +356,24 @@ class McpWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "already exists"):
             workflow.generate_views(self.root, "product-review")
 
-
     def test_subprocess_failure_preserves_output_without_polluting_protocol(self) -> None:
         output = self.root / "build/command-test.json"
         captured = StringIO()
-        with (redirect_stdout(captured), redirect_stderr(captured),
-              self.assertRaisesRegex(ValueError, "build/command-test.json")):
-            workflow.captured_command(self.root, (
-                sys.executable, "-c",
-                "import sys; print('child stdout'); print('child stderr', file=sys.stderr); sys.exit(7)",
-            ), output, 30)
+        with (
+            redirect_stdout(captured),
+            redirect_stderr(captured),
+            self.assertRaisesRegex(ValueError, "build/command-test.json"),
+        ):
+            workflow.captured_command(
+                self.root,
+                (
+                    sys.executable,
+                    "-c",
+                    "import sys; print('child stdout'); print('child stderr', file=sys.stderr); sys.exit(7)",
+                ),
+                output,
+                30,
+            )
         self.assertEqual(captured.getvalue(), "")
         receipt = read_model(output, CommandEvidence)
         self.assertEqual(receipt.returncode, 7)
@@ -313,14 +392,15 @@ class McpWorkflowTests(unittest.TestCase):
             (self.root / "build/release-deps").symlink_to(outside, target_is_directory=True)
         except OSError:
             self.skipTest("Directory symlinks unavailable")
-        with (patch("kicad_tooling.hwrepo.mcp_workflow.selected_cli", return_value=None),
-              patch("kicad_tooling.hwrepo.mcp_workflow.run_command") as run,
-              self.assertRaisesRegex(ValueError, "Linked")):
+        with (
+            patch("kicad_tooling.hwrepo.mcp_workflow.selected_cli", return_value=None),
+            patch("kicad_tooling.hwrepo.mcp_workflow.run_command") as run,
+            self.assertRaisesRegex(ValueError, "Linked"),
+        ):
             workflow.export_project(self.root, "arduino-uno-status-led", "linked-deps", "container")
         run.assert_not_called()
         self.assertFalse((self.root / "build/exports").exists())
         self.assertEqual(list(outside.iterdir()), [])
-
 
     def test_3d_export_rejects_linked_output_before_native_dispatch(self) -> None:
         external = self.root.parent / "external-3d"
@@ -330,8 +410,10 @@ class McpWorkflowTests(unittest.TestCase):
             (self.root / "build/3d").symlink_to(external, target_is_directory=True)
         except OSError:
             self.skipTest("Directory symlinks unavailable")
-        with (patch("kicad_tooling.hwrepo.three_d.generate") as generate,
-              self.assertRaisesRegex(ValueError, "Linked")):
+        with (
+            patch("kicad_tooling.hwrepo.three_d.generate") as generate,
+            self.assertRaisesRegex(ValueError, "Linked"),
+        ):
             workflow.export_3d(self.root, "arduino-uno-status-led", "escaped")
         generate.assert_not_called()
         self.assertEqual(list(external.iterdir()), [])
@@ -351,14 +433,17 @@ class McpWorkflowTests(unittest.TestCase):
                 board.write_bytes(original + b"\n")
             return test_visualize.evidence(args)
 
-        with (patch("kicad_tooling.hwrepo.three_d.doctor", return_value=test_visualize.passing_doctor()),
-              patch("kicad_tooling.hwrepo.three_d._run_kicad", side_effect=native)):
+        with (
+            patch(
+                "kicad_tooling.hwrepo.three_d.doctor", return_value=test_visualize.passing_doctor()
+            ),
+            patch("kicad_tooling.hwrepo.three_d._run_kicad", side_effect=native),
+        ):
             report = workflow.export_3d(self.root, test_visualize.PROJECT, "stale-source", "local")
         self.assertEqual(report.status, "FAIL")
         self.assertIn("source changed", report.error)
         self.assertFalse(report.build_authorized)
         self.assertTrue((Path(report.run_directory) / "visualization.json").is_file())
-
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 """MCP source-edit and artifact boundaries, stale writes and bounded text reads."""
+
 from __future__ import annotations
 
 import hashlib
@@ -43,21 +44,33 @@ class McpFilesTests(unittest.TestCase):
         self.build = self.root / "build"
         self.build.mkdir()
         self.doc = self.island / "docs/mcp-edit.md"
-        self.doc.write_text("# Repair note\n\nObserved: old text.\nRepeat repeat.\n", encoding="utf-8")
+        self.doc.write_text(
+            "# Repair note\n\nObserved: old text.\nRepeat repeat.\n", encoding="utf-8"
+        )
 
     def arguments(self, old_text="old text", new_text="reviewed repair"):
         return (self.root, "controller", "docs/mcp-edit.md", digest(self.doc), old_text, new_text)
 
     def test_artifact_scopes_reject_sources_traversal_and_restore_payload(self) -> None:
-        for name in ("build/run/log.txt", "examples/projects/controller/build/log.txt",
-                     "examples/products/status-indicator-system/build/report.json"):
+        for name in (
+            "build/run/log.txt",
+            "examples/projects/controller/build/log.txt",
+            "examples/products/status-indicator-system/build/report.json",
+        ):
             self.assertEqual(artifact_path(self.root, name), self.root / name)
-        for name in ("README.md", "catalog/parts.json", "build/../catalog/parts.json",
-                     "projects/unknown-board/build/log.txt", "products/unknown/build/report.json",
-                     "examples/projects/unknown-board/build/log.txt",
-                     str(self.doc), "projects/board/docs/build/log.txt",
-                     "build/restores/project/project.json", "build/a/restores/data.txt",
-                     "build/./log.txt"):
+        for name in (
+            "README.md",
+            "catalog/parts.json",
+            "build/../catalog/parts.json",
+            "projects/unknown-board/build/log.txt",
+            "products/unknown/build/report.json",
+            "examples/projects/unknown-board/build/log.txt",
+            str(self.doc),
+            "projects/board/docs/build/log.txt",
+            "build/restores/project/project.json",
+            "build/a/restores/data.txt",
+            "build/./log.txt",
+        ):
             with self.subTest(path=name), self.assertRaises(ValueError):
                 artifact_path(self.root, name)
 
@@ -128,9 +141,16 @@ class McpFilesTests(unittest.TestCase):
         allowed = read_project_file(self.root, "controller", "docs/mcp-edit.md")
         self.assertEqual(allowed.path, "examples/projects/controller/docs/mcp-edit.md")
         self.assertEqual(allowed.sha256, digest(self.doc))
-        for value in ("tests/test_board.py", "build/output.kicad_sch", ".git/config",
-                      "releases/approval.md", "../controller/docs/mcp-edit.md",
-                      "docs/not-present.md", "docs/approval.json", "kicad/controller.kicad_prl"):
+        for value in (
+            "tests/test_board.py",
+            "build/output.kicad_sch",
+            ".git/config",
+            "releases/approval.md",
+            "../controller/docs/mcp-edit.md",
+            "docs/not-present.md",
+            "docs/approval.json",
+            "kicad/controller.kicad_prl",
+        ):
             with self.subTest(path=value), self.assertRaises(ValueError):
                 read_project_file(self.root, "controller", value)
         try:
@@ -191,10 +211,14 @@ class McpFilesTests(unittest.TestCase):
             self.doc.write_text("Independent edit during preparation\n", encoding="utf-8")
             return result
 
-        with (patch.object(mcp_files.tempfile, "mkstemp", side_effect=mutate_source),
-              self.assertRaisesRegex(ValueError, "before publication")):
+        with (
+            patch.object(mcp_files.tempfile, "mkstemp", side_effect=mutate_source),
+            self.assertRaisesRegex(ValueError, "before publication"),
+        ):
             apply_project_edit(*self.arguments())
-        self.assertEqual(self.doc.read_text(encoding="utf-8"), "Independent edit during preparation\n")
+        self.assertEqual(
+            self.doc.read_text(encoding="utf-8"), "Independent edit during preparation\n"
+        )
         self.assertFalse(list(self.doc.parent.glob(".mcp-edit-*")))
 
     def test_json_validation_rejects_id_escape_unknown_toolchain_and_wrong_contract(self) -> None:
@@ -208,28 +232,49 @@ class McpFilesTests(unittest.TestCase):
             ('"schema_version": "1"', '"schema_version": "1", "schema_version": "1"'),
         ):
             with self.subTest(replacement=new), self.assertRaises(ValueError):
-                apply_project_edit(self.root, "controller", "project.json", digest(manifest), old, new)
+                apply_project_edit(
+                    self.root, "controller", "project.json", digest(manifest), old, new
+                )
             self.assertEqual(manifest.read_bytes(), original)
         contract = self.island / "tests/contract.json"
         with self.assertRaises(ValueError):
-            preview_project_edit(self.root, "controller", "tests/contract.json", digest(contract),
-                                 '"kind": "pcb"', '"kind": "pcb_only"')
+            preview_project_edit(
+                self.root,
+                "controller",
+                "tests/contract.json",
+                digest(contract),
+                '"kind": "pcb"',
+                '"kind": "pcb_only"',
+            )
 
     def test_manifest_repair_does_not_require_global_discovery(self) -> None:
         manifest = self.island / "project.json"
         text = manifest.read_text(encoding="utf-8")
-        manifest.write_text(text.replace('"schema_version": "1"', '"schema_version": BROKEN'),
-                            encoding="utf-8")
+        manifest.write_text(
+            text.replace('"schema_version": "1"', '"schema_version": BROKEN'), encoding="utf-8"
+        )
         current = read_project_file(self.root, "controller", "project.json")
-        result = apply_project_edit(self.root, "controller", "project.json", current.sha256,
-                                    '"schema_version": BROKEN', '"schema_version": "1"')
+        result = apply_project_edit(
+            self.root,
+            "controller",
+            "project.json",
+            current.sha256,
+            '"schema_version": BROKEN',
+            '"schema_version": "1"',
+        )
         self.assertEqual(json.loads(manifest.read_text(encoding="utf-8"))["id"], "controller")
         self.assertTrue(result.checks_required)
 
     def test_valid_contract_change_remains_unapproved(self) -> None:
         contract = self.island / "tests/contract.json"
-        preview = preview_project_edit(self.root, "controller", "tests/contract.json", digest(contract),
-                                       '"value": "1k"', '"value": "1.1k"')
+        preview = preview_project_edit(
+            self.root,
+            "controller",
+            "tests/contract.json",
+            digest(contract),
+            '"value": "1k"',
+            '"value": "1.1k"',
+        )
         self.assertEqual(preview.validation, "JSON_MODEL")
         self.assertFalse(preview.build_authorized)
         self.assertTrue(preview.checks_required)
@@ -270,14 +315,21 @@ class McpFileErrorTests(unittest.IsolatedAsyncioTestCase):
                 ):
                     for tool in ("preview_project_edit", "apply_project_edit"):
                         with self.subTest(tool=tool, replacement=replacement):
-                            result = await client.call_tool(tool, {
-                                "project_id": "controller", "path": "kicad/review.kicad_pro",
-                                "expected_sha256": digest(source), "old_text": "{}",
-                                "new_text": replacement,
-                            })
+                            result = await client.call_tool(
+                                tool,
+                                {
+                                    "project_id": "controller",
+                                    "path": "kicad/review.kicad_pro",
+                                    "expected_sha256": digest(source),
+                                    "old_text": "{}",
+                                    "new_text": replacement,
+                                },
+                            )
                             self.assertTrue(result.is_error)
                             explanation = "\n".join(
-                                item.text for item in result.content if isinstance(item, TextContent)
+                                item.text
+                                for item in result.content
+                                if isinstance(item, TextContent)
                             )
                             self.assertIn(expected, explanation)
                             self.assertEqual(source.read_bytes(), original)

@@ -1,4 +1,5 @@
 """Create pending electrical requirements and capture unreviewed input hashes."""
+
 from __future__ import annotations
 
 import os
@@ -30,14 +31,18 @@ from .models import (
 GUIDE = "docs/workflow/ELECTRICAL_ANALYSIS.md"
 
 
-def initialize(root: Path, project_id: str, ngspice_version: str = "UNREVIEWED") -> ElectricalSetupReport:
+def initialize(
+    root: Path, project_id: str, ngspice_version: str = "UNREVIEWED"
+) -> ElectricalSetupReport:
     """Add only pending requirements; refuse to replace an existing authored contract."""
     root = root.resolve()
     config = selected_config(root, project_id)
     if config.kind not in {ProjectKind.PCB, ProjectKind.SCHEMATIC}:
         raise ValueError("Electrical setup needs an authoritative pcb or schematic project")
     if config.electrical is not None:
-        raise ValueError(f"Electrical contract already configured: {config.electrical}; edit it or use --capture-inputs")
+        raise ValueError(
+            f"Electrical contract already configured: {config.electrical}; edit it or use --capture-inputs"
+        )
     project = next(p for p in load_registry(root).projects if p.id == project_id)
     manifest_path = repo_path(root, project.config)
     manifest = read_model(manifest_path, ProjectManifest)
@@ -50,10 +55,17 @@ def initialize(root: Path, project_id: str, ngspice_version: str = "UNREVIEWED")
     if destination == checks:
         raise ValueError("The electrical sidecar cannot replace the native test contract")
     starter = ElectricalAnalysisContract(
-        project_id=project_id, ngspice_version=ngspice_version,
-        grounding=AnalysisPending(reason="Review every component's required ground pins and domains."),
-        power=AnalysisPending(reason="Author derated rail/load limits and reviewed startup/steady-state models."),
-        high_frequency=AnalysisPending(reason="Determine frequency/edge requirements and reviewed AC/transient models."),
+        project_id=project_id,
+        ngspice_version=ngspice_version,
+        grounding=AnalysisPending(
+            reason="Review every component's required ground pins and domains."
+        ),
+        power=AnalysisPending(
+            reason="Author derated rail/load limits and reviewed startup/steady-state models."
+        ),
+        high_frequency=AnalysisPending(
+            reason="Determine frequency/edge requirements and reviewed AC/transient models."
+        ),
     )
     data = starter.model_dump_json(indent=2) + "\n"
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -63,11 +75,15 @@ def initialize(root: Path, project_id: str, ngspice_version: str = "UNREVIEWED")
         with destination.open("x", encoding="utf-8") as stream:
             stream.write(data)
         created = True
-        with tempfile.NamedTemporaryFile(dir=checks.parent, prefix=".electrical-", delete=False) as stream:
+        with tempfile.NamedTemporaryFile(
+            dir=checks.parent, prefix=".electrical-", delete=False
+        ) as stream:
             temporary = Path(stream.name)
         write_model(temporary, contract.model_copy(update={"electrical": "tests/electrical.json"}))
         if regular_input_bytes(checks) != before:
-            raise ValueError("Native test contract changed during setup; preserve the edit and retry")
+            raise ValueError(
+                "Native test contract changed during setup; preserve the edit and retry"
+            )
         os.chmod(temporary, checks.stat().st_mode & 0o777)
         os.replace(temporary, checks)
     except BaseException:
@@ -79,20 +95,24 @@ def initialize(root: Path, project_id: str, ngspice_version: str = "UNREVIEWED")
             temporary.unlink(missing_ok=True)
     relative = destination.relative_to(root).as_posix()
     return ElectricalSetupReport(
-        project_id=project_id, contract=relative,
+        project_id=project_id,
+        contract=relative,
         changed=(relative, checks.relative_to(root).as_posix()),
         next_actions=(
             f"Open {relative}. All three sections are pending and cannot pass verification.",
             f"Follow {GUIDE} and templates/electrical/README.md to author requirements and models.",
-            (f"Capture review inputs with python -B -m kicad_tooling.electrical --project {project_id} "
-             "--capture-inputs --model <repository-relative-deck> (repeat --model for includes)."),
+            (
+                f"Capture review inputs with python -B -m kicad_tooling.electrical --project {project_id} "
+                "--capture-inputs --model <repository-relative-deck> (repeat --model for includes)."
+            ),
             f"Run python -B -m kicad_tooling.template doctor --electrical --project-id {project_id} --format text.",
         ),
     )
 
 
-def capture_inputs(root: Path, project_id: str, models: tuple[str, ...] = (),
-                   output: Path | None = None) -> ElectricalInputInventory:
+def capture_inputs(
+    root: Path, project_id: str, models: tuple[str, ...] = (), output: Path | None = None
+) -> ElectricalInputInventory:
     """Record actual hashes in ignored output; never replace reviewed contract bindings."""
     root = root.resolve()
     config = selected_config(root, project_id)
@@ -121,11 +141,15 @@ def capture_inputs(root: Path, project_id: str, models: tuple[str, ...] = (),
         model_digest(repo_path(root, name)) != value for name, value in model_hashes.items()
     ):
         raise ValueError("Inputs changed during capture; rerun after saving the design")
-    directory = receipt_directory(root, project_id, output or (
-        Path("build/electrical-inputs") / f"{project_id}-{uuid4().hex[:12]}"
-    ))
+    directory = receipt_directory(
+        root,
+        project_id,
+        output or (Path("build/electrical-inputs") / f"{project_id}-{uuid4().hex[:12]}"),
+    )
     report = ElectricalInputInventory(
-        project_id=project_id, run_directory=str(directory), source_sha256=current,
+        project_id=project_id,
+        run_directory=str(directory),
+        source_sha256=current,
         model_sha256=model_hashes,
         next_actions=(
             "UNREVIEWED: compare the models, assumptions and circuit mapping with the design.",

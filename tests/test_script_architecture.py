@@ -1,4 +1,5 @@
 """Guard the typed scripting boundary used by policy and CI kicad_tooling."""
+
 from __future__ import annotations
 
 import ast

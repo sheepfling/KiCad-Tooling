@@ -1,4 +1,5 @@
 """Fail-closed synthetic KiCad check; this is not hardware approval."""
+
 from __future__ import annotations
 
 import argparse
@@ -36,9 +37,9 @@ from .hwrepo.models import (
 def local_state(path: Path) -> bool:
     """Only known non-source KiCad preferences/cache files are excluded."""
     return path.suffix == ".kicad_prl" or path.name == "fp-info-cache"
-def hashes(
-    root: Path, source_roots: Sequence[str] | None = None
-) -> dict[str, str]:
+
+
+def hashes(root: Path, source_roots: Sequence[str] | None = None) -> dict[str, str]:
     """Hash the declared design and library roots, excluding local KiCad state."""
     root = root.resolve()
     roots = ("projects",) if source_roots is None else tuple(source_roots)
@@ -93,10 +94,7 @@ def check_report(
         if data.get("included_severities") != ["error", "warning", "exclusion"]:
             raise ValueError("Report must include errors, warnings and exclusions")
         ignored = _sequence(data.get("ignored_checks"), "ignored-check inventory")
-        keys = tuple(
-            str(_mapping(item, "ignored check").get("key", ""))
-            for item in ignored
-        )
+        keys = tuple(str(_mapping(item, "ignored check").get("key", "")) for item in ignored)
         expected = (
             config.validation.expected_ignored_checks.erc
             if kind == "erc"
@@ -116,10 +114,7 @@ def check_report(
         drc_categories = ("violations", "unconnected_items")
         if config is None or config.kind is not ProjectKind.PCB_ONLY:
             drc_categories += ("schematic_parity",)
-        findings = tuple(
-            _sequence(data.get(key), f"DRC {key}")
-            for key in drc_categories
-        )
+        findings = tuple(_sequence(data.get(key), f"DRC {key}") for key in drc_categories)
     return sum(len(items) for items in findings)
 
 
@@ -172,34 +167,47 @@ def read_netlist(path: Path) -> NetlistContract:
         if name in nets:
             raise ValueError("Duplicate normalized net name")
         nets[name] = tuple(
-            sorted(
-                f"{node.attrib['ref']}.{node.attrib['pin']}"
-                for node in net.findall("node")
-            )
+            sorted(f"{node.attrib['ref']}.{node.attrib['pin']}" for node in net.findall("node"))
         )
     return NetlistContract(components=components, nets=nets)
 
 
-def check_netlist(path: Path, validation: PcbValidationContract | SchematicValidationContract) -> NetlistContract:
+def check_netlist(
+    path: Path, validation: PcbValidationContract | SchematicValidationContract
+) -> NetlistContract:
     """Compare a native export with reviewed expectations, never an empty scaffold."""
     if not validation.components:
         raise ValueError("Complete the component test contract before native validation")
     contract = read_netlist(path)
-    compared = {reference: component if validation.components.get(reference) is not None
-                and validation.components[reference].part_id is not None
-                else component.model_copy(update={"part_id": None})
-                for reference, component in contract.components.items()}
+    compared = {
+        reference: component
+        if validation.components.get(reference) is not None
+        and validation.components[reference].part_id is not None
+        else component.model_copy(update={"part_id": None})
+        for reference, component in contract.components.items()
+    }
     if compared != validation.components or contract.nets != validation.nets:
-        changed_components = sorted(key for key in set(contract.components) | set(validation.components)
-                                    if compared.get(key) != validation.components.get(key))
-        changed_nets = sorted(key for key in set(contract.nets) | set(validation.nets)
-                              if contract.nets.get(key) != validation.nets.get(key))
-        raise ValueError(f"Independent netlist contract mismatch: components={changed_components}, nets={changed_nets}")
+        changed_components = sorted(
+            key
+            for key in set(contract.components) | set(validation.components)
+            if compared.get(key) != validation.components.get(key)
+        )
+        changed_nets = sorted(
+            key
+            for key in set(contract.nets) | set(validation.nets)
+            if contract.nets.get(key) != validation.nets.get(key)
+        )
+        raise ValueError(
+            f"Independent netlist contract mismatch: components={changed_components}, nets={changed_nets}"
+        )
     return contract
+
+
 def svg_files(output: Path, name: str) -> list[Path]:
     files: list[Path] = (
         list((output / "schematic").glob("*.svg"))
-        if name == "schematic_svg" else [output / "pcb.svg"]
+        if name == "schematic_svg"
+        else [output / "pcb.svg"]
     )
     if not files or any(not p.is_file() or p.stat().st_size == 0 for p in files):
         raise ValueError("Missing SVG export")
@@ -207,9 +215,9 @@ def svg_files(output: Path, name: str) -> list[Path]:
         if ET.parse(path).getroot().tag != "{http://www.w3.org/2000/svg}svg":
             raise ValueError("Export is not an SVG document")
     return files
-def execute(
-    argv: Sequence[str], cwd: Path, output: Path, name: str
-) -> CommandEvidence:
+
+
+def execute(argv: Sequence[str], cwd: Path, output: Path, name: str) -> CommandEvidence:
     record = CommandEvidence(
         argv=tuple(argv),
         started_utc=datetime.now(UTC).isoformat(),
@@ -217,7 +225,12 @@ def execute(
     )
     try:
         result = subprocess.run(
-            argv, cwd=cwd, text=True, capture_output=True, timeout=180, check=False,
+            argv,
+            cwd=cwd,
+            text=True,
+            capture_output=True,
+            timeout=180,
+            check=False,
         )
         record = record.model_copy(
             update={
@@ -233,16 +246,26 @@ def execute(
 
 
 def write_native_bom(
-    path: Path, components: Mapping[str, ComponentContract], disposition: str,
+    path: Path,
+    components: Mapping[str, ComponentContract],
+    disposition: str,
 ) -> None:
     """Write the native review BOM with the same CSV cell policy as other exports."""
     with path.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream)
         writer.writerow(("Reference", "Value", "Footprint", "Disposition"))
         for reference, component in components.items():
-            writer.writerow(tuple(csv_cell(cell) for cell in (
-                reference, component.value, component.footprint, disposition,
-            )))
+            writer.writerow(
+                tuple(
+                    csv_cell(cell)
+                    for cell in (
+                        reference,
+                        component.value,
+                        component.footprint,
+                        disposition,
+                    )
+                )
+            )
 
 
 def validate(
@@ -278,27 +301,28 @@ def validate(
 
         governance = lint(root, [config.project_id])
         repository = check_repository(root, (config.project_id,))
-        product_policy = check_product(
-            root, selected_project_ids=(config.project_id,)
-        )
+        product_policy = check_product(root, selected_project_ids=(config.project_id,))
         checks["governance"] = CheckEvidence(
             status=governance.status,
             error="; ".join(governance.issues) if governance.issues else None,
         )
-        checks["repository"] = CheckEvidence(status=repository.status,
-            error="; ".join(repository.issues) if repository.issues else None)
+        checks["repository"] = CheckEvidence(
+            status=repository.status,
+            error="; ".join(repository.issues) if repository.issues else None,
+        )
         checks["product_policy"] = CheckEvidence(
             status=product_policy.status,
             error=(
-                "; ".join(
-                    f"{issue.code}: {issue.message}"
-                    for issue in product_policy.issues
-                )
+                "; ".join(f"{issue.code}: {issue.message}" for issue in product_policy.issues)
                 if product_policy.issues
                 else None
             ),
         )
-        if governance.status != "PASS" or repository.status != "PASS" or product_policy.status != "PASS":
+        if (
+            governance.status != "PASS"
+            or repository.status != "PASS"
+            or product_policy.status != "PASS"
+        ):
             raise ValueError(
                 f"Repository preflight failed: {governance.issues}; {repository.issues}; {product_policy.issues}"
             )
@@ -330,9 +354,7 @@ def validate(
         version = execute((executable, "version"), root, output, "version")
         actual = version.stdout.strip()
         if version.returncode != 0 or actual != config.kicad_version:
-            raise ValueError(
-                f"Expected KiCad {config.kicad_version}; observed {actual!r}"
-            )
+            raise ValueError(f"Expected KiCad {config.kicad_version}; observed {actual!r}")
         checks["toolchain"] = CheckEvidence(
             status="PASS",
             observed_version=actual,
@@ -347,26 +369,56 @@ def validate(
             commands.update(
                 {
                     "erc": (
-                        "sch", "erc", "--format", "json", "--severity-all",
-                        "--exit-code-violations", "--output", str(output / "erc.json"),
+                        "sch",
+                        "erc",
+                        "--format",
+                        "json",
+                        "--severity-all",
+                        "--exit-code-violations",
+                        "--output",
+                        str(output / "erc.json"),
                         str(base.with_suffix(".kicad_sch")),
                     ),
                     "schematic_svg": (
-                        "sch", "export", "svg", "--output", str(output / "schematic"),
+                        "sch",
+                        "export",
+                        "svg",
+                        "--output",
+                        str(output / "schematic"),
                         str(base.with_suffix(".kicad_sch")),
                     ),
                     "drc": (
-                        "pcb", "drc", "--format", "json", "--severity-all",
-                        "--exit-code-violations", "--schematic-parity", "--refill-zones",
-                        "--output", str(output / "drc.json"), str(base.with_suffix(".kicad_pcb")),
+                        "pcb",
+                        "drc",
+                        "--format",
+                        "json",
+                        "--severity-all",
+                        "--exit-code-violations",
+                        "--schematic-parity",
+                        "--refill-zones",
+                        "--output",
+                        str(output / "drc.json"),
+                        str(base.with_suffix(".kicad_pcb")),
                     ),
                     "netlist": (
-                        "sch", "export", "netlist", "--format", "kicadxml", "--output",
-                        str(output / "netlist.xml"), str(base.with_suffix(".kicad_sch")),
+                        "sch",
+                        "export",
+                        "netlist",
+                        "--format",
+                        "kicadxml",
+                        "--output",
+                        str(output / "netlist.xml"),
+                        str(base.with_suffix(".kicad_sch")),
                     ),
                     "pcb_svg": (
-                        "pcb", "export", "svg", "--layers", "F.Cu,F.SilkS,Edge.Cuts,Cmts.User",
-                        "--output", str(output / "pcb.svg"), str(base.with_suffix(".kicad_pcb")),
+                        "pcb",
+                        "export",
+                        "svg",
+                        "--layers",
+                        "F.Cu,F.SilkS,Edge.Cuts,Cmts.User",
+                        "--output",
+                        str(output / "pcb.svg"),
+                        str(base.with_suffix(".kicad_pcb")),
                     ),
                 }
             )
@@ -377,13 +429,26 @@ def validate(
             commands.update(
                 {
                     "drc": (
-                        "pcb", "drc", "--format", "json", "--severity-all",
-                        "--exit-code-violations", "--refill-zones",
-                        "--output", str(output / "drc.json"), str(base.with_suffix(".kicad_pcb")),
+                        "pcb",
+                        "drc",
+                        "--format",
+                        "json",
+                        "--severity-all",
+                        "--exit-code-violations",
+                        "--refill-zones",
+                        "--output",
+                        str(output / "drc.json"),
+                        str(base.with_suffix(".kicad_pcb")),
                     ),
                     "pcb_svg": (
-                        "pcb", "export", "svg", "--layers", "F.Cu,F.SilkS,Edge.Cuts,Cmts.User",
-                        "--output", str(output / "pcb.svg"), str(base.with_suffix(".kicad_pcb")),
+                        "pcb",
+                        "export",
+                        "svg",
+                        "--layers",
+                        "F.Cu,F.SilkS,Edge.Cuts,Cmts.User",
+                        "--output",
+                        str(output / "pcb.svg"),
+                        str(base.with_suffix(".kicad_pcb")),
                     ),
                 }
             )
@@ -391,12 +456,22 @@ def validate(
             commands.update(
                 {
                     "erc": (
-                        "sch", "erc", "--format", "json", "--severity-all",
-                        "--exit-code-violations", "--output", str(output / "erc.json"),
+                        "sch",
+                        "erc",
+                        "--format",
+                        "json",
+                        "--severity-all",
+                        "--exit-code-violations",
+                        "--output",
+                        str(output / "erc.json"),
                         str(base.with_suffix(".kicad_sch")),
                     ),
                     "schematic_svg": (
-                        "sch", "export", "svg", "--output", str(output / "schematic"),
+                        "sch",
+                        "export",
+                        "svg",
+                        "--output",
+                        str(output / "schematic"),
                         str(base.with_suffix(".kicad_sch")),
                     ),
                 }
@@ -407,19 +482,32 @@ def validate(
         elif config.kind is ProjectKind.HARNESS_INTERFACE:
             check_harness_interface_contract(root, config)
             checks["harness_contract"] = CheckEvidence(status="PASS")
-        if config.electrical is not None or config.component_identity.required or (
-            isinstance(config.validation, SchematicValidationContract) and config.validation.components
+        if (
+            config.electrical is not None
+            or config.component_identity.required
+            or (
+                isinstance(config.validation, SchematicValidationContract)
+                and config.validation.components
+            )
         ):
-            commands["netlist"] = ("sch", "export", "netlist", "--format", "kicadxml", "--output",
-                                   str(output / "netlist.xml"), str(base.with_suffix(".kicad_sch")))
+            commands["netlist"] = (
+                "sch",
+                "export",
+                "netlist",
+                "--format",
+                "kicadxml",
+                "--output",
+                str(output / "netlist.xml"),
+                str(base.with_suffix(".kicad_sch")),
+            )
         for name, arguments in commands.items():
             command = execute((executable, *arguments), root, output, name)
             evidence = CheckEvidence(status="FAIL", returncode=command.returncode)
             try:
-                if command.returncode != 0 and not (name in {"erc", "drc"} and command.returncode == 5):
-                    raise ValueError(
-                        f"KiCad command failed with {command.returncode}"
-                    )
+                if command.returncode != 0 and not (
+                    name in {"erc", "drc"} and command.returncode == 5
+                ):
+                    raise ValueError(f"KiCad command failed with {command.returncode}")
                 if name in {"erc", "drc"}:
                     kind: Literal["erc", "drc"] = "erc" if name == "erc" else "drc"
                     # KiCad uses exit 5 for findings. Retain their count and report
@@ -443,7 +531,9 @@ def validate(
                         raise ValueError(f"KiCad command failed with {command.returncode}")
                 elif name == "netlist":
                     validation = config.validation
-                    if not isinstance(validation, (PcbValidationContract, SchematicValidationContract)):
+                    if not isinstance(
+                        validation, (PcbValidationContract, SchematicValidationContract)
+                    ):
                         raise ValueError("Netlist check requires an electrical component contract")
                     check_netlist(output / "netlist.xml", validation)
                     if config.electrical is not None:
@@ -451,8 +541,14 @@ def validate(
 
                         electrical = load_analysis(root, config)
                         if electrical is not None:
-                            ground = grounding_checks(electrical.grounding, read_netlist(output / "netlist.xml"))
-                            failures = [row.detail for row in ground if row.status not in {"PASS", "NOT_APPLICABLE"}]
+                            ground = grounding_checks(
+                                electrical.grounding, read_netlist(output / "netlist.xml")
+                            )
+                            failures = [
+                                row.detail
+                                for row in ground
+                                if row.status not in {"PASS", "NOT_APPLICABLE"}
+                            ]
                             checks["grounding"] = CheckEvidence(
                                 status="FAIL" if failures else "PASS",
                                 error="; ".join(failures) if failures else None,
@@ -466,9 +562,7 @@ def validate(
                         else "ENGINEERING — RELEASE REVIEW REQUIRED"
                     )
                     write_native_bom(output / "bom.csv", validation.components, disposition)
-                    evidence = evidence.model_copy(
-                        update={"identity_status": identity.status}
-                    )
+                    evidence = evidence.model_copy(update={"identity_status": identity.status})
                 else:
                     evidence = evidence.model_copy(
                         update={
@@ -506,9 +600,14 @@ def validate(
             required.add("harness_contract")
     if config is not None and config.electrical is not None:
         required.add("grounding")
-    if config is not None and (config.electrical is not None or config.component_identity.required or (
-        isinstance(config.validation, SchematicValidationContract) and config.validation.components
-    )):
+    if config is not None and (
+        config.electrical is not None
+        or config.component_identity.required
+        or (
+            isinstance(config.validation, SchematicValidationContract)
+            and config.validation.components
+        )
+    ):
         required.add("netlist")
     status = (
         "PASS"
@@ -519,9 +618,11 @@ def validate(
     summary = ValidationSummary(
         timestamp_utc=datetime.now(UTC).isoformat(),
         checked_commit=source_before.commit or "LOCAL_UNBOUND",
-        source=source_before.model_copy(update={
-            "clean": source_before.clean and source_state(root) == source_before,
-        }),
+        source=source_before.model_copy(
+            update={
+                "clean": source_before.clean and source_state(root) == source_before,
+            }
+        ),
         project_id=None if config is None else config.project_id,
         pr_head_commit=os.environ.get("PR_HEAD_SHA"),
         assurance_profile=profile,
@@ -537,12 +638,15 @@ def validate(
     )
     write_model(output / "summary.json", summary)
     return summary
+
+
 def main() -> int:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(
-        "--cli", default="kicad-cli",
+        "--cli",
+        default="kicad-cli",
         help="KiCad CLI command or path (relative paths use the caller's cwd)",
     )
     parser.add_argument(
@@ -552,5 +656,7 @@ def main() -> int:
     summary = validate(args.root.resolve(), args.output.resolve(), args.cli, args.config)
     print(summary.model_dump_json(indent=2))
     return 0 if summary.status == "PASS" else 1
+
+
 if __name__ == "__main__":
     sys.exit(main())

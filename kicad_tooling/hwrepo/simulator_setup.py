@@ -1,4 +1,5 @@
 """Explicit hosted setup of an exact simulator from a verified public source archive."""
+
 from __future__ import annotations
 
 import hashlib
@@ -29,13 +30,23 @@ def exact_executable(executable: str, version: str) -> str | None:
     if path is None:
         return None
     try:
-        process = subprocess.run((path, "--version"), text=True, capture_output=True,
-                                 check=False, timeout=30)
+        process = subprocess.run(
+            (path, "--version"), text=True, capture_output=True, check=False, timeout=30
+        )
     except (OSError, subprocess.TimeoutExpired):
         return None
-    command = CommandEvidence(argv=(path, "--version"), started_utc="setup-probe",
-                              returncode=process.returncode, stdout=process.stdout, stderr=process.stderr)
-    return str(Path(path).resolve()) if process.returncode == 0 and version in observed_versions(command) else None
+    command = CommandEvidence(
+        argv=(path, "--version"),
+        started_utc="setup-probe",
+        returncode=process.returncode,
+        stdout=process.stdout,
+        stderr=process.stderr,
+    )
+    return (
+        str(Path(path).resolve())
+        if process.returncode == 0 and version in observed_versions(command)
+        else None
+    )
 
 
 def unpack(archive: Path, destination: Path, version: str) -> Path:
@@ -48,17 +59,28 @@ def unpack(archive: Path, destination: Path, version: str) -> Path:
         names: set[str] = set()
         for member in members:
             path = PurePosixPath(member.name)
-            if (path.is_absolute() or ".." in path.parts or not path.parts
-                    or path.parts[0] != prefix or "\\" in member.name
-                    or not (member.isfile() or member.isdir()) or member.name in names):
+            if (
+                path.is_absolute()
+                or ".." in path.parts
+                or not path.parts
+                or path.parts[0] != prefix
+                or "\\" in member.name
+                or not (member.isfile() or member.isdir())
+                or member.name in names
+            ):
                 raise ValueError(f"Unsafe simulator archive member: {member.name}")
             names.add(member.name)
         bundle.extractall(destination, members=members, filter="data")
     return destination / prefix
 
 
-def ensure(root: Path, version: str, expected_sha256: str | None, log: SetupLog,
-           executable: str = "ngspice") -> str:
+def ensure(
+    root: Path,
+    version: str,
+    expected_sha256: str | None,
+    log: SetupLog,
+    executable: str = "ngspice",
+) -> str:
     """Use the exact installed tool, or build in a fresh ignored directory with full logs."""
     if re.fullmatch(r"[0-9]+(?:\.[0-9]+)*", version) is None:
         raise ValueError("Review the exact ngspice version before hosted setup")
@@ -68,10 +90,14 @@ def ensure(root: Path, version: str, expected_sha256: str | None, log: SetupLog,
         return installed
     expected = expected_sha256 or SOURCE_PINS.get(version)
     if expected is None or re.fullmatch(r"[a-f0-9]{64}", expected) is None:
-        raise ValueError(f"ngspice {version} is unavailable; install it or review ngspice_source_sha256")
+        raise ValueError(
+            f"ngspice {version} is unavailable; install it or review ngspice_source_sha256"
+        )
     missing = [name for name in ("make", "cc", "bison", "flex") if shutil.which(name) is None]
     if missing:
-        raise ValueError(f"Simulator build prerequisites missing: {missing}; install build-essential, bison and flex")
+        raise ValueError(
+            f"Simulator build prerequisites missing: {missing}; install build-essential, bison and flex"
+        )
     parent = root / "build/ngspice-build"
     parent.mkdir(parents=True, exist_ok=True)
     output = Path(tempfile.mkdtemp(prefix=f"{version}-", dir=parent))
@@ -94,9 +120,18 @@ def ensure(root: Path, version: str, expected_sha256: str | None, log: SetupLog,
     log.event("simulator-download", "PASS", sha256=expected, archive=str(archive))
     source = unpack(archive, output, version)
     prefix = output / "installed"
-    log.run("simulator-configure", (str(source / "configure"), f"--prefix={prefix}",
-                                    "--without-x", "--disable-debug", "--with-readline=no",
-                                    "--disable-openmp"), cwd=source)
+    log.run(
+        "simulator-configure",
+        (
+            str(source / "configure"),
+            f"--prefix={prefix}",
+            "--without-x",
+            "--disable-debug",
+            "--with-readline=no",
+            "--disable-openmp",
+        ),
+        cwd=source,
+    )
     log.run("simulator-make", ("make", "-j2"), cwd=source)
     log.run("simulator-install", ("make", "install"), cwd=source)
     installed = exact_executable(str(prefix / "bin/ngspice"), version)

@@ -1,4 +1,5 @@
 """Bounded MCP workflow adapters over diagnostic, native and release services."""
+
 from __future__ import annotations
 
 import stat
@@ -109,7 +110,10 @@ def journal(root: Path, project_id: str) -> Generator[DiagnosticJournal, None, N
 
 
 def diagnose_import(
-    root: Path, source: Path, project_id: str, toolchain_id: str,
+    root: Path,
+    source: Path,
+    project_id: str,
+    toolchain_id: str,
 ) -> DiagnosticReport:
     """Diagnose an already-authorized import source and retain the preview receipt."""
     with journal(root, project_id) as receipt:
@@ -120,7 +124,10 @@ def diagnose_import(
 
 
 def diagnose_project(
-    root: Path, project_id: str, native_report: str | None = None, bom: str | None = None,
+    root: Path,
+    project_id: str,
+    native_report: str | None = None,
+    bom: str | None = None,
 ) -> DiagnosticReport:
     """Run selected diagnosis; optional native/BOM inputs must be ignored artifacts."""
     if bom is not None and native_report is None:
@@ -143,27 +150,40 @@ def rescue_project(root: Path, project_id: str) -> LocalRescueReport:
 
 
 def check_scope(
-    root: Path, project_ids: tuple[str, ...] = (), product_ids: tuple[str, ...] = (),
-    tags: tuple[str, ...] = (), exclude_tags: tuple[str, ...] = (),
-    shard: str | None = None, jobs: int = 1,
+    root: Path,
+    project_ids: tuple[str, ...] = (),
+    product_ids: tuple[str, ...] = (),
+    tags: tuple[str, ...] = (),
+    exclude_tags: tuple[str, ...] = (),
+    shard: str | None = None,
+    jobs: int = 1,
 ) -> McpScopeReport:
     """Reuse union/exclusion selection; no selectors deliberately invokes the full gate."""
     if type(jobs) is not int or not 1 <= jobs <= 32:
         raise ValueError("jobs must be between 1 and 32")
     selector = ProjectSelector(
-        project_ids=project_ids, product_ids=product_ids, tags=tags, excluded_tags=exclude_tags,
+        project_ids=project_ids,
+        product_ids=product_ids,
+        tags=tags,
+        excluded_tags=exclude_tags,
     )
     selected = list(resolve_project_ids(root, selector)) if selector.active else None
     if shard is not None:
-        selected = list(shard_projects(
-            tuple(selected) if selected is not None else resolve_project_ids(root, ProjectSelector()),
-            shard,
-        ))
+        selected = list(
+            shard_projects(
+                tuple(selected)
+                if selected is not None
+                else resolve_project_ids(root, ProjectSelector()),
+                shard,
+            )
+        )
     with journal(root, "scope") as receipt:
         with receipt.stage("portable"):
             result = static_pipeline(root, selected, workers=jobs)
         report = McpScopeReport(
-            status=result.status, run_directory=str(receipt.directory), report=result,
+            status=result.status,
+            run_directory=str(receipt.directory),
+            report=result,
         )
         receipt.finish_named("scope", report, f"Scope check: {report.status}", report.status)
         return report
@@ -171,19 +191,25 @@ def check_scope(
 
 def inspect_contract(root: Path, project_id: str, native_summary: str) -> ContractCoachReport:
     """Read source-bound observations without writing independent test expectations."""
-    return contract_coach.inspect_summary(root, project_id, native_summary_path(root, native_summary))
+    return contract_coach.inspect_summary(
+        root, project_id, native_summary_path(root, native_summary)
+    )
 
 
 def capture_contract(
-    root: Path, project_id: str, runner: NativeRunner = "auto",
+    root: Path,
+    project_id: str,
+    runner: NativeRunner = "auto",
 ) -> ContractCoachReport:
     """Capture an UNREVIEWED netlist with fixed local or digest-pinned native runners."""
     selected_project(root, project_id)
     if runner not in {"auto", "local", "container"}:
         raise ValueError(f"Unknown native runner: {runner}")
     native_runner = (
-        contract_coach.LocalNetlistRunner("kicad-cli") if runner == "local"
-        else contract_coach.ContainerNetlistRunner() if runner == "container"
+        contract_coach.LocalNetlistRunner("kicad-cli")
+        if runner == "local"
+        else contract_coach.ContainerNetlistRunner()
+        if runner == "container"
         else contract_coach.AutoNetlistRunner("kicad-cli")
     )
     output = contract_coach.receipt_directory(root, project_id, None)
@@ -234,7 +260,10 @@ def captured_command(root: Path, argv: tuple[str, ...], log: Path, timeout: int)
 
 
 def export_project(
-    root: Path, project_id: str, export_id: str, runner: NativeRunner = "auto",
+    root: Path,
+    project_id: str,
+    export_id: str,
+    runner: NativeRunner = "auto",
     assembly_variant: str | None = None,
 ) -> ReleaseExportReport:
     """Export explicit PCB settings into a fresh ignored directory for review."""
@@ -252,24 +281,46 @@ def export_project(
     output = repo_path(root, (directory / "files").relative_to(root).as_posix())
     clean_source(root)
     cli = selected_cli(root, project_id, runner)
-    dependency_path = (fresh_output(root, "release-deps", "mcp-export-" + export_id)
-                       if cli is None else None)
+    dependency_path = (
+        fresh_output(root, "release-deps", "mcp-export-" + export_id) if cli is None else None
+    )
     directory.mkdir(parents=True, exist_ok=False)
     dependencies: Path | None = None
     if dependency_path is not None:
         dependencies = dependency_path.relative_to(root)
         config = load_config(root, project.config)
-        captured_command(root, (
-            sys.executable, "-I", "-B", "-m", "kicad_tooling.native_deps", "--root", str(root),
-            "--image", config.image, "--output", dependencies.as_posix(),
-        ), directory / "dependencies.command.json", 600)
+        captured_command(
+            root,
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.native_deps",
+                "--root",
+                str(root),
+                "--image",
+                config.image,
+                "--output",
+                dependencies.as_posix(),
+            ),
+            directory / "dependencies.command.json",
+            600,
+        )
     source = source_state(root)
     if cli is not None:
         report = generate_exports(root, project.config, output, cli, assembly_variant)
     else:
         try:
-            releasing.run_native(root, project, output, cli, dependencies, export_only=True,
-                                 assembly_variant=assembly_variant)
+            releasing.run_native(
+                root,
+                project,
+                output,
+                cli,
+                dependencies,
+                export_only=True,
+                assembly_variant=assembly_variant,
+            )
         except ValueError:
             # The CLI exits 1 for a typed domain FAIL. Preserve that report when
             # present; startup/container failures without a report remain errors.
@@ -281,22 +332,32 @@ def export_project(
                 raise
         else:
             report = read_model(output / "exports.json", ReleaseExportReport)
-    if (report.project_id != project_id or report.source != source
-            or report.toolchain_id != load_config(root, project.config).toolchain_id
-            or report.settings != manifest.release_exports
-            or report.assembly_variant != selected_variant):
+    if (
+        report.project_id != project_id
+        or report.source != source
+        or report.toolchain_id != load_config(root, project.config).toolchain_id
+        or report.settings != manifest.release_exports
+        or report.assembly_variant != selected_variant
+    ):
         raise ValueError("Export report differs from the requested project/source/settings")
     if report.status == "FAIL":
         return report
     return verify_exports(
-        root, releasing.reference(root, output / "exports.json"), source_state(root),
-        project_id, project.config, assembly_variant,
+        root,
+        releasing.reference(root, output / "exports.json"),
+        source_state(root),
+        project_id,
+        project.config,
+        assembly_variant,
     )
 
 
 def prepare_review_scope(
-    root: Path, release_id: str, project_ids: tuple[str, ...] = (),
-    variants: tuple[str, ...] = (), portable: str | None = None,
+    root: Path,
+    release_id: str,
+    project_ids: tuple[str, ...] = (),
+    variants: tuple[str, ...] = (),
+    portable: str | None = None,
     runner: NativeRunner = "auto",
 ) -> ReleaseManifest:
     """Prepare an engineering-review scope using the same selections as the release CLI."""
@@ -311,48 +372,98 @@ def prepare_review_scope(
         raise ValueError("Commit the reviewed source before preparing a review")
     selections = releasing.resolve_variants(root, variants)
     request = ReleaseManifest(
-        release_id=release_id, release_class=ReleaseClass.ENGINEERING_REVIEW,
-        status=ReleaseStatus.CANDIDATE, source_commit=source.commit, toolchain_id="pending",
-        projects=project_ids, variants=selections, libraries=(), interfaces=(), artifacts=(),
+        release_id=release_id,
+        release_class=ReleaseClass.ENGINEERING_REVIEW,
+        status=ReleaseStatus.CANDIDATE,
+        source_commit=source.commit,
+        toolchain_id="pending",
+        projects=project_ids,
+        variants=selections,
+        libraries=(),
+        interfaces=(),
+        artifacts=(),
     )
     projects = releasing.selected_projects(root, request)
     portable_path = None if portable is None else artifact_file(root, portable)
     if portable_path is not None:
-        verify_release_portable(root, releasing.reference(root, portable_path), source,
-                                tuple(project.id for project in projects))
+        verify_release_portable(
+            root,
+            releasing.reference(root, portable_path),
+            source,
+            tuple(project.id for project in projects),
+        )
     cli = selected_cli(root, projects[0].id, runner)
     if cli is not None:
         return releasing.prepare(
-            root, release_id, project_ids, selections,
-            release_class=ReleaseClass.ENGINEERING_REVIEW, cli=cli,
+            root,
+            release_id,
+            project_ids,
+            selections,
+            release_class=ReleaseClass.ENGINEERING_REVIEW,
+            cli=cli,
             portable=None if portable_path is None else portable_path.relative_to(root),
         )
     # Existing dependency preparation inherits stdout; capture the CLI so progress
     # cannot enter the stdio protocol. Every option comes from a validated selection.
-    selection_args = tuple(value for project_id in project_ids for value in ("--project", project_id))
+    selection_args = tuple(
+        value for project_id in project_ids for value in ("--project", project_id)
+    )
     variant_args = tuple(value for variant in variants for value in ("--variant", variant))
-    portable_args = () if portable_path is None else (
-        "--portable", portable_path.relative_to(root).as_posix(),
+    portable_args = (
+        ()
+        if portable_path is None
+        else (
+            "--portable",
+            portable_path.relative_to(root).as_posix(),
+        )
     )
-    captured_command(root, (
-        sys.executable, "-I", "-B", "-m", "kicad_tooling.release", "prepare", "--root", str(root),
-        *selection_args, *variant_args, *portable_args, "--release-id", release_id,
-        "--release-class", "engineering_review", "--format", "json",
-    ), output.parent / f"{output.name}.command.json", 1800)
+    captured_command(
+        root,
+        (
+            sys.executable,
+            "-I",
+            "-B",
+            "-m",
+            "kicad_tooling.release",
+            "prepare",
+            "--root",
+            str(root),
+            *selection_args,
+            *variant_args,
+            *portable_args,
+            "--release-id",
+            release_id,
+            "--release-class",
+            "engineering_review",
+            "--format",
+            "json",
+        ),
+        output.parent / f"{output.name}.command.json",
+        1800,
+    )
     candidate = read_model(
-        repo_path(root, (output / "manifest.json").relative_to(root).as_posix()), ReleaseManifest,
+        repo_path(root, (output / "manifest.json").relative_to(root).as_posix()),
+        ReleaseManifest,
     )
-    if (candidate.release_id != release_id or candidate.projects != project_ids
-            or candidate.variants != selections
-            or candidate.release_class is not ReleaseClass.ENGINEERING_REVIEW
-            or candidate.status is not ReleaseStatus.CANDIDATE or candidate.approval is not None
-            or candidate.source_commit != source.commit or source_state(root) != source):
+    if (
+        candidate.release_id != release_id
+        or candidate.projects != project_ids
+        or candidate.variants != selections
+        or candidate.release_class is not ReleaseClass.ENGINEERING_REVIEW
+        or candidate.status is not ReleaseStatus.CANDIDATE
+        or candidate.approval is not None
+        or candidate.source_commit != source.commit
+        or source_state(root) != source
+    ):
         raise ValueError("Prepared candidate differs from the requested review or current source")
     return candidate
 
 
 def prepare_review(
-    root: Path, project_id: str, release_id: str, runner: NativeRunner = "auto",
+    root: Path,
+    project_id: str,
+    release_id: str,
+    runner: NativeRunner = "auto",
 ) -> ReleaseManifest:
     """Prepare one engineering-review candidate without approval or production authority."""
     return prepare_review_scope(root, release_id, (project_id,), runner=runner)
@@ -380,20 +491,27 @@ def restore_package(root: Path, archive: str, restore_id: str) -> ReleasePackage
 
 
 def generate_views(
-    root: Path, view_id: str, project_ids: tuple[str, ...] = (),
-    product_ids: tuple[str, ...] = (), tags: tuple[str, ...] = (),
+    root: Path,
+    view_id: str,
+    project_ids: tuple[str, ...] = (),
+    product_ids: tuple[str, ...] = (),
+    tags: tuple[str, ...] = (),
     exclude_tags: tuple[str, ...] = (),
 ) -> McpGenerationReport:
     """Render validated product/BOM projections into a fresh ignored review directory."""
     selector = ProjectSelector(
-        project_ids=project_ids, product_ids=product_ids, tags=tags, excluded_tags=exclude_tags,
+        project_ids=project_ids,
+        product_ids=product_ids,
+        tags=tags,
+        excluded_tags=exclude_tags,
     )
     selected = resolve_project_ids(root, selector) if selector.active else None
     output = fresh_output(root, "views", view_id)
     output.mkdir(parents=True, exist_ok=False)
     names = generation.generate(root, output=output, selected_project_ids=selected)
     return McpGenerationReport(
-        status="PASS", directory=output.relative_to(root).as_posix(),
+        status="PASS",
+        directory=output.relative_to(root).as_posix(),
         files=tuple((output / name).relative_to(root).as_posix() for name in names),
     )
 
@@ -412,7 +530,10 @@ def inspect_3d_models(root: Path, project_id: str) -> ModelInventoryReport:
 
 
 def export_3d(
-    root: Path, project_id: str, view_id: str, runner: NativeRunner = "auto",
+    root: Path,
+    project_id: str,
+    view_id: str,
+    runner: NativeRunner = "auto",
     assembly_variant: str | None = None,
     views: list[ThreeDView] | None = None,
 ) -> ThreeDReport:
@@ -423,12 +544,21 @@ def export_3d(
         raise ValueError(f"Unknown native runner: {runner}")
     selected = three_d.selected_views(views)
     output = fresh_output(root, "3d", view_id)
-    return three_d.generate(root, project_id, runner=runner, cli="kicad-cli", output=output,
-                            assembly_variant=assembly_variant, views=selected)
+    return three_d.generate(
+        root,
+        project_id,
+        runner=runner,
+        cli="kicad-cli",
+        output=output,
+        assembly_variant=assembly_variant,
+        views=selected,
+    )
 
 
 def preview_model_population(
-    root: Path, project_id: str, board_sha256: str,
+    root: Path,
+    project_id: str,
+    board_sha256: str,
     assignments: tuple[ModelMapAssignment, ...],
 ) -> ModelPopulationReport:
     """Retain a source-bound plan for explicitly reviewed model assignments."""
@@ -436,8 +566,10 @@ def preview_model_population(
     pcb_config(root, project_id)
     project = selected_project(root, project_id)
     spec = ModelMap(
-        project_id=project_id, board_sha256=board_sha256,
-        manifest_sha256=digest(repo_path(root, project.config)), assignments=assignments,
+        project_id=project_id,
+        board_sha256=board_sha256,
+        manifest_sha256=digest(repo_path(root, project.config)),
+        assignments=assignments,
     )
     repo_path(root, "build/diagnostics")
     return model_population.populate_models(root, project_id, spec)
@@ -450,8 +582,14 @@ def apply_model_population(root: Path, project_id: str, plan: str) -> ModelPopul
     plan_path = artifact_file(root, plan)
     reviewed = read_model(plan_path, ModelPopulationReport)
     if reviewed.status != "PLAN" or reviewed.project_id != project_id:
-        raise ValueError("Select a PLAN receipt for the same project before applying model assignments")
-    map_path = artifact_file(root, (plan_path.parent / "locked-model-map.json").relative_to(root).as_posix())
+        raise ValueError(
+            "Select a PLAN receipt for the same project before applying model assignments"
+        )
+    map_path = artifact_file(
+        root, (plan_path.parent / "locked-model-map.json").relative_to(root).as_posix()
+    )
     spec = read_model(map_path, ModelMap)
     repo_path(root, "build/diagnostics")
-    return model_population.populate_models(root, project_id, spec, apply=True, reviewed_plan=reviewed)
+    return model_population.populate_models(
+        root, project_id, spec, apply=True, reviewed_plan=reviewed
+    )

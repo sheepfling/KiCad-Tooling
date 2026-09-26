@@ -1,4 +1,5 @@
 """Typed project-selection helpers for local and hosted automation."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -64,7 +65,9 @@ def select_projects(
             if product.id.casefold() in indexed:
                 raise ValueError(f"Duplicate product ID in index: {product.id}")
             indexed[product.id.casefold()] = product.project_ids
-        unknown_products = sorted(set(selector.product_ids) - {product.id for product in product_index.products})
+        unknown_products = sorted(
+            set(selector.product_ids) - {product.id for product in product_index.products}
+        )
         if unknown_products:
             raise ValueError(f"Unknown product IDs: {unknown_products}")
         for product_id in selector.product_ids:
@@ -98,6 +101,7 @@ def resolve_project_ids(root: Path, selector: ProjectSelector) -> tuple[str, ...
     registry = load_registry(root)
     product_index = (
         read_model(repo_path(root, layout(root).products), ProductIndex)
-        if selector.product_ids else None
+        if selector.product_ids
+        else None
     )
     return tuple(project.id for project in select_projects(registry, selector, product_index))

@@ -3,6 +3,7 @@
 This adapter proves numbered pad geometry correspondence, not manufacturer fit.
 It never moves a footprint, edits a pad, guesses a package, or fetches a network URL.
 """
+
 from __future__ import annotations
 
 import math
@@ -108,8 +109,9 @@ def _number(value: str) -> float:
     return result
 
 
-def _values(source: str, parent: _Span, name: str, count: int,
-            default: tuple[float, ...] = ()) -> tuple[float, ...]:
+def _values(
+    source: str, parent: _Span, name: str, count: int, default: tuple[float, ...] = ()
+) -> tuple[float, ...]:
     values = _field(source, parent, name, required=False)
     if not values:
         return default
@@ -128,14 +130,17 @@ def _pair(values: tuple[float, ...]) -> tuple[float, float]:
     return values[0], values[1]
 
 
-def _pads(source: str, parent: _Span, rotation: float = 0,
-          bottom: bool = False) -> tuple[PadSignature, ...]:
+def _pads(
+    source: str, parent: _Span, rotation: float = 0, bottom: bool = False
+) -> tuple[PadSignature, ...]:
     result: list[PadSignature] = []
     sign = -1 if bottom else 1
     for pad in _nodes(source, parent, "pad"):
         atoms = _atoms(source, pad)
         if len(atoms) != 4 or atoms[3] not in {"rect", "circle", "oval", "roundrect"}:
-            raise ValueError("Automatic model alignment supports rectangular, circular, oval and roundrect pads; review custom pads in KiCad")
+            raise ValueError(
+                "Automatic model alignment supports rectangular, circular, oval and roundrect pads; review custom pads in KiCad"
+            )
         if any(_nodes(source, pad, name) for name in ("primitives", "chamfer", "rect_delta")):
             raise ValueError("Automatic model alignment cannot establish custom pad geometry")
         at = _field(source, pad, "at")
@@ -162,12 +167,26 @@ def _pads(source: str, parent: _Span, rotation: float = 0,
         if any(value <= 0 for value in size) or any(value < 0 for value in drill):
             raise ValueError("Invalid pad size or drill")
         layers = _field(source, pad, "layers")
-        normalized = tuple(sorted(("F." + value[2:] if value.startswith("B.") else
-                                   "B." + value[2:] if value.startswith("F.") else value)
-                                  if bottom else value for value in layers))
+        normalized = tuple(
+            sorted(
+                (
+                    "F." + value[2:]
+                    if value.startswith("B.")
+                    else "B." + value[2:]
+                    if value.startswith("F.")
+                    else value
+                )
+                if bottom
+                else value
+                for value in layers
+            )
+        )
         ratio = _values(source, pad, "roundrect_rratio", 1, (0.0,))[0]
-        result.append(PadSignature(atoms[1], atoms[2], atoms[3], x, y, angle,
-                                   size, drill, offset, normalized, ratio))
+        result.append(
+            PadSignature(
+                atoms[1], atoms[2], atoms[3], x, y, angle, size, drill, offset, normalized, ratio
+            )
+        )
     if not result:
         raise ValueError("The footprint has no pad geometry to confirm model alignment")
     return tuple(sorted(result, key=lambda pad: (pad.number, pad.x, pad.y, pad.kind)))
@@ -199,19 +218,28 @@ def _standard_locations(major: str, explicit: Path | None) -> tuple[tuple[Path, 
     model_env = os.environ.get(f"KICAD{major}_3DMODEL_DIR")
     if footprint_env:
         directory = Path(footprint_env).absolute()
-        result.append((directory, Path(model_env).absolute() if model_env else directory.parent / "3dmodels"))
-    candidates = [Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport"),
-                  Path("/usr/share/kicad"), Path("/usr/local/share/kicad")]
+        result.append(
+            (directory, Path(model_env).absolute() if model_env else directory.parent / "3dmodels")
+        )
+    candidates = [
+        Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport"),
+        Path("/usr/share/kicad"),
+        Path("/usr/local/share/kicad"),
+    ]
     for key in ("ProgramFiles", "ProgramFiles(x86)"):
         if os.environ.get(key):
-            candidates.extend(sorted((Path(os.environ[key]) / "KiCad").glob(f"{major}*/share/kicad")))
+            candidates.extend(
+                sorted((Path(os.environ[key]) / "KiCad").glob(f"{major}*/share/kicad"))
+            )
     for base in candidates:
         model_dir = Path(model_env).absolute() if model_env else base / "3dmodels"
         result.append((base / "footprints", model_dir))
     return tuple(result)
 
 
-def _library(root: Path, project_id: str, nickname: str, explicit: Path | None) -> tuple[_Library, str]:
+def _library(
+    root: Path, project_id: str, nickname: str, explicit: Path | None
+) -> tuple[_Library, str]:
     registry = load_registry(root)
     record = next((item for item in registry.projects if item.id == project_id), None)
     if record is None:
@@ -241,33 +269,60 @@ def _library(root: Path, project_id: str, nickname: str, explicit: Path | None) 
             uri = _scalar(text, entry, "uri")
             prefix = f"${{KICAD{major}_FOOTPRINT_DIR}}/"
             if uri.startswith(prefix):
-                relative = uri[len(prefix):]
+                relative = uri[len(prefix) :]
                 if relative != nickname + ".pretty":
                     raise ValueError("Standard library entry must name its exact library directory")
                 break
-            if "$" in uri.replace("${KIPRJMOD}", "") or "\\" in uri or ":" in uri or Path(uri).is_absolute():
+            if (
+                "$" in uri.replace("${KIPRJMOD}", "")
+                or "\\" in uri
+                or ":" in uri
+                or Path(uri).is_absolute()
+            ):
                 raise ValueError("Project footprint library must use a portable KIPRJMOD path")
             directory = Path(uri.replace("${KIPRJMOD}", str(project_dir)))
             if not directory.is_absolute():
                 directory = project_dir / directory
             directory = Path(os.path.abspath(directory))
             if not any(directory.is_relative_to(source_root) for source_root in roots):
-                raise ValueError("Project footprint library is outside this project's declared sources")
-            return _Library(directory, roots, tuple(path for _, path in locations),
-                            f"Project-declared footprint source: {directory}"), major
+                raise ValueError(
+                    "Project footprint library is outside this project's declared sources"
+                )
+            return _Library(
+                directory,
+                roots,
+                tuple(path for _, path in locations),
+                f"Project-declared footprint source: {directory}",
+            ), major
     for footprints, models in locations:
         directory = footprints / (nickname + ".pretty")
         if directory.is_dir():
-            if (directory.is_relative_to(root) and not directory.is_relative_to(root / "build")
-                    and not any(directory.is_relative_to(source_root) for source_root in roots)):
+            if (
+                directory.is_relative_to(root)
+                and not directory.is_relative_to(root / "build")
+                and not any(directory.is_relative_to(source_root) for source_root in roots)
+            ):
                 raise ValueError("Cannot borrow a different project's private CAD source")
-            return _Library(directory, (footprints, models), (models,),
-                            (f"Explicit paired CAD library: {footprints}" if explicit is not None else
-                             f"Installed KiCad {major} footprint/model pair: {footprints}; exact library revision unverified"),
-                            explicit is None and str(footprints) in {
-                                "/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints",
-                                "/usr/share/kicad/footprints", "/usr/local/share/kicad/footprints"}), major
-    raise MissingFootprintError(f"Footprint library {nickname!r} is unavailable. Install the project's KiCad {major} libraries or provide its paired CAD library.")
+            return _Library(
+                directory,
+                (footprints, models),
+                (models,),
+                (
+                    f"Explicit paired CAD library: {footprints}"
+                    if explicit is not None
+                    else f"Installed KiCad {major} footprint/model pair: {footprints}; exact library revision unverified"
+                ),
+                explicit is None
+                and str(footprints)
+                in {
+                    "/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints",
+                    "/usr/share/kicad/footprints",
+                    "/usr/local/share/kicad/footprints",
+                },
+            ), major
+    raise MissingFootprintError(
+        f"Footprint library {nickname!r} is unavailable. Install the project's KiCad {major} libraries or provide its paired CAD library."
+    )
 
 
 def _model_path(reference: str, library: _Library, major: str, project_dir: Path) -> Path:
@@ -275,7 +330,7 @@ def _model_path(reference: str, library: _Library, major: str, project_dir: Path
         raise ValueError("Model source path must be local and portable")
     prefix = f"${{KICAD{major}_3DMODEL_DIR}}/"
     if reference.startswith(prefix):
-        relative = reference[len(prefix):]
+        relative = reference[len(prefix) :]
         if "$" in relative or any(part in {"", ".", ".."} for part in relative.split("/")):
             raise ValueError("Unsafe standard 3D model reference")
         for directory in library.model_roots:
@@ -284,7 +339,7 @@ def _model_path(reference: str, library: _Library, major: str, project_dir: Path
                 return _safe_file(path, (directory,))
         raise ValueError(f"Paired 3D model is missing: {reference}")
     if reference.startswith("${KIPRJMOD}/"):
-        path = project_dir / reference[len("${KIPRJMOD}/"):]
+        path = project_dir / reference[len("${KIPRJMOD}/") :]
     elif "$" in reference:
         raise ValueError("Unresolved or wrong-version 3D model variable")
     else:
@@ -292,13 +347,19 @@ def _model_path(reference: str, library: _Library, major: str, project_dir: Path
     return _safe_file(path, library.roots)
 
 
-def _model_signature(expression: str) -> tuple[str, tuple[float, ...], tuple[float, ...], tuple[float, ...], bool]:
+def _model_signature(
+    expression: str,
+) -> tuple[str, tuple[float, ...], tuple[float, ...], tuple[float, ...], bool]:
     parent = _root(expression, "model")
     atoms = _atoms(expression, parent)
     if len(atoms) != 2:
         raise ValueError("Malformed model path")
     transforms: list[tuple[float, ...]] = []
-    for name, default in (("offset", (0.0, 0.0, 0.0)), ("scale", (1.0, 1.0, 1.0)), ("rotate", (0.0, 0.0, 0.0))):
+    for name, default in (
+        ("offset", (0.0, 0.0, 0.0)),
+        ("scale", (1.0, 1.0, 1.0)),
+        ("rotate", (0.0, 0.0, 0.0)),
+    ):
         nodes = _nodes(expression, parent, name)
         if len(nodes) > 1:
             raise ValueError("Duplicate model transform")
@@ -307,7 +368,10 @@ def _model_signature(expression: str) -> tuple[str, tuple[float, ...], tuple[flo
             raise ValueError("Invalid authored model transform")
         transforms.append(value)
     known = {"offset", "scale", "rotate", "hide", "opacity"}
-    if any(_atoms(expression, child)[0] not in known for child in _children(expression, parent.start + 1, parent.end - 1)):
+    if any(
+        _atoms(expression, child)[0] not in known
+        for child in _children(expression, parent.start + 1, parent.end - 1)
+    ):
         raise ValueError("Unsupported model expression needs review in KiCad")
     hide = _field(expression, parent, "hide", required=False)
     if hide and hide not in {("yes",), ("no",)}:
@@ -316,19 +380,25 @@ def _model_signature(expression: str) -> tuple[str, tuple[float, ...], tuple[flo
     return atoms[1], transforms[0], transforms[1], transforms[2], hidden
 
 
-def resolve_footprint(root: Path, project_id: str, footprint_id: str,
-                      library_root: Path | None = None) -> ResolvedFootprint:
+def resolve_footprint(
+    root: Path, project_id: str, footprint_id: str, library_root: Path | None = None
+) -> ResolvedFootprint:
     """Read one exact footprint and every model paired by its authored expressions."""
     root = root.resolve()
     pieces = footprint_id.split(":")
-    if len(pieces) != 2 or any(not value or any(char in value for char in "/\\$") or value in {".", ".."} for value in pieces):
+    if len(pieces) != 2 or any(
+        not value or any(char in value for char in "/\\$") or value in {".", ".."}
+        for value in pieces
+    ):
         raise ValueError("Choose an exact KiCad library:footprint identity")
     nickname, name = pieces
     library, major = _library(root, project_id, nickname, library_root)
     member = library.path / (name + ".kicad_mod")
     if not member.exists() and not member.is_symlink():
         if library.provenance.startswith("Project-declared"):
-            raise ValueError(f"Declared project footprint is missing: {member}; restore that source before automatic population")
+            raise ValueError(
+                f"Declared project footprint is missing: {member}; restore that source before automatic population"
+            )
         raise MissingFootprintError(f"Exact footprint member is unavailable: {member}")
     path = _safe_file(member, library.roots)
     source = path.read_bytes().decode("utf-8")
@@ -342,17 +412,29 @@ def resolve_footprint(root: Path, project_id: str, footprint_id: str,
     project_dir = repo_path(root, record.project).parent
     models: list[ResolvedModel] = []
     for model in _nodes(source, parent, "model"):
-        expression = source[model.start:model.end]
+        expression = source[model.start : model.end]
         reference, _, _, _, hidden = _model_signature(expression)
         if hidden:
-            raise ValueError("The library's paired model is hidden; review it in KiCad before automatic population")
+            raise ValueError(
+                "The library's paired model is hidden; review it in KiCad before automatic population"
+            )
         target = _model_path(reference, library, major, project_dir)
         if target.suffix.lower() not in {".step", ".stp", ".wrl", ".igs", ".iges"}:
             raise ValueError("Unsupported paired 3D source format")
         models.append(ResolvedModel(target, target.read_bytes(), reference, expression))
     if not models:
-        raise ValueError("This footprint has no paired 3D model; obtain the manufacturer's paired CAD data")
-    return ResolvedFootprint(footprint_id, path, source, tuple(models), _pads(source, parent), library.provenance, library.official)
+        raise ValueError(
+            "This footprint has no paired 3D model; obtain the manufacturer's paired CAD data"
+        )
+    return ResolvedFootprint(
+        footprint_id,
+        path,
+        source,
+        tuple(models),
+        _pads(source, parent),
+        library.provenance,
+        library.official,
+    )
 
 
 def _placed(source: str) -> tuple[PlacedFootprint, ...]:
@@ -366,9 +448,14 @@ def _placed(source: str) -> tuple[PlacedFootprint, ...]:
             raise ValueError("Malformed placed footprint identity")
         properties = _properties(source, span)
         reference = _property(source, properties, "Reference")
-        legacy = tuple(_atoms(source, item) for item in _nodes(source, span, "fp_text")
-                       if _atoms(source, item)[:2] == ("fp_text", "reference"))
-        if len(legacy) > 1 or (legacy and (len(legacy[0]) != 3 or reference and legacy[0][2] != reference)):
+        legacy = tuple(
+            _atoms(source, item)
+            for item in _nodes(source, span, "fp_text")
+            if _atoms(source, item)[:2] == ("fp_text", "reference")
+        )
+        if len(legacy) > 1 or (
+            legacy and (len(legacy[0]) != 3 or reference and legacy[0][2] != reference)
+        ):
             raise ValueError("Conflicting footprint reference")
         if legacy:
             reference = legacy[0][2]
@@ -381,16 +468,28 @@ def _placed(source: str) -> tuple[PlacedFootprint, ...]:
         if len(at) not in {2, 3}:
             raise ValueError("Malformed footprint placement")
         rotation = _number(at[2]) if len(at) == 3 else 0.0
-        expressions = tuple(source[node.start:node.end] for node in _nodes(source, span, "model"))
+        expressions = tuple(source[node.start : node.end] for node in _nodes(source, span, "model"))
         geometry_issue: str | None = None
         try:
             pads = _pads(source, span, rotation, layer == "B.Cu")
         except ValueError as error:
             pads = ()
             geometry_issue = str(error)
-        result.append(PlacedFootprint(reference, atoms[1], layer, rotation,
-            (_number(at[0]), _number(at[1])), _scalar(source, span, "path", default=""),
-            pads, expressions, span.start, span.end, geometry_issue))
+        result.append(
+            PlacedFootprint(
+                reference,
+                atoms[1],
+                layer,
+                rotation,
+                (_number(at[0]), _number(at[1])),
+                _scalar(source, span, "path", default=""),
+                pads,
+                expressions,
+                span.start,
+                span.end,
+                geometry_issue,
+            )
+        )
     return tuple(result)
 
 
@@ -417,8 +516,12 @@ def _same_pads(actual: tuple[PadSignature, ...], expected: tuple[PadSignature, .
     return True
 
 
-def plan_model_assignment(board_source: str, reference: str, resolved: ResolvedFootprint,
-                          model_references: Mapping[str, str]) -> str:
+def plan_model_assignment(
+    board_source: str,
+    reference: str,
+    resolved: ResolvedFootprint,
+    model_references: Mapping[str, str],
+) -> str:
     """Attach the exact source's model expressions only after numbered-pad matching.
 
     Mappings replace source model paths with vendored portable paths. Existing
@@ -432,17 +535,19 @@ def plan_model_assignment(board_source: str, reference: str, resolved: ResolvedF
     if placed.geometry_issue is not None:
         raise ValueError(f"{reference}: {placed.geometry_issue}")
     if not _same_pads(placed.pads, resolved.pads):
-        raise ValueError(f"{reference}: numbered pad geometry, spacing, orientation or drills differ from the paired footprint. Update/review the footprint in KiCad; no model was attached.")
+        raise ValueError(
+            f"{reference}: numbered pad geometry, spacing, orientation or drills differ from the paired footprint. Update/review the footprint in KiCad; no model was attached."
+        )
     if set(model_references) != {model.source_model_reference for model in resolved.models}:
         raise ValueError("Every paired model needs exactly one portable destination")
     expressions: list[str] = []
     for model in resolved.models:
         destination = model_references[model.source_model_reference]
-        if not destination.startswith("${KIPRJMOD}/") or "$" in destination[len("${KIPRJMOD}/"):]:
+        if not destination.startswith("${KIPRJMOD}/") or "$" in destination[len("${KIPRJMOD}/") :]:
             raise ValueError("Imported model paths must be portable KIPRJMOD references")
         text = model.model_expression
         token = _tokens(text, _root(text, "model"))[1]
-        expressions.append(text[:token.start] + _quote(destination) + text[token.end:])
+        expressions.append(text[: token.start] + _quote(destination) + text[token.end :])
     if placed.model_expressions:
         existing = tuple(_model_signature(item) for item in placed.model_expressions)
         desired = tuple(_model_signature(item) for item in expressions)
@@ -451,19 +556,30 @@ def plan_model_assignment(board_source: str, reference: str, resolved: ResolvedF
             actual != wanted and actual != authored
             for actual, wanted, authored in zip(existing, desired, original)
         ):
-            raise ValueError(f"{reference}: existing 3D assignment differs from the paired source; review/remove that assignment in KiCad before replacing it")
+            raise ValueError(
+                f"{reference}: existing 3D assignment differs from the paired source; review/remove that assignment in KiCad before replacing it"
+            )
         if existing == desired:
             return board_source
         footprint_span = _Span(placed.start, placed.end)
         spans = _nodes(board_source, footprint_span, "model")
-        replacements = [(token.start, token.end, _quote(signature[0]))
-                        for span, signature in zip(spans, desired)
-                        for token in (_tokens(board_source, span)[1],)]
+        replacements = [
+            (token.start, token.end, _quote(signature[0]))
+            for span, signature in zip(spans, desired)
+            for token in (_tokens(board_source, span)[1],)
+        ]
         result = board_source
         for start, end, value in reversed(replacements):
             result = result[:start] + value + result[end:]
         return result
     newline = "\r\n" if "\r\n" in board_source else "\n"
-    insertion = newline + newline.join("    " + expression.replace("\r\n", "\n").replace("\n", newline)
-                                       for expression in expressions) + newline + "  "
-    return board_source[:placed.end - 1] + insertion + board_source[placed.end - 1:]
+    insertion = (
+        newline
+        + newline.join(
+            "    " + expression.replace("\r\n", "\n").replace("\n", newline)
+            for expression in expressions
+        )
+        + newline
+        + "  "
+    )
+    return board_source[: placed.end - 1] + insertion + board_source[placed.end - 1 :]

@@ -1,4 +1,5 @@
 """Emit one digest-pinned KiCad CI lane per declared project."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,9 +15,7 @@ def build_matrix(root: Path, selected: tuple[str, ...] | None = None) -> CiMatri
     root = root.resolve()
     governance = lint(root, None if selected is None else list(selected))
     if governance.status != "PASS":
-        raise ValueError(
-            f"Refusing CI matrix for invalid registry: {governance.issues}"
-        )
+        raise ValueError(f"Refusing CI matrix for invalid registry: {governance.issues}")
     registry = load_registry(root)
     include: list[MatrixEntry] = []
     selected_ids = None if selected is None else frozenset(selected)

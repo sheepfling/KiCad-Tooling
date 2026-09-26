@@ -3,6 +3,7 @@
 Installing library data does not select a purchasing part, approve pin functions, or
 change placed symbols, pads, nets, routing, or independent electrical expectations.
 """
+
 from __future__ import annotations
 
 import difflib
@@ -145,8 +146,8 @@ def _native_footprint(source: str, name: str) -> str:
             raise ValueError("Legacy sourced footprint root differs from its recorded identity")
         tokens = _tokens(source, parent)
         first, identity = tokens[0], tokens[1]
-        source = source[:identity.start] + _quote(name) + source[identity.end:]
-        source = source[:first.start] + "footprint" + source[first.end:]
+        source = source[: identity.start] + _quote(name) + source[identity.end :]
+        source = source[: first.start] + "footprint" + source[first.end :]
     parent = _root(source, "footprint")
     if _atoms(source, parent) != ("footprint", name):
         raise ValueError("Sourced footprint root differs from its recorded identity")
@@ -158,7 +159,7 @@ def _model_reference(source: str, parent: _Span, expected: str) -> str:
     if len(models) != 1:
         raise ValueError("Sourced footprint must have exactly one paired WRL model")
     model = models[0]
-    expression = source[model.start:model.end]
+    expression = source[model.start : model.end]
     reference, _, _, _, hidden = _model_signature(expression)
     if hidden:
         raise ValueError("Sourced footprint's paired model is hidden")
@@ -169,7 +170,9 @@ def _model_reference(source: str, parent: _Span, expected: str) -> str:
     if "$" in relative or relative != expected:
         raise ValueError("Sourced footprint's model path differs from its recorded WRL file")
     if Path(relative).suffix.casefold() != ".wrl":
-        raise ValueError("The sourced CAD flow requires its translated WRL model; STEP substitution is unsupported")
+        raise ValueError(
+            "The sourced CAD flow requires its translated WRL model; STEP substitution is unsupported"
+        )
     return reference
 
 
@@ -178,12 +181,14 @@ def _replace_property(source: str, parent: _Span, name: str, value: str) -> str:
     if name not in properties:
         raise ValueError(f"Sourced symbol is missing its {name} property")
     token = _tokens(source, properties[name])[2]
-    return source[:token.start] + _quote(value) + source[token.end:]
+    return source[: token.start] + _quote(value) + source[token.end :]
 
 
 def _table(source: str | None, kind: str, nickname: str, uri: str) -> str:
-    entry = (f'(lib (name {_quote(nickname)})(type "KiCad")'
-             f'(uri {_quote(uri)})(options "")(descr "Sourced CAD; review pinout and physical fit"))')
+    entry = (
+        f'(lib (name {_quote(nickname)})(type "KiCad")'
+        f'(uri {_quote(uri)})(options "")(descr "Sourced CAD; review pinout and physical fit"))'
+    )
     if source is None:
         return f"({kind}\n  (version 7)\n  {entry}\n)\n"
     parent = _root(source, kind)
@@ -191,28 +196,41 @@ def _table(source: str | None, kind: str, nickname: str, uri: str) -> str:
     for node in _nodes(source, parent, "lib"):
         name = _scalar(source, node, "name")
         if not name or name.casefold() in seen:
-            raise ValueError("Project library table contains duplicate or case-conflicting nicknames")
+            raise ValueError(
+                "Project library table contains duplicate or case-conflicting nicknames"
+            )
         seen.add(name.casefold())
         if name.casefold() == nickname.casefold():
-            if (name == nickname and _scalar(source, node, "type") == "KiCad"
-                    and _scalar(source, node, "uri") == uri
-                    and _scalar(source, node, "options", default="") == ""):
+            if (
+                name == nickname
+                and _scalar(source, node, "type") == "KiCad"
+                and _scalar(source, node, "uri") == uri
+                and _scalar(source, node, "options", default="") == ""
+            ):
                 return source
             raise ValueError(f"Project library nickname conflicts with sourced CAD: {nickname}")
     newline = "\r\n" if "\r\n" in source else "\n"
-    return source[:parent.end - 1] + "  " + entry + newline + source[parent.end - 1:]
+    return source[: parent.end - 1] + "  " + entry + newline + source[parent.end - 1 :]
 
 
 def _diff(edits: tuple[_Edit, ...]) -> str:
     chunks: list[str] = []
     for edit in edits:
         if edit.path.endswith(".wrl"):
-            chunks.append(f"Import {edit.path} ({len(edit.after)} bytes; SHA256 {_sha(edit.after)})\n")
+            chunks.append(
+                f"Import {edit.path} ({len(edit.after)} bytes; SHA256 {_sha(edit.after)})\n"
+            )
         else:
-            chunks.append("".join(difflib.unified_diff(
-                (edit.before or b"").decode("utf-8").splitlines(keepends=True),
-                edit.after.decode("utf-8").splitlines(keepends=True),
-                fromfile="a/" + edit.path, tofile="b/" + edit.path)))
+            chunks.append(
+                "".join(
+                    difflib.unified_diff(
+                        (edit.before or b"").decode("utf-8").splitlines(keepends=True),
+                        edit.after.decode("utf-8").splitlines(keepends=True),
+                        fromfile="a/" + edit.path,
+                        tofile="b/" + edit.path,
+                    )
+                )
+            )
     return "".join(chunks)
 
 
@@ -240,9 +258,11 @@ def _checked(directory: Path, bundle: CadSourceBundle) -> tuple[CadBundleCheck, 
         raise ValueError("CAD bundle is missing a distinct symbol, footprint or model")
     for name in (bundle.symbol_name, bundle.footprint_name):
         _native_member(name)
-    if (Path(bundle.symbol_file).suffix != ".kicad_sym"
-            or Path(bundle.footprint_file).suffix != ".kicad_mod"
-            or Path(bundle.model_file).suffix != ".wrl"):
+    if (
+        Path(bundle.symbol_file).suffix != ".kicad_sym"
+        or Path(bundle.footprint_file).suffix != ".kicad_mod"
+        or Path(bundle.model_file).suffix != ".wrl"
+    ):
         raise ValueError("CAD source identities must name native symbol, footprint and WRL files")
     if Path(bundle.footprint_file).name != bundle.footprint_name + ".kicad_mod":
         raise ValueError("Sourced footprint filename differs from its native identity")
@@ -251,14 +271,19 @@ def _checked(directory: Path, bundle: CadSourceBundle) -> tuple[CadBundleCheck, 
     symbol_text = files[bundle.symbol_file].decode("utf-8")
     symbol, pins = _symbol(symbol_text, bundle.symbol_name)
     properties = _properties(symbol_text, symbol)
-    for name, expected_value in (("Manufacturer", bundle.manufacturer), ("MPN", bundle.mpn),
-                                 ("LCSC Part", bundle.supplier_id)):
+    for name, expected_value in (
+        ("Manufacturer", bundle.manufacturer),
+        ("MPN", bundle.mpn),
+        ("LCSC Part", bundle.supplier_id),
+    ):
         if _property(symbol_text, properties, name, required=True) != expected_value:
             raise ValueError(f"Sourced symbol {name} differs from the recorded exact part identity")
     bound_footprint = _property(symbol_text, properties, "Footprint", required=True)
     if bound_footprint.split(":")[-1] != bundle.footprint_name or bound_footprint.count(":") != 1:
         raise ValueError("Sourced symbol's footprint assignment differs from its paired footprint")
-    footprint_text = _native_footprint(files[bundle.footprint_file].decode("utf-8"), bundle.footprint_name)
+    footprint_text = _native_footprint(
+        files[bundle.footprint_file].decode("utf-8"), bundle.footprint_name
+    )
     footprint = _root(footprint_text, "footprint")
     if _atoms(footprint_text, footprint) != ("footprint", bundle.footprint_name):
         raise ValueError("Sourced footprint root differs from its recorded identity")
@@ -276,17 +301,28 @@ def _checked(directory: Path, bundle: CadSourceBundle) -> tuple[CadBundleCheck, 
         numbers.append(pad.number)
     numbered = tuple(sorted(set(numbers)))
     if pins != numbered:
-        raise ValueError("Symbol pin numbers differ from the paired footprint pad numbers: "
-                         f"symbol={','.join(pins)}; footprint={','.join(numbered)}")
+        raise ValueError(
+            "Symbol pin numbers differ from the paired footprint pad numbers: "
+            f"symbol={','.join(pins)}; footprint={','.join(numbered)}"
+        )
     reference = _model_reference(footprint_text, footprint, bundle.model_file)
     model_text = files[bundle.model_file].decode("utf-8")
-    if (not model_text.lstrip().startswith("#VRML V2.0 utf8")
-            or re.search(r"\b(?:Shape|IndexedFaceSet)\s*\{", model_text) is None):
+    if (
+        not model_text.lstrip().startswith("#VRML V2.0 utf8")
+        or re.search(r"\b(?:Shape|IndexedFaceSet)\s*\{", model_text) is None
+    ):
         raise ValueError("Paired model must contain native VRML geometry")
-    if re.search(r"\b(?:Inline|ImageTexture|MovieTexture|AudioClip|Script|EXTERNPROTO|url)\b", model_text):
+    if re.search(
+        r"\b(?:Inline|ImageTexture|MovieTexture|AudioClip|Script|EXTERNPROTO|url)\b", model_text
+    ):
         raise ValueError("Paired WRL must be self-contained without scripts or external resources")
-    return CadBundleCheck(status="READY", symbol_pins=pins, footprint_pads=numbered,
-                          model_references=(reference,), issues=(*bundle.issues, _REVIEW_LIMIT)), files
+    return CadBundleCheck(
+        status="READY",
+        symbol_pins=pins,
+        footprint_pads=numbered,
+        model_references=(reference,),
+        issues=(*bundle.issues, _REVIEW_LIMIT),
+    ), files
 
 
 def inspect_bundle(bundle_dir: Path, bundle: CadSourceBundle) -> CadBundleCheck:
@@ -298,9 +334,13 @@ def inspect_bundle(bundle_dir: Path, bundle: CadSourceBundle) -> CadBundleCheck:
         return CadBundleCheck(status="BLOCKED", issues=(str(error),))
 
 
-def _build(root: Path, project_id: str, directory: Path,
-           bundle: CadSourceBundle, original: bytes,
-           ) -> tuple[CadBundleCheck, tuple[_Edit, ...], str, str]:
+def _build(
+    root: Path,
+    project_id: str,
+    directory: Path,
+    bundle: CadSourceBundle,
+    original: bytes,
+) -> tuple[CadBundleCheck, tuple[_Edit, ...], str, str]:
     check, files = _checked(directory, bundle)
     project = selected_project(root, project_id)
     config = load_config(root, project.config)
@@ -309,8 +349,10 @@ def _build(root: Path, project_id: str, directory: Path,
     manifest_path = repo_path(root, project.config)
     manifest = read_model(manifest_path, ProjectManifest)
     project_dir = repo_path(root, project.project).parent
-    if not any(project_dir.is_relative_to(repo_path(manifest_path.parent, name))
-               for name in manifest.source_roots):
+    if not any(
+        project_dir.is_relative_to(repo_path(manifest_path.parent, name))
+        for name in manifest.source_roots
+    ):
         raise ValueError("Project CAD libraries must live under a declared local source root")
     fingerprint = _sha(original)[:16]
     nickname = f"CAD_{bundle.supplier_id}_{fingerprint}"
@@ -320,34 +362,43 @@ def _build(root: Path, project_id: str, directory: Path,
     symbol = files[bundle.symbol_file].decode("utf-8")
     parent, _ = _symbol(symbol, bundle.symbol_name)
     symbol = _replace_property(symbol, parent, "Footprint", footprint_id)
-    footprint = _native_footprint(files[bundle.footprint_file].decode("utf-8"), bundle.footprint_name)
+    footprint = _native_footprint(
+        files[bundle.footprint_file].decode("utf-8"), bundle.footprint_name
+    )
     parent = _root(footprint, "footprint")
     model = _nodes(footprint, parent, "model")[0]
     token = _tokens(footprint, model)[1]
     model_target = destination / bundle.model_file
     portable_model = "${KIPRJMOD}/" + model_target.relative_to(project_dir).as_posix()
-    footprint = footprint[:token.start] + _quote(portable_model) + footprint[token.end:]
+    footprint = footprint[: token.start] + _quote(portable_model) + footprint[token.end :]
     proposed: dict[str, bytes] = {}
-    for name, content in ((bundle.symbol_file, symbol.encode("utf-8")),
-                          (bundle.footprint_file, footprint.encode("utf-8")),
-                          (bundle.model_file, files[bundle.model_file]),
-                          ("SOURCE.json", original),
-                          ("NOTICE.txt", (
-                              b"Source provenance is recorded in SOURCE.json. Its file hashes describe "
-                              b"the original provider bundle. Imported symbol and model paths were "
-                              b"rewritten for this project; model transforms were preserved.\n"
-                              b"CAD licensing terms, manufacturer pin functions and physical fit are "
-                              b"not independently verified by this import. No part approval is granted.\n"
-                              b"Only the paired WRL is installed. STEP output from easyeda2kicad 1.0.1 "
-                              b"is not substituted because it may omit the model translation.\n"
-                          ))):
+    for name, content in (
+        (bundle.symbol_file, symbol.encode("utf-8")),
+        (bundle.footprint_file, footprint.encode("utf-8")),
+        (bundle.model_file, files[bundle.model_file]),
+        ("SOURCE.json", original),
+        (
+            "NOTICE.txt",
+            (
+                b"Source provenance is recorded in SOURCE.json. Its file hashes describe "
+                b"the original provider bundle. Imported symbol and model paths were "
+                b"rewritten for this project; model transforms were preserved.\n"
+                b"CAD licensing terms, manufacturer pin functions and physical fit are "
+                b"not independently verified by this import. No part approval is granted.\n"
+                b"Only the paired WRL is installed. STEP output from easyeda2kicad 1.0.1 "
+                b"is not substituted because it may omit the model translation.\n"
+            ),
+        ),
+    ):
         target = destination / name
         relative = target.relative_to(root).as_posix()
         repo_path(root, relative)
         proposed[relative] = content
     # Local table edits expose only these explicitly selected assets in KiCad's chooser.
-    for name, kind, target in (("sym-lib-table", "sym_lib_table", destination / bundle.symbol_file),
-                               ("fp-lib-table", "fp_lib_table", (destination / bundle.footprint_file).parent)):
+    for name, kind, target in (
+        ("sym-lib-table", "sym_lib_table", destination / bundle.symbol_file),
+        ("fp-lib-table", "fp_lib_table", (destination / bundle.footprint_file).parent),
+    ):
         path = project_dir / name
         relative = path.relative_to(root).as_posix()
         repo_path(root, relative)
@@ -356,8 +407,10 @@ def _build(root: Path, project_id: str, directory: Path,
         proposed[relative] = _table(before, kind, nickname, uri).encode("utf-8")
     before = manifest_path.read_bytes().decode("utf-8")
     additions: dict[str, set[str]] = {
-        "required_inputs": {Path(path).relative_to(manifest_path.parent.relative_to(root)).as_posix()
-                            for path in proposed},
+        "required_inputs": {
+            Path(path).relative_to(manifest_path.parent.relative_to(root)).as_posix()
+            for path in proposed
+        },
         "shared_inputs": set(),
     }
     proposed[project.config] = update_project_manifest_inputs(before, additions).encode("utf-8")
@@ -376,8 +429,9 @@ def _build(root: Path, project_id: str, directory: Path,
     return check, tuple(edits), symbol_id, footprint_id
 
 
-def _run(root: Path, project_id: str, bundle_dir: Path | None,
-         output: Path, locked: Path | None) -> CadImportReport:
+def _run(
+    root: Path, project_id: str, bundle_dir: Path | None, output: Path, locked: Path | None
+) -> CadImportReport:
     root = root.resolve()
     output = _receipt(root, output)
     check: CadBundleCheck | None = None
@@ -396,7 +450,9 @@ def _run(root: Path, project_id: str, bundle_dir: Path | None,
         bundle, original = _read_bundle(directory)
         if spec is not None and _sha(original) != spec.bundle_sha256:
             raise ValueError("CAD bundle source metadata changed after preview")
-        check, edits, symbol_id, footprint_id = _build(root, project_id, directory, bundle, original)
+        check, edits, symbol_id, footprint_id = _build(
+            root, project_id, directory, bundle, original
+        )
         _verify_snapshot(root, project_id, before)
         # Bind the manifest bytes used for output, as well as every original file hash.
         current_bundle, current_original = _read_bundle(directory)
@@ -406,23 +462,51 @@ def _run(root: Path, project_id: str, bundle_dir: Path | None,
         after_hashes = {edit.path: _sha(edit.after) for edit in edits}
         if spec is not None and dict(spec.after_hashes) != after_hashes:
             raise ValueError("CAD import differs from the reviewed plan; preview a fresh bundle")
-        plan_record = CadImportPlan(project_id=project_id, bundle_dir=str(directory),
-            bundle_sha256=_sha(original), preconditions=before, after_hashes=after_hashes)
+        plan_record = CadImportPlan(
+            project_id=project_id,
+            bundle_dir=str(directory),
+            bundle_sha256=_sha(original),
+            preconditions=before,
+            after_hashes=after_hashes,
+        )
         plan_path = output / "cad-import-plan.json"
         plan_path.write_text(plan_record.model_dump_json(indent=2) + "\n", encoding="utf-8")
         diff = _diff(edits)
         (output / "cad-import.diff").write_text(diff, encoding="utf-8")
         if spec is not None:
-            _write_edits(root, project_id, AutoCadPlan(project_id=project_id,
-                preconditions=dict(spec.preconditions), after_hashes=dict(spec.after_hashes)), edits)
-        report = CadImportReport(status="APPLIED" if spec is not None else "PLAN",
-            project_id=project_id, symbol_id=symbol_id, footprint_id=footprint_id,
-            files=tuple(after_hashes), issues=check.issues, check=check, plan_path=str(plan_path),
-            receipt_directory=str(output), diff=diff)
+            _write_edits(
+                root,
+                project_id,
+                AutoCadPlan(
+                    project_id=project_id,
+                    preconditions=dict(spec.preconditions),
+                    after_hashes=dict(spec.after_hashes),
+                ),
+                edits,
+            )
+        report = CadImportReport(
+            status="APPLIED" if spec is not None else "PLAN",
+            project_id=project_id,
+            symbol_id=symbol_id,
+            footprint_id=footprint_id,
+            files=tuple(after_hashes),
+            issues=check.issues,
+            check=check,
+            plan_path=str(plan_path),
+            receipt_directory=str(output),
+            diff=diff,
+        )
     except (OSError, ValueError, UnicodeError) as error:
-        report = CadImportReport(status="BLOCKED", project_id=project_id, check=check,
-                                 issues=(str(error),), receipt_directory=str(output))
-    (output / "cad-import-report.json").write_text(report.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        report = CadImportReport(
+            status="BLOCKED",
+            project_id=project_id,
+            check=check,
+            issues=(str(error),),
+            receipt_directory=str(output),
+        )
+    (output / "cad-import-report.json").write_text(
+        report.model_dump_json(indent=2) + "\n", encoding="utf-8"
+    )
     return report
 
 

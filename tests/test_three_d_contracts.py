@@ -1,4 +1,5 @@
 """Strict 3D wire reports retain malformed-source findings without granting approval."""
+
 from __future__ import annotations
 
 import hashlib
@@ -40,10 +41,14 @@ class ThreeDContractTests(unittest.TestCase):
         self.config = load_config(self.root, f"{ISLAND}/project.json")
         self.inventory = inspect_models(self.root, self.config)
         self.report = ThreeDReport(
-            project_id=PROJECT, mode="inspect", status="PASS",
+            project_id=PROJECT,
+            mode="inspect",
+            status="PASS",
             run_directory=str(self.root / "build/diagnostics/contract-fixture"),
-            toolchain_id=self.config.toolchain_id, kicad_version=self.config.kicad_version,
-            board=BOARD, source_sha256={BOARD: hashlib.sha256(self.board.read_bytes()).hexdigest()},
+            toolchain_id=self.config.toolchain_id,
+            kicad_version=self.config.kicad_version,
+            board=BOARD,
+            source_sha256={BOARD: hashlib.sha256(self.board.read_bytes()).hexdigest()},
             models=self.inventory,
         )
 
@@ -57,7 +62,8 @@ class ThreeDContractTests(unittest.TestCase):
         self.assertEqual(ThreeDReport.model_validate_json(report.model_dump_json()), report)
         receipt = Path(report.run_directory)
         self.assertEqual(
-            ThreeDReport.model_validate_json((receipt / "visualization.json").read_text()), report,
+            ThreeDReport.model_validate_json((receipt / "visualization.json").read_text()),
+            report,
         )
         self.assertEqual(
             ModelInventoryReport.model_validate_json((receipt / "models.json").read_text()),
@@ -79,9 +85,12 @@ class ThreeDContractTests(unittest.TestCase):
         for report in (self.inventory, self.report):
             data = report.model_dump(mode="json")
             for update in (
-                {"schema_version": "2"}, {"schema_version": 1},
-                {"unrecognized": "field"}, {"project_id": 17},
-                {"build_authorized": True}, {"build_authorized": "false"},
+                {"schema_version": "2"},
+                {"schema_version": 1},
+                {"unrecognized": "field"},
+                {"project_id": 17},
+                {"build_authorized": True},
+                {"build_authorized": "false"},
                 {"status": "APPROVED"},
             ):
                 with (
@@ -97,39 +106,61 @@ class ThreeDContractTests(unittest.TestCase):
                 ModelInventoryReport.model_validate_json(json.dumps(inventory | update))
         report = self.report.model_dump(mode="json")
         for update in (
-            {"run_directory": ""}, {"toolchain_id": "../other"}, {"board": ""},
+            {"run_directory": ""},
+            {"toolchain_id": "../other"},
+            {"board": ""},
             {"source_sha256": {BOARD: "not-a-hash"}},
             {"artifacts_sha256": {"board.step": "A" * 64}},
             {"source_sha256": {"": "a" * 64}},
-            {"runner": "shell"}, {"mode": "approve"},
+            {"runner": "shell"},
+            {"mode": "approve"},
         ):
             with self.subTest(update=update), self.assertRaises(ValidationError):
                 ThreeDReport.model_validate_json(json.dumps(report | update))
 
     def test_nested_assignment_contracts_validate_line_numbers_and_resolved_paths(self) -> None:
         assignment = ModelAssignment(
-            path="${KIPRJMOD}/models/Part.step", line=3, resolution="source_present",
+            path="${KIPRJMOD}/models/Part.step",
+            line=3,
+            resolution="source_present",
             source_path=f"{ISLAND}/kicad/models/Part.step",
         )
-        self.assertEqual(ModelAssignment.model_validate_json(assignment.model_dump_json()), assignment)
-        footprint = FootprintModels(
-            reference="U1", footprint_id="Library:Part", line=2,
-            models=(assignment,), candidate_assets=(assignment.source_path,), status="READY",
+        self.assertEqual(
+            ModelAssignment.model_validate_json(assignment.model_dump_json()), assignment
         )
-        self.assertEqual(FootprintModels.model_validate_json(footprint.model_dump_json()), footprint)
+        footprint = FootprintModels(
+            reference="U1",
+            footprint_id="Library:Part",
+            line=2,
+            models=(assignment,),
+            candidate_assets=(assignment.source_path,),
+            status="READY",
+        )
+        self.assertEqual(
+            FootprintModels.model_validate_json(footprint.model_dump_json()), footprint
+        )
         data = assignment.model_dump(mode="json")
         for update in (
-            {"line": 0}, {"line": True}, {"line": "3"}, {"hidden": "false"},
-            {"source_path": ""}, {"resolution": "approved"}, {"extra": "field"},
+            {"line": 0},
+            {"line": True},
+            {"line": "3"},
+            {"hidden": "false"},
+            {"source_path": ""},
+            {"resolution": "approved"},
+            {"extra": "field"},
         ):
             with self.subTest(update=update), self.assertRaises(ValidationError):
                 ModelAssignment.model_validate_json(json.dumps(data | update))
         for update in ({"line": -1}, {"candidate_assets": [""]}, {"models": [data | {"line": 0}]}):
             with self.subTest(update=update), self.assertRaises(ValidationError):
-                FootprintModels.model_validate_json(json.dumps(footprint.model_dump(mode="json") | update))
+                FootprintModels.model_validate_json(
+                    json.dumps(footprint.model_dump(mode="json") | update)
+                )
 
     def test_raw_broken_model_paths_and_unknown_references_remain_diagnosable(self) -> None:
-        self.board.write_text('(kicad_pcb\n  (footprint ""\n    (model "")\n  )\n)\n', encoding="utf-8")
+        self.board.write_text(
+            '(kicad_pcb\n  (footprint ""\n    (model "")\n  )\n)\n', encoding="utf-8"
+        )
         report = inspect_models(self.root, self.config)
         self.assertEqual(report.status, "FAIL")
         footprint = report.footprints[0]
@@ -145,15 +176,21 @@ class ThreeDContractTests(unittest.TestCase):
     def test_model_map_round_trip_rejects_ambiguous_and_malformed_assignments(self) -> None:
         assignment = ModelMapAssignment(reference="J1", model=f"{ISLAND}/kicad/models/Part.step")
         model_map = ModelMap(
-            project_id=PROJECT, board_sha256=hashlib.sha256(self.board.read_bytes()).hexdigest(),
-            manifest_sha256=hashlib.sha256((self.root / ISLAND / "project.json").read_bytes()).hexdigest(),
+            project_id=PROJECT,
+            board_sha256=hashlib.sha256(self.board.read_bytes()).hexdigest(),
+            manifest_sha256=hashlib.sha256(
+                (self.root / ISLAND / "project.json").read_bytes()
+            ).hexdigest(),
             assignments=(assignment,),
         )
         self.assertEqual(ModelMap.model_validate_json(model_map.model_dump_json()), model_map)
         data = model_map.model_dump(mode="json")
         for update in (
-            {"schema_version": "2"}, {"schema_version": 1}, {"extra": "field"},
-            {"project_id": "../other"}, {"board_sha256": "not-a-digest"},
+            {"schema_version": "2"},
+            {"schema_version": 1},
+            {"extra": "field"},
+            {"project_id": "../other"},
+            {"board_sha256": "not-a-digest"},
             {"manifest_sha256": "not-a-digest"},
             {"assignments": []},
             {"assignments": [assignment.model_dump(), assignment.model_dump()]},
@@ -163,9 +200,14 @@ class ThreeDContractTests(unittest.TestCase):
         ):
             with self.subTest(update=update), self.assertRaises(ValidationError):
                 ModelMap.model_validate_json(json.dumps(data | update))
-        draft = ModelMap.model_validate_json(json.dumps(data | {
-            "assignments": [{"reference": "J1", "model": "", "candidate_assets": []}],
-        }))
+        draft = ModelMap.model_validate_json(
+            json.dumps(
+                data
+                | {
+                    "assignments": [{"reference": "J1", "model": "", "candidate_assets": []}],
+                }
+            )
+        )
         self.assertEqual(draft.assignments[0].model, "")
         missing_manifest = dict(data)
         del missing_manifest["manifest_sha256"]
@@ -175,26 +217,41 @@ class ThreeDContractTests(unittest.TestCase):
     def test_population_report_never_authorizes_build_or_skips_required_checks(self) -> None:
         digest = hashlib.sha256(self.board.read_bytes()).hexdigest()
         report = ModelPopulationReport(
-            status="APPLIED", project_id=PROJECT,
-            run_directory=str(self.root / "build/diagnostics/model-map"), board=BOARD,
-            manifest=f"{ISLAND}/project.json", board_sha256=digest,
+            status="APPLIED",
+            project_id=PROJECT,
+            run_directory=str(self.root / "build/diagnostics/model-map"),
+            board=BOARD,
+            manifest=f"{ISLAND}/project.json",
+            board_sha256=digest,
             model_sha256={f"{ISLAND}/kicad/models/Part.step": "a" * 64},
-            next_commands=(f"python -B -m kicad_tooling.verify --project {PROJECT} --depth native",),
+            next_commands=(
+                f"python -B -m kicad_tooling.verify --project {PROJECT} --depth native",
+            ),
         )
-        self.assertEqual(ModelPopulationReport.model_validate_json(report.model_dump_json()), report)
+        self.assertEqual(
+            ModelPopulationReport.model_validate_json(report.model_dump_json()), report
+        )
         self.assertFalse(report.build_authorized)
         self.assertTrue(report.checks_required)
         schema = ModelPopulationReport.model_json_schema()
         self.assertIs(schema["properties"]["build_authorized"]["const"], False)
         self.assertIs(schema["properties"]["checks_required"]["const"], True)
         for update in (
-            {"schema_version": "2"}, {"unrecognized": "field"}, {"project_id": 10},
-            {"board_sha256": "bad"}, {"model_sha256": {"model.step": "bad"}},
-            {"board": ""}, {"run_directory": ""}, {"build_authorized": True},
-            {"checks_required": False}, {"status": "APPROVED"},
+            {"schema_version": "2"},
+            {"unrecognized": "field"},
+            {"project_id": 10},
+            {"board_sha256": "bad"},
+            {"model_sha256": {"model.step": "bad"}},
+            {"board": ""},
+            {"run_directory": ""},
+            {"build_authorized": True},
+            {"checks_required": False},
+            {"status": "APPROVED"},
         ):
             with self.subTest(update=update), self.assertRaises(ValidationError):
-                ModelPopulationReport.model_validate_json(json.dumps(report.model_dump(mode="json") | update))
+                ModelPopulationReport.model_validate_json(
+                    json.dumps(report.model_dump(mode="json") | update)
+                )
 
     def test_linked_derived_board_is_rejected_before_inspection_or_native_execution(self) -> None:
         outside = self.root.parent / "outside.kicad_pcb"

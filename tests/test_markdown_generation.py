@@ -1,4 +1,5 @@
 """Deterministic contracts for Markdown produced by repository workflows."""
+
 from __future__ import annotations
 
 import tempfile
@@ -52,9 +53,7 @@ class MarkdownGenerationTests(unittest.TestCase):
         rendered = str(document)
         self.assertIn("[the native project](kicad/Old%20board.kicad_pro)", rendered)
         self.assertIn("- [Upstream Board notes.md](kicad/Board%20notes.md)", rendered)
-        self.assertIn(
-            "- [Upstream docs/Bring-up #1.md](kicad/docs/Bring-up%20%231.md)", rendered
-        )
+        self.assertIn("- [Upstream docs/Bring-up #1.md](kicad/docs/Bring-up%20%231.md)", rendered)
 
     def test_release_review_uses_inline_code_and_writer_adds_one_final_newline(self) -> None:
         document = release_review("review-001", "abc123", "engineering_review")

@@ -3,6 +3,7 @@
 This module never accepts raw JSON values.  File deserialization occurs once in
 the repository loader and engineering policy uses typed immutable records only.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -73,9 +74,7 @@ def index_by_id(
     casefolded: set[str] = set()
     for record in records:
         if record.id.casefold() in casefolded:
-            issues.append(
-                PolicyIssue(code="DUPLICATE_ID", location=label, message=record.id)
-            )
+            issues.append(PolicyIssue(code="DUPLICATE_ID", location=label, message=record.id))
         casefolded.add(record.id.casefold())
         result[record.id] = record
     return result
@@ -193,8 +192,7 @@ def validate_product(
                             "Assembly members must match every KiCad component reference",
                         )
                 if any(
-                    member.quantity != 1 or member.item not in parts
-                    for member in assembly.members
+                    member.quantity != 1 or member.item not in parts for member in assembly.members
                 ):
                     fail(
                         "KICAD_MEMBERS",
@@ -214,9 +212,7 @@ def validate_product(
         return tuple(issues)
 
     instances = occurrences(product)
-    used_parts = {
-        occurrence.item for occurrence in instances.values() if occurrence.item in parts
-    }
+    used_parts = {occurrence.item for occurrence in instances.values() if occurrence.item in parts}
     used_parts.update(
         assembly.purchase_part
         for assembly in assemblies.values()
@@ -239,13 +235,18 @@ def validate_product(
                 fail("VARIANT_REF", variant.id, f"Unknown excluded instance {path}")
         for project_id in variant.board_variants:
             matching = (
-                path for path, occurrence in instances.items()
+                path
+                for path, occurrence in instances.items()
                 if (assembly := assemblies.get(occurrence.item)) is not None
-                and assembly.project_id == project_id and not excluded(path, variant)
+                and assembly.project_id == project_id
+                and not excluded(path, variant)
             )
             if not any(matching):
-                fail("VARIANT_BOARD", variant.id,
-                     f"Board variant maps {project_id} without an included board occurrence")
+                fail(
+                    "VARIANT_BOARD",
+                    variant.id,
+                    f"Board variant maps {project_id} without an included board occurrence",
+                )
 
     terminal_pairs: set[tuple[str, str]] = set()
     for terminal in terminals.values():
@@ -266,11 +267,7 @@ def validate_product(
         config = configurations.get(parent_item.item) if parent_item is not None else None
         project = project_bindings.get(parent_item.item) if parent_item is not None else None
         if config is not None:
-            nodes = {
-                node
-                for values in config.nets.values()
-                for node in values
-            }
+            nodes = {node for values in config.nets.values() for node in values}
             if (
                 terminal.kind is not TerminalKind.ELECTRICAL
                 or f"{reference}.{terminal.pin}" not in nodes
@@ -289,7 +286,9 @@ def validate_product(
         elif terminal.interface_id is not None and terminal.interface_pin is not None:
             interface = interfaces.get(terminal.interface_id)
             if terminal.kind is not TerminalKind.ELECTRICAL:
-                fail("INTERFACE_BINDING", terminal.id, "Bound interface terminal must be electrical")
+                fail(
+                    "INTERFACE_BINDING", terminal.id, "Bound interface terminal must be electrical"
+                )
             if project is None or terminal.interface_id not in project.interfaces:
                 fail(
                     "INTERFACE_BINDING",
@@ -474,17 +473,17 @@ def load_repository(
                 )
             )
         relevant_entries = (
-            index.products if selected is None else tuple(
-                entry for entry in index.products
-                if not selected.isdisjoint(entry.project_ids)
+            index.products
+            if selected is None
+            else tuple(
+                entry for entry in index.products if not selected.isdisjoint(entry.project_ids)
             )
         )
         relevant_project_ids = (
-            None if selected is None else selected | {
-                project_id
-                for entry in relevant_entries
-                for project_id in entry.project_ids
-            }
+            None
+            if selected is None
+            else selected
+            | {project_id for entry in relevant_entries for project_id in entry.project_ids}
         )
         product_view_projects_by_product: dict[
             str, list[tuple[str, ProductTraceabilityValidationContract]]
@@ -605,9 +604,11 @@ def load_repository(
             found = {
                 path.relative_to(root).as_posix()
                 for product_root in configuration.product_roots
-                if not (configuration.product_roots == RepositoryLayout().product_roots
-                        and product_root == "examples/products"
-                        and not any(name.startswith("examples/") for name in declared))
+                if not (
+                    configuration.product_roots == RepositoryLayout().product_roots
+                    and product_root == "examples/products"
+                    and not any(name.startswith("examples/") for name in declared)
+                )
                 for path in repo_path(root, product_root).glob("*/product.json")
                 if repo_path(root, path.relative_to(root).as_posix()).is_file()
             }
@@ -620,9 +621,7 @@ def load_repository(
                     )
                 )
     except (OSError, ValueError) as exc:
-        issues.append(
-            PolicyIssue(code="PRODUCT_LOAD", location="repository", message=str(exc))
-        )
+        issues.append(PolicyIssue(code="PRODUCT_LOAD", location="repository", message=str(exc)))
     return ProductRepository(
         products=tuple(products),
         product_project_ids=product_project_ids,
@@ -714,8 +713,7 @@ def validate_harness_interface_contract(
     expected_connections = {
         connection.id
         for connection in connections.values()
-        if connection.kind is ConnectionKind.ELECTRICAL
-        and connection.harness in declared_harnesses
+        if connection.kind is ConnectionKind.ELECTRICAL and connection.harness in declared_harnesses
     }
     declared_connections = set(validation.connection_ids)
     if declared_connections != expected_connections:
@@ -772,9 +770,7 @@ def check_harness_interface_contract(root: Path, config: ProjectConfig) -> None:
     validate_harness_interface_contract(products[0], validation)
 
 
-def check_project_netlist(
-    root: Path, project_id: str, path: Path
-) -> NetlistIdentityReport:
+def check_project_netlist(root: Path, project_id: str, path: Path) -> NetlistIdentityReport:
     """Verify actual exported KiCad PART_ID fields against typed product records."""
     repository = load_repository(root, (project_id,))
     if repository.issues:
@@ -787,7 +783,9 @@ def check_project_netlist(
     )
     project = repository.projects[project_id]
     if not bindings and not project.component_identity.required:
-        return NetlistIdentityReport(status="NOT_APPLICABLE", reason="Project does not require component identity")
+        return NetlistIdentityReport(
+            status="NOT_APPLICABLE", reason="Project does not require component identity"
+        )
     tree = ET.parse(path).getroot()
     components: dict[str, Mapping[str, str]] = {}
     for component in tree.findall("./components/comp"):
@@ -798,17 +796,16 @@ def check_project_netlist(
         names = tuple(field.attrib["name"] for field in fields)
         if len(set(names)) != len(names):
             raise ValueError(f"Duplicate KiCad fields at {reference}")
-        components[reference] = {
-            field.attrib["name"]: field.text or ""
-            for field in fields
-        }
+        components[reference] = {field.attrib["name"]: field.text or "" for field in fields}
     if project.component_identity.required:
         from .discovery import load_config
         from .models import PcbValidationContract, SchematicValidationContract
 
         config = load_config(root, project.config)
         if isinstance(config.validation, (PcbValidationContract, SchematicValidationContract)):
-            expected_parts = {ref: component.part_id for ref, component in config.validation.components.items()}
+            expected_parts = {
+                ref: component.part_id for ref, component in config.validation.components.items()
+            }
             if set(components) != set(expected_parts):
                 raise ValueError("KiCad and project component inventories differ")
             for reference, identifier in expected_parts.items():
@@ -831,9 +828,7 @@ def check_project_netlist(
             raise ValueError("KiCad and product instance inventories differ")
         for reference, identifier in expected.items():
             if components[reference].get("PART_ID") != identifier:
-                raise ValueError(
-                    f"KiCad PART_ID mismatch: {reference}, expected {identifier}"
-                )
+                raise ValueError(f"KiCad PART_ID mismatch: {reference}, expected {identifier}")
             part = repository.parts[identifier]
             if part.status is PartStatus.APPROVED:
                 for field_name, expected_value in (

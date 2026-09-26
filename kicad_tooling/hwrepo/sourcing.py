@@ -1,4 +1,5 @@
 """Provider-neutral validation for manually captured, time-bound supplier offers."""
+
 from __future__ import annotations
 
 from pathlib import Path

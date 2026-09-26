@@ -1,4 +1,5 @@
 """Unit tests for the single CI entry point that GitHub invokes."""
+
 from __future__ import annotations
 
 import json
@@ -42,9 +43,12 @@ class CiDriverTests(unittest.TestCase):
         self.assertEqual(result.returncode, 127)
         self.assertIsNotNone(result.error)
 
-    def test_repository_pipeline_requires_markdown_and_leaves_tooling_tests_to_package_ci(self) -> None:
-        with patch("kicad_tooling.ci.run_command", side_effect=(
-            evidence(0), evidence(1))) as command:
+    def test_repository_pipeline_requires_markdown_and_leaves_tooling_tests_to_package_ci(
+        self,
+    ) -> None:
+        with patch(
+            "kicad_tooling.ci.run_command", side_effect=(evidence(0), evidence(1))
+        ) as command:
             result = static_pipeline(ROOT, None)
         if not isinstance(result, StaticPipelineReport):
             self.fail("The unselected CI lane must return the full repository report")
@@ -75,9 +79,19 @@ class CiDriverTests(unittest.TestCase):
     def test_markdown_check_uses_the_installed_package_module(self) -> None:
         with patch("kicad_tooling.ci.run_command", return_value=evidence(0)) as command:
             static_pipeline(ROOT, None)
-        self.assertEqual(command.call_args_list[0].args,
-                         (ROOT, sys.executable, "-I", "-m", "kicad_tooling.markdown_check",
-                          "check", ".", "--no-cache"))
+        self.assertEqual(
+            command.call_args_list[0].args,
+            (
+                ROOT,
+                sys.executable,
+                "-I",
+                "-m",
+                "kicad_tooling.markdown_check",
+                "check",
+                ".",
+                "--no-cache",
+            ),
+        )
 
     def test_mdrepo_roots_follow_documentation_roots(self) -> None:
         config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
@@ -107,9 +121,21 @@ class CiDriverTests(unittest.TestCase):
 
     def test_selected_project_can_print_a_short_human_summary(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--project", "controller",
-             "--format", "text"],
-            cwd=ROOT, capture_output=True, text=True, check=False,
+            [
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.ci",
+                "--project",
+                "controller",
+                "--format",
+                "text",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Portable check: PASS", result.stdout)
@@ -118,10 +144,19 @@ class CiDriverTests(unittest.TestCase):
 
     def test_failed_project_text_points_to_the_diagnostic_command(self) -> None:
         with (
-            patch.object(sys, "argv", [
-                "ci.py", "--root", str(ROOT), "--project", "controller",
-                "--format", "text",
-            ]),
+            patch.object(
+                sys,
+                "argv",
+                [
+                    "ci.py",
+                    "--root",
+                    str(ROOT),
+                    "--project",
+                    "controller",
+                    "--format",
+                    "text",
+                ],
+            ),
             patch("kicad_tooling.ci.check_generation", return_value=("Outdated BOM view",)),
             patch("sys.stdout", new_callable=StringIO) as output,
         ):
@@ -137,9 +172,23 @@ class CiDriverTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="portable-journal-") as temporary:
             output = Path(temporary) / "run"
             with (
-                patch.object(sys, "argv", ["ci.py", "--root", str(ROOT), "--project", "controller",
-                                         "--output", str(output)]),
-                patch("kicad_tooling.ci.check_repository", side_effect=RuntimeError("unexpected failure")),
+                patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "ci.py",
+                        "--root",
+                        str(ROOT),
+                        "--project",
+                        "controller",
+                        "--output",
+                        str(output),
+                    ],
+                ),
+                patch(
+                    "kicad_tooling.ci.check_repository",
+                    side_effect=RuntimeError("unexpected failure"),
+                ),
                 patch("sys.stdout", new_callable=StringIO),
                 patch("sys.stderr", new_callable=StringIO),
                 self.assertRaisesRegex(RuntimeError, "unexpected failure"),
@@ -148,9 +197,15 @@ class CiDriverTests(unittest.TestCase):
             self.assertEqual(json.loads((output / "run.json").read_text())["status"], "ERROR")
             self.assertTrue((output / "registry.json").is_file())
             self.assertFalse((output / "portable.json").exists())
-            events = [json.loads(line) for line in (output / "events.jsonl").read_text().splitlines()]
-            self.assertTrue(any(event["stage"] == "repository" and event["status"] == "ERROR"
-                                for event in events))
+            events = [
+                json.loads(line) for line in (output / "events.jsonl").read_text().splitlines()
+            ]
+            self.assertTrue(
+                any(
+                    event["stage"] == "repository" and event["status"] == "ERROR"
+                    for event in events
+                )
+            )
 
     def test_module_entrypoint_selects_projects_by_metadata_tag(self) -> None:
         result = subprocess.run(
@@ -164,12 +219,25 @@ class CiDriverTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual(
             report["projects"],
-            ['arduino-uno-status-led', 'raspberry-pi-status-led', 'status-indicator-harness-interface', 'status-indicator-wiring'],
+            [
+                "arduino-uno-status-led",
+                "raspberry-pi-status-led",
+                "status-indicator-harness-interface",
+                "status-indicator-wiring",
+            ],
         )
 
     def test_module_entrypoint_selects_an_indexed_product(self) -> None:
         result = subprocess.run(
-            [sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--product", "status-indicator-system"],
+            [
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.ci",
+                "--product",
+                "status-indicator-system",
+            ],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -202,8 +270,16 @@ class CiDriverTests(unittest.TestCase):
     def test_native_matrix_honors_product_and_excluded_tag(self) -> None:
         result = subprocess.run(
             [
-                sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--matrix",
-                "--product", "status-indicator-system", "--exclude-tag", "arduino",
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.ci",
+                "--matrix",
+                "--product",
+                "status-indicator-system",
+                "--exclude-tag",
+                "arduino",
             ],
             cwd=ROOT,
             capture_output=True,
@@ -223,17 +299,23 @@ class CiDriverTests(unittest.TestCase):
     def test_manual_impact_selectors_plan_only_requested_project_lanes(self) -> None:
         cases = (
             (("--select-project", "controller"), ["controller"]),
-            (("--select-product", "status-indicator-system"), [
-                "arduino-uno-status-led",
-                "raspberry-pi-status-led",
-                "status-indicator-harness-interface",
-                "status-indicator-wiring",
-            ]),
-            (("--select-tag", "status-led", "--exclude-tag", "arduino"), [
-                "raspberry-pi-status-led",
-                "status-indicator-harness-interface",
-                "status-indicator-wiring",
-            ]),
+            (
+                ("--select-product", "status-indicator-system"),
+                [
+                    "arduino-uno-status-led",
+                    "raspberry-pi-status-led",
+                    "status-indicator-harness-interface",
+                    "status-indicator-wiring",
+                ],
+            ),
+            (
+                ("--select-tag", "status-led", "--exclude-tag", "arduino"),
+                [
+                    "raspberry-pi-status-led",
+                    "status-indicator-harness-interface",
+                    "status-indicator-wiring",
+                ],
+            ),
         )
         for arguments, expected in cases:
             with self.subTest(arguments=arguments):
@@ -280,7 +362,9 @@ class CiDriverTests(unittest.TestCase):
 
     def test_metrics_text_reuses_the_read_only_summary(self) -> None:
         with (
-            patch.object(sys, "argv", ["ci.py", "--root", str(ROOT), "--metrics", "--format", "text"]),
+            patch.object(
+                sys, "argv", ["ci.py", "--root", str(ROOT), "--metrics", "--format", "text"]
+            ),
             patch("sys.stdout", new_callable=StringIO) as output,
         ):
             self.assertEqual(main(), 0)
@@ -306,8 +390,12 @@ class CiDriverTests(unittest.TestCase):
             self.assertEqual(main(), 0)
         self.assertEqual(json.loads(output.getvalue())["lane"], "TEMPLATE_METRICS")
 
-    def test_native_workflow_passes_the_selected_project_and_uses_declared_dependencies(self) -> None:
-        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+    def test_native_workflow_passes_the_selected_project_and_uses_declared_dependencies(
+        self,
+    ) -> None:
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(
+            encoding="utf-8"
+        )
         native = workflow.split("  kicad:\n", 1)[1].split("  release-rehearsal:\n", 1)[0]
         self.assertIn('kicad_tooling.ci_hosted native --project "$PROJECT_ID"', native)
         self.assertIn('--image "$KICAD_IMAGE" --pr-head "$PR_HEAD"', native)
@@ -315,44 +403,67 @@ class CiDriverTests(unittest.TestCase):
         self.assertNotIn("docker run", native)
         self.assertNotIn("kicad_tooling.native_deps", native)
         self.assertNotIn("pydantic==", workflow)
-        self.assertIn("needs: [scope, project-matrix, python-tests, kicad, release-rehearsal]", workflow)
+        self.assertIn(
+            "needs: [scope, project-matrix, python-tests, kicad, release-rehearsal]", workflow
+        )
 
     def test_hosted_native_and_release_work_do_not_wait_for_windows(self) -> None:
-        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(
+            encoding="utf-8"
+        )
         native = workflow.split("  kicad:\n", 1)[1].split("  release-rehearsal:\n", 1)[0]
-        release = workflow.split("  release-rehearsal:\n", 1)[1].split("  engineering-gate:\n", 1)[0]
+        release = workflow.split("  release-rehearsal:\n", 1)[1].split("  engineering-gate:\n", 1)[
+            0
+        ]
         self.assertIn("needs: [scope, project-matrix]", native)
         self.assertIn("needs: [scope, kicad]", release)
         self.assertNotIn("python-tests", native)
         self.assertNotIn("python-tests", release)
 
     def test_hosted_scope_runs_focused_prs_and_full_main_or_manual_checks(self) -> None:
-        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(
+            encoding="utf-8"
+        )
         scope = workflow.split("  scope:\n", 1)[1].split("  project-matrix:\n", 1)[0]
         matrix = workflow.split("  project-matrix:\n", 1)[1].split("  python-tests:\n", 1)[0]
         portable = workflow.split("  python-tests:\n", 1)[1].split("  kicad:\n", 1)[0]
-        release = workflow.split("  release-rehearsal:\n", 1)[1].split("  engineering-gate:\n", 1)[0]
+        release = workflow.split("  release-rehearsal:\n", 1)[1].split("  engineering-gate:\n", 1)[
+            0
+        ]
         self.assertIn("fetch-depth: 0", scope)
-        self.assertIn('kicad_tooling.ci_hosted plan --event "$EVENT_NAME" --base "$BASE_SHA"', scope)
+        self.assertIn(
+            'kicad_tooling.ci_hosted plan --event "$EVENT_NAME" --base "$BASE_SHA"', scope
+        )
         self.assertIn('--focus "$DISPATCH_FOCUS" --value "$DISPATCH_VALUE"', scope)
-        self.assertIn('kicad_tooling.ci_hosted matrix --scope "$CHECK_SCOPE" --projects "$CI_PROJECTS"', matrix)
+        self.assertIn(
+            'kicad_tooling.ci_hosted matrix --scope "$CHECK_SCOPE" --projects "$CI_PROJECTS"',
+            matrix,
+        )
         self.assertIn("needs.scope.outputs.scope != 'docs'", matrix)
-        self.assertIn('fromJSON(needs.scope.outputs.portable-matrix)', portable)
+        self.assertIn("fromJSON(needs.scope.outputs.portable-matrix)", portable)
         self.assertIn('kicad_tooling.ci_hosted portable --scope "$CHECK_SCOPE"', portable)
         self.assertIn('--projects "$CI_PROJECTS" --docs-changed "$DOCS_CHANGED" --jobs 4', portable)
         self.assertIn("timeout-minutes: 13", portable)
         self.assertIn("cache-dependency-path: requirements-tooling.txt", portable)
         self.assertIn("if: matrix.os != 'windows-2022'", portable)
-        self.assertIn("pip install --disable-pip-version-check -r requirements-tooling.txt", portable)
+        self.assertIn(
+            "pip install --disable-pip-version-check -r requirements-tooling.txt", portable
+        )
         self.assertNotIn("kicad_tooling.ci_hosted windows-types", portable)
         self.assertIn("kicad_tooling.ci_hosted windows-smoke", portable)
         self.assertIn("kicad_tooling.ci_hosted source-clean", portable)
-        self.assertIn("if: needs.scope.outputs.scope == 'full' && matrix.os != 'windows-2022'", portable)
-        self.assertIn("if: needs.scope.outputs.scope == 'full' && needs.kicad.result == 'success'", release)
+        self.assertIn(
+            "if: needs.scope.outputs.scope == 'full' && matrix.os != 'windows-2022'", portable
+        )
+        self.assertIn(
+            "if: needs.scope.outputs.scope == 'full' && needs.kicad.result == 'success'", release
+        )
         self.assertIn("kicad_tooling.ci_hosted release", release)
 
     def test_manual_dispatch_wires_typed_focus_inputs_into_the_planner(self) -> None:
-        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(
+            encoding="utf-8"
+        )
         caller = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
         dispatch = caller.split("  workflow_dispatch:\n", 1)[1].split("  push:\n", 1)[0]
         scope = workflow.split("  scope:\n", 1)[1].split("  project-matrix:\n", 1)[0]
@@ -366,13 +477,19 @@ class CiDriverTests(unittest.TestCase):
         self.assertIn('--exclude-tag "$DISPATCH_EXCLUDE_TAG" --shard "$DISPATCH_SHARD"', scope)
 
     def test_workflow_delegates_policy_work_to_the_driver(self) -> None:
-        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(
+            encoding="utf-8"
+        )
         self.assertNotRegex(workflow, r"\bpython(?:3)?\s+(?!-m\b)[^\n]*tools[/\\][^\n]*\.py")
-        for embedded in ("docker run", "<<'PY'", 'case "$CHECK_SCOPE"',
-                         "tools/ci.py", "tools/check_all.py"):
+        for embedded in (
+            "docker run",
+            "<<'PY'",
+            'case "$CHECK_SCOPE"',
+            "tools/ci.py",
+            "tools/check_all.py",
+        ):
             self.assertNotIn(embedded, workflow)
-        for mode in ("plan", "matrix", "portable", "windows-smoke",
-                     "native", "release", "gate"):
+        for mode in ("plan", "matrix", "portable", "windows-smoke", "native", "release", "gate"):
             self.assertIn(f"kicad_tooling.ci_hosted {mode}", workflow)
         self.assertLessEqual(len(workflow.splitlines()), 275)
 
@@ -384,7 +501,9 @@ class CiDriverTests(unittest.TestCase):
         self.assertEqual(policy.count("open-pull-requests-limit: 3"), 2)
 
     def test_final_hosted_gate_rejects_incomplete_results(self) -> None:
-        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("run: python -I -B -m kicad_tooling.ci_hosted gate", workflow)
         baselines = (
             ("success", "docs", "success", "skipped", "skipped", "", "skipped"),

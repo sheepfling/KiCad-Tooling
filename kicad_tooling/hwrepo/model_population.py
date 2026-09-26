@@ -1,4 +1,5 @@
 """Explicit, source-preserving assignment of reviewed PCB 3D model files."""
+
 from __future__ import annotations
 
 import difflib
@@ -46,14 +47,19 @@ def _digest(value: bytes) -> str:
 
 
 def _diff(before: str, after: str, name: str) -> str:
-    return "".join(difflib.unified_diff(
-        before.splitlines(keepends=True), after.splitlines(keepends=True),
-        fromfile=f"a/{name}", tofile=f"b/{name}",
-    ))
+    return "".join(
+        difflib.unified_diff(
+            before.splitlines(keepends=True),
+            after.splitlines(keepends=True),
+            fromfile=f"a/{name}",
+            tofile=f"b/{name}",
+        )
+    )
 
 
-def _model_path(root: Path, manifest_dir: Path, board_dir: Path,
-                manifest: ProjectManifest, name: str) -> tuple[Path, str, str, str]:
+def _model_path(
+    root: Path, manifest_dir: Path, board_dir: Path, manifest: ProjectManifest, name: str
+) -> tuple[Path, str, str, str]:
     if Path(name).suffix.casefold() not in AUTHORABLE_SUFFIXES:
         raise ValueError(
             f"{name}: assign STEP/STP/IGS/IGES/WRL source; IDF and exports are not viewable model inputs"
@@ -72,13 +78,14 @@ def _model_path(root: Path, manifest_dir: Path, board_dir: Path,
             f"{name}: model must belong to exactly one declared project-local or shared source root"
         )
     inventory_field = "required_inputs" if local else "shared_inputs"
-    inventory_name = (path.relative_to(manifest_dir).as_posix() if local else name)
+    inventory_name = path.relative_to(manifest_dir).as_posix() if local else name
     relative = Path(os.path.relpath(path, board_dir)).as_posix()
     return path, inventory_field, inventory_name, "${KIPRJMOD}/" + relative
 
 
-def _validate_shared_roots(root: Path, registry: ProjectRegistry,
-                           manifest: ProjectManifest) -> None:
+def _validate_shared_roots(
+    root: Path, registry: ProjectRegistry, manifest: ProjectManifest
+) -> None:
     """Accept shared model roots only through this project's registered libraries."""
     catalog = read_model(repo_path(root, registry.catalogs.libraries), LibrariesCatalog)
     libraries = {item.id: item for item in catalog.libraries}
@@ -101,8 +108,11 @@ def _validate_shared_roots(root: Path, registry: ProjectRegistry,
 
 
 def _require_shared_consumer_inventory(
-    root: Path, registry: ProjectRegistry, selected_config: str,
-    manifest: ProjectManifest, models: set[str],
+    root: Path,
+    registry: ProjectRegistry,
+    selected_config: str,
+    manifest: ProjectManifest,
+    models: set[str],
 ) -> None:
     """Do not introduce a shared asset that another consumer has not inventoried."""
     if not models:
@@ -114,8 +124,7 @@ def _require_shared_consumer_inventory(
     model_roots: dict[str, str] = {}
     for model in models:
         matches = [
-            source for source in manifest.shared_source_roots
-            if model.startswith(f"{source}/")
+            source for source in manifest.shared_source_roots if model.startswith(f"{source}/")
         ]
         if len(matches) != 1:
             raise ValueError(f"Shared model has no unique registered library root: {model}")
@@ -134,8 +143,7 @@ def _require_shared_consumer_inventory(
                 missing.append((consumer.config, model))
     if missing:
         repairs = "\n".join(
-            f"  {config}: add {model} to shared_inputs"
-            for config, model in sorted(missing)
+            f"  {config}: add {model} to shared_inputs" for config, model in sorted(missing)
         )
         raise ValueError(
             "Shared model is not inventoried by every consumer of its registered library. "
@@ -143,8 +151,7 @@ def _require_shared_consumer_inventory(
         )
 
 
-def _board_edits(source: str, assignments: ModelMap,
-                 model_references: dict[str, str]) -> str:
+def _board_edits(source: str, assignments: ModelMap, model_references: dict[str, str]) -> str:
     roots = _children(source, 0, len(source))
     if len(roots) != 1 or _atoms(source, roots[0])[:1] != ("kicad_pcb",):
         raise ValueError("Expected exactly one kicad_pcb root expression")
@@ -169,7 +176,9 @@ def _board_edits(source: str, assignments: ModelMap,
         if reference not in wanted:
             continue
         if reference in found:
-            raise ValueError(f"Duplicate placed footprint reference {reference!r}; cannot assign safely")
+            raise ValueError(
+                f"Duplicate placed footprint reference {reference!r}; cannot assign safely"
+            )
         if models:
             raise ValueError(
                 f"{reference}: footprint already has a model assignment; edit it in KiCad instead"
@@ -177,7 +186,7 @@ def _board_edits(source: str, assignments: ModelMap,
         reference_path = model_references[reference]
         expression = (
             f'(model "{reference_path}" (offset (xyz 0 0 0)) '
-            '(scale (xyz 1 1 1)) (rotate (xyz 0 0 0)))'
+            "(scale (xyz 1 1 1)) (rotate (xyz 0 0 0)))"
         )
         # Insert at the containing footprint's closing parenthesis. Leave all
         # existing KiCad source bytes and their ordering untouched.
@@ -186,7 +195,7 @@ def _board_edits(source: str, assignments: ModelMap,
         before_close = source[line_start:close]
         if before_close.strip():
             opening_line = source.rfind("\n", 0, node.start) + 1
-            opening_indent = source[opening_line:node.start]
+            opening_indent = source[opening_line : node.start]
             if opening_indent.strip():
                 opening_indent = ""
             insertion = f"\n{opening_indent}  {expression}\n{opening_indent}"
@@ -250,9 +259,15 @@ def render_population_text(report: ModelPopulationReport) -> str:
     return "\n".join(lines)
 
 
-def populate_models(root: Path, project_id: str, map_path: Path | ModelMap, *,
-                    apply: bool = False, output: Path | None = None,
-                    reviewed_plan: ModelPopulationReport | None = None) -> ModelPopulationReport:
+def populate_models(
+    root: Path,
+    project_id: str,
+    map_path: Path | ModelMap,
+    *,
+    apply: bool = False,
+    output: Path | None = None,
+    reviewed_plan: ModelPopulationReport | None = None,
+) -> ModelPopulationReport:
     """Plan or apply only explicit, hash-bound model references and inventory entries."""
     root = root.resolve()
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", project_id) is None:
@@ -274,11 +289,16 @@ def populate_models(root: Path, project_id: str, map_path: Path | ModelMap, *,
     locked_map: str | None = None
     try:
         with journal.stage("map-and-project"):
-            spec = (map_path if isinstance(map_path, ModelMap) else
-                    read_model(map_path if map_path.is_absolute() else root / map_path, ModelMap))
+            spec = (
+                map_path
+                if isinstance(map_path, ModelMap)
+                else read_model(map_path if map_path.is_absolute() else root / map_path, ModelMap)
+            )
             journal.save_model("model-map", spec)
             if reviewed_plan is not None and (
-                not apply or reviewed_plan.status != "PLAN" or reviewed_plan.project_id != project_id
+                not apply
+                or reviewed_plan.status != "PLAN"
+                or reviewed_plan.project_id != project_id
             ):
                 raise ValueError("Apply requires a PLAN receipt for the selected project")
             if spec.project_id != project_id:
@@ -330,7 +350,11 @@ def populate_models(root: Path, project_id: str, map_path: Path | ModelMap, *,
                         "unneeded assignment from the draft map"
                     )
                 path, field, inventory_name, reference = _model_path(
-                    root, manifest_path.parent, board_path.parent, manifest, item.model,
+                    root,
+                    manifest_path.parent,
+                    board_path.parent,
+                    manifest,
+                    item.model,
                 )
                 additions[field].add(inventory_name)
                 references[item.reference] = reference
@@ -343,7 +367,11 @@ def populate_models(root: Path, project_id: str, map_path: Path | ModelMap, *,
                 model_hashes[item.model] = digest
                 locked_assignments.append(item.model_copy(update={"model_sha256": digest}))
             _require_shared_consumer_inventory(
-                root, registry, manifest_name, manifest, additions["shared_inputs"],
+                root,
+                registry,
+                manifest_name,
+                manifest,
+                additions["shared_inputs"],
             )
             source = board_before.decode("utf-8")
             manifest_source = manifest_before.decode("utf-8")
@@ -360,14 +388,17 @@ def populate_models(root: Path, project_id: str, map_path: Path | ModelMap, *,
                 or reviewed_plan.board_diff != board_diff
                 or reviewed_plan.manifest_diff != manifest_diff
             ):
-                raise ValueError("Source or model map changed since the reviewed plan; preview again")
+                raise ValueError(
+                    "Source or model map changed since the reviewed plan; preview again"
+                )
             (journal.directory / "board.diff").write_text(board_diff, encoding="utf-8")
             (journal.directory / "manifest.diff").write_text(manifest_diff, encoding="utf-8")
             if not apply:
                 locked_path = journal.directory / "locked-model-map.json"
                 locked_spec = spec.model_copy(update={"assignments": tuple(locked_assignments)})
-                locked_path.write_text(locked_spec.model_dump_json(indent=2) + "\n",
-                                       encoding="utf-8")
+                locked_path.write_text(
+                    locked_spec.model_dump_json(indent=2) + "\n", encoding="utf-8"
+                )
                 locked_map = str(locked_path)
         status: Literal["DRAFT", "PLAN", "APPLIED", "FAIL", "ERROR"] = "PLAN"
         if apply:
@@ -380,12 +411,19 @@ def populate_models(root: Path, project_id: str, map_path: Path | ModelMap, *,
                     if _digest(repo_path(root, name).read_bytes()) != digest:
                         raise ValueError(f"Model source changed after planning: {name}")
                 _require_shared_consumer_inventory(
-                    root, registry, manifest_name, manifest, additions["shared_inputs"],
+                    root,
+                    registry,
+                    manifest_name,
+                    manifest,
+                    additions["shared_inputs"],
                 )
                 try:
                     _replace_bytes(board_path, board_after)
                     _replace_bytes(manifest_path, manifest_after)
-                    if board_path.read_bytes() != board_after or manifest_path.read_bytes() != manifest_after:
+                    if (
+                        board_path.read_bytes() != board_after
+                        or manifest_path.read_bytes() != manifest_after
+                    ):
                         raise ValueError("Source readback differs from the reviewed edit")
                 except (OSError, ValueError):
                     # Restore only our exact bytes; never overwrite a separate editor's update.
@@ -398,50 +436,78 @@ def populate_models(root: Path, project_id: str, map_path: Path | ModelMap, *,
                     raise
                 status = "APPLIED"
         next_commands = (
-            f"python -B -m kicad_tooling.verify --project {project_id} --depth native",
-            f"python -B -m kicad_tooling.visualize --project {project_id} --check-models",
-            f"python -B -m kicad_tooling.visualize --project {project_id}",
-        ) if apply else (
             (
-                f"python -B -m kicad_tooling.visualize --project {project_id} --map-models "
-                f"{locked_map} --apply"
-            ),
+                f"python -B -m kicad_tooling.verify --project {project_id} --depth native",
+                f"python -B -m kicad_tooling.visualize --project {project_id} --check-models",
+                f"python -B -m kicad_tooling.visualize --project {project_id}",
+            )
+            if apply
+            else (
+                (
+                    f"python -B -m kicad_tooling.visualize --project {project_id} --map-models "
+                    f"{locked_map} --apply"
+                ),
+            )
         )
         result = ModelPopulationReport(
-            status=status, project_id=project_id, run_directory=str(journal.directory),
-            board=board_name, manifest=manifest_name, board_sha256=board_digest,
-            manifest_sha256=manifest_digest, model_sha256=model_hashes, locked_map=locked_map,
-            board_diff=board_diff, manifest_diff=manifest_diff,
+            status=status,
+            project_id=project_id,
+            run_directory=str(journal.directory),
+            board=board_name,
+            manifest=manifest_name,
+            board_sha256=board_digest,
+            manifest_sha256=manifest_digest,
+            model_sha256=model_hashes,
+            locked_map=locked_map,
+            board_diff=board_diff,
+            manifest_diff=manifest_diff,
             next_commands=next_commands,
         )
     except (OSError, ValueError, UnicodeError) as exc:
         result = ModelPopulationReport(
-            status="FAIL", project_id=project_id, run_directory=str(journal.directory),
-            board=board_name, manifest=manifest_name, board_sha256=board_digest,
-            manifest_sha256=manifest_digest, model_sha256=model_hashes,
-            board_diff=board_diff, manifest_diff=manifest_diff, error=str(exc),
+            status="FAIL",
+            project_id=project_id,
+            run_directory=str(journal.directory),
+            board=board_name,
+            manifest=manifest_name,
+            board_sha256=board_digest,
+            manifest_sha256=manifest_digest,
+            model_sha256=model_hashes,
+            board_diff=board_diff,
+            manifest_diff=manifest_diff,
+            error=str(exc),
         )
     except Exception as exc:  # noqa: BLE001 - retain a tooling-fault receipt for agent diagnosis
         journal.fail(exc)
         result = ModelPopulationReport(
-            status="ERROR", project_id=project_id, run_directory=str(journal.directory),
-            board=board_name, manifest=manifest_name, board_sha256=board_digest,
-            manifest_sha256=manifest_digest, model_sha256=model_hashes,
-            board_diff=board_diff, manifest_diff=manifest_diff, error=str(exc),
+            status="ERROR",
+            project_id=project_id,
+            run_directory=str(journal.directory),
+            board=board_name,
+            manifest=manifest_name,
+            board_sha256=board_digest,
+            manifest_sha256=manifest_digest,
+            model_sha256=model_hashes,
+            board_diff=board_diff,
+            manifest_diff=manifest_diff,
+            error=str(exc),
         )
     journal.finish_named("model-population", result, render_population_text(result), result.status)
     return result
 
 
-def init_model_map(root: Path, project_id: str, destination: Path, *,
-                   output: Path | None = None) -> ModelPopulationReport:
+def init_model_map(
+    root: Path, project_id: str, destination: Path, *, output: Path | None = None
+) -> ModelPopulationReport:
     """Write an ignored, unapproved map draft with hashes and candidate hints."""
     root = root.resolve()
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", project_id) is None:
         raise ValueError("Project ID must use letters, digits, periods, underscores or hyphens")
     destination = root / destination if not destination.is_absolute() else destination
     if not destination.is_relative_to(root / "build") or destination.suffix != ".json":
-        raise ValueError("Draft model map must be a JSON file under this repository's ignored build/")
+        raise ValueError(
+            "Draft model map must be a JSON file under this repository's ignored build/"
+        )
     destination = repo_path(root, destination.relative_to(root).as_posix())
     repo_path(root, "build/diagnostics")
     if output is not None:
@@ -457,13 +523,20 @@ def init_model_map(root: Path, project_id: str, destination: Path, *,
     try:
         with journal.stage("draft-map"):
             reserved_receipts = {
-                "run.json", "events.log", "error.txt", "model-population.json",
-                "model-population.txt", "board.diff", "manifest.diff",
+                "run.json",
+                "events.log",
+                "error.txt",
+                "model-population.json",
+                "model-population.txt",
+                "board.diff",
+                "manifest.diff",
                 "locked-model-map.json",
             }
             if destination.parent == journal.directory and destination.name in reserved_receipts:
                 raise ValueError(f"Draft map path collides with receipt file: {destination.name}")
-            record = next((item for item in load_registry(root).projects if item.id == project_id), None)
+            record = next(
+                (item for item in load_registry(root).projects if item.id == project_id), None
+            )
             if record is None or record.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
                 raise ValueError(f"Select a registered PCB or PCB-only project: {project_id}")
             manifest_name = record.config
@@ -482,10 +555,17 @@ def init_model_map(root: Path, project_id: str, destination: Path, *,
             if len(refs) != len(set(refs)) or any(ref.startswith("<unknown") for ref in refs):
                 raise ValueError("Board has duplicate or unreadable references; repair it in KiCad")
             payload = ModelMap(
-                project_id=project_id, board_sha256=board_digest, manifest_sha256=manifest_digest,
-                assignments=tuple(ModelMapAssignment(
-                    reference=item.reference, model="", candidate_assets=item.candidate_assets,
-                ) for item in unassigned),
+                project_id=project_id,
+                board_sha256=board_digest,
+                manifest_sha256=manifest_digest,
+                assignments=tuple(
+                    ModelMapAssignment(
+                        reference=item.reference,
+                        model="",
+                        candidate_assets=item.candidate_assets,
+                    )
+                    for item in unassigned
+                ),
             )
             destination.parent.mkdir(parents=True, exist_ok=True)
             descriptor, name = tempfile.mkstemp(prefix=".draft-model-map-", dir=destination.parent)
@@ -500,9 +580,14 @@ def init_model_map(root: Path, project_id: str, destination: Path, *,
                 staged.unlink(missing_ok=True)
             journal.event("draft-map", "SAVED", str(destination))
         result = ModelPopulationReport(
-            status="DRAFT", project_id=project_id, run_directory=str(journal.directory),
-            board=board_name, manifest=manifest_name, board_sha256=board_digest,
-            manifest_sha256=manifest_digest, draft_map=str(destination),
+            status="DRAFT",
+            project_id=project_id,
+            run_directory=str(journal.directory),
+            board=board_name,
+            manifest=manifest_name,
+            board_sha256=board_digest,
+            manifest_sha256=manifest_digest,
+            draft_map=str(destination),
             next_commands=(
                 "Choose exact reviewed model files for desired references in the draft map.",
                 f"python -B -m kicad_tooling.visualize --project {project_id} --map-models {destination}",
@@ -510,16 +595,26 @@ def init_model_map(root: Path, project_id: str, destination: Path, *,
         )
     except (OSError, ValueError, UnicodeError) as exc:
         result = ModelPopulationReport(
-            status="FAIL", project_id=project_id, run_directory=str(journal.directory),
-            board=board_name, manifest=manifest_name, board_sha256=board_digest,
-            manifest_sha256=manifest_digest, error=str(exc),
+            status="FAIL",
+            project_id=project_id,
+            run_directory=str(journal.directory),
+            board=board_name,
+            manifest=manifest_name,
+            board_sha256=board_digest,
+            manifest_sha256=manifest_digest,
+            error=str(exc),
         )
     except Exception as exc:  # noqa: BLE001 - retain a tooling-fault receipt for agent diagnosis
         journal.fail(exc)
         result = ModelPopulationReport(
-            status="ERROR", project_id=project_id, run_directory=str(journal.directory),
-            board=board_name, manifest=manifest_name, board_sha256=board_digest,
-            manifest_sha256=manifest_digest, error=str(exc),
+            status="ERROR",
+            project_id=project_id,
+            run_directory=str(journal.directory),
+            board=board_name,
+            manifest=manifest_name,
+            board_sha256=board_digest,
+            manifest_sha256=manifest_digest,
+            error=str(exc),
         )
     journal.finish_named("model-population", result, render_population_text(result), result.status)
     return result

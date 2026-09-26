@@ -1,4 +1,5 @@
 """Typed-contract tests: raw JSON exists only here at the file boundary."""
+
 from __future__ import annotations
 
 import json
@@ -106,7 +107,9 @@ class TypedContractsTests(unittest.TestCase):
         document = '[{"requestedPartNumber":"NE555P","quantities":[{"quantity":2}],"customerReference":"U1","notes":"Demo"}]'
         payload = parse_model(document, DigiKeyHandoffPayload)
         self.assertEqual(payload.root[0].quantities[0].quantity, 2)
-        self.assertEqual(parse_model(payload.model_dump_json(by_alias=True), DigiKeyHandoffPayload), payload)
+        self.assertEqual(
+            parse_model(payload.model_dump_json(by_alias=True), DigiKeyHandoffPayload), payload
+        )
         with self.assertRaises(ValidationError):
             payload.root = ()
         for invalid in (
@@ -119,9 +122,11 @@ class TypedContractsTests(unittest.TestCase):
         ):
             with self.subTest(document=invalid), self.assertRaises(ValueError):
                 parse_model(invalid, DigiKeyHandoffPayload)
-        self.assertEqual(parse_model('"https://www.digikey.com/short/abc1234"', DigiKeyHandoffUrl).root,
-                         "https://www.digikey.com/short/abc1234")
-        for invalid in ('1', 'true', 'null', '{}', '[]'):
+        self.assertEqual(
+            parse_model('"https://www.digikey.com/short/abc1234"', DigiKeyHandoffUrl).root,
+            "https://www.digikey.com/short/abc1234",
+        )
+        for invalid in ("1", "true", "null", "{}", "[]"):
             with self.subTest(document=invalid), self.assertRaises(ValueError):
                 parse_model(invalid, DigiKeyHandoffUrl)
 
@@ -137,15 +142,11 @@ class TypedContractsTests(unittest.TestCase):
         self.assertIn("PART_REF", self.codes(product))
 
         bad_terminal = self.product.terminals[0].model_copy(update={"pin": "999"})
-        product = self.product_with(
-            terminals=(bad_terminal, *self.product.terminals[1:])
-        )
+        product = self.product_with(terminals=(bad_terminal, *self.product.terminals[1:]))
         self.assertIn("KICAD_TERMINAL", self.codes(product))
 
         duplicate_wire = self.product.connections[0].model_copy(update={"id": "C-OTHER"})
-        product = self.product_with(
-            connections=(*self.product.connections, duplicate_wire)
-        )
+        product = self.product_with(connections=(*self.product.connections, duplicate_wire))
         self.assertIn("TERMINAL_ALLOCATION", self.codes(product))
 
     def test_relationship_variant_harness_and_mechanical_rules_remain_typed(self) -> None:
@@ -156,15 +157,11 @@ class TypedContractsTests(unittest.TestCase):
         self.assertIn("HARNESS_REF", self.codes(product))
 
         invalid_variant = self.product.variants[0].model_copy(update={"exclude": ("UNO",)})
-        product = self.product_with(
-            variants=(invalid_variant, *self.product.variants[1:])
-        )
+        product = self.product_with(variants=(invalid_variant, *self.product.variants[1:]))
         self.assertIn("VARIANT_ENDPOINT", self.codes(product))
 
         bad_handoff = self.product.mechanical[0].model_copy(update={"instances": ("MISSING",)})
-        product = self.product_with(
-            mechanical=(bad_handoff,)
-        )
+        product = self.product_with(mechanical=(bad_handoff,))
         self.assertIn("MECHANICAL_INSTANCE", self.codes(product))
 
     def test_deterministic_bom_has_typed_rows_and_functional_links_are_excluded(self) -> None:
@@ -198,11 +195,16 @@ class TypedContractsTests(unittest.TestCase):
         self.assertEqual(drift(root), ())
         target = root / "examples/products/status-indicator-system/build/STANDARD.bom.csv"
         target.write_text("stale", encoding="utf-8")
-        self.assertIn("GENERATION_DRIFT: examples/products/status-indicator-system/build/STANDARD.bom.csv", drift(root))
+        self.assertIn(
+            "GENERATION_DRIFT: examples/products/status-indicator-system/build/STANDARD.bom.csv",
+            drift(root),
+        )
 
     def test_library_sbom_is_deterministic_and_retains_evidence_hashes(self) -> None:
         sbom = library_sbom(ROOT)
-        self.assertEqual([library.id for library in sbom.libraries], ["library-status-led-training"])
+        self.assertEqual(
+            [library.id for library in sbom.libraries], ["library-status-led-training"]
+        )
         self.assertFalse(sbom.build_authorized)
         catalog = read_model(ROOT / "catalog/libraries.json", LibrariesCatalog)
         self.assertEqual(

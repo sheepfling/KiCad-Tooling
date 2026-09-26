@@ -3,6 +3,7 @@
 Raw JSON is decoded here only. Callers must immediately validate it into a
 Pydantic model from hwrepo.models; dictionaries do not cross this boundary.
 """
+
 from __future__ import annotations
 
 import json
@@ -43,7 +44,9 @@ def parse_model_text(document: str, model: type[Model]) -> Model:
 def validate_json_object(document: str) -> None:
     """Check JSON object shape without returning untyped native-settings data."""
     decoded: object = json.loads(
-        document, object_pairs_hook=_unique_object, parse_constant=_invalid_number,
+        document,
+        object_pairs_hook=_unique_object,
+        parse_constant=_invalid_number,
     )
     if not isinstance(decoded, dict):
         raise TypeError("JSON document must be an object")
@@ -66,8 +69,11 @@ def read_model(path: Path, model: type[Model]) -> Model:
 def _read_external_json(path: Path) -> object:
     """Decode unowned KiCad JSON only at this I/O boundary."""
     try:
-        return json.loads(path.read_text(encoding="utf-8"),
-                          object_pairs_hook=_unique_object, parse_constant=_invalid_number)
+        return json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_unique_object,
+            parse_constant=_invalid_number,
+        )
     except (OSError, UnicodeError, ValueError) as exc:
         raise ValueError(f"{path}: invalid KiCad JSON: {exc}") from exc
 
@@ -85,8 +91,10 @@ def kicad_variant_names(path: Path) -> tuple[str, ...]:
         raise ValueError(f"{path}: schematic.variants is not a list")  # noqa: TRY004 - input boundary
     names: list[str] = []
     for item in cast(list[object], variants):
-        value: object = item if isinstance(item, str) else (
-            cast(dict[str, object], item).get("name") if isinstance(item, dict) else None
+        value: object = (
+            item
+            if isinstance(item, str)
+            else (cast(dict[str, object], item).get("name") if isinstance(item, dict) else None)
         )
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"{path}: schematic.variants contains a nameless entry")
@@ -111,17 +119,23 @@ def read_kicad_import_summary(path: Path) -> KiCadForeignImportSummary:
     layer_mapping = values.get("layer_mapping")
     errors = values.get("errors")
     warnings = values.get("warnings")
-    if (not isinstance(source_format, str) or not source_format.strip()
-            or not isinstance(layer_mapping, dict) or not isinstance(errors, list)
-            or not isinstance(warnings, list)):
+    if (
+        not isinstance(source_format, str)
+        or not source_format.strip()
+        or not isinstance(layer_mapping, dict)
+        or not isinstance(errors, list)
+        or not isinstance(warnings, list)
+    ):
         raise ValueError(f"{path}: import report lacks format, layer map, errors or warnings")
 
     def messages(items: list[object]) -> tuple[str, ...]:
-        return tuple(item if isinstance(item, str) else json.dumps(item, sort_keys=True)
-                     for item in items)
+        return tuple(
+            item if isinstance(item, str) else json.dumps(item, sort_keys=True) for item in items
+        )
 
     return KiCadForeignImportSummary(
-        source_format=source_format, mapped_layers=len(cast(dict[str, object], layer_mapping)),
+        source_format=source_format,
+        mapped_layers=len(cast(dict[str, object], layer_mapping)),
         errors=messages(cast(list[object], errors)),
         warnings=messages(cast(list[object], warnings)),
     )
@@ -140,7 +154,9 @@ def update_project_manifest_inputs(document: str, additions: dict[str, set[str]]
     from .models import ProjectManifest
 
     raw = json.loads(
-        document, object_pairs_hook=_unique_object, parse_constant=_invalid_number,
+        document,
+        object_pairs_hook=_unique_object,
+        parse_constant=_invalid_number,
     )
     manifest = ProjectManifest.model_validate_json(document, strict=True)
     for field in ("required_inputs", "shared_inputs"):
@@ -166,7 +182,10 @@ def repo_path(root: Path, value: str) -> Path:
     root = root.resolve()
     current = root
     reserved = {
-        "CON", "PRN", "AUX", "NUL",
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
         *(f"COM{i}" for i in range(1, 10)),
         *(f"LPT{i}" for i in range(1, 10)),
     }
@@ -184,9 +203,7 @@ def repo_path(root: Path, value: str) -> Path:
             }:
                 raise ValueError(f"Path case mismatch: {value!r}")
         current = current / component
-        if current.is_symlink() or (
-            current.exists() and current.resolve() != current.absolute()
-        ):
+        if current.is_symlink() or (current.exists() and current.resolve() != current.absolute()):
             raise ValueError(f"Linked repository path: {value!r}")
     if root not in current.resolve().parents:
         raise ValueError(f"Escaping repository path: {value!r}")
@@ -194,7 +211,9 @@ def repo_path(root: Path, value: str) -> Path:
 
 
 def update_project_manifest_parts(
-    document: str, part_ids: tuple[str, ...], additions: dict[str, set[str]],
+    document: str,
+    part_ids: tuple[str, ...],
+    additions: dict[str, set[str]],
     remove_part_ids: tuple[str, ...] = (),
 ) -> str:
     """Update reviewed identities and model inputs, retaining other authored JSON fields."""
@@ -224,23 +243,33 @@ def parse_easyeda_identity(document: str) -> CadProviderIdentity:
         result = raw["result"]
         parameters = result["dataStr"]["head"]["c_para"]
         shapes = TypeAdapter(list[str]).validate_python(
-            result["packageDetail"]["dataStr"]["shape"], strict=True,
+            result["packageDetail"]["dataStr"]["shape"],
+            strict=True,
         )
-        models = [shape.removeprefix("SVGNODE~") for shape in shapes if shape.startswith("SVGNODE~")]
+        models = [
+            shape.removeprefix("SVGNODE~") for shape in shapes if shape.startswith("SVGNODE~")
+        ]
         if len(models) != 1:
             raise ValueError("The provider footprint must have exactly one paired 3D model")
-        node = json.loads(models[0], object_pairs_hook=_unique_object, parse_constant=_invalid_number)
+        node = json.loads(
+            models[0], object_pairs_hook=_unique_object, parse_constant=_invalid_number
+        )
         if not isinstance(node["attrs"], dict):
             raise TypeError("The provider model attributes have an unsupported format")
-        return CadProviderIdentity.model_validate({
-            "supplier_id": result["lcsc"]["number"],
-            "component_supplier_id": parameters["Supplier Part"],
-            "manufacturer": parameters["Manufacturer"],
-            "mpn": parameters["Manufacturer Part"],
-            "package": parameters["package"],
-            "symbol_name": parameters["name"],
-            "model_uuid": node["attrs"]["uuid"],
-            "model_title": node["attrs"].get("title", ""),
-        }, strict=True)
+        return CadProviderIdentity.model_validate(
+            {
+                "supplier_id": result["lcsc"]["number"],
+                "component_supplier_id": parameters["Supplier Part"],
+                "manufacturer": parameters["Manufacturer"],
+                "mpn": parameters["Manufacturer Part"],
+                "package": parameters["package"],
+                "symbol_name": parameters["name"],
+                "model_uuid": node["attrs"]["uuid"],
+                "model_title": node["attrs"].get("title", ""),
+            },
+            strict=True,
+        )
     except (KeyError, IndexError, TypeError) as error:
-        raise ValueError("The CAD provider returned incomplete or unsupported component metadata") from error
+        raise ValueError(
+            "The CAD provider returned incomplete or unsupported component metadata"
+        ) from error

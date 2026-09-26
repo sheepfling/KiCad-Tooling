@@ -1,4 +1,5 @@
 """Human summaries and machine JSON remain distinct CLI contracts."""
+
 from __future__ import annotations
 
 import json
@@ -27,7 +28,9 @@ from kicad_tooling.template import main as template_main
 class CliOutputTests(unittest.TestCase):
     def test_documentation_issue_keeps_file_and_line(self) -> None:
         issue = DocumentationIssue(
-            code="MD001", path="projects/board/docs/notes.md", line=12,
+            code="MD001",
+            path="projects/board/docs/notes.md",
+            line=12,
             message="Tabs are not permitted",
         )
         self.assertEqual(
@@ -37,10 +40,12 @@ class CliOutputTests(unittest.TestCase):
 
     def test_nested_issue_overflow_points_to_full_json(self) -> None:
         report = ProjectStaticPipelineReport(
-            status="FAIL", projects=("controller",),
+            status="FAIL",
+            projects=("controller",),
             registry=GovernanceLintReport(projects=("controller",), issues=(), status="PASS"),
             repository=RepositoryPolicyReport(
-                status="FAIL", issues=tuple(f"Problem {n}" for n in range(6)),
+                status="FAIL",
+                issues=tuple(f"Problem {n}" for n in range(6)),
             ),
             product=ProductPolicyReport(status="PASS", products=(), open_items={}, issues=()),
             generation=GenerationReport(status="PASS", issues=()),
@@ -56,11 +61,18 @@ class CliOutputTests(unittest.TestCase):
             governance=GovernanceLintReport(projects=("controller",), issues=(), status="PASS"),
             repository=RepositoryPolicyReport(status="PASS", issues=()),
             product_policy=ProductPolicyReport(
-                status="PASS", products=(), open_items={}, issues=(),
+                status="PASS",
+                products=(),
+                open_items={},
+                issues=(),
             ),
-            projects=(ProjectCheckSummary(
-                id="controller", status="FAIL", summary="controller/summary.json",
-            ),),
+            projects=(
+                ProjectCheckSummary(
+                    id="controller",
+                    status="FAIL",
+                    summary="controller/summary.json",
+                ),
+            ),
             status="FAIL",
         )
         output = summary("Native KiCad check", report)
@@ -70,11 +82,18 @@ class CliOutputTests(unittest.TestCase):
     def test_doctor_text_coaches_while_default_stdout_remains_json(self) -> None:
         report = TemplateDoctorReport(
             native_requested=False,
-            checks=(EnvironmentCheck(
-                id="git", required=True, status="FAIL", expected="Git on PATH",
-                observed=None, next_action="Install Git and retry.",
-            ),),
-            status="FAIL", next_actions=("Repair Git before adoption.",),
+            checks=(
+                EnvironmentCheck(
+                    id="git",
+                    required=True,
+                    status="FAIL",
+                    expected="Git on PATH",
+                    observed=None,
+                    next_action="Install Git and retry.",
+                ),
+            ),
+            status="FAIL",
+            next_actions=("Repair Git before adoption.",),
         )
         with (
             patch("kicad_tooling.template.doctor", return_value=report),

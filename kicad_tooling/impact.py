@@ -1,4 +1,5 @@
 """Explain which project lanes a Git change needs, with conservative fallback."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,9 @@ def resolve_commit(root: Path, value: str) -> str:
     """Resolve a commit-ish after Git's option boundary before using it in a diff."""
     result = subprocess.run(
         ("git", "-C", str(root), "rev-parse", "--verify", "--end-of-options", value + "^{commit}"),
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     commit = result.stdout.strip()
     if result.returncode or re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", commit) is None:
@@ -29,9 +32,22 @@ def changed_paths(root: Path, base: str, head: str) -> tuple[str, ...]:
     base_commit = resolve_commit(root, base)
     head_commit = resolve_commit(root, head)
     result = subprocess.run(
-        ("git", "-C", str(root), "diff", "--no-ext-diff", "--no-textconv",
-         "--name-only", "-z", "--no-renames", base_commit, head_commit, "--"),
-        capture_output=True, check=False,
+        (
+            "git",
+            "-C",
+            str(root),
+            "diff",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            base_commit,
+            head_commit,
+            "--",
+        ),
+        capture_output=True,
+        check=False,
     )
     if result.returncode:
         detail = result.stderr.decode("utf-8", errors="replace").strip()
@@ -40,25 +56,40 @@ def changed_paths(root: Path, base: str, head: str) -> tuple[str, ...]:
 
 
 def build_plan(
-    root: Path, *, base: str | None = None, head: str = "HEAD",
-    paths: tuple[str, ...] | None = None, full: bool = False,
-    select_project: str | None = None, select_tag: str | None = None,
-    select_product: str | None = None, exclude_tag: str | None = None,
+    root: Path,
+    *,
+    base: str | None = None,
+    head: str = "HEAD",
+    paths: tuple[str, ...] | None = None,
+    full: bool = False,
+    select_project: str | None = None,
+    select_tag: str | None = None,
+    select_product: str | None = None,
+    exclude_tag: str | None = None,
     shard: str | None = None,
 ) -> ImpactPlan:
     """Share CLI selection semantics with protocol clients without executing checks."""
     selectors = (select_project, select_tag, select_product)
     manual_selection = any(value is not None for value in selectors)
-    modes = sum((base is not None, paths is not None, full,
-                 *(value is not None for value in selectors)))
+    modes = sum(
+        (base is not None, paths is not None, full, *(value is not None for value in selectors))
+    )
     if modes != 1:
-        raise ValueError("Choose exactly one of base, paths, full or a manual project/tag/product selector")
+        raise ValueError(
+            "Choose exactly one of base, paths, full or a manual project/tag/product selector"
+        )
     if exclude_tag and not manual_selection:
         raise ValueError("exclude_tag requires a manual project, tag or product selection")
     if manual_selection:
         if not (select_project or select_tag or select_product):
             raise ValueError("Manual selector value must not be empty")
-        selector_name = "project" if select_project is not None else "tag" if select_tag is not None else "product"
+        selector_name = (
+            "project"
+            if select_project is not None
+            else "tag"
+            if select_tag is not None
+            else "product"
+        )
         selector_value = select_project or select_tag or select_product
         selector = ProjectSelector(
             project_ids=(select_project,) if select_project else (),
@@ -67,7 +98,9 @@ def build_plan(
             excluded_tags=(exclude_tag,) if exclude_tag else (),
         )
         plan = ImpactPlan(
-            scope="focused", projects=resolve_project_ids(root, selector), changed_paths=(),
+            scope="focused",
+            projects=resolve_project_ids(root, selector),
+            changed_paths=(),
             reasons=(f"Manual {selector_name} selector: {selector_value}",),
         )
     else:
@@ -77,10 +110,13 @@ def build_plan(
             plan = plan.model_copy(update={"reasons": ("Full run requested",)})
     if shard is not None:
         projects = shard_projects(plan.projects, shard)
-        plan = plan.model_copy(update={
-            "scope": "focused", "projects": projects,
-            "reasons": (*plan.reasons, f"Partial project shard {shard}"),
-        })
+        plan = plan.model_copy(
+            update={
+                "scope": "focused",
+                "projects": projects,
+                "reasons": (*plan.reasons, f"Partial project shard {shard}"),
+            }
+        )
     return plan
 
 
@@ -89,8 +125,12 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path.cwd())
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--base", help="Base commit for a Git diff")
-    source.add_argument("--path", action="append", dest="paths",
-                        help="Plan one changed repository path directly; may be repeated")
+    source.add_argument(
+        "--path",
+        action="append",
+        dest="paths",
+        help="Plan one changed repository path directly; may be repeated",
+    )
     source.add_argument("--full", action="store_true", help="Request complete acceptance")
     source.add_argument("--select-project", help="Request one project lane")
     source.add_argument("--select-tag", help="Request lanes with one metadata tag")
@@ -103,10 +143,15 @@ def main() -> int:
     root = args.root.resolve()
     try:
         plan = build_plan(
-            root, base=args.base, head=args.head,
-            paths=None if args.paths is None else tuple(args.paths), full=args.full,
-            select_project=args.select_project, select_tag=args.select_tag,
-            select_product=args.select_product, exclude_tag=args.exclude_tag,
+            root,
+            base=args.base,
+            head=args.head,
+            paths=None if args.paths is None else tuple(args.paths),
+            full=args.full,
+            select_project=args.select_project,
+            select_tag=args.select_tag,
+            select_product=args.select_product,
+            exclude_tag=args.exclude_tag,
             shard=args.shard,
         )
     except (OSError, UnicodeError, ValueError) as exc:

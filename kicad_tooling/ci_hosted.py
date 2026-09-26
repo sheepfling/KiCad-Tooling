@@ -3,6 +3,7 @@
 GitHub Actions owns runner allocation, job dependencies and artifact uploads. This
 module owns decisions and commands, recording each stage under ignored build/.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -48,17 +49,28 @@ class HostedLog:
 
     def event(self, stage: str, status: str, **details: str | float) -> None:
         entry: dict[str, str | float | int] = {
-            "time_utc": datetime.now(UTC).isoformat(), "stage": stage, "status": status,
+            "time_utc": datetime.now(UTC).isoformat(),
+            "stage": stage,
+            "status": status,
             **details,
         }
         with self.events.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(entry, sort_keys=True) + "\n")
-        suffix = " " + " ".join(f"{key}={value}" for key, value in details.items()) if details else ""
+        suffix = (
+            " " + " ".join(f"{key}={value}" for key, value in details.items()) if details else ""
+        )
         print(f"hosted-ci: {stage} {status.lower()}{suffix}", file=sys.stderr, flush=True)
 
-    def run(self, stage: str, argv: tuple[str, ...], *, cwd: Path,
-            stdout_path: Path | None = None, env: dict[str, str] | None = None,
-            merge_stderr: bool = False) -> Path:
+    def run(
+        self,
+        stage: str,
+        argv: tuple[str, ...],
+        *,
+        cwd: Path,
+        stdout_path: Path | None = None,
+        env: dict[str, str] | None = None,
+        merge_stderr: bool = False,
+    ) -> Path:
         """Retain stdout and stderr separately; stream progress to the Actions log."""
         output = stdout_path or self.directory / f"{stage}.stdout.log"
         error = self.directory / f"{stage}.stderr.log"
@@ -66,12 +78,19 @@ class HostedLog:
         started = time.monotonic()
         self.event(stage, "START", command=" ".join(argv))
         try:
-            with output.open("w", encoding="utf-8") as stdout, error.open(
-                "w", encoding="utf-8"
-            ) as stderr:
+            with (
+                output.open("w", encoding="utf-8") as stdout,
+                error.open("w", encoding="utf-8") as stderr,
+            ):
                 process = subprocess.Popen(
-                    argv, cwd=cwd, stdout=stdout, stderr=subprocess.PIPE,
-                    text=True, encoding="utf-8", errors="replace", env=env,
+                    argv,
+                    cwd=cwd,
+                    stdout=stdout,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    env=env,
                 )
                 assert process.stderr is not None
                 for line in process.stderr:
@@ -85,11 +104,16 @@ class HostedLog:
                 process.stderr.close()
                 code = process.wait()
         except OSError as exc:
-            self.event(stage, "ERROR", elapsed_seconds=round(time.monotonic() - started, 3),
-                       error=str(exc))
+            self.event(
+                stage, "ERROR", elapsed_seconds=round(time.monotonic() - started, 3), error=str(exc)
+            )
             raise
-        self.event(stage, "PASS" if code == 0 else "FAIL",
-                   elapsed_seconds=round(time.monotonic() - started, 3), exit_code=code)
+        self.event(
+            stage,
+            "PASS" if code == 0 else "FAIL",
+            elapsed_seconds=round(time.monotonic() - started, 3),
+            exit_code=code,
+        )
         if code:
             tail = output.read_text(encoding="utf-8", errors="replace")[-4000:].strip()
             if tail:
@@ -113,8 +137,15 @@ def write_action_outputs(values: dict[str, str]) -> None:
 
 
 def plan_scope(
-    root: Path, *, event: str, base: str | None, focus: str, value: str | None,
-    exclude_tag: str | None, shard: str | None, head: str = "HEAD",
+    root: Path,
+    *,
+    event: str,
+    base: str | None,
+    focus: str,
+    value: str | None,
+    exclude_tag: str | None,
+    shard: str | None,
+    head: str = "HEAD",
 ) -> ImpactPlan:
     """Use the same typed impact planner for PRs, branch diffs and manual cohorts."""
     if event == "pull_request":
@@ -146,23 +177,29 @@ def plan_scope(
 
 def plan_lane(root: Path, args: argparse.Namespace, log: HostedLog) -> None:
     plan = plan_scope(
-        root, event=args.event, base=args.base or None, focus=args.focus,
-        value=args.value or None, exclude_tag=args.exclude_tag or None,
+        root,
+        event=args.event,
+        base=args.base or None,
+        focus=args.focus,
+        value=args.value or None,
+        exclude_tag=args.exclude_tag or None,
         shard=args.shard or None,
         head=args.head,
     )
     destination = root / "build/impact.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(plan.model_dump_json(indent=2) + "\n", encoding="utf-8")
-    systems = ["ubuntu-24.04", "windows-2022", "macos-14"] if plan.scope == "full" else [
-        "ubuntu-24.04"
-    ]
-    write_action_outputs({
-        "scope": plan.scope,
-        "projects": " ".join(plan.projects),
-        "docs-changed": str(plan.docs_changed).lower(),
-        "portable-matrix": json.dumps({"os": systems, "python": ["3.11"]}),
-    })
+    systems = (
+        ["ubuntu-24.04", "windows-2022", "macos-14"] if plan.scope == "full" else ["ubuntu-24.04"]
+    )
+    write_action_outputs(
+        {
+            "scope": plan.scope,
+            "projects": " ".join(plan.projects),
+            "docs-changed": str(plan.docs_changed).lower(),
+            "portable-matrix": json.dumps({"os": systems, "python": ["3.11"]}),
+        }
+    )
     log.event("scope", "PASS", scope=plan.scope, projects=len(plan.projects))
     print(plan.model_dump_json(indent=2))
 
@@ -172,55 +209,105 @@ def matrix_lane(root: Path, projects: tuple[str, ...] | None, log: HostedLog) ->
     destination = root / "build/build-matrix.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(matrix.model_dump_json(indent=2) + "\n", encoding="utf-8")
-    write_action_outputs({
-        "matrix": matrix.model_dump_json(),
-        "has-projects": str(bool(matrix.include)).lower(),
-    })
+    write_action_outputs(
+        {
+            "matrix": matrix.model_dump_json(),
+            "has-projects": str(bool(matrix.include)).lower(),
+        }
+    )
     log.event("matrix", "PASS", projects=len(matrix.include))
     print(matrix.model_dump_json())
 
 
 def markdown_checks(root: Path, log: HostedLog) -> None:
-    log.run("docs-policy", (sys.executable, "-I", "-B", "-m", "kicad_tooling.docs_policy"), cwd=root)
-    log.run("rumdl", (sys.executable, "-I", "-m", "kicad_tooling.markdown_check",
-                       "check", ".", "--no-cache"), cwd=root)
+    log.run(
+        "docs-policy", (sys.executable, "-I", "-B", "-m", "kicad_tooling.docs_policy"), cwd=root
+    )
+    log.run(
+        "rumdl",
+        (sys.executable, "-I", "-m", "kicad_tooling.markdown_check", "check", ".", "--no-cache"),
+        cwd=root,
+    )
     log.run("mdrepo", (sys.executable, "-B", "-m", "mdrepo", "check", "."), cwd=root)
 
 
-def portable_lane(root: Path, scope: str, projects: tuple[str, ...],
-                  docs_changed: bool, jobs: int, log: HostedLog) -> None:
+def portable_lane(
+    root: Path, scope: str, projects: tuple[str, ...], docs_changed: bool, jobs: int, log: HostedLog
+) -> None:
     if scope == "docs":
         markdown_checks(root, log)
     elif scope == "focused":
         if not projects:
             raise ValueError("Focused portable lane requires selected projects")
-        argv = (sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", *(
-            part for project in projects for part in ("--project", project)
-        ), "--jobs", str(jobs), "--output", "build/portable")
+        argv = (
+            sys.executable,
+            "-I",
+            "-B",
+            "-m",
+            "kicad_tooling.ci",
+            *(part for project in projects for part in ("--project", project)),
+            "--jobs",
+            str(jobs),
+            "--output",
+            "build/portable",
+        )
         log.run("portable-focused", argv, cwd=root)
         if docs_changed:
             markdown_checks(root, log)
     elif scope == "full":
-        log.run("portable-full", (sys.executable, "-I", "-B", "-m", "kicad_tooling.ci",
-                                  "--jobs", str(jobs), "--output", "build/portable"), cwd=root)
+        log.run(
+            "portable-full",
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.ci",
+                "--jobs",
+                str(jobs),
+                "--output",
+                "build/portable",
+            ),
+            cwd=root,
+        )
     else:
         raise ValueError(f"Unknown portable scope: {scope}")
 
 
 def windows_types(root: Path, log: HostedLog) -> None:
-    log.run("windows-types", (sys.executable, "-B", "-m", "pyright", "--pythonpath",
-                              sys.executable, "--pythonplatform", "Windows",
-                              "--pythonversion", "3.11", str(Path(__file__).resolve().parent)), cwd=root,
-            stdout_path=root / "build/portable/windows-types.txt")
+    log.run(
+        "windows-types",
+        (
+            sys.executable,
+            "-B",
+            "-m",
+            "pyright",
+            "--pythonpath",
+            sys.executable,
+            "--pythonplatform",
+            "Windows",
+            "--pythonversion",
+            "3.11",
+            str(Path(__file__).resolve().parent),
+        ),
+        cwd=root,
+        stdout_path=root / "build/portable/windows-types.txt",
+    )
 
 
 def windows_smoke(root: Path, log: HostedLog) -> None:
-    log.run("windows-inventory", (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "list",
-                                  "--format", "json"), cwd=root,
-            stdout_path=root / "build/portable/windows-inventory.json")
-    log.run("windows-policy", (sys.executable, "-I", "-B", "-m", "kicad_tooling.ci",
-                               "--format", "json"), cwd=root,
-            stdout_path=root / "build/portable/windows-policy.json")
+    log.run(
+        "windows-inventory",
+        (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "list", "--format", "json"),
+        cwd=root,
+        stdout_path=root / "build/portable/windows-inventory.json",
+    )
+    log.run(
+        "windows-policy",
+        (sys.executable, "-I", "-B", "-m", "kicad_tooling.ci", "--format", "json"),
+        cwd=root,
+        stdout_path=root / "build/portable/windows-policy.json",
+    )
 
 
 def checked_source(root: Path, log: HostedLog) -> None:
@@ -228,40 +315,86 @@ def checked_source(root: Path, log: HostedLog) -> None:
     log.run("index-diff", ("git", "diff", "--cached", "--exit-code"), cwd=root)
 
 
-def native_lane(root: Path, *, project: str, image: str, pr_head: str,
-                fault_probes: bool, log: HostedLog) -> None:
+def native_lane(
+    root: Path, *, project: str, image: str, pr_head: str, fault_probes: bool, log: HostedLog
+) -> None:
     if not project or "@sha256:" not in image:
         raise ValueError("Native lane requires a project and digest-pinned image")
     if sys.platform == "win32":
         raise ValueError("The Docker native lane requires a Unix runner")
-    checked = subprocess.run(("git", "rev-parse", "HEAD"), cwd=root, capture_output=True,
-                             text=True, check=True).stdout.strip()
+    checked = subprocess.run(
+        ("git", "rev-parse", "HEAD"), cwd=root, capture_output=True, text=True, check=True
+    ).stdout.strip()
     (root / "build").mkdir(exist_ok=True)
     (root / "build/checked-commit.txt").write_text(checked + "\n", encoding="utf-8")
-    log.run("status-before", ("git", "status", "--porcelain=v1"), cwd=root,
-            stdout_path=root / "build/status-before.txt")
-    log.run("source-archive", ("git", "archive", "--format=tar.gz",
-                               "--output=build/checked-source.tar.gz", "HEAD"), cwd=root)
+    log.run(
+        "status-before",
+        ("git", "status", "--porcelain=v1"),
+        cwd=root,
+        stdout_path=root / "build/status-before.txt",
+    )
+    log.run(
+        "source-archive",
+        ("git", "archive", "--format=tar.gz", "--output=build/checked-source.tar.gz", "HEAD"),
+        cwd=root,
+    )
     environment = os.environ.copy()
     environment.update({"CHECKED_SHA": checked, "PR_HEAD_SHA": pr_head, "PROJECT_ID": project})
     docker = (
-        "docker", "run", "--rm", "--platform", "linux/amd64", "--user",
-        f"{os.getuid()}:{os.getgid()}", "--entrypoint", "sh",
-        "-e", "HOME=/tmp/kicad-template", "-e", "PYTHONDONTWRITEBYTECODE=1",
-        "-e", "CHECKED_SHA",
-        "-e", "PR_HEAD_SHA", "-e", "PROJECT_ID", "-v", f"{root}:/work",
-        "-w", "/work", image, "-ec",
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        "--entrypoint",
+        "sh",
+        "-e",
+        "HOME=/tmp/kicad-template",
+        "-e",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "-e",
+        "CHECKED_SHA",
+        "-e",
+        "PR_HEAD_SHA",
+        "-e",
+        "PROJECT_ID",
+        "-v",
+        f"{root}:/work",
+        "-w",
+        "/work",
+        image,
+        "-ec",
     )
     try:
         log.run("docker-pull", ("docker", "pull", image), cwd=root)
-        log.run("native-deps", (sys.executable, "-I", "-B", "-m", "kicad_tooling.native_deps",
-                                "--image", image), cwd=root)
-        log.run("native-check", (*docker,
-                                 '/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --kicad --project "$PROJECT_ID" '
-                                 + "--output build/review"), cwd=root, env=environment)
+        log.run(
+            "native-deps",
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling.native_deps", "--image", image),
+            cwd=root,
+        )
+        log.run(
+            "native-check",
+            (
+                *docker,
+                '/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --kicad --project "$PROJECT_ID" '
+                + "--output build/review",
+            ),
+            cwd=root,
+            env=environment,
+        )
         electrical_lane(root, project, log, native_summary=f"build/review/{project}/summary.json")
         if fault_probes:
-            log.run("fault-probes", (*docker, "/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --fault-probes --output build/fault-probes"), cwd=root, env=environment)
+            log.run(
+                "fault-probes",
+                (
+                    *docker,
+                    "/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --fault-probes --output build/fault-probes",
+                ),
+                cwd=root,
+                env=environment,
+            )
     finally:
         checked_source(root, log)
 
@@ -277,34 +410,78 @@ def project_simulator(root: Path, project: str, log: HostedLog) -> str:
     issues = policy_issues(root, config)
     if issues:
         raise ValueError(f"{project}: unresolved electrical requirements: {issues}")
-    return (ensure(root, contract.ngspice_version, contract.ngspice_source_sha256, log)
-            if simulation_cases(contract) else "ngspice")
+    return (
+        ensure(root, contract.ngspice_version, contract.ngspice_source_sha256, log)
+        if simulation_cases(contract)
+        else "ngspice"
+    )
 
 
-def electrical_lane(root: Path, project: str, log: HostedLog,
-                    native_summary: str | None = None, required: bool = False) -> None:
+def electrical_lane(
+    root: Path,
+    project: str,
+    log: HostedLog,
+    native_summary: str | None = None,
+    required: bool = False,
+) -> None:
     from .hwrepo.electrical import selected_config
     from .hwrepo.models import ElectricalAnalysisReport
 
     if selected_config(root, project).electrical is None:
         if required:
-            raise ValueError(f"{project}: no electrical contract; run kicad-team electrical --project {project} --init")
+            raise ValueError(
+                f"{project}: no electrical contract; run kicad-team electrical --project {project} --init"
+            )
         log.event("electrical", "NOT_CONFIGURED", project=project)
         return
     simulator = project_simulator(root, project, log)
     report = root / "build" / f"electrical-{project}.json"
-    summary_args = ("--native-summary", native_summary) if native_summary else ("--runner", "container")
+    summary_args = (
+        ("--native-summary", native_summary) if native_summary else ("--runner", "container")
+    )
+
     def charts() -> None:
         analysis = read_model(report, ElectricalAnalysisReport)
-        log.run("electrical-charts", (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical_charts",
-                                     "--root", str(root), "--receipt", analysis.run_directory,
-                                     "--format", "json"), cwd=root)
+        log.run(
+            "electrical-charts",
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.electrical_charts",
+                "--root",
+                str(root),
+                "--receipt",
+                analysis.run_directory,
+                "--format",
+                "json",
+            ),
+            cwd=root,
+        )
 
     try:
-        log.run("electrical-check", (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical",
-                                    "--root", str(root), "--project", project, *summary_args,
-                                    "--ngspice", simulator, "--format", "json"), cwd=root,
-                stdout_path=report)
+        log.run(
+            "electrical-check",
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.electrical",
+                "--root",
+                str(root),
+                "--project",
+                project,
+                *summary_args,
+                "--ngspice",
+                simulator,
+                "--format",
+                "json",
+            ),
+            cwd=root,
+            stdout_path=report,
+        )
     except RuntimeError:
         # Keep plots from measured failures, while preserving the original gate failure.
         try:
@@ -332,8 +509,10 @@ def candidate_lane(root: Path, project: str, release_id: str, log: HostedLog) ->
     if readiness.status != "PASS":
         raise ValueError(f"Release readiness failed: {readiness.issues}")
     archive = root / "build" / f"{release_id}.zip"
-    write_model(log.directory / "package.json", package(
-        root, f"build/releases/{release_id}/manifest.json", archive))
+    write_model(
+        log.directory / "package.json",
+        package(root, f"build/releases/{release_id}/manifest.json", archive),
+    )
     write_model(log.directory / "verified.json", verify(archive))
     checked_source(root, log)
     log.event("candidate-restore", "PASS", archive=str(archive))
@@ -351,19 +530,28 @@ def release_fixture(root: Path, target: Path) -> None:
         raise ValueError(f"Release rehearsal output already exists: {target}")
     directories = ("docs", "templates", "examples", ".github")
     files = (
-        "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md",
-        ".gitignore", ".gitattributes", "pyproject.toml", "requirements-tooling.txt",
+        "README.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CHANGELOG.md",
+        ".gitignore",
+        ".gitattributes",
+        "pyproject.toml",
+        "requirements-tooling.txt",
         "catalog/documentation-policy.json",
     )
     references = (
-        "examples/catalog/projects.json", "examples/catalog/products.json",
-        "examples/catalog/parts.json", "examples/catalog/interfaces.json",
-        "examples/catalog/libraries.json", "examples/catalog/toolchains.json",
-        "examples/catalog/team-policy.json", "examples/catalog/release-policies.json",
+        "examples/catalog/projects.json",
+        "examples/catalog/products.json",
+        "examples/catalog/parts.json",
+        "examples/catalog/interfaces.json",
+        "examples/catalog/libraries.json",
+        "examples/catalog/toolchains.json",
+        "examples/catalog/team-policy.json",
+        "examples/catalog/release-policies.json",
         "examples/projects/arduino-uno-status-led/project.json",
     )
-    missing = [name for name in (*directories, *files, *references)
-               if not (root / name).exists()]
+    missing = [name for name in (*directories, *files, *references) if not (root / name).exists()]
     if missing:
         raise ValueError(
             "Release rehearsal requires retained public template fixtures; restore these "
@@ -371,8 +559,13 @@ def release_fixture(root: Path, target: Path) -> None:
         )
 
     def ignore_local(directory: str, names: list[str]) -> set[str]:
-        ignored = {name for name in names if name == ".git" or ephemeral(name)
-                   or generated_artifact((Path(directory) / name).relative_to(root).as_posix())}
+        ignored = {
+            name
+            for name in names
+            if name == ".git"
+            or ephemeral(name)
+            or generated_artifact((Path(directory) / name).relative_to(root).as_posix())
+        }
         for name in set(names) - ignored:
             path = Path(directory) / name
             if path.is_symlink():
@@ -402,9 +595,12 @@ def release_fixture(root: Path, target: Path) -> None:
         readme = root / directory / "README.md"
         if not (root / directory).is_symlink() and readme.is_file() and not readme.is_symlink():
             shutil.copy2(readme, target / directory / "README.md")
-    shutil.copytree(root / "examples/catalog", target / "catalog", dirs_exist_ok=True,
-                    ignore=ignore_local)
-    shutil.copy2(Path(__file__).resolve().parent / "fixtures/scaffold-license.txt", target / "LICENSE")
+    shutil.copytree(
+        root / "examples/catalog", target / "catalog", dirs_exist_ok=True, ignore=ignore_local
+    )
+    shutil.copy2(
+        Path(__file__).resolve().parent / "fixtures/scaffold-license.txt", target / "LICENSE"
+    )
 
 
 def release_lane(root: Path, log: HostedLog) -> None:
@@ -416,9 +612,11 @@ def release_lane(root: Path, log: HostedLog) -> None:
     manifest = read_model(manifest_path, ProjectManifest)
     if manifest.release_exports is None:
         raise ValueError("Reference project lacks release export settings")
-    settings = manifest.release_exports.model_copy(update={
-        "supplier_formats": ("odb", "ipc2581", "ipcd356"),
-    })
+    settings = manifest.release_exports.model_copy(
+        update={
+            "supplier_formats": ("odb", "ipc2581", "ipcd356"),
+        }
+    )
     write_model(manifest_path, manifest.model_copy(update={"release_exports": settings}))
     log.event("supplier-formats", "PASS")
     log.run("fixture-init", ("git", "init", "-q"), cwd=target)
@@ -426,41 +624,110 @@ def release_lane(root: Path, log: HostedLog) -> None:
     log.run("fixture-gc", ("git", "config", "gc.auto", "0"), cwd=target)
     log.run("fixture-maintenance", ("git", "config", "maintenance.auto", "false"), cwd=target)
     log.run("fixture-add", ("git", "add", "--all"), cwd=target)
-    log.run("fixture-commit", ("git", "-c", "user.name=Scaffold CI fixture",
-                               "-c", "user.email=fixture@example.invalid", "commit", "-qm",
-                               "Disposable release rehearsal"), cwd=target)
+    log.run(
+        "fixture-commit",
+        (
+            "git",
+            "-c",
+            "user.name=Scaffold CI fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Disposable release rehearsal",
+        ),
+        cwd=target,
+    )
     for stage, command in (
-        ("release-prepare", ("kicad_tooling.release", "prepare", "--project",
-                             "arduino-uno-status-led", "--release-id", "ci-review")),
-        ("release-package", ("kicad_tooling.release", "package", "--manifest",
-                             "build/releases/ci-review/manifest.json", "--output", "build/ci-review.zip")),
+        (
+            "release-prepare",
+            (
+                "kicad_tooling.release",
+                "prepare",
+                "--project",
+                "arduino-uno-status-led",
+                "--release-id",
+                "ci-review",
+            ),
+        ),
+        (
+            "release-package",
+            (
+                "kicad_tooling.release",
+                "package",
+                "--manifest",
+                "build/releases/ci-review/manifest.json",
+                "--output",
+                "build/ci-review.zip",
+            ),
+        ),
         ("release-verify", ("kicad_tooling.release", "verify", "--archive", "build/ci-review.zip")),
     ):
         log.run(stage, (sys.executable, "-I", "-B", "-m", *command), cwd=target)
     checked_source(target, log)
     fixture = Path(__file__).resolve().parent / "fixtures/foreign-eagle-board.xml"
-    conversion = log.run("foreign-conversion", (
-        sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
-        "--source", str(fixture), "--project-id",
-        "foreign-smoke", "--toolchain", "kicad-10.0.5", "--input-format", "eagle",
-        "--runner", "container", "--format", "json",
-    ), cwd=target, stdout_path=target / "build/foreign-pcb-conversion.json")
+    conversion = log.run(
+        "foreign-conversion",
+        (
+            sys.executable,
+            "-I",
+            "-B",
+            "-m",
+            "kicad_tooling.template",
+            "convert-pcb",
+            "--source",
+            str(fixture),
+            "--project-id",
+            "foreign-smoke",
+            "--toolchain",
+            "kicad-10.0.5",
+            "--input-format",
+            "eagle",
+            "--runner",
+            "container",
+            "--format",
+            "json",
+        ),
+        cwd=target,
+        stdout_path=target / "build/foreign-pcb-conversion.json",
+    )
     receipt = read_model(conversion, ForeignPcbReport)
     native_summary = receipt.native_summary
-    if (receipt.status != "PASS" or not receipt.review_required
-            or receipt.build_authorized or native_summary is None
-            or native_summary.errors or native_summary.source_format.lower() != "eagle"):
+    if (
+        receipt.status != "PASS"
+        or not receipt.review_required
+        or receipt.build_authorized
+        or native_summary is None
+        or native_summary.errors
+        or native_summary.source_format.lower() != "eagle"
+    ):
         raise ValueError("Foreign conversion receipt failed review assertions")
     source = Path(receipt.run_directory) / "stage/foreign-smoke.kicad_pro"
-    if source.with_suffix(".kicad_pcb").read_text(encoding="utf-8").count(
-        '(layer "Edge.Cuts")'
-    ) != 4:
+    if (
+        source.with_suffix(".kicad_pcb").read_text(encoding="utf-8").count('(layer "Edge.Cuts")')
+        != 4
+    ):
         raise ValueError("Foreign PCB edge geometry changed")
-    imported_path = log.run("foreign-import", (
-        sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "import-project", "--source",
-        str(source), "--project-id", "foreign-smoke", "--toolchain", "kicad-10.0.5",
-        "--format", "json",
-    ), cwd=target)
+    imported_path = log.run(
+        "foreign-import",
+        (
+            sys.executable,
+            "-I",
+            "-B",
+            "-m",
+            "kicad_tooling.template",
+            "import-project",
+            "--source",
+            str(source),
+            "--project-id",
+            "foreign-smoke",
+            "--toolchain",
+            "kicad-10.0.5",
+            "--format",
+            "json",
+        ),
+        cwd=target,
+    )
     imported = read_model(imported_path, ProjectImportReport)
     if imported.status != "PASS" or not imported.review_required:
         raise ValueError("Foreign import receipt failed review assertions")
@@ -470,8 +737,15 @@ def release_lane(root: Path, log: HostedLog) -> None:
     log.event("foreign-review", "PASS")
 
 
-def gate_result(scope_result: str, scope: str, unit_result: str, matrix_result: str,
-                kicad_result: str, has_projects: str, release_result: str) -> None:
+def gate_result(
+    scope_result: str,
+    scope: str,
+    unit_result: str,
+    matrix_result: str,
+    kicad_result: str,
+    has_projects: str,
+    release_result: str,
+) -> None:
     """Fail closed on every expected prerequisite, including skipped jobs."""
     if scope_result != "success" or unit_result != "success":
         raise ValueError("Planning and portable checks must both succeed")
@@ -501,12 +775,14 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path.cwd())
     commands = parser.add_subparsers(dest="command", required=True)
     plan = commands.add_parser("plan", help="Plan PR, branch or manually focused acceptance")
-    plan.add_argument("--event", choices=("pull_request", "workflow_dispatch", "push", "local"),
-                      default="local")
+    plan.add_argument(
+        "--event", choices=("pull_request", "workflow_dispatch", "push", "local"), default="local"
+    )
     plan.add_argument("--base")
     plan.add_argument("--head", default="HEAD")
-    plan.add_argument("--focus", choices=("full", "branch", "project", "product", "tag"),
-                      default="full")
+    plan.add_argument(
+        "--focus", choices=("full", "branch", "project", "product", "tag"), default="full"
+    )
     plan.add_argument("--value")
     plan.add_argument("--exclude-tag")
     plan.add_argument("--shard")
@@ -526,14 +802,21 @@ def main() -> int:
     native.add_argument("--image", required=True)
     native.add_argument("--pr-head", required=True)
     native.add_argument("--fault-probes", choices=("true", "false"), default="false")
-    electrical = commands.add_parser("electrical", help="Run required electrical checks with verified simulator setup")
+    electrical = commands.add_parser(
+        "electrical", help="Run required electrical checks with verified simulator setup"
+    )
     electrical.add_argument("--project", required=True)
-    candidate = commands.add_parser("candidate", help="Prepare, package and restore a selected review candidate")
+    candidate = commands.add_parser(
+        "candidate", help="Prepare, package and restore a selected review candidate"
+    )
     candidate.add_argument("--project", required=True)
     candidate.add_argument("--release-id", required=True)
-    preview = commands.add_parser("preview", help="Render 3D views with portable logs and Actions summary")
-    preview.add_argument("--project", default=os.environ.get("PROJECT_ID"),
-                         required=not os.environ.get("PROJECT_ID"))
+    preview = commands.add_parser(
+        "preview", help="Render 3D views with portable logs and Actions summary"
+    )
+    preview.add_argument(
+        "--project", default=os.environ.get("PROJECT_ID"), required=not os.environ.get("PROJECT_ID")
+    )
     preview.add_argument("--runner", choices=("auto", "local", "container"), default="auto")
     preview.add_argument("--cli", default="kicad-cli")
     preview.add_argument("--output", type=Path, default=Path("build/3d-preview"))
@@ -558,8 +841,14 @@ def main() -> int:
                 raise ValueError("Focused matrix requires selected projects")
             matrix_lane(root, selected, log)
         elif args.command == "portable":
-            portable_lane(root, args.scope, tuple(args.projects.split()),
-                          args.docs_changed == "true", args.jobs, log)
+            portable_lane(
+                root,
+                args.scope,
+                tuple(args.projects.split()),
+                args.docs_changed == "true",
+                args.jobs,
+                log,
+            )
         elif args.command == "windows-types":
             windows_types(root, log)
         elif args.command == "windows-smoke":
@@ -567,8 +856,14 @@ def main() -> int:
         elif args.command == "source-clean":
             checked_source(root, log)
         elif args.command == "native":
-            native_lane(root, project=args.project, image=args.image, pr_head=args.pr_head,
-                        fault_probes=args.fault_probes == "true", log=log)
+            native_lane(
+                root,
+                project=args.project,
+                image=args.image,
+                pr_head=args.pr_head,
+                fault_probes=args.fault_probes == "true",
+                log=log,
+            )
         elif args.command == "release":
             release_lane(root, log)
         elif args.command == "electrical":
@@ -576,11 +871,19 @@ def main() -> int:
         elif args.command == "candidate":
             candidate_lane(root, args.project, args.release_id, log)
         elif args.command == "preview":
-            preview_lane(root, args.project, log, runner=args.runner, cli=args.cli, output=args.output)
+            preview_lane(
+                root, args.project, log, runner=args.runner, cli=args.cli, output=args.output
+            )
         elif args.command == "gate":
-            gate_result(args.scope_result, args.scope, args.unit_result,
-                        args.matrix_result, args.kicad_result, args.has_projects,
-                        args.release_result)
+            gate_result(
+                args.scope_result,
+                args.scope,
+                args.unit_result,
+                args.matrix_result,
+                args.kicad_result,
+                args.has_projects,
+                args.release_result,
+            )
         log.finish()
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
         log.event("lane", "FAIL", error=str(exc))

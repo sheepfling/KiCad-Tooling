@@ -1,4 +1,5 @@
 """Recheck retained electrical evidence without executing a simulator or project code."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -30,23 +31,29 @@ from .models import (
 from .spice import measured_checks, observed_versions, simulation_deck, waveform_checks
 
 
-def required_projects(root: Path, projects: tuple[ProjectRecord, ...],
-                      release_class: ReleaseClass) -> tuple[str, ...]:
+def required_projects(
+    root: Path, projects: tuple[ProjectRecord, ...], release_class: ReleaseClass
+) -> tuple[str, ...]:
     """Declared contracts always gate releases; buildable boards must declare one."""
     required: list[str] = []
     for project in projects:
         config = selected_config(root, project.id)
         if config.electrical is not None:
             required.append(project.id)
-        elif (release_class is not ReleaseClass.ENGINEERING_REVIEW
-              and config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC}):
-            raise ValueError(f"{project.id}: build releases require reviewed electrical requirements; "
-                             f"run kicad-team electrical --project {project.id} --init and review applicability")
+        elif release_class is not ReleaseClass.ENGINEERING_REVIEW and config.kind in {
+            ProjectKind.PCB,
+            ProjectKind.SCHEMATIC,
+        }:
+            raise ValueError(
+                f"{project.id}: build releases require reviewed electrical requirements; "
+                f"run kicad-team electrical --project {project.id} --init and review applicability"
+            )
     return tuple(required)
 
 
-def verify_electrical(root: Path, reference: EvidenceFile, source: SourceState,
-                      project_id: str, native: EvidenceFile) -> ElectricalAnalysisReport:
+def verify_electrical(
+    root: Path, reference: EvidenceFile, source: SourceState, project_id: str, native: EvidenceFile
+) -> ElectricalAnalysisReport:
     """Check source, exact cases, logs, decks and waveform coverage, including after restore."""
     from ..validate import read_netlist
 
@@ -77,16 +84,25 @@ def verify_electrical(root: Path, reference: EvidenceFile, source: SourceState,
         raise ValueError("Retained electrical requirements differ from committed requirements")
     checks: list[ElectricalCheck] = []
     if isinstance(contract.grounding, GroundingAnalysis):
-        checks.extend(grounding_checks(contract.grounding, read_netlist(
-            evidence_path(root, native).parent / "netlist.xml")))
+        checks.extend(
+            grounding_checks(
+                contract.grounding, read_netlist(evidence_path(root, native).parent / "netlist.xml")
+            )
+        )
     else:
         if not isinstance(contract.grounding, AnalysisNotApplicable):
             raise ValueError("Grounding requirements remain pending")  # noqa: TRY004 - incomplete policy
-        checks.append(ElectricalCheck(id="grounding", status="NOT_APPLICABLE",
-                                      detail=contract.grounding.reason))
+        checks.append(
+            ElectricalCheck(
+                id="grounding", status="NOT_APPLICABLE", detail=contract.grounding.reason
+            )
+        )
     if isinstance(contract.high_frequency, AnalysisNotApplicable):
-        checks.append(ElectricalCheck(id="high-frequency", status="NOT_APPLICABLE",
-                                      detail=contract.high_frequency.reason))
+        checks.append(
+            ElectricalCheck(
+                id="high-frequency", status="NOT_APPLICABLE", detail=contract.high_frequency.reason
+            )
+        )
     checks.extend(power_budget_checks(contract.power))
     cases = simulation_cases(contract)
     expected_commands: set[str] = {case.id for case in cases}
@@ -96,8 +112,12 @@ def verify_electrical(root: Path, reference: EvidenceFile, source: SourceState,
         raise ValueError("Electrical evidence command inventory differs from required cases")
     if cases:
         version = read_model(artifact("ngspice-version.command.json"), CommandEvidence)
-        if (version != report.commands["version"] or version.returncode != 0 or version.error
-                or contract.ngspice_version not in observed_versions(version)):
+        if (
+            version != report.commands["version"]
+            or version.returncode != 0
+            or version.error
+            or contract.ngspice_version not in observed_versions(version)
+        ):
             raise ValueError("Electrical evidence has no successful exact simulator version probe")
     for case in cases:
         command = read_model(artifact(f"{case.id}/ngspice.command.json"), CommandEvidence)
@@ -107,7 +127,10 @@ def verify_electrical(root: Path, reference: EvidenceFile, source: SourceState,
             raise ValueError(f"{case.id}: retained simulation deck differs from reviewed inputs")
         checks.extend(measured_checks(case, command))
         checks.extend(waveform_checks(artifact(f"{case.id}/waveforms.raw"), case))
-    if (tuple(checks) != report.checks or not checks
-            or any(row.status not in {"PASS", "NOT_APPLICABLE"} for row in checks)):
+    if (
+        tuple(checks) != report.checks
+        or not checks
+        or any(row.status not in {"PASS", "NOT_APPLICABLE"} for row in checks)
+    ):
         raise ValueError("Retained electrical checks fail or omit reviewed requirements")
     return report
