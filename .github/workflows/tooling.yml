@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: sheepfling/KiCad-Team-Workflow-Template
-          ref: 02a91cc1f5466dc4d6b9fcb0956f701bed2e2792
+          ref: 5ca79bedf665a9b6577d96b1d47f13ccd518c968
           path: build/acceptance-template
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97

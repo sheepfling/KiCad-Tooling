@@ -384,7 +384,7 @@ class CiDriverTests(unittest.TestCase):
 
     def test_final_hosted_gate_rejects_incomplete_results(self) -> None:
         workflow = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
-        self.assertIn("run: python -B -m kicad_tooling.ci_hosted gate", workflow)
+        self.assertIn("run: python -I -B -m kicad_tooling.ci_hosted gate", workflow)
         baselines = (
             ("success", "docs", "success", "skipped", "skipped", "", "skipped"),
             ("success", "focused", "success", "success", "success", "true", "skipped"),
