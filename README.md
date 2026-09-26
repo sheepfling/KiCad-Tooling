@@ -8,7 +8,8 @@ The same installed package provides both command surfaces.
 
 The template now consumes this package through an exact dependency pin. It keeps
 project structure, catalogs, engineering contracts, agent guidance, and onboarding
-documents. Shared Python implementation and its regression suite live here.
+documents. Shared Python implementation, reusable GitHub workflows and their regression
+suite live here. See [project CI](docs/PROJECT_CI.md) for pinned callers and upgrades.
 The package is not published on PyPI yet; the template pins a reviewed Git commit.
 
 ## Try the separate package

@@ -1,0 +1,239 @@
+name: KiCad project acceptance
+
+on:
+  workflow_call:
+    inputs:
+      focus:
+        description: Full acceptance, branch diff, project, product or tag
+        type: string
+        default: full
+      value:
+        description: Base ref, project ID, product ID or tag for the selected focus
+        type: string
+        default: ''
+      exclude_tag:
+        description: Optional exclusion for project, product or tag focus
+        type: string
+        default: ''
+      shard:
+        description: Optional partial project shard INDEX/COUNT
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    name: Plan affected project lanes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      scope: ${{ steps.plan.outputs.scope }}
+      projects: ${{ steps.plan.outputs.projects }}
+      docs-changed: ${{ steps.plan.outputs.docs-changed }}
+      portable-matrix: ${{ steps.plan.outputs.portable-matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-tooling.txt
+      - name: Install typed policy dependency
+        run: python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+      - id: plan
+        name: Plan the PR, branch diff or manual cohort
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          DISPATCH_FOCUS: ${{ inputs.focus || 'full' }}
+          DISPATCH_VALUE: ${{ inputs.value || '' }}
+          DISPATCH_EXCLUDE_TAG: ${{ inputs.exclude_tag || '' }}
+          DISPATCH_SHARD: ${{ inputs.shard || '' }}
+        run: |
+          python -I -B -m kicad_tooling.ci_hosted plan --event "$EVENT_NAME" --base "$BASE_SHA" \
+            --focus "$DISPATCH_FOCUS" --value "$DISPATCH_VALUE" \
+            --exclude-tag "$DISPATCH_EXCLUDE_TAG" --shard "$DISPATCH_SHARD"
+  project-matrix:
+    name: Build declared-project matrix
+    needs: [scope]
+    if: needs.scope.outputs.scope != 'docs'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has-projects: ${{ steps.matrix.outputs.has-projects }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-tooling.txt
+      - name: Install typed policy dependency
+        run: python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+      - id: matrix
+        name: Resolve digest-pinned KiCad lanes
+        env:
+          CHECK_SCOPE: ${{ needs.scope.outputs.scope }}
+          CI_PROJECTS: ${{ needs.scope.outputs.projects }}
+        run: python -I -B -m kicad_tooling.ci_hosted matrix --scope "$CHECK_SCOPE" --projects "$CI_PROJECTS"
+  python-tests:
+    name: Portable policy (${{ matrix.os }}, Python ${{ matrix.python }})
+    needs: [scope]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.scope.outputs.portable-matrix) }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements-tooling.txt
+      - name: Install policy dependencies
+        shell: bash
+        run: python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+      - name: Run the planned portable policy pipeline
+        if: matrix.os != 'windows-2022'
+        shell: bash
+        timeout-minutes: 13
+        env:
+          CHECK_SCOPE: ${{ needs.scope.outputs.scope }}
+          CI_PROJECTS: ${{ needs.scope.outputs.projects }}
+          DOCS_CHANGED: ${{ needs.scope.outputs.docs-changed }}
+        run: |
+          python -I -B -m kicad_tooling.ci_hosted portable --scope "$CHECK_SCOPE" \
+            --projects "$CI_PROJECTS" --docs-changed "$DOCS_CHANGED" --jobs 4
+      - name: Smoke test real Windows paths and CLI entry points
+        if: matrix.os == 'windows-2022'
+        timeout-minutes: 4
+        run: python -I -B -m kicad_tooling.ci_hosted windows-smoke
+      - name: Export reproducible review views and schemas
+        if: needs.scope.outputs.scope == 'full' && matrix.os != 'windows-2022'
+        run: python -I -B -m kicad_tooling.hardware generate
+      - name: Confirm generation leaves tracked source unchanged
+        run: python -I -B -m kicad_tooling.ci_hosted source-clean
+      - name: Retain portable logs and generated review views
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: portable-review-${{ matrix.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/portable/
+            build/ci-hosted/
+            generated/
+            schemas/
+            products/*/build/
+            examples/products/*/build/
+          if-no-files-found: error
+  kicad:
+    name: KiCad ${{ matrix.project }} (${{ matrix.kicad_version }})
+    needs: [scope, project-matrix]
+    if: needs.project-matrix.outputs.has-projects == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.project-matrix.outputs.matrix) }}
+    env:
+      KICAD_IMAGE: ${{ matrix.image }}
+      PROJECT_ID: ${{ matrix.project }}
+      PR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      FAULT_PROBES: ${{ matrix.fault_probes }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-tooling.txt
+      - name: Install typed policy dependency
+        run: python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+      - name: Install declared simulator build prerequisites
+        if: matrix.electrical
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential bison flex
+      - name: Check pinned KiCad project and deliberate defects
+        run: |
+          python -I -B -m kicad_tooling.ci_hosted native --project "$PROJECT_ID" \
+            --image "$KICAD_IMAGE" --pr-head "$PR_HEAD" --fault-probes "$FAULT_PROBES"
+      - name: Retain review and failure evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: kicad-review-${{ matrix.project }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/
+            !build/policy-deps/
+            !build/ngspice-build/
+          if-no-files-found: error
+          retention-days: 30
+  release-rehearsal:
+    name: Standalone release and restore
+    needs: [scope, kicad]
+    if: needs.scope.outputs.scope == 'full' && needs.kicad.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-tooling.txt
+      - name: Install quality tools
+        run: python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+      - name: Rehearse release and guarded foreign-board import
+        run: python -I -B -m kicad_tooling.ci_hosted release
+      - name: Retain release rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-rehearsal-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/rehearsal-source/build/releases/
+            build/rehearsal-source/build/ci-review.zip
+            build/rehearsal-source/build/foreign-pcb-conversion.json
+            build/rehearsal-source/build/diagnostics/
+            build/ci-hosted/release/
+          if-no-files-found: error
+          retention-days: 30
+  engineering-gate:
+    name: Template acceptance
+    if: always()
+    needs: [scope, project-matrix, python-tests, kicad, release-rehearsal]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+      - name: Install typed policy dependency
+        run: python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+      - name: Reject failed, skipped, missing or cancelled prerequisites
+        env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          SCOPE: ${{ needs.scope.outputs.scope }}
+          UNIT_RESULT: ${{ needs.python-tests.result }}
+          MATRIX_RESULT: ${{ needs.project-matrix.result }}
+          KICAD_RESULT: ${{ needs.kicad.result }}
+          HAS_PROJECTS: ${{ needs.project-matrix.outputs.has-projects }}
+          RELEASE_RESULT: ${{ needs.release-rehearsal.result }}
+        run: python -I -B -m kicad_tooling.ci_hosted gate

@@ -1,0 +1,44 @@
+name: KiCad 3D preview
+
+on:
+  workflow_call:
+    inputs:
+      project_id:
+        description: Registered PCB or PCB-only project ID to render
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    name: Render ${{ inputs.project_id }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-tooling.txt
+      - name: Install policy tooling
+        run: python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+      - name: Generate selected 3D preview
+        timeout-minutes: 55
+        env:
+          PROJECT_ID: ${{ inputs.project_id }}
+        run: python -I -B -m kicad_tooling.ci_hosted preview --runner container
+      - name: Retain 3D preview and failure evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: 3d-preview-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/3d-preview/
+            build/ci-hosted/preview/
+          if-no-files-found: warn
+          retention-days: 30

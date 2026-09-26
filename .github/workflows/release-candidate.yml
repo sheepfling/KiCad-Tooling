@@ -1,0 +1,45 @@
+name: Selected release candidate
+
+on:
+  workflow_call:
+    inputs:
+      project_id:
+        description: Registered project ID to rehearse from this exact source commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+      - name: Install tooling and simulator build prerequisites
+        run: |
+          python -I -m pip install --disable-pip-version-check -r requirements-tooling.txt
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential bison flex
+      - name: Prepare, check, package and restore selected engineering review
+        env:
+          PROJECT_ID: ${{ inputs.project_id }}
+          RELEASE_ID: hosted-${{ github.run_id }}-${{ github.run_attempt }}
+        run: python -I -B -m kicad_tooling.ci_hosted candidate --project "$PROJECT_ID" --release-id "$RELEASE_ID"
+      - name: Retain candidate and failure evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/releases/
+            build/hosted-*.zip
+            build/ci-hosted/
+          if-no-files-found: warn
+          retention-days: 30
