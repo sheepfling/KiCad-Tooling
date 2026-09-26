@@ -33,7 +33,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.template import main as template_main
 from kicad_tooling.verify import verify
 from tests import test_verify
-from tests.support import TEMPLATE_ROOT, reference_root
+from tests.support import SOURCE_ROOT, TEMPLATE_ROOT, reference_root
 from tests.test_electrical import ISLAND, NA, PROJECT, install_fixture
 
 
@@ -248,12 +248,10 @@ class ElectricalSetupTests(unittest.TestCase):
             self.assertTrue((TEMPLATE_ROOT / "templates/electrical" / Path(case.deck).name).is_file())
 
     def test_hosted_electrical_workflow_retains_failure_artifacts(self) -> None:
-        workflow = (TEMPLATE_ROOT / ".github/workflows/electrical-analysis.yml").read_text()
-        self.assertIn("workflow_dispatch:", workflow)
+        workflow = (SOURCE_ROOT / ".github/workflows/electrical-analysis.yml").read_text()
+        self.assertIn("workflow_call:", workflow)
         self.assertNotIn("pull_request:", workflow)
         self.assertIn("contents: read", workflow)
-        # Template revisions may dispatch the shared Python lane or its older CLI
-        # composition. Behavioral simulator/CI enforcement is tested in tooling.
         self.assertIn("kicad_tooling.", workflow)
         self.assertIn("if: always()", workflow)
         self.assertIn("build/electrical/", workflow)

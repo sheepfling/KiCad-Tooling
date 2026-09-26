@@ -16,7 +16,7 @@ from kicad_tooling.ci import main, project_static_pipeline, run_command, static_
 from kicad_tooling.ci_hosted import gate_result
 from kicad_tooling.hwrepo.documentation import check as documentation_check
 from kicad_tooling.hwrepo.models import CommandEvidence, StaticPipelineReport
-from tests.support import reference_root
+from tests.support import SOURCE_ROOT, reference_root
 
 ROOT = reference_root()
 
@@ -307,7 +307,7 @@ class CiDriverTests(unittest.TestCase):
         self.assertEqual(json.loads(output.getvalue())["lane"], "TEMPLATE_METRICS")
 
     def test_native_workflow_passes_the_selected_project_and_uses_declared_dependencies(self) -> None:
-        workflow = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
         native = workflow.split("  kicad:\n", 1)[1].split("  release-rehearsal:\n", 1)[0]
         self.assertIn('kicad_tooling.ci_hosted native --project "$PROJECT_ID"', native)
         self.assertIn('--image "$KICAD_IMAGE" --pr-head "$PR_HEAD"', native)
@@ -318,7 +318,7 @@ class CiDriverTests(unittest.TestCase):
         self.assertIn("needs: [scope, project-matrix, python-tests, kicad, release-rehearsal]", workflow)
 
     def test_hosted_native_and_release_work_do_not_wait_for_windows(self) -> None:
-        workflow = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
         native = workflow.split("  kicad:\n", 1)[1].split("  release-rehearsal:\n", 1)[0]
         release = workflow.split("  release-rehearsal:\n", 1)[1].split("  engineering-gate:\n", 1)[0]
         self.assertIn("needs: [scope, project-matrix]", native)
@@ -327,7 +327,7 @@ class CiDriverTests(unittest.TestCase):
         self.assertNotIn("python-tests", release)
 
     def test_hosted_scope_runs_focused_prs_and_full_main_or_manual_checks(self) -> None:
-        workflow = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
         scope = workflow.split("  scope:\n", 1)[1].split("  project-matrix:\n", 1)[0]
         matrix = workflow.split("  project-matrix:\n", 1)[1].split("  python-tests:\n", 1)[0]
         portable = workflow.split("  python-tests:\n", 1)[1].split("  kicad:\n", 1)[0]
@@ -352,8 +352,9 @@ class CiDriverTests(unittest.TestCase):
         self.assertIn("kicad_tooling.ci_hosted release", release)
 
     def test_manual_dispatch_wires_typed_focus_inputs_into_the_planner(self) -> None:
-        workflow = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
-        dispatch = workflow.split("  workflow_dispatch:\n", 1)[1].split("  push:\n", 1)[0]
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        caller = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        dispatch = caller.split("  workflow_dispatch:\n", 1)[1].split("  push:\n", 1)[0]
         scope = workflow.split("  scope:\n", 1)[1].split("  project-matrix:\n", 1)[0]
         self.assertIn("options: [full, branch, project, product, tag]", dispatch)
         for field in ("focus", "value", "exclude_tag", "shard"):
@@ -365,7 +366,7 @@ class CiDriverTests(unittest.TestCase):
         self.assertIn('--exclude-tag "$DISPATCH_EXCLUDE_TAG" --shard "$DISPATCH_SHARD"', scope)
 
     def test_workflow_delegates_policy_work_to_the_driver(self) -> None:
-        workflow = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
         self.assertNotRegex(workflow, r"\bpython(?:3)?\s+(?!-m\b)[^\n]*tools[/\\][^\n]*\.py")
         for embedded in ("docker run", "<<'PY'", 'case "$CHECK_SCOPE"',
                          "tools/ci.py", "tools/check_all.py"):
@@ -383,7 +384,7 @@ class CiDriverTests(unittest.TestCase):
         self.assertEqual(policy.count("open-pull-requests-limit: 3"), 2)
 
     def test_final_hosted_gate_rejects_incomplete_results(self) -> None:
-        workflow = (ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
+        workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(encoding="utf-8")
         self.assertIn("run: python -I -B -m kicad_tooling.ci_hosted gate", workflow)
         baselines = (
             ("success", "docs", "success", "skipped", "skipped", "", "skipped"),
