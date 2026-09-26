@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kicad-team-tooling"
 dynamic = ["version"]
-description = "CLI and MCP verification workflows for KiCad team projects"
+description = "Guided KiCad workflows for onboarding, triage, verification, BOMs, and review evidence"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.11"
