@@ -1,0 +1,40 @@
+name: KiCad tooling acceptance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: sheepfling/KiCad-Team-Workflow-Template
+          ref: 02a91cc1f5466dc4d6b9fcb0956f701bed2e2792
+          path: build/acceptance-template
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+      - name: Install package check dependencies
+        run: python -m pip install --disable-pip-version-check -e '.[dev]'
+      - name: Check tooling and installed wheel against a separate project
+        run: python scripts/ci.py --project-root build/acceptance-template
+      - name: Keep stage logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: tooling-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/ci/
+          if-no-files-found: warn
