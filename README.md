@@ -1,8 +1,13 @@
 # KiCad Team Tooling
 
-This repository contains the Python CLI and MCP services for KiCad team projects.
-Project source, requirements, catalog records, and engineering decisions stay in a
-project repository created from the
+KiCad Team Tooling guides teams through project onboarding, triage, verification,
+BOM preparation, plotting and 3D review evidence. The Python CLI and local MCP
+server use the same installed services. Results show what was checked and what
+still needs engineering review; they do not approve electrical designs, part
+choices, physical fit, purchasing or manufacturing release.
+
+Project source, requirements, catalog records, and engineering decisions stay in
+a project repository created from the
 [KiCad team workflow template](https://github.com/sheepfling/KiCad-Team-Workflow-Template).
 The same installed package provides both command surfaces.
 
@@ -11,6 +16,9 @@ project structure, catalogs, engineering contracts, agent guidance, and onboardi
 documents. Shared Python implementation, reusable GitHub workflows and their regression
 suite live here. See [project CI](docs/PROJECT_CI.md) for pinned callers and upgrades.
 The package is not published on PyPI yet; the template pins a reviewed Git commit.
+The MCP works with saved project data and reviewed, hash-bound file edits; it does
+not connect to or control a live KiCad editor session. Live editor integration is
+outside the current scope.
 
 ## Try the separate package
 
