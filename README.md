@@ -91,21 +91,24 @@ python3.11 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e '.[dev,cad]'
 export KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Team-Workflow-Template
-python -B -m unittest discover -s tests -v
-python -m ruff check --no-cache kicad_tooling tests
+python -B scripts/ci.py --project-root "$KICAD_TEMPLATE_ROOT"
 ```
 
 On Windows, create the environment with `py -3.11 -m venv .venv` and activate it
-with `.venv\Scripts\Activate.ps1`. In PowerShell, set the fixture path with
-`$env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"`.
+with `.venv\Scripts\Activate.ps1`. In PowerShell, set the fixture path and run the
+same package gate with:
 
-The shared regression suite uses an explicitly selected external template for
-public reference data. It does not copy Python tooling into that checkout:
-
-```sh
-export KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Team-Workflow-Template
-python -B scripts/ci.py --project-root "$KICAD_TEMPLATE_ROOT"
+```powershell
+$env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"
+python -B scripts/ci.py --project-root $env:KICAD_TEMPLATE_ROOT
 ```
+
+The package gate runs the regression suite, Ruff formatting and lint, strict
+Pyright for the shipped package (including a Windows-targeted type pass), rumdl,
+mdrepo, and source/wheel build plus installed-wheel smoke checks. Each stage keeps
+its logs under ignored `build/ci/`. The shared regression suite uses the external
+template for public reference data; it does not copy Python tooling into that
+checkout.
 
 Package CI owns shared lint, typing, regressions and wheel/source-distribution
 checks. Project CI owns project policy, documentation, contracts, local suites and

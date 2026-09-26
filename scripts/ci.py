@@ -353,6 +353,21 @@ def main() -> int:
             cwd=ROOT,
         )
         stage(
+            "ruff-format",
+            (
+                sys.executable,
+                "-m",
+                "ruff",
+                "format",
+                "--check",
+                "kicad_tooling",
+                "tests",
+                "scripts",
+            ),
+            output,
+            cwd=ROOT,
+        )
+        stage(
             "ruff",
             (
                 sys.executable,
