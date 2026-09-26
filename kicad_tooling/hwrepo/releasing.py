@@ -1,4 +1,5 @@
 """Prepare candidates from executed checks, without inventing review approvals."""
+
 from __future__ import annotations
 
 import subprocess
@@ -50,9 +51,15 @@ def reference(root: Path, path: Path) -> EvidenceFile:
     return EvidenceFile(path=path.relative_to(root).as_posix(), sha256=digest(path))
 
 
-def run_native(root: Path, project: ProjectRecord, output: Path, cli: str | None,
-               dependencies: Path | None, export_only: bool = False,
-               assembly_variant: str | None = None) -> None:
+def run_native(
+    root: Path,
+    project: ProjectRecord,
+    output: Path,
+    cli: str | None,
+    dependencies: Path | None,
+    export_only: bool = False,
+    assembly_variant: str | None = None,
+) -> None:
     if cli is not None:
         if export_only:
             from .exports import export
@@ -70,28 +77,64 @@ def run_native(root: Path, project: ProjectRecord, output: Path, cli: str | None
     if dependencies is None:
         raise ValueError("Container dependencies were not prepared")
     config = load_config(root, project.config)
-    command = ("kicad_tooling.release", "export", "--project", project.id,
-               *(("--assembly-variant", assembly_variant) if assembly_variant else ())) if export_only else (
-        "kicad_tooling.validate", "--config", project.config)
+    command = (
+        (
+            "kicad_tooling.release",
+            "export",
+            "--project",
+            project.id,
+            *(("--assembly-variant", assembly_variant) if assembly_variant else ()),
+        )
+        if export_only
+        else ("kicad_tooling.validate", "--config", project.config)
+    )
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
         import os
 
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
-    argv = ("docker", "run", "--rm", "--platform", "linux/amd64", *user,
-                    "--entrypoint", f"/work/{dependencies.as_posix()}/bin/python",
-                    "-e", "HOME=/tmp/kicad-release",
-                    "-e", "PYTHONDONTWRITEBYTECODE=1",
-                    "-v", f"{root}:/work", *git_metadata_mounts(root),
-                    "-w", "/work", config.image, "-I", "-B", "-m", *command,
-                    "--root", "/work", "--output", output.relative_to(root).as_posix())
+    argv = (
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        *user,
+        "--entrypoint",
+        f"/work/{dependencies.as_posix()}/bin/python",
+        "-e",
+        "HOME=/tmp/kicad-release",
+        "-e",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "-v",
+        f"{root}:/work",
+        *git_metadata_mounts(root),
+        "-w",
+        "/work",
+        config.image,
+        "-I",
+        "-B",
+        "-m",
+        *command,
+        "--root",
+        "/work",
+        "--output",
+        output.relative_to(root).as_posix(),
+    )
     started = datetime.now(UTC).isoformat()
     output.parent.mkdir(parents=True, exist_ok=True)
     log_path = output.parent / f"{project.id}.container.command.json"
     try:
-        result = subprocess.run(argv, cwd=root, capture_output=True, text=True, check=False, timeout=600)
-        record = CommandEvidence(argv=argv, started_utc=started, returncode=result.returncode,
-                                 stdout=result.stdout, stderr=result.stderr)
+        result = subprocess.run(
+            argv, cwd=root, capture_output=True, text=True, check=False, timeout=600
+        )
+        record = CommandEvidence(
+            argv=argv,
+            started_utc=started,
+            returncode=result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         record = CommandEvidence(argv=argv, started_utc=started, returncode=127, error=str(exc))
     write_model(log_path, record)
@@ -121,15 +164,20 @@ def resolve_variants(root: Path, values: tuple[str, ...]) -> tuple[ReleaseVarian
         variant = next((item for item in product.variants if item.id == variant_id), None)
         if variant is None:
             raise ValueError(f"Unknown variant {variant_id!r} for product {product_id!r}")
-        selections.append(ReleaseVariant(
-            product=product.id, product_revision=product.revision,
-            variant=variant.id, variant_revision=variant.revision,
-        ))
+        selections.append(
+            ReleaseVariant(
+                product=product.id,
+                product_revision=product.revision,
+                variant=variant.id,
+                variant_revision=variant.revision,
+            )
+        )
     return tuple(selections)
 
 
 def selected_scope(
-    root: Path, candidate: ReleaseManifest,
+    root: Path,
+    candidate: ReleaseManifest,
 ) -> tuple[tuple[ProjectRecord, ...], tuple[ProductRecord, ...]]:
     """Validate release scope and its common toolchain before creating any evidence."""
     repository = load_release_repository(root, candidate)
@@ -142,16 +190,26 @@ def selected_scope(
         project.assurance_profile != "production" or project.status != "release_candidate"
         for project in projects
     ):
-        raise ValueError("Non-review releases require production-profile release_candidate projects")
+        raise ValueError(
+            "Non-review releases require production-profile release_candidate projects"
+        )
     if len(configured_toolchains(root, projects)) != 1:
         raise ValueError("Prepare separate release candidates for different toolchains")
-    board_variants = selected_board_variants(products, candidate.variants,
-                                             (project.id for project in projects))
+    board_variants = selected_board_variants(
+        products, candidate.variants, (project.id for project in projects)
+    )
     for project in projects:
-        if project.id in board_variants and read_model(
-            repo_path(root, project.config), ProjectManifest,
-        ).release_exports is None:
-            raise ValueError(f"{project.id} needs release_exports to apply its product KiCad variant")
+        if (
+            project.id in board_variants
+            and read_model(
+                repo_path(root, project.config),
+                ProjectManifest,
+            ).release_exports
+            is None
+        ):
+            raise ValueError(
+                f"{project.id} needs release_exports to apply its product KiCad variant"
+            )
     return projects, products
 
 
@@ -160,29 +218,46 @@ def selected_projects(root: Path, candidate: ReleaseManifest) -> tuple[ProjectRe
     return selected_scope(root, candidate)[0]
 
 
-def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
-            variants: tuple[ReleaseVariant, ...] = (), release_class: ReleaseClass = ReleaseClass.ENGINEERING_REVIEW,
-            cli: str | None = None, portable: Path | None = None,
-            ngspice: str = "ngspice") -> ReleaseManifest:
+def prepare(
+    root: Path,
+    release_id: str,
+    project_ids: tuple[str, ...],
+    variants: tuple[ReleaseVariant, ...] = (),
+    release_class: ReleaseClass = ReleaseClass.ENGINEERING_REVIEW,
+    cli: str | None = None,
+    portable: Path | None = None,
+    ngspice: str = "ngspice",
+) -> ReleaseManifest:
     """Commit source first; reports and the candidate are then written under build/."""
     from ..ci import static_pipeline
 
     root = root.resolve()
     source = source_state(root)
     if not source.clean or source.commit is None:
-        raise ValueError("Commit the reviewed source first; release preparation requires a clean checkout")
+        raise ValueError(
+            "Commit the reviewed source first; release preparation requires a clean checkout"
+        )
     # Validate caller values before making any output directories.
-    candidate = ReleaseManifest(release_id=release_id, release_class=release_class,
-                                status=ReleaseStatus.CANDIDATE, source_commit=source.commit,
-                                toolchain_id="pending", projects=project_ids, variants=variants,
-                                libraries=(), interfaces=(), artifacts=())
+    candidate = ReleaseManifest(
+        release_id=release_id,
+        release_class=release_class,
+        status=ReleaseStatus.CANDIDATE,
+        source_commit=source.commit,
+        toolchain_id="pending",
+        projects=project_ids,
+        variants=variants,
+        libraries=(),
+        interfaces=(),
+        artifacts=(),
+    )
     projects, products = selected_scope(root, candidate)
     from .electrical_evidence import required_projects, verify_electrical
 
     electrical_ids = required_projects(root, projects, release_class)
     toolchains = configured_toolchains(root, projects)
-    board_variants = selected_board_variants(products, variants,
-                                             (project.id for project in projects))
+    board_variants = selected_board_variants(
+        products, variants, (project.id for project in projects)
+    )
     output = repo_path(root, f"build/releases/{release_id}")
     output.mkdir(parents=True, exist_ok=False)
     selected_ids = tuple(project.id for project in projects)
@@ -193,9 +268,14 @@ def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
             raise ValueError("Selected release portable checks did not return a project report")
         if source_state(root) != source:
             raise ValueError("Source changed while running selected portable checks")
-        write_model(portable, ScopedReleasePortableReport(
-            source=source, projects=selected_ids, checks=checks,
-        ))
+        write_model(
+            portable,
+            ScopedReleasePortableReport(
+                source=source,
+                projects=selected_ids,
+                checks=checks,
+            ),
+        )
     else:
         portable = repo_path(root, portable.as_posix())
     portable_reference = reference(root, portable)
@@ -217,19 +297,30 @@ def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
             from .electrical_runner import analyze
 
             electrical_output = output / "electrical" / project.id
-            analysis = analyze(root, project.id, electrical_output,
-                               native_output / "summary.json", ngspice=ngspice)
+            analysis = analyze(
+                root, project.id, electrical_output, native_output / "summary.json", ngspice=ngspice
+            )
             if analysis.status != "PASS":
-                raise ValueError(f"Electrical checks failed for {project.id}; see {electrical_output}")
+                raise ValueError(
+                    f"Electrical checks failed for {project.id}; see {electrical_output}"
+                )
             electrical[project.id] = reference(root, electrical_output / "electrical.json")
             verify_electrical(root, electrical[project.id], source, project.id, native[project.id])
         manifest = read_model(repo_path(root, project.config), ProjectManifest)
         if manifest.release_exports is not None:
             export_output = output / "exports" / project.id
-            run_native(root, project, export_output, cli, dependencies, export_only=True,
-                       assembly_variant=board_variants.get(project.id))
-            verify_board_population(products, variants, project.id,
-                                    export_output / "assembly/bom.csv")
+            run_native(
+                root,
+                project,
+                export_output,
+                cli,
+                dependencies,
+                export_only=True,
+                assembly_variant=board_variants.get(project.id),
+            )
+            verify_board_population(
+                products, variants, project.id, export_output / "assembly/bom.csv"
+            )
             exports[project.id] = reference(root, export_output / "exports.json")
     # Only retain projections of selected product variants in this candidate.
     projections = expected_outputs(root, tuple(project.id for project in projects))
@@ -241,33 +332,65 @@ def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
                 destination.write_bytes(content)
     write_markdown(
         output / "review.md",
-        release_review(release_id, source.commit, release_class.value, (
-            (project.id, "PASS — retained electrical evidence" if project.id in electrical
-             else "NOT_CONFIGURED — electrical analysis not assessed") for project in projects
-        )),
+        release_review(
+            release_id,
+            source.commit,
+            release_class.value,
+            (
+                (
+                    project.id,
+                    "PASS — retained electrical evidence"
+                    if project.id in electrical
+                    else "NOT_CONFIGURED — electrical analysis not assessed",
+                )
+                for project in projects
+            ),
+        ),
     )
-    artifacts = tuple(ReleaseArtifact(id=f"artifact-{index}", kind=artifact_kind(path, output),
-                        path=path.relative_to(root).as_posix(), sha256=digest(path),
-                        intended_use="Release candidate review; see approval and release class.")
-                      for index, path in enumerate(sorted(output.rglob("*"))) if path.is_file())
+    artifacts = tuple(
+        ReleaseArtifact(
+            id=f"artifact-{index}",
+            kind=artifact_kind(path, output),
+            path=path.relative_to(root).as_posix(),
+            sha256=digest(path),
+            intended_use="Release candidate review; see approval and release class.",
+        )
+        for index, path in enumerate(sorted(output.rglob("*")))
+        if path.is_file()
+    )
     registry = load_registry(root)
     library_ids = {identifier for project in projects for identifier in project.library_ids}
     interface_ids = {identifier for project in projects for identifier in project.interfaces}
     libraries = read_model(repo_path(root, registry.catalogs.libraries), LibrariesCatalog)
     interfaces = read_model(repo_path(root, registry.catalogs.interfaces), InterfacesCatalog)
-    candidate = candidate.model_copy(update={
-        "toolchain_id": next(iter(toolchains)),
-        "libraries": tuple(ReleaseLibrary(id=library.id, version=library.version,
-            provenance_sha256=library.provenance_sha256, licensing_sha256=library.licensing_sha256)
-                           for library in libraries.libraries if library.id in library_ids),
-        "interfaces": tuple(ReleaseInterface(id=interface.id, revision=interface.revision)
-                            for interface in interfaces.interfaces if interface.id in interface_ids),
-        "artifacts": artifacts,
-        "evidence": ReleaseEvidence(portable=portable_reference, native=native, exports=exports,
-                                    electrical=electrical),
-    })
+    candidate = candidate.model_copy(
+        update={
+            "toolchain_id": next(iter(toolchains)),
+            "libraries": tuple(
+                ReleaseLibrary(
+                    id=library.id,
+                    version=library.version,
+                    provenance_sha256=library.provenance_sha256,
+                    licensing_sha256=library.licensing_sha256,
+                )
+                for library in libraries.libraries
+                if library.id in library_ids
+            ),
+            "interfaces": tuple(
+                ReleaseInterface(id=interface.id, revision=interface.revision)
+                for interface in interfaces.interfaces
+                if interface.id in interface_ids
+            ),
+            "artifacts": artifacts,
+            "evidence": ReleaseEvidence(
+                portable=portable_reference, native=native, exports=exports, electrical=electrical
+            ),
+        }
+    )
     if source_state(root) != source:
-        raise ValueError("Source changed while preparing the release; retained outputs are not a candidate")
+        raise ValueError(
+            "Source changed while preparing the release; retained outputs are not a candidate"
+        )
     write_model(output / "manifest.json", candidate)
     return candidate
 
@@ -305,17 +428,26 @@ def retained_paths(root: Path, manifest: ReleaseManifest) -> set[str]:
         from .models import ElectricalAnalysisReport
 
         paths.add(reference_file.path)
-        electrical_report = read_model(evidence_path(root, reference_file), ElectricalAnalysisReport)
-        paths.update((Path(reference_file.path).parent / name).as_posix()
-                     for name in electrical_report.artifacts_sha256)
+        electrical_report = read_model(
+            evidence_path(root, reference_file), ElectricalAnalysisReport
+        )
+        paths.update(
+            (Path(reference_file.path).parent / name).as_posix()
+            for name in electrical_report.artifacts_sha256
+        )
     for reference_file in manifest.evidence.native.values():
         paths.add(reference_file.path)
         report = read_model(evidence_path(root, reference_file), ValidationSummary)
-        paths.update((Path(reference_file.path).parent / name).as_posix() for name in report.artifacts_sha256)
+        paths.update(
+            (Path(reference_file.path).parent / name).as_posix() for name in report.artifacts_sha256
+        )
     for reference_file in manifest.evidence.exports.values():
         from .models import ReleaseExportReport
 
         paths.add(reference_file.path)
         export_report = read_model(evidence_path(root, reference_file), ReleaseExportReport)
-        paths.update((Path(reference_file.path).parent / name).as_posix() for name in export_report.artifacts_sha256)
+        paths.update(
+            (Path(reference_file.path).parent / name).as_posix()
+            for name in export_report.artifacts_sha256
+        )
     return paths

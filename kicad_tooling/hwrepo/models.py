@@ -1,4 +1,5 @@
 """Typed, strict records for repository inputs, policy outputs and generated views."""
+
 from __future__ import annotations
 
 import re
@@ -887,7 +888,9 @@ class TeamPolicy(StrictModel):
     schema_version: Literal["1"] = "1"
     minimum_actors: Annotated[int, Field(ge=1)] = 2
     independent_review: bool = True
-    required_status_checks: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)] = ("Template acceptance",)
+    required_status_checks: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)] = (
+        "Template acceptance",
+    )
     rationale: NonEmptyText
 
 
@@ -1401,7 +1404,9 @@ class StaticPipelineReport(StrictModel):
         ):
             raise ValueError("Legacy full reports require all tooling quality commands")
         if self.scope == "repository_static" and self.tooling_version is None:
-            raise ValueError("Project repository reports must identify the installed tooling version")
+            raise ValueError(
+                "Project repository reports must identify the installed tooling version"
+            )
         return self
 
 
@@ -1439,7 +1444,6 @@ class ProjectVerificationReport(StrictModel):
     status: Literal["PASS", "FAIL", "ERROR"]
     next_actions: tuple[NonEmptyText, ...] = ()
     error: str | None = None
-
 
 
 class ScopedReleasePortableReport(StrictModel):
@@ -1567,19 +1571,38 @@ class McpGenerationReport(StrictModel):
 
 
 Resolution = Literal[
-    "source_present", "toolchain_dependent", "embedded_present", "broken",
+    "source_present",
+    "toolchain_dependent",
+    "embedded_present",
+    "broken",
 ]
 InventoryStatus = Literal["READY", "REVIEW", "FAIL"]
 ExportMode = Literal["inspect", "generate"]
 ExportStatus = Literal["PASS", "FAIL", "ERROR"]
 SelectedRunner = Literal["none", "local", "container"]
 ThreeDView = Literal[
-    "top", "bottom", "left", "right", "front", "back",
-    "angled", "angled-90", "angled-180", "angled-270",
+    "top",
+    "bottom",
+    "left",
+    "right",
+    "front",
+    "back",
+    "angled",
+    "angled-90",
+    "angled-180",
+    "angled-270",
 ]
 THREE_D_VIEWS: tuple[ThreeDView, ...] = (
-    "top", "bottom", "left", "right", "front", "back",
-    "angled", "angled-90", "angled-180", "angled-270",
+    "top",
+    "bottom",
+    "left",
+    "right",
+    "front",
+    "back",
+    "angled",
+    "angled-90",
+    "angled-180",
+    "angled-270",
 )
 DEFAULT_THREE_D_VIEWS: tuple[ThreeDView, ...] = THREE_D_VIEWS
 
@@ -1703,6 +1726,8 @@ class ModelPopulationReport(StrictModel):
     )
     next_commands: tuple[NonEmptyText, ...] = ()
     error: str | None = None
+
+
 class PurchasingSchemaModel(StrictModel):
     schema_version: Literal["1"] = "1"
 
@@ -1720,7 +1745,9 @@ class PurchasingPreferences(PurchasingSchemaModel):
     boards: PositiveCount = 1
     spare_percent: Annotated[int, Field(ge=0, le=100)] = 0
     spare_minimum: NonNegativeCount = 0
-    digikey_skus: Mapping[Identifier, Annotated[str, StringConstraints(min_length=1)]] = Field(default_factory=dict)
+    digikey_skus: Mapping[Identifier, Annotated[str, StringConstraints(min_length=1)]] = Field(
+        default_factory=dict
+    )
 
     @model_validator(mode="after")
     def exact_supplier_identifiers(self) -> PurchasingPreferences:
@@ -1728,7 +1755,9 @@ class PurchasingPreferences(PurchasingSchemaModel):
             if identifier != identifier.strip() or any(
                 ord(character) < 32 or ord(character) == 127 for character in identifier
             ):
-                raise ValueError("DigiKey identifiers must be exact text without padding or control characters")
+                raise ValueError(
+                    "DigiKey identifiers must be exact text without padding or control characters"
+                )
         return self
 
 
@@ -1803,7 +1832,8 @@ class DigiKeyHandoffUrl(RootModel[str]):
 
 class DigiKeyHandoffReply(StrictModel):
     single_use_url: Annotated[
-        str, StringConstraints(pattern=r"^https://www\.digikey\.com/short/[a-z0-9]{7,8}$"),
+        str,
+        StringConstraints(pattern=r"^https://www\.digikey\.com/short/[a-z0-9]{7,8}$"),
     ]
 
 
@@ -1911,7 +1941,8 @@ FiniteMeasure = Annotated[float, Field(allow_inf_nan=False)]
 NonNegativeMeasure = Annotated[float, Field(ge=0, allow_inf_nan=False)]
 ElectricalPositive = Annotated[float, Field(gt=0, allow_inf_nan=False)]
 SpiceExpression = Annotated[
-    str, StringConstraints(pattern=r"^[A-Za-z0-9_().,+*/ ^-]+$", min_length=1),
+    str,
+    StringConstraints(pattern=r"^[A-Za-z0-9_().,+*/ ^-]+$", min_length=1),
 ]
 
 
@@ -2025,7 +2056,9 @@ class TransientAnalysis(SimulationModel):
             raise ValueError("Transient step must be smaller than stop")
         for measure in self.measures:
             if measure.stop > self.stop_s or measure.stop - measure.start < self.step_s:
-                raise ValueError("Transient measurement window is outside the run or below its step")
+                raise ValueError(
+                    "Transient measurement window is outside the run or below its step"
+                )
         return self
 
 
@@ -2059,8 +2092,10 @@ class PowerAnalysis(StrictModel):
             if not any(m.unit == "A" and m.statistic == "max" for m in case.measures):
                 raise ValueError("Every startup case needs a peak current limit")
         for case in self.steady_state:
-            if not all(any(m.unit == unit and m.statistic == "avg" for m in case.measures)
-                       for unit in ("A", "W")):
+            if not all(
+                any(m.unit == unit and m.statistic == "avg" for m in case.measures)
+                for unit in ("A", "W")
+            ):
                 raise ValueError("Every steady-state case needs average current and power limits")
         return self
 
@@ -2073,12 +2108,13 @@ class HighFrequencyAnalysis(StrictModel):
     sweeps: Annotated[tuple[FrequencyAnalysis, ...], Field(min_length=1)]
     waveforms: Annotated[tuple[TransientAnalysis, ...], Field(min_length=1)]
 
-
     @model_validator(mode="after")
     def waveform_resolution(self) -> HighFrequencyAnalysis:
         for case in self.waveforms:
             if case.step_s > min(self.rise_time_s / 10, 1 / (20 * self.frequency_hz)):
-                raise ValueError("Waveform step needs at least 10 samples per rise and 20 per cycle")
+                raise ValueError(
+                    "Waveform step needs at least 10 samples per rise and 20 per cycle"
+                )
             if case.stop_s < 2 / self.frequency_hz:
                 raise ValueError("Waveform run must cover at least two nominal cycles")
         return self
@@ -2089,9 +2125,15 @@ class ElectricalAnalysisContract(StrictModel):
     project_id: Identifier
     ngspice_version: NonEmptyText
     ngspice_source_sha256: Digest | None = None
-    grounding: Annotated[GroundingAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")]
-    power: Annotated[PowerAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")]
-    high_frequency: Annotated[HighFrequencyAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")]
+    grounding: Annotated[
+        GroundingAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
+    ]
+    power: Annotated[
+        PowerAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
+    ]
+    high_frequency: Annotated[
+        HighFrequencyAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
+    ]
 
     @model_validator(mode="after")
     def unique_cases(self) -> ElectricalAnalysisContract:
@@ -2309,15 +2351,21 @@ class SupplierHandoffReport(StrictModel):
     handoff_sha256: Digest
     payload_sha256: Digest
     attempt_receipt: RepositoryPath | None = None
-    single_use_url: Annotated[
-        str, StringConstraints(pattern=r"^https://www\.digikey\.com/short/[a-z0-9]{7,8}$"),
-    ] | None = None
+    single_use_url: (
+        Annotated[
+            str,
+            StringConstraints(pattern=r"^https://www\.digikey\.com/short/[a-z0-9]{7,8}$"),
+        ]
+        | None
+    ) = None
     issues: tuple[NonEmptyText, ...] = ()
     purchase_authorized: Literal[False] = False
     build_authorized: Literal[False] = False
 
 
-ForeignFormat = Literal["auto", "pads", "altium", "eagle", "cadstar", "fabmaster", "pcad", "solidworks"]
+ForeignFormat = Literal[
+    "auto", "pads", "altium", "eagle", "cadstar", "fabmaster", "pcad", "solidworks"
+]
 
 
 class ForeignPcbReport(StrictModel):

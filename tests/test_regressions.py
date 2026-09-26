@@ -1,4 +1,5 @@
 """Regressions from the first real Actions run and report-policy safeguards."""
+
 from __future__ import annotations
 
 import json
@@ -37,6 +38,7 @@ class RegressionTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root: Path = Path(self.temp.name)
         self.config = load_config(ROOT, ROOT / "examples/projects/controller/project.json")
+
     ####
 
     def erc_report(self) -> ErcReport:
@@ -45,26 +47,33 @@ class RegressionTests(unittest.TestCase):
             "kicad_version": "10.0.0",
             "included_severities": ["error", "warning", "exclusion"],
             "ignored_checks": [
-                {"key": key}
-                for key in self.config.validation.expected_ignored_checks.erc
+                {"key": key} for key in self.config.validation.expected_ignored_checks.erc
             ],
             "sheets": [{"violations": []}],
         }
+
     ####
 
     def check(self, data: ErcReport) -> int:
         path: Path = self.root / "report.json"
-        payload = {"$schema": data["schema"], **{key: value for key, value in data.items() if key != "schema"}}
+        payload = {
+            "$schema": data["schema"],
+            **{key: value for key, value in data.items() if key != "schema"},
+        }
         path.write_text(json.dumps(payload))
         return check_report(path, "erc", self.config)
+
     ####
 
     def test_known_local_state_does_not_change_source_identity(self) -> None:
         shutil.copytree(ROOT / "examples/projects", self.root / "examples/projects")
         before = hashes(self.root, self.config.source_roots)
-        (self.root / "examples/projects/controller/kicad/controller.kicad_prl").write_text("local preferences")
+        (self.root / "examples/projects/controller/kicad/controller.kicad_prl").write_text(
+            "local preferences"
+        )
         (self.root / "examples/projects/controller/kicad/fp-info-cache").write_text("local cache")
         self.assertEqual(before, hashes(self.root, self.config.source_roots))
+
     ####
 
     def test_other_new_source_still_changes_inventory(self) -> None:
@@ -72,12 +81,14 @@ class RegressionTests(unittest.TestCase):
         before = hashes(self.root, self.config.source_roots)
         (self.root / "examples/projects/controller/kicad/new.kicad_sch").write_text("unregistered")
         self.assertNotEqual(before, hashes(self.root, self.config.source_roots))
+
     ####
 
     def test_pcb_svg_is_a_file_not_a_directory(self) -> None:
         path: Path = self.root / "pcb.svg"
         path.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
         self.assertEqual(svg_files(self.root, "pcb_svg"), [path])
+
     ####
 
     def test_schematic_svg_uses_a_directory(self) -> None:
@@ -85,6 +96,7 @@ class RegressionTests(unittest.TestCase):
         path: Path = self.root / "schematic/sheet.svg"
         path.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
         self.assertEqual(svg_files(self.root, "schematic_svg"), [path])
+
     ####
 
     def test_non_svg_xml_rejected(self) -> None:
@@ -92,10 +104,12 @@ class RegressionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             svg_files(self.root, "pcb_svg")
         ####
+
     ####
 
     def test_pinned_report_policy_passes(self) -> None:
         self.assertEqual(self.check(self.erc_report()), 0)
+
     ####
 
     def test_new_disabled_check_rejected(self) -> None:
@@ -104,6 +118,7 @@ class RegressionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Disabled-check"):
             self.check(data)
         ####
+
     ####
 
     def test_missing_ignored_inventory_rejected(self) -> None:
@@ -112,6 +127,7 @@ class RegressionTests(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, "ignored-check"):
             self.check(data)
         ####
+
     ####
 
     def test_suppressed_warning_output_rejected(self) -> None:
@@ -120,6 +136,7 @@ class RegressionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "warnings"):
             self.check(data)
         ####
+
     ####
 
     def test_stale_report_version_rejected(self) -> None:
@@ -127,5 +144,7 @@ class RegressionTests(unittest.TestCase):
         data["kicad_version"] = "9.0.0"
         with self.assertRaisesRegex(ValueError, "identity"):
             self.check(data)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,5 @@
 """Fail before editing when the locally installed KiCad does not match the approved toolchain."""
+
 from __future__ import annotations
 
 import argparse
@@ -17,7 +18,9 @@ MACOS_KICAD_CLI = Path("/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli")
 
 def toolchain(root: Path, identifier: str | None) -> ToolchainRecord:
     catalog = read_model(repo_path(root, settings(root).catalogs.toolchains), ToolchainsCatalog)
-    matching = [record for record in catalog.toolchains if identifier is None or record.id == identifier]
+    matching = [
+        record for record in catalog.toolchains if identifier is None or record.id == identifier
+    ]
     if len(matching) == 1:
         return matching[0]
     if identifier is not None:
@@ -26,9 +29,7 @@ def toolchain(root: Path, identifier: str | None) -> ToolchainRecord:
     raise ValueError(f"Select --toolchain <id>; available catalogued toolchains: {available}")
 
 
-def assessment(
-    record: ToolchainRecord, observed_version: str | None
-) -> ToolchainAssessment:
+def assessment(record: ToolchainRecord, observed_version: str | None) -> ToolchainAssessment:
     matches = observed_version == record.kicad_version
     return ToolchainAssessment(
         toolchain_id=record.id,
@@ -64,10 +65,15 @@ def cli_executable(cli: str) -> str | None:
     for variable in ("LOCALAPPDATA", "ProgramFiles"):
         value: str | None = os.environ.get(variable)
         if value:
-            roots.append(Path(value) / "Programs" / "KiCad") if variable == "LOCALAPPDATA" else roots.append(Path(value) / "KiCad")
+            roots.append(
+                Path(value) / "Programs" / "KiCad"
+            ) if variable == "LOCALAPPDATA" else roots.append(Path(value) / "KiCad")
     candidates: list[Path] = [
-        candidate for root in roots if root.is_dir()
-        for candidate in root.glob("*/bin/kicad-cli.exe") if candidate.is_file()
+        candidate
+        for root in roots
+        if root.is_dir()
+        for candidate in root.glob("*/bin/kicad-cli.exe")
+        if candidate.is_file()
     ]
     return str(candidates[0].resolve()) if len(candidates) == 1 else None
 
@@ -78,7 +84,11 @@ def observed_version(cli: str) -> str | None:
         return None
     try:
         result: subprocess.CompletedProcess[str] = subprocess.run(
-            [executable, "version"], text=True, capture_output=True, timeout=30, check=False,
+            [executable, "version"],
+            text=True,
+            capture_output=True,
+            timeout=30,
+            check=False,
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -88,9 +98,12 @@ def observed_version(cli: str) -> str | None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--toolchain", help="Catalogued ID; may be omitted only for a single toolchain")
     parser.add_argument(
-        "--cli", default="kicad-cli",
+        "--toolchain", help="Catalogued ID; may be omitted only for a single toolchain"
+    )
+    parser.add_argument(
+        "--cli",
+        default="kicad-cli",
         help="KiCad CLI command or path (relative paths use the caller's cwd)",
     )
     args = parser.parse_args()

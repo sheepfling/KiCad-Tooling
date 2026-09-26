@@ -1,4 +1,5 @@
 """One-command fork adoption using existing transactional initialization and CI."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,7 +35,8 @@ def adopt(root: Path, project_id: str) -> TemplateAdoptReport:
             status="FAIL",
             issues=tuple(
                 f"{check.id}: {check.next_action}"
-                for check in environment.checks if check.status == "FAIL"
+                for check in environment.checks
+                if check.status == "FAIL"
             ),
             next_actions=environment.next_actions,
         )
@@ -53,7 +55,8 @@ def adopt(root: Path, project_id: str) -> TemplateAdoptReport:
             portable="NOT_RUN",
             status="FAIL",
             issues=tuple(f"{issue.code}: {issue.message}" for issue in initialized.issues),
-            next_actions=version_actions or (
+            next_actions=version_actions
+            or (
                 "Resolve the initialization finding without deleting adopter work, then rerun adoption.",
             ),
         )
@@ -71,9 +74,13 @@ def adopt(root: Path, project_id: str) -> TemplateAdoptReport:
         status="PASS" if passed else "FAIL",
         changed=initialized.changed,
         removed=initialized.removed,
-        issues=() if passed else ("Portable acceptance failed; run kicad_tooling.ci for the detailed report.",),
+        issues=()
+        if passed
+        else ("Portable acceptance failed; run kicad_tooling.ci for the detailed report.",),
         next_actions=(
             "Choose the repository license/notice and review the adoption changes before the first commit.",
             "Create or import the first project island, then run its selected and native checks.",
-        ) if passed else ("Run python -B -m kicad_tooling.ci and resolve its reported findings.",),
+        )
+        if passed
+        else ("Run python -B -m kicad_tooling.ci and resolve its reported findings.",),
     )

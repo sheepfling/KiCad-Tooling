@@ -4,6 +4,7 @@ This module imports Matplotlib only when a chart is requested. The charts show
 simulator output and the authored measurement windows; they do not certify a
 physical board or recompute the acceptance result in the receipt.
 """
+
 from __future__ import annotations
 
 import math
@@ -76,7 +77,9 @@ def _trace(data: WaveformData, name: str) -> WaveformSeries:
     return matches[0]
 
 
-def _phase_from_expression(data: WaveformData, expression: str) -> tuple[tuple[float, ...], str] | None:
+def _phase_from_expression(
+    data: WaveformData, expression: str
+) -> tuple[tuple[float, ...], str] | None:
     compact = re.sub(r"\s+", "", expression)
     ratio = _DB_RATIO.fullmatch(compact)
     single = _DB_SINGLE.fullmatch(compact)
@@ -92,9 +95,13 @@ def _phase_from_expression(data: WaveformData, expression: str) -> tuple[tuple[f
     values: list[complex] = []
     for top, bottom in zip(numerator.values, denominator.values, strict=True):
         if bottom == 0:
-            raise ValueError(f"Cannot derive phase of {expression}: zero {denominator_name} sample.")
+            raise ValueError(
+                f"Cannot derive phase of {expression}: zero {denominator_name} sample."
+            )
         values.append(top / bottom)
-    return _complex_phase(tuple(values)), f"Derived phase of {numerator_name}/{denominator_name} (rad)"
+    return _complex_phase(
+        tuple(values)
+    ), f"Derived phase of {numerator_name}/{denominator_name} (rad)"
 
 
 def _is_real(value: complex) -> bool:
@@ -117,8 +124,10 @@ def _panels(data: WaveformData, case: SimulationCase) -> tuple[_ChartPanel, ...]
         series = _indexed_trace(data, index)
         if len(series.values) != len(data.axis):
             raise ValueError(f"Waveform {series.name} has a different sample count from its axis.")
-        if any(not math.isfinite(value.real) or not math.isfinite(value.imag)
-               for value in series.values):
+        if any(
+            not math.isfinite(value.real) or not math.isfinite(value.imag)
+            for value in series.values
+        ):
             raise ValueError(f"Waveform {series.name} contains a non-finite value.")
         unit_tokens = series.unit.split()
         native_unit = unit_tokens[0].casefold() if unit_tokens else ""
@@ -128,10 +137,15 @@ def _panels(data: WaveformData, case: SimulationCase) -> tuple[_ChartPanel, ...]
                 f"but measurement {measure.id} declares {measure.unit}."
             )
         tolerance = max(abs(measure.stop), 1e-15) * 1e-8
-        if not (data.axis[0] <= measure.start + tolerance
-                and data.axis[-1] >= measure.stop - tolerance
-                and sum(measure.start - tolerance <= point <= measure.stop + tolerance
-                        for point in data.axis) >= 2):
+        if not (
+            data.axis[0] <= measure.start + tolerance
+            and data.axis[-1] >= measure.stop - tolerance
+            and sum(
+                measure.start - tolerance <= point <= measure.stop + tolerance
+                for point in data.axis
+            )
+            >= 2
+        ):
             raise ValueError(f"Waveform does not cover the {measure.id} measurement window.")
 
         complex_trace = any(not _is_real(value) for value in series.values)
@@ -143,22 +157,34 @@ def _panels(data: WaveformData, case: SimulationCase) -> tuple[_ChartPanel, ...]
                 "author a scalar ngspice expression before charting it."
             )
         if complex_trace:
-            panels.append(_ChartPanel(
-                measure=measure, values=tuple(abs(value) for value in series.values),
-                label=f"Derived magnitude of {series.name}", unit=measure.unit,
-                comparable_limits=False, phase=_complex_phase(series.values),
-                phase_label=f"Derived phase of {series.name} (rad)",
-            ))
+            panels.append(
+                _ChartPanel(
+                    measure=measure,
+                    values=tuple(abs(value) for value in series.values),
+                    label=f"Derived magnitude of {series.name}",
+                    unit=measure.unit,
+                    comparable_limits=False,
+                    phase=_complex_phase(series.values),
+                    phase_label=f"Derived phase of {series.name} (rad)",
+                )
+            )
         else:
-            derived = (_phase_from_expression(data, measure.expression)
-                       if isinstance(case, FrequencyAnalysis) else None)
-            panels.append(_ChartPanel(
-                measure=measure, values=tuple(value.real for value in series.values),
-                label=f"{series.name}: {measure.expression}", unit=measure.unit,
-                comparable_limits=True,
-                phase=derived[0] if derived else None,
-                phase_label=derived[1] if derived else None,
-            ))
+            derived = (
+                _phase_from_expression(data, measure.expression)
+                if isinstance(case, FrequencyAnalysis)
+                else None
+            )
+            panels.append(
+                _ChartPanel(
+                    measure=measure,
+                    values=tuple(value.real for value in series.values),
+                    label=f"{series.name}: {measure.expression}",
+                    unit=measure.unit,
+                    comparable_limits=True,
+                    phase=derived[0] if derived else None,
+                    phase_label=derived[1] if derived else None,
+                )
+            )
     return tuple(panels)
 
 
@@ -196,8 +222,9 @@ def render_case(data: WaveformData, case: SimulationCase, png: Path, svg: Path) 
         first = min(measure.start for measure in case.measures)
         last = max(measure.stop for measure in case.measures)
         margin = (last - first) * 0.03
-        visible = tuple(index for index, value in enumerate(x)
-                        if first - margin <= value <= last + margin)
+        visible = tuple(
+            index for index, value in enumerate(x) if first - margin <= value <= last + margin
+        )
     else:
         visible = tuple(range(len(x)))
     shown_x = tuple(x[index] for index in visible)
@@ -206,39 +233,75 @@ def render_case(data: WaveformData, case: SimulationCase, png: Path, svg: Path) 
     for panel in panels:
         chart = axes[position, 0]
         position += 1
-        chart.plot(shown_x, tuple(panel.values[index] for index in visible),
-                   color="#155a85", linewidth=1.2, label=panel.label)
-        chart.axvspan(panel.measure.start, panel.measure.stop, alpha=0.12,
-                      color="#d39d27", label="Measured window")
+        chart.plot(
+            shown_x,
+            tuple(panel.values[index] for index in visible),
+            color="#155a85",
+            linewidth=1.2,
+            label=panel.label,
+        )
+        chart.axvspan(
+            panel.measure.start,
+            panel.measure.stop,
+            alpha=0.12,
+            color="#d39d27",
+            label="Measured window",
+        )
         if panel.comparable_limits:
             if panel.measure.statistic == "pp":
-                chart.text(0.99, 0.98,
-                           (f"pp limits [{panel.measure.minimum}, {panel.measure.maximum}] "
-                            f"{panel.unit} over shaded window"),
-                           transform=chart.transAxes, horizontalalignment="right",
-                           verticalalignment="top", fontsize=8)
+                chart.text(
+                    0.99,
+                    0.98,
+                    (
+                        f"pp limits [{panel.measure.minimum}, {panel.measure.maximum}] "
+                        f"{panel.unit} over shaded window"
+                    ),
+                    transform=chart.transAxes,
+                    horizontalalignment="right",
+                    verticalalignment="top",
+                    fontsize=8,
+                )
             else:
-                for label, limit, color in (("lower limit", panel.measure.minimum, "#247046"),
-                                            ("upper limit", panel.measure.maximum, "#af3939")):
+                for label, limit, color in (
+                    ("lower limit", panel.measure.minimum, "#247046"),
+                    ("upper limit", panel.measure.maximum, "#af3939"),
+                ):
                     if limit is not None:
-                        chart.hlines(limit, panel.measure.start, panel.measure.stop,
-                                     color=color, linestyle="--", linewidth=1,
-                                     label=(f"{panel.measure.statistic} {label} "
-                                            f"{limit:g} {panel.unit}"))
+                        chart.hlines(
+                            limit,
+                            panel.measure.start,
+                            panel.measure.stop,
+                            color=color,
+                            linestyle="--",
+                            linewidth=1,
+                            label=(f"{panel.measure.statistic} {label} {limit:g} {panel.unit}"),
+                        )
         else:
-            chart.text(0.99, 0.98, "Derived magnitude; limits apply to ngspice measure",
-                       transform=chart.transAxes, horizontalalignment="right",
-                       verticalalignment="top", fontsize=8)
+            chart.text(
+                0.99,
+                0.98,
+                "Derived magnitude; limits apply to ngspice measure",
+                transform=chart.transAxes,
+                horizontalalignment="right",
+                verticalalignment="top",
+                fontsize=8,
+            )
         chart.set_ylabel(f"{panel.measure.id} ({panel.unit})")
         chart.grid(True, alpha=0.25)
         chart.legend(loc="best", fontsize=8)
         if panel.phase is not None:
             phase_chart = axes[position, 0]
             position += 1
-            phase_chart.plot(shown_x, tuple(panel.phase[index] for index in visible),
-                             color="#7d5596", linewidth=1.2, label=panel.phase_label)
-            phase_chart.axvspan(panel.measure.start, panel.measure.stop,
-                                alpha=0.12, color="#d39d27")
+            phase_chart.plot(
+                shown_x,
+                tuple(panel.phase[index] for index in visible),
+                color="#7d5596",
+                linewidth=1.2,
+                label=panel.phase_label,
+            )
+            phase_chart.axvspan(
+                panel.measure.start, panel.measure.stop, alpha=0.12, color="#d39d27"
+            )
             phase_chart.set_ylabel("Phase (rad)")
             phase_chart.grid(True, alpha=0.25)
             phase_chart.legend(loc="best", fontsize=8)
@@ -248,10 +311,14 @@ def render_case(data: WaveformData, case: SimulationCase, png: Path, svg: Path) 
             chart.set_xscale("log")
     axes[-1, 0].set_xlabel(axis_label)
     # Matplotlib leaves these keyword argument signatures partially untyped.
-    subtitle = ("ngspice model output; measurement window detail, full samples in CSV"
-                if detail_window else "ngspice model output")
+    subtitle = (
+        "ngspice model output; measurement window detail, full samples in CSV"
+        if detail_window
+        else "ngspice model output"
+    )
     figure.suptitle(  # pyright: ignore[reportUnknownMemberType]
-        textwrap.fill(f"{case.id}: {case.basis}", 105) + f"\n{subtitle}", fontsize=11,
+        textwrap.fill(f"{case.id}: {case.basis}", 105) + f"\n{subtitle}",
+        fontsize=11,
     )
     png.parent.mkdir(parents=True, exist_ok=True)
     svg.parent.mkdir(parents=True, exist_ok=True)

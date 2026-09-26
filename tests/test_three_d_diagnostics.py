@@ -1,4 +1,5 @@
 """Static PCB model findings join the existing diagnostic repair queue."""
+
 from __future__ import annotations
 
 import shutil
@@ -30,15 +31,25 @@ class ThreeDDiagnosticTests(unittest.TestCase):
         assignment = "" if model is None else f' (model "{model}")'
         self.board.write_text(
             '(kicad_pcb\n  (footprint "Lib:Part" (property "Reference" "U1")'
-            + assignment + ')\n)\n', encoding="utf-8",
+            + assignment
+            + ")\n)\n",
+            encoding="utf-8",
         )
 
     def test_missing_models_are_review_findings_and_do_not_fail_portable_diagnosis(self) -> None:
         self.board_source()
         original = self.board.read_bytes()
         journal = DiagnosticJournal(self.root, "controller")
-        with (patch("kicad_tooling.hwrepo.three_d.doctor", side_effect=AssertionError("native runner started")),
-              patch("kicad_tooling.hwrepo.three_d.generate", side_effect=AssertionError("3D export started"))):
+        with (
+            patch(
+                "kicad_tooling.hwrepo.three_d.doctor",
+                side_effect=AssertionError("native runner started"),
+            ),
+            patch(
+                "kicad_tooling.hwrepo.three_d.generate",
+                side_effect=AssertionError("3D export started"),
+            ),
+        ):
             result = diagnose_project(self.root, "controller", journal=journal)
         self.assertEqual(result.status, "PASS", result.findings)
         findings = [item for item in result.findings if item.code == "MODEL_UNASSIGNED"]
@@ -52,16 +63,23 @@ class ThreeDDiagnosticTests(unittest.TestCase):
         retained = read_model(journal.directory / "models.json", ModelInventoryReport)
         self.assertEqual(retained.status, "REVIEW")
         self.assertEqual(retained.findings, tuple(findings))
-        self.assertIn("model-inventory", (journal.directory / "events.log").read_text(encoding="utf-8"))
+        self.assertIn(
+            "model-inventory", (journal.directory / "events.log").read_text(encoding="utf-8")
+        )
 
     def test_declared_assigned_model_has_no_model_repair_findings(self) -> None:
         self.board_source("${KIPRJMOD}/Part.step")
         model = self.island / "kicad/Part.step"
         model.write_text("authored model source", encoding="utf-8")
         manifest = read_model(self.manifest, ProjectManifest)
-        write_model(self.manifest, manifest.model_copy(update={
-            "required_inputs": (*manifest.required_inputs, "kicad/Part.step"),
-        }))
+        write_model(
+            self.manifest,
+            manifest.model_copy(
+                update={
+                    "required_inputs": (*manifest.required_inputs, "kicad/Part.step"),
+                }
+            ),
+        )
         original = {path: path.read_bytes() for path in (self.board, model, self.manifest)}
         result = diagnose_project(self.root, "controller")
         self.assertEqual(result.status, "PASS", result.findings)
@@ -83,7 +101,10 @@ class ThreeDDiagnosticTests(unittest.TestCase):
         self.assertEqual(self.board.read_bytes(), original)
 
     def test_non_pcb_diagnosis_does_not_attempt_model_inspection(self) -> None:
-        with patch("kicad_tooling.hwrepo.diagnostics.inspect_models", side_effect=AssertionError("not a PCB")):
+        with patch(
+            "kicad_tooling.hwrepo.diagnostics.inspect_models",
+            side_effect=AssertionError("not a PCB"),
+        ):
             result = diagnose_project(self.root, "passive-signal-reference")
         self.assertEqual(result.status, "PASS", result.findings)
         self.assertFalse(any(item.code.startswith("MODEL_") for item in result.findings))
@@ -92,7 +113,9 @@ class ThreeDDiagnosticTests(unittest.TestCase):
         self.board_source()
         manifest = read_model(self.manifest, ProjectManifest)
         write_model(self.manifest, manifest.model_copy(update={"kind": ProjectKind.PCB_ONLY}))
-        contract = read_model(self.root / "templates/project-tests/pcb_only.json", ProjectTestContract)
+        contract = read_model(
+            self.root / "templates/project-tests/pcb_only.json", ProjectTestContract
+        )
         write_model(self.island / "tests/contract.json", contract)
         result = diagnose_project(self.root, "controller")
         self.assertTrue(any(item.code == "PCB_ONLY_SCOPE" for item in result.findings))
@@ -101,7 +124,10 @@ class ThreeDDiagnosticTests(unittest.TestCase):
         self.assertFalse(result.build_authorized)
 
     def test_model_read_error_preserves_other_diagnostic_findings(self) -> None:
-        with patch("kicad_tooling.hwrepo.diagnostics.inspect_models", side_effect=ValueError("Linked board path")):
+        with patch(
+            "kicad_tooling.hwrepo.diagnostics.inspect_models",
+            side_effect=ValueError("Linked board path"),
+        ):
             result = diagnose_project(self.root, "controller")
         self.assertEqual(result.status, "NEEDS_WORK")
         failure = next(item for item in result.findings if item.code == "MODEL_INVENTORY")

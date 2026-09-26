@@ -1,4 +1,5 @@
 """Optional MCP adapter over the existing, typed repository workflow services."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Mapping
@@ -88,10 +89,24 @@ from .models import (
 from .scaffold import new_project as scaffold_project
 
 DocumentName = Literal[
-    "start-here", "first-board", "diagnostics", "import-workflow",
-    "contributor-guide", "checks-and-ci", "mcp", "bom-policy", "release-readiness",
-    "release-storage", "project-kinds", "libraries", "authority-model", "assurance-profiles",
-    "three-d-workflow", "parts-to-order", "tool-surfaces", "electrical-analysis",
+    "start-here",
+    "first-board",
+    "diagnostics",
+    "import-workflow",
+    "contributor-guide",
+    "checks-and-ci",
+    "mcp",
+    "bom-policy",
+    "release-readiness",
+    "release-storage",
+    "project-kinds",
+    "libraries",
+    "authority-model",
+    "assurance-profiles",
+    "three-d-workflow",
+    "parts-to-order",
+    "tool-surfaces",
+    "electrical-analysis",
     "cad-sourcing",
 ]
 DOCUMENTS: Mapping[DocumentName, str] = {
@@ -116,21 +131,37 @@ DOCUMENTS: Mapping[DocumentName, str] = {
     "cad-sourcing": "docs/workflow/CAD_SOURCING.md",
 }
 READ_ONLY = ToolAnnotations(
-    read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False,
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=True,
+    open_world_hint=False,
 )
 CREATE_ONLY = ToolAnnotations(
-    read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=False,
+    read_only_hint=False,
+    destructive_hint=False,
+    idempotent_hint=False,
+    open_world_hint=False,
 )
 EDIT = ToolAnnotations(
-    read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=False,
+    read_only_hint=False,
+    destructive_hint=True,
+    idempotent_hint=False,
+    open_world_hint=False,
 )
 EXECUTION = ToolAnnotations(
-    read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True,
+    read_only_hint=False,
+    destructive_hint=True,
+    idempotent_hint=False,
+    open_world_hint=True,
 )
 
 
 def import_path(
-    root: Path, source: str, scopes: tuple[Path, ...], *, directory: bool = False,
+    root: Path,
+    source: str,
+    scopes: tuple[Path, ...],
+    *,
+    directory: bool = False,
 ) -> Path:
     """Authorize a source before the importer resolves its parent or reads siblings."""
     candidate = Path(source).expanduser()
@@ -147,7 +178,9 @@ def import_path(
             elif path.suffix != ".kicad_pro" or not path.is_file():
                 raise ValueError("Select an existing .kicad_pro file, not a directory")
             return path
-    raise ValueError("Import source is outside the checkout and configured --import-root directories")
+    raise ValueError(
+        "Import source is outside the checkout and configured --import-root directories"
+    )
 
 
 @contextmanager
@@ -161,9 +194,15 @@ def service_operation(operation: Lock) -> Generator[None, None, None]:
 
 
 def create_server(
-    root: Path, *, allow_checks: bool = False, allow_writes: bool = False,
-    import_roots: tuple[Path, ...] = (), allow_edits: bool = False, allow_exports: bool = False,
-    allow_downloads: bool = False, allow_supplier_submissions: bool = False,
+    root: Path,
+    *,
+    allow_checks: bool = False,
+    allow_writes: bool = False,
+    import_roots: tuple[Path, ...] = (),
+    allow_edits: bool = False,
+    allow_exports: bool = False,
+    allow_downloads: bool = False,
+    allow_supplier_submissions: bool = False,
 ) -> MCPServer[None]:
     """Bind one server to a trusted checkout; tool calls cannot change its authority."""
     declared_root = root.expanduser().absolute()
@@ -182,7 +221,9 @@ def create_server(
     # checkout so discovery never observes a partially staged write from this server.
     operation = Lock()
     server: MCPServer[None] = MCPServer(
-        "kicad-workflow", version="2", log_level="WARNING",
+        "kicad-workflow",
+        version="2",
+        log_level="WARNING",
         instructions=(
             f"Use only this checkout: {root}. Start with list_projects and doctor. "
             "Use inspect_tool_surfaces to see CLI/MCP coverage and intentional gaps. "
@@ -223,9 +264,14 @@ def create_server(
     server.tool(annotations=READ_ONLY)(inspect_tool_surfaces)
 
     def plan_impact(
-        base: str | None = None, head: str = "HEAD", paths: tuple[str, ...] | None = None,
-        full: bool = False, select_project: str | None = None, select_tag: str | None = None,
-        select_product: str | None = None, exclude_tag: str | None = None,
+        base: str | None = None,
+        head: str = "HEAD",
+        paths: tuple[str, ...] | None = None,
+        full: bool = False,
+        select_project: str | None = None,
+        select_tag: str | None = None,
+        select_product: str | None = None,
+        exclude_tag: str | None = None,
         shard: str | None = None,
     ) -> ImpactPlan:
         """Plan checks from one Git diff, path list, full request or manual selector.
@@ -235,8 +281,18 @@ def create_server(
         ambiguous changed paths conservatively select the full scope.
         """
         with service_operation(operation):
-            return planning.plan_impact(root, base, head, paths, full, select_project,
-                                        select_tag, select_product, exclude_tag, shard)
+            return planning.plan_impact(
+                root,
+                base,
+                head,
+                paths,
+                full,
+                select_project,
+                select_tag,
+                select_product,
+                exclude_tag,
+                shard,
+            )
 
     server.tool(annotations=READ_ONLY)(plan_impact)
 
@@ -257,31 +313,40 @@ def create_server(
         with service_operation(operation):
             report = inventory(root)
             if report.status != "PASS":
-                raise ValueError("Project discovery failed: " + "; ".join(
-                    issue.message for issue in report.issues
-                ))
+                raise ValueError(
+                    "Project discovery failed: "
+                    + "; ".join(issue.message for issue in report.issues)
+                )
             project = next((item for item in report.projects if item.id == project_id), None)
             if project is None:
                 raise ValueError(f"Unknown project ID: {project_id}. Call list_projects first.")
             path = repo_path(root, project.manifest)
             manifest = read_model(path, ProjectManifest)
             contract_path = repo_path(path.parent, manifest.checks)
-            contract = (read_model(contract_path, ProjectTestContract)
-                        if contract_path.is_file() else None)
+            contract = (
+                read_model(contract_path, ProjectTestContract) if contract_path.is_file() else None
+            )
             return McpProjectReport(project=project, manifest=manifest, contract=contract)
 
     server.tool(annotations=READ_ONLY)(get_project)
 
     def doctor(
-        project_id: str | None = None, native: bool = False,
-        toolchain_id: str | None = None, runner: NativeRunner = "auto",
+        project_id: str | None = None,
+        native: bool = False,
+        toolchain_id: str | None = None,
+        runner: NativeRunner = "auto",
         electrical: bool = False,
     ) -> TemplateDoctorReport:
         """Inspect setup without running project tests; select a project for native readiness."""
         with service_operation(operation):
             return inspect_environment(
-                root, native=native, project_id=project_id, toolchain_id=toolchain_id, runner=runner,
-                electrical=electrical, ngspice="ngspice",
+                root,
+                native=native,
+                project_id=project_id,
+                toolchain_id=toolchain_id,
+                runner=runner,
+                electrical=electrical,
+                ngspice="ngspice",
             )
 
     server.tool(annotations=READ_ONLY)(doctor)
@@ -289,7 +354,9 @@ def create_server(
     def document(name: DocumentName) -> str:
         with operation:
             try:
-                return repo_path(root, workflow_guide(root, DOCUMENTS[name])).read_text(encoding="utf-8")
+                return repo_path(root, workflow_guide(root, DOCUMENTS[name])).read_text(
+                    encoding="utf-8"
+                )
             except (OSError, ValueError) as exc:
                 raise ResourceError(str(exc)) from exc
 
@@ -302,11 +369,14 @@ def create_server(
     def resource_reader(name: DocumentName) -> Callable[[], str]:
         def read() -> str:
             return document(name)
+
         return read
 
     for name in DOCUMENTS:
         server.resource(
-            f"kicad://docs/{name}", name=name, mime_type="text/markdown",
+            f"kicad://docs/{name}",
+            name=name,
+            mime_type="text/markdown",
             description=f"Repository workflow guide: {name}",
         )(resource_reader(name))
 
@@ -354,7 +424,9 @@ def create_server(
     server.tool(annotations=CREATE_ONLY)(rescue_project)
 
     def list_artifacts(
-        directory: str = "build", offset: int = 0, limit: int = 100,
+        directory: str = "build",
+        offset: int = 0,
+        limit: int = 100,
     ) -> McpArtifactList:
         """List a bounded page of retained artifacts in a repository-relative build directory."""
         with service_operation(operation):
@@ -374,7 +446,10 @@ def create_server(
     server.tool(annotations=READ_ONLY)(read_artifact)
 
     def read_project_file(
-        project_id: str, path: str, offset: int = 0, limit: int = 20000,
+        project_id: str,
+        path: str,
+        offset: int = 0,
+        limit: int = 20000,
     ) -> McpFileContent:
         """Read an authored text file relative to a registered project island for repair."""
         with service_operation(operation):
@@ -383,7 +458,11 @@ def create_server(
     server.tool(annotations=READ_ONLY)(read_project_file)
 
     def preview_project_edit(
-        project_id: str, path: str, expected_sha256: str, old_text: str, new_text: str,
+        project_id: str,
+        path: str,
+        expected_sha256: str,
+        old_text: str,
+        new_text: str,
     ) -> McpEditPreview:
         """Preview one exact reviewed source replacement against the last-read SHA256.
 
@@ -392,7 +471,12 @@ def create_server(
         """
         with service_operation(operation):
             return files.preview_project_edit(
-                root, project_id, path, expected_sha256, old_text, new_text,
+                root,
+                project_id,
+                path,
+                expected_sha256,
+                old_text,
+                new_text,
             )
 
     server.tool(annotations=READ_ONLY)(preview_project_edit)
@@ -420,7 +504,9 @@ def create_server(
     server.tool(annotations=READ_ONLY)(inspect_3d_models)
 
     def preview_model_population(
-        project_id: str, board_sha256: str, assignments: tuple[McpModelMapAssignment, ...],
+        project_id: str,
+        board_sha256: str,
+        assignments: tuple[McpModelMapAssignment, ...],
     ) -> ModelPopulationReport:
         """Preview explicit model assignments and retain a fresh ignored PLAN receipt.
 
@@ -429,10 +515,15 @@ def create_server(
         board and manifest diffs before applying; package identity and fit stay unverified.
         """
         with service_operation(operation):
-            reviewed = tuple(ModelMapAssignment(
-                reference=item.reference, model=item.model, candidate_assets=tuple(item.candidate_assets),
-                model_sha256=item.model_sha256,
-            ) for item in assignments)
+            reviewed = tuple(
+                ModelMapAssignment(
+                    reference=item.reference,
+                    model=item.model,
+                    candidate_assets=tuple(item.candidate_assets),
+                    model_sha256=item.model_sha256,
+                )
+                for item in assignments
+            )
             return workflow.preview_model_population(root, project_id, board_sha256, reviewed)
 
     server.tool(annotations=CREATE_ONLY)(preview_model_population)
@@ -452,9 +543,12 @@ def create_server(
     server.tool(annotations=READ_ONLY)(verify_package)
 
     if allow_checks:
+
         def check_native_scope(
-            view_id: str, project_ids: list[str] | None = None,
-            product_ids: list[str] | None = None, tags: list[str] | None = None,
+            view_id: str,
+            project_ids: list[str] | None = None,
+            product_ids: list[str] | None = None,
+            tags: list[str] | None = None,
             exclude_tags: list[str] | None = None,
         ) -> McpNativeScopeReport:
             """Run the CLI grouped native lane with local kicad-cli and retain every failure.
@@ -465,14 +559,20 @@ def create_server(
             """
             with service_operation(operation):
                 return checks.check_native_scope(
-                    root, view_id, tuple(project_ids or ()), tuple(product_ids or ()),
-                    tuple(tags or ()), tuple(exclude_tags or ()),
+                    root,
+                    view_id,
+                    tuple(project_ids or ()),
+                    tuple(product_ids or ()),
+                    tuple(tags or ()),
+                    tuple(exclude_tags or ()),
                 )
 
         server.tool(annotations=EXECUTION)(check_native_scope)
 
         def check_project(
-            project_id: str, depth: Depth = "portable", runner: NativeRunner = "auto",
+            project_id: str,
+            depth: Depth = "portable",
+            runner: NativeRunner = "auto",
         ) -> ProjectVerificationReport:
             """Run trusted project tests and keep a fresh ignored verification receipt.
 
@@ -490,7 +590,9 @@ def create_server(
         server.tool(annotations=EXECUTION)(check_project)
 
         def diagnose_project(
-            project_id: str, native_report: str | None = None, bom: str | None = None,
+            project_id: str,
+            native_report: str | None = None,
+            bom: str | None = None,
         ) -> DiagnosticReport:
             """Run project diagnosis with repair findings, optional native evidence and BOM review.
 
@@ -504,7 +606,8 @@ def create_server(
         server.tool(annotations=EXECUTION)(diagnose_project)
 
         def capture_contract(
-            project_id: str, runner: NativeRunner = "auto",
+            project_id: str,
+            runner: NativeRunner = "auto",
         ) -> ContractCoachReport:
             """Capture exact-toolchain netlist observations for review; never author expectations."""
             with service_operation(operation):
@@ -513,9 +616,12 @@ def create_server(
         server.tool(annotations=EXECUTION)(capture_contract)
 
         def check_scope(
-            project_ids: list[str] | None = None, product_ids: list[str] | None = None,
-            tags: list[str] | None = None, exclude_tags: list[str] | None = None,
-            shard: str | None = None, jobs: int = 1,
+            project_ids: list[str] | None = None,
+            product_ids: list[str] | None = None,
+            tags: list[str] | None = None,
+            exclude_tags: list[str] | None = None,
+            shard: str | None = None,
+            jobs: int = 1,
         ) -> McpScopeReport:
             """Run selected project/product/tag checks or the full portable gate when unselected.
 
@@ -524,15 +630,23 @@ def create_server(
             """
             with service_operation(operation):
                 return workflow.check_scope(
-                    root, tuple(project_ids or ()), tuple(product_ids or ()),
-                    tuple(tags or ()), tuple(exclude_tags or ()), shard, jobs,
+                    root,
+                    tuple(project_ids or ()),
+                    tuple(product_ids or ()),
+                    tuple(tags or ()),
+                    tuple(exclude_tags or ()),
+                    shard,
+                    jobs,
                 )
 
         server.tool(annotations=EXECUTION)(check_scope)
 
     if allow_writes:
+
         def new_project(
-            project_id: str, kind: ProjectKind, toolchain_id: str,
+            project_id: str,
+            kind: ProjectKind,
+            toolchain_id: str,
         ) -> ProjectScaffoldReport:
             """Create a new project skeleton without overwriting an existing island.
 
@@ -557,8 +671,11 @@ def create_server(
         server.tool(annotations=CREATE_ONLY)(import_project)
 
     if allow_edits:
+
         def save_parts_preferences(
-            project_id: str, preferences: PurchasingPreferences, expected_sha256: str | None = None,
+            project_id: str,
+            preferences: PurchasingPreferences,
+            expected_sha256: str | None = None,
         ) -> McpPurchasingPreferencesResult:
             """Save reviewed quantities and exact supplier SKUs to docs/purchasing.json.
 
@@ -572,7 +689,11 @@ def create_server(
         server.tool(annotations=EDIT)(save_parts_preferences)
 
         def apply_project_edit(
-            project_id: str, path: str, expected_sha256: str, old_text: str, new_text: str,
+            project_id: str,
+            path: str,
+            expected_sha256: str,
+            old_text: str,
+            new_text: str,
         ) -> McpEditResult:
             """Apply a reviewed preview's exact source replacement; reject stale or ambiguous input.
 
@@ -582,7 +703,12 @@ def create_server(
             """
             with service_operation(operation):
                 return files.apply_project_edit(
-                    root, project_id, path, expected_sha256, old_text, new_text,
+                    root,
+                    project_id,
+                    path,
+                    expected_sha256,
+                    old_text,
+                    new_text,
                 )
 
         server.tool(annotations=EDIT)(apply_project_edit)
@@ -601,6 +727,7 @@ def create_server(
         server.tool(annotations=EDIT)(apply_model_population)
 
     if allow_exports:
+
         def init_model_map(project_id: str, view_id: str) -> ModelPopulationReport:
             """Create a source-bound model-map DRAFT in fresh build/model-maps/view_id.
 
@@ -614,8 +741,11 @@ def create_server(
         server.tool(annotations=CREATE_ONLY)(init_model_map)
 
         def prepare_parts(
-            project_id: str, view_id: str, native_summary: str | None = None,
-            preferences: str | None = None, boards: Annotated[StrictInt, Field(gt=0)] | None = None,
+            project_id: str,
+            view_id: str,
+            native_summary: str | None = None,
+            preferences: str | None = None,
+            boards: Annotated[StrictInt, Field(gt=0)] | None = None,
             spare_percent: Annotated[StrictInt, Field(ge=0, le=100)] | None = None,
             spare_minimum: Annotated[StrictInt, Field(ge=0)] | None = None,
             runner: NativeRunner = "auto",
@@ -630,15 +760,25 @@ def create_server(
             """
             with service_operation(operation):
                 return parts.prepare_parts(
-                    root, project_id, view_id, native_summary, preferences,
-                    boards, spare_percent, spare_minimum, runner, allow_checks=allow_checks,
+                    root,
+                    project_id,
+                    view_id,
+                    native_summary,
+                    preferences,
+                    boards,
+                    spare_percent,
+                    spare_minimum,
+                    runner,
+                    allow_checks=allow_checks,
                 )
 
         server.tool(annotations=EXECUTION if allow_checks else CREATE_ONLY)(prepare_parts)
 
         def generate_views(
-            view_id: str, project_ids: list[str] | None = None,
-            product_ids: list[str] | None = None, tags: list[str] | None = None,
+            view_id: str,
+            project_ids: list[str] | None = None,
+            product_ids: list[str] | None = None,
+            tags: list[str] | None = None,
             exclude_tags: list[str] | None = None,
         ) -> McpGenerationReport:
             """Generate product BOMs, harness schedules and review views into fresh ignored output.
@@ -648,8 +788,12 @@ def create_server(
             """
             with service_operation(operation):
                 return workflow.generate_views(
-                    root, view_id, tuple(project_ids or ()), tuple(product_ids or ()),
-                    tuple(tags or ()), tuple(exclude_tags or ()),
+                    root,
+                    view_id,
+                    tuple(project_ids or ()),
+                    tuple(product_ids or ()),
+                    tuple(tags or ()),
+                    tuple(exclude_tags or ()),
                 )
 
         server.tool(annotations=CREATE_ONLY)(generate_views)
@@ -669,8 +813,11 @@ def create_server(
         server.tool(annotations=CREATE_ONLY)(restore_package)
 
         if allow_checks:
+
             def export_project(
-                project_id: str, export_id: str, runner: NativeRunner = "auto",
+                project_id: str,
+                export_id: str,
+                runner: NativeRunner = "auto",
                 assembly_variant: str | None = None,
             ) -> ReleaseExportReport:
                 """Export Gerbers, drills, placements and assembly/purchasing BOMs for review.
@@ -679,12 +826,16 @@ def create_server(
                 Writes fresh ignored evidence only. Export success is not release approval.
                 """
                 with service_operation(operation):
-                    return workflow.export_project(root, project_id, export_id, runner, assembly_variant)
+                    return workflow.export_project(
+                        root, project_id, export_id, runner, assembly_variant
+                    )
 
             server.tool(annotations=EXECUTION)(export_project)
 
             def export_3d(
-                project_id: str, view_id: str, runner: NativeRunner = "auto",
+                project_id: str,
+                view_id: str,
+                runner: NativeRunner = "auto",
                 assembly_variant: str | None = None,
                 views: list[ThreeDView] | None = None,
             ) -> ThreeDReport:
@@ -698,13 +849,16 @@ def create_server(
                 actual images and geometry before making mechanical decisions.
                 """
                 with service_operation(operation):
-                    return workflow.export_3d(root, project_id, view_id, runner,
-                                               assembly_variant, views)
+                    return workflow.export_3d(
+                        root, project_id, view_id, runner, assembly_variant, views
+                    )
 
             server.tool(annotations=EXECUTION)(export_3d)
 
             def prepare_review(
-                project_id: str, release_id: str, runner: NativeRunner = "auto",
+                project_id: str,
+                release_id: str,
+                runner: NativeRunner = "auto",
             ) -> ReleaseManifest:
                 """Prepare a review candidate with portable/native/export and declared electrical evidence.
 
@@ -718,8 +872,10 @@ def create_server(
             server.tool(annotations=EXECUTION)(prepare_review)
 
             def prepare_review_scope(
-                release_id: str, project_ids: list[str] | None = None,
-                variants: list[str] | None = None, portable: str | None = None,
+                release_id: str,
+                project_ids: list[str] | None = None,
+                variants: list[str] | None = None,
+                portable: str | None = None,
                 runner: NativeRunner = "auto",
             ) -> ReleaseManifest:
                 """Prepare multiple projects or explicit PRODUCT:VARIANT choices for review.
@@ -731,14 +887,21 @@ def create_server(
                 """
                 with service_operation(operation):
                     return workflow.prepare_review_scope(
-                        root, release_id, tuple(project_ids or ()), tuple(variants or ()),
-                        portable, runner,
+                        root,
+                        release_id,
+                        tuple(project_ids or ()),
+                        tuple(variants or ()),
+                        portable,
+                        runner,
                     )
 
             server.tool(annotations=EXECUTION)(prepare_review_scope)
 
     if allow_edits:
-        def init_electrical(project_id: str, ngspice_version: str = "UNREVIEWED") -> ElectricalSetupReport:
+
+        def init_electrical(
+            project_id: str, ngspice_version: str = "UNREVIEWED"
+        ) -> ElectricalSetupReport:
             """Create pending electrical requirements without overwriting existing contracts.
 
             An engineer must author limits and reviewed model bindings before analysis.
@@ -750,12 +913,17 @@ def create_server(
         server.tool(annotations=EDIT)(init_electrical)
 
     if allow_exports:
+
         def capture_electrical_inputs(
-            project_id: str, view_id: str, models: list[str] | None = None,
+            project_id: str,
+            view_id: str,
+            models: list[str] | None = None,
         ) -> ElectricalInputInventory:
             """Capture UNREVIEWED source/model hashes in a fresh ignored receipt."""
             with service_operation(operation):
-                return electrical.capture_electrical_inputs(root, project_id, view_id, tuple(models or ()))
+                return electrical.capture_electrical_inputs(
+                    root, project_id, view_id, tuple(models or ())
+                )
 
         server.tool(annotations=CREATE_ONLY)(capture_electrical_inputs)
 
@@ -778,8 +946,11 @@ def create_server(
         server.tool(annotations=CREATE_ONLY)(export_electrical_chart_suite)
 
     if allow_checks:
+
         def analyze_electrical(
-            project_id: str, view_id: str, native_summary: str | None = None,
+            project_id: str,
+            view_id: str,
+            native_summary: str | None = None,
             runner: NativeRunner = "auto",
         ) -> ElectricalAnalysisReport:
             """Analyze reviewed grounding, power and frequency requirements with fixed executables.
@@ -788,27 +959,38 @@ def create_server(
             remain explicit. Simulated results do not establish physical acceptance.
             """
             with service_operation(operation):
-                return electrical.analyze_electrical(root, project_id, view_id, native_summary, runner)
+                return electrical.analyze_electrical(
+                    root, project_id, view_id, native_summary, runner
+                )
 
         server.tool(annotations=EXECUTION)(analyze_electrical)
 
         def check_electrical_scope(
-            project_ids: list[str] | None = None, product_ids: list[str] | None = None,
-            tags: list[str] | None = None, exclude_tags: list[str] | None = None,
+            project_ids: list[str] | None = None,
+            product_ids: list[str] | None = None,
+            tags: list[str] | None = None,
+            exclude_tags: list[str] | None = None,
         ) -> ElectricalSuiteReport:
             """Run the CLI's selected electrical suite, preserving failures and missing requirements."""
             with service_operation(operation):
                 return electrical.check_electrical_scope(
-                    root, tuple(project_ids or ()), tuple(product_ids or ()),
-                    tuple(tags or ()), tuple(exclude_tags or ()),
+                    root,
+                    tuple(project_ids or ()),
+                    tuple(product_ids or ()),
+                    tuple(tags or ()),
+                    tuple(exclude_tags or ()),
                 )
 
         server.tool(annotations=EXECUTION)(check_electrical_scope)
 
         if allow_exports:
+
             def convert_pcb(
-                source: str, project_id: str, toolchain_id: str,
-                input_format: ForeignFormat = "auto", runner: NativeRunner = "auto",
+                source: str,
+                project_id: str,
+                toolchain_id: str,
+                input_format: ForeignFormat = "auto",
+                runner: NativeRunner = "auto",
             ) -> ForeignPcbReport:
                 """Stage a foreign PCB conversion with hashes, native findings and an import preview.
 
@@ -818,15 +1000,23 @@ def create_server(
                 """
                 with service_operation(operation):
                     return conversion.convert_pcb(
-                        root, source, project_id, toolchain_id, input_format, runner,
+                        root,
+                        source,
+                        project_id,
+                        toolchain_id,
+                        input_format,
+                        runner,
                         import_roots=permitted_sources,
                     )
 
             server.tool(annotations=EXECUTION)(convert_pcb)
 
     if allow_exports:
+
         def prepare_part_picker(
-            project_id: str, view_id: str, native_summary: str | None = None,
+            project_id: str,
+            view_id: str,
+            native_summary: str | None = None,
             runner: NativeRunner = "auto",
         ) -> PartPickerReport:
             """List reviewed catalog choices from source-bound component evidence.
@@ -836,13 +1026,20 @@ def create_server(
             """
             with service_operation(operation):
                 return part_tools.prepare_part_picker(
-                    root, project_id, view_id, native_summary, runner, allow_checks=allow_checks,
+                    root,
+                    project_id,
+                    view_id,
+                    native_summary,
+                    runner,
+                    allow_checks=allow_checks,
                 )
 
         server.tool(annotations=EXECUTION if allow_checks else CREATE_ONLY)(prepare_part_picker)
 
         def preview_part_selection(
-            project_id: str, view_id: str, picker_report: str,
+            project_id: str,
+            view_id: str,
+            picker_report: str,
             assignments: list[PartSelectionAssignment],
         ) -> PartSelectionReport:
             """Preview explicit reference/part_id choices offered by a retained picker.
@@ -851,7 +1048,9 @@ def create_server(
             edit catalog identities, approve substitutions or change native source.
             """
             with service_operation(operation):
-                return part_tools.preview_part_selection(root, project_id, view_id, picker_report, assignments)
+                return part_tools.preview_part_selection(
+                    root, project_id, view_id, picker_report, assignments
+                )
 
         server.tool(annotations=CREATE_ONLY)(preview_part_selection)
 
@@ -869,13 +1068,18 @@ def create_server(
             repository, installed or validated cached assets can be used. Physical fit still needs review.
             """
             with service_operation(operation):
-                return part_tools.preview_auto_cad(root, project_id, view_id, allow_downloads=allow_downloads)
+                return part_tools.preview_auto_cad(
+                    root, project_id, view_id, allow_downloads=allow_downloads
+                )
 
         server.tool(annotations=EXECUTION if allow_downloads else CREATE_ONLY)(preview_auto_cad)
 
         def source_cad(
-            project_id: str, view_id: str, supplier_id: str,
-            expected_mpn: str | None = None, refresh: bool = False,
+            project_id: str,
+            view_id: str,
+            supplier_id: str,
+            expected_mpn: str | None = None,
+            refresh: bool = False,
         ) -> CadSourcingReview:
             """Check an exact LCSC identity, freeze CAD and preview project import.
 
@@ -884,14 +1088,20 @@ def create_server(
             """
             with service_operation(operation):
                 return new_workflows.source_cad(
-                    root, project_id, view_id, supplier_id, expected_mpn, refresh,
+                    root,
+                    project_id,
+                    view_id,
+                    supplier_id,
+                    expected_mpn,
+                    refresh,
                     allow_downloads=allow_downloads,
                 )
 
         server.tool(annotations=EXECUTION if allow_downloads else CREATE_ONLY)(source_cad)
 
-        def preview_cad_import(project_id: str, view_id: str,
-                               source_report: str) -> CadImportReport:
+        def preview_cad_import(
+            project_id: str, view_id: str, source_report: str
+        ) -> CadImportReport:
             """Preview source changes from a saved exact-part CAD cache receipt."""
             with service_operation(operation):
                 return new_workflows.preview_cad_import(root, project_id, view_id, source_report)
@@ -899,9 +1109,13 @@ def create_server(
         server.tool(annotations=CREATE_ONLY)(preview_cad_import)
 
         if allow_checks:
+
             def check_step_alignment(
-                project_id: str, view_id: str, supplier_id: str,
-                expected_mpn: str | None = None, refresh: bool = False,
+                project_id: str,
+                view_id: str,
+                supplier_id: str,
+                expected_mpn: str | None = None,
+                refresh: bool = False,
                 source_report: str | None = None,
             ) -> CadStepReport:
                 """Render paired WRL/STEP views with pinned KiCad for visual review.
@@ -912,14 +1126,22 @@ def create_server(
                 """
                 with service_operation(operation):
                     return new_workflows.check_step_alignment(
-                        root, project_id, view_id, supplier_id, expected_mpn, refresh,
-                        source_report, allow_downloads=allow_downloads,
+                        root,
+                        project_id,
+                        view_id,
+                        supplier_id,
+                        expected_mpn,
+                        refresh,
+                        source_report,
+                        allow_downloads=allow_downloads,
                     )
 
             server.tool(annotations=EXECUTION)(check_step_alignment)
 
         def prepare_supplier_handoff(
-            project_id: str, view_id: str, parts_report: str,
+            project_id: str,
+            view_id: str,
+            parts_report: str,
         ) -> SupplierHandoffReport:
             """Prepare a source-bound DigiKey BOM payload for review without contacting the supplier.
 
@@ -932,20 +1154,29 @@ def create_server(
         server.tool(annotations=CREATE_ONLY)(prepare_supplier_handoff)
 
     if allow_edits:
+
         def apply_part_selection(
-            project_id: str, view_id: str, selection_map: str, expected_sha256: str,
+            project_id: str,
+            view_id: str,
+            selection_map: str,
+            expected_sha256: str,
         ) -> PartSelectionReport:
             """Apply a reviewed locked selection whose exact artifact digest is still current.
 
             Changes selected board source only; rerun native checks and inspect geometry.
             """
             with service_operation(operation):
-                return part_tools.apply_part_selection(root, project_id, view_id, selection_map, expected_sha256)
+                return part_tools.apply_part_selection(
+                    root, project_id, view_id, selection_map, expected_sha256
+                )
 
         server.tool(annotations=EDIT)(apply_part_selection)
 
         def apply_auto_cad(
-            project_id: str, view_id: str, plan: str, expected_sha256: str,
+            project_id: str,
+            view_id: str,
+            plan: str,
+            expected_sha256: str,
         ) -> AutoCadReport:
             """Apply exactly a retained CAD plan with current source and plan hashes.
 
@@ -954,13 +1185,21 @@ def create_server(
             """
             with service_operation(operation):
                 return part_tools.apply_auto_cad(
-                    root, project_id, view_id, plan, expected_sha256, allow_downloads=allow_downloads,
+                    root,
+                    project_id,
+                    view_id,
+                    plan,
+                    expected_sha256,
+                    allow_downloads=allow_downloads,
                 )
 
         server.tool(annotations=EXECUTION if allow_downloads else EDIT)(apply_auto_cad)
 
         def apply_cad_import(
-            project_id: str, view_id: str, plan: str, expected_sha256: str,
+            project_id: str,
+            view_id: str,
+            plan: str,
+            expected_sha256: str,
         ) -> CadImportReport:
             """Import project-local CAD from the exact reviewed plan bytes.
 
@@ -968,11 +1207,14 @@ def create_server(
             applying. Placed components are not altered or electrically approved.
             """
             with service_operation(operation):
-                return new_workflows.apply_cad_import(root, project_id, view_id, plan, expected_sha256)
+                return new_workflows.apply_cad_import(
+                    root, project_id, view_id, plan, expected_sha256
+                )
 
         server.tool(annotations=EDIT)(apply_cad_import)
 
     if allow_supplier_submissions:
+
         def submit_supplier_handoff(handoff: str, expected_sha256: str) -> SupplierHandoffReport:
             """Submit one explicitly reviewed BOM to DigiKey for external product matching.
 

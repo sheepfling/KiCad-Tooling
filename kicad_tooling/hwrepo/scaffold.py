@@ -1,4 +1,5 @@
 """Create a new project island without inventing or copying an electrical design."""
+
 from __future__ import annotations
 
 import os
@@ -13,18 +14,26 @@ from .markdown import design_notes, project_readme, write_markdown
 from .models import ProjectKind, ProjectManifest, ProjectScaffoldReport, ToolchainsCatalog
 
 
-def prepare_manifest(root: Path, project_id: str, kind: ProjectKind, toolchain_id: str) -> ProjectManifest:
+def prepare_manifest(
+    root: Path, project_id: str, kind: ProjectKind, toolchain_id: str
+) -> ProjectManifest:
     """Validate identity, destination and toolchain before making any files."""
-    template = read_model(repo_path(root, f"{layout(root).templates}/{kind.domain_name}-project-config.example.json"), ProjectManifest)
+    template = read_model(
+        repo_path(root, f"{layout(root).templates}/{kind.domain_name}-project-config.example.json"),
+        ProjectManifest,
+    )
     # Validate the identifier before substituting it into template paths.
     manifest = ProjectManifest.model_validate({**template.model_dump(), "id": project_id})
-    manifest = ProjectManifest.model_validate_json(manifest.model_dump_json().replace(
-        "REPLACE-WITH-PROJECT-ID", project_id))
+    manifest = ProjectManifest.model_validate_json(
+        manifest.model_dump_json().replace("REPLACE-WITH-PROJECT-ID", project_id)
+    )
     policy = settings(root)
     toolchains = read_model(repo_path(root, policy.catalogs.toolchains), ToolchainsCatalog)
     if toolchain_id not in {toolchain.id for toolchain in toolchains.toolchains}:
         raise ValueError(f"Unknown toolchain: {toolchain_id}")
-    if manifest.id.casefold() in {project.id.casefold() for project in load_registry(root).projects}:
+    if manifest.id.casefold() in {
+        project.id.casefold() for project in load_registry(root).projects
+    }:
         raise ValueError(f"Project id already exists: {manifest.id}")
     destination = project_destination(root, manifest.id)
     if destination.exists():
@@ -37,12 +46,17 @@ def write_scaffold(root: Path, stage: Path, manifest: ProjectManifest) -> None:
     for folder in ("kicad", "docs", "tests"):
         (stage / folder).mkdir()
     write_model(stage / "project.json", manifest)
-    shutil.copy2(repo_path(root, f"{layout(root).templates}/project-tests/{manifest.kind.value}.json"), stage / "tests/contract.json")
+    shutil.copy2(
+        repo_path(root, f"{layout(root).templates}/project-tests/{manifest.kind.value}.json"),
+        stage / "tests/contract.json",
+    )
     write_markdown(stage / "README.md", project_readme(manifest.id, manifest.kind))
     write_markdown(stage / "docs/README.md", design_notes())
 
 
-def new_project(root: Path, project_id: str, kind: ProjectKind, toolchain_id: str) -> ProjectScaffoldReport:
+def new_project(
+    root: Path, project_id: str, kind: ProjectKind, toolchain_id: str
+) -> ProjectScaffoldReport:
     root = root.resolve()
     stage: Path | None = None
     try:
@@ -54,7 +68,8 @@ def new_project(root: Path, project_id: str, kind: ProjectKind, toolchain_id: st
         os.replace(stage, destination)
         stage = None
         return ProjectScaffoldReport(
-            status="PASS", directory=destination.relative_to(root).as_posix(),
+            status="PASS",
+            directory=destination.relative_to(root).as_posix(),
             next_step=(
                 "Create the native KiCad design and complete the test contract, then run "
                 f"python -B -m kicad_tooling.verify --project {manifest.id}."

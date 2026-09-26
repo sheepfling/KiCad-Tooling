@@ -1,4 +1,5 @@
 """Import portability, isolation and failure recovery without external demo fixtures."""
+
 from __future__ import annotations
 
 import hashlib
@@ -39,10 +40,14 @@ class ImportTests(unittest.TestCase):
         self.source.mkdir()
         self.project = self.source / "Old board.kicad_pro"
         self.project.write_text("{}")
-        self.project.with_suffix(".kicad_sch").write_text('(kicad_sch (property "Sheetfile" "sheets/channel.kicad_sch"))')
+        self.project.with_suffix(".kicad_sch").write_text(
+            '(kicad_sch (property "Sheetfile" "sheets/channel.kicad_sch"))'
+        )
         self.project.with_suffix(".kicad_pcb").write_text("(kicad_pcb)")
         (self.source / "sheets").mkdir()
-        (self.source / "sheets/channel.kicad_sch").write_text('(kicad_sch (property "Sheetfile" "../shared.kicad_sch"))')
+        (self.source / "sheets/channel.kicad_sch").write_text(
+            '(kicad_sch (property "Sheetfile" "../shared.kicad_sch"))'
+        )
         (self.source / "shared.kicad_sch").write_text("(kicad_sch)")
         (self.source / "symbols.kicad_sym").write_text("(kicad_symbol_lib)")
         (self.source / "LICENSE").write_text("Test fixture source")
@@ -50,9 +55,14 @@ class ImportTests(unittest.TestCase):
     def run_import(self, dry_run: bool = False):
         return import_project(self.root, self.project, "battery-board", "kicad-10.0.5", dry_run)
 
-    def test_preserves_native_bytes_spaces_hierarchy_and_dependencies_without_catalog_edit(self) -> None:
-        before = {p.relative_to(self.source).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-                  for p in self.source.rglob('*') if p.is_file()}
+    def test_preserves_native_bytes_spaces_hierarchy_and_dependencies_without_catalog_edit(
+        self,
+    ) -> None:
+        before = {
+            p.relative_to(self.source).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in self.source.rglob("*")
+            if p.is_file()
+        }
         catalog = (self.root / "catalog/projects.json").read_bytes()
         result = self.run_import()
         self.assertEqual(result.status, "PASS", result.issues)
@@ -63,16 +73,26 @@ class ImportTests(unittest.TestCase):
         self.assertFalse(manifest.component_identity.required)
         self.assertEqual(set(manifest.required_inputs), {f"kicad/{name}" for name in before})
         for name, digest in before.items():
-            self.assertEqual(hashlib.sha256((island / 'kicad' / name).read_bytes()).hexdigest(), digest)
+            self.assertEqual(
+                hashlib.sha256((island / "kicad" / name).read_bytes()).hexdigest(), digest
+            )
             self.assertEqual(hashlib.sha256((self.source / name).read_bytes()).hexdigest(), digest)
         self.assertEqual((self.root / "catalog/projects.json").read_bytes(), catalog)
         self.assertIn("battery-board", {p.id for p in load_registry(self.root).projects})
         self.assertEqual(self.run_import().status, "FAIL")
 
     def test_dry_run_reports_working_exports_and_separate_projects_without_writes(self) -> None:
-        for name in ("other.kicad_pro", "other.kicad_sch", "other.kicad_pcb", "old.gbr", ".DS_Store", "photo.png"):
+        for name in (
+            "other.kicad_pro",
+            "other.kicad_sch",
+            "other.kicad_pcb",
+            "old.gbr",
+            ".DS_Store",
+            "photo.png",
+        ):
             (self.source / name).write_text("excluded")
-        nested = self.source / "child"; nested.mkdir()
+        nested = self.source / "child"
+        nested.mkdir()
         (nested / "child.kicad_pro").write_text("{}")
         result = self.run_import(True)
         self.assertEqual(result.status, "PASS", result.issues)
@@ -84,9 +104,26 @@ class ImportTests(unittest.TestCase):
         self.assertNotIn("other.kicad_sch", result.copied_sha256)
 
     def test_cli_never_silently_ignores_dry_run_on_another_command(self) -> None:
-        result = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "new-project",
-            "--root", str(self.root), "--project-id", "dry-board", "--toolchain", "kicad-10.0.5", "--dry-run"),
-            capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.template",
+                "new-project",
+                "--root",
+                str(self.root),
+                "--project-id",
+                "dry-board",
+                "--toolchain",
+                "kicad-10.0.5",
+                "--dry-run",
+            ),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         self.assertEqual(result.returncode, 2)
         self.assertIn("require import-project", result.stderr)
         self.assertFalse((self.root / "projects/dry-board").exists())
@@ -107,7 +144,8 @@ class ImportTests(unittest.TestCase):
         (self.source / "shared.kicad_sch").unlink()
         before = {
             path.relative_to(self.source).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
-            for path in self.source.rglob("*") if path.is_file()
+            for path in self.source.rglob("*")
+            if path.is_file()
         }
         dry_run = self.run_import(True)
         self.assertEqual(dry_run.status, "PASS", dry_run.issues)
@@ -126,15 +164,22 @@ class ImportTests(unittest.TestCase):
         self.assertIn("PCB-only import", (island / "README.md").read_text(encoding="utf-8"))
         self.assertEqual(lint(self.root, [manifest.id]).status, "PASS")
         self.assertEqual(
-            {path.relative_to(self.source).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
-             for path in self.source.rglob("*") if path.is_file()},
+            {
+                path.relative_to(self.source).as_posix(): hashlib.sha256(
+                    path.read_bytes()
+                ).hexdigest()
+                for path in self.source.rglob("*")
+                if path.is_file()
+            },
             before,
         )
         write_model(
             island / "project.json",
             manifest.model_copy(update={"assurance_profile": "production"}),
         )
-        self.assertTrue(any("pcb_only must remain" in issue for issue in lint(self.root, [manifest.id]).issues))
+        self.assertTrue(
+            any("pcb_only must remain" in issue for issue in lint(self.root, [manifest.id]).issues)
+        )
         write_model(
             island / "project.json",
             manifest.model_copy(
@@ -142,7 +187,10 @@ class ImportTests(unittest.TestCase):
             ),
         )
         self.assertTrue(
-            any("pcb_only cannot require component identity" in issue for issue in lint(self.root, [manifest.id]).issues)
+            any(
+                "pcb_only cannot require component identity" in issue
+                for issue in lint(self.root, [manifest.id]).issues
+            )
         )
 
     def test_project_without_a_schematic_or_board_fails_without_publishing(self) -> None:
@@ -168,12 +216,19 @@ class ImportTests(unittest.TestCase):
 
     def test_embedded_models_are_local_dependencies_but_missing_records_fail(self) -> None:
         board = self.source / "embedded.kicad_pcb"
-        board.write_text('(kicad_pcb (model "kicad-embed://part.step") '
-                         '(embedded_files (file (name "part.step") (type model) '
-                         '(data |YWJj|) (checksum "AABB"))))')
-        self.assertEqual(cad_dependencies(self.base, board, self.source, "10", frozenset(), frozenset()), [])
+        board.write_text(
+            '(kicad_pcb (model "kicad-embed://part.step") '
+            '(embedded_files (file (name "part.step") (type model) '
+            '(data |YWJj|) (checksum "AABB"))))'
+        )
+        self.assertEqual(
+            cad_dependencies(self.base, board, self.source, "10", frozenset(), frozenset()), []
+        )
         board.write_text('(kicad_pcb (model "kicad-embed://part.step"))')
-        self.assertIn("missing embedded model", cad_dependencies(self.base, board, self.source, "10", frozenset(), frozenset())[0])
+        self.assertIn(
+            "missing embedded model",
+            cad_dependencies(self.base, board, self.source, "10", frozenset(), frozenset())[0],
+        )
 
     def test_import_preserves_all_local_3d_source_formats_and_references(self) -> None:
         models = self.source / "models"
@@ -194,10 +249,17 @@ class ImportTests(unittest.TestCase):
         self.assertEqual(imported.status, "PASS", imported.issues)
         config = load_config(self.root, "projects/battery-board/project.json")
         board = self.root / "projects/battery-board/kicad/Old board.kicad_pcb"
-        self.assertEqual(cad_dependencies(
-            self.root, board, board.parent, "10",
-            frozenset(config.required_inputs), frozenset(config.source_roots),
-        ), [])
+        self.assertEqual(
+            cad_dependencies(
+                self.root,
+                board,
+                board.parent,
+                "10",
+                frozenset(config.required_inputs),
+                frozenset(config.source_roots),
+            ),
+            [],
+        )
         inventory = inspect_models(self.root, config)
         self.assertEqual(inventory.status, "READY", inventory.findings)
         self.assertEqual(len(inventory.footprints[0].models), len(names))
@@ -206,15 +268,20 @@ class ImportTests(unittest.TestCase):
     def test_missing_3d_asset_remains_a_named_repair_after_import(self) -> None:
         self.project.with_suffix(".kicad_pcb").write_text(
             '(kicad_pcb (footprint "Lib:Part" (property "Reference" "U1") '
-            '(model "${KIPRJMOD}/models/Missing.step")))', encoding="utf-8",
+            '(model "${KIPRJMOD}/models/Missing.step")))',
+            encoding="utf-8",
         )
         imported = self.run_import()
         self.assertEqual(imported.status, "PASS", imported.issues)
         config = load_config(self.root, "projects/battery-board/project.json")
         board = self.root / "projects/battery-board/kicad/Old board.kicad_pcb"
         issues = cad_dependencies(
-            self.root, board, board.parent, "10",
-            frozenset(config.required_inputs), frozenset(config.source_roots),
+            self.root,
+            board,
+            board.parent,
+            "10",
+            frozenset(config.required_inputs),
+            frozenset(config.source_roots),
         )
         self.assertEqual(len(issues), 1)
         self.assertIn("Missing.step", issues[0])

@@ -1,4 +1,5 @@
 """Cross-platform typed product policy and deterministic review artifacts."""
+
 from __future__ import annotations
 
 import argparse
@@ -39,9 +40,7 @@ def format_text(command: str, result: dict[str, object], output: Path | None) ->
         lines.append(f"Products: {', '.join(str(item) for item in products)}")
     open_items = _mapping(result.get("open_items"))
     review = tuple(
-        f"{product}: {item}"
-        for product, values in open_items.items()
-        for item in _items(values)
+        f"{product}: {item}" for product, values in open_items.items() for item in _items(values)
     )
     if review:
         lines.append(f"Open review items: {len(review)}")
@@ -94,9 +93,10 @@ def generation_output(root: Path, requested: Path) -> Path:
         output = repo_path(root, output.relative_to(root).as_posix())
     else:
         output = output.resolve()
-    if output == root or (output.is_relative_to(root) and (
-        not output.is_relative_to(root / "build") or output == root / "build"
-    )):
+    if output == root or (
+        output.is_relative_to(root)
+        and (not output.is_relative_to(root / "build") or output == root / "build")
+    ):
         raise ValueError("In-repository generation output must be a new directory below build/")
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite generated review output: {output}")
@@ -108,23 +108,48 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("check", "generate", "snapshot", "verify-snapshot"))
     parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--release", action="store_true", help="Fail closed: build/release authorization is not implemented")
-    parser.add_argument("--output", type=Path, help="New directory for generation or a review snapshot")
-    parser.add_argument("--project", action="append", dest="projects",
-                        help="Generate views for this project; may be repeated")
-    parser.add_argument("--product", action="append", dest="products",
-                        help="Generate views for an indexed product's projects; may be repeated")
-    parser.add_argument("--tag", action="append", dest="tags",
-                        help="Generate views for projects with this tag; may be repeated")
-    parser.add_argument("--exclude-tag", action="append", dest="excluded_tags",
-                        help="Exclude tagged projects after inclusion selection; may be repeated")
-    parser.add_argument("--format", choices=("json", "text"), default="json",
-                        help="Output format (default: json)")
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="Fail closed: build/release authorization is not implemented",
+    )
+    parser.add_argument(
+        "--output", type=Path, help="New directory for generation or a review snapshot"
+    )
+    parser.add_argument(
+        "--project",
+        action="append",
+        dest="projects",
+        help="Generate views for this project; may be repeated",
+    )
+    parser.add_argument(
+        "--product",
+        action="append",
+        dest="products",
+        help="Generate views for an indexed product's projects; may be repeated",
+    )
+    parser.add_argument(
+        "--tag",
+        action="append",
+        dest="tags",
+        help="Generate views for projects with this tag; may be repeated",
+    )
+    parser.add_argument(
+        "--exclude-tag",
+        action="append",
+        dest="excluded_tags",
+        help="Exclude tagged projects after inclusion selection; may be repeated",
+    )
+    parser.add_argument(
+        "--format", choices=("json", "text"), default="json", help="Output format (default: json)"
+    )
     args = parser.parse_args()
     root = args.root.resolve()
     selector = ProjectSelector(
-        project_ids=tuple(args.projects or ()), product_ids=tuple(args.products or ()),
-        tags=tuple(args.tags or ()), excluded_tags=tuple(args.excluded_tags or ()),
+        project_ids=tuple(args.projects or ()),
+        product_ids=tuple(args.products or ()),
+        tags=tuple(args.tags or ()),
+        excluded_tags=tuple(args.excluded_tags or ()),
     )
     if selector.active and args.command != "generate":
         parser.error("Project/product/tag selectors are only valid with generate")
@@ -164,8 +189,11 @@ def main() -> int:
         result = {"status": "FAIL", "error": str(exc), "build_authorized": False}
     import json  # CLI serialization boundary; the service layer returns models.
 
-    print(json.dumps(result, indent=2) if args.format == "json" else
-          format_text(args.command, result, args.output))
+    print(
+        json.dumps(result, indent=2)
+        if args.format == "json"
+        else format_text(args.command, result, args.output)
+    )
     return 0 if result["status"] == "PASS" else 1
 
 

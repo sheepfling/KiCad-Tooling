@@ -1,4 +1,5 @@
 """Typed template diagnostics, adoption, scaffolding and migration command line."""
+
 from __future__ import annotations
 
 import argparse
@@ -27,8 +28,19 @@ def main() -> int:
     parser.add_argument(
         "command",
         choices=(
-            "doctor", "adopt", "init", "preflight", "bootstrap", "upgrade-plan",
-            "new-project", "import-project", "convert-pcb", "scan-imports", "diagnose", "rescue", "list",
+            "doctor",
+            "adopt",
+            "init",
+            "preflight",
+            "bootstrap",
+            "upgrade-plan",
+            "new-project",
+            "import-project",
+            "convert-pcb",
+            "scan-imports",
+            "diagnose",
+            "rescue",
+            "list",
         ),
     )
     parser.add_argument("--root", type=Path, default=Path.cwd())
@@ -38,37 +50,71 @@ def main() -> int:
     parser.add_argument("--kind", choices=[kind.value for kind in ProjectKind], default="pcb")
     parser.add_argument("--toolchain")
     parser.add_argument(
-        "--cli", default="kicad-cli",
+        "--cli",
+        default="kicad-cli",
         help="KiCad CLI for doctor or convert-pcb (relative paths use the caller's cwd)",
     )
     parser.add_argument(
-        "--native", action="store_true",
+        "--native",
+        action="store_true",
         help="Require doctor to find this project's exact local CLI or pinned Docker runner",
     )
     parser.add_argument(
-        "--runner", choices=("auto", "local", "container"), default="auto",
+        "--runner",
+        choices=("auto", "local", "container"),
+        default="auto",
         help="Native runner for doctor --native/--electrical or convert-pcb; auto prefers an exact local CLI, then Docker",
     )
-    parser.add_argument("--source", type=Path,
-                        help="Native .kicad_pro for import/diagnose, or foreign board file for convert-pcb")
-    parser.add_argument("--input-format", choices=("auto", "pads", "altium", "eagle", "cadstar",
-                                                    "fabmaster", "pcad", "solidworks"),
-                        help="Foreign PCB format for convert-pcb (default: auto)")
-    parser.add_argument("--electrical", action="store_true", help="Doctor: require native and electrical setup plus the exact host ngspice")
-    parser.add_argument("--ngspice", default="ngspice", help="Simulator executable for doctor --electrical")
-    parser.add_argument("--source-dir", type=Path,
-                        help="Directory of candidate .kicad_pro files to inventory without copying")
-    parser.add_argument("--dry-run", action="store_true", help="Preview an import without writing files")
+    parser.add_argument(
+        "--source",
+        type=Path,
+        help="Native .kicad_pro for import/diagnose, or foreign board file for convert-pcb",
+    )
+    parser.add_argument(
+        "--input-format",
+        choices=("auto", "pads", "altium", "eagle", "cadstar", "fabmaster", "pcad", "solidworks"),
+        help="Foreign PCB format for convert-pcb (default: auto)",
+    )
+    parser.add_argument(
+        "--electrical",
+        action="store_true",
+        help="Doctor: require native and electrical setup plus the exact host ngspice",
+    )
+    parser.add_argument(
+        "--ngspice", default="ngspice", help="Simulator executable for doctor --electrical"
+    )
+    parser.add_argument(
+        "--source-dir",
+        type=Path,
+        help="Directory of candidate .kicad_pro files to inventory without copying",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview an import without writing files"
+    )
     parser.add_argument("--native-report", type=Path, help="Project native summary.json to explain")
-    parser.add_argument("--bom", type=Path, help="Native assembly/bom.csv to check for part identities")
-    parser.add_argument("--format", choices=("text", "json"),
-                        help="Output format (default: text for diagnose/rescue, JSON otherwise)")
-    parser.add_argument("--detail", choices=("brief", "full"),
-                        help="Text detail for diagnose/rescue (default: brief; JSON is always full)")
-    parser.add_argument("--log-dir", type=Path,
-                        help="New diagnose/rescue receipt directory (default: ignored build/diagnostics)")
+    parser.add_argument(
+        "--bom", type=Path, help="Native assembly/bom.csv to check for part identities"
+    )
+    parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        help="Output format (default: text for diagnose/rescue, JSON otherwise)",
+    )
+    parser.add_argument(
+        "--detail",
+        choices=("brief", "full"),
+        help="Text detail for diagnose/rescue (default: brief; JSON is always full)",
+    )
+    parser.add_argument(
+        "--log-dir",
+        type=Path,
+        help="New diagnose/rescue receipt directory (default: ignored build/diagnostics)",
+    )
     args = parser.parse_args()
-    if args.command not in {"import-project", "convert-pcb", "diagnose"} and args.source is not None:
+    if (
+        args.command not in {"import-project", "convert-pcb", "diagnose"}
+        and args.source is not None
+    ):
         parser.error("--source requires import-project, convert-pcb or diagnose")
     if args.command != "convert-pcb" and args.input_format is not None:
         parser.error("--input-format requires convert-pcb")
@@ -94,8 +140,14 @@ def main() -> int:
         parser.error("--runner requires --native or --electrical")
     if args.command == "doctor":
         result = doctor(
-            args.root, args.native, args.toolchain, args.cli,
-            project_id=args.project_id, runner=args.runner, electrical=args.electrical, ngspice=args.ngspice,
+            args.root,
+            args.native,
+            args.toolchain,
+            args.cli,
+            project_id=args.project_id,
+            runner=args.runner,
+            electrical=args.electrical,
+            ngspice=args.ngspice,
         )
     elif args.command == "rescue":
         if args.project_id is None:
@@ -115,8 +167,11 @@ def main() -> int:
             journal.finish(result, human_text, result.status)
         except Exception as exc:  # noqa: BLE001 - retain unexpected tool errors in receipt
             journal.fail(exc)
-            print(f"Rescue stopped: {type(exc).__name__}: {exc}\n"
-                  f"Full traceback: {journal.directory / 'error.txt'}", file=sys.stderr)
+            print(
+                f"Rescue stopped: {type(exc).__name__}: {exc}\n"
+                f"Full traceback: {journal.directory / 'error.txt'}",
+                file=sys.stderr,
+            )
             return 2
         except KeyboardInterrupt as exc:
             journal.fail(exc)
@@ -135,20 +190,36 @@ def main() -> int:
     elif args.command == "import-project":
         if args.project_id is None or args.toolchain is None or args.source is None:
             parser.error("import-project requires --source, --project-id and --toolchain")
-        result = import_project(args.root, args.source, args.project_id, args.toolchain, args.dry_run)
+        result = import_project(
+            args.root, args.source, args.project_id, args.toolchain, args.dry_run
+        )
     elif args.command == "convert-pcb":
         if args.project_id is None or args.toolchain is None or args.source is None:
             parser.error("convert-pcb requires --source, --project-id and --toolchain")
-        result = convert_pcb(args.root, args.source, args.project_id, args.toolchain,
-                             args.input_format or "auto", args.runner, args.cli)
-        print(render_foreign_pcb(result) if args.format != "json" else result.model_dump_json(indent=2))
+        result = convert_pcb(
+            args.root,
+            args.source,
+            args.project_id,
+            args.toolchain,
+            args.input_format or "auto",
+            args.runner,
+            args.cli,
+        )
+        print(
+            render_foreign_pcb(result)
+            if args.format != "json"
+            else result.model_dump_json(indent=2)
+        )
         return 0 if result.status == "PASS" else 1
     elif args.command == "scan-imports":
         if args.source_dir is None or args.toolchain is None:
             parser.error("scan-imports requires --source-dir and --toolchain")
         report = scan_imports(args.root, args.source_dir, args.toolchain)
-        print(format_import_inventory(report) if args.format == "text"
-              else report.model_dump_json(indent=2))
+        print(
+            format_import_inventory(report)
+            if args.format == "text"
+            else report.model_dump_json(indent=2)
+        )
         return 0 if report.status == "PASS" else 1
     elif args.command == "diagnose":
         if args.project_id is None:
@@ -157,7 +228,9 @@ def main() -> int:
             parser.error("--detail is for text; JSON already includes every finding")
         if args.source is not None:
             if args.toolchain is None or args.native_report or args.bom:
-                parser.error("diagnose --source requires --toolchain and cannot use native/BOM reports")
+                parser.error(
+                    "diagnose --source requires --toolchain and cannot use native/BOM reports"
+                )
         else:
             if args.toolchain is not None:
                 parser.error("diagnose --toolchain requires --source")
@@ -166,8 +239,11 @@ def main() -> int:
         try:
             journal = DiagnosticJournal(args.root, args.project_id, args.log_dir)
         except (OSError, ValueError) as exc:
-            print(f"Cannot create diagnostic log: {exc}. Use --log-dir outside the repository "
-                  "or repair build/ permissions.", file=sys.stderr)
+            print(
+                f"Cannot create diagnostic log: {exc}. Use --log-dir outside the repository "
+                "or repair build/ permissions.",
+                file=sys.stderr,
+            )
             return 2
         try:
             if args.source is not None:
@@ -184,9 +260,11 @@ def main() -> int:
             journal.finish(result, human_text, result.status)
         except Exception as exc:  # noqa: BLE001 - CLI boundary must retain unexpected tracebacks
             journal.fail(exc)
-            print(f"Diagnosis stopped: {type(exc).__name__}: {exc}\n"
-                  f"Repair the input or tool; full traceback: {journal.directory / 'error.txt'}",
-                  file=sys.stderr)
+            print(
+                f"Diagnosis stopped: {type(exc).__name__}: {exc}\n"
+                f"Repair the input or tool; full traceback: {journal.directory / 'error.txt'}",
+                file=sys.stderr,
+            )
             return 2
         except KeyboardInterrupt as exc:
             journal.fail(exc)
@@ -200,7 +278,9 @@ def main() -> int:
         result = new_project(args.root, args.project_id, ProjectKind(args.kind), args.toolchain)
     elif args.command == "list":
         result = inventory(args.root)
-        print(format_inventory(result) if args.format == "text" else result.model_dump_json(indent=2))
+        print(
+            format_inventory(result) if args.format == "text" else result.model_dump_json(indent=2)
+        )
         return 0 if result.status == "PASS" else 1
     elif args.command == "preflight":
         result = preflight(args.root)
@@ -212,8 +292,11 @@ def main() -> int:
         if args.target_version is None:
             parser.error("upgrade-plan requires --target-version")
         result = plan_upgrade(args.root, args.target_version)
-    print(summary(f"Template {args.command}", result)
-          if args.format == "text" else result.model_dump_json(indent=2))
+    print(
+        summary(f"Template {args.command}", result)
+        if args.format == "text"
+        else result.model_dump_json(indent=2)
+    )
     return 0 if result.status == "PASS" else 1
 
 

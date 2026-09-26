@@ -1,4 +1,5 @@
 """Deterministic typed review projections; procurement rows never authorize a build."""
+
 from __future__ import annotations
 
 import csv
@@ -311,46 +312,38 @@ def expected_outputs(
             "schemas/product-index-v1.schema.json": schema_json_bytes(ProductIndex),
             "schemas/project-manifest-v1.schema.json": schema_json_bytes(ProjectManifest),
             "schemas/project-tests-v1.schema.json": schema_json_bytes(ProjectTestContract),
-            "schemas/electrical-analysis-v1.schema.json": schema_json_bytes(ElectricalAnalysisContract),
+            "schemas/electrical-analysis-v1.schema.json": schema_json_bytes(
+                ElectricalAnalysisContract
+            ),
             "schemas/release-manifest-v1.schema.json": schema_json_bytes(ReleaseManifest),
-            "schemas/release-policies-v1.schema.json": schema_json_bytes(
-                ReleasePoliciesCatalog
-            ),
-            "schemas/template-adoption-v1.schema.json": schema_json_bytes(
-                TemplateAdoptionRecord
-            ),
+            "schemas/release-policies-v1.schema.json": schema_json_bytes(ReleasePoliciesCatalog),
+            "schemas/template-adoption-v1.schema.json": schema_json_bytes(TemplateAdoptionRecord),
             "schemas/template-contract-v1.schema.json": schema_json_bytes(TemplateContract),
-            "schemas/template-upgrades-v1.schema.json": schema_json_bytes(
-                TemplateUpgradesCatalog
-            ),
+            "schemas/template-upgrades-v1.schema.json": schema_json_bytes(TemplateUpgradesCatalog),
             "generated/library-sbom-v1.json": model_json_bytes(library_sbom(root)),
-            "schemas/sourcing-snapshot-v1.schema.json": schema_json_bytes(
-                SourcingSnapshot
-            ),
+            "schemas/sourcing-snapshot-v1.schema.json": schema_json_bytes(SourcingSnapshot),
         }
     index = read_model(repo_path(root, layout(root).products), ProductIndex)
     product_paths = {entry.id: Path(entry.path).parent.as_posix() for entry in index.products}
     for product in repository.products:
         for variant in product.variants:
             prefix = f"{product_paths[product.id]}/build/{variant.id}"
-            outputs[prefix + ".bom.csv"] = csv_bytes(
-                bom_rows(product, repository.parts, variant)
-            )
+            outputs[prefix + ".bom.csv"] = csv_bytes(bom_rows(product, repository.parts, variant))
             outputs[prefix + ".electrical.json"] = model_json_bytes(
                 electrical_view(product, variant)
             )
             outputs[prefix + ".system.json"] = model_json_bytes(system_view(product, variant))
             schedule = harness_schedule(product, variant)
             outputs[prefix + ".harness-schedule.json"] = model_json_bytes(schedule)
-            outputs[prefix + ".harness-schedule.csv"] = harness_schedule_csv_bytes(
-                schedule
-            )
+            outputs[prefix + ".harness-schedule.csv"] = harness_schedule_csv_bytes(schedule)
     return outputs
 
 
 def drift(
-    root: Path, selected_project_ids: tuple[str, ...] | None = None,
-    *, output: Path | None = None,
+    root: Path,
+    selected_project_ids: tuple[str, ...] | None = None,
+    *,
+    output: Path | None = None,
 ) -> tuple[str, ...]:
     """Detect full or selected-product output drift without writing files."""
     outputs = expected_outputs(root, selected_project_ids)
@@ -372,14 +365,16 @@ def drift(
         for directory in directories
         for path in (destination / directory).rglob("*")
         if path.is_file()
-        and path.relative_to(destination).as_posix() not in {"generated/README.md", "schemas/README.md"}
+        and path.relative_to(destination).as_posix()
+        not in {"generated/README.md", "schemas/README.md"}
     }
     issues.extend(f"STALE_OUTPUT: {name}" for name in sorted(found - set(outputs)))
     return tuple(issues)
 
 
 def generate(
-    root: Path, output: Path | None = None,
+    root: Path,
+    output: Path | None = None,
     selected_project_ids: tuple[str, ...] | None = None,
 ) -> tuple[str, ...]:
     """Write validated projections only; intentional stale files remain for review."""
@@ -428,10 +423,21 @@ def snapshot(root: Path, output: Path) -> SnapshotManifest:
     policy = settings(root)
     sources: set[Path] = set()
     directories = {
-        "catalog", "products", "projects", "examples", "libraries", "tools", "tests",
-        ".github", "docs", "templates", *policy.project_roots,
-        *configuration.product_roots, *configuration.library_roots,
-        configuration.templates, configuration.workflow_docs,
+        "catalog",
+        "products",
+        "projects",
+        "examples",
+        "libraries",
+        "tools",
+        "tests",
+        ".github",
+        "docs",
+        "templates",
+        *policy.project_roots,
+        *configuration.product_roots,
+        *configuration.library_roots,
+        configuration.templates,
+        configuration.workflow_docs,
     }
     for directory in sorted(directories):
         for path in repo_path(root, directory).rglob("*"):
@@ -442,8 +448,13 @@ def snapshot(root: Path, output: Path) -> SnapshotManifest:
             if path.is_file():
                 sources.add(path)
     for name in (
-        configuration.discovery, configuration.products, configuration.team_policy, policy.catalogs.parts,
-        policy.catalogs.interfaces, policy.catalogs.libraries, policy.catalogs.toolchains,
+        configuration.discovery,
+        configuration.products,
+        configuration.team_policy,
+        policy.catalogs.parts,
+        policy.catalogs.interfaces,
+        policy.catalogs.libraries,
+        policy.catalogs.toolchains,
         policy.catalogs.release_policies,
     ):
         path = repo_path(root, name)
@@ -454,8 +465,15 @@ def snapshot(root: Path, output: Path) -> SnapshotManifest:
         for path in sorted(sources)
     }
     for name in (
-        "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md", ".gitattributes",
-        ".gitignore", "pyproject.toml", "template-adoption.json", CONFIG_NAME,
+        "README.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CHANGELOG.md",
+        ".gitattributes",
+        ".gitignore",
+        "pyproject.toml",
+        "template-adoption.json",
+        CONFIG_NAME,
     ):
         if (path := repo_path(root, name)).is_file():
             source_hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -476,8 +494,7 @@ def snapshot(root: Path, output: Path) -> SnapshotManifest:
         },
         sources_sha256=source_hashes,
         artifacts_sha256={
-            name: hashlib.sha256(content).hexdigest()
-            for name, content in sorted(outputs.items())
+            name: hashlib.sha256(content).hexdigest() for name, content in sorted(outputs.items())
         },
     )
     output.mkdir(parents=True, exist_ok=False)
@@ -495,11 +512,7 @@ def verify_snapshot(output: Path) -> SnapshotVerification:
     for name, expected in manifest.artifacts_sha256.items():
         if hashlib.sha256(repo_path(output, name).read_bytes()).hexdigest() != expected:
             raise ValueError(f"Artifact hash mismatch: {name}")
-    actual = {
-        path.relative_to(output).as_posix()
-        for path in output.rglob("*")
-        if path.is_file()
-    }
+    actual = {path.relative_to(output).as_posix() for path in output.rglob("*") if path.is_file()}
     if actual != set(manifest.artifacts_sha256) | {"manifest.json"}:
         raise ValueError("Retained artifact inventory differs")
     return SnapshotVerification(

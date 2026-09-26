@@ -1,4 +1,5 @@
 """Safe template preflight, bootstrap and migration planning services."""
+
 from __future__ import annotations
 
 import os
@@ -33,7 +34,9 @@ def finding(code: str, location: str, message: str) -> PolicyIssue:
 
 def load_contract(root: Path) -> TemplateContract:
     """Load the one authoritative template contract at the file boundary."""
-    return read_model(repo_path(root, f"{layout(root).templates}/template-contract.json"), TemplateContract)
+    return read_model(
+        repo_path(root, f"{layout(root).templates}/template-contract.json"), TemplateContract
+    )
 
 
 def preflight(root: Path) -> TemplatePreflightReport:
@@ -45,7 +48,9 @@ def preflight(root: Path) -> TemplatePreflightReport:
         for value in (*contract.required_paths, contract.adoption_guide, contract.upgrades_catalog):
             path = repo_path(resolved_root, value)
             if not path.exists():
-                issues.append(finding("TEMPLATE_REQUIRED_PATH", value, "Required template path is missing"))
+                issues.append(
+                    finding("TEMPLATE_REQUIRED_PATH", value, "Required template path is missing")
+                )
         if not issues:
             read_model(repo_path(resolved_root, contract.upgrades_catalog), TemplateUpgradesCatalog)
     except (OSError, ValueError) as exc:
@@ -96,7 +101,11 @@ def bootstrap(root: Path, destination: Path, project_id: str) -> TemplateBootstr
         )
     if not resolved_destination.parent.is_dir():
         issues.append(
-            finding("TEMPLATE_DESTINATION", str(resolved_destination.parent), "Parent directory is missing")
+            finding(
+                "TEMPLATE_DESTINATION",
+                str(resolved_destination.parent),
+                "Parent directory is missing",
+            )
         )
     if resolved_root == resolved_destination or resolved_root in resolved_destination.parents:
         issues.append(
@@ -135,14 +144,25 @@ def bootstrap(root: Path, destination: Path, project_id: str) -> TemplateBootstr
             issues=tuple(issues),
         )
 
-    staging_parent = Path(tempfile.mkdtemp(prefix="kicad-template-bootstrap-", dir=resolved_destination.parent))
+    staging_parent = Path(
+        tempfile.mkdtemp(prefix="kicad-template-bootstrap-", dir=resolved_destination.parent)
+    )
     staging = staging_parent / resolved_destination.name
     removed: tuple[str, ...] = ()
     try:
         tracked = subprocess.run(
-            ["git", "-c", f"safe.directory={resolved_root.as_posix()}",
-             "-C", str(resolved_root), "ls-files", "-z"],
-            capture_output=True, text=True, check=True,
+            [
+                "git",
+                "-c",
+                f"safe.directory={resolved_root.as_posix()}",
+                "-C",
+                str(resolved_root),
+                "ls-files",
+                "-z",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         staging.mkdir()
         for name in tracked.stdout.split("\0"):
@@ -228,7 +248,9 @@ def plan_upgrade(root: Path, target_version: str) -> TemplateUpgradePlan:
         if adoption_path.is_file():
             current = read_model(adoption_path, TemplateAdoptionRecord).template_version
         if version_key(target_version) < version_key(current):
-            issues.append(finding("TEMPLATE_UPGRADE", target_version, "Downgrades are not supported"))
+            issues.append(
+                finding("TEMPLATE_UPGRADE", target_version, "Downgrades are not supported")
+            )
         elif target_version == current:
             return TemplateUpgradePlan(
                 current_version=current,

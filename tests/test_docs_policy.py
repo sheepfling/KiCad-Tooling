@@ -1,4 +1,5 @@
 """Tests for deterministic Markdown layout and repository-documentation policy."""
+
 from __future__ import annotations
 
 import tempfile
@@ -78,7 +79,9 @@ class DocumentationPolicyTests(unittest.TestCase):
     def test_project_readme_is_discovered_without_a_central_link_edit(self) -> None:
         self.write_policy()
         self.write("README.md", "# Repository\n")
-        self.write("projects/battery-board/README.md", "# Battery board\n\n[Design](docs/design.md)\n")
+        self.write(
+            "projects/battery-board/README.md", "# Battery board\n\n[Design](docs/design.md)\n"
+        )
         self.write("projects/battery-board/docs/design.md", "# Design notes\n")
         self.assertEqual(self.codes(), set())
         self.write("projects/battery-board/docs/forgotten.md", "# Forgotten notes\n")
@@ -96,8 +99,10 @@ class DocumentationPolicyTests(unittest.TestCase):
         self.write_policy()
         self.write("docs/board notes.md", "# Board notes\n")
         self.write("docs/native #1.kicad_pro", "{}")
-        for link in ('docs/board%20notes.md', '<docs/board notes.md> "Title"'):
-            self.write("README.md", f"# Root\n\n[Board]({link})\n[Native](docs/native%20%231.kicad_pro)\n")
+        for link in ("docs/board%20notes.md", '<docs/board notes.md> "Title"'):
+            self.write(
+                "README.md", f"# Root\n\n[Board]({link})\n[Native](docs/native%20%231.kicad_pro)\n"
+            )
             self.assertEqual(self.codes(), set())
         self.write("docs/board notes.md", "# Board notes\n\n[Escape](%2E%2E/%2E%2E/outside.md)\n")
         self.assertEqual(self.codes(), {"DOC101"})
@@ -123,7 +128,7 @@ class DocumentationPolicyTests(unittest.TestCase):
         )
         self.write(
             "docs/README.md",
-            "# Documentation\n\n[Workflow](workflow/guide.md)\n[Team](team/README.md)\n"
+            "# Documentation\n\n[Workflow](workflow/guide.md)\n[Team](team/README.md)\n",
         )
         self.write("docs/workflow/guide.md", "# Guide\n")
         self.write("docs/team/README.md", "# Team documentation\n")

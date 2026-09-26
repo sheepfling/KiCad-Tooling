@@ -1,4 +1,5 @@
 """Thin command-line adapter for the Markdown documentation-policy engine."""
+
 from __future__ import annotations
 
 import argparse

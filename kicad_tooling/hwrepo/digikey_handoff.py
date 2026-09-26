@@ -3,6 +3,7 @@
 The wire contract follows Digi-Key/KiCad-Push-to-DigiKey's public source.
 This creates a review list, not a purchase, and never retries a POST automatically.
 """
+
 from __future__ import annotations
 
 import http.client
@@ -48,13 +49,17 @@ def build_payload(plan: PurchasingPlan) -> DigiKeyHandoffPayload:
                 "select an exact DigiKey SKU for each part before sending."
             )
         identities[line.order_number] = identity
-        rows.append(DigiKeyHandoffPart(
-            requestedPartNumber=line.order_number,
-            quantities=(DigiKeyHandoffQuantity(quantity=line.quantity),),
-            customerReference=line.part_id,
-            notes=(f"Manufacturer: {line.manufacturer}; MPN: {line.mpn}; "
-                   f"References: {', '.join(line.references)}"),
-        ))
+        rows.append(
+            DigiKeyHandoffPart(
+                requestedPartNumber=line.order_number,
+                quantities=(DigiKeyHandoffQuantity(quantity=line.quantity),),
+                customerReference=line.part_id,
+                notes=(
+                    f"Manufacturer: {line.manufacturer}; MPN: {line.mpn}; "
+                    f"References: {', '.join(line.references)}"
+                ),
+            )
+        )
     return DigiKeyHandoffPayload(root=tuple(rows))
 
 
@@ -69,14 +74,21 @@ def _post(path: str, body: bytes) -> bytes:
     """One bounded HTTPS exchange; redirects are rejected without following them."""
     deadline = time.monotonic() + _TIMEOUT_SECONDS
     connection = http.client.HTTPSConnection(
-        _HOST, timeout=_TIMEOUT_SECONDS, context=ssl.create_default_context(),
+        _HOST,
+        timeout=_TIMEOUT_SECONDS,
+        context=ssl.create_default_context(),
     )
     try:
-        connection.request("POST", path, body=body, headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json; charset=utf-8",
-            "User-Agent": "KiCad-Parts-Assistant/1",
-        })
+        connection.request(
+            "POST",
+            path,
+            body=body,
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+                "User-Agent": "KiCad-Parts-Assistant/1",
+            },
+        )
         if connection.sock is not None:
             connection.sock.settimeout(_remaining(deadline))
         transport_socket = connection.sock

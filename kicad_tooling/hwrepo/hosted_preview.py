@@ -1,4 +1,5 @@
 """Portable log retention and Actions summaries for the shared 3D renderer."""
+
 from __future__ import annotations
 
 import html
@@ -16,8 +17,13 @@ if TYPE_CHECKING:
 
 
 def preview_lane(
-    root: Path, project: str, log: HostedLog, *, runner: NativeRunner = "auto",
-    cli: str = "kicad-cli", output: Path = Path("build/3d-preview"),
+    root: Path,
+    project: str,
+    log: HostedLog,
+    *,
+    runner: NativeRunner = "auto",
+    cli: str = "kicad-cli",
+    output: Path = Path("build/3d-preview"),
 ) -> None:
     """Keep fresh renderer evidence, including errors before a receipt is created."""
     root = root.resolve()
@@ -30,11 +36,31 @@ def preview_lane(
     stdout = log.directory / "preview.stdout.log"
     stderr = log.directory / "preview.stderr.log"
     try:
-        log.run("preview", (
-            sys.executable, "-I", "-X", "utf8", "-B", "-m", "kicad_tooling.visualize",
-            "--root", str(root), "--project", project, "--runner", runner,
-            "--cli", cli, "--output", str(output), "--format", "text",
-        ), cwd=root)
+        log.run(
+            "preview",
+            (
+                sys.executable,
+                "-I",
+                "-X",
+                "utf8",
+                "-B",
+                "-m",
+                "kicad_tooling.visualize",
+                "--root",
+                str(root),
+                "--project",
+                project,
+                "--runner",
+                runner,
+                "--cli",
+                cli,
+                "--output",
+                str(output),
+                "--format",
+                "text",
+            ),
+            cwd=root,
+        )
     finally:
         # Validate again before writing into a directory created by the child.
         repo_path(root, output.relative_to(root).as_posix())
@@ -48,7 +74,10 @@ def preview_lane(
         summary = os.environ.get("GITHUB_STEP_SUMMARY")
         if summary:
             report = repo_path(root, (output / "visualization.txt").relative_to(root).as_posix())
-            text = (report.read_text(encoding="utf-8") if report.is_file() else
-                    "No visualization report was produced. Inspect the retained CLI logs.")
+            text = (
+                report.read_text(encoding="utf-8")
+                if report.is_file()
+                else "No visualization report was produced. Inspect the retained CLI logs."
+            )
             with Path(summary).open("a", encoding="utf-8") as stream:
                 stream.write("## KiCad 3D preview\n\n<pre>" + html.escape(text) + "</pre>\n")

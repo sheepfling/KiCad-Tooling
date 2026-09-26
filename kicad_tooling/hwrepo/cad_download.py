@@ -4,6 +4,7 @@ This adapter preserves footprint bytes, including authored model transforms. It
 never identifies a manufacturer part or substitutes a similarly named package.
 Supplier CAD outside the official library needs a separate provider adapter.
 """
+
 from __future__ import annotations
 
 import csv
@@ -59,8 +60,13 @@ def _url(repository: str, version: str, path: str) -> str:
 def _download(url: str, maximum: int) -> bytes:
     """Read one HTTPS response; redirects never forward requests elsewhere."""
     parsed = urlsplit(url)
-    if (parsed.scheme != "https" or parsed.netloc != _HOST or parsed.query
-            or parsed.fragment or not parsed.path.startswith("/kicad/libraries/")):
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc != _HOST
+        or parsed.query
+        or parsed.fragment
+        or not parsed.path.startswith("/kicad/libraries/")
+    ):
         raise ValueError("CAD download URL is outside the official KiCad library host")
     connection = http.client.HTTPSConnection(_HOST, timeout=_TIMEOUT)
     started = time.monotonic()
@@ -97,7 +103,7 @@ def _model_paths(source: bytes, name: str, version: str) -> tuple[str, ...]:
     if len(roots) != 1 or _atoms(text, roots[0]) != ("footprint", name):
         raise ValueError("Downloaded footprint identity does not match the requested footprint")
     root = roots[0]
-    if text[:root.start].strip() or text[root.end:].strip():
+    if text[: root.start].strip() or text[root.end :].strip():
         raise ValueError("Unexpected data outside the downloaded footprint")
     prefix = "${KICAD" + version.split(".")[0] + "_3DMODEL_DIR}/"
     paths: list[str] = []
@@ -107,11 +113,14 @@ def _model_paths(source: bytes, name: str, version: str) -> tuple[str, ...]:
             continue
         if len(atoms) != 2 or not atoms[1].startswith(prefix):
             raise ValueError("Footprint model is not an explicit versioned official KiCad model")
-        path = atoms[1][len(prefix):]
+        path = atoms[1][len(prefix) :]
         parts = path.split("/")
-        if (len(parts) != 2 or not parts[0].endswith(".3dshapes")
-                or any(not _NAME.fullmatch(part) for part in parts)
-                or PurePosixPath(path).suffix.lower() not in {".step", ".stp", ".wrl"}):
+        if (
+            len(parts) != 2
+            or not parts[0].endswith(".3dshapes")
+            or any(not _NAME.fullmatch(part) for part in parts)
+            or PurePosixPath(path).suffix.lower() not in {".step", ".stp", ".wrl"}
+        ):
             raise ValueError("Footprint model path is outside the official model library layout")
         if path not in paths:
             paths.append(path)
@@ -125,8 +134,7 @@ def _model_paths(source: bytes, name: str, version: str) -> tuple[str, ...]:
 def _asset_shape(path: str, value: bytes) -> None:
     suffix = PurePosixPath(path).suffix.lower()
     if suffix in {".step", ".stp"} and not (
-        value.lstrip().startswith(b"ISO-10303-21;")
-        and b"END-ISO-10303-21;" in value[-100:]
+        value.lstrip().startswith(b"ISO-10303-21;") and b"END-ISO-10303-21;" in value[-100:]
     ):
         raise ValueError(f"Downloaded model is not a STEP file: {path}")
     if suffix == ".wrl" and not value.lstrip().startswith(b"#VRML"):
@@ -162,14 +170,22 @@ def inspect_cached_provenance(footprints_root: Path) -> tuple[DownloadedCadAsset
                 raise ValueError("Official CAD cache contains malformed provenance")
             path, url, digest = row
             parts = PurePosixPath(path).parts
-            if (not parts or path != PurePosixPath(path).as_posix() or ".." in parts
-                    or PurePosixPath(path).is_absolute() or "\\" in path
-                    or any(part in {"", "."} for part in parts)
-                    or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            if (
+                not parts
+                or path != PurePosixPath(path).as_posix()
+                or ".." in parts
+                or PurePosixPath(path).is_absolute()
+                or "\\" in path
+                or any(part in {"", "."} for part in parts)
+                or not re.fullmatch(r"[0-9a-f]{64}", digest)
+            ):
                 raise ValueError("Official CAD cache contains unsafe provenance")
             asset = bundle / path
-            if (asset.is_symlink() or not asset.resolve().is_relative_to(bundle)
-                    or not asset.is_file()):
+            if (
+                asset.is_symlink()
+                or not asset.resolve().is_relative_to(bundle)
+                or not asset.is_file()
+            ):
                 raise ValueError("Official CAD cache asset is missing or outside its bundle")
             if hashlib.sha256(asset.read_bytes()).hexdigest() != digest:
                 raise ValueError(f"Official CAD cache asset changed: {path}")
@@ -190,8 +206,9 @@ def _validate_cache(footprints: Path, footprint_id: str, version: str) -> None:
         raise ValueError("Official CAD cache provenance does not match the requested assets")
 
 
-def fetch_official_footprint(cache: Path, footprint_id: str, version: str, *,
-                             allow_downloads: bool = True) -> Path:
+def fetch_official_footprint(
+    cache: Path, footprint_id: str, version: str, *, allow_downloads: bool = True
+) -> Path:
     """Return a complete local footprints root, with sibling models and licenses.
 
     A failed transfer leaves no usable bundle. Completed bundles are reused only

@@ -1,4 +1,5 @@
 """Deterministic, explicitly partial project shards shared by CLI, MCP and CI."""
+
 from __future__ import annotations
 
 import re
@@ -23,11 +24,12 @@ class ProjectShard:
     def select(self, projects: tuple[str, ...]) -> tuple[str, ...]:
         """Round-robin a stable sorted project set; never report an empty shard as PASS."""
         if self.count > len(projects):
-            raise ValueError(
-                f"{self.count} shards exceed {len(projects)} selected projects"
-            )
-        selected = tuple(project for position, project in enumerate(sorted(projects))
-                         if position % self.count == self.index - 1)
+            raise ValueError(f"{self.count} shards exceed {len(projects)} selected projects")
+        selected = tuple(
+            project
+            for position, project in enumerate(sorted(projects))
+            if position % self.count == self.index - 1
+        )
         if not selected:
             raise ValueError(f"Shard {self.index}/{self.count} selected no projects")
         return selected

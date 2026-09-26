@@ -1,4 +1,5 @@
 """Integration guards for source-bound, local-only purchasing receipts."""
+
 from __future__ import annotations
 
 import json
@@ -50,8 +51,10 @@ NETLIST = """<export><components>
 
 def command(stdout: str = "") -> CommandEvidence:
     return CommandEvidence(
-        argv=("synthetic-kicad-cli",), started_utc="2026-09-24T00:00:00+00:00",
-        returncode=0, stdout=stdout,
+        argv=("synthetic-kicad-cli",),
+        started_utc="2026-09-24T00:00:00+00:00",
+        returncode=0,
+        stdout=stdout,
     )
 
 
@@ -81,16 +84,37 @@ class PartsWorkflowTests(unittest.TestCase):
         self.manifest_path = self.root / "examples/projects/controller/project.json"
         self.island = self.manifest_path.parent
         manifest = read_model(self.manifest_path, ProjectManifest)
-        write_model(self.manifest_path, manifest.model_copy(update={
-            "component_identity": ComponentIdentity(required=True, part_ids=("resistor-1k",)),
-        }))
+        write_model(
+            self.manifest_path,
+            manifest.model_copy(
+                update={
+                    "component_identity": ComponentIdentity(
+                        required=True, part_ids=("resistor-1k",)
+                    ),
+                }
+            ),
+        )
         self.catalog_path = self.root / "catalog/parts.json"
-        write_model(self.catalog_path, PartsCatalog(schema_version="0.1", parts=(PartRecord(
-            id="resistor-1k", revision="A", description="Integration-test identity only",
-            part_class="resistor", unit="each", manufacturer="Vishay",
-            mpn="MRS25000C1001FCT00", datasheet_url="https://example.invalid/test-only",
-            lifecycle="active", status=PartStatus.APPROVED,
-        ),)))
+        write_model(
+            self.catalog_path,
+            PartsCatalog(
+                schema_version="0.1",
+                parts=(
+                    PartRecord(
+                        id="resistor-1k",
+                        revision="A",
+                        description="Integration-test identity only",
+                        part_class="resistor",
+                        unit="each",
+                        manufacturer="Vishay",
+                        mpn="MRS25000C1001FCT00",
+                        datasheet_url="https://example.invalid/test-only",
+                        lifecycle="active",
+                        status=PartStatus.APPROVED,
+                    ),
+                ),
+            ),
+        )
         self.config = load_config(self.root, self.manifest_path)
         self.native = self.root / "build/native/controller"
         self.native.mkdir(parents=True)
@@ -101,17 +125,24 @@ class PartsWorkflowTests(unittest.TestCase):
         write_model(self.native / "netlist.command.json", command())
         current = hashes(self.root, self.config.source_roots)
         self.summary = ValidationSummary(
-            timestamp_utc="2026-09-24T00:00:00+00:00", checked_commit="LOCAL_UNBOUND",
-            project_id=self.project_id, project_kind=ProjectKind.PCB,
+            timestamp_utc="2026-09-24T00:00:00+00:00",
+            checked_commit="LOCAL_UNBOUND",
+            project_id=self.project_id,
+            project_kind=ProjectKind.PCB,
             checks={
                 "source_scope": CheckEvidence(status="PASS", source_hashes=current),
                 "source_unchanged": CheckEvidence(status="PASS", source_hashes=current),
-                "toolchain": CheckEvidence(status="PASS",
-                    observed_version=self.config.kicad_version, image=self.config.image),
-                "netlist": CheckEvidence(status="FAIL", returncode=0,
-                    error="Independent electrical contract differs"),
+                "toolchain": CheckEvidence(
+                    status="PASS",
+                    observed_version=self.config.kicad_version,
+                    image=self.config.image,
+                ),
+                "netlist": CheckEvidence(
+                    status="FAIL", returncode=0, error="Independent electrical contract differs"
+                ),
             },
-            status="FAIL", artifacts_sha256={
+            status="FAIL",
+            artifacts_sha256={
                 "netlist.xml": digest(self.native / "netlist.xml"),
                 "netlist.command.json": digest(self.native / "netlist.command.json"),
             },
@@ -119,15 +150,34 @@ class PartsWorkflowTests(unittest.TestCase):
         write_model(self.native / "summary.json", self.summary)
 
     def review(self, **options: object) -> PurchasingReport:
-        return prepare(self.root, self.project_id,
-            new_receipt(self.root, self.project_id, None), FixtureRunner(),
-            native_summary=self.native, **options)
+        return prepare(
+            self.root,
+            self.project_id,
+            new_receipt(self.root, self.project_id, None),
+            FixtureRunner(),
+            native_summary=self.native,
+            **options,
+        )
 
     def cli(self, *arguments: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run((
-            sys.executable, "-I", "-B", "-m", "kicad_tooling.parts", "--root", str(self.root),
-            "--project", self.project_id, *arguments,
-        ), cwd=self.root, text=True, capture_output=True, check=False)
+        return subprocess.run(
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.parts",
+                "--root",
+                str(self.root),
+                "--project",
+                self.project_id,
+                *arguments,
+            ),
+            cwd=self.root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
 
     def test_native_metadata_review_preserves_source_and_authority_boundaries(self) -> None:
         original = hashes(self.root, self.config.source_roots)
@@ -143,8 +193,9 @@ class PartsWorkflowTests(unittest.TestCase):
         self.assertEqual(hashes(self.root, self.config.source_roots), original)
         receipt = Path(report.receipt_dir)
         self.assertEqual(digest(receipt / "netlist.xml"), report.netlist_sha256)
-        self.assertEqual((receipt / "netlist.xml").read_bytes(),
-                         (self.native / "netlist.xml").read_bytes())
+        self.assertEqual(
+            (receipt / "netlist.xml").read_bytes(), (self.native / "netlist.xml").read_bytes()
+        )
         self.assertTrue((receipt / "digikey.csv").is_file())
         save_report(receipt, report)
         self.assertEqual(read_model(receipt / "report.json", PurchasingReport), report)
@@ -156,6 +207,7 @@ class PartsWorkflowTests(unittest.TestCase):
         for path in paths:
             with self.subTest(path=path.name):
                 original = path.read_bytes()
+
                 def mutate(path: Path = path, original: bytes = original) -> None:
                     path.write_bytes(original + b"\n")
 
@@ -168,9 +220,12 @@ class PartsWorkflowTests(unittest.TestCase):
                 path.write_bytes(original)
 
     def test_wrong_project_and_tampered_native_evidence_are_blocked(self) -> None:
-        write_model(self.native / "summary.json", self.summary.model_copy(
-            update={"project_id": "passive-signal-reference"},
-        ))
+        write_model(
+            self.native / "summary.json",
+            self.summary.model_copy(
+                update={"project_id": "passive-signal-reference"},
+            ),
+        )
         report = self.review()
         self.assertEqual(report.status, "BLOCKED")
         self.assertIn("another project", report.issues[0])
@@ -189,24 +244,30 @@ class PartsWorkflowTests(unittest.TestCase):
         self.assertIn("source", report.issues[0].lower())
 
     def test_default_explicit_and_run_only_preferences(self) -> None:
-        self.assertEqual(load_preferences(self.root, self.project_id, None, None, None, None),
-                         PurchasingPreferences())
+        self.assertEqual(
+            load_preferences(self.root, self.project_id, None, None, None, None),
+            PurchasingPreferences(),
+        )
         path = self.island / "docs/purchasing.json"
-        saved = PurchasingPreferences(boards=4, spare_percent=5, spare_minimum=2,
-                                      digikey_skus={"resistor-1k": "541-1KABC-ND"})
+        saved = PurchasingPreferences(
+            boards=4, spare_percent=5, spare_minimum=2, digikey_skus={"resistor-1k": "541-1KABC-ND"}
+        )
         write_model(path, saved)
-        self.assertEqual(load_preferences(self.root, self.project_id, None, None, None, None),
-                         saved)
+        self.assertEqual(
+            load_preferences(self.root, self.project_id, None, None, None, None), saved
+        )
         original = path.read_bytes()
         overridden = load_preferences(self.root, self.project_id, path, 10, 20, 0)
-        self.assertEqual((overridden.boards, overridden.spare_percent, overridden.spare_minimum),
-                         (10, 20, 0))
+        self.assertEqual(
+            (overridden.boards, overridden.spare_percent, overridden.spare_minimum), (10, 20, 0)
+        )
         self.assertEqual(overridden.digikey_skus, saved.digikey_skus)
         self.assertEqual(path.read_bytes(), original)
         alternative = self.root / "build/other-preferences.json"
         write_model(alternative, PurchasingPreferences(boards=7))
-        self.assertEqual(load_preferences(self.root, self.project_id, alternative,
-                                         None, None, None).boards, 7)
+        self.assertEqual(
+            load_preferences(self.root, self.project_id, alternative, None, None, None).boards, 7
+        )
 
     def test_malformed_preferences_return_readable_blocked_reports(self) -> None:
         path = self.island / "docs/purchasing.json"
@@ -223,9 +284,12 @@ class PartsWorkflowTests(unittest.TestCase):
         original = self.island / manifest.checks
         custom = self.island / "tests/electrical-contract.json"
         original.rename(custom)
-        write_model(self.manifest_path, manifest.model_copy(
-            update={"checks": "tests/electrical-contract.json"},
-        ))
+        write_model(
+            self.manifest_path,
+            manifest.model_copy(
+                update={"checks": "tests/electrical-contract.json"},
+            ),
+        )
         bound = input_hashes(self.root, self.project_id, None)
         self.assertIn(custom.relative_to(self.root).as_posix(), bound)
         self.assertNotIn(original.relative_to(self.root).as_posix(), bound)
@@ -239,9 +303,12 @@ class PartsWorkflowTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             init_preferences(self.root, self.project_id, path, PurchasingPreferences())
         self.assertEqual(path.read_bytes(), before)
-        for unsafe in (Path("../escaped.json"), Path("catalog/preferences.json"),
-                       self.root.parent / "escaped.json",
-                       self.island / "docs/preferences.txt"):
+        for unsafe in (
+            Path("../escaped.json"),
+            Path("catalog/preferences.json"),
+            self.root.parent / "escaped.json",
+            self.island / "docs/preferences.txt",
+        ):
             with self.subTest(path=unsafe), self.assertRaises(ValueError):
                 init_preferences(self.root, self.project_id, unsafe, saved)
         self.assertFalse((self.root.parent / "escaped.json").exists())
@@ -256,8 +323,9 @@ class PartsWorkflowTests(unittest.TestCase):
 
     def test_direct_prepare_cannot_write_into_authored_docs(self) -> None:
         output = self.island / "docs"
-        report = prepare(self.root, self.project_id, output, FixtureRunner(),
-                         native_summary=self.native)
+        report = prepare(
+            self.root, self.project_id, output, FixtureRunner(), native_summary=self.native
+        )
         self.assertEqual(report.status, "BLOCKED")
         self.assertFalse((output / "netlist.xml").exists())
         self.assertFalse((output / "digikey.csv").exists())
@@ -266,8 +334,18 @@ class PartsWorkflowTests(unittest.TestCase):
         path = self.island / "docs/purchasing.json"
         write_model(path, PurchasingPreferences(boards=2, spare_minimum=3))
         before = path.read_bytes()
-        result = self.cli("--native-summary", str(self.native), "--preferences", str(path),
-                          "--boards", "10", "--spare-percent", "10", "--format", "json")
+        result = self.cli(
+            "--native-summary",
+            str(self.native),
+            "--preferences",
+            str(path),
+            "--boards",
+            "10",
+            "--spare-percent",
+            "10",
+            "--format",
+            "json",
+        )
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
         report = json.loads(result.stdout)
         self.assertEqual(report["plan"]["lines"][0]["quantity"], 23)
@@ -275,14 +353,19 @@ class PartsWorkflowTests(unittest.TestCase):
         self.assertTrue(Path(report["receipt_dir"], "index.html").is_file())
 
     def test_cli_errors_have_deliberate_exit_codes(self) -> None:
-        for arguments in (("--boards", "0"), ("--spare-percent", "101"),
-                          ("--boards", "1.5"), ("--output", "docs/no-output")):
+        for arguments in (
+            ("--boards", "0"),
+            ("--spare-percent", "101"),
+            ("--boards", "1.5"),
+            ("--output", "docs/no-output"),
+        ):
             with self.subTest(arguments=arguments):
                 result = self.cli(*arguments)
                 self.assertEqual(result.returncode, 2, result.stdout)
                 self.assertNotIn("Traceback", result.stderr)
-        result = self.cli("--runner", "local", "--cli", "missing-kicad-parts-test",
-                          "--format", "json")
+        result = self.cli(
+            "--runner", "local", "--cli", "missing-kicad-parts-test", "--format", "json"
+        )
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertEqual(json.loads(result.stdout)["status"], "BLOCKED")
         self.assertNotIn("Traceback", result.stderr)
@@ -297,8 +380,11 @@ class PartsWorkflowTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
 
     def test_html_escapes_source_text_and_exposes_failed_native_validation(self) -> None:
-        self.write_summary(NETLIST.replace("<value>1k</value>",
-            "<value>&lt;img src=x onerror=alert(1)&gt;</value>"))
+        self.write_summary(
+            NETLIST.replace(
+                "<value>1k</value>", "<value>&lt;img src=x onerror=alert(1)&gt;</value>"
+            )
+        )
         report = self.review()
         self.assertEqual(report.status, "READY_FOR_ORDER_REVIEW", report.issues)
         html = render_html(report)

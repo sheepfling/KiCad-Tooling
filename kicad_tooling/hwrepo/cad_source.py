@@ -4,6 +4,7 @@ The provider is a community endpoint, not a manufacturer approval. Cached bundle
 are immutable and checked on every use. STEP evidence stays outside the imported
 library because this converter does not apply its WRL offsets to STEP geometry.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -72,12 +73,19 @@ def _download(url: str, maximum: int) -> bytes:
     connection = http.client.HTTPSConnection(parsed.netloc, timeout=_TIMEOUT)
     start = time.monotonic()
     try:
-        connection.request("GET", parsed.path, headers={
-            "User-Agent": "KiCad-Team-Template/1", "Accept-Encoding": "identity",
-        })
+        connection.request(
+            "GET",
+            parsed.path,
+            headers={
+                "User-Agent": "KiCad-Team-Template/1",
+                "Accept-Encoding": "identity",
+            },
+        )
         response = connection.getresponse()
         if response.status != 200:
-            raise ValueError(f"CAD provider returned HTTP {response.status}; retry later or use another source")
+            raise ValueError(
+                f"CAD provider returned HTTP {response.status}; retry later or use another source"
+            )
         encoding = response.getheader("Content-Encoding")
         if encoding and encoding.lower() != "identity":
             raise ValueError("CAD provider returned an unsupported content encoding")
@@ -111,9 +119,14 @@ def _converter_digest() -> str:
             "Install the CAD provider once with: python -m pip install -e '.[cad]'"
         ) from error
     if distribution.version != VERSION:
-        raise ValueError(f"CAD sourcing requires easyeda2kicad=={VERSION}; install the pinned cad extra")
-    sources = sorted(item for item in distribution.files or ()
-                     if str(item).startswith("easyeda2kicad/") and str(item).endswith(".py"))
+        raise ValueError(
+            f"CAD sourcing requires easyeda2kicad=={VERSION}; install the pinned cad extra"
+        )
+    sources = sorted(
+        item
+        for item in distribution.files or ()
+        if str(item).startswith("easyeda2kicad/") and str(item).endswith(".py")
+    )
     if not sources:
         raise ValueError("The CAD converter installation has no recorded Python source files")
     digest = hashlib.sha256()
@@ -125,14 +138,34 @@ def _converter_digest() -> str:
 
 
 def _run_converter(bundle: Path, supplier_id: str, logs: Path) -> None:
-    arguments = [sys.executable, "-I", "-B", "-c", _OFFLINE_WORKER,
-                 "--full", "--lcsc_id", supplier_id, "--output",
-                 str(bundle / "library/part"), "--project-relative", "--use-cache"]
-    with (logs.joinpath("converter.stdout").open("wb") as stdout,
-          logs.joinpath("converter.stderr").open("wb") as stderr):
+    arguments = [
+        sys.executable,
+        "-I",
+        "-B",
+        "-c",
+        _OFFLINE_WORKER,
+        "--full",
+        "--lcsc_id",
+        supplier_id,
+        "--output",
+        str(bundle / "library/part"),
+        "--project-relative",
+        "--use-cache",
+    ]
+    with (
+        logs.joinpath("converter.stdout").open("wb") as stdout,
+        logs.joinpath("converter.stderr").open("wb") as stderr,
+    ):
         try:
-            result = subprocess.run(arguments, cwd=bundle, stdin=subprocess.DEVNULL,
-                                    stdout=stdout, stderr=stderr, timeout=90, check=False)
+            result = subprocess.run(
+                arguments,
+                cwd=bundle,
+                stdin=subprocess.DEVNULL,
+                stdout=stdout,
+                stderr=stderr,
+                timeout=90,
+                check=False,
+            )
         except subprocess.TimeoutExpired as error:
             raise ValueError("The CAD converter exceeded its time limit") from error
     if result.returncode:
@@ -155,8 +188,11 @@ def _symbol_identity(path: Path, identity: CadProviderIdentity) -> None:
     roots = _children(text, 0, len(text))
     if len(roots) != 1 or _atoms(text, roots[0]) != ("kicad_symbol_lib",):
         raise ValueError("Converted symbol library is malformed")
-    symbols = [node for node in _children(text, roots[0].start + 1, roots[0].end - 1)
-               if _atoms(text, node)[:1] == ("symbol",)]
+    symbols = [
+        node
+        for node in _children(text, roots[0].start + 1, roots[0].end - 1)
+        if _atoms(text, node)[:1] == ("symbol",)
+    ]
     if len(symbols) != 1 or _atoms(text, symbols[0]) != ("symbol", identity.symbol_name):
         raise ValueError("Converted symbol does not match the frozen provider identity")
     properties: dict[str, str] = {}
@@ -166,8 +202,12 @@ def _symbol_identity(path: Path, identity: CadProviderIdentity) -> None:
             if atoms[1] in properties:
                 raise ValueError("Converted symbol repeats an identity property")
             properties[atoms[1]] = atoms[2]
-    expected = {"Manufacturer": identity.manufacturer, "MPN": identity.mpn,
-                "LCSC Part": identity.supplier_id, "Footprint": f"part:{identity.package}"}
+    expected = {
+        "Manufacturer": identity.manufacturer,
+        "MPN": identity.mpn,
+        "LCSC Part": identity.supplier_id,
+        "Footprint": f"part:{identity.package}",
+    }
     if any(properties.get(name) != value for name, value in expected.items()):
         raise ValueError("Converted symbol fields do not match the frozen provider identity")
 
@@ -192,21 +232,30 @@ def _files(bundle: Path, identity: CadProviderIdentity) -> tuple[CadSourceFile, 
         data = path.read_bytes()
         if not data:
             raise ValueError("Converted CAD asset is empty")
-        if path.suffix == ".wrl" and (not data.startswith(b"#VRML V2.0 utf8")
-                                     or b"IndexedFaceSet" not in data):
+        if path.suffix == ".wrl" and (
+            not data.startswith(b"#VRML V2.0 utf8") or b"IndexedFaceSet" not in data
+        ):
             raise ValueError("Converted 3D model contains no supported geometry")
-        records.append(CadSourceFile(
-            path=name, sha256=_sha(data), source_url=(
-                _OBJ.format(uuid=identity.model_uuid) if path.suffix == ".wrl"
-                else _API.format(supplier_id=identity.supplier_id)),
-        ))
+        records.append(
+            CadSourceFile(
+                path=name,
+                sha256=_sha(data),
+                source_url=(
+                    _OBJ.format(uuid=identity.model_uuid)
+                    if path.suffix == ".wrl"
+                    else _API.format(supplier_id=identity.supplier_id)
+                ),
+            )
+        )
     _symbol_identity(repo_path(bundle, expected[0]), identity)
     return tuple(records)
 
 
 def _bounded_file(path: Path, maximum: int) -> bytes:
     if path.is_symlink() or not path.is_file() or path.stat().st_size > maximum:
-        raise ValueError(f"CAD source cache file is missing, linked or exceeds the size limit: {path.name}")
+        raise ValueError(
+            f"CAD source cache file is missing, linked or exceeds the size limit: {path.name}"
+        )
     return path.read_bytes()
 
 
@@ -219,8 +268,11 @@ def _cached(destination: Path, supplier_id: str, expected_mpn: str | None) -> Ca
     bundle = read_model(metadata, CadSourceBundle)
     if len(bundle.files) != 3 or len({item.path for item in bundle.files}) != 3:
         raise ValueError("CAD source cache has an unexpected file count")
-    actual = {p.relative_to(bundle_dir).as_posix() for p in bundle_dir.rglob("*")
-              if p.is_file() or p.is_symlink()}
+    actual = {
+        p.relative_to(bundle_dir).as_posix()
+        for p in bundle_dir.rglob("*")
+        if p.is_file() or p.is_symlink()
+    }
     if actual != {item.path for item in bundle.files} | {"bundle.json"}:
         raise ValueError("CAD source cache inventory changed")
     if bundle.supplier_id != supplier_id or bundle.converter_version != VERSION:
@@ -230,7 +282,9 @@ def _cached(destination: Path, supplier_id: str, expected_mpn: str | None) -> Ca
     for item in bundle.files:
         path = repo_path(destination / "bundle", item.path)
         if _sha(_bounded_file(path, _MAX_OUTPUT)) != item.sha256:
-            raise ValueError(f"CAD source cache changed: {item.path}; no automatic overwrite was made")
+            raise ValueError(
+                f"CAD source cache changed: {item.path}; no automatic overwrite was made"
+            )
     raw = repo_path(destination, f"source/{supplier_id}.json")
     raw_bytes = _bounded_file(raw, _MAX_JSON)
     if _sha(raw_bytes) != bundle.source_sha256:
@@ -238,18 +292,24 @@ def _cached(destination: Path, supplier_id: str, expected_mpn: str | None) -> Ca
     identity = parse_easyeda_identity(raw_bytes.decode("utf-8"))
     _safe_identity(identity, supplier_id, destination / "bundle")
     if (identity.manufacturer, identity.mpn, identity.package) != (
-            bundle.manufacturer, bundle.mpn, bundle.package):
+        bundle.manufacturer,
+        bundle.mpn,
+        bundle.package,
+    ):
         raise ValueError("CAD source cache differs from its frozen provider response")
     obj = _bounded_file(repo_path(destination, f"source/{identity.model_uuid}.obj"), _MAX_ASSET)
     step = _bounded_file(repo_path(destination, f"source/{identity.model_uuid}.step"), _MAX_ASSET)
-    key = _sha(raw_bytes + b"\0" + obj + b"\0" + step
-               + (bundle.converter_sha256 or "").encode("ascii"))
+    key = _sha(
+        raw_bytes + b"\0" + obj + b"\0" + step + (bundle.converter_sha256 or "").encode("ascii")
+    )
     if destination.name != key:
         raise ValueError("The frozen CAD source snapshot changed")
     return bundle
 
 
-def _build(parent: Path, supplier_id: str, expected_mpn: str | None, receipt: Path) -> tuple[Path, CadSourceBundle]:
+def _build(
+    parent: Path, supplier_id: str, expected_mpn: str | None, receipt: Path
+) -> tuple[Path, CadSourceBundle]:
     converter_digest = _converter_digest()
     source_url = _API.format(supplier_id=supplier_id)
     raw = _download(source_url, _MAX_JSON)
@@ -287,23 +347,36 @@ def _build(parent: Path, supplier_id: str, expected_mpn: str | None, receipt: Pa
         frozen.rename(stage / "source")
         files = _files(bundle_dir, identity)
         bundle = CadSourceBundle(
-            supplier_id=supplier_id, manufacturer=identity.manufacturer, mpn=identity.mpn,
-            package=identity.package, symbol_file="library/part.kicad_sym",
+            supplier_id=supplier_id,
+            manufacturer=identity.manufacturer,
+            mpn=identity.mpn,
+            package=identity.package,
+            symbol_file="library/part.kicad_sym",
             symbol_name=identity.symbol_name,
             footprint_file=f"library/part.pretty/{identity.package}.kicad_mod",
             footprint_name=identity.package,
             model_file=f"library/part.3dshapes/{identity.model_title}.wrl",
-            files=files, source_url=source_url, source_sha256=_sha(raw),
+            files=files,
+            source_url=source_url,
+            source_sha256=_sha(raw),
             retrieved_at=datetime.now(UTC).isoformat(),
-            converter_sha256=converter_digest, issues=issues,
+            converter_sha256=converter_digest,
+            issues=issues,
         )
         write_model(bundle_dir / "bundle.json", bundle)
         stage.rename(destination)
     return destination, bundle
 
 
-def fetch(root: Path, supplier_id: str, output: Path, *, expected_mpn: str | None = None,
-          refresh: bool = False, allow_downloads: bool = True) -> CadSourceReport:
+def fetch(
+    root: Path,
+    supplier_id: str,
+    output: Path,
+    *,
+    expected_mpn: str | None = None,
+    refresh: bool = False,
+    allow_downloads: bool = True,
+) -> CadSourceReport:
     """Freeze one exact supplier part; never place it or approve an electrical design."""
     root = root.resolve()
     output = output if output.is_absolute() else root / output
@@ -328,20 +401,31 @@ def fetch(root: Path, supplier_id: str, output: Path, *, expected_mpn: str | Non
             bundle = _cached(destination, supplier_id, expected_mpn)
         else:
             if not allow_downloads:
-                raise ValueError("CAD source is not cached; reconnect MCP with --allow-downloads to fetch it")
+                raise ValueError(
+                    "CAD source is not cached; reconnect MCP with --allow-downloads to fetch it"
+                )
             destination, bundle = _build(parent, supplier_id, expected_mpn, output)
-            with tempfile.NamedTemporaryFile(mode="w", encoding="ascii",
-                                             prefix=".current-", dir=parent, delete=False) as stream:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="ascii", prefix=".current-", dir=parent, delete=False
+            ) as stream:
                 stream.write(destination.name + "\n")
                 temporary = Path(stream.name)
             os.replace(temporary, pointer)
         report = CadSourceReport(
-            status="READY", supplier_id=supplier_id,
-            bundle_directory=str(destination / "bundle"), bundle=bundle,
-            cache_hit=cache_hit, issues=bundle.issues, receipt_directory=str(output),
+            status="READY",
+            supplier_id=supplier_id,
+            bundle_directory=str(destination / "bundle"),
+            bundle=bundle,
+            cache_hit=cache_hit,
+            issues=bundle.issues,
+            receipt_directory=str(output),
         )
     except (OSError, ValueError, UnicodeError, subprocess.SubprocessError) as error:
-        report = CadSourceReport(status="BLOCKED", supplier_id=supplier_id,
-                                 issues=(str(error),), receipt_directory=str(output))
+        report = CadSourceReport(
+            status="BLOCKED",
+            supplier_id=supplier_id,
+            issues=(str(error),),
+            receipt_directory=str(output),
+        )
     write_model(output / "cad-source.json", report)
     return report

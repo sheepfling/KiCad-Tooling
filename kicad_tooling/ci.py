@@ -1,4 +1,5 @@
 """One portable local/CI entry point. Static checks do not replace actual KiCad runs."""
+
 from __future__ import annotations
 
 import argparse
@@ -34,8 +35,7 @@ from .metrics import format_metrics
 _Result = TypeVar("_Result")
 
 
-def phase(journal: PipelineJournal | None, name: str,
-          action: Callable[[], _Result]) -> _Result:
+def phase(journal: PipelineJournal | None, name: str, action: Callable[[], _Result]) -> _Result:
     return action() if journal is None else journal.stage(name, action)
 
 
@@ -75,7 +75,9 @@ def generation_report(root: Path, selected: tuple[str, ...] | None = None) -> Ge
 
 
 def project_static_pipeline(
-    root: Path, selected: tuple[str, ...], workers: int = 1,
+    root: Path,
+    selected: tuple[str, ...],
+    workers: int = 1,
     journal: PipelineJournal | None = None,
 ) -> ProjectStaticPipelineReport:
     """Run the fast local policy lane for selected projects and dependent products."""
@@ -83,8 +85,9 @@ def project_static_pipeline(
     repository = phase(journal, "repository", lambda: check_repository(root, selected))
     product = phase(journal, "product", lambda: product_check(root, selected_project_ids=selected))
     generation = phase(journal, "generation", lambda: generation_report(root, selected))
-    project_tests = phase(journal, "project-tests",
-                          lambda: checked_project_tests(root, selected, workers))
+    project_tests = phase(
+        journal, "project-tests", lambda: checked_project_tests(root, selected, workers)
+    )
     passed = (
         registry.status == "PASS"
         and repository.status == "PASS"
@@ -104,7 +107,9 @@ def project_static_pipeline(
 
 
 def static_pipeline(
-    root: Path, selected: list[str] | None, workers: int = 1,
+    root: Path,
+    selected: list[str] | None,
+    workers: int = 1,
     journal: PipelineJournal | None = None,
 ) -> StaticPipelineReport | ProjectStaticPipelineReport:
     """Run all project policy checks or the fast lane for selected projects."""
@@ -114,15 +119,28 @@ def static_pipeline(
     registry = phase(journal, "registry", lambda: lint(root))
     repository = phase(journal, "repository", lambda: check_repository(root))
     documentation = phase(journal, "documentation", lambda: documentation_check(root))
-    rumdl = phase(journal, "rumdl", lambda: run_command(
-        root, sys.executable, "-I", "-m", "kicad_tooling.markdown_check",
-        "check", ".", "--no-cache"))
-    mdrepo = phase(journal, "mdrepo", lambda: run_command(
-        root, sys.executable, "-m", "mdrepo", "check", "."))
+    rumdl = phase(
+        journal,
+        "rumdl",
+        lambda: run_command(
+            root,
+            sys.executable,
+            "-I",
+            "-m",
+            "kicad_tooling.markdown_check",
+            "check",
+            ".",
+            "--no-cache",
+        ),
+    )
+    mdrepo = phase(
+        journal, "mdrepo", lambda: run_command(root, sys.executable, "-m", "mdrepo", "check", ".")
+    )
     product = phase(journal, "product", lambda: product_check(root))
     generation = phase(journal, "generation", lambda: generation_report(root))
-    project_tests = phase(journal, "project-tests",
-                          lambda: checked_project_tests(root, workers=workers))
+    project_tests = phase(
+        journal, "project-tests", lambda: checked_project_tests(root, workers=workers)
+    )
     passed = (
         registry.status == "PASS"
         and repository.status == "PASS"
@@ -150,16 +168,24 @@ def static_pipeline(
     )
 
 
-def checked_project_tests(root: Path, selected: tuple[str, ...] | None = None,
-                          workers: int = 1) -> ProjectTestsReport:
+def checked_project_tests(
+    root: Path, selected: tuple[str, ...] | None = None, workers: int = 1
+) -> ProjectTestsReport:
     """Keep malformed discovery records as a typed failure in the portable report."""
     try:
         return run_tests(root, selected, max_workers=workers)
     except (OSError, ValueError) as exc:
-        return ProjectTestsReport(status="FAIL", commands={
-            "discovery": CommandEvidence(argv=("project-test-discovery",),
-                started_utc=datetime.now(UTC).isoformat(), returncode=1, error=str(exc)),
-        })
+        return ProjectTestsReport(
+            status="FAIL",
+            commands={
+                "discovery": CommandEvidence(
+                    argv=("project-test-discovery",),
+                    started_utc=datetime.now(UTC).isoformat(),
+                    returncode=1,
+                    error=str(exc),
+                ),
+            },
+        )
 
 
 def positive_worker_count(value: str) -> int:
@@ -207,20 +233,40 @@ def main() -> int:
         help="Repository root; defaults to the current working directory",
     )
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--electrical", action="store_true", help="Run configured electrical analyses.")
+    mode.add_argument(
+        "--electrical", action="store_true", help="Run configured electrical analyses."
+    )
     mode.add_argument("--matrix", action="store_true", help="Print the declared KiCad matrix.")
-    mode.add_argument("--kicad", action="store_true", help="Execute one or more pinned KiCad checks.")
-    mode.add_argument("--fault-probes", action="store_true", help="Run disposable KiCad negative probes.")
-    mode.add_argument("--release", action="store_true", help="Validate one typed release candidate.")
-    mode.add_argument("--metrics", action="store_true", help="Report current policy and deviation metrics.")
+    mode.add_argument(
+        "--kicad", action="store_true", help="Execute one or more pinned KiCad checks."
+    )
+    mode.add_argument(
+        "--fault-probes", action="store_true", help="Run disposable KiCad negative probes."
+    )
+    mode.add_argument(
+        "--release", action="store_true", help="Validate one typed release candidate."
+    )
+    mode.add_argument(
+        "--metrics", action="store_true", help="Report current policy and deviation metrics."
+    )
     parser.add_argument("--cli", default="kicad-cli")
     parser.add_argument("--ngspice", default="ngspice")
     parser.add_argument("--shard", help="One-based project shard INDEX/COUNT; partial focused lane")
-    parser.add_argument("--jobs", type=positive_worker_count, default=1,
-                        help="Maximum concurrent project/product Python suites (default: 1)")
-    parser.add_argument("--format", choices=("json", "text"), default="json",
-                        help="Machine JSON (default) or a concise human summary")
-    parser.add_argument("--output", type=Path, help="New evidence directory, required by KiCad modes.")
+    parser.add_argument(
+        "--jobs",
+        type=positive_worker_count,
+        default=1,
+        help="Maximum concurrent project/product Python suites (default: 1)",
+    )
+    parser.add_argument(
+        "--format",
+        choices=("json", "text"),
+        default="json",
+        help="Machine JSON (default) or a concise human summary",
+    )
+    parser.add_argument(
+        "--output", type=Path, help="New evidence directory, required by KiCad modes."
+    )
     parser.add_argument(
         "--manifest",
         help="Repository-relative typed release manifest, required by --release and optional for --metrics.",
@@ -242,8 +288,9 @@ def main() -> int:
             )
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
-    if args.shard is not None and (args.electrical or args.fault_probes
-                                   or args.release or args.metrics):
+    if args.shard is not None and (
+        args.electrical or args.fault_probes or args.release or args.metrics
+    ):
         parser.error("--shard is for portable or native project lanes")
     if args.electrical:
         from .hwrepo.electrical_runner import analyze_scope
@@ -251,7 +298,11 @@ def main() -> int:
         if args.output is not None:
             parser.error("--electrical manages fresh per-project receipts; omit --output")
         suite = analyze_scope(root, selector, cli=args.cli, ngspice=args.ngspice)
-        print(summary("Electrical suite", suite) if args.format == "text" else suite.model_dump_json(indent=2))
+        print(
+            summary("Electrical suite", suite)
+            if args.format == "text"
+            else suite.model_dump_json(indent=2)
+        )
         return 0 if suite.status == "PASS" else 1
     if args.matrix:
         matrix = build_matrix(root, selected)
@@ -276,7 +327,8 @@ def main() -> int:
         )
         print(
             summary("Native KiCad check", kicad) + f"\nOutput: {args.output.resolve()}"
-            if args.format == "text" else kicad.model_dump_json(indent=2)
+            if args.format == "text"
+            else kicad.model_dump_json(indent=2)
         )
         return 0 if kicad.status == "PASS" else 1
     if args.fault_probes:
@@ -289,7 +341,8 @@ def main() -> int:
         fault_probes = probe(root, args.output.resolve())
         print(
             summary("KiCad fault probes", fault_probes) + f"\nOutput: {args.output.resolve()}"
-            if args.format == "text" else fault_probes.model_dump_json(indent=2)
+            if args.format == "text"
+            else fault_probes.model_dump_json(indent=2)
         )
         return 0 if fault_probes.status == "PASS" else 1
     if args.release:
@@ -306,8 +359,11 @@ def main() -> int:
         except (OSError, ValueError) as exc:
             parser.error(str(exc))
         release = release_check(root, manifest)
-        print(summary("Release check", release)
-              if args.format == "text" else release.model_dump_json(indent=2))
+        print(
+            summary("Release check", release)
+            if args.format == "text"
+            else release.model_dump_json(indent=2)
+        )
         return 0 if release.status == "PASS" else 1
     if args.metrics:
         if selected is not None:
@@ -330,11 +386,16 @@ def main() -> int:
         else:
             print(metrics.model_dump_json(indent=2))
         return 0
-    journal = PipelineJournal(args.output, "full" if selected is None else "focused",
-                              () if selected is None else selected, args.jobs)
+    journal = PipelineJournal(
+        args.output,
+        "full" if selected is None else "focused",
+        () if selected is None else selected,
+        args.jobs,
+    )
     try:
-        static = static_pipeline(root, None if selected is None else list(selected),
-                                 workers=args.jobs, journal=journal)
+        static = static_pipeline(
+            root, None if selected is None else list(selected), workers=args.jobs, journal=journal
+        )
         if args.output is not None:
             from .hwrepo.contracts import write_model
 
@@ -343,8 +404,11 @@ def main() -> int:
     except BaseException:
         journal.finish("ERROR")
         raise
-    print(summary("Portable check", static)
-          if args.format == "text" else static.model_dump_json(indent=2))
+    print(
+        summary("Portable check", static)
+        if args.format == "text"
+        else static.model_dump_json(indent=2)
+    )
     return 0 if static.status == "PASS" else 1
 
 

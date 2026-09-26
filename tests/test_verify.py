@@ -1,4 +1,5 @@
 """Selected one-command verification retains useful evidence across runner failures."""
+
 from __future__ import annotations
 
 import json
@@ -36,9 +37,13 @@ def native_summary(status: str = "PASS") -> CheckAllSummary:
         governance=GovernanceLintReport(projects=("controller",), issues=(), status="PASS"),
         repository=RepositoryPolicyReport(status="PASS", issues=()),
         product_policy=ProductPolicyReport(status="PASS", products=(), open_items={}, issues=()),
-        projects=(ProjectCheckSummary(
-            id="controller", status=status, summary="controller/summary.json",
-        ),),
+        projects=(
+            ProjectCheckSummary(
+                id="controller",
+                status=status,
+                summary="controller/summary.json",
+            ),
+        ),
         status=status,
     )
 
@@ -93,9 +98,23 @@ class VerifyTests(unittest.TestCase):
 
     def test_cli_json_stdout_stays_parseable_while_progress_goes_to_stderr(self) -> None:
         command = subprocess.run(
-            (sys.executable, "-I", "-B", "-m", "kicad_tooling.verify", "--root", str(self.root),
-             "--project", "controller", "--format", "json"),
-            cwd=self.root, text=True, capture_output=True, check=False,
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.verify",
+                "--root",
+                str(self.root),
+                "--project",
+                "controller",
+                "--format",
+                "json",
+            ),
+            cwd=self.root,
+            text=True,
+            capture_output=True,
+            check=False,
         )
         self.assertEqual(command.returncode, 0, command.stderr)
         result = json.loads(command.stdout)
@@ -112,16 +131,23 @@ class VerifyTests(unittest.TestCase):
 
     def test_failed_portable_diagnosis_reuses_the_captured_report(self) -> None:
         baseline = project_static_pipeline(self.root, ("controller",))
-        failed = baseline.model_copy(update={
-            "status": "FAIL",
-            "registry": baseline.registry.model_copy(update={
-                "status": "FAIL", "issues": ("Deliberate captured registry finding",),
-            }),
-        })
+        failed = baseline.model_copy(
+            update={
+                "status": "FAIL",
+                "registry": baseline.registry.model_copy(
+                    update={
+                        "status": "FAIL",
+                        "issues": ("Deliberate captured registry finding",),
+                    }
+                ),
+            }
+        )
         with (
             patch("kicad_tooling.verify.project_static_pipeline", return_value=failed) as first_run,
-            patch("kicad_tooling.ci.project_static_pipeline", side_effect=AssertionError("portable rerun"))
-            as rerun,
+            patch(
+                "kicad_tooling.ci.project_static_pipeline",
+                side_effect=AssertionError("portable rerun"),
+            ) as rerun,
         ):
             result = verify(self.root, "controller")
         self.assertEqual(result.status, "FAIL", result.error)
@@ -171,7 +197,9 @@ class VerifyTests(unittest.TestCase):
                 self.runner_environment("10.0.0"),
                 patch("kicad_tooling.verify.check_all", side_effect=native),
             ):
-                result = verify(self.root, "controller", depth="native", runner="local", cli=relative_cli)
+                result = verify(
+                    self.root, "controller", depth="native", runner="local", cli=relative_cli
+                )
         finally:
             os.chdir(original_cwd)
         self.assertEqual(result.status, "PASS", result.error)
@@ -179,8 +207,11 @@ class VerifyTests(unittest.TestCase):
     def test_windows_container_command_does_not_request_posix_user(self) -> None:
         with patch("kicad_tooling.verify.sys.platform", "win32"):
             command = container_command(
-                self.root, "kicad@sha256:" + "0" * 64, "controller",
-                self.root / "build/deps", self.root / "build/native",
+                self.root,
+                "kicad@sha256:" + "0" * 64,
+                "controller",
+                self.root / "build/deps",
+                self.root / "build/native",
             )
         self.assertNotIn("--user", command)
 
@@ -194,7 +225,9 @@ class VerifyTests(unittest.TestCase):
                 output.mkdir(parents=True)
                 write_model(output / "summary.json", native_summary())
             return CommandEvidence(
-                argv=argv, started_utc=datetime.now(UTC).isoformat(), returncode=0,
+                argv=argv,
+                started_utc=datetime.now(UTC).isoformat(),
+                returncode=0,
             )
 
         with (
@@ -214,7 +247,8 @@ class VerifyTests(unittest.TestCase):
     def test_dependency_failure_stops_native_and_retains_setup_stderr(self) -> None:
         failed = CommandEvidence(
             argv=("python", "-m", "kicad_tooling.native_deps"),
-            started_utc=datetime.now(UTC).isoformat(), returncode=1,
+            started_utc=datetime.now(UTC).isoformat(),
+            returncode=1,
             stderr="docker: image manifest unavailable",
         )
         with (
@@ -225,14 +259,16 @@ class VerifyTests(unittest.TestCase):
         self.assertEqual(result.status, "FAIL")
         self.assertIsNone(result.native)
         self.assertEqual(command.call_count, 1)
-        self.assertIn("image manifest unavailable", (
-            Path(result.run_directory) / "dependency-command.json"
-        ).read_text())
+        self.assertIn(
+            "image manifest unavailable",
+            (Path(result.run_directory) / "dependency-command.json").read_text(),
+        )
         self.assertIn("dependency-command.json", result.next_actions[0])
 
     def test_container_success_without_summary_is_a_runner_failure(self) -> None:
         success = CommandEvidence(
-            argv=("docker", "run"), started_utc=datetime.now(UTC).isoformat(),
+            argv=("docker", "run"),
+            started_utc=datetime.now(UTC).isoformat(),
             returncode=0,
         )
         with (
@@ -245,7 +281,10 @@ class VerifyTests(unittest.TestCase):
 
     def test_timeout_preserves_partial_runner_output(self) -> None:
         expired = subprocess.TimeoutExpired(
-            ("docker", "run"), 30, output=b"starting image", stderr=b"probe hung",
+            ("docker", "run"),
+            30,
+            output=b"starting image",
+            stderr=b"probe hung",
         )
         with patch("kicad_tooling.verify.subprocess.run", side_effect=expired):
             result = run_command(self.root, ("docker", "run"), 30)
@@ -254,15 +293,27 @@ class VerifyTests(unittest.TestCase):
         self.assertEqual(result.stderr, "probe hung")
 
     def test_native_failure_keeps_report_and_specific_repair_findings(self) -> None:
-        def failing_native(root: Path, output: Path, cli: str, projects: list[str]) -> CheckAllSummary:
+        def failing_native(
+            root: Path, output: Path, cli: str, projects: list[str]
+        ) -> CheckAllSummary:
             project_output = output / "controller"
             project_output.mkdir(parents=True)
-            write_model(project_output / "summary.json", ValidationSummary(
-                timestamp_utc=datetime.now(UTC).isoformat(), checked_commit="LOCAL_UNBOUND",
-                project_id="controller", checks={"erc": CheckEvidence(
-                    status="FAIL", error="2 rule violations",
-                )}, status="FAIL", artifacts_sha256={},
-            ))
+            write_model(
+                project_output / "summary.json",
+                ValidationSummary(
+                    timestamp_utc=datetime.now(UTC).isoformat(),
+                    checked_commit="LOCAL_UNBOUND",
+                    project_id="controller",
+                    checks={
+                        "erc": CheckEvidence(
+                            status="FAIL",
+                            error="2 rule violations",
+                        )
+                    },
+                    status="FAIL",
+                    artifacts_sha256={},
+                ),
+            )
             write_model(output / "summary.json", native_summary("FAIL"))
             return native_summary("FAIL")
 

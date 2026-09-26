@@ -1,4 +1,5 @@
 """Loopback browser adapter for automatic CAD, reviewed parts and order files."""
+
 from __future__ import annotations
 
 import hashlib
@@ -54,9 +55,16 @@ class Form:
     def decode(cls, body: bytes) -> Form:
         if len(body) > MAX_BODY:
             raise ValueError("The request is too large")
-        fields = tuple(parse_qsl(body.decode("utf-8"), keep_blank_values=True,
-                                 strict_parsing=True, max_num_fields=1024,
-                                 encoding="utf-8", errors="strict"))
+        fields = tuple(
+            parse_qsl(
+                body.decode("utf-8"),
+                keep_blank_values=True,
+                strict_parsing=True,
+                max_num_fields=1024,
+                encoding="utf-8",
+                errors="strict",
+            )
+        )
         names = [name for name, _ in fields]
         if len(names) != len(set(names)):
             raise ValueError("A request field appears more than once")
@@ -78,16 +86,23 @@ class Form:
         supplier_id, expected_mpn = values["id"], values["expected_mpn"]
         if re.fullmatch(r"C[1-9][0-9]*", supplier_id) is None or len(supplier_id) > 32:
             raise ValueError("Use an exact LCSC part number such as C2040")
-        if (len(expected_mpn) > 200 or expected_mpn != expected_mpn.strip()
-                or any(ord(char) < 32 or ord(char) == 127 for char in expected_mpn)):
-            raise ValueError("Expected MPN must be exact text without padding or control characters")
+        if (
+            len(expected_mpn) > 200
+            or expected_mpn != expected_mpn.strip()
+            or any(ord(char) < 32 or ord(char) == 127 for char in expected_mpn)
+        ):
+            raise ValueError(
+                "Expected MPN must be exact text without padding or control characters"
+            )
         return supplier_id, expected_mpn or None
 
     def assignments(self) -> tuple[PartSelectionAssignment, ...]:
         if not self.fields or any(not name.startswith("part.") for name, _ in self.fields):
             raise ValueError("Select at least one listed part")
-        return tuple(PartSelectionAssignment(reference=name.removeprefix("part."), part_id=value)
-                     for name, value in self.fields)
+        return tuple(
+            PartSelectionAssignment(reference=name.removeprefix("part."), part_id=value)
+            for name, value in self.fields
+        )
 
     def quantities(self) -> PurchasingPreferences:
         values = dict(self.fields)
@@ -95,8 +110,11 @@ class Form:
             raise ValueError("Provide board quantity, spare percentage and minimum spares")
         if any(not value.isascii() or not value.isdecimal() for value in values.values()):
             raise ValueError("Quantities must be whole numbers")
-        return PurchasingPreferences(boards=int(values["boards"]),
-            spare_percent=int(values["spare_percent"]), spare_minimum=int(values["spare_minimum"]))
+        return PurchasingPreferences(
+            boards=int(values["boards"]),
+            spare_percent=int(values["spare_percent"]),
+            spare_minimum=int(values["spare_minimum"]),
+        )
 
 
 @dataclass
@@ -144,15 +162,25 @@ class Assistant:
         self.sourcing_review_id = None
         self.sourced_source = None
         self.step_assets.clear()
-        source = fetch(self.root, supplier_id, new_receipt(self.root, self.project_id, None),
-                       expected_mpn=expected_mpn)
+        source = fetch(
+            self.root,
+            supplier_id,
+            new_receipt(self.root, self.project_id, None),
+            expected_mpn=expected_mpn,
+        )
         import_plan = None
         review_id = secrets.token_urlsafe(24)
         if source.status == "READY":
             if source.bundle is None or source.bundle_directory is None:
-                raise ValueError("The CAD provider returned an incomplete bundle; find the part again")
-            import_plan = plan(self.root, self.project_id, Path(source.bundle_directory),
-                               new_receipt(self.root, self.project_id, None))
+                raise ValueError(
+                    "The CAD provider returned an incomplete bundle; find the part again"
+                )
+            import_plan = plan(
+                self.root,
+                self.project_id,
+                Path(source.bundle_directory),
+                new_receipt(self.root, self.project_id, None),
+            )
             if import_plan.status == "PLAN" and import_plan.plan_path is not None:
                 self.sourced_plan = Path(import_plan.plan_path)
                 self.sourcing_review_id = review_id
@@ -162,16 +190,24 @@ class Assistant:
     def check_step(self, review: str) -> CadStepReport:
         from .cad_step import review as compare
 
-        if (self.sourcing_review_id is None or self.sourced_source is None
-                or review != self.sourcing_review_id):
+        if (
+            self.sourcing_review_id is None
+            or self.sourced_source is None
+            or review != self.sourcing_review_id
+        ):
             raise ValueError("Find the exact part again before checking its STEP model")
         self.step_assets.clear()
-        report = compare(self.root, self.project_id, self.sourced_source,
-                         new_receipt(self.root, self.project_id, None))
+        report = compare(
+            self.root,
+            self.project_id,
+            self.sourced_source,
+            new_receipt(self.root, self.project_id, None),
+        )
         if report.status == "REVIEW":
             output = Path(report.receipt_directory)
             self.step_assets = {
-                name: (output / name, sha) for name, sha in report.artifacts_sha256.items()
+                name: (output / name, sha)
+                for name, sha in report.artifacts_sha256.items()
                 if name in {"index.html", "index.css", "assembly.step"} or name.endswith(".png")
             }
         return report
@@ -192,12 +228,15 @@ class Assistant:
         if self.sourced_plan is None or self.sourcing_review_id is None:
             raise ValueError("Find a part and review its CAD before adding it to the project")
         if review != self.sourcing_review_id:
-            raise ValueError("A newer CAD review replaced this page; find the part again before adding it")
+            raise ValueError(
+                "A newer CAD review replaced this page; find the part again before adding it"
+            )
         # The form only identifies the server-held plan; it never supplies a path.
         path = self.sourced_plan
         self.invalidate()
-        return apply(self.root, self.project_id, path,
-                     new_receipt(self.root, self.project_id, None))
+        return apply(
+            self.root, self.project_id, path, new_receipt(self.root, self.project_id, None)
+        )
 
     def scan(self) -> StrictModel:
         from .auto_cad import plan
@@ -214,8 +253,9 @@ class Assistant:
             raise ValueError("Scan the board and review the proposed models before applying")
         path = self.cad_plan
         self.invalidate()
-        return apply(self.root, self.project_id, path,
-                     new_receipt(self.root, self.project_id, None))
+        return apply(
+            self.root, self.project_id, path, new_receipt(self.root, self.project_id, None)
+        )
 
     def parts(self) -> PartPickerReport:
         self.picker = None
@@ -235,8 +275,11 @@ class Assistant:
         allowed = {item.component.reference: item.choice_ids for item in self.picker.items}
         if any(item.part_id not in allowed.get(item.reference, ()) for item in assignments):
             raise ValueError("Selection contains a part that was not offered for that reference")
-        spec = PartSelectionMap(project_id=self.project_id,
-            preconditions=self.picker.selection_template.preconditions, assignments=assignments)
+        spec = PartSelectionMap(
+            project_id=self.project_id,
+            preconditions=self.picker.selection_template.preconditions,
+            assignments=assignments,
+        )
         # The submitted form never supplies a filesystem path or source precondition.
         draft_output = new_receipt(self.root, self.project_id, None)
         path = draft_output / "selection.json"
@@ -262,12 +305,22 @@ class Assistant:
     def prepare_order(self, preferences: PurchasingPreferences) -> PurchasingReport:
         self.reset_order()
         output = new_receipt(self.root, self.project_id, None)
-        report = prepare(self.root, self.project_id, output, self.runner,
-            boards=preferences.boards, spare_percent=preferences.spare_percent,
-            spare_minimum=preferences.spare_minimum)
+        report = prepare(
+            self.root,
+            self.project_id,
+            output,
+            self.runner,
+            boards=preferences.boards,
+            spare_percent=preferences.spare_percent,
+            spare_minimum=preferences.spare_minimum,
+        )
         save_report(output, report)
         self.order = report
-        allowed = ("bom.csv", "digikey.csv") if report.status == "READY_FOR_ORDER_REVIEW" else ("bom.csv",)
+        allowed = (
+            ("bom.csv", "digikey.csv")
+            if report.status == "READY_FOR_ORDER_REVIEW"
+            else ("bom.csv",)
+        )
         for name in allowed:
             path = output / name
             if name in report.artifacts and path.is_file() and not path.is_symlink():
@@ -278,8 +331,10 @@ class Assistant:
         if self.order is None:
             raise ValueError("Prepare a current order review first")
         _, _, current = project_context(self.root, self.project_id)
-        if (current != self.order.source_hashes
-                or input_hashes(self.root, self.project_id, None) != self.order.input_hashes):
+        if (
+            current != self.order.source_hashes
+            or input_hashes(self.root, self.project_id, None) != self.order.input_hashes
+        ):
             self.reset_order()
             raise ValueError("The board or part information changed; prepare a fresh order review")
         return self.order
@@ -291,7 +346,9 @@ class Assistant:
             order = self.current_order()
             # Compare only; browser-provided review identity is never a filesystem path.
             if review != order.receipt_dir:
-                raise ValueError("A newer order review replaced this page; prepare a fresh review before sending")
+                raise ValueError(
+                    "A newer order review replaced this page; prepare a fresh review before sending"
+                )
             if order.status != "READY_FOR_ORDER_REVIEW" or order.plan is None:
                 raise ValueError("Complete the parts review before sending a DigiKey list")
             if self.handoff_result is not None:
@@ -300,19 +357,33 @@ class Assistant:
         except (OSError, ValueError) as error:
             return DigiKeyHandoffResult(status="BLOCKED", issues=(str(error),))
         # Mark the attempt before the external write; retries require a fresh review.
-        self.handoff_result = DigiKeyHandoffResult(status="ERROR", issues=(
-            "The DigiKey request was not confirmed. Check DigiKey before preparing another order review.",))
+        self.handoff_result = DigiKeyHandoffResult(
+            status="ERROR",
+            issues=(
+                "The DigiKey request was not confirmed. Check DigiKey before preparing another order review.",
+            ),
+        )
         try:
             reply = send(payload, list_name=self.project_id)
             result = DigiKeyHandoffResult(status="READY", single_use_url=reply.single_use_url)
         except (OSError, ValueError) as error:
-            result = DigiKeyHandoffResult(status="ERROR", issues=(str(error),
-                "Your CSV files remain available. Check DigiKey before preparing a fresh order review to try again."))
+            result = DigiKeyHandoffResult(
+                status="ERROR",
+                issues=(
+                    str(error),
+                    "Your CSV files remain available. Check DigiKey before preparing a fresh order review to try again.",
+                ),
+            )
         try:
             self.current_order()
         except (OSError, ValueError) as error:
-            result = DigiKeyHandoffResult(status="BLOCKED", issues=(str(error),
-                "DigiKey may already have received the earlier list; it no longer represents the current board."))
+            result = DigiKeyHandoffResult(
+                status="BLOCKED",
+                issues=(
+                    str(error),
+                    "DigiKey may already have received the earlier list; it no longer represents the current board.",
+                ),
+            )
         self.handoff_result = result
         return result
 
@@ -746,10 +817,17 @@ class AssistantHandler(BaseHTTPRequestHandler):
         if not self.path.startswith(prefix) or "?" in self.path or "#" in self.path:
             self.respond(404, b"Assistant page not found")
             return None
-        return self.path[len(prefix):]
+        return self.path[len(prefix) :]
 
-    def respond(self, status: int, content: bytes, content_type: str = "text/plain; charset=utf-8",
-                *, nonce: str | None = None, filename: str | None = None) -> None:
+    def respond(
+        self,
+        status: int,
+        content: bytes,
+        content_type: str = "text/plain; charset=utf-8",
+        *,
+        nonce: str | None = None,
+        filename: str | None = None,
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
@@ -757,9 +835,16 @@ class AssistantHandler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy", "default-src 'none'; connect-src 'self'; "
-            + (f"script-src 'nonce-{nonce}'; style-src 'self' 'nonce-{nonce}'; " if nonce else "style-src 'self'; ")
-            + "img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'none'; connect-src 'self'; "
+            + (
+                f"script-src 'nonce-{nonce}'; style-src 'self' 'nonce-{nonce}'; "
+                if nonce
+                else "style-src 'self'; "
+            )
+            + "img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+        )
         if filename is not None:
             self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
         self.end_headers()
@@ -774,27 +859,44 @@ class AssistantHandler(BaseHTTPRequestHandler):
             if route == "":
                 nonce = secrets.token_urlsafe(24)
                 prefs = load_preferences(state.root, state.project_id, None, None, None, None)
-                self.respond(200, render_html(state.project_id, prefs, nonce).encode("utf-8"),
-                             "text/html; charset=utf-8", nonce=nonce)
+                self.respond(
+                    200,
+                    render_html(state.project_id, prefs, nonce).encode("utf-8"),
+                    "text/html; charset=utf-8",
+                    nonce=nonce,
+                )
             elif route in {"download/bom.csv", "download/digikey.csv"}:
                 if not state.lock.acquire(blocking=False):
                     self.respond(409, b"Wait for the current action to finish")
                     return
                 try:
                     name = route.removeprefix("download/")
-                    self.respond(200, state.download(name), "text/csv; charset=utf-8", filename=name)
+                    self.respond(
+                        200, state.download(name), "text/csv; charset=utf-8", filename=name
+                    )
                 finally:
                     state.lock.release()
             elif route.startswith("step/"):
                 with state.lock:
                     name = route.removeprefix("step/")
                     content = state.step_asset(name)
-                    content_type = ("text/html; charset=utf-8" if name == "index.html" else
-                                    "image/png" if name.endswith(".png") else
-                                    "text/css; charset=utf-8" if name == "index.css" else
-                                    "application/step" if name == "assembly.step" else "application/octet-stream")
-                    self.respond(200, content, content_type,
-                                 filename=name if name == "assembly.step" else None)
+                    content_type = (
+                        "text/html; charset=utf-8"
+                        if name == "index.html"
+                        else "image/png"
+                        if name.endswith(".png")
+                        else "text/css; charset=utf-8"
+                        if name == "index.css"
+                        else "application/step"
+                        if name == "assembly.step"
+                        else "application/octet-stream"
+                    )
+                    self.respond(
+                        200,
+                        content,
+                        content_type,
+                        filename=name if name == "assembly.step" else None,
+                    )
             elif route == "selection-diff" and state.selection_diff is not None:
                 self.respond(200, state.selection_diff.read_bytes())
             else:
@@ -812,8 +914,10 @@ class AssistantHandler(BaseHTTPRequestHandler):
         if self.headers.get("Sec-Fetch-Site", "same-origin") != "same-origin":
             self.respond(403, b"Cross-site assistant requests are not accepted")
             return
-        if (self.headers.get_all("Content-Type") != ["application/x-www-form-urlencoded"]
-                or self.headers.get("Transfer-Encoding") is not None):
+        if (
+            self.headers.get_all("Content-Type") != ["application/x-www-form-urlencoded"]
+            or self.headers.get("Transfer-Encoding") is not None
+        ):
             self.respond(415, b"Use the assistant's form controls")
             return
         lengths = self.headers.get_all("Content-Length") or []
@@ -840,20 +944,25 @@ class AssistantHandler(BaseHTTPRequestHandler):
             state.lock.release()
 
 
-def create_server(root: Path, project_id: str, *, port: int = 0,
-                  runner: NetlistRunner | None = None) -> AssistantServer:
+def create_server(
+    root: Path, project_id: str, *, port: int = 0, runner: NetlistRunner | None = None
+) -> AssistantServer:
     root = root.resolve()
     selected_project(root, project_id)
     if not 0 <= port <= 65535:
         raise ValueError("Assistant port must be between 0 and 65535")
-    return AssistantServer(Assistant(root, project_id, runner or AutoNetlistRunner("kicad-cli")), port)
+    return AssistantServer(
+        Assistant(root, project_id, runner or AutoNetlistRunner("kicad-cli")), port
+    )
 
 
 def serve(root: Path, project_id: str, *, port: int = 0, open_browser: bool = True) -> None:
     """Serve a private loopback session until Ctrl-C; never start a remote listener."""
     with create_server(root, project_id, port=port) as server:
-        print(f"Parts assistant: {server.url}\nKeep this terminal open; Ctrl-C stops the assistant.",
-              flush=True)
+        print(
+            f"Parts assistant: {server.url}\nKeep this terminal open; Ctrl-C stops the assistant.",
+            flush=True,
+        )
         if open_browser:
             try:
                 webbrowser.open(server.url)

@@ -1,4 +1,5 @@
 """Run the KiCad project CLI from any project checkout."""
+
 from __future__ import annotations
 
 import importlib
@@ -8,10 +9,31 @@ from importlib.metadata import PackageNotFoundError
 from kicad_tooling import package_version
 
 COMMANDS = (
-    "check_all", "check_toolchain", "ci", "ci_hosted", "ci_matrix", "contract_coach",
-    "docs_policy", "electrical", "electrical_charts", "fault_probe", "governance_audit",
-    "hardware", "impact", "lint_registry", "mcp", "metrics", "native_deps", "parts",
-    "release", "sourcing", "surface", "template", "validate", "verify", "visualize",
+    "check_all",
+    "check_toolchain",
+    "ci",
+    "ci_hosted",
+    "ci_matrix",
+    "contract_coach",
+    "docs_policy",
+    "electrical",
+    "electrical_charts",
+    "fault_probe",
+    "governance_audit",
+    "hardware",
+    "impact",
+    "lint_registry",
+    "mcp",
+    "metrics",
+    "native_deps",
+    "parts",
+    "release",
+    "sourcing",
+    "surface",
+    "template",
+    "validate",
+    "verify",
+    "visualize",
 )
 
 

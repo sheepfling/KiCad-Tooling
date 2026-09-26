@@ -1,4 +1,5 @@
 """Supplier-offer snapshots remain typed, local and non-authorizing."""
+
 from __future__ import annotations
 
 import json
@@ -54,7 +55,9 @@ class SourcingSnapshotTests(unittest.TestCase):
     def test_cli_defaults_to_json_and_text_explains_a_failing_offer(self) -> None:
         snapshot = self.snapshot()
         with (
-            patch.object(sys, "argv", ["sourcing.py", "--root", str(ROOT), "--snapshot", "offer.json"]),
+            patch.object(
+                sys, "argv", ["sourcing.py", "--root", str(ROOT), "--snapshot", "offer.json"]
+            ),
             patch("kicad_tooling.sourcing.read_model", return_value=snapshot),
             patch("sys.stdout", new_callable=StringIO) as output,
         ):
@@ -63,10 +66,22 @@ class SourcingSnapshotTests(unittest.TestCase):
 
         unknown = snapshot.offers[0].model_copy(update={"part_id": "unknown-part"})
         with (
-            patch.object(sys, "argv", [
-                "sourcing.py", "--root", str(ROOT), "--snapshot", "offer.json", "--format", "text",
-            ]),
-            patch("kicad_tooling.sourcing.read_model", return_value=self.snapshot(offers=(unknown,))),
+            patch.object(
+                sys,
+                "argv",
+                [
+                    "sourcing.py",
+                    "--root",
+                    str(ROOT),
+                    "--snapshot",
+                    "offer.json",
+                    "--format",
+                    "text",
+                ],
+            ),
+            patch(
+                "kicad_tooling.sourcing.read_model", return_value=self.snapshot(offers=(unknown,))
+            ),
             patch("sys.stdout", new_callable=StringIO) as output,
         ):
             self.assertEqual(sourcing_main(), 1)
@@ -76,9 +91,19 @@ class SourcingSnapshotTests(unittest.TestCase):
 
     def test_cli_text_reports_an_unreadable_snapshot(self) -> None:
         with (
-            patch.object(sys, "argv", [
-                "sourcing.py", "--root", str(ROOT), "--snapshot", "missing.json", "--format", "text",
-            ]),
+            patch.object(
+                sys,
+                "argv",
+                [
+                    "sourcing.py",
+                    "--root",
+                    str(ROOT),
+                    "--snapshot",
+                    "missing.json",
+                    "--format",
+                    "text",
+                ],
+            ),
             patch("kicad_tooling.sourcing.read_model", side_effect=OSError("missing snapshot")),
             patch("sys.stdout", new_callable=StringIO) as output,
             patch("sys.stderr", new_callable=StringIO),
