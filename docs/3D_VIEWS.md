@@ -35,3 +35,29 @@ full bundle, or pass an array such as `['top', 'angled', 'angled-90']`. Its
 
 Inspect the actual images and geometry before making mechanical decisions. A
 render is a review aid, not physical-fit or manufacturing approval.
+
+## Portable preview orchestration
+
+The hosted preview wrapper runs on Windows, macOS and Linux with the installed tooling:
+
+```sh
+python -I -B -m kicad_tooling.ci_hosted preview --project controller
+```
+
+Use an actual registered project ID. The default runner is `auto`: an exact local KiCad CLI
+or the project's pinned Linux container through Docker. Select `--runner local --cli` with a
+quoted executable path when needed, or `--runner container` for the pinned image. Native tools
+must be installed separately; a portable wrapper does not make them available on every runner.
+
+Pass `--root` before `preview` when running outside the project. Each run needs a fresh
+`--output` under the project's ignored `build/`; the default is `build/3d-preview`.
+Python retains `cli.stdout.txt`, `cli.stderr.txt`, renderer receipts and stage logs under
+`build/ci-hosted/preview/`, and preserves a failed renderer's exit code. When GitHub supplies
+`GITHUB_STEP_SUMMARY`, Python also appends the escaped review text, including failure reports.
+Local runs need no GitHub environment or Bash utilities. Existing receipts are never overwritten.
+
+The manual template Action runs the wrapper with the pinned container on Linux. Package CI
+separately exercises its path handling, subprocesses, Unicode logs and failure behavior on actual
+Windows, macOS and Linux runners. These orchestration tests use a synthetic child process and do
+not claim a native render on all three systems. MCP `export_3d` uses the same underlying renderer;
+GitHub log and summary handling remains an operator/CI adapter.
