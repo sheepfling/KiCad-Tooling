@@ -17,6 +17,7 @@ from pathlib import Path
 
 from .ci_matrix import build_matrix
 from .hwrepo.contracts import read_model, write_model
+from .hwrepo.hosted_preview import preview_lane
 from .hwrepo.models import (
     ForeignPcbReport,
     ImpactPlan,
@@ -26,6 +27,14 @@ from .hwrepo.models import (
 )
 from .hwrepo.repository import ephemeral, generated_artifact
 from .impact import build_plan
+
+
+class HostedCommandError(RuntimeError):
+    """A retained child failure whose exit code remains available to the caller."""
+
+    def __init__(self, message: str, returncode: int) -> None:
+        super().__init__(message)
+        self.returncode = returncode
 
 
 class HostedLog:
@@ -62,7 +71,7 @@ class HostedLog:
             ) as stderr:
                 process = subprocess.Popen(
                     argv, cwd=cwd, stdout=stdout, stderr=subprocess.PIPE,
-                    text=True, env=env,
+                    text=True, encoding="utf-8", errors="replace", env=env,
                 )
                 assert process.stderr is not None
                 for line in process.stderr:
@@ -85,7 +94,7 @@ class HostedLog:
             tail = output.read_text(encoding="utf-8", errors="replace")[-4000:].strip()
             if tail:
                 print(f"hosted-ci: {stage} stdout tail:\n{tail}", file=sys.stderr)
-            raise RuntimeError(f"{stage} failed ({code}); inspect {error} and {output}")
+            raise HostedCommandError(f"{stage} failed ({code}); inspect {error} and {output}", code)
         return output
 
     def finish(self) -> None:
@@ -522,6 +531,12 @@ def main() -> int:
     candidate = commands.add_parser("candidate", help="Prepare, package and restore a selected review candidate")
     candidate.add_argument("--project", required=True)
     candidate.add_argument("--release-id", required=True)
+    preview = commands.add_parser("preview", help="Render 3D views with portable logs and Actions summary")
+    preview.add_argument("--project", default=os.environ.get("PROJECT_ID"),
+                         required=not os.environ.get("PROJECT_ID"))
+    preview.add_argument("--runner", choices=("auto", "local", "container"), default="auto")
+    preview.add_argument("--cli", default="kicad-cli")
+    preview.add_argument("--output", type=Path, default=Path("build/3d-preview"))
     commands.add_parser("release", help="Run disposable release and foreign-board rehearsal")
     gate = commands.add_parser("gate", help="Verify every hosted prerequisite outcome")
     gate.add_argument("--scope-result", default=os.environ.get("SCOPE_RESULT"))
@@ -560,6 +575,8 @@ def main() -> int:
             electrical_lane(root, args.project, log, required=True)
         elif args.command == "candidate":
             candidate_lane(root, args.project, args.release_id, log)
+        elif args.command == "preview":
+            preview_lane(root, args.project, log, runner=args.runner, cli=args.cli, output=args.output)
         elif args.command == "gate":
             gate_result(args.scope_result, args.scope, args.unit_result,
                         args.matrix_result, args.kicad_result, args.has_projects,
@@ -568,7 +585,7 @@ def main() -> int:
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
         log.event("lane", "FAIL", error=str(exc))
         print(f"hosted-ci: {exc}", file=sys.stderr)
-        return 1
+        return exc.returncode if isinstance(exc, HostedCommandError) else 1
     return 0
 
 
