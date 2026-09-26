@@ -37,7 +37,8 @@ class TemplateToolTests(unittest.TestCase):
     def test_preflight_accepts_the_declared_template_contract(self) -> None:
         report = preflight(self.root)
         self.assertEqual(report.status, "PASS", report.issues)
-        self.assertEqual(report.template_version, "1.4.0")
+        contract = read_model(self.root / "templates/template-contract.json", TemplateContract)
+        self.assertEqual(report.template_version, contract.template_version)
         self.assertFalse(report.build_authorized)
 
     def test_preflight_rejects_a_missing_required_template_path(self) -> None:
@@ -100,7 +101,7 @@ class TemplateToolTests(unittest.TestCase):
         self.assertEqual([upgrade.id for upgrade in report.upgrades], ["template-1.0-to-1.1"])
 
     def test_upgrade_plan_rejects_missing_forward_path(self) -> None:
-        report = plan_upgrade(self.root, "1.4.1")
+        report = plan_upgrade(self.root, "999.0.0")
         self.assertEqual(report.status, "FAIL")
         self.assertIn("TEMPLATE_UPGRADE_PATH", {issue.code for issue in report.issues})
 

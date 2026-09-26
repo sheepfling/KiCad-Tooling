@@ -27,6 +27,7 @@ from kicad_tooling.hwrepo.models import (
     GovernanceRecord,
     LibrariesCatalog,
     ProductRecord,
+    TeamPolicy,
 )
 from kicad_tooling.hwrepo.product import check, load_repository, validate_product
 from tests.support import reference_root
@@ -37,7 +38,8 @@ ROOT = reference_root()
 class TypedContractsTests(unittest.TestCase):
     def test_copyable_governance_template_matches_the_actual_schema(self) -> None:
         record = read_model(ROOT / "templates/github-governance.example.json", GovernanceRecord)
-        self.assertEqual(record.required_status_checks, ("Template acceptance",))
+        policy = read_model(ROOT / "catalog/team-policy.json", TeamPolicy)
+        self.assertEqual(record.required_status_checks, policy.required_status_checks)
         self.assertIsInstance(record.branch_protection_evidence, tuple)
 
     @classmethod

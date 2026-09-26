@@ -12,11 +12,14 @@ from pathlib import Path
 from unittest.mock import patch
 
 from kicad_tooling.governance_audit import main as audit_main
+from kicad_tooling.hwrepo.contracts import read_model
+from kicad_tooling.hwrepo.models import TeamPolicy
 from kicad_tooling.hwrepo.hosted_governance import ApiError, _gh, audit
 from tests.support import reference_root
 
 ROOT = reference_root()
 REPO = "example/hardware"
+REQUIRED_CHECKS = read_model(ROOT / "catalog/team-policy.json", TeamPolicy).required_status_checks
 
 
 def api_response(root: Path, *args: str) -> object:
@@ -32,7 +35,7 @@ def api_response(root: Path, *args: str) -> object:
                 "require_code_owner_review": True,
             }},
             {"type": "required_status_checks", "parameters": {
-                "required_status_checks": [{"context": "Template acceptance"}],
+                "required_status_checks": [{"context": name} for name in REQUIRED_CHECKS],
                 "strict_required_status_checks_policy": True,
             }},
             {"type": "non_fast_forward"},
@@ -278,7 +281,7 @@ class HostedGovernanceAuditTests(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertEqual(payload["lane"], "HOSTED_GOVERNANCE_AUDIT")
         self.assertEqual(payload["status"], "UNKNOWN")
-        self.assertEqual(payload["required_status_checks"], ["Template acceptance"])
+        self.assertEqual(payload["required_status_checks"], list(REQUIRED_CHECKS))
         with (
             patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=api_response),
             patch.object(sys, "argv", ["kicad_tooling.governance_audit", "--root", str(ROOT),
