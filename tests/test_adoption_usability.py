@@ -11,9 +11,9 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from kicad_tooling.hwrepo.adoption import adopt
-from kicad_tooling.hwrepo.contracts import write_model
+from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.doctor import doctor
-from kicad_tooling.hwrepo.models import TemplateAdoptionRecord
+from kicad_tooling.hwrepo.models import TemplateAdoptionRecord, TemplateContract
 from tests.support import initialize_git, reference_root
 
 
@@ -148,13 +148,14 @@ class AdoptionUsabilityTests(unittest.TestCase):
         self.assertEqual(report.status, "FAIL")
         self.assertEqual(report.initialization, "FAIL")
         self.assertIn("TEMPLATE_UPGRADE", report.issues[0])
-        self.assertIn("upgrade-plan --target-version 1.4.0", report.next_actions[0])
+        contract = read_model(self.root / "templates/template-contract.json", TemplateContract)
+        self.assertIn(f"upgrade-plan --target-version {contract.template_version}", report.next_actions[0])
 
     def test_adopt_reports_a_newer_record_without_recommending_a_downgrade(self) -> None:
         write_model(
             self.root / "template-adoption.json",
             TemplateAdoptionRecord(
-                template_version="1.4.1", project_id="company-hardware", status="initialized"
+                template_version="999.0.0", project_id="company-hardware", status="initialized"
             ),
         )
         with (

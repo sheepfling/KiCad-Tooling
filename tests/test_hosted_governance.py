@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 from kicad_tooling.governance_audit import main as audit_main
 from kicad_tooling.hwrepo.contracts import read_model
-from kicad_tooling.hwrepo.models import TeamPolicy
 from kicad_tooling.hwrepo.hosted_governance import ApiError, _gh, audit
+from kicad_tooling.hwrepo.models import TeamPolicy
 from tests.support import reference_root
 
 ROOT = reference_root()
