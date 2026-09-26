@@ -43,6 +43,10 @@ reviewed edits, exports, downloads, or supplier submissions. See the project's
 [MCP guide](https://github.com/sheepfling/KiCad-Team-Workflow-Template/blob/main/docs/workflow/MCP.md)
 for the permission and review workflow.
 
+The board renderer creates six orthographic and four angled views by default.
+See [3D view selection](docs/3D_VIEWS.md) to request a smaller view set from
+the CLI or MCP.
+
 ## Configure another layout or KiCad version
 
 The template layout is the default. A project-owned `kicad-tooling.toml` can
@@ -107,3 +111,5 @@ checks. Project CI owns project policy, documentation, contracts, local suites a
 pinned native lanes. See [local workflow rehearsal](docs/LOCAL_PLAYTEST.md) for
 CLI/MCP checks across the two repositories and [tests](tests/README.md) for coverage.
 Contributors and coding agents should follow [AGENTS.md](AGENTS.md).
+Read the [quality-gate audit](docs/QUALITY_GATE_AUDIT.md) for electrical, parts, CAD, BOM and
+revision coverage, the current rehearsal evidence and remaining enforcement gaps.

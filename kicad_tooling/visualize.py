@@ -6,7 +6,8 @@ import sys
 from pathlib import Path
 
 from .hwrepo.model_population import init_model_map, populate_models, render_population_text
-from .hwrepo.three_d import generate, render_text
+from .hwrepo.models import THREE_D_VIEWS
+from .hwrepo.three_d import generate, render_text, selected_views
 
 
 def main() -> int:
@@ -24,6 +25,10 @@ def main() -> int:
                         help="Exact local CLI or project digest-pinned Docker image")
     parser.add_argument("--cli", default="kicad-cli", help="KiCad CLI path for an exact local runner")
     parser.add_argument("--assembly-variant", help="Declared KiCad component population for 3D outputs")
+    parser.add_argument(
+        "--view", dest="views", action="append", choices=THREE_D_VIEWS,
+        help="Select a view; repeat to render several. Defaults to six orthographic and four angled views.",
+    )
     parser.add_argument("--output", type=Path, help="Fresh receipt directory under ignored build/")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--detail", choices=("brief", "full"), default="brief",
@@ -41,6 +46,14 @@ def main() -> int:
     if args.assembly_variant and (args.map_models is not None or args.init_model_map is not None
                                   or args.check_models):
         parser.error("--assembly-variant requires 3D export generation")
+    if args.views and (args.map_models is not None or args.init_model_map is not None
+                       or args.check_models):
+        parser.error("--view is used only when generating 3D exports")
+    if args.views is not None:
+        try:
+            selected_views(args.views)
+        except ValueError as exc:
+            parser.error(str(exc))
     if args.format == "json" and args.detail != "brief":
         parser.error("--detail is for text; JSON already includes every finding")
     try:
@@ -59,6 +72,7 @@ def main() -> int:
         report = generate(args.root, args.project, check_models=args.check_models,
                           runner=args.runner, cli=args.cli, output=args.output,
                           assembly_variant=args.assembly_variant,
+                          views=args.views,
                           detail=args.detail)
     except (OSError, ValueError) as exc:
         print(f"Cannot create 3D receipt: {exc}", file=sys.stderr)

@@ -65,7 +65,9 @@ class MarkdownGenerationTests(unittest.TestCase):
             "Candidate for engineering review. This report records executed checks; "
             "it is not human approval.\n\n"
             "Manufacturing and assembly files require review of layers, origin, "
-            "population, and supplier requirements.",
+            "population, and supplier requirements. Electrical models do not establish physical "
+            "grounding, thermal margin, transient behavior, signal integrity or EMC. Retain the "
+            "responsible engineers' design reviews and applicable measurements separately.",
         )
         with tempfile.TemporaryDirectory(prefix="markdown-writer-") as directory:
             path = Path(directory) / "review.md"

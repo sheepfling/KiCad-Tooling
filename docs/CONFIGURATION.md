@@ -129,3 +129,13 @@ Without a declared compatible profile, native operations stop with an actionable
 error while portable operations remain available. Version matching, image digest
 requirements, and report schema checks remain enforced even with an explicit
 profile. No newer KiCad major version has been validated by this extraction.
+
+## Approve a simulator version
+
+The project-owned electrical contract selects exact `ngspice_version`. Hosted Python lanes reuse
+that version from PATH, or build official source after verifying its archive checksum. The bundled
+source pin covers version 47. For another reviewed version, add `ngspice_source_sha256` to the
+contract; unknown unpinned versions stop before downloading. The build needs a C compiler, make,
+bison and flex and retains stage logs under `build/ci-hosted/`. Normal CLI analysis accepts an
+explicit `--ngspice` executable; MCP uses its fixed startup environment. Neither changes Python
+imports or project search paths. Changing a simulator pin requires rerunning the relevant models.

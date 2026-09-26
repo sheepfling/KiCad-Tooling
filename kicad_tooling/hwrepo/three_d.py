@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
@@ -18,6 +19,8 @@ from .discovery import load_config, load_registry
 from .doctor import NativeRunner, doctor
 from .model_inventory import inspect_models
 from .models import (
+    DEFAULT_THREE_D_VIEWS,
+    THREE_D_VIEWS,
     CommandEvidence,
     ExportMode,
     ExportStatus,
@@ -26,6 +29,7 @@ from .models import (
     ProjectKind,
     SelectedRunner,
     ThreeDReport,
+    ThreeDView,
 )
 
 # Preserve the original service-module import surface for existing consumers.
@@ -35,8 +39,10 @@ __all__ = [
     "ModelInventoryReport",
     "SelectedRunner",
     "ThreeDReport",
+    "ThreeDView",
     "generate",
     "render_text",
+    "selected_views",
 ]
 
 
@@ -133,20 +139,53 @@ def _source_hashes(root: Path, config: ProjectConfig) -> dict[str, str]:
     return actual
 
 
-def _specifications(board: str, assembly_variant: str | None = None) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
+def selected_views(views: Iterable[str] | None = None) -> tuple[ThreeDView, ...]:
+    """Resolve the default camera bundle or validate an explicitly selected view list."""
+    selected = DEFAULT_THREE_D_VIEWS if views is None else tuple(views)
+    if not selected:
+        raise ValueError("Select at least one 3D view")
+    if len(set(selected)) != len(selected):
+        raise ValueError("3D views must be unique")
+    unknown = sorted(set(selected) - set(THREE_D_VIEWS))
+    if unknown:
+        raise ValueError("Unknown 3D view(s): " + ", ".join(unknown))
+    return selected  # type: ignore[return-value]
+
+
+def _specifications(
+    board: str, assembly_variant: str | None = None,
+    views: Iterable[str] | None = None,
+) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
     source = f"/work/{board}"
     variant = ("--variant", assembly_variant) if assembly_variant else ()
-    return (
-        ("top", "top.png", ("pcb", "render", "-o", "/output/top.png", "--side", "top",
-                             "--width", "1600", "--height", "900", *variant, source)),
-        ("angled", "angled.png", ("pcb", "render", "-o", "/output/angled.png",
-                                   "--width", "1600", "--height", "900", "--rotate",
-                                   "45,0,45", "--perspective", *variant, source)),
+    side_views: dict[ThreeDView, str] = {
+        "top": "top", "bottom": "bottom", "left": "left", "right": "right",
+        "front": "front", "back": "back",
+    }
+    rotations = {
+        "angled": "45,0,0", "angled-90": "45,0,90",
+        "angled-180": "45,0,180", "angled-270": "45,0,270",
+    }
+    specifications: list[tuple[str, str, tuple[str, ...]]] = []
+    for name in selected_views(views):
+        filename = f"{name}.png"
+        args: tuple[str, ...] = (
+            "pcb", "render", "-o", f"/output/{filename}", "--width", "1600",
+            "--height", "1600" if name in rotations else "900",
+            "--side", side_views.get(name, "top"),
+        )
+        if name in rotations:
+            # KiCad frames the unrotated board before applying camera rotation.
+            # Square framing plus a margin accommodates the quarter-turn views.
+            args += ("--rotate", rotations[name], "--perspective", "--zoom", "0.6")
+        specifications.append((name, filename, (*args, *variant, source)))
+    specifications.extend((
         ("step", "board.step", ("pcb", "export", "step", "--subst-models", "--no-dnp",
-                                 *variant, "-o", "/output/board.step", source)),
+                                  *variant, "-o", "/output/board.step", source)),
         ("glb", "board.glb", ("pcb", "export", "glb", "--subst-models", "--no-dnp",
-                               *variant, "-o", "/output/board.glb", source)),
-    )
+                                *variant, "-o", "/output/board.glb", source)),
+    ))
+    return tuple(specifications)
 
 
 def render_text(report: ThreeDReport, detail: Literal["brief", "full"] = "brief") -> str:
@@ -191,9 +230,10 @@ def generate(
     root: Path, project_id: str, *, check_models: bool = False,
     runner: NativeRunner = "auto", cli: str = "kicad-cli", output: Path | None = None,
     assembly_variant: str | None = None,
+    views: Iterable[str] | None = None,
     detail: Literal["brief", "full"] = "brief",
 ) -> ThreeDReport:
-    """Inspect one PCB and optionally export four views from its exact KiCad toolchain."""
+    """Inspect one PCB or export selected standard camera views and geometry."""
     root = root.resolve()
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", project_id) is None:
         raise ValueError("Project ID must use letters, digits, periods, underscores or hyphens")
@@ -220,6 +260,7 @@ def generate(
     try:
         with journal.stage("project-selection"):
             config, board = _selected(root, project_id)
+            resolved_views = selected_views(views)
             if assembly_variant:
                 from .exports import require_declared_variant
 
@@ -263,7 +304,9 @@ def generate(
                         f"Use exact KiCad {config.kicad_version}; inspect version-command.json.",
                     )
                 else:
-                    for name, filename, args in _specifications(board, assembly_variant):
+                    for name, filename, args in _specifications(
+                        board, assembly_variant, resolved_views,
+                    ):
                         with journal.stage(name):
                             result = _run_kicad(root, journal.directory, config, selected_runner,
                                                 cli, args, timeout=600)

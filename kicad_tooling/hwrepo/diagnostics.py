@@ -348,6 +348,17 @@ def portable_findings(
             "BLOCKING", "PROJECT_TEST", name, detail or f"exit {command.returncode}",
             action, "tests/README.md",
         ))
+    if config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC} and config.electrical is None:
+        findings.append(finding(
+            "REVIEW", "ELECTRICAL_NOT_CONFIGURED", contract_path,
+            "Grounding requirements, power budgets and transient/frequency analysis are not configured.",
+            "Review applicability with the electrical owner. Start pending requirements with "
+            f"kicad-team electrical --project {quote_argument(project_id)} --init; author reviewed "
+            "limits or explicit not-applicable reasons, then run "
+            f"kicad-team verify --project {quote_argument(project_id)} --depth electrical. "
+            "A portable/native PASS does not assess these missing requirements.",
+            "docs/workflow/ELECTRICAL_ANALYSIS.md",
+        ))
     if config.kind is ProjectKind.PCB_ONLY:
         findings.append(finding(
             "REVIEW", "PCB_ONLY_SCOPE", project.config,

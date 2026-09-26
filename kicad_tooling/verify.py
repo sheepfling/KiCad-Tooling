@@ -89,8 +89,7 @@ def format_report(result: ProjectVerificationReport, detail: Literal["brief", "f
     if result.depth in {"native", "electrical"}:
         lines.append(f"Runner: {result.runner}")
         lines.append(f"Native: {result.native.status if result.native is not None else 'NOT_RUN'}")
-    if result.depth == "electrical":
-        lines.append(f"Electrical: {result.electrical.status if result.electrical else 'NOT_RUN'}")
+    lines.append(f"Electrical analysis: {result.electrical.status if result.electrical else 'NOT_RUN'}")
     lines.append(f"Receipt: {result.run_directory}")
     if result.error:
         lines.append(f"Tool error: {result.error}")
@@ -118,6 +117,7 @@ def verify(
             raise ValueError("Verification output must be under this repository's ignored build/")
     journal = DiagnosticJournal(root, project_id, output, label="verify")
     portable: ProjectStaticPipelineReport | None = None
+    config = None
     native_doctor = None
     dependency_command = None
     native_command = None
@@ -263,6 +263,17 @@ def verify(
         next_actions = (
             f"Inspect {journal.directory / 'events.log'} and "
             + f"{journal.directory / 'error.txt'}; report a tool defect if inputs are valid.",
+        )
+
+    if (status == "PASS" and depth != "electrical" and config is not None
+            and config.kind.value in {"pcb", "schematic"}):
+        next_actions += (
+            "Full electrical analysis was not run at this depth. Review grounding, power and "
+            "transient/frequency applicability with the electrical owner; "
+            + (f"start with kicad-team electrical --project {project_id} --init, then "
+               if config.electrical is None else "")
+            + f"run kicad-team verify --project {project_id} --depth electrical. "
+            "Any configured static budgets or native grounding checks retain their separate results.",
         )
 
     result = ProjectVerificationReport(

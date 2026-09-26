@@ -12,7 +12,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from kicad_tooling.hwrepo.models import CommandEvidence, EnvironmentCheck, TemplateDoctorReport
+from kicad_tooling.hwrepo.models import (
+    DEFAULT_THREE_D_VIEWS,
+    CommandEvidence,
+    EnvironmentCheck,
+    TemplateDoctorReport,
+)
 from kicad_tooling.hwrepo.three_d import ThreeDReport, generate
 from tests.support import reference_root
 
@@ -178,7 +183,8 @@ class VisualizeTests(unittest.TestCase):
         self.assertTrue((Path(report.run_directory) / "top-command.json").is_file())
 
     def test_successful_exports_are_hashed_and_source_rewrites_invalidate_them(self) -> None:
-        payloads = {"top.png": PNG, "angled.png": PNG, "board.step": STEP, "board.glb": GLB}
+        payloads = {f"{name}.png": PNG for name in DEFAULT_THREE_D_VIEWS}
+        payloads.update({"board.step": STEP, "board.glb": GLB})
 
         def fake_export(_root: Path, output: Path, _config: object, _selected: str,
                         _cli: str, args: tuple[str, ...], timeout: int = 300) -> CommandEvidence:
@@ -217,6 +223,36 @@ class VisualizeTests(unittest.TestCase):
         self.assertEqual(changed.status, "FAIL")
         self.assertIn("source changed", changed.error or "")
         self.assertNotEqual(self.board.read_bytes(), original)
+
+    def test_selected_views_render_only_requested_pngs_plus_exchange_geometry(self) -> None:
+        payloads = {"back.png": PNG, "angled-90.png": PNG,
+                    "board.step": STEP, "board.glb": GLB}
+
+        def fake_export(_root: Path, output: Path, _config: object, _selected: str,
+                        _cli: str, args: tuple[str, ...], timeout: int = 300) -> CommandEvidence:
+            _ = timeout
+            if args == ("version",):
+                return evidence(args, stdout="10.0.5\n")
+            filename = Path(args[args.index("-o") + 1]).name
+            (output / filename).write_bytes(payloads[filename])
+            return evidence(args)
+
+        with patch("kicad_tooling.hwrepo.three_d.doctor", return_value=passing_doctor()), patch(
+            "kicad_tooling.hwrepo.three_d._run_kicad", side_effect=fake_export,
+        ):
+            report = generate(self.root, PROJECT, runner="local", views=("back", "angled-90"),
+                              output=Path("build/selected-views"))
+        self.assertEqual(report.status, "PASS", report.next_actions)
+        self.assertEqual(set(report.commands), {"version", "back", "angled-90", "step", "glb"})
+        self.assertEqual(set(report.artifacts_sha256), set(payloads))
+
+    def test_duplicate_views_are_rejected_before_native_runner_selection(self) -> None:
+        with patch("kicad_tooling.hwrepo.three_d.doctor") as native:
+            report = generate(self.root, PROJECT, views=("top", "top"),
+                              output=Path("build/duplicate-views"))
+        self.assertEqual(report.status, "FAIL")
+        self.assertIn("must be unique", report.error or "")
+        native.assert_not_called()
 
 
 if __name__ == "__main__":

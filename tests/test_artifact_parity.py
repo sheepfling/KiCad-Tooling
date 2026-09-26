@@ -23,6 +23,7 @@ from kicad_tooling.hwrepo.contracts import parse_model_text, read_model
 from kicad_tooling.hwrepo.evidence import digest, source_state
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
+    DEFAULT_THREE_D_VIEWS,
     CommandEvidence,
     PartsCatalog,
     ReleaseExportReport,
@@ -257,9 +258,27 @@ else:
                             self.assertFalse(mcp.artifacts_sha256)
                             self.assertEqual(set(mcp.commands), {"version", "top"})
                         else:
-                            self.assertEqual(set(mcp.artifacts_sha256),
-                                             {"top.png", "angled.png", "board.step", "board.glb"})
+                            expected_files = {f"{view}.png" for view in DEFAULT_THREE_D_VIEWS}
+                            expected_files.update({"board.step", "board.glb"})
+                            self.assertEqual(set(mcp.artifacts_sha256), expected_files)
                         self.assertEqual(source_state(self.root), before)
+
+                views = ("back", "angled-90")
+                cli_directory = self.root / "build/3d/cli-selected"
+                cli_args = ("--project", test_visualize.PROJECT, "--runner", "local",
+                            "--output", str(cli_directory),
+                            *tuple(item for view in views for item in ("--view", view)))
+                cli_selected = await self.cli("kicad_tooling.visualize", ThreeDReport, *cli_args)
+                mcp_selected = await self.call(client, "export_3d", ThreeDReport, {
+                    "project_id": test_visualize.PROJECT, "runner": "local",
+                    "view_id": "mcp-selected", "views": list(views),
+                })
+                selected_directory = Path(mcp_selected.run_directory)
+                self.assertEqual(self.semantic(cli_selected, cli_directory),
+                                 self.semantic(mcp_selected, selected_directory))
+                self.assertEqual(set(mcp_selected.artifacts_sha256),
+                                 {"back.png", "angled-90.png", "board.step", "board.glb"})
+                self.assertEqual(source_state(self.root), before)
 
     def configure_variants(self) -> None:
         project = self.root / test_visualize.BOARD.replace(".kicad_pcb", ".kicad_pro")
@@ -316,7 +335,7 @@ else:
                                  self.semantic(mcp_3d, Path(mcp_3d.run_directory)))
                 self.assertEqual(mcp_3d.assembly_variant, "Pilot B")
                 self.assertEqual(mcp_3d.models.status, "REVIEW")
-                for name in ("top", "angled", "step", "glb"):
+                for name in (*DEFAULT_THREE_D_VIEWS, "step", "glb"):
                     argv = mcp_3d.commands[name].argv
                     self.assertEqual(argv[argv.index("--variant") + 1], "Pilot B")
                 self.assertEqual(source_state(self.root), before)

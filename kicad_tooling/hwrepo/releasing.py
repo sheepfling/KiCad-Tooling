@@ -162,7 +162,8 @@ def selected_projects(root: Path, candidate: ReleaseManifest) -> tuple[ProjectRe
 
 def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
             variants: tuple[ReleaseVariant, ...] = (), release_class: ReleaseClass = ReleaseClass.ENGINEERING_REVIEW,
-            cli: str | None = None, portable: Path | None = None) -> ReleaseManifest:
+            cli: str | None = None, portable: Path | None = None,
+            ngspice: str = "ngspice") -> ReleaseManifest:
     """Commit source first; reports and the candidate are then written under build/."""
     from ..ci import static_pipeline
 
@@ -176,6 +177,9 @@ def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
                                 toolchain_id="pending", projects=project_ids, variants=variants,
                                 libraries=(), interfaces=(), artifacts=())
     projects, products = selected_scope(root, candidate)
+    from .electrical_evidence import required_projects, verify_electrical
+
+    electrical_ids = required_projects(root, projects, release_class)
     toolchains = configured_toolchains(root, projects)
     board_variants = selected_board_variants(products, variants,
                                              (project.id for project in projects))
@@ -204,10 +208,21 @@ def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
         prepare_dependencies(root, load_config(root, projects[0].config).image, dependencies)
     native: dict[str, EvidenceFile] = {}
     exports: dict[str, EvidenceFile] = {}
+    electrical: dict[str, EvidenceFile] = {}
     for project in projects:
         native_output = output / "native" / project.id
         run_native(root, project, native_output, cli, dependencies)
         native[project.id] = reference(root, native_output / "summary.json")
+        if project.id in electrical_ids:
+            from .electrical_runner import analyze
+
+            electrical_output = output / "electrical" / project.id
+            analysis = analyze(root, project.id, electrical_output,
+                               native_output / "summary.json", ngspice=ngspice)
+            if analysis.status != "PASS":
+                raise ValueError(f"Electrical checks failed for {project.id}; see {electrical_output}")
+            electrical[project.id] = reference(root, electrical_output / "electrical.json")
+            verify_electrical(root, electrical[project.id], source, project.id, native[project.id])
         manifest = read_model(repo_path(root, project.config), ProjectManifest)
         if manifest.release_exports is not None:
             export_output = output / "exports" / project.id
@@ -226,7 +241,10 @@ def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
                 destination.write_bytes(content)
     write_markdown(
         output / "review.md",
-        release_review(release_id, source.commit, release_class.value),
+        release_review(release_id, source.commit, release_class.value, (
+            (project.id, "PASS — retained electrical evidence" if project.id in electrical
+             else "NOT_CONFIGURED — electrical analysis not assessed") for project in projects
+        )),
     )
     artifacts = tuple(ReleaseArtifact(id=f"artifact-{index}", kind=artifact_kind(path, output),
                         path=path.relative_to(root).as_posix(), sha256=digest(path),
@@ -245,7 +263,8 @@ def prepare(root: Path, release_id: str, project_ids: tuple[str, ...],
         "interfaces": tuple(ReleaseInterface(id=interface.id, revision=interface.revision)
                             for interface in interfaces.interfaces if interface.id in interface_ids),
         "artifacts": artifacts,
-        "evidence": ReleaseEvidence(portable=portable_reference, native=native, exports=exports),
+        "evidence": ReleaseEvidence(portable=portable_reference, native=native, exports=exports,
+                                    electrical=electrical),
     })
     if source_state(root) != source:
         raise ValueError("Source changed while preparing the release; retained outputs are not a candidate")
@@ -282,6 +301,13 @@ def retained_paths(root: Path, manifest: ReleaseManifest) -> set[str]:
     if manifest.evidence is None:
         raise ValueError("Candidate lacks evidence")
     paths.add(manifest.evidence.portable.path)
+    for reference_file in manifest.evidence.electrical.values():
+        from .models import ElectricalAnalysisReport
+
+        paths.add(reference_file.path)
+        electrical_report = read_model(evidence_path(root, reference_file), ElectricalAnalysisReport)
+        paths.update((Path(reference_file.path).parent / name).as_posix()
+                     for name in electrical_report.artifacts_sha256)
     for reference_file in manifest.evidence.native.values():
         paths.add(reference_file.path)
         report = read_model(evidence_path(root, reference_file), ValidationSummary)

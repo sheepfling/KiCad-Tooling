@@ -72,6 +72,7 @@ def main() -> int:
     parser.add_argument("--release-id")
     parser.add_argument("--release-class", choices=[value.value for value in ReleaseClass], default="engineering_review")
     parser.add_argument("--cli", help="Use an installed pinned KiCad CLI; default uses Docker")
+    parser.add_argument("--ngspice", default="ngspice", help="Exact approved simulator for release preparation")
     parser.add_argument("--portable", type=Path,
                         help="Reuse a full or exact-project release portable report from this clean source")
     parser.add_argument("--output", type=Path)
@@ -96,7 +97,7 @@ def main() -> int:
                 parser.error("prepare requires --release-id and --project or --variant")
             selections = resolve_variants(root, tuple(args.variant))
             manifest = prepare(root, args.release_id, tuple(args.project), selections,
-                               ReleaseClass(args.release_class), args.cli, args.portable)
+                               ReleaseClass(args.release_class), args.cli, args.portable, args.ngspice)
             if args.json or args.format == "json":
                 print(manifest.model_dump_json(indent=2))
             else:

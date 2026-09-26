@@ -15,6 +15,7 @@ from unittest.mock import patch
 from kicad_tooling.hwrepo import mcp_workflow as workflow
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.models import (
+    DEFAULT_THREE_D_VIEWS,
     CommandEvidence,
     EnvironmentCheck,
     ReleaseClass,
@@ -338,8 +339,8 @@ class McpWorkflowTests(unittest.TestCase):
     def test_3d_export_source_mutation_keeps_failure_and_receipt(self) -> None:
         board = self.root / test_visualize.BOARD
         original = board.read_bytes()
-        payloads = {"top.png": test_visualize.PNG, "angled.png": test_visualize.PNG,
-                    "board.step": test_visualize.STEP, "board.glb": test_visualize.GLB}
+        payloads = {f"{name}.png": test_visualize.PNG for name in DEFAULT_THREE_D_VIEWS}
+        payloads.update({"board.step": test_visualize.STEP, "board.glb": test_visualize.GLB})
 
         def native(_root, output, _config, _selected, _cli, args, timeout=300):
             if args == ("version",):

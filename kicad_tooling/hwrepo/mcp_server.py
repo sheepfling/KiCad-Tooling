@@ -82,6 +82,7 @@ from .models import (
     TemplateDoctorReport,
     TemplateInventoryReport,
     ThreeDReport,
+    ThreeDView,
     ToolSurfaceReport,
 )
 from .scaffold import new_project as scaffold_project
@@ -685,23 +686,29 @@ def create_server(
             def export_3d(
                 project_id: str, view_id: str, runner: NativeRunner = "auto",
                 assembly_variant: str | None = None,
+                views: list[ThreeDView] | None = None,
             ) -> ThreeDReport:
-                """Generate top/angled PNG, STEP and GLB in a fresh ignored 3D receipt.
+                """Generate selected PCB PNG views plus STEP and GLB in a fresh 3D receipt.
+
+                By default, render all six orthographic sides and four angled views.
+                Pass named views to select a smaller set, matching CLI --view.
 
                 Uses exact local KiCad or a pinned container; never edits the board or
                 assigns models. Export PASS can still have model coverage REVIEW. Inspect
                 actual images and geometry before making mechanical decisions.
                 """
                 with service_operation(operation):
-                    return workflow.export_3d(root, project_id, view_id, runner, assembly_variant)
+                    return workflow.export_3d(root, project_id, view_id, runner,
+                                               assembly_variant, views)
 
             server.tool(annotations=EXECUTION)(export_3d)
 
             def prepare_review(
                 project_id: str, release_id: str, runner: NativeRunner = "auto",
             ) -> ReleaseManifest:
-                """Prepare an engineering_review candidate with portable/native/export evidence.
+                """Prepare a review candidate with portable/native/export and declared electrical evidence.
 
+                Declared electrical checks require the exact ngspice on the server's startup PATH.
                 Requires clean committed source and an exact runner. Never creates production
                 approval, a tag, a purchase or a manufacturing authorization.
                 """
@@ -718,7 +725,8 @@ def create_server(
                 """Prepare multiple projects or explicit PRODUCT:VARIANT choices for review.
 
                 Requires clean committed source, one common toolchain and exact native
-                checks. Optional portable evidence must be a source-bound build artifact.
+                checks. Declared electrical checks and their source-bound logs/waveforms are required.
+                Optional portable evidence must be a source-bound build artifact.
                 The candidate remains engineering_review without approval or manufacture authority.
                 """
                 with service_operation(operation):

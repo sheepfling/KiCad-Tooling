@@ -506,6 +506,14 @@ def check(root: Path, manifest: ReleaseManifest, today: date | None = None) -> R
             raise ValueError("Native evidence must cover exactly the selected projects")
         for project in projects:
             verify_native(resolved_root, manifest.evidence.native[project.id], source, project.id)
+        from .electrical_evidence import required_projects, verify_electrical
+
+        required = required_projects(resolved_root, projects, manifest.release_class)
+        if set(manifest.evidence.electrical) != set(required):
+            raise ValueError("Electrical evidence must cover exactly the selected declared contracts")
+        for project_id in required:
+            verify_electrical(resolved_root, manifest.evidence.electrical[project_id], source,
+                              project_id, manifest.evidence.native[project_id])
         from .exports import verify_exports
 
         if not set(manifest.evidence.exports) <= {project.id for project in projects}:

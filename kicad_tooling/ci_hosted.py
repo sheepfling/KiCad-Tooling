@@ -250,10 +250,84 @@ def native_lane(root: Path, *, project: str, image: str, pr_head: str,
         log.run("native-check", (*docker,
                                  '/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --kicad --project "$PROJECT_ID" '
                                  + "--output build/review"), cwd=root, env=environment)
+        electrical_lane(root, project, log, native_summary=f"build/review/{project}/summary.json")
         if fault_probes:
             log.run("fault-probes", (*docker, "/work/build/policy-deps/bin/python -I -m kicad_tooling.ci --fault-probes --output build/fault-probes"), cwd=root, env=environment)
     finally:
         checked_source(root, log)
+
+
+def project_simulator(root: Path, project: str, log: HostedLog) -> str:
+    from .hwrepo.electrical import load_analysis, policy_issues, selected_config, simulation_cases
+    from .hwrepo.simulator_setup import ensure
+
+    config = selected_config(root, project)
+    contract = load_analysis(root, config)
+    if contract is None:
+        return "ngspice"
+    issues = policy_issues(root, config)
+    if issues:
+        raise ValueError(f"{project}: unresolved electrical requirements: {issues}")
+    return (ensure(root, contract.ngspice_version, contract.ngspice_source_sha256, log)
+            if simulation_cases(contract) else "ngspice")
+
+
+def electrical_lane(root: Path, project: str, log: HostedLog,
+                    native_summary: str | None = None, required: bool = False) -> None:
+    from .hwrepo.electrical import selected_config
+    from .hwrepo.models import ElectricalAnalysisReport
+
+    if selected_config(root, project).electrical is None:
+        if required:
+            raise ValueError(f"{project}: no electrical contract; run kicad-team electrical --project {project} --init")
+        log.event("electrical", "NOT_CONFIGURED", project=project)
+        return
+    simulator = project_simulator(root, project, log)
+    report = root / "build" / f"electrical-{project}.json"
+    summary_args = ("--native-summary", native_summary) if native_summary else ("--runner", "container")
+    def charts() -> None:
+        analysis = read_model(report, ElectricalAnalysisReport)
+        log.run("electrical-charts", (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical_charts",
+                                     "--root", str(root), "--receipt", analysis.run_directory,
+                                     "--format", "json"), cwd=root)
+
+    try:
+        log.run("electrical-check", (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical",
+                                    "--root", str(root), "--project", project, *summary_args,
+                                    "--ngspice", simulator, "--format", "json"), cwd=root,
+                stdout_path=report)
+    except RuntimeError:
+        # Keep plots from measured failures, while preserving the original gate failure.
+        try:
+            charts()
+        except (OSError, ValueError, RuntimeError) as exc:
+            log.event("electrical-charts", "UNAVAILABLE", error=str(exc))
+        raise
+    charts()
+
+
+def candidate_lane(root: Path, project: str, release_id: str, log: HostedLog) -> None:
+    from .hwrepo.evidence import source_state
+    from .hwrepo.packaging import package, verify
+    from .hwrepo.release import check
+    from .hwrepo.releasing import prepare
+
+    source = source_state(root)
+    if os.environ.get("GITHUB_SHA") and source.commit != os.environ["GITHUB_SHA"]:
+        raise ValueError("Checkout differs from dispatched source commit")
+    simulator = project_simulator(root, project, log)
+    log.event("candidate-prepare", "START", project=project, release_id=release_id)
+    manifest = prepare(root, release_id, (project,), ngspice=simulator)
+    readiness = check(root, manifest)
+    write_model(log.directory / "readiness.json", readiness)
+    if readiness.status != "PASS":
+        raise ValueError(f"Release readiness failed: {readiness.issues}")
+    archive = root / "build" / f"{release_id}.zip"
+    write_model(log.directory / "package.json", package(
+        root, f"build/releases/{release_id}/manifest.json", archive))
+    write_model(log.directory / "verified.json", verify(archive))
+    checked_source(root, log)
+    log.event("candidate-restore", "PASS", archive=str(archive))
 
 
 def release_fixture(root: Path, target: Path) -> None:
@@ -339,6 +413,9 @@ def release_lane(root: Path, log: HostedLog) -> None:
     write_model(manifest_path, manifest.model_copy(update={"release_exports": settings}))
     log.event("supplier-formats", "PASS")
     log.run("fixture-init", ("git", "init", "-q"), cwd=target)
+    # This checkout is disposable; background maintenance can race its cleanup.
+    log.run("fixture-gc", ("git", "config", "gc.auto", "0"), cwd=target)
+    log.run("fixture-maintenance", ("git", "config", "maintenance.auto", "false"), cwd=target)
     log.run("fixture-add", ("git", "add", "--all"), cwd=target)
     log.run("fixture-commit", ("git", "-c", "user.name=Scaffold CI fixture",
                                "-c", "user.email=fixture@example.invalid", "commit", "-qm",
@@ -440,6 +517,11 @@ def main() -> int:
     native.add_argument("--image", required=True)
     native.add_argument("--pr-head", required=True)
     native.add_argument("--fault-probes", choices=("true", "false"), default="false")
+    electrical = commands.add_parser("electrical", help="Run required electrical checks with verified simulator setup")
+    electrical.add_argument("--project", required=True)
+    candidate = commands.add_parser("candidate", help="Prepare, package and restore a selected review candidate")
+    candidate.add_argument("--project", required=True)
+    candidate.add_argument("--release-id", required=True)
     commands.add_parser("release", help="Run disposable release and foreign-board rehearsal")
     gate = commands.add_parser("gate", help="Verify every hosted prerequisite outcome")
     gate.add_argument("--scope-result", default=os.environ.get("SCOPE_RESULT"))
@@ -474,6 +556,10 @@ def main() -> int:
                         fault_probes=args.fault_probes == "true", log=log)
         elif args.command == "release":
             release_lane(root, log)
+        elif args.command == "electrical":
+            electrical_lane(root, args.project, log, required=True)
+        elif args.command == "candidate":
+            candidate_lane(root, args.project, args.release_id, log)
         elif args.command == "gate":
             gate_result(args.scope_result, args.scope, args.unit_result,
                         args.matrix_result, args.kicad_result, args.has_projects,

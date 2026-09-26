@@ -27,7 +27,7 @@ from kicad_tooling.hwrepo.models import (
     RepositoryPolicyReport,
     ValidationSummary,
 )
-from kicad_tooling.verify import container_command, run_command, verify
+from kicad_tooling.verify import container_command, format_report, run_command, verify
 from tests.support import initialize_git, reference_root
 
 
@@ -88,6 +88,8 @@ class VerifyTests(unittest.TestCase):
         self.assertEqual(json.loads((receipt / "verification.json").read_text())["status"], "PASS")
         self.assertIn("portable", (receipt / "events.log").read_text())
         self.assertEqual(json.loads((receipt / "run.json").read_text())["status"], "PASS")
+        self.assertIn("Electrical analysis: NOT_RUN", format_report(first))
+        self.assertIn("--init", " ".join(first.next_actions))
 
     def test_cli_json_stdout_stays_parseable_while_progress_goes_to_stderr(self) -> None:
         command = subprocess.run(

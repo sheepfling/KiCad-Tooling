@@ -225,6 +225,19 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(mcp.status, "NEEDS_WORK")
         self.assertEqual({item.preview.status for item in mcp.candidates}, {"PASS", "FAIL"})
 
+    async def test_missing_electrical_requirements_are_visible_without_claiming_failure(self) -> None:
+        cli = await self.cli("kicad_tooling.template", DiagnosticReport, "diagnose", "--project-id",
+                             "controller")
+        async with Client(create_server(self.root, allow_checks=True), mode="legacy") as client:
+            mcp = await self.call(client, "diagnose_project", DiagnosticReport,
+                                  {"project_id": "controller"})
+        self.receipt_equal(cli, mcp)
+        self.assertEqual(mcp.status, "PASS")
+        missing = next(row for row in mcp.findings if row.code == "ELECTRICAL_NOT_CONFIGURED")
+        self.assertEqual(missing.severity, "REVIEW")
+        self.assertIn("--init", missing.action)
+        self.assertIn("--depth electrical", missing.action)
+
     async def test_import_diagnosis_parity(self) -> None:
         self.damage_import()
         cli = await self.cli("kicad_tooling.template", DiagnosticReport, "diagnose", "--source",
@@ -271,6 +284,9 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                     self.receipt_equal(cli, mcp)
                     self.assertEqual(mcp.status, "FAIL" if broken else "PASS")
                     self.assertFalse(mcp.build_authorized)
+                    if not broken:
+                        self.assertIsNone(mcp.electrical)
+                        self.assertIn("Full electrical analysis was not run", " ".join(mcp.next_actions))
 
     async def test_scope_check_parity(self) -> None:
         cli = await self.cli("kicad_tooling.ci", ProjectStaticPipelineReport, "--project", "controller")

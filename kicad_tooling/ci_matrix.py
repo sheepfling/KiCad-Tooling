@@ -29,6 +29,7 @@ def build_matrix(root: Path, selected: tuple[str, ...] | None = None) -> CiMatri
                 project=project.id,
                 image=config.image,
                 kicad_version=config.kicad_version,
+                electrical=config.electrical is not None,
                 fault_probes=(
                     project.id == "controller"
                     and project.project == "examples/projects/controller/kicad/controller.kicad_pro"

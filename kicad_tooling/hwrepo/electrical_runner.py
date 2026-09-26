@@ -21,7 +21,7 @@ from .electrical import (
     selected_config,
     simulation_cases,
 )
-from .evidence import digest
+from .evidence import digest, source_state
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
@@ -39,6 +39,7 @@ def analyze(root: Path, project_id: str, output: Path | None = None,
             native_summary: Path | None = None, cli: str = "kicad-cli",
             ngspice: str = "ngspice", runner: NetlistRunner | None = None) -> ElectricalAnalysisReport:
     root = root.resolve()
+    source = source_state(root)
     if native_summary is not None and not native_summary.is_absolute():
         native_summary = root / native_summary
     if output is None:
@@ -93,11 +94,13 @@ def analyze(root: Path, project_id: str, output: Path | None = None,
                             checks.append(ElectricalCheck(id=case.id, status="FAIL", detail=str(exc)))
             if bound_inputs(root, config, load_analysis(root, config) or contract) != inputs:
                 raise ValueError("Electrical inputs changed during analysis")
+            if source_state(root) != source:
+                raise ValueError("Repository source changed during electrical analysis")
             status = "PASS" if checks and all(c.status in {"PASS", "NOT_APPLICABLE"} for c in checks) else "FAIL"
     except (OSError, ValueError) as exc:
         checks.append(ElectricalCheck(id="inputs", status="FAIL", detail=str(exc)))
     report = ElectricalAnalysisReport(
-        project_id=project_id, status=status, run_directory=str(output), input_sha256=inputs,
+        project_id=project_id, source=source, status=status, run_directory=str(output), input_sha256=inputs,
         artifacts_sha256={path.relative_to(output).as_posix(): digest(path)
                           for path in sorted(output.rglob("*")) if path.is_file()},
         commands=commands, checks=tuple(checks),

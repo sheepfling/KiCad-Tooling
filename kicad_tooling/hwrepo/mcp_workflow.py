@@ -53,6 +53,7 @@ from .models import (
     ReleaseReadinessReport,
     ReleaseStatus,
     ThreeDReport,
+    ThreeDView,
 )
 from .release import check as release_check
 from .selection import ProjectSelector, resolve_project_ids
@@ -413,15 +414,17 @@ def inspect_3d_models(root: Path, project_id: str) -> ModelInventoryReport:
 def export_3d(
     root: Path, project_id: str, view_id: str, runner: NativeRunner = "auto",
     assembly_variant: str | None = None,
+    views: list[ThreeDView] | None = None,
 ) -> ThreeDReport:
     """Create source-bound 3D review artifacts under one fresh ignored destination."""
     root = root.resolve()
     pcb_config(root, project_id)
     if runner not in {"auto", "local", "container"}:
         raise ValueError(f"Unknown native runner: {runner}")
+    selected = three_d.selected_views(views)
     output = fresh_output(root, "3d", view_id)
     return three_d.generate(root, project_id, runner=runner, cli="kicad-cli", output=output,
-                            assembly_variant=assembly_variant)
+                            assembly_variant=assembly_variant, views=selected)
 
 
 def preview_model_population(

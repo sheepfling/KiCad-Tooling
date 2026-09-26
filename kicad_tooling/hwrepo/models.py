@@ -826,6 +826,7 @@ class ReleaseEvidence(StrictModel):
     portable: EvidenceFile
     native: Mapping[Identifier, EvidenceFile]
     exports: Mapping[Identifier, EvidenceFile] = Field(default_factory=dict)
+    electrical: Mapping[Identifier, EvidenceFile] = Field(default_factory=dict)
 
 
 class ReleaseManifest(StrictModel):
@@ -938,6 +939,7 @@ class MatrixEntry(StrictModel):
     image: NonEmptyText
     kicad_version: NonEmptyText
     fault_probes: bool = False
+    electrical: bool = False
 
 
 class CiMatrix(StrictModel):
@@ -1571,6 +1573,15 @@ InventoryStatus = Literal["READY", "REVIEW", "FAIL"]
 ExportMode = Literal["inspect", "generate"]
 ExportStatus = Literal["PASS", "FAIL", "ERROR"]
 SelectedRunner = Literal["none", "local", "container"]
+ThreeDView = Literal[
+    "top", "bottom", "left", "right", "front", "back",
+    "angled", "angled-90", "angled-180", "angled-270",
+]
+THREE_D_VIEWS: tuple[ThreeDView, ...] = (
+    "top", "bottom", "left", "right", "front", "back",
+    "angled", "angled-90", "angled-180", "angled-270",
+)
+DEFAULT_THREE_D_VIEWS: tuple[ThreeDView, ...] = THREE_D_VIEWS
 
 
 class ModelAssignment(StrictModel):
@@ -2077,6 +2088,7 @@ class ElectricalAnalysisContract(StrictModel):
     schema_version: Literal["1"] = "1"
     project_id: Identifier
     ngspice_version: NonEmptyText
+    ngspice_source_sha256: Digest | None = None
     grounding: Annotated[GroundingAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")]
     power: Annotated[PowerAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")]
     high_frequency: Annotated[HighFrequencyAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")]
@@ -2106,6 +2118,7 @@ class ElectricalAnalysisReport(StrictModel):
     lane: Literal["ELECTRICAL_ANALYSIS"] = "ELECTRICAL_ANALYSIS"
     build_authorized: Literal[False] = False
     project_id: Identifier
+    source: SourceState | None = None
     status: Literal["PASS", "FAIL", "NOT_CONFIGURED"]
     run_directory: str = ""
     input_sha256: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)

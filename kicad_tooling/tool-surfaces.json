@@ -51,6 +51,8 @@
     {
       "module": "kicad_tooling.ci_hosted",
       "commands": [
+        "candidate",
+        "electrical",
         "gate",
         "matrix",
         "native",
@@ -77,6 +79,7 @@
         "--pr-head",
         "--project",
         "--projects",
+        "--release-id",
         "--release-result",
         "--root",
         "--scope",
@@ -302,6 +305,7 @@
         "--format",
         "--json",
         "--manifest",
+        "--ngspice",
         "--output",
         "--portable",
         "--project",
@@ -409,7 +413,8 @@
         "--output",
         "--project",
         "--root",
-        "--runner"
+        "--runner",
+        "--view"
       ]
     }
   ],
@@ -579,7 +584,8 @@
         "assembly_variant",
         "project_id",
         "runner",
-        "view_id"
+        "view_id",
+        "views"
       ]
     },
     {
@@ -1007,7 +1013,7 @@
         "diagnose_project"
       ],
       "alignment": "aligned",
-      "reason": "Both retain diagnostic receipts for import or registered-project triage.",
+      "reason": "Both retain diagnostic receipts for import or registered-project triage, including unconfigured electrical requirements as review tasks.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1016,7 +1022,8 @@
       ],
       "parity_tests": [
         "tests.test_mcp_parity.McpParityTests.test_import_diagnosis_parity",
-        "tests.test_mcp_parity.McpParityTests.test_project_diagnosis_parity"
+        "tests.test_mcp_parity.McpParityTests.test_project_diagnosis_parity",
+        "tests.test_mcp_parity.McpParityTests.test_missing_electrical_requirements_are_visible_without_claiming_failure"
       ]
     },
     {
@@ -1065,7 +1072,7 @@
         "check_project"
       ],
       "alignment": "aligned",
-      "reason": "Both dispatch the same portable/native/electrical project verification and preserve failed results.",
+      "reason": "Both dispatch the same portable/native/electrical project verification, preserve failed results and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1166,10 +1173,11 @@
         "export_3d"
       ],
       "alignment": "aligned",
-      "reason": "Both export native 3D views and models using the selected exact runner. Both accept declared KiCad assembly variants; fabrication exports retain configured supplier formats and review artifacts.",
+      "reason": "Both export six orthographic and four angled PCB views by default, or a matching selected view set, plus STEP and GLB using the selected exact runner and declared KiCad assembly variant.",
       "scope": "core",
       "gaps": [],
       "constraints": [
+        "CLI repeats --view to select output images; MCP accepts the same names in views and defaults to all ten camera views.",
         "CLI accepts --cli and --output; MCP selects a fresh directory by view_id and requires allow-checks plus allow-exports."
       ],
       "parity_tests": [
@@ -1272,11 +1280,13 @@
       "gaps": [],
       "constraints": [
         "MCP exposes engineering_review only; manufacture/prototype release authority is an explicit administrative exception.",
-        "MCP uses fixed runners and fresh ignored receipts; both accept multiple projects, product variants and source-bound portable evidence."
+        "MCP uses fixed runners and fresh ignored receipts; both accept multiple projects, product variants and source-bound portable evidence.",
+        "Declared electrical contracts require successful source-bound simulation evidence; CLI --ngspice selects the host executable, MCP uses its fixed startup environment."
       ],
       "parity_tests": [
         "tests.test_review_scope_parity.ReviewScopeParityTests.test_actual_cli_and_mcp_prepare_same_project_variant_scope",
-        "tests.test_review_scope_parity.ReviewScopeParityTests.test_saved_portable_and_valid_native_evidence_support_same_package_lifecycle"
+        "tests.test_review_scope_parity.ReviewScopeParityTests.test_saved_portable_and_valid_native_evidence_support_same_package_lifecycle",
+        "tests.test_release_electrical.ReleaseElectricalTests.test_release_electrical_cli_mcp_roundtrip_and_missing_evidence"
       ]
     },
     {
@@ -1288,14 +1298,15 @@
         "check_release"
       ],
       "alignment": "aligned",
-      "reason": "Both check the same release manifest readiness contract.",
+      "reason": "Both require and revalidate declared electrical evidence, exact source, native outputs and applicable release authority.",
       "scope": "core",
       "gaps": [],
       "constraints": [
         "MCP manifest inputs must be allowed repository build artifacts; CLI accepts its explicit manifest path."
       ],
       "parity_tests": [
-        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity"
+        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity",
+        "tests.test_release_electrical.ReleaseElectricalTests.test_release_electrical_cli_mcp_roundtrip_and_missing_evidence"
       ]
     },
     {
@@ -1307,14 +1318,15 @@
         "package_release"
       ],
       "alignment": "aligned",
-      "reason": "Both package retained release evidence with the shared archive service.",
+      "reason": "Both retain electrical requirements, logs and waveform dependencies with native evidence and verify the restored source.",
       "scope": "core",
       "gaps": [],
       "constraints": [
         "MCP fixes output to a fresh build/packages/<package_id>.zip and requires allow-exports; CLI chooses the archive/output path."
       ],
       "parity_tests": [
-        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity"
+        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity",
+        "tests.test_release_electrical.ReleaseElectricalTests.test_release_electrical_cli_mcp_roundtrip_and_missing_evidence"
       ]
     },
     {
@@ -1333,7 +1345,8 @@
         "MCP archive inputs must be allowed repository build artifacts; CLI accepts its explicit archive path."
       ],
       "parity_tests": [
-        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity"
+        "tests.test_artifact_parity.ArtifactParityTests.test_release_readiness_and_archive_lifecycle_parity",
+        "tests.test_release_electrical.ReleaseElectricalTests.test_release_electrical_cli_mcp_roundtrip_and_missing_evidence"
       ]
     },
     {
@@ -1824,6 +1837,8 @@
     {
       "id": "hosted-ci-orchestration",
       "cli": [
+        "kicad_tooling.ci_hosted candidate",
+        "kicad_tooling.ci_hosted electrical",
         "kicad_tooling.ci_hosted gate",
         "kicad_tooling.ci_hosted matrix",
         "kicad_tooling.ci_hosted native",

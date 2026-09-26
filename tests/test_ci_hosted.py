@@ -16,18 +16,23 @@ from unittest.mock import patch
 
 from kicad_tooling.ci_hosted import (
     HostedLog,
+    electrical_lane,
     gate_result,
     markdown_checks,
     matrix_lane,
+    native_lane,
     plan_lane,
     plan_scope,
     portable_lane,
     release_fixture,
     release_lane,
 )
+from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.discovery import load_registry
+from kicad_tooling.hwrepo.electrical_setup import initialize as init_electrical
 from kicad_tooling.hwrepo.initialization import initialize
 from kicad_tooling.hwrepo.layout import RepositoryLayout, layout
+from kicad_tooling.hwrepo.models import AnalysisNotApplicable, ElectricalAnalysisContract
 from kicad_tooling.hwrepo.sharding import ProjectShard, shard_projects
 from kicad_tooling.hwrepo.template import preflight
 from tests.support import TEST_ROOT, initialize_git, reference_root
@@ -146,6 +151,52 @@ class HostedCiTests(unittest.TestCase):
         self.assertIn("err", (log.directory / "probe.stderr.log").read_text())
         self.assertIn("out", live.getvalue())
         self.assertIn('"exit_code": 7', log.events.read_text())
+
+    def test_electrical_lane_is_explicit_about_missing_and_pending_requirements(self) -> None:
+        log = HostedLog(self.root, "electrical")
+        electrical_lane(self.root, "controller", log)
+        self.assertIn("NOT_CONFIGURED", log.events.read_text())
+        with self.assertRaisesRegex(ValueError, "no electrical contract"):
+            electrical_lane(self.root, "controller", log, required=True)
+        init_electrical(self.root, "controller", "47")
+        with self.assertRaisesRegex(ValueError, "unresolved electrical requirements"):
+            electrical_lane(self.root, "controller", log)
+
+    def test_declared_applicability_runs_in_hosted_lane_without_native_tools(self) -> None:
+        setup = init_electrical(self.root, "controller", "47")
+        na = AnalysisNotApplicable(mode="not_applicable", reason="Synthetic orchestration test only")
+        write_model(self.root / setup.contract, ElectricalAnalysisContract(
+            project_id="controller", ngspice_version="47", grounding=na, power=na,
+            high_frequency=na,
+        ))
+        log = HostedLog(self.root, "electrical")
+        electrical_lane(self.root, "controller", log)
+        report = json.loads((self.root / "build/electrical-controller.json").read_text())
+        self.assertEqual(report["status"], "PASS")
+        self.assertEqual({row["status"] for row in report["checks"]}, {"NOT_APPLICABLE"})
+        from kicad_tooling.ci_matrix import build_matrix
+
+        self.assertTrue(build_matrix(self.root, ("controller",)).include[0].electrical)
+
+    @unittest.skipIf(sys.platform == "win32", "Hosted native orchestration uses a Unix runner")
+    def test_native_lane_cannot_pass_when_declared_electrical_fails(self) -> None:
+        initialize_git(self.root)
+        subprocess.run(("git", "-C", str(self.root), "-c", "user.name=Test fixture",
+                        "-c", "user.email=fixture@example.invalid", "commit", "-qm",
+                        "Synthetic source"), check=True, capture_output=True)
+        log = HostedLog(self.root, "native")
+        with (patch.object(log, "run") as run,
+              patch("kicad_tooling.ci_hosted.electrical_lane",
+                    side_effect=RuntimeError("Electrical measurement failed")) as electrical,
+              self.assertRaisesRegex(RuntimeError, "Electrical measurement failed")):
+            native_lane(self.root, project="controller", image="fixture@sha256:" + "a" * 64,
+                        pr_head="", fault_probes=True, log=log)
+        electrical.assert_called_once_with(
+            self.root, "controller", log, native_summary="build/review/controller/summary.json")
+        stages = [call.args[0] for call in run.call_args_list]
+        self.assertIn("native-check", stages)
+        self.assertNotIn("fault-probes", stages)
+        self.assertEqual(stages[-2:], ["source-diff", "index-diff"])
 
     def test_release_rehearsal_restores_examples_after_adoption_without_copying_live_data(self) -> None:
         self.assertEqual(initialize(self.root, "adopted-team").status, "PASS")

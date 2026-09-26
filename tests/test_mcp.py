@@ -19,6 +19,7 @@ from pydantic import ValidationError
 from kicad_tooling.hwrepo.contracts import read_model
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
+    DEFAULT_THREE_D_VIEWS,
     McpProjectReport,
     ProjectManifest,
     ProjectTestContract,
@@ -556,8 +557,8 @@ class McpTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(snapshot(self.root), before)
 
     async def test_3d_export_handoff_keeps_review_and_rejects_unsafe_or_used_output(self) -> None:
-        payloads = {"top.png": test_visualize.PNG, "angled.png": test_visualize.PNG,
-                    "board.step": test_visualize.STEP, "board.glb": test_visualize.GLB}
+        payloads = {f"{name}.png": test_visualize.PNG for name in DEFAULT_THREE_D_VIEWS}
+        payloads.update({"board.step": test_visualize.STEP, "board.glb": test_visualize.GLB})
 
         def native(_root, output, _config, selected, cli, args, timeout=300):
             self.assertEqual(selected, "local")
@@ -574,7 +575,13 @@ class McpTests(unittest.IsolatedAsyncioTestCase):
         ), mode="legacy") as client:
             tool = next(item for item in (await client.list_tools()).tools if item.name == "export_3d")
             self.assertFalse(tool.annotations.read_only_hint)
-            self.assertEqual(set(tool.input_schema["properties"]), {"project_id", "view_id", "runner", "assembly_variant"})
+            self.assertEqual(set(tool.input_schema["properties"]),
+                             {"project_id", "view_id", "runner", "assembly_variant", "views"})
+            view_schema = tool.input_schema["properties"]["views"]
+            array_schema = next(item for item in view_schema["anyOf"]
+                                if item.get("type") == "array")
+            self.assertEqual(set(array_schema["items"]["enum"]),
+                             set(DEFAULT_THREE_D_VIEWS))
             with (patch("kicad_tooling.hwrepo.three_d.doctor", return_value=test_visualize.passing_doctor()),
                   patch("kicad_tooling.hwrepo.three_d._run_kicad", side_effect=native)):
                 report = self.structured(await client.call_tool("export_3d", options))
@@ -589,6 +596,7 @@ class McpTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(json.loads(saved["text"])["models"]["status"], "REVIEW")
             with patch("kicad_tooling.hwrepo.three_d.generate") as generate:
                 for update in ({}, {"view_id": "../escape"}, {"view_id": "/tmp/escape"},
+                               {"view_id": "duplicate-views", "views": ["top", "top"]},
                                {"view_id": "invalid-runner", "runner": "arbitrary-command"}):
                     rejected = await client.call_tool("export_3d", options | update)
                     self.assertTrue(rejected.is_error, rejected.content)

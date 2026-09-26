@@ -1,5 +1,8 @@
 # Rehearse the template and tooling together
 
+For a persistent DUMP zone, third-party source snapshots and larger repeatable
+batches, use the [corpus rehearsal guide](CORPUS_REHEARSAL.md).
+
 Keep the two checkouts adjacent. The template holds engineering source and
 instructions; this repository holds the installed Python services and their
 regression suite. The normal engineer environment installs the template's exact

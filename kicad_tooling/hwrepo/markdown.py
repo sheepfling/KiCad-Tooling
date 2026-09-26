@@ -136,7 +136,8 @@ def imported_project_readme(
     return document
 
 
-def release_review(release_id: str, source_commit: str, release_class: str) -> Document:
+def release_review(release_id: str, source_commit: str, release_class: str,
+                   electrical: Iterable[tuple[str, str]] = ()) -> Document:
     document = Document()
     document.add_heading(release_id)
     paragraph(
@@ -151,8 +152,19 @@ def release_review(release_id: str, source_commit: str, release_class: str) -> D
         "Candidate for engineering review. This report records executed checks; "
         "it is not human approval."
     )
+    rows = list(electrical)
+    if rows:
+        document.add_heading("Electrical coverage", level=2)
+        document.add_table(["Project", "Evidence"], rows)
+        document.add_paragraph(
+            "PASS covers the committed requirements and their recorded applicability decisions. "
+            "NOT_CONFIGURED means electrical analysis was not assessed; it is allowed only "
+            "for engineering review. Review missing requirements before any build release."
+        )
     document.add_paragraph(
         "Manufacturing and assembly files require review of layers, origin, "
-        "population, and supplier requirements."
+        "population, and supplier requirements. Electrical models do not establish physical "
+        "grounding, thermal margin, transient behavior, signal integrity or EMC. Retain the "
+        "responsible engineers' design reviews and applicable measurements separately."
     )
     return document

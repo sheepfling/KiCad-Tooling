@@ -22,6 +22,8 @@ from kicad_tooling.hwrepo.exports import (
 )
 from kicad_tooling.hwrepo.foreign_pcb import ForeignPcbReport, convert_pcb
 from kicad_tooling.hwrepo.models import (
+    DEFAULT_THREE_D_VIEWS,
+    THREE_D_VIEWS,
     CommandEvidence,
     EnvironmentCheck,
     ReleaseArtifactKind,
@@ -41,6 +43,27 @@ from tests.support import reference_root
 
 
 class ExportExtensionTests(unittest.TestCase):
+    def test_3d_export_defaults_to_six_sides_and_four_angle_presets(self) -> None:
+        specifications = _specifications("projects/board/kicad/board.kicad_pcb")
+        image_names = tuple(name for name, filename, _ in specifications if filename.endswith(".png"))
+        self.assertEqual(image_names, DEFAULT_THREE_D_VIEWS)
+        self.assertEqual(len(THREE_D_VIEWS), 10)
+        by_name = {name: args for name, _, args in specifications}
+        for side in ("top", "bottom", "left", "right", "front", "back"):
+            args = by_name[side]
+            self.assertEqual(args[args.index("--side") + 1], side)
+            self.assertNotIn("--rotate", args)
+        for name, angle in (("angled", "45,0,0"), ("angled-90", "45,0,90"),
+                            ("angled-180", "45,0,180"), ("angled-270", "45,0,270")):
+            args = by_name[name]
+            self.assertEqual(args[args.index("--rotate") + 1], angle)
+            self.assertIn("--perspective", args)
+
+        selected = _specifications("projects/board/kicad/board.kicad_pcb",
+                                   views=("back", "angled-90"))
+        self.assertEqual(tuple(name for name, filename, _ in selected if filename.endswith(".png")),
+                         ("back", "angled-90"))
+
     def test_typed_settings_roundtrip_and_reject_invalid_formats(self) -> None:
         settings = ReleaseExportSettings(
             gerber_layers=("F.Cu", "B.Cu", "Edge.Cuts"),
