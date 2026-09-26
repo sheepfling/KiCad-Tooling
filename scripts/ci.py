@@ -356,6 +356,7 @@ def main() -> int:
             "ruff-format",
             (
                 sys.executable,
+                "-I",
                 "-m",
                 "ruff",
                 "format",
@@ -371,6 +372,7 @@ def main() -> int:
             "ruff",
             (
                 sys.executable,
+                "-I",
                 "-m",
                 "ruff",
                 "check",
