@@ -1,4 +1,5 @@
 """Native Markdown dependency execution stays behind the installed package adapter."""
+
 from __future__ import annotations
 
 import os
@@ -21,9 +22,14 @@ class MarkdownRunnerTests(unittest.TestCase):
                 binary = base / name
                 binary.touch()
                 installed = Mock()
-                installed.files = [PackagePath(f"../../../scripts/{name}"), PackagePath("rumdl/__init__.py")]
+                installed.files = [
+                    PackagePath(f"../../../scripts/{name}"),
+                    PackagePath("rumdl/__init__.py"),
+                ]
                 installed.locate_file.return_value = binary
-                with patch("kicad_tooling.markdown_check.distribution", return_value=installed) as lookup:
+                with patch(
+                    "kicad_tooling.markdown_check.distribution", return_value=installed
+                ) as lookup:
                     self.assertEqual(executable(), binary)
                 lookup.assert_called_once_with("rumdl")
                 installed.locate_file.assert_called_once_with(installed.files[0])
@@ -33,10 +39,14 @@ class MarkdownRunnerTests(unittest.TestCase):
             with self.subTest(files=files):
                 installed = Mock(files=files)
                 installed.locate_file.return_value = Path("/missing/rumdl")
-                with (patch("kicad_tooling.markdown_check.distribution", return_value=installed),
-                      self.assertRaisesRegex(ValueError, "exactly one")):
+                with (
+                    patch("kicad_tooling.markdown_check.distribution", return_value=installed),
+                    self.assertRaisesRegex(ValueError, "exactly one"),
+                ):
                     executable()
-        with patch("kicad_tooling.markdown_check.distribution", side_effect=PackageNotFoundError("rumdl")):
+        with patch(
+            "kicad_tooling.markdown_check.distribution", side_effect=PackageNotFoundError("rumdl")
+        ):
             self.assertEqual(run(["--version"]), 127)
 
     def test_module_ignores_checkout_shadow_and_ambient_python_path(self) -> None:
@@ -44,8 +54,13 @@ class MarkdownRunnerTests(unittest.TestCase):
             caller = Path(temporary)
             (caller / "kicad_tooling.py").write_text("raise RuntimeError('shadow import')\n")
             (caller / "rumdl").write_text("not the installed executable\n")
-            result = subprocess.run((sys.executable, "-I", "-m", "kicad_tooling.markdown_check", "--version"),
-                                    cwd=caller, env=os.environ | {"PYTHONPATH": str(caller), "PATH": str(caller)},
-                                    capture_output=True, text=True, check=False)
+            result = subprocess.run(
+                (sys.executable, "-I", "-m", "kicad_tooling.markdown_check", "--version"),
+                cwd=caller,
+                env=os.environ | {"PYTHONPATH": str(caller), "PATH": str(caller)},
+                capture_output=True,
+                text=True,
+                check=False,
+            )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.strip(), "rumdl 0.2.77")

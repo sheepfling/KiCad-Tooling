@@ -1,4 +1,5 @@
 """Regression checks for variant-bound exports and guarded foreign PCB conversion."""
+
 from __future__ import annotations
 
 import csv
@@ -45,7 +46,9 @@ from tests.support import reference_root
 class ExportExtensionTests(unittest.TestCase):
     def test_3d_export_defaults_to_six_sides_and_four_angle_presets(self) -> None:
         specifications = _specifications("projects/board/kicad/board.kicad_pcb")
-        image_names = tuple(name for name, filename, _ in specifications if filename.endswith(".png"))
+        image_names = tuple(
+            name for name, filename, _ in specifications if filename.endswith(".png")
+        )
         self.assertEqual(image_names, DEFAULT_THREE_D_VIEWS)
         self.assertEqual(len(THREE_D_VIEWS), 10)
         by_name = {name: args for name, _, args in specifications}
@@ -53,23 +56,33 @@ class ExportExtensionTests(unittest.TestCase):
             args = by_name[side]
             self.assertEqual(args[args.index("--side") + 1], side)
             self.assertNotIn("--rotate", args)
-        for name, angle in (("angled", "45,0,0"), ("angled-90", "45,0,90"),
-                            ("angled-180", "45,0,180"), ("angled-270", "45,0,270")):
+        for name, angle in (
+            ("angled", "45,0,0"),
+            ("angled-90", "45,0,90"),
+            ("angled-180", "45,0,180"),
+            ("angled-270", "45,0,270"),
+        ):
             args = by_name[name]
             self.assertEqual(args[args.index("--rotate") + 1], angle)
             self.assertIn("--perspective", args)
 
-        selected = _specifications("projects/board/kicad/board.kicad_pcb",
-                                   views=("back", "angled-90"))
-        self.assertEqual(tuple(name for name, filename, _ in selected if filename.endswith(".png")),
-                         ("back", "angled-90"))
+        selected = _specifications(
+            "projects/board/kicad/board.kicad_pcb", views=("back", "angled-90")
+        )
+        self.assertEqual(
+            tuple(name for name, filename, _ in selected if filename.endswith(".png")),
+            ("back", "angled-90"),
+        )
 
     def test_typed_settings_roundtrip_and_reject_invalid_formats(self) -> None:
         settings = ReleaseExportSettings(
             gerber_layers=("F.Cu", "B.Cu", "Edge.Cuts"),
-            assembly_variant="Pilot A", supplier_formats=("odb", "ipc2581", "ipcd356"),
+            assembly_variant="Pilot A",
+            supplier_formats=("odb", "ipc2581", "ipcd356"),
         )
-        self.assertEqual(ReleaseExportSettings.model_validate_json(settings.model_dump_json()), settings)
+        self.assertEqual(
+            ReleaseExportSettings.model_validate_json(settings.model_dump_json()), settings
+        )
         for patch_values in (
             {"supplier_formats": ["odb", "odb"]},
             {"supplier_formats": ["unknown"]},
@@ -85,10 +98,21 @@ class ExportExtensionTests(unittest.TestCase):
             supplier_formats=("odb", "ipc2581", "ipcd356"),
         )
         commands = command_arguments(settings, Path("/work/board"), Path("/output"), "Pilot A")
-        self.assertEqual(set(commands), {
-            "gerbers", "drill", "position", "bom", "schematic_pdf", "pcb_pdf",
-            "board_stats", "odb", "ipc2581", "ipcd356",
-        })
+        self.assertEqual(
+            set(commands),
+            {
+                "gerbers",
+                "drill",
+                "position",
+                "bom",
+                "schematic_pdf",
+                "pcb_pdf",
+                "board_stats",
+                "odb",
+                "ipc2581",
+                "ipcd356",
+            },
+        )
         for name in ("gerbers", "position", "bom", "schematic_pdf", "pcb_pdf", "odb", "ipc2581"):
             with self.subTest(name=name):
                 self.assertEqual(commands[name].count("--variant"), 1)
@@ -114,12 +138,18 @@ class ExportExtensionTests(unittest.TestCase):
 
     def test_release_artifacts_identify_review_packet_and_bom(self) -> None:
         output = Path("/release")
-        self.assertEqual(artifact_kind(output / "exports/board/review/schematic.pdf", output),
-                         ReleaseArtifactKind.SCHEMATIC_EXPORT)
-        self.assertEqual(artifact_kind(output / "exports/board/review/pcb.pdf", output),
-                         ReleaseArtifactKind.PCB_EXPORT)
-        self.assertEqual(artifact_kind(output / "exports/board/assembly/bom.csv", output),
-                         ReleaseArtifactKind.BOM)
+        self.assertEqual(
+            artifact_kind(output / "exports/board/review/schematic.pdf", output),
+            ReleaseArtifactKind.SCHEMATIC_EXPORT,
+        )
+        self.assertEqual(
+            artifact_kind(output / "exports/board/review/pcb.pdf", output),
+            ReleaseArtifactKind.PCB_EXPORT,
+        )
+        self.assertEqual(
+            artifact_kind(output / "exports/board/assembly/bom.csv", output),
+            ReleaseArtifactKind.BOM,
+        )
 
     def test_review_outputs_require_real_pdf_json_and_supplier_archives(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -142,31 +172,61 @@ class ExportExtensionTests(unittest.TestCase):
     def test_product_board_variant_mapping_is_scoped_and_conflicts_fail(self) -> None:
         repository = load_repository(reference_root())
         product = repository.products[0]
-        standard = product.variants[0].model_copy(update={
-            "board_variants": {"arduino-uno-status-led": "Pilot A"},
-        })
-        other = product.variants[1].model_copy(update={
-            "board_variants": {"arduino-uno-status-led": "Pilot B"},
-        })
-        edited = product.model_copy(update={"variants": (standard, other, *product.variants[2:])})
-        self.assertFalse(validate_product(reference_root(), edited, repository.parts,
-                                          repository.interfaces, repository.projects))
-        selections = (
-            ReleaseVariant(product=edited.id, product_revision=edited.revision,
-                           variant=standard.id, variant_revision=standard.revision),
-            ReleaseVariant(product=edited.id, product_revision=edited.revision,
-                           variant=other.id, variant_revision=other.revision),
+        standard = product.variants[0].model_copy(
+            update={
+                "board_variants": {"arduino-uno-status-led": "Pilot A"},
+            }
         )
-        self.assertEqual(selected_board_variants((edited,), selections[:1],
-                                                  ("arduino-uno-status-led",)),
-                         {"arduino-uno-status-led": "Pilot A"})
+        other = product.variants[1].model_copy(
+            update={
+                "board_variants": {"arduino-uno-status-led": "Pilot B"},
+            }
+        )
+        edited = product.model_copy(update={"variants": (standard, other, *product.variants[2:])})
+        self.assertFalse(
+            validate_product(
+                reference_root(),
+                edited,
+                repository.parts,
+                repository.interfaces,
+                repository.projects,
+            )
+        )
+        selections = (
+            ReleaseVariant(
+                product=edited.id,
+                product_revision=edited.revision,
+                variant=standard.id,
+                variant_revision=standard.revision,
+            ),
+            ReleaseVariant(
+                product=edited.id,
+                product_revision=edited.revision,
+                variant=other.id,
+                variant_revision=other.revision,
+            ),
+        )
+        self.assertEqual(
+            selected_board_variants((edited,), selections[:1], ("arduino-uno-status-led",)),
+            {"arduino-uno-status-led": "Pilot A"},
+        )
         with self.assertRaisesRegex(ValueError, "Conflicting KiCad assembly variants"):
             selected_board_variants((edited,), selections, ("arduino-uno-status-led",))
         excluded = standard.model_copy(update={"board_variants": {"not-a-board": "Pilot A"}})
         invalid = edited.model_copy(update={"variants": (excluded, *edited.variants[1:])})
-        self.assertIn("VARIANT_BOARD", {issue.code for issue in validate_product(
-            reference_root(), invalid, repository.parts, repository.interfaces, repository.projects,
-        )})
+        self.assertIn(
+            "VARIANT_BOARD",
+            {
+                issue.code
+                for issue in validate_product(
+                    reference_root(),
+                    invalid,
+                    repository.parts,
+                    repository.interfaces,
+                    repository.projects,
+                )
+            },
+        )
 
     def test_product_population_must_match_native_fitted_part_id_rows(self) -> None:
         product = load_repository(reference_root()).products[0]
@@ -176,8 +236,12 @@ class ExportExtensionTests(unittest.TestCase):
         self.assertIsNotNone(expected)
         assert expected is not None
         self.assertEqual(set(expected), {"J1", "D1"})
-        choice = ReleaseVariant(product=edited.id, product_revision=edited.revision,
-                                variant=standard.id, variant_revision=standard.revision)
+        choice = ReleaseVariant(
+            product=edited.id,
+            product_revision=edited.revision,
+            variant=standard.id,
+            variant_revision=standard.revision,
+        )
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "bom.csv"
 
@@ -209,10 +273,20 @@ class ForeignPcbConversionTests(unittest.TestCase):
 
     @staticmethod
     def doctor_report() -> TemplateDoctorReport:
-        return TemplateDoctorReport(native_requested=True, status="PASS", checks=(
-            EnvironmentCheck(id="native-runner", required=True, status="PASS",
-                             expected="exact", observed="local", next_action="ready"),
-        ))
+        return TemplateDoctorReport(
+            native_requested=True,
+            status="PASS",
+            checks=(
+                EnvironmentCheck(
+                    id="native-runner",
+                    required=True,
+                    status="PASS",
+                    expected="exact",
+                    observed="local",
+                    next_action="ready",
+                ),
+            ),
+        )
 
     def test_success_keeps_source_and_repository_untouched_until_reviewed_import(self) -> None:
         before = self.source.read_bytes()
@@ -220,7 +294,9 @@ class ForeignPcbConversionTests(unittest.TestCase):
         def run(_root: Path, argv: tuple[str, ...], timeout: int) -> CommandEvidence:
             self.assertEqual(timeout, 600)
             if argv[-1] == "version":
-                return CommandEvidence(argv=argv, started_utc="now", returncode=0, stdout="10.0.5\n")
+                return CommandEvidence(
+                    argv=argv, started_utc="now", returncode=0, stdout="10.0.5\n"
+                )
             board = Path(argv[argv.index("--output") + 1])
             board.write_text("(kicad_pcb (version 20260206))")
             Path(argv[argv.index("--report-file") + 1]).write_text(
@@ -228,9 +304,13 @@ class ForeignPcbConversionTests(unittest.TestCase):
             )
             return CommandEvidence(argv=argv, started_utc="now", returncode=0)
 
-        with (patch("kicad_tooling.hwrepo.foreign_pcb.doctor", return_value=self.doctor_report()),
-              patch("kicad_tooling.hwrepo.foreign_pcb.cli_executable", return_value="/fake/kicad-cli"),
-              patch("kicad_tooling.hwrepo.foreign_pcb.run_command", side_effect=run)):
+        with (
+            patch("kicad_tooling.hwrepo.foreign_pcb.doctor", return_value=self.doctor_report()),
+            patch(
+                "kicad_tooling.hwrepo.foreign_pcb.cli_executable", return_value="/fake/kicad-cli"
+            ),
+            patch("kicad_tooling.hwrepo.foreign_pcb.run_command", side_effect=run),
+        ):
             report = convert_pcb(self.root, self.source, "vendor-board", "kicad-10.0.5")
         self.assertEqual(report.status, "PASS", report.error)
         self.assertEqual(report.runner, "local")
@@ -246,10 +326,24 @@ class ForeignPcbConversionTests(unittest.TestCase):
         self.assertEqual(read_model(receipt / "conversion.json", ForeignPcbReport), report)
 
     def test_invalid_source_returns_json_failure_with_receipt(self) -> None:
-        command = (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
-                   "--root", str(self.root), "--project-id", "vendor-board",
-                   "--toolchain", "kicad-10.0.5", "--source", str(self.source.with_suffix(".missing")),
-                   "--format", "json")
+        command = (
+            sys.executable,
+            "-I",
+            "-B",
+            "-m",
+            "kicad_tooling.template",
+            "convert-pcb",
+            "--root",
+            str(self.root),
+            "--project-id",
+            "vendor-board",
+            "--toolchain",
+            "kicad-10.0.5",
+            "--source",
+            str(self.source.with_suffix(".missing")),
+            "--format",
+            "json",
+        )
         result = subprocess.run(command, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 1, result.stderr)
         report = ForeignPcbReport.model_validate_json(result.stdout)
@@ -260,12 +354,29 @@ class ForeignPcbConversionTests(unittest.TestCase):
     def test_invalid_project_id_still_returns_typed_json_and_a_receipt(self) -> None:
         for project_id in ("bad/id", "with space", ""):
             with self.subTest(project_id=project_id):
-                result = subprocess.run((
-                    sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
-                    "--root", str(self.root), "--project-id", project_id,
-                    "--toolchain", "kicad-10.0.5", "--source", str(self.source),
-                    "--format", "json",
-                ), capture_output=True, text=True, check=False)
+                result = subprocess.run(
+                    (
+                        sys.executable,
+                        "-I",
+                        "-B",
+                        "-m",
+                        "kicad_tooling.template",
+                        "convert-pcb",
+                        "--root",
+                        str(self.root),
+                        "--project-id",
+                        project_id,
+                        "--toolchain",
+                        "kicad-10.0.5",
+                        "--source",
+                        str(self.source),
+                        "--format",
+                        "json",
+                    ),
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
                 self.assertEqual(result.returncode, 1, result.stderr)
                 report = ForeignPcbReport.model_validate_json(result.stdout)
                 self.assertEqual(report.status, "FAIL")
@@ -275,12 +386,29 @@ class ForeignPcbConversionTests(unittest.TestCase):
         self.assertFalse((self.root / "projects/vendor-board").exists())
 
     def test_invalid_toolchain_id_still_returns_typed_json_and_a_receipt(self) -> None:
-        result = subprocess.run((
-            sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "convert-pcb",
-            "--root", str(self.root), "--project-id", "vendor-board",
-            "--toolchain", "bad/id", "--source", str(self.source),
-            "--format", "json",
-        ), capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.template",
+                "convert-pcb",
+                "--root",
+                str(self.root),
+                "--project-id",
+                "vendor-board",
+                "--toolchain",
+                "bad/id",
+                "--source",
+                str(self.source),
+                "--format",
+                "json",
+            ),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         self.assertEqual(result.returncode, 1, result.stderr)
         report = ForeignPcbReport.model_validate_json(result.stdout)
         self.assertEqual(report.status, "FAIL")

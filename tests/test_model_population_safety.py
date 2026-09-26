@@ -1,4 +1,5 @@
 """Reviewed model-population plans bind all inputs and recover partial write failures."""
+
 from __future__ import annotations
 
 import hashlib
@@ -42,9 +43,12 @@ class ModelPopulationSafetyTests(unittest.TestCase):
         self.model = self.root / MODEL
         self.model.parent.mkdir(parents=True)
         self.model.write_bytes(b"ISO-10303-21;\nEND-ISO-10303-21;\n")
-        self.spec = ModelMap(project_id=PROJECT, board_sha256=digest(self.board.read_bytes()),
-                             manifest_sha256=digest(self.manifest.read_bytes()),
-                             assignments=(ModelMapAssignment(reference="J1", model=MODEL),))
+        self.spec = ModelMap(
+            project_id=PROJECT,
+            board_sha256=digest(self.board.read_bytes()),
+            manifest_sha256=digest(self.manifest.read_bytes()),
+            assignments=(ModelMapAssignment(reference="J1", model=MODEL),),
+        )
 
     def plan(self) -> ModelPopulationReport:
         result = populate_models(self.root, PROJECT, self.spec)
@@ -99,13 +103,20 @@ class ModelPopulationSafetyTests(unittest.TestCase):
         alternate = self.model.with_name("Alternate.step")
         alternate.write_bytes(self.model.read_bytes())
         for assignment in (
-            ModelMapAssignment(reference="R1", model=MODEL, model_sha256=digest(self.model.read_bytes())),
-            ModelMapAssignment(reference="J1", model=alternate.relative_to(self.root).as_posix(),
-                               model_sha256=digest(alternate.read_bytes())),
+            ModelMapAssignment(
+                reference="R1", model=MODEL, model_sha256=digest(self.model.read_bytes())
+            ),
+            ModelMapAssignment(
+                reference="J1",
+                model=alternate.relative_to(self.root).as_posix(),
+                model_sha256=digest(alternate.read_bytes()),
+            ),
         ):
             changed = self.spec.model_copy(update={"assignments": (assignment,)})
             with self.subTest(assignment=assignment):
-                result = populate_models(self.root, PROJECT, changed, apply=True, reviewed_plan=plan)
+                result = populate_models(
+                    self.root, PROJECT, changed, apply=True, reviewed_plan=plan
+                )
                 self.assertEqual(result.status, "FAIL")
                 self.assertIn("changed since the reviewed plan", result.error or "")
                 self.assertEqual(self.board.read_bytes(), original_board)
@@ -124,8 +135,13 @@ class ModelPopulationSafetyTests(unittest.TestCase):
             self.skipTest(str(exc))
         for apply in (False, True):
             with self.subTest(apply=apply):
-                result = populate_models(self.root, PROJECT, self.spec, apply=apply,
-                                         reviewed_plan=plan if apply else None)
+                result = populate_models(
+                    self.root,
+                    PROJECT,
+                    self.spec,
+                    apply=apply,
+                    reviewed_plan=plan if apply else None,
+                )
                 self.assertEqual(result.status, "FAIL")
                 self.assertIn("Linked repository path", result.error or "")
                 self.assertIsNone(result.board_sha256)
@@ -142,7 +158,9 @@ class ModelPopulationSafetyTests(unittest.TestCase):
             plan = self.plan()
             failure_seen = False
 
-            def fail_manifest_once(path: Path, value: bytes, after_write: bool = fail_after_write) -> None:
+            def fail_manifest_once(
+                path: Path, value: bytes, after_write: bool = fail_after_write
+            ) -> None:
                 nonlocal failure_seen
                 if path == self.manifest and not failure_seen:
                     failure_seen = True
@@ -151,10 +169,16 @@ class ModelPopulationSafetyTests(unittest.TestCase):
                     raise OSError("injected manifest publication failure")
                 original_replace(path, value)
 
-            with self.subTest(after_write=fail_after_write), patch(
-                "kicad_tooling.hwrepo.model_population._replace_bytes", side_effect=fail_manifest_once,
+            with (
+                self.subTest(after_write=fail_after_write),
+                patch(
+                    "kicad_tooling.hwrepo.model_population._replace_bytes",
+                    side_effect=fail_manifest_once,
+                ),
             ):
-                result = populate_models(self.root, PROJECT, self.spec, apply=True, reviewed_plan=plan)
+                result = populate_models(
+                    self.root, PROJECT, self.spec, apply=True, reviewed_plan=plan
+                )
             self.assertTrue(failure_seen)
             self.assertEqual(result.status, "FAIL")
             self.assertIn("injected manifest publication failure", result.error or "")
@@ -176,7 +200,10 @@ class ModelPopulationSafetyTests(unittest.TestCase):
                 raise OSError("external edit arrived before manifest publication")
             original_replace(path, value)
 
-        with patch("kicad_tooling.hwrepo.model_population._replace_bytes", side_effect=interfere_with_manifest):
+        with patch(
+            "kicad_tooling.hwrepo.model_population._replace_bytes",
+            side_effect=interfere_with_manifest,
+        ):
             result = populate_models(self.root, PROJECT, self.spec, apply=True, reviewed_plan=plan)
         self.assertEqual(result.status, "FAIL")
         self.assertEqual(self.board.read_bytes(), independent_board)
@@ -184,38 +211,54 @@ class ModelPopulationSafetyTests(unittest.TestCase):
 
     def test_typed_preview_apply_changes_only_requested_assignment_and_inventory(self) -> None:
         def snapshot() -> dict[str, str]:
-            return {path.relative_to(self.root).as_posix(): digest(path.read_bytes())
-                    for path in self.root.rglob("*") if path.is_file()
-                    and "build" not in path.relative_to(self.root).parts}
+            return {
+                path.relative_to(self.root).as_posix(): digest(path.read_bytes())
+                for path in self.root.rglob("*")
+                if path.is_file() and "build" not in path.relative_to(self.root).parts
+            }
 
         original_sources = snapshot()
         original_board = self.board.read_bytes()
         original_manifest = read_model(self.manifest, ProjectManifest)
         plan = self.plan()
         saved_spec = read_model(Path(plan.run_directory) / "locked-model-map.json", ModelMap)
-        saved_plan = read_model(Path(plan.run_directory) / "model-population.json", ModelPopulationReport)
+        saved_plan = read_model(
+            Path(plan.run_directory) / "model-population.json", ModelPopulationReport
+        )
         self.assertEqual(saved_spec, self.spec)
         self.assertEqual(saved_plan, plan)
         self.assertEqual(snapshot(), original_sources)
-        result = populate_models(self.root, PROJECT, saved_spec, apply=True, reviewed_plan=saved_plan)
+        result = populate_models(
+            self.root, PROJECT, saved_spec, apply=True, reviewed_plan=saved_plan
+        )
         self.assertEqual(result.status, "APPLIED", result.error)
         self.assertEqual(result.board_diff, plan.board_diff)
         self.assertEqual(result.manifest_diff, plan.manifest_diff)
         changed = snapshot()
-        self.assertEqual({name for name in original_sources if original_sources[name] != changed[name]},
-                         {BOARD, MANIFEST})
+        self.assertEqual(
+            {name for name in original_sources if original_sources[name] != changed[name]},
+            {BOARD, MANIFEST},
+        )
         after = self.board.read_bytes()
         untouched_marker = b'  (footprint "StatusLedTraining:R_Axial_10mm"'
-        self.assertEqual(after[after.index(untouched_marker):],
-                         original_board[original_board.index(untouched_marker):])
+        self.assertEqual(
+            after[after.index(untouched_marker) :],
+            original_board[original_board.index(untouched_marker) :],
+        )
         prefix_marker = b'      (layers "*.Cu" "*.Mask") (net 3 "/GND"))'
-        self.assertEqual(after.split(prefix_marker, 1)[0], original_board.split(prefix_marker, 1)[0])
+        self.assertEqual(
+            after.split(prefix_marker, 1)[0], original_board.split(prefix_marker, 1)[0]
+        )
         self.assertEqual(after.count(b'(model "${KIPRJMOD}/models/Header_1x02.step"'), 1)
         manifest = read_model(self.manifest, ProjectManifest)
-        self.assertEqual(manifest.model_dump(exclude={"required_inputs"}),
-                         original_manifest.model_dump(exclude={"required_inputs"}))
-        self.assertEqual(set(manifest.required_inputs),
-                         set(original_manifest.required_inputs) | {"kicad/models/Header_1x02.step"})
+        self.assertEqual(
+            manifest.model_dump(exclude={"required_inputs"}),
+            original_manifest.model_dump(exclude={"required_inputs"}),
+        )
+        self.assertEqual(
+            set(manifest.required_inputs),
+            set(original_manifest.required_inputs) | {"kicad/models/Header_1x02.step"},
+        )
         self.assertIn("inspect", result.review_notice.lower())
         self.assertTrue(any("kicad_tooling.verify" in command for command in result.next_commands))
 

@@ -1,4 +1,5 @@
 """Bounded foreign-board conversion for the optional MCP adapter."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -24,12 +25,19 @@ def source_path(root: Path, source: str, import_roots: tuple[Path, ...]) -> Path
             if path.exists() and not path.is_file():
                 raise ValueError("Conversion source must be a regular file")
             return path
-    raise ValueError("Conversion source is outside the checkout and configured --import-root directories")
+    raise ValueError(
+        "Conversion source is outside the checkout and configured --import-root directories"
+    )
 
 
 def convert_pcb(
-    root: Path, source: str, project_id: str, toolchain_id: str,
-    input_format: ForeignFormat = "auto", runner: NativeRunner = "auto", *,
+    root: Path,
+    source: str,
+    project_id: str,
+    toolchain_id: str,
+    input_format: ForeignFormat = "auto",
+    runner: NativeRunner = "auto",
+    *,
     import_roots: tuple[Path, ...] = (),
 ) -> ForeignPcbReport:
     """Convert into a fresh ignored receipt; a separate reviewed import is required."""
@@ -38,5 +46,6 @@ def convert_pcb(
         raise ValueError(f"Unknown native runner: {runner}")
     selected = source_path(root, source, import_roots)
     repo_path(root, "build/diagnostics")
-    return foreign_pcb.convert_pcb(root, selected, project_id, toolchain_id,
-                                  input_format, runner, cli="kicad-cli")
+    return foreign_pcb.convert_pcb(
+        root, selected, project_id, toolchain_id, input_format, runner, cli="kicad-cli"
+    )

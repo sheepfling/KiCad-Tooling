@@ -1,4 +1,5 @@
 """Typed SnakeMD builders for Markdown created by repository workflows."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -128,16 +129,19 @@ def imported_project_readme(
         "After independently authoring the contract, add --depth native for exact KiCad checks."
     )
     links = tuple(
-        Inline(f"Upstream {name}", link=quote(f"kicad/{name}"))
-        for name in upstream_documents
+        Inline(f"Upstream {name}", link=quote(f"kicad/{name}")) for name in upstream_documents
     )
     if links:
         document.add_block(MDList(links))
     return document
 
 
-def release_review(release_id: str, source_commit: str, release_class: str,
-                   electrical: Iterable[tuple[str, str]] = ()) -> Document:
+def release_review(
+    release_id: str,
+    source_commit: str,
+    release_class: str,
+    electrical: Iterable[tuple[str, str]] = (),
+) -> Document:
     document = Document()
     document.add_heading(release_id)
     paragraph(

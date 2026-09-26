@@ -1,4 +1,5 @@
 """Release-readiness tests; all release checks remain read-only and non-authorizing."""
+
 from __future__ import annotations
 
 import hashlib
@@ -152,8 +153,9 @@ class ReleaseReadinessTests(unittest.TestCase):
             report = check(self.root, manifest)
         self.assertEqual(report.status, "FAIL")
         self.assertTrue(
-            {"RELEASE_MATURITY", "RELEASE_STATUS", "RELEASE_APPROVAL", "RELEASE_TAG"}
-            .issubset({finding.code for finding in report.issues})
+            {"RELEASE_MATURITY", "RELEASE_STATUS", "RELEASE_APPROVAL", "RELEASE_TAG"}.issubset(
+                {finding.code for finding in report.issues}
+            )
         )
 
     def test_release_class_enforces_the_catalogued_assurance_floor(self) -> None:
@@ -193,19 +195,31 @@ class ReleaseReadinessTests(unittest.TestCase):
         index_path = self.root / "catalog/products.json"
         index = read_model(index_path, ProductIndex)
         entry = next(item for item in index.products if item.id == "status-indicator-system")
-        shortened = entry.model_copy(update={
-            "project_ids": tuple(name for name in entry.project_ids
-                                 if name != "status-indicator-wiring"),
-        })
-        write_model(index_path, index.model_copy(update={
-            "products": tuple(shortened if item.id == entry.id else item
-                              for item in index.products),
-        }))
-        with self.assertRaisesRegex(ValueError, "omits product-view project status-indicator-wiring"):
+        shortened = entry.model_copy(
+            update={
+                "project_ids": tuple(
+                    name for name in entry.project_ids if name != "status-indicator-wiring"
+                ),
+            }
+        )
+        write_model(
+            index_path,
+            index.model_copy(
+                update={
+                    "products": tuple(
+                        shortened if item.id == entry.id else item for item in index.products
+                    ),
+                }
+            ),
+        )
+        with self.assertRaisesRegex(
+            ValueError, "omits product-view project status-indicator-wiring"
+        ):
             load_release_repository(self.root, self.manifest())
-        self.assertIn("RELEASE_DEPENDENCY", {
-            finding.code for finding in check(self.root, self.manifest()).issues
-        })
+        self.assertIn(
+            "RELEASE_DEPENDENCY",
+            {finding.code for finding in check(self.root, self.manifest()).issues},
+        )
 
     def test_revision_and_library_binding_cannot_be_stale(self) -> None:
         base = self.manifest()
@@ -224,17 +238,28 @@ class ReleaseReadinessTests(unittest.TestCase):
     def test_prepare_json_is_one_document_and_default_output_remains_human(self) -> None:
         manifest = self.manifest()
         argv = [
-            "kicad_tooling.release", "prepare", "--root", str(self.root),
-            "--release-id", manifest.release_id, "--project", "passive-signal-reference",
+            "kicad_tooling.release",
+            "prepare",
+            "--root",
+            str(self.root),
+            "--release-id",
+            manifest.release_id,
+            "--project",
+            "passive-signal-reference",
         ]
         with patch("kicad_tooling.hwrepo.releasing.prepare", return_value=manifest):
             machine_output = StringIO()
             with patch.object(sys, "argv", [*argv, "--json"]), redirect_stdout(machine_output):
                 self.assertEqual(release_main(), 0)
-            self.assertEqual(json.loads(machine_output.getvalue()), manifest.model_dump(mode="json"))
+            self.assertEqual(
+                json.loads(machine_output.getvalue()), manifest.model_dump(mode="json")
+            )
 
             alias_output = StringIO()
-            with patch.object(sys, "argv", [*argv, "--format", "json"]), redirect_stdout(alias_output):
+            with (
+                patch.object(sys, "argv", [*argv, "--format", "json"]),
+                redirect_stdout(alias_output),
+            ):
                 self.assertEqual(release_main(), 0)
             self.assertEqual(alias_output.getvalue(), machine_output.getvalue())
 
@@ -263,24 +288,52 @@ class ReleaseReadinessTests(unittest.TestCase):
         broken_path = self.root / "examples/products/broken-legacy/product.json"
         broken_path.parent.mkdir(parents=True)
         broken_path.write_bytes(b"{bad JSON")
-        write_model(index_path, index.model_copy(update={"products": (*index.products,
-            ProductIndexEntry(id="broken-legacy",
-                              path="examples/products/broken-legacy/product.json",
-                              project_ids=()),
-        )}))
-        argv = ["kicad_tooling.release", "prepare", "--root", str(self.root),
-                "--release-id", "scoped-variant", "--variant", "status-indicator-system:STANDARD"]
-        with (patch("kicad_tooling.hwrepo.releasing.prepare", return_value=self.manifest()) as prepared,
-              patch.object(sys, "argv", argv), redirect_stdout(StringIO())):
+        write_model(
+            index_path,
+            index.model_copy(
+                update={
+                    "products": (
+                        *index.products,
+                        ProductIndexEntry(
+                            id="broken-legacy",
+                            path="examples/products/broken-legacy/product.json",
+                            project_ids=(),
+                        ),
+                    )
+                }
+            ),
+        )
+        argv = [
+            "kicad_tooling.release",
+            "prepare",
+            "--root",
+            str(self.root),
+            "--release-id",
+            "scoped-variant",
+            "--variant",
+            "status-indicator-system:STANDARD",
+        ]
+        with (
+            patch(
+                "kicad_tooling.hwrepo.releasing.prepare", return_value=self.manifest()
+            ) as prepared,
+            patch.object(sys, "argv", argv),
+            redirect_stdout(StringIO()),
+        ):
             self.assertEqual(release_main(), 0)
         self.assertEqual(prepared.call_args.args[3][0].product, "status-indicator-system")
 
-        for selection, expected in (("unknown:STANDARD", "Unknown release product"),
-                                    ("status-indicator-system:missing", "Unknown variant")):
+        for selection, expected in (
+            ("unknown:STANDARD", "Unknown release product"),
+            ("status-indicator-system:missing", "Unknown variant"),
+        ):
             with self.subTest(selection=selection):
                 error_text = StringIO()
-                with (patch.object(sys, "argv", [*argv[:-1], selection]),
-                      redirect_stderr(error_text), self.assertRaises(SystemExit) as error):
+                with (
+                    patch.object(sys, "argv", [*argv[:-1], selection]),
+                    redirect_stderr(error_text),
+                    self.assertRaises(SystemExit) as error,
+                ):
                     release_main()
                 self.assertEqual(error.exception.code, 2)
                 self.assertIn(expected, error_text.getvalue())
@@ -289,19 +342,37 @@ class ReleaseReadinessTests(unittest.TestCase):
         manifest = self.manifest()
         manifest_name = "release-cli-test.json"
         write_model(self.root / manifest_name, manifest)
-        issue = PolicyIssue(code="RELEASE_EVIDENCE", location="evidence.native",
-                            message="Native evidence is missing")
-        report = ReleaseReadinessReport(release_id=manifest.release_id,
-            release_class=manifest.release_class, status="FAIL", issues=(issue,))
-        argv = ["kicad_tooling.release", "check", "--root", str(self.root), "--manifest", manifest_name]
+        issue = PolicyIssue(
+            code="RELEASE_EVIDENCE",
+            location="evidence.native",
+            message="Native evidence is missing",
+        )
+        report = ReleaseReadinessReport(
+            release_id=manifest.release_id,
+            release_class=manifest.release_class,
+            status="FAIL",
+            issues=(issue,),
+        )
+        argv = [
+            "kicad_tooling.release",
+            "check",
+            "--root",
+            str(self.root),
+            "--manifest",
+            manifest_name,
+        ]
         with patch("kicad_tooling.release.check", return_value=report):
             human_output = StringIO()
-            with patch.object(sys, "argv", [*argv, "--format", "text"]), \
-                    redirect_stdout(human_output):
+            with (
+                patch.object(sys, "argv", [*argv, "--format", "text"]),
+                redirect_stdout(human_output),
+            ):
                 self.assertEqual(release_main(), 1)
             self.assertIn("FAIL: release readiness", human_output.getvalue())
-            self.assertIn("RELEASE_EVIDENCE at evidence.native: Native evidence is missing",
-                          human_output.getvalue())
+            self.assertIn(
+                "RELEASE_EVIDENCE at evidence.native: Native evidence is missing",
+                human_output.getvalue(),
+            )
 
             machine_output = StringIO()
             with patch.object(sys, "argv", argv), redirect_stdout(machine_output):
@@ -315,34 +386,60 @@ class ReleaseReadinessTests(unittest.TestCase):
         self.assertIsNotNone(project.release_exports)
         assert project.release_exports is not None
         export_report = ReleaseExportReport(
-            project_id=project.id, source=SourceState(commit=COMMIT, clean=True),
-            toolchain_id=project.toolchain_id, settings=project.release_exports,
-            commands={}, artifacts_sha256={}, status="PASS",
+            project_id=project.id,
+            source=SourceState(commit=COMMIT, clean=True),
+            toolchain_id=project.toolchain_id,
+            settings=project.release_exports,
+            commands={},
+            artifacts_sha256={},
+            status="PASS",
         )
         output = self.root / "build/export-cli-test"
         with patch("kicad_tooling.hwrepo.exports.export", return_value=export_report):
             captured = StringIO()
-            argv = ["kicad_tooling.release", "export", "--root", str(self.root),
-                    "--project", project.id, "--output", str(output), "--format", "text"]
+            argv = [
+                "kicad_tooling.release",
+                "export",
+                "--root",
+                str(self.root),
+                "--project",
+                project.id,
+                "--output",
+                str(output),
+                "--format",
+                "text",
+            ]
             with patch.object(sys, "argv", argv), redirect_stdout(captured):
                 self.assertEqual(release_main(), 0)
             self.assertIn(f"PASS: release export for {project.id}", captured.getvalue())
             self.assertIn(f"Output: {output}", captured.getvalue())
 
         package_report = ReleasePackageReport(
-            status="PASS", source_commit=COMMIT, package="/tmp/release.zip",
-            package_sha256="b" * 64, manifest="build/releases/test/manifest.json",
+            status="PASS",
+            source_commit=COMMIT,
+            package="/tmp/release.zip",
+            package_sha256="b" * 64,
+            manifest="build/releases/test/manifest.json",
         )
         for command, arguments in (
             ("package", ["--manifest", package_report.manifest, "--output", "/tmp/release.zip"]),
             ("verify", ["--archive", package_report.package]),
             ("restore", ["--archive", package_report.package, "--destination", "/tmp/restored"]),
         ):
-            with self.subTest(command=command), \
-                    patch(f"kicad_tooling.hwrepo.packaging.{command}", return_value=package_report):
+            with (
+                self.subTest(command=command),
+                patch(f"kicad_tooling.hwrepo.packaging.{command}", return_value=package_report),
+            ):
                 captured = StringIO()
-                argv = ["kicad_tooling.release", command, "--root", str(self.root),
-                        *arguments, "--format", "text"]
+                argv = [
+                    "kicad_tooling.release",
+                    command,
+                    "--root",
+                    str(self.root),
+                    *arguments,
+                    "--format",
+                    "text",
+                ]
                 with patch.object(sys, "argv", argv), redirect_stdout(captured):
                     self.assertEqual(release_main(), 0)
                 self.assertIn(f"PASS: release {command}", captured.getvalue())

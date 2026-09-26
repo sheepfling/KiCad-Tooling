@@ -1,4 +1,5 @@
 """Read-only electrical-contract coaching from source-bound KiCad observations."""
+
 from __future__ import annotations
 
 import os
@@ -46,22 +47,45 @@ def run_command(root: Path, argv: tuple[str, ...], timeout: int = 180) -> Comman
     started = datetime.now(UTC).isoformat()
     try:
         result = subprocess.run(
-            argv, cwd=root, capture_output=True, text=True, timeout=timeout, check=False,
+            argv,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
         )
         return CommandEvidence(
-            argv=argv, started_utc=started, returncode=result.returncode,
-            stdout=result.stdout, stderr=result.stderr,
+            argv=argv,
+            started_utc=started,
+            returncode=result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
         )
     except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else exc.stdout or ""
-        stderr = exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else exc.stderr or ""
+        stdout = (
+            exc.stdout.decode(errors="replace")
+            if isinstance(exc.stdout, bytes)
+            else exc.stdout or ""
+        )
+        stderr = (
+            exc.stderr.decode(errors="replace")
+            if isinstance(exc.stderr, bytes)
+            else exc.stderr or ""
+        )
         return CommandEvidence(
-            argv=argv, started_utc=started, returncode=124, stdout=stdout,
-            stderr=stderr, error=f"Timed out after {timeout} seconds",
+            argv=argv,
+            started_utc=started,
+            returncode=124,
+            stdout=stdout,
+            stderr=stderr,
+            error=f"Timed out after {timeout} seconds",
         )
     except OSError as exc:
         return CommandEvidence(
-            argv=argv, started_utc=started, returncode=127, error=str(exc),
+            argv=argv,
+            started_utc=started,
+            returncode=127,
+            error=str(exc),
         )
 
 
@@ -83,10 +107,20 @@ class LocalNetlistRunner:
 
     def export(self, root: Path, config: ProjectConfig, output: Path) -> CommandEvidence:
         schematic = repo_path(root, config.project).with_suffix(".kicad_sch")
-        return run_command(root, (
-            self.cli, "sch", "export", "netlist", "--format", "kicadxml",
-            "--output", str(output), str(schematic),
-        ))
+        return run_command(
+            root,
+            (
+                self.cli,
+                "sch",
+                "export",
+                "netlist",
+                "--format",
+                "kicadxml",
+                "--output",
+                str(output),
+                str(schematic),
+            ),
+        )
 
 
 def pinned_image(image: str) -> str:
@@ -102,8 +136,16 @@ def docker_prefix() -> tuple[str, ...]:
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
     docker = shutil.which("docker") if sys.platform == "win32" else None
     return (
-        docker or "docker", "run", "--rm", "--platform", "linux/amd64", *user,
-        "--entrypoint", "kicad-cli", "-e", "HOME=/tmp/kicad-coach",
+        docker or "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        *user,
+        "--entrypoint",
+        "kicad-cli",
+        "-e",
+        "HOME=/tmp/kicad-coach",
     )
 
 
@@ -121,14 +163,28 @@ class ContainerNetlistRunner:
         if not output.parent.is_relative_to(root.resolve()):
             raise ValueError("Container netlist output must be inside the repository")
         schematic_arg = f"/work/{schematic.relative_to(root).as_posix()}"
-        return run_command(root, (
-            *docker_prefix(),
-            "-v", f"{root}:/work:ro",
-            "-v", f"{output.parent}:/output:rw",
-            "-w", "/work", image,
-            "sch", "export", "netlist", "--format", "kicadxml",
-            "--output", f"/output/{output.name}", schematic_arg,
-        ), timeout=600)
+        return run_command(
+            root,
+            (
+                *docker_prefix(),
+                "-v",
+                f"{root}:/work:ro",
+                "-v",
+                f"{output.parent}:/output:rw",
+                "-w",
+                "/work",
+                image,
+                "sch",
+                "export",
+                "netlist",
+                "--format",
+                "kicadxml",
+                "--output",
+                f"/output/{output.name}",
+                schematic_arg,
+            ),
+            timeout=600,
+        )
 
 
 class AutoNetlistRunner:
@@ -144,7 +200,11 @@ class AutoNetlistRunner:
     def version(self, root: Path, config: ProjectConfig) -> CommandEvidence:
         local = self.local.version(root, config)
         self.probes["local_version"] = local
-        if local.returncode == 0 and local.error is None and local.stdout.strip() == config.kicad_version:
+        if (
+            local.returncode == 0
+            and local.error is None
+            and local.stdout.strip() == config.kicad_version
+        ):
             self.selected = self.local
             self.selected_runner = "local"
             return local
@@ -160,7 +220,9 @@ class AutoNetlistRunner:
         return self.selected.export(root, config, output)
 
 
-def project_context(root: Path, project_id: str) -> tuple[ProjectConfig, NetlistContract, dict[str, str]]:
+def project_context(
+    root: Path, project_id: str
+) -> tuple[ProjectConfig, NetlistContract, dict[str, str]]:
     """Resolve only a schematic-backed island and its complete declared inputs."""
     project = next((item for item in load_registry(root).projects if item.id == project_id), None)
     if project is None:
@@ -185,14 +247,20 @@ def project_context(root: Path, project_id: str) -> tuple[ProjectConfig, Netlist
             "Declared source inventory differs from current design files; "
             "repair project.json before coaching"
         )
-    return config, NetlistContract(
-        components=validation.components, nets=validation.nets,
-    ), current
+    return (
+        config,
+        NetlistContract(
+            components=validation.components,
+            nets=validation.nets,
+        ),
+        current,
+    )
 
 
 def category_differences(
     kind: Literal["component", "net"],
-    actual: Mapping[str, Item], expected: Mapping[str, Item],
+    actual: Mapping[str, Item],
+    expected: Mapping[str, Item],
 ) -> tuple[ContractDifference, ...]:
     changes: list[ContractDifference] = []
     for identifier in sorted(actual.keys() | expected.keys()):
@@ -204,13 +272,19 @@ def category_differences(
             difference = "different"
         else:
             continue
-        changes.append(ContractDifference(
-            kind=kind, identifier=identifier, difference=difference,
-        ))
+        changes.append(
+            ContractDifference(
+                kind=kind,
+                identifier=identifier,
+                difference=difference,
+            )
+        )
     return tuple(changes)
 
 
-def differences(observed: NetlistContract, authored: NetlistContract) -> tuple[ContractDifference, ...]:
+def differences(
+    observed: NetlistContract, authored: NetlistContract
+) -> tuple[ContractDifference, ...]:
     return (
         *category_differences("component", observed.components, authored.components),
         *category_differences("net", observed.nets, authored.nets),
@@ -218,51 +292,77 @@ def differences(observed: NetlistContract, authored: NetlistContract) -> tuple[C
 
 
 def ready_report(
-    project_id: str, config: ProjectConfig, current: dict[str, str],
-    observed: NetlistContract, authored: NetlistContract, netlist_hash: str,
+    project_id: str,
+    config: ProjectConfig,
+    current: dict[str, str],
+    observed: NetlistContract,
+    authored: NetlistContract,
+    netlist_hash: str,
     native_status: Literal["PASS", "FAIL"] | None,
     commands: dict[str, CommandEvidence] | None = None,
     receipt_dir: str | None = None,
     selected_runner: Literal["local", "container"] | None = None,
 ) -> ContractCoachReport:
     changes = differences(observed, authored)
-    actions = [(
-        "Compare each UNREVIEWED observation with requirements and the KiCad design; "
-        "do not copy exported values into tests/contract.json as an approval."
-    )]
+    actions = [
+        (
+            "Compare each UNREVIEWED observation with requirements and the KiCad design; "
+            "do not copy exported values into tests/contract.json as an approval."
+        )
+    ]
     if changes:
         actions.append(
             "Resolve each difference by reviewing the design and independently authored "
             "expectations with the responsible engineer."
         )
     else:
-        actions.append("The inventories match; still review electrical intent before claiming coverage.")
+        actions.append(
+            "The inventories match; still review electrical intent before claiming coverage."
+        )
     if native_status == "FAIL":
-        actions.append("The native validation failed; inspect ERC, DRC and netlist checks separately.")
+        actions.append(
+            "The native validation failed; inspect ERC, DRC and netlist checks separately."
+        )
     actions.append("Rerun the selected portable and native lanes after an authored decision.")
     return ContractCoachReport(
-        status="READY_FOR_REVIEW", project_id=project_id, project_kind=config.kind,
+        status="READY_FOR_REVIEW",
+        project_id=project_id,
+        project_kind=config.kind,
         selected_runner=selected_runner,
-        source_hashes=current, netlist_sha256=netlist_hash,
-        native_status=native_status, observed=observed, authored=authored,
-        differences=changes, next_actions=tuple(actions),
-        commands={} if commands is None else commands, receipt_dir=receipt_dir,
+        source_hashes=current,
+        netlist_sha256=netlist_hash,
+        native_status=native_status,
+        observed=observed,
+        authored=authored,
+        differences=changes,
+        next_actions=tuple(actions),
+        commands={} if commands is None else commands,
+        receipt_dir=receipt_dir,
     )
 
 
 def blocked_report(
-    project_id: str, reason: str, project_kind: ProjectKind | None = None,
+    project_id: str,
+    reason: str,
+    project_kind: ProjectKind | None = None,
     commands: dict[str, CommandEvidence] | None = None,
     receipt_dir: str | None = None,
     selected_runner: Literal["local", "container"] | None = None,
 ) -> ContractCoachReport:
     return ContractCoachReport(
-        status="BLOCKED", project_id=project_id, project_kind=project_kind,
+        status="BLOCKED",
+        project_id=project_id,
+        project_kind=project_kind,
         selected_runner=selected_runner,
-        issues=(reason,), next_actions=((
-            "Repair the named source or evidence problem, then capture or select a fresh "
-            "netlist. Do not edit the authored contract from unverified output."
-        ),), commands={} if commands is None else commands, receipt_dir=receipt_dir,
+        issues=(reason,),
+        next_actions=(
+            (
+                "Repair the named source or evidence problem, then capture or select a fresh "
+                "netlist. Do not edit the authored contract from unverified output."
+            ),
+        ),
+        commands={} if commands is None else commands,
+        receipt_dir=receipt_dir,
     )
 
 
@@ -279,7 +379,8 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Contra
             raise ValueError("Native summary belongs to another project or project kind")
         toolchain_check = summary.checks.get("toolchain")
         if (
-            toolchain_check is None or toolchain_check.status != "PASS"
+            toolchain_check is None
+            or toolchain_check.status != "PASS"
             or toolchain_check.error is not None
             or toolchain_check.observed_version != config.kicad_version
             or toolchain_check.image != config.image
@@ -290,12 +391,19 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Contra
             )
         for key in ("source_scope", "source_unchanged"):
             check = summary.checks.get(key)
-            if (check is None or check.status != "PASS" or check.error is not None
-                    or check.source_hashes != current):
+            if (
+                check is None
+                or check.status != "PASS"
+                or check.error is not None
+                or check.source_hashes != current
+            ):
                 raise ValueError(f"Native {key} hashes do not match current declared source")
         netlist_check = summary.checks.get("netlist")
-        if (netlist_check is None or netlist_check.status == "NOT_RUN"
-                or netlist_check.returncode != 0):
+        if (
+            netlist_check is None
+            or netlist_check.status == "NOT_RUN"
+            or netlist_check.returncode != 0
+        ):
             raise ValueError("Native netlist export was not executed successfully")
         netlist_path = summary_path.parent / "netlist.xml"
         netlist_hash = digest(netlist_path)
@@ -303,7 +411,9 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Contra
             raise ValueError("Native netlist bytes differ from the summary artifact hash")
         command_path = summary_path.parent / "netlist.command.json"
         if summary.artifacts_sha256.get("netlist.command.json") != digest(command_path):
-            raise ValueError("Native netlist command evidence differs from the summary artifact hash")
+            raise ValueError(
+                "Native netlist command evidence differs from the summary artifact hash"
+            )
         command = read_model(command_path, CommandEvidence)
         if command.returncode != 0 or command.error is not None:
             raise ValueError("Native netlist command evidence records a failed export")
@@ -311,7 +421,13 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Contra
         if hashes(root, config.source_roots) != current:
             raise ValueError("Declared source changed while reading native evidence")
         return ready_report(
-            project_id, config, current, observed, authored, netlist_hash, summary.status,
+            project_id,
+            config,
+            current,
+            observed,
+            authored,
+            netlist_hash,
+            summary.status,
         ).model_copy(update={"native_summary": str(summary_path)})
     except (OSError, ValueError, TypeError, KeyError, ET.ParseError) as exc:
         return blocked_report(project_id, str(exc), kind).model_copy(
@@ -338,7 +454,10 @@ def receipt_directory(root: Path, project_id: str, output: Path | None) -> Path:
 
 
 def capture(
-    root: Path, project_id: str, output: Path, runner: NetlistRunner,
+    root: Path,
+    project_id: str,
+    output: Path,
+    runner: NetlistRunner,
 ) -> ContractCoachReport:
     """Export an observed netlist using exact local KiCad or a digest-pinned image."""
     root = root.resolve()
@@ -362,7 +481,11 @@ def capture(
             write_model(output / f"{probe_name}.command.json", probe)
         commands["version"] = version
         write_model(output / "version.command.json", version)
-        if version.returncode != 0 or version.error is not None or version.stdout.strip() != config.kicad_version:
+        if (
+            version.returncode != 0
+            or version.error is not None
+            or version.stdout.strip() != config.kicad_version
+        ):
             observed = version.error or version.stderr.strip() or version.stdout.strip()
             raise ValueError(
                 f"Exact KiCad {config.kicad_version} is required; runner reported "
@@ -380,10 +503,20 @@ def capture(
             )
         observed = read_netlist(netlist_path)
         if hashes(root, config.source_roots) != current:
-            raise ValueError("Declared source changed during netlist capture; rerun against saved source")
+            raise ValueError(
+                "Declared source changed during netlist capture; rerun against saved source"
+            )
         return ready_report(
-            project_id, config, current, observed, authored, digest(netlist_path),
-            None, commands, str(output), selected_runner,
+            project_id,
+            config,
+            current,
+            observed,
+            authored,
+            digest(netlist_path),
+            None,
+            commands,
+            str(output),
+            selected_runner,
         )
     except (OSError, ValueError, TypeError, KeyError, ET.ParseError) as exc:
         return blocked_report(project_id, str(exc), kind, commands, str(output), selected_runner)

@@ -1,4 +1,5 @@
 """Package boundary checks using a disposable project checkout."""
+
 from __future__ import annotations
 
 import json
@@ -21,17 +22,21 @@ class InstalledPackageTest(unittest.TestCase):
         self.project = Path(self.temporary.name)
         (self.project / "catalog").mkdir()
         (self.project / "projects").mkdir()
-        (self.project / "catalog/projects.json").write_text(json.dumps({
-            "schema_version": "1",
-            "catalogs": {
-                "parts": "catalog/parts.json",
-                "interfaces": "catalog/interfaces.json",
-                "libraries": "catalog/libraries.json",
-                "toolchains": "catalog/toolchains.json",
-                "release_policies": "catalog/release-policies.json",
-            },
-            "project_roots": ["projects"],
-        }))
+        (self.project / "catalog/projects.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "1",
+                    "catalogs": {
+                        "parts": "catalog/parts.json",
+                        "interfaces": "catalog/interfaces.json",
+                        "libraries": "catalog/libraries.json",
+                        "toolchains": "catalog/toolchains.json",
+                        "release_policies": "catalog/release-policies.json",
+                    },
+                    "project_roots": ["projects"],
+                }
+            )
+        )
         (self.project / "catalog/toolchains.json").write_text(
             '{"schema_version":"0.1","toolchains":[]}\n'
         )
@@ -43,8 +48,11 @@ class InstalledPackageTest(unittest.TestCase):
         environment = os.environ.copy()
         return subprocess.run(
             (sys.executable, "-I", "-B", "-m", "kicad_tooling", *args),
-            cwd=cwd or self.project, env=environment,
-            capture_output=True, text=True, check=False,
+            cwd=cwd or self.project,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
         )
 
     def test_inventory_uses_project_checkout_not_package_source(self) -> None:
@@ -56,7 +64,12 @@ class InstalledPackageTest(unittest.TestCase):
 
     def test_explicit_root_works_from_another_directory(self) -> None:
         result = self.run_cli(
-            "template", "list", "--root", str(self.project), "--format", "json",
+            "template",
+            "list",
+            "--root",
+            str(self.project),
+            "--format",
+            "json",
             cwd=SOURCE_ROOT,
         )
         self.assertEqual(0, result.returncode, result.stderr)

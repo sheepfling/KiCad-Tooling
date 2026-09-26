@@ -1,4 +1,5 @@
 """Strict reader for the ngspice ASCII raw waveforms retained in electrical receipts."""
+
 from __future__ import annotations
 
 import math
@@ -38,7 +39,7 @@ def _section_index(lines: list[str], section: str) -> int:
 
 def _header(lines: list[str], name: str) -> str:
     prefix = f"{name}:"
-    matches = [line[len(prefix):].strip() for line in lines if line.startswith(prefix)]
+    matches = [line[len(prefix) :].strip() for line in lines if line.startswith(prefix)]
     if len(matches) != 1 or not matches[0]:
         raise ValueError(f"Missing or duplicate ASCII waveform {name} header")
     return matches[0]
@@ -91,7 +92,7 @@ def read_waveform(path: Path, expected_axis: AxisName | None = None) -> Waveform
         raise ValueError("ASCII waveform needs exactly one real or complex Flags mode")
     complex_mode = "complex" in modes
 
-    declared = [line.split() for line in lines[variables_index + 1:values_index] if line.strip()]
+    declared = [line.split() for line in lines[variables_index + 1 : values_index] if line.strip()]
     if len(declared) != width:
         raise ValueError("Waveform variable count does not match header")
     names: list[str] = []
@@ -113,7 +114,7 @@ def read_waveform(path: Path, expected_axis: AxisName | None = None) -> Waveform
     if expected_axis is not None and axis_name != expected_axis:
         raise ValueError("Waveform analysis does not match the requested case")
 
-    tokens = re.sub(r",\s+", ",", "\n".join(lines[values_index + 1:])).split()
+    tokens = re.sub(r",\s+", ",", "\n".join(lines[values_index + 1 :])).split()
     if len(tokens) != count * (width + 1):
         raise ValueError("Truncated or extra waveform values")
     values: list[list[complex]] = [[] for _ in range(width)]
@@ -121,7 +122,7 @@ def read_waveform(path: Path, expected_axis: AxisName | None = None) -> Waveform
         offset = point * (width + 1)
         if tokens[offset] != str(point):
             raise ValueError("Invalid waveform point index")
-        for variable, token in enumerate(tokens[offset + 1:offset + width + 1]):
+        for variable, token in enumerate(tokens[offset + 1 : offset + width + 1]):
             values[variable].append(_sample(token, complex_mode=complex_mode))
     if any(value.imag != 0 for value in values[0]):
         raise ValueError("Waveform axis has a nonzero imaginary component")
@@ -135,6 +136,8 @@ def read_waveform(path: Path, expected_axis: AxisName | None = None) -> Waveform
     return WaveformData(
         axis_name=axis_name,
         axis=axis,
-        series=tuple(WaveformSeries(name=names[index], unit=units[index], values=tuple(values[index]))
-                     for index in range(1, width)),
+        series=tuple(
+            WaveformSeries(name=names[index], unit=units[index], values=tuple(values[index]))
+            for index in range(1, width)
+        ),
     )

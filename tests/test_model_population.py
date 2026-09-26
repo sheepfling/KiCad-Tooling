@@ -1,4 +1,5 @@
 """Reviewed, explicit model assignment plans preserve board source and inventory."""
+
 from __future__ import annotations
 
 import hashlib
@@ -46,10 +47,12 @@ class ModelPopulationTests(unittest.TestCase):
         self.map.parent.mkdir(exist_ok=True)
         self.write_map()
 
-    def write_map(self, *, reference: str = "J1", model: str = MODEL,
-                  digest: str | None = None) -> None:
+    def write_map(
+        self, *, reference: str = "J1", model: str = MODEL, digest: str | None = None
+    ) -> None:
         data = {
-            "schema_version": "1", "project_id": PROJECT,
+            "schema_version": "1",
+            "project_id": PROJECT,
             "board_sha256": digest or hashlib.sha256(self.board.read_bytes()).hexdigest(),
             "manifest_sha256": hashlib.sha256(self.manifest.read_bytes()).hexdigest(),
             "assignments": [{"reference": reference, "model": model}],
@@ -77,8 +80,9 @@ class ModelPopulationTests(unittest.TestCase):
         self.assertEqual(ModelMap.model_validate_json(self.map.read_text()).project_id, PROJECT)
         self.assertIsNotNone(plan.locked_map)
         locked = ModelMap.model_validate_json(Path(plan.locked_map or "").read_text())
-        self.assertEqual(locked.assignments[0].model_sha256,
-                         hashlib.sha256(self.model.read_bytes()).hexdigest())
+        self.assertEqual(
+            locked.assignments[0].model_sha256, hashlib.sha256(self.model.read_bytes()).hexdigest()
+        )
 
         unlocked = populate_models(self.root, PROJECT, self.map, apply=True)
         self.assertEqual(unlocked.status, "FAIL")
@@ -89,14 +93,17 @@ class ModelPopulationTests(unittest.TestCase):
         self.assertEqual(applied.board_diff, plan.board_diff)
         self.assertEqual(applied.manifest_diff, plan.manifest_diff)
         changed_board = self.board.read_bytes()
-        self.assertEqual(changed_board, original_board.replace(
-            b'(layers "*.Cu" "*.Mask") (net 3 "/GND")))',
-            b'(layers "*.Cu" "*.Mask") (net 3 "/GND"))\n'
-            b'    (model "${KIPRJMOD}/models/Header_1x02.step" '
-            b'(offset (xyz 0 0 0)) (scale (xyz 1 1 1)) '
-            b'(rotate (xyz 0 0 0)))\n  )',
-            1,
-        ))
+        self.assertEqual(
+            changed_board,
+            original_board.replace(
+                b'(layers "*.Cu" "*.Mask") (net 3 "/GND")))',
+                b'(layers "*.Cu" "*.Mask") (net 3 "/GND"))\n'
+                b'    (model "${KIPRJMOD}/models/Header_1x02.step" '
+                b"(offset (xyz 0 0 0)) (scale (xyz 1 1 1)) "
+                b"(rotate (xyz 0 0 0)))\n  )",
+                1,
+            ),
+        )
         manifest = read_model(self.manifest, ProjectManifest)
         self.assertIn("kicad/models/Header_1x02.step", manifest.required_inputs)
         inventory = inspect_models(self.root, load_config(self.root, MANIFEST))
@@ -111,22 +118,42 @@ class ModelPopulationTests(unittest.TestCase):
         original_board = self.board.read_bytes()
         result = subprocess.run(
             (
-                sys.executable, "-I", "-B", "-m", "kicad_tooling.visualize", "--root", str(self.root),
-                "--project", PROJECT, "--init-model-map", "build/model-map.json",
-                "--format", "json",
-            ), cwd=reference_root(), capture_output=True, text=True, check=False,
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.visualize",
+                "--root",
+                str(self.root),
+                "--project",
+                PROJECT,
+                "--init-model-map",
+                "build/model-map.json",
+                "--format",
+                "json",
+            ),
+            cwd=reference_root(),
+            capture_output=True,
+            text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         report = ModelPopulationReport.model_validate_json(result.stdout)
         self.assertEqual(report.status, "DRAFT")
         raw = json.loads(self.map.read_text(encoding="utf-8"))
         self.assertEqual(raw["board_sha256"], hashlib.sha256(self.board.read_bytes()).hexdigest())
-        self.assertEqual(raw["manifest_sha256"], hashlib.sha256(self.manifest.read_bytes()).hexdigest())
+        self.assertEqual(
+            raw["manifest_sha256"], hashlib.sha256(self.manifest.read_bytes()).hexdigest()
+        )
         self.assertEqual({item["reference"] for item in raw["assignments"]}, {"J1", "R1", "D1"})
         self.assertTrue(all(item["model"] == "" for item in raw["assignments"]))
         self.assertTrue(all("model_sha256" not in item for item in raw["assignments"]))
-        self.assertEqual(next(item for item in raw["assignments"] if item["reference"] == "J1")
-                         ["candidate_assets"], [MODEL])
+        self.assertEqual(
+            next(item for item in raw["assignments"] if item["reference"] == "J1")[
+                "candidate_assets"
+            ],
+            [MODEL],
+        )
         self.assertEqual(self.board.read_bytes(), original_board)
         preview = populate_models(self.root, PROJECT, self.map)
         self.assertEqual(preview.status, "FAIL")
@@ -138,12 +165,15 @@ class ModelPopulationTests(unittest.TestCase):
         self.assertEqual(drift.status, "FAIL")
         self.assertIn("manifest changed", (drift.error or "").lower())
         self.write_map()
-        with patch("kicad_tooling.hwrepo.model_population._board_edits", side_effect=RuntimeError("bug")):
+        with patch(
+            "kicad_tooling.hwrepo.model_population._board_edits", side_effect=RuntimeError("bug")
+        ):
             failed = populate_models(self.root, PROJECT, self.map)
         self.assertEqual(failed.status, "ERROR")
         self.assertIn("RuntimeError: bug", (Path(failed.run_directory) / "error.txt").read_text())
-        self.assertEqual(json.loads((Path(failed.run_directory) / "run.json").read_text())["status"],
-                         "ERROR")
+        self.assertEqual(
+            json.loads((Path(failed.run_directory) / "run.json").read_text())["status"], "ERROR"
+        )
 
     def test_model_bytes_must_match_the_reviewed_plan(self) -> None:
         locked = self.locked_map()
@@ -170,15 +200,21 @@ class ModelPopulationTests(unittest.TestCase):
         self.assertEqual(rejected.status, "FAIL")
         self.assertIn("registered library_ids", rejected.error or "")
 
-    def test_draft_map_staging_preserves_destination_on_error_and_reserves_receipt_names(self) -> None:
+    def test_draft_map_staging_preserves_destination_on_error_and_reserves_receipt_names(
+        self,
+    ) -> None:
         target = self.root / "build/new-map.json"
-        with patch("kicad_tooling.hwrepo.model_population.os.link", side_effect=OSError("commit failed")):
+        with patch(
+            "kicad_tooling.hwrepo.model_population.os.link", side_effect=OSError("commit failed")
+        ):
             failed = init_model_map(self.root, PROJECT, target)
         self.assertEqual(failed.status, "FAIL")
         self.assertFalse(target.exists())
         self.assertEqual(list(target.parent.glob(".draft-model-map-*")), [])
         collided = init_model_map(
-            self.root, PROJECT, Path("build/collision/model-population.json"),
+            self.root,
+            PROJECT,
+            Path("build/collision/model-population.json"),
             output=Path("build/collision"),
         )
         self.assertEqual(collided.status, "FAIL")
@@ -187,9 +223,14 @@ class ModelPopulationTests(unittest.TestCase):
 
     def test_duplicate_board_reference_and_manifest_write_failure_leave_source_safe(self) -> None:
         original = self.board.read_text(encoding="utf-8")
-        self.board.write_text(original.replace(
-            '(property "Reference" "R1"', '(property "Reference" "J1"', 1,
-        ), encoding="utf-8")
+        self.board.write_text(
+            original.replace(
+                '(property "Reference" "R1"',
+                '(property "Reference" "J1"',
+                1,
+            ),
+            encoding="utf-8",
+        )
         self.write_map()
         ambiguous = populate_models(self.root, PROJECT, self.map)
         self.assertEqual(ambiguous.status, "FAIL")
@@ -205,7 +246,9 @@ class ModelPopulationTests(unittest.TestCase):
                 raise OSError("manifest write failed")
             _replace_bytes(path, value)
 
-        with patch("kicad_tooling.hwrepo.model_population._replace_bytes", side_effect=fail_manifest):
+        with patch(
+            "kicad_tooling.hwrepo.model_population._replace_bytes", side_effect=fail_manifest
+        ):
             failed = populate_models(self.root, PROJECT, self.locked_map(), apply=True)
         self.assertEqual(failed.status, "FAIL")
         self.assertIn("manifest write failed", failed.error or "")
@@ -277,7 +320,7 @@ class ModelPopulationTests(unittest.TestCase):
         self.assertIn(shared_name, manifest.shared_inputs)
         self.assertEqual(consumer.read_bytes(), consumer_before_apply)
         self.assertIn(
-            '${KIPRJMOD}/../../../libraries/status-led/Header_1x02.step',
+            "${KIPRJMOD}/../../../libraries/status-led/Header_1x02.step",
             self.board.read_text(encoding="utf-8"),
         )
 
@@ -297,7 +340,9 @@ class ModelPopulationTests(unittest.TestCase):
         original_manifest = self.manifest.read_bytes()
         rejected = populate_models(self.root, PROJECT, locked, apply=True)
         self.assertEqual(rejected.status, "FAIL")
-        self.assertIn("examples/projects/raspberry-pi-status-led/project.json", rejected.error or "")
+        self.assertIn(
+            "examples/projects/raspberry-pi-status-led/project.json", rejected.error or ""
+        )
         self.assertIn(f"add {shared_name} to shared_inputs", rejected.error or "")
         self.assertEqual(self.board.read_bytes(), original_board)
         self.assertEqual(self.manifest.read_bytes(), original_manifest)

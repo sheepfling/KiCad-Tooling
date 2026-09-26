@@ -1,4 +1,5 @@
 """Shared, typed purchasing preference writes with optimistic concurrency guards."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,7 +11,9 @@ from .parts_workflow import selected_project
 
 
 def save_parts_preferences(
-    root: Path, project_id: str, preferences: PurchasingPreferences,
+    root: Path,
+    project_id: str,
+    preferences: PurchasingPreferences,
     expected_sha256: str | None = None,
 ) -> McpPurchasingPreferencesResult:
     """Save explicit preferences at the fixed authored path; updates need a current hash."""
@@ -32,7 +35,12 @@ def save_parts_preferences(
         before = previous.sha256
         if previous.text != text:
             mcp_files.apply_project_edit(
-                root, project_id, "docs/purchasing.json", expected_sha256, previous.text, text,
+                root,
+                project_id,
+                "docs/purchasing.json",
+                expected_sha256,
+                previous.text,
+                text,
             )
         status = "UPDATED"
     else:
@@ -47,6 +55,11 @@ def save_parts_preferences(
     if saved != preferences:
         raise ValueError("Preferences changed during readback; reread before continuing")
     return McpPurchasingPreferencesResult(
-        project_id=project_id, path=relative, status=status, before_sha256=before,
-        after_sha256=content.sha256, readback_sha256=content.sha256, preferences=saved,
+        project_id=project_id,
+        path=relative,
+        status=status,
+        before_sha256=before,
+        after_sha256=content.sha256,
+        readback_sha256=content.sha256,
+        preferences=saved,
     )

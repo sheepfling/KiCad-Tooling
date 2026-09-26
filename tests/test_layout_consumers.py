@@ -1,4 +1,5 @@
 """Configured repository layouts stay authoritative across shared workflow services."""
+
 from __future__ import annotations
 
 import hashlib
@@ -34,7 +35,9 @@ class LayoutConsumersTests(unittest.TestCase):
         self.products = "policy/assemblies.json"
         self.project = "hardware/boards/team/board"
         self.product = "hardware/assemblies/device"
-        self.write("kicad-tooling.toml", '''[layout]
+        self.write(
+            "kicad-tooling.toml",
+            """[layout]
 discovery = "policy/discovery.json"
 products = "policy/assemblies.json"
 templates = "policy/templates"
@@ -42,51 +45,142 @@ workflow_docs = "handbook/workflow"
 new_project_root = "hardware/boards/team"
 product_roots = ["hardware/assemblies"]
 library_roots = ["cad/libraries"]
-''')
-        self.write_json(self.discovery, {
-            "schema_version": "1", "project_roots": ["hardware/boards"], "project_depth": 2,
-            "catalogs": {name: f"policy/{name}.json" for name in
-                         ("parts", "interfaces", "libraries", "toolchains", "release_policies")},
-        })
-        self.write_json(self.products, {"schema_version": "1", "products": [{
-            "id": "device", "path": f"{self.product}/product.json", "project_ids": ["board"],
-        }]})
-        self.write_json("policy/toolchains.json", {"schema_version": "1", "toolchains": [{
-            "id": "kicad", "kicad_version": "10.0.0", "image": "kicad:10",
-            "desktop_edit_policy": "Save before checking", "installer_source": "local",
-            "migration_policy": "Review migrations",
-        }]})
-        self.write_json("policy/parts.json", {"schema_version": "1", "parts": [{
-            "id": "resistor", "revision": "A", "description": "Test resistor",
-            "part_class": "resistor", "unit": "each", "manufacturer": "Fixture",
-            "mpn": "R1", "datasheet_url": "https://example.test/r1", "lifecycle": "test",
-            "status": "not_for_manufacture",
-        }]})
-        for name, collection in (("interfaces", "interfaces"), ("libraries", "libraries"),
-                                 ("release_policies", "policies")):
+""",
+        )
+        self.write_json(
+            self.discovery,
+            {
+                "schema_version": "1",
+                "project_roots": ["hardware/boards"],
+                "project_depth": 2,
+                "catalogs": {
+                    name: f"policy/{name}.json"
+                    for name in (
+                        "parts",
+                        "interfaces",
+                        "libraries",
+                        "toolchains",
+                        "release_policies",
+                    )
+                },
+            },
+        )
+        self.write_json(
+            self.products,
+            {
+                "schema_version": "1",
+                "products": [
+                    {
+                        "id": "device",
+                        "path": f"{self.product}/product.json",
+                        "project_ids": ["board"],
+                    }
+                ],
+            },
+        )
+        self.write_json(
+            "policy/toolchains.json",
+            {
+                "schema_version": "1",
+                "toolchains": [
+                    {
+                        "id": "kicad",
+                        "kicad_version": "10.0.0",
+                        "image": "kicad:10",
+                        "desktop_edit_policy": "Save before checking",
+                        "installer_source": "local",
+                        "migration_policy": "Review migrations",
+                    }
+                ],
+            },
+        )
+        self.write_json(
+            "policy/parts.json",
+            {
+                "schema_version": "1",
+                "parts": [
+                    {
+                        "id": "resistor",
+                        "revision": "A",
+                        "description": "Test resistor",
+                        "part_class": "resistor",
+                        "unit": "each",
+                        "manufacturer": "Fixture",
+                        "mpn": "R1",
+                        "datasheet_url": "https://example.test/r1",
+                        "lifecycle": "test",
+                        "status": "not_for_manufacture",
+                    }
+                ],
+            },
+        )
+        for name, collection in (
+            ("interfaces", "interfaces"),
+            ("libraries", "libraries"),
+            ("release_policies", "policies"),
+        ):
             self.write_json(f"policy/{name}.json", {"schema_version": "1", collection: []})
-        self.write_json(f"{self.project}/project.json", {
-            "id": "board", "kind": "pcb", "status": "training_fixture",
-            "assurance_profile": "training", "toolchain_id": "kicad",
-            "project": "pcb/board.kicad_pro", "source_roots": ["pcb"],
-            "required_inputs": ["pcb/board.kicad_pro"], "tags": ["demo"],
-            "component_identity": {"required": True, "part_ids": ["resistor"]},
-        })
+        self.write_json(
+            f"{self.project}/project.json",
+            {
+                "id": "board",
+                "kind": "pcb",
+                "status": "training_fixture",
+                "assurance_profile": "training",
+                "toolchain_id": "kicad",
+                "project": "pcb/board.kicad_pro",
+                "source_roots": ["pcb"],
+                "required_inputs": ["pcb/board.kicad_pro"],
+                "tags": ["demo"],
+                "component_identity": {"required": True, "part_ids": ["resistor"]},
+            },
+        )
         self.write(f"{self.project}/pcb/board.kicad_pro", "{}\n")
-        self.write_json(f"{self.project}/tests/contract.json", {"validation": {
-            "kind": "pcb", "components": {"R1": {"value": "1k", "footprint": "R:0603",
-                                                    "part_id": "resistor"}},
-            "nets": {}, "expected_ignored_checks": {"erc": [], "drc": []},
-        }})
-        self.write_json(f"{self.product}/product.json", {
-            "schema_version": "1", "id": "device", "revision": "A", "maturity": "training",
-            "root_assembly": "board-assembly", "assemblies": [{
-                "id": "board-assembly", "revision": "A", "kind": "built", "project_id": "board",
-                "members": [{"ref": "R1", "item": "resistor", "quantity": 1}],
-            }], "terminals": [], "connections": [], "variants": [{
-                "id": "standard", "revision": "A", "exclude": [],
-            }], "evidence": [], "harnesses": [], "mechanical": [], "blocking_issues": [],
-        })
+        self.write_json(
+            f"{self.project}/tests/contract.json",
+            {
+                "validation": {
+                    "kind": "pcb",
+                    "components": {
+                        "R1": {"value": "1k", "footprint": "R:0603", "part_id": "resistor"}
+                    },
+                    "nets": {},
+                    "expected_ignored_checks": {"erc": [], "drc": []},
+                }
+            },
+        )
+        self.write_json(
+            f"{self.product}/product.json",
+            {
+                "schema_version": "1",
+                "id": "device",
+                "revision": "A",
+                "maturity": "training",
+                "root_assembly": "board-assembly",
+                "assemblies": [
+                    {
+                        "id": "board-assembly",
+                        "revision": "A",
+                        "kind": "built",
+                        "project_id": "board",
+                        "members": [{"ref": "R1", "item": "resistor", "quantity": 1}],
+                    }
+                ],
+                "terminals": [],
+                "connections": [],
+                "variants": [
+                    {
+                        "id": "standard",
+                        "revision": "A",
+                        "exclude": [],
+                    }
+                ],
+                "evidence": [],
+                "harnesses": [],
+                "mechanical": [],
+                "blocking_issues": [],
+            },
+        )
         self.write("handbook/workflow/review.md", "# Review\n")
         self.write("policy/templates/template.txt", "authored template\n")
         self.write("cad/libraries/fixture.txt", "authored library\n")
@@ -101,30 +195,44 @@ library_roots = ["cad/libraries"]
 
     def cli(self, *args: str) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
-        return subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling", *args),
-                              cwd=self.root, env=environment, capture_output=True, text=True,
-                              check=False)
+        return subprocess.run(
+            (sys.executable, "-I", "-B", "-m", "kicad_tooling", *args),
+            cwd=self.root,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
 
     def test_inventory_selection_and_release_use_configured_catalogs(self) -> None:
         report = inventory(self.root)
         self.assertEqual("PASS", report.status, report.issues)
         self.assertEqual(("board",), tuple(item.id for item in report.projects))
         self.assertEqual(("device",), report.projects[0].products)
-        self.assertEqual(("board",), resolve_project_ids(
-            self.root, ProjectSelector(product_ids=("device",))))
+        self.assertEqual(
+            ("board",), resolve_project_ids(self.root, ProjectSelector(product_ids=("device",)))
+        )
         variants = resolve_variants(self.root, ("device:standard",))
         self.assertEqual("A", variants[0].product_revision)
         candidate = ReleaseManifest(
-            release_id="review", release_class=ReleaseClass.ENGINEERING_REVIEW,
-            status=ReleaseStatus.CANDIDATE, source_commit="0" * 40, toolchain_id="kicad",
-            variants=variants, libraries=(), interfaces=(), artifacts=(),
+            release_id="review",
+            release_class=ReleaseClass.ENGINEERING_REVIEW,
+            status=ReleaseStatus.CANDIDATE,
+            source_commit="0" * 40,
+            toolchain_id="kicad",
+            variants=variants,
+            libraries=(),
+            interfaces=(),
+            artifacts=(),
         )
         repository = load_release_repository(self.root, candidate)
         self.assertEqual((), repository.issues)
         self.assertEqual(("device",), tuple(item.id for item in repository.products))
         result = self.cli("template", "list", "--format", "json")
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertEqual(self.project + "/project.json", json.loads(result.stdout)["projects"][0]["manifest"])
+        self.assertEqual(
+            self.project + "/project.json", json.loads(result.stdout)["projects"][0]["manifest"]
+        )
         self.assertFalse((self.root / "catalog").exists())
 
     def test_generation_cli_and_service_use_custom_product_destination(self) -> None:
@@ -146,10 +254,19 @@ library_roots = ["cad/libraries"]
         repository = load_repository(self.root)
         self.assertIn("PRODUCT_DISCOVERY", {issue.code for issue in repository.issues})
         (self.root / "hardware/assemblies/orphan/product.json").unlink()
-        self.write_json(self.products, {"schema_version": "1", "products": [{
-            "id": "device", "path": "hardware/assemblies/group/device/product.json",
-            "project_ids": ["board"],
-        }]})
+        self.write_json(
+            self.products,
+            {
+                "schema_version": "1",
+                "products": [
+                    {
+                        "id": "device",
+                        "path": "hardware/assemblies/group/device/product.json",
+                        "project_ids": ["board"],
+                    }
+                ],
+            },
+        )
         self.write("hardware/assemblies/group/device/product.json", original)
         repository = load_repository(self.root)
         self.assertIn("PRODUCT_LOAD", {issue.code for issue in repository.issues})
@@ -159,12 +276,24 @@ library_roots = ["cad/libraries"]
         original = (self.root / self.product / "product.json").read_text()
         for invalid in ("hardware/assemblies-evil/device/product.json", "../outside.json"):
             with self.subTest(path=invalid):
-                self.write_json(self.products, {"schema_version": "1", "products": [{
-                    "id": "device", "path": invalid, "project_ids": ["board"],
-                }]})
+                self.write_json(
+                    self.products,
+                    {
+                        "schema_version": "1",
+                        "products": [
+                            {
+                                "id": "device",
+                                "path": invalid,
+                                "project_ids": ["board"],
+                            }
+                        ],
+                    },
+                )
                 if ".." not in invalid:
                     self.write(invalid, original)
-                self.assertIn("PRODUCT_LOAD", {item.code for item in load_repository(self.root).issues})
+                self.assertIn(
+                    "PRODUCT_LOAD", {item.code for item in load_repository(self.root).issues}
+                )
 
     @unittest.skipIf(os.name == "nt", "POSIX symbolic-link boundary")
     def test_product_and_snapshot_reject_linked_source(self) -> None:
@@ -212,29 +341,51 @@ library_roots = ["cad/libraries"]
             _verify_snapshot(self.root, "board", absent)
 
     def test_snapshot_binds_all_configured_source_scopes(self) -> None:
-        for command in (("init",), ("add", "."),
-                        ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.test",
-                         "commit", "-m", "Fixture")):
-            result = subprocess.run(("git", *command), cwd=self.root, capture_output=True,
-                                    text=True, check=False)
+        for command in (
+            ("init",),
+            ("add", "."),
+            (
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.test",
+                "commit",
+                "-m",
+                "Fixture",
+            ),
+        ):
+            result = subprocess.run(
+                ("git", *command), cwd=self.root, capture_output=True, text=True, check=False
+            )
             self.assertEqual(0, result.returncode, result.stderr)
         report = snapshot(self.root, self.root / "build/review")
-        for name in ("kicad-tooling.toml", self.discovery, self.products,
-                     f"{self.project}/project.json", f"{self.product}/product.json",
-                     "policy/templates/template.txt", "handbook/workflow/review.md",
-                     "cad/libraries/fixture.txt"):
+        for name in (
+            "kicad-tooling.toml",
+            self.discovery,
+            self.products,
+            f"{self.project}/project.json",
+            f"{self.product}/product.json",
+            "policy/templates/template.txt",
+            "handbook/workflow/review.md",
+            "cad/libraries/fixture.txt",
+        ):
             with self.subTest(path=name):
-                self.assertEqual(hashlib.sha256((self.root / name).read_bytes()).hexdigest(),
-                                 report.sources_sha256[name])
+                self.assertEqual(
+                    hashlib.sha256((self.root / name).read_bytes()).hexdigest(),
+                    report.sources_sha256[name],
+                )
         self.assertFalse(report.build_authorized)
         self.assertEqual("NOT_RUN", report.checks["kicad"])
 
     def test_product_unittest_suite_is_discovered_through_custom_index(self) -> None:
-        self.write(f"{self.product}/tests/test_product.py", '''import unittest
+        self.write(
+            f"{self.product}/tests/test_product.py",
+            """import unittest
 class ProductTests(unittest.TestCase):
     def test_marker(self):
         self.assertEqual(2, 1 + 1)
-''')
+""",
+        )
         report = run_tests(self.root, ("board",))
         self.assertEqual("PASS", report.status)
         self.assertEqual({"product-device"}, set(report.commands))

@@ -1,4 +1,5 @@
 """Bulk intake is a read-only collection of ordinary one-project previews."""
+
 from __future__ import annotations
 
 import json
@@ -24,8 +25,7 @@ class ImportInventoryTests(unittest.TestCase):
         self.source = Path(temporary.name) / "Old boards"
         self.source.mkdir()
 
-    def write_candidate(self, relative: str, schematic: bool = True,
-                        pcb: bool = False) -> Path:
+    def write_candidate(self, relative: str, schematic: bool = True, pcb: bool = False) -> Path:
         path = self.source / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("{}", encoding="utf-8")
@@ -45,12 +45,18 @@ class ImportInventoryTests(unittest.TestCase):
 
         self.assertEqual(report.status, "PASS", report.issues)
         self.assertFalse(report.copied)
-        self.assertEqual(tuple(item.suggested_project_id for item in report.candidates),
-                         ("power-board", "sub-led-board"))
-        self.assertEqual(tuple(item.kind for item in report.candidates),
-                         (ProjectKind.PCB, ProjectKind.PCB_ONLY))
-        self.assertTrue(all(item.preview.dry_run and item.preview.status == "PASS"
-                            for item in report.candidates))
+        self.assertEqual(
+            tuple(item.suggested_project_id for item in report.candidates),
+            ("power-board", "sub-led-board"),
+        )
+        self.assertEqual(
+            tuple(item.kind for item in report.candidates), (ProjectKind.PCB, ProjectKind.PCB_ONLY)
+        )
+        self.assertTrue(
+            all(
+                item.preview.dry_run and item.preview.status == "PASS" for item in report.candidates
+            )
+        )
         self.assertIn("--source '", report.candidates[0].next_command)
         self.assertIn("kicad_tooling.template diagnose", report.candidates[0].next_command)
         self.assertIn("build/old.kicad_pro", report.skipped_local_state)
@@ -65,22 +71,30 @@ class ImportInventoryTests(unittest.TestCase):
         self.assertEqual(len(report.candidates), 2)
         self.assertEqual(report.candidates[0].preview.status, "PASS")
         self.assertEqual(report.candidates[1].preview.status, "FAIL")
-        self.assertIn("matching .kicad_sch or .kicad_pcb",
-                      report.candidates[1].preview.issues[0])
+        self.assertIn("matching .kicad_sch or .kicad_pcb", report.candidates[1].preview.issues[0])
 
     def test_cli_text_is_brief_and_json_retains_exclusion_detail(self) -> None:
         self.write_candidate("battery.kicad_pro", pcb=True)
-        argv = ["kicad_tooling.template", "scan-imports", "--root", str(reference_root()),
-                "--source-dir", str(self.source), "--toolchain", "kicad-10.0.5"]
-        with (patch.object(sys, "argv", argv),
-              patch("sys.stdout", new_callable=StringIO) as output):
+        argv = [
+            "kicad_tooling.template",
+            "scan-imports",
+            "--root",
+            str(reference_root()),
+            "--source-dir",
+            str(self.source),
+            "--toolchain",
+            "kicad-10.0.5",
+        ]
+        with patch.object(sys, "argv", argv), patch("sys.stdout", new_callable=StringIO) as output:
             self.assertEqual(template_main(), 0)
         payload = json.loads(output.getvalue())
         self.assertEqual(payload["lane"], "IMPORT_INVENTORY")
         self.assertFalse(payload["copied"])
         self.assertIn("copied_sha256", payload["candidates"][0]["preview"])
-        with (patch.object(sys, "argv", [*argv, "--format", "text"]),
-              patch("sys.stdout", new_callable=StringIO) as output):
+        with (
+            patch.object(sys, "argv", [*argv, "--format", "text"]),
+            patch("sys.stdout", new_callable=StringIO) as output,
+        ):
             self.assertEqual(template_main(), 0)
         self.assertIn("Import inventory: PASS; 1 candidate", output.getvalue())
         self.assertIn("suggested ID: battery", output.getvalue())
@@ -89,8 +103,7 @@ class ImportInventoryTests(unittest.TestCase):
         self.write_candidate("battery.kicad_pro", pcb=True)
         report = scan_imports(reference_root(), self.source, "kicad-10.0.5")
         payload = json.loads(report.model_dump_json())
-        self.assertEqual(ImportInventoryReport.model_validate_json(
-            json.dumps(payload)), report)
+        self.assertEqual(ImportInventoryReport.model_validate_json(json.dumps(payload)), report)
         cases = (
             {**payload, "schema_version": "2"},
             {**payload, "copied": "false"},

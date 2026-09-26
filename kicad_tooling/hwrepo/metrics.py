@@ -1,4 +1,5 @@
 """Read-only current-state metrics for template policy and release exceptions."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

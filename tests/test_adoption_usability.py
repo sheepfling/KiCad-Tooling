@@ -1,4 +1,5 @@
 """Fast diagnostics and one-command adoption behavior."""
+
 from __future__ import annotations
 
 import shutil
@@ -78,18 +79,40 @@ class AdoptionUsabilityTests(unittest.TestCase):
             report = doctor(self.root, native=True)
         failures = {row.id for row in report.checks if row.status == "FAIL"}
         self.assertEqual(report.status, "FAIL")
-        self.assertEqual(failures, {
-            "python", "git", "git-repository", "native-target", "native-runner",
-        })
+        self.assertEqual(
+            failures,
+            {
+                "python",
+                "git",
+                "git-repository",
+                "native-target",
+                "native-runner",
+            },
+        )
 
     def test_explicit_runner_requires_native_doctor_mode(self) -> None:
         for runner in ("local", "container"):
             with self.subTest(runner=runner), self.assertRaisesRegex(ValueError, "requires native"):
                 doctor(self.root, runner=runner)
         command = subprocess.run(
-            (sys.executable, "-I", "-B", "-m", "kicad_tooling.template", "doctor", "--root", str(self.root),
-             "--runner", "local", "--format", "text"),
-            cwd=self.root, capture_output=True, text=True, check=False,
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.template",
+                "doctor",
+                "--root",
+                str(self.root),
+                "--runner",
+                "local",
+                "--format",
+                "text",
+            ),
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         self.assertEqual(command.returncode, 2)
         self.assertIn("--runner requires --native", command.stderr)
@@ -102,7 +125,9 @@ class AdoptionUsabilityTests(unittest.TestCase):
             patch("kicad_tooling.hwrepo.doctor.observed_version", return_value="10.0.0"),
         ):
             report = doctor(
-                self.root, native=True, project_id="arduino-uno-status-led",
+                self.root,
+                native=True,
+                project_id="arduino-uno-status-led",
                 toolchain_id="kicad-10.0.0",
             )
         self.assertEqual(report.status, "FAIL")
@@ -115,7 +140,9 @@ class AdoptionUsabilityTests(unittest.TestCase):
             patch("kicad_tooling.hwrepo.doctor.sys.version_info", (3, 11, 1)),
             patch("kicad_tooling.hwrepo.doctor.shutil.which", return_value="/usr/bin/git"),
             patch("kicad_tooling.hwrepo.doctor.command_output", side_effect=self.command_output),
-            patch("kicad_tooling.ci.static_pipeline", return_value=SimpleNamespace(status="PASS")) as pipeline,
+            patch(
+                "kicad_tooling.ci.static_pipeline", return_value=SimpleNamespace(status="PASS")
+            ) as pipeline,
         ):
             report = adopt(self.root, "company-hardware")
         self.assertEqual(report.status, "PASS", report.issues)
@@ -149,7 +176,9 @@ class AdoptionUsabilityTests(unittest.TestCase):
         self.assertEqual(report.initialization, "FAIL")
         self.assertIn("TEMPLATE_UPGRADE", report.issues[0])
         contract = read_model(self.root / "templates/template-contract.json", TemplateContract)
-        self.assertIn(f"upgrade-plan --target-version {contract.template_version}", report.next_actions[0])
+        self.assertIn(
+            f"upgrade-plan --target-version {contract.template_version}", report.next_actions[0]
+        )
 
     def test_adopt_reports_a_newer_record_without_recommending_a_downgrade(self) -> None:
         write_model(
@@ -174,7 +203,9 @@ class AdoptionUsabilityTests(unittest.TestCase):
         with (
             patch("kicad_tooling.hwrepo.doctor.sys.version_info", (3, 11, 1)),
             patch("kicad_tooling.hwrepo.doctor.shutil.which", return_value="/usr/bin/git"),
-            patch("kicad_tooling.hwrepo.doctor.command_output", side_effect=self.command_output) as command,
+            patch(
+                "kicad_tooling.hwrepo.doctor.command_output", side_effect=self.command_output
+            ) as command,
         ):
             report = doctor(self.root)
         self.assertEqual(report.status, "PASS")

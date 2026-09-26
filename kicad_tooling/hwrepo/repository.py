@@ -1,4 +1,5 @@
 """Portable CAD dependencies, project discovery, and tracked-state hygiene."""
+
 from __future__ import annotations
 
 import os
@@ -175,10 +176,10 @@ def generated_artifact(name: str) -> bool:
     """Classify output locations and unambiguous native manufacturing exports."""
     path = PurePosixPath(name)
     return (
-        (bool(path.parts) and path.parts[0].casefold() in {"generated", "schemas"}
-         and name not in {"generated/README.md", "schemas/README.md"})
-        or path.suffix.casefold() in {".gbr", ".gbrjob", ".ger", ".drl", ".pos", ".net"}
-    )
+        bool(path.parts)
+        and path.parts[0].casefold() in {"generated", "schemas"}
+        and name not in {"generated/README.md", "schemas/README.md"}
+    ) or path.suffix.casefold() in {".gbr", ".gbrjob", ".ger", ".drl", ".pos", ".net"}
 
 
 def unmanaged_artifact(name: str) -> bool:
@@ -193,16 +194,23 @@ def unmanaged_artifact(name: str) -> bool:
 
 
 def cad_dependencies(
-    root: Path, file: Path, project_dir: Path, major: str,
+    root: Path,
+    file: Path,
+    project_dir: Path,
+    major: str,
     inventoried_inputs: frozenset[str],
     source_roots: frozenset[str],
     exposed_inputs: frozenset[str] | None = None,
 ) -> list[str]:
     issues: list[str] = []
     text = file.read_text(encoding="utf-8")
-    embedded = set(re.findall(
-        r'\(file\s+\(name\s+"([^"\n]+)"\)\s+\(type\s+model\)\s+'
-        r'\(data\s+\|[A-Za-z0-9+/=\s]+\|\s*\)\s+\(checksum\s+"[A-Fa-f0-9]+"\)\s*\)', text))
+    embedded = set(
+        re.findall(
+            r'\(file\s+\(name\s+"([^"\n]+)"\)\s+\(type\s+model\)\s+'
+            r'\(data\s+\|[A-Za-z0-9+/=\s]+\|\s*\)\s+\(checksum\s+"[A-Fa-f0-9]+"\)\s*\)',
+            text,
+        )
+    )
     previous_match = 0
     line = 1
     for match in re.finditer(r'\((?:uri|model)\s+"([^"\n]*)"', text):
@@ -219,13 +227,19 @@ def cad_dependencies(
         if "\\" in value or PureWindowsPath(value).drive or value.startswith("/"):
             issues.append(f"CAD_PATH: {label}: machine-local dependency {value!r}")
             continue
-        allowed = {f"KICAD{major}_SYMBOL_DIR", f"KICAD{major}_FOOTPRINT_DIR", f"KICAD{major}_3DMODEL_DIR"}
-        variables = re.findall(r'\$\{([^}]+)\}', value)
+        allowed = {
+            f"KICAD{major}_SYMBOL_DIR",
+            f"KICAD{major}_FOOTPRINT_DIR",
+            f"KICAD{major}_3DMODEL_DIR",
+        }
+        variables = re.findall(r"\$\{([^}]+)\}", value)
         if variables and variables[0] in allowed and len(variables) == 1:
             if not value.startswith("${" + variables[0] + "}/") or ".." in value.split("/"):
                 issues.append(f"CAD_PATH: {label}: invalid versioned KiCad library path")
             continue  # Bundled library dependency resolved by the pinned KiCad lane.
-        if any(variable != "KIPRJMOD" for variable in variables) or "$" in value.replace("${KIPRJMOD}", ""):
+        if any(variable != "KIPRJMOD" for variable in variables) or "$" in value.replace(
+            "${KIPRJMOD}", ""
+        ):
             issues.append(f"CAD_PATH: {label}: undocumented path variable {value!r}")
             continue
         target = Path(value.replace("${KIPRJMOD}", project_dir.as_posix()))
@@ -250,17 +264,19 @@ def cad_dependencies(
                     {
                         child.relative_to(root).as_posix()
                         for child in dependency.rglob("*")
-                        if child.is_file() and child.suffix != ".kicad_prl"
+                        if child.is_file()
+                        and child.suffix != ".kicad_prl"
                         and child.name != "fp-info-cache"
                     }
-                    if exposed_inputs is None else {
-                        name for name in exposed_inputs if name.startswith(f"{relative}/")
-                    }
+                    if exposed_inputs is None
+                    else {name for name in exposed_inputs if name.startswith(f"{relative}/")}
                 )
                 if not exposed:
                     raise ValueError("library directory has no inventoried inputs for this project")
                 if unlisted := exposed - inventoried_inputs:
-                    raise ValueError(f"library directory exposes unlisted files: {sorted(unlisted)}")
+                    raise ValueError(
+                        f"library directory exposes unlisted files: {sorted(unlisted)}"
+                    )
         except ValueError as exc:
             issues.append(f"CAD_PATH: {label}: {value!r}: {exc}")
     return issues
@@ -291,7 +307,10 @@ def check_repository(
             source_roots = frozenset(config.source_roots)
             for name in config.required_inputs:
                 path = repo_path(root, name)
-                if path.suffix in {".kicad_pcb", ".kicad_mod"} or path.name in {"sym-lib-table", "fp-lib-table"}:
+                if path.suffix in {".kicad_pcb", ".kicad_mod"} or path.name in {
+                    "sym-lib-table",
+                    "fp-lib-table",
+                }:
                     issues.extend(
                         cad_dependencies(
                             root,
@@ -304,7 +323,8 @@ def check_repository(
                     )
         scan_roots = (
             tuple(root / directory for directory in settings(root).project_roots)
-            if selected is None else tuple(selected_roots)
+            if selected is None
+            else tuple(selected_roots)
         )
         found = {
             path.relative_to(root).as_posix()
@@ -315,7 +335,12 @@ def check_repository(
             and not ephemeral(path.relative_to(root).as_posix())
         }
         issues.extend(f"UNREGISTERED_DESIGN: {name}" for name in sorted(found - inventories))
-        result = subprocess.run(["git", "-c", f"safe.directory={root.as_posix()}", "-C", str(root), "ls-files", "-z"], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["git", "-c", f"safe.directory={root.as_posix()}", "-C", str(root), "ls-files", "-z"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
         for name in result.stdout.split("\0"):
             if name and generated_artifact(name) and (root / name).exists():
                 # A working-tree deletion is the intended fix; CI checks the committed tree.

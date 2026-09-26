@@ -1,4 +1,5 @@
 """ASCII waveform reading for replayable electrical charts and coverage checks."""
+
 from __future__ import annotations
 
 import tempfile
@@ -7,12 +8,16 @@ from pathlib import Path
 
 from kicad_tooling.hwrepo.waveform_data import read_waveform
 
-REAL = ("Title: transient\nFlags: real\nNo. Variables: 2\nNo. Points: 3\n"
-        "Variables:\n0 time time\n1 v(out) voltage\nValues:\n"
-        "0 0\n1\n1 0.001\n4.9\n2 0.005\n5\n")
-COMPLEX = ("Title: AC\nFlags: complex\nNo. Variables: 2\nNo. Points: 2\n"
-           "Variables:\n0 frequency frequency grid=3\n1 v(out) voltage\nValues:\n"
-           "0 1000,0\n1,2\n1 2000,0\n3,-4\n")
+REAL = (
+    "Title: transient\nFlags: real\nNo. Variables: 2\nNo. Points: 3\n"
+    "Variables:\n0 time time\n1 v(out) voltage\nValues:\n"
+    "0 0\n1\n1 0.001\n4.9\n2 0.005\n5\n"
+)
+COMPLEX = (
+    "Title: AC\nFlags: complex\nNo. Variables: 2\nNo. Points: 2\n"
+    "Variables:\n0 frequency frequency grid=3\n1 v(out) voltage\nValues:\n"
+    "0 1000,0\n1,2\n1 2000,0\n3,-4\n"
+)
 
 
 class WaveformDataTests(unittest.TestCase):
@@ -26,8 +31,9 @@ class WaveformDataTests(unittest.TestCase):
         waveform = read_waveform(self.path, expected_axis="time")
         self.assertEqual(waveform.axis_name, "time")
         self.assertEqual(waveform.axis, (0.0, 0.001, 0.005))
-        self.assertEqual([(series.name, series.unit) for series in waveform.series],
-                         [("v(out)", "voltage")])
+        self.assertEqual(
+            [(series.name, series.unit) for series in waveform.series], [("v(out)", "voltage")]
+        )
         self.assertEqual(waveform.series[0].values, (1 + 0j, 4.9 + 0j, 5 + 0j))
 
     def test_ac_data_retains_complex_samples_and_declared_frequency_axis(self) -> None:

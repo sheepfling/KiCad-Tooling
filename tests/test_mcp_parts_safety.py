@@ -1,4 +1,5 @@
 """Purchasing adapter type, file-kind, destination and concurrent-edit regressions."""
+
 from __future__ import annotations
 
 import json
@@ -28,33 +29,43 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
         self.summary = "build/native/controller/summary.json"
 
     def arguments(self, view_id: str = "safety-review"):
-        return {"project_id": "controller", "view_id": view_id,
-                "native_summary": self.summary}
+        return {"project_id": "controller", "view_id": view_id, "native_summary": self.summary}
 
     async def test_quantity_overrides_reject_coercion_before_receipt_creation(self) -> None:
         async with Client(create_server(self.root, allow_exports=True), mode="legacy") as client:
             for name in ("boards", "spare_percent", "spare_minimum"):
                 for value in (True, "2", 2.0):
                     with self.subTest(name=name, value=value):
-                        result = await client.call_tool("prepare_parts", self.arguments() | {name: value})
+                        result = await client.call_tool(
+                            "prepare_parts", self.arguments() | {name: value}
+                        )
                         self.assertTrue(result.is_error, result.content)
                         self.assertFalse((self.root / "build/parts").exists())
             for name, value in (("boards", 0), ("spare_percent", 101), ("spare_minimum", -1)):
                 with self.subTest(name=name, value=value):
-                    result = await client.call_tool("prepare_parts", self.arguments() | {name: value})
+                    result = await client.call_tool(
+                        "prepare_parts", self.arguments() | {name: value}
+                    )
                     self.assertTrue(result.is_error, result.content)
                     self.assertFalse((self.root / "build/parts").exists())
 
     async def test_tool_arguments_cannot_enable_capture_or_choose_a_destination(self) -> None:
         async with Client(create_server(self.root, allow_exports=True), mode="legacy") as client:
-            tool = next(item for item in (await client.list_tools()).tools if item.name == "prepare_parts")
+            tool = next(
+                item for item in (await client.list_tools()).tools if item.name == "prepare_parts"
+            )
             for absent in ("allow_checks", "output", "cli", "root"):
                 self.assertNotIn(absent, tool.input_schema["properties"])
             with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
-                result = await client.call_tool("prepare_parts", {
-                    "project_id": "controller", "view_id": "attempted-capture",
-                    "allow_checks": True, "output": str(self.root.parent / "outside"),
-                })
+                result = await client.call_tool(
+                    "prepare_parts",
+                    {
+                        "project_id": "controller",
+                        "view_id": "attempted-capture",
+                        "allow_checks": True,
+                        "output": str(self.root.parent / "outside"),
+                    },
+                )
             self.assertTrue(result.is_error, result.content)
             prepare.assert_not_called()
             self.assertFalse((self.root / "build/parts").exists())
@@ -71,7 +82,9 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
                 try:
                     with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
                         with self.assertRaisesRegex(ValueError, "regular"):
-                            mcp_parts.prepare_parts(self.root, "controller", "special-file", self.summary)
+                            mcp_parts.prepare_parts(
+                                self.root, "controller", "special-file", self.summary
+                            )
                         prepare.assert_not_called()
                     self.assertFalse((self.root / "build/parts").exists())
                 finally:
@@ -84,7 +97,9 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
         os.mkfifo(self.preferences)
         with patch("kicad_tooling.hwrepo.parts_workflow.prepare") as prepare:
             with self.assertRaises(ValueError):
-                mcp_parts.prepare_parts(self.root, "controller", "special-preferences", self.summary)
+                mcp_parts.prepare_parts(
+                    self.root, "controller", "special-preferences", self.summary
+                )
             prepare.assert_not_called()
         self.assertFalse((self.root / "build/parts").exists())
 
@@ -122,9 +137,15 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
             write_model(path, competing)
             return original_init(root, project_id, path, preferences)
 
-        with (patch("kicad_tooling.hwrepo.parts_workflow.init_preferences", side_effect=create_competing),
-              self.assertRaises(FileExistsError)):
-            mcp_parts.save_parts_preferences(self.root, "controller", PurchasingPreferences(boards=2))
+        with (
+            patch(
+                "kicad_tooling.hwrepo.parts_workflow.init_preferences", side_effect=create_competing
+            ),
+            self.assertRaises(FileExistsError),
+        ):
+            mcp_parts.save_parts_preferences(
+                self.root, "controller", PurchasingPreferences(boards=2)
+            )
         self.assertEqual(read_model(self.preferences, PurchasingPreferences), competing)
         expected = digest(self.preferences)
         original_apply = mcp_files.apply_project_edit
@@ -134,20 +155,31 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
             write_model(self.preferences, changed)
             return original_apply(*args, **kwargs)
 
-        with (patch("kicad_tooling.hwrepo.mcp_files.apply_project_edit", side_effect=change_before_apply),
-              self.assertRaisesRegex(ValueError, "hash mismatch")):
+        with (
+            patch(
+                "kicad_tooling.hwrepo.mcp_files.apply_project_edit", side_effect=change_before_apply
+            ),
+            self.assertRaisesRegex(ValueError, "hash mismatch"),
+        ):
             mcp_parts.save_parts_preferences(
-                self.root, "controller", PurchasingPreferences(boards=3), expected,
+                self.root,
+                "controller",
+                PurchasingPreferences(boards=3),
+                expected,
             )
         self.assertEqual(read_model(self.preferences, PurchasingPreferences), changed)
         self.assertFalse(list(self.preferences.parent.glob(".mcp-edit-*")))
 
-    async def test_binary_duplicate_and_wrong_shape_preferences_remain_blocked_receipts(self) -> None:
+    async def test_binary_duplicate_and_wrong_shape_preferences_remain_blocked_receipts(
+        self,
+    ) -> None:
         async with Client(create_server(self.root, allow_exports=True), mode="legacy") as client:
-            for index, content in enumerate((b"\xff\x00", b'{"boards":2,"boards":3}', b'[]')):
+            for index, content in enumerate((b"\xff\x00", b'{"boards":2,"boards":3}', b"[]")):
                 with self.subTest(content=content):
                     self.preferences.write_bytes(content)
-                    result = await client.call_tool("prepare_parts", self.arguments(f"bad-prefs-{index}"))
+                    result = await client.call_tool(
+                        "prepare_parts", self.arguments(f"bad-prefs-{index}")
+                    )
                     self.assertFalse(result.is_error, result.content)
                     self.assertIsNotNone(result.structured_content)
                     report = result.structured_content
@@ -172,28 +204,41 @@ class McpPartsSafetyTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse((Path(report["receipt_dir"]) / "digikey.csv").exists())
         self.assertTrue((Path(report["receipt_dir"]) / "bom.csv").is_file())
 
-    async def test_preference_result_roundtrips_and_existing_noop_requires_current_digest(self) -> None:
+    async def test_preference_result_roundtrips_and_existing_noop_requires_current_digest(
+        self,
+    ) -> None:
         async with Client(create_server(self.root, allow_edits=True), mode="legacy") as client:
             arguments = {"project_id": "controller", "preferences": {"boards": 2}}
             created = await client.call_tool("save_parts_preferences", arguments)
             self.assertFalse(created.is_error, created.content)
-            report = McpPurchasingPreferencesResult.model_validate_json(json.dumps(created.structured_content))
+            report = McpPurchasingPreferencesResult.model_validate_json(
+                json.dumps(created.structured_content)
+            )
             self.assertEqual(report.project_id, "controller")
             self.assertEqual(report.preferences.boards, 2)
             self.assertFalse(report.purchase_authorized)
             before = self.preferences.read_bytes()
-            noop = await client.call_tool("save_parts_preferences", arguments | {
-                "expected_sha256": report.after_sha256,
-            })
+            noop = await client.call_tool(
+                "save_parts_preferences",
+                arguments
+                | {
+                    "expected_sha256": report.after_sha256,
+                },
+            )
             self.assertFalse(noop.is_error, noop.content)
             self.assertEqual(self.preferences.read_bytes(), before)
-            stale = await client.call_tool("save_parts_preferences", arguments | {
-                "expected_sha256": "0" * 64,
-            })
+            stale = await client.call_tool(
+                "save_parts_preferences",
+                arguments
+                | {
+                    "expected_sha256": "0" * 64,
+                },
+            )
             self.assertTrue(stale.is_error)
-            self.assertIn("hash mismatch", " ".join(
-                item.text for item in stale.content if isinstance(item, TextContent)
-            ))
+            self.assertIn(
+                "hash mismatch",
+                " ".join(item.text for item in stale.content if isinstance(item, TextContent)),
+            )
             self.assertEqual(self.preferences.read_bytes(), before)
 
 

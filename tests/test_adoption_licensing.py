@@ -1,4 +1,5 @@
 """Adoption keeps the company's first commit independent of the root template notice."""
+
 from __future__ import annotations
 
 import shutil
@@ -29,13 +30,22 @@ class AdoptionLicensingTests(unittest.TestCase):
         self.commit(self.root)
 
     def git(self, root: Path, *args: str) -> str:
-        return subprocess.run(("git", "-C", str(root), *args), check=True,
-                              capture_output=True, text=True).stdout.strip()
+        return subprocess.run(
+            ("git", "-C", str(root), *args), check=True, capture_output=True, text=True
+        ).stdout.strip()
 
     def commit(self, root: Path) -> None:
         self.git(root, "add", "--all")
-        self.git(root, "-c", "user.name=Scaffold licensing test", "-c",
-                 "user.email=fixture@example.invalid", "commit", "-qm", "Synthetic adoption fixture")
+        self.git(
+            root,
+            "-c",
+            "user.name=Scaffold licensing test",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Synthetic adoption fixture",
+        )
 
     def test_company_first_commit_contains_its_own_root_license(self) -> None:
         self.assertEqual(template_license(self.root), self.root / "LICENSE")
@@ -48,7 +58,9 @@ class AdoptionLicensingTests(unittest.TestCase):
         self.assertEqual((self.root / "LICENSE").read_bytes(), self.original)
         self.assertEqual(initialize(destination, "company-hardware").status, "PASS")
         self.assertEqual(preflight(destination).status, "PASS")
-        self.assertEqual((destination / self.notice).read_bytes(), (self.root / self.notice).read_bytes())
+        self.assertEqual(
+            (destination / self.notice).read_bytes(), (self.root / self.notice).read_bytes()
+        )
         company_notice = "Synthetic company license fixture: all rights reserved."
         (destination / "LICENSE").write_text(company_notice, encoding="utf-8")
         initialize_git(destination)
@@ -82,7 +94,9 @@ class AdoptionLicensingTests(unittest.TestCase):
                 self.assertEqual(result.status, "PASS", result.issues)
                 self.assertEqual(result.removed, ())
                 self.assertEqual((destination / "LICENSE").read_bytes(), notice)
-                self.assertEqual((destination / self.notice).read_bytes(), (self.root / self.notice).read_bytes())
+                self.assertEqual(
+                    (destination / self.notice).read_bytes(), (self.root / self.notice).read_bytes()
+                )
 
     def test_no_root_license_is_a_valid_adoption_start(self) -> None:
         (self.root / "LICENSE").unlink()

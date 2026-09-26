@@ -1,4 +1,5 @@
 """Test the checker itself; these unit tests do not stand in for KiCad execution."""
+
 from __future__ import annotations
 
 import csv
@@ -43,12 +44,14 @@ class ValidationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root: Path = Path(self.temp.name)
         self.config = load_config(ROOT, ROOT / "examples/projects/controller/project.json")
+
     ####
 
     def report(self, data: JsonValue) -> Path:
         path: Path = self.root / "report.json"
         path.write_text(json.dumps(data))
         return path
+
     ####
 
     def fixture(self) -> None:
@@ -59,38 +62,62 @@ class ValidationTests(unittest.TestCase):
         ):
             shutil.copytree(ROOT / directory, self.root / directory)
         initialize_git(self.root)
+
     ####
 
     def test_erc_clean(self) -> None:
         data: JsonObject = {"kicad_version": "10.0.0", "sheets": [{"violations": []}]}
         self.assertEqual(check_report(self.report(data), "erc"), 0)
+
     ####
 
     def test_erc_all_findings_count(self) -> None:
-        data: JsonObject = {"kicad_version": "10.0.0", "sheets": [{"violations": [{"severity": "warning"}, {"excluded": True}]}]}
+        data: JsonObject = {
+            "kicad_version": "10.0.0",
+            "sheets": [{"violations": [{"severity": "warning"}, {"excluded": True}]}],
+        }
         self.assertEqual(check_report(self.report(data), "erc"), 2)
+
     ####
 
     def test_incomplete_reports_rejected(self) -> None:
-        for data in ({}, [], {"kicad_version": "10.0.0"}, {"kicad_version": "10.0.0", "sheets": []}):
+        for data in (
+            {},
+            [],
+            {"kicad_version": "10.0.0"},
+            {"kicad_version": "10.0.0", "sheets": []},
+        ):
             with self.subTest(data=data), self.assertRaises((ValueError, TypeError)):
                 check_report(self.report(data), "erc")
             ####
         ####
+
     ####
 
     def test_drc_clean_requires_parity(self) -> None:
-        data: JsonObject = {"kicad_version": "10.0.0", "violations": [], "unconnected_items": [], "schematic_parity": []}
+        data: JsonObject = {
+            "kicad_version": "10.0.0",
+            "violations": [],
+            "unconnected_items": [],
+            "schematic_parity": [],
+        }
         self.assertEqual(check_report(self.report(data), "drc"), 0)
         del data["schematic_parity"]
         with self.assertRaises((TypeError, ValueError)):
             check_report(self.report(data), "drc")
         ####
+
     ####
 
     def test_drc_counts_every_category(self) -> None:
-        data: JsonObject = {"kicad_version": "10.0.0", "violations": [{}], "unconnected_items": [{}], "schematic_parity": [{}]}
+        data: JsonObject = {
+            "kicad_version": "10.0.0",
+            "violations": [{}],
+            "unconnected_items": [{}],
+            "schematic_parity": [{}],
+        }
         self.assertEqual(check_report(self.report(data), "drc"), 3)
+
     ####
 
     def test_pcb_only_drc_has_no_schematic_parity_requirement(self) -> None:
@@ -132,26 +159,35 @@ class ValidationTests(unittest.TestCase):
         components["R1"] = components["R1"].model_copy(
             update={"value": "=1+1", "footprint": " @unsafe"}
         )
-        config = self.config.model_copy(update={
-            "validation": self.config.validation.model_copy(update={"components": components}),
-        })
+        config = self.config.model_copy(
+            update={
+                "validation": self.config.validation.model_copy(update={"components": components}),
+            }
+        )
 
-        def run_kicad(argv: tuple[str, ...], _cwd: Path, output: Path, name: str) -> CommandEvidence:
+        def run_kicad(
+            argv: tuple[str, ...], _cwd: Path, output: Path, name: str
+        ) -> CommandEvidence:
             if name in {"erc", "drc"}:
                 report: JsonObject = {
                     "$schema": f"https://schemas.kicad.org/{name}.v1.json",
                     "kicad_version": config.kicad_version,
                     "included_severities": ["error", "warning", "exclusion"],
                     "ignored_checks": [
-                        {"key": key} for key in getattr(config.validation.expected_ignored_checks, name)
+                        {"key": key}
+                        for key in getattr(config.validation.expected_ignored_checks, name)
                     ],
                 }
                 if name == "erc":
                     report["sheets"] = [{"violations": []}]
                 else:
-                    report.update({
-                        "violations": [], "unconnected_items": [], "schematic_parity": [],
-                    })
+                    report.update(
+                        {
+                            "violations": [],
+                            "unconnected_items": [],
+                            "schematic_parity": [],
+                        }
+                    )
                 (output / f"{name}.json").write_text(json.dumps(report), encoding="utf-8")
             elif name == "schematic_svg":
                 directory = output / "schematic"
@@ -166,7 +202,9 @@ class ValidationTests(unittest.TestCase):
             elif name == "netlist":
                 (output / "netlist.xml").write_text("<export/>", encoding="utf-8")
             return CommandEvidence(
-                argv=argv, started_utc="2026-01-01T00:00:00+00:00", returncode=0,
+                argv=argv,
+                started_utc="2026-01-01T00:00:00+00:00",
+                returncode=0,
                 stdout=f"{config.kicad_version}\n" if name == "version" else "",
             )
 
@@ -176,11 +214,15 @@ class ValidationTests(unittest.TestCase):
             patch("kicad_tooling.validate.cli_executable", return_value="fake-kicad-cli"),
             patch("kicad_tooling.validate.execute", side_effect=run_kicad),
             patch("kicad_tooling.validate.check_netlist"),
-            patch("kicad_tooling.hwrepo.product.check_project_netlist",
-                  return_value=NetlistIdentityReport(status="PASS")),
+            patch(
+                "kicad_tooling.hwrepo.product.check_project_netlist",
+                return_value=NetlistIdentityReport(status="PASS"),
+            ),
         ):
             result = validate(
-                self.root, output, "fake-kicad-cli",
+                self.root,
+                output,
+                "fake-kicad-cli",
                 Path("examples/projects/controller/project.json"),
             )
         self.assertEqual(result.status, "PASS", result.checks)
@@ -205,7 +247,9 @@ class ValidationTests(unittest.TestCase):
         (island / "legacy-layout.kicad_pcb").write_text("(kicad_pcb)", encoding="utf-8")
         commands: list[tuple[str, ...]] = []
 
-        def run_kicad(argv: tuple[str, ...], _cwd: Path, output: Path, name: str) -> CommandEvidence:
+        def run_kicad(
+            argv: tuple[str, ...], _cwd: Path, output: Path, name: str
+        ) -> CommandEvidence:
             commands.append(argv)
             if name == "version":
                 return CommandEvidence(
@@ -215,14 +259,19 @@ class ValidationTests(unittest.TestCase):
                     stdout="10.0.5\n",
                 )
             if name == "drc":
-                (output / "drc.json").write_text(json.dumps({
-                    "$schema": "https://schemas.kicad.org/drc.v1.json",
-                    "kicad_version": "10.0.5",
-                    "included_severities": ["error", "warning", "exclusion"],
-                    "ignored_checks": [],
-                    "violations": [],
-                    "unconnected_items": [],
-                }), encoding="utf-8")
+                (output / "drc.json").write_text(
+                    json.dumps(
+                        {
+                            "$schema": "https://schemas.kicad.org/drc.v1.json",
+                            "kicad_version": "10.0.5",
+                            "included_severities": ["error", "warning", "exclusion"],
+                            "ignored_checks": [],
+                            "violations": [],
+                            "unconnected_items": [],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
             elif name == "pcb_svg":
                 (output / "pcb.svg").write_text(
                     '<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8"
@@ -246,10 +295,19 @@ class ValidationTests(unittest.TestCase):
                 Path("projects/legacy-layout/project.json"),
             )
         self.assertEqual(result.status, "PASS", result.checks)
-        self.assertEqual(set(result.checks), {
-            "governance", "repository", "product_policy", "source_scope", "toolchain",
-            "drc", "pcb_svg", "source_unchanged",
-        })
+        self.assertEqual(
+            set(result.checks),
+            {
+                "governance",
+                "repository",
+                "product_policy",
+                "source_scope",
+                "toolchain",
+                "drc",
+                "pcb_svg",
+                "source_unchanged",
+            },
+        )
         calls = "\n".join(" ".join(command[1:]) for command in commands)
         self.assertIn("pcb drc", calls)
         self.assertIn("pcb export svg", calls)
@@ -266,22 +324,34 @@ class ValidationTests(unittest.TestCase):
     def test_unfinished_import_contract_never_passes_an_empty_export(self) -> None:
         path = self.root / "empty.xml"
         path.write_text("<export><components/><nets/></export>")
-        contract = PcbValidationContract(kind=ProjectKind.PCB, components={}, nets={},
-                                        expected_ignored_checks=IgnoredChecks(erc=(), drc=()))
+        contract = PcbValidationContract(
+            kind=ProjectKind.PCB,
+            components={},
+            nets={},
+            expected_ignored_checks=IgnoredChecks(erc=(), drc=()),
+        )
         with self.assertRaisesRegex(ValueError, "Complete the component"):
             check_netlist(path, contract)
 
-    def test_realistic_net_names_and_missing_footprints_parse_and_connection_changes_fail(self) -> None:
+    def test_realistic_net_names_and_missing_footprints_parse_and_connection_changes_fail(
+        self,
+    ) -> None:
         path = self.root / "native.xml"
-        source = ('<export><components><comp ref="J1"><value>USB</value></comp></components>'
-                  '<nets><net name="/+3.3V"><node ref="J1" pin="1"/></net>'
-                  '<net name="/channel/D+[0]"><node ref="J1" pin="3"/></net></nets></export>')
+        source = (
+            '<export><components><comp ref="J1"><value>USB</value></comp></components>'
+            '<nets><net name="/+3.3V"><node ref="J1" pin="1"/></net>'
+            '<net name="/channel/D+[0]"><node ref="J1" pin="3"/></net></nets></export>'
+        )
         path.write_text(source)
         observed = read_netlist(path)
         self.assertIn("channel/D+[0]", observed.nets)
         self.assertEqual(observed.components["J1"].footprint, "")
-        contract = PcbValidationContract(kind=ProjectKind.PCB, components=observed.components,
-            nets=observed.nets, expected_ignored_checks=IgnoredChecks(erc=(), drc=()))
+        contract = PcbValidationContract(
+            kind=ProjectKind.PCB,
+            components=observed.components,
+            nets=observed.nets,
+            expected_ignored_checks=IgnoredChecks(erc=(), drc=()),
+        )
         self.assertEqual(check_netlist(path, contract), observed)
         path.write_text(source.replace('pin="3"', 'pin="2"'))
         with self.assertRaisesRegex(ValueError, "channel/D"):
@@ -291,16 +361,20 @@ class ValidationTests(unittest.TestCase):
         self.fixture()
         board = self.root / "examples/projects/controller/kicad/controller.kicad_pcb"
         board.write_text(board.read_text() + '\n(model "/missing/machine-local.step")\n')
-        result = check_all(self.root, self.root / "blocked-native", "intentionally-absent-kicad", ["controller"])
+        result = check_all(
+            self.root, self.root / "blocked-native", "intentionally-absent-kicad", ["controller"]
+        )
         self.assertEqual(result.status, "FAIL")
         self.assertEqual(result.projects, ())
         self.assertIn("machine-local dependency", " ".join(result.repository.issues))
         ####
+
     ####
 
     def test_fixture_inventory_matches(self) -> None:
         config = load_config(ROOT, ROOT / "examples/projects/controller/project.json")
         self.assertEqual(set(hashes(ROOT, config.source_roots)), set(config.required_inputs))
+
     ####
 
     def test_missing_tool_is_failure(self) -> None:
@@ -308,6 +382,7 @@ class ValidationTests(unittest.TestCase):
         result = validate(self.root, self.root / "out", "intentionally-absent-kicad")
         self.assertEqual(result.status, "FAIL")
         self.assertIn("missing", result.checks["preflight"].error or "")
+
     ####
 
     def test_missing_dependency_is_failure(self) -> None:
@@ -316,6 +391,7 @@ class ValidationTests(unittest.TestCase):
         result = validate(self.root, self.root / "out", "intentionally-absent-kicad")
         self.assertEqual(result.status, "FAIL")
         self.assertIn("inventory", result.checks["preflight"].error or "")
+
     ####
 
     def test_unknown_board_is_failure(self) -> None:
@@ -324,6 +400,7 @@ class ValidationTests(unittest.TestCase):
         result = validate(self.root, self.root / "out", "intentionally-absent-kicad")
         self.assertEqual(result.status, "FAIL")
         self.assertIn("extra.kicad_pcb", result.checks["preflight"].error or "")
+
     ####
 
     def test_no_overwriting_retained_evidence(self) -> None:
@@ -332,6 +409,7 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             validate(self.root, self.root / "out", "intentionally-absent-kicad")
         ####
+
     ####
 
     def test_source_hash_detects_mutation(self) -> None:
@@ -339,6 +417,7 @@ class ValidationTests(unittest.TestCase):
         before = hashes(self.root, self.config.source_roots)
         (self.root / "examples/projects/controller/kicad/controller.kicad_pro").write_text("{}")
         self.assertNotEqual(before, hashes(self.root, self.config.source_roots))
+
     ####
 
     def test_all_project_check_reports_missing_tool(self) -> None:
@@ -348,6 +427,7 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(result.governance.status, "PASS")
         self.assertIn("controller", {project.id for project in result.projects})
         self.assertEqual(result.projects[0].status, "FAIL")
+
     ####
 
     def test_declared_shared_library_root_is_hashed(self) -> None:
@@ -359,6 +439,9 @@ class ValidationTests(unittest.TestCase):
         scoped = hashes(self.root, ["examples/projects", "libraries/shared"])
         self.assertIn("libraries/shared/Example.kicad_sym", scoped)
         self.assertNotEqual(hashes(self.root, self.config.source_roots), scoped)
+
     ####
+
+
 if __name__ == "__main__":
     unittest.main()

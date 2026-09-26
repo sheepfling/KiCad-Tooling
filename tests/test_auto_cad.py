@@ -1,4 +1,5 @@
 """Automatic CAD plans preserve geometry and cannot apply stale or altered sources."""
+
 from __future__ import annotations
 
 import os
@@ -60,9 +61,14 @@ class AutoCadTests(unittest.TestCase):
         applied = self.apply(report)
         self.assertEqual(applied.status, "APPLIED", applied.issues)
         self.assertIn(TRANSFORM, self.board.read_text())
-        after_without_model = self.board.read_text().split('\n    (model ')[0] + self.board.read_text().split(TRANSFORM + ')\n  ')[1]
+        after_without_model = (
+            self.board.read_text().split("\n    (model ")[0]
+            + self.board.read_text().split(TRANSFORM + ")\n  ")[1]
+        )
         self.assertEqual(after_without_model, before)
-        manifest = read_model(self.root / "examples/projects/controller/project.json", ProjectManifest)
+        manifest = read_model(
+            self.root / "examples/projects/controller/project.json", ProjectManifest
+        )
         self.assertTrue(any(path.endswith(".step") for path in manifest.required_inputs))
         self.assertTrue(any(path.endswith("provenance.json") for path in manifest.required_inputs))
         rerun = self.plan()
@@ -74,9 +80,14 @@ class AutoCadTests(unittest.TestCase):
         self.assertEqual(applied.status, "APPLIED")
         provenance = next((self.board.parent / "cad").rglob("provenance.json"))
         before = provenance.read_bytes()
-        relocated = replace(self.pair, source_path=Path("/another-machine/footprint.kicad_mod"),
+        relocated = replace(
+            self.pair,
+            source_path=Path("/another-machine/footprint.kicad_mod"),
             provenance="Identical library on a different machine",
-            models=(replace(self.pair.models[0], source_path=Path("/another-machine/TwoPin.step")),))
+            models=(
+                replace(self.pair.models[0], source_path=Path("/another-machine/TwoPin.step")),
+            ),
+        )
         with patch("kicad_tooling.hwrepo.auto_cad._resolve", return_value=relocated):
             report = self.plan()
         self.assertEqual(report.files, (), report.issues)
@@ -109,14 +120,20 @@ class AutoCadTests(unittest.TestCase):
         plan_path.write_text(altered.model_dump_json())
         self.assertEqual(self.apply(report).status, "BLOCKED")
         plan_path.write_text(spec.model_dump_json())
-        changed = replace(self.pair, models=(replace(self.pair.models[0], source_bytes=b"changed"),))
+        changed = replace(
+            self.pair, models=(replace(self.pair.models[0], source_bytes=b"changed"),)
+        )
         with patch("kicad_tooling.hwrepo.auto_cad._resolve", return_value=changed):
             self.assertEqual(self.apply(report).status, "BLOCKED")
         self.assertNotIn("(model", self.board.read_text())
 
     def test_mid_transaction_write_failure_rolls_back_every_source(self) -> None:
         report = self.plan()
-        before = {path: path.read_bytes() for path in self.root.rglob("*") if path.is_file() and "build" not in path.parts}
+        before = {
+            path: path.read_bytes()
+            for path in self.root.rglob("*")
+            if path.is_file() and "build" not in path.parts
+        }
         replace_file = os.replace
         calls = 0
 
@@ -130,7 +147,11 @@ class AutoCadTests(unittest.TestCase):
         with patch("kicad_tooling.hwrepo.auto_cad.os.replace", side_effect=fail_once):
             result = self.apply(report)
         self.assertEqual(result.status, "BLOCKED")
-        after = {path: path.read_bytes() for path in self.root.rglob("*") if path.is_file() and "build" not in path.parts}
+        after = {
+            path: path.read_bytes()
+            for path in self.root.rglob("*")
+            if path.is_file() and "build" not in path.parts
+        }
         self.assertEqual(after, before)
 
     def test_existing_wrong_model_is_not_labeled_aligned(self) -> None:
@@ -140,7 +161,9 @@ class AutoCadTests(unittest.TestCase):
         self.assertIn("existing 3D assignment", report.issues[0])
 
     def test_legacy_modules_are_not_silently_reported_as_an_empty_board(self) -> None:
-        self.board.write_text(board().replace('(footprint "Paired:TwoPin"', '(module "Paired:TwoPin"'))
+        self.board.write_text(
+            board().replace('(footprint "Paired:TwoPin"', '(module "Paired:TwoPin"')
+        )
         report = self.plan()
         self.assertEqual(report.status, "BLOCKED")
         self.assertIn("legacy", report.issues[0])
@@ -151,9 +174,11 @@ class AutoCadTests(unittest.TestCase):
         assert report.plan_path is not None
         spec = read_model(Path(report.plan_path), AutoCadPlan)
         self.assertEqual(AutoCadPlan.model_validate_json(spec.model_dump_json()), spec)
-        for raw in (spec.model_dump_json().replace('"1"', '"2"', 1),
-                    spec.model_dump_json()[:-1] + ',"unexpected":1}',
-                    spec.model_dump_json().replace('"controller"', '123')):
+        for raw in (
+            spec.model_dump_json().replace('"1"', '"2"', 1),
+            spec.model_dump_json()[:-1] + ',"unexpected":1}',
+            spec.model_dump_json().replace('"controller"', "123"),
+        ):
             with self.assertRaises(ValidationError):
                 AutoCadPlan.model_validate_json(raw)
 

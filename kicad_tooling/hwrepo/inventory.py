@@ -1,4 +1,5 @@
 """Read-only inventory of selectable projects, cohorts and approved toolchains."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -38,7 +39,9 @@ def inventory(root: Path) -> TemplateInventoryReport:
         for entry in products.products:
             product = read_model(repo_path(root, entry.path), ProductRecord)
             if product.id != entry.id:
-                raise ValueError(f"{entry.path}: product ID {product.id} differs from index ID {entry.id}")
+                raise ValueError(
+                    f"{entry.path}: product ID {product.id} differs from index ID {entry.id}"
+                )
             if len({name.casefold() for name in entry.project_ids}) != len(entry.project_ids):
                 raise ValueError(f"{layout(root).products}: duplicate project IDs in product index")
             unknown = sorted(set(entry.project_ids) - known_projects)
@@ -58,14 +61,19 @@ def inventory(root: Path) -> TemplateInventoryReport:
             local_files = (manifest.project, manifest.checks, *manifest.required_inputs)
             files = [f"{directory}/{name}" for name in local_files]
             files.extend(manifest.shared_inputs)
-            files.extend(f"{directory}/{name}" for name in
-                         (manifest.mechanical_handoff, manifest.governance_record) if name is not None)
+            files.extend(
+                f"{directory}/{name}"
+                for name in (manifest.mechanical_handoff, manifest.governance_record)
+                if name is not None
+            )
             directories = [f"{directory}/{name}" for name in manifest.source_roots]
             directories.extend(manifest.shared_source_roots)
-            missing = tuple(sorted(
-                {name for name in files if not repo_path(root, name).is_file()}
-                | {name for name in directories if not repo_path(root, name).is_dir()}
-            ))
+            missing = tuple(
+                sorted(
+                    {name for name in files if not repo_path(root, name).is_file()}
+                    | {name for name in directories if not repo_path(root, name).is_dir()}
+                )
+            )
             checks_path = repo_path(root, f"{directory}/{manifest.checks}")
             if checks_path.is_file():
                 contract = read_model(checks_path, ProjectTestContract)
@@ -73,39 +81,52 @@ def inventory(root: Path) -> TemplateInventoryReport:
                     raise ValueError(f"{checks_path}: validation kind differs from project kind")
             for tag in manifest.tags:
                 tag_members[tag].append(record.id)
-            project_rows.append(InventoryProject(
-                id=record.id, kind=record.kind, status=record.status,
-                assurance_profile=record.assurance_profile, manifest=record.config,
-                project=record.project, toolchain_id=manifest.toolchain_id,
-                tags=tuple(sorted(set(manifest.tags))),
-                products=tuple(sorted(project_products[record.id])),
-                readiness="NEEDS_INPUTS" if missing else "INPUTS_PRESENT",
-                missing_inputs=missing,
-                next_command=(
-                    f"Complete declared inputs for {record.id}, then run "
-                    f"python -B -m kicad_tooling.verify --project {record.id} --format text"
-                    if missing else
-                    f"python -B -m kicad_tooling.verify --project {record.id} --format text"
-                ),
-            ))
+            project_rows.append(
+                InventoryProject(
+                    id=record.id,
+                    kind=record.kind,
+                    status=record.status,
+                    assurance_profile=record.assurance_profile,
+                    manifest=record.config,
+                    project=record.project,
+                    toolchain_id=manifest.toolchain_id,
+                    tags=tuple(sorted(set(manifest.tags))),
+                    products=tuple(sorted(project_products[record.id])),
+                    readiness="NEEDS_INPUTS" if missing else "INPUTS_PRESENT",
+                    missing_inputs=missing,
+                    next_command=(
+                        f"Complete declared inputs for {record.id}, then run "
+                        f"python -B -m kicad_tooling.verify --project {record.id} --format text"
+                        if missing
+                        else f"python -B -m kicad_tooling.verify --project {record.id} --format text"
+                    ),
+                )
+            )
         return TemplateInventoryReport(
-            status="PASS", projects=tuple(project_rows),
+            status="PASS",
+            projects=tuple(project_rows),
             products=tuple(sorted(product_rows, key=lambda item: item.id)),
-            tags=tuple(InventoryGroup(id=tag, project_ids=tuple(sorted(members)))
-                       for tag, members in sorted(tag_members.items())),
-            toolchains=tuple(InventoryToolchain(id=record.id, kicad_version=record.kicad_version)
-                             for record in sorted(toolchains.toolchains, key=lambda item: item.id)),
+            tags=tuple(
+                InventoryGroup(id=tag, project_ids=tuple(sorted(members)))
+                for tag, members in sorted(tag_members.items())
+            ),
+            toolchains=tuple(
+                InventoryToolchain(id=record.id, kicad_version=record.kicad_version)
+                for record in sorted(toolchains.toolchains, key=lambda item: item.id)
+            ),
             next_actions=(
                 "No live projects are registered. Create one with kicad_tooling.template new-project."
-                if not project_rows else
-                "Input presence is not validation. Run the selected verify command and review its receipt.",
+                if not project_rows
+                else "Input presence is not validation. Run the selected verify command and review its receipt.",
             ),
         )
     except (OSError, ValueError) as exc:
         return TemplateInventoryReport(
             status="FAIL",
             issues=(PolicyIssue(code="INVENTORY_INPUT", location="repository", message=str(exc)),),
-            next_actions=("Repair the named catalog or project manifest, then rerun kicad_tooling.template list.",),
+            next_actions=(
+                "Repair the named catalog or project manifest, then rerun kicad_tooling.template list.",
+            ),
         )
 
 

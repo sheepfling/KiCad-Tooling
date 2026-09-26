@@ -1,4 +1,5 @@
 """Actual CLI and MCP generation outputs share selection and review-only semantics."""
+
 from __future__ import annotations
 
 import json
@@ -16,8 +17,11 @@ from tests.support import reference_root
 
 
 def files(root: Path) -> dict[str, bytes]:
-    return {path.relative_to(root).as_posix(): path.read_bytes()
-            for path in root.rglob("*") if path.is_file()}
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in root.rglob("*")
+        if path.is_file()
+    }
 
 
 class GenerationParityTests(unittest.IsolatedAsyncioTestCase):
@@ -26,13 +30,30 @@ class GenerationParityTests(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(temporary.cleanup)
         self.base = Path(temporary.name).resolve()
         self.root = self.base / "repository"
-        shutil.copytree(reference_root(), self.root,
-                        ignore=shutil.ignore_patterns(".git", "build", "__pycache__"))
+        shutil.copytree(
+            reference_root(),
+            self.root,
+            ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
+        )
 
     def cli(self, *arguments: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.hardware", "generate",
-                               "--root", str(self.root), *arguments),
-                              cwd=self.root, text=True, capture_output=True, check=False)
+        return subprocess.run(
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.hardware",
+                "generate",
+                "--root",
+                str(self.root),
+                *arguments,
+            ),
+            cwd=self.root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
 
     async def test_cli_and_mcp_generate_identical_scoped_files(self) -> None:
         selections = (
@@ -40,10 +61,15 @@ class GenerationParityTests(unittest.IsolatedAsyncioTestCase):
             (("--project", "project_ids", "arduino-uno-status-led"),),
             (("--product", "product_ids", "status-indicator-system"),),
             (("--tag", "tags", "status-led"),),
-            (("--project", "project_ids", "controller"),
-             ("--tag", "tags", "reference"), ("--exclude-tag", "exclude_tags", "status-led")),
-            (("--project", "project_ids", "controller"),
-             ("--project", "project_ids", "arduino-uno-status-led")),
+            (
+                ("--project", "project_ids", "controller"),
+                ("--tag", "tags", "reference"),
+                ("--exclude-tag", "exclude_tags", "status-led"),
+            ),
+            (
+                ("--project", "project_ids", "controller"),
+                ("--project", "project_ids", "arduino-uno-status-led"),
+            ),
         )
         async with Client(create_server(self.root, allow_exports=True), mode="legacy") as client:
             for index, selection in enumerate(selections):
@@ -86,14 +112,20 @@ class GenerationParityTests(unittest.IsolatedAsyncioTestCase):
         (self.root / bom).write_bytes(b"stale generated output")
         repeated = self.cli()
         self.assertEqual(repeated.returncode, 0, repeated.stderr + repeated.stdout)
-        self.assertEqual({name: (self.root / name).read_bytes() for name in report["generated"]}, original)
+        self.assertEqual(
+            {name: (self.root / name).read_bytes() for name in report["generated"]}, original
+        )
 
     def test_invalid_selection_fails_before_fresh_output_creation(self) -> None:
-        for index, arguments in enumerate((
-            ("--project", "missing"), ("--product", "missing"), ("--tag", "missing"),
-            ("--project", "controller", "--project", "controller"),
-            ("--project", "controller", "--exclude-tag", "training"),
-        )):
+        for index, arguments in enumerate(
+            (
+                ("--project", "missing"),
+                ("--product", "missing"),
+                ("--tag", "missing"),
+                ("--project", "controller", "--project", "controller"),
+                ("--project", "controller", "--exclude-tag", "training"),
+            )
+        ):
             with self.subTest(arguments=arguments):
                 output = self.root / f"build/invalid-{index}"
                 result = self.cli("--output", str(output), *arguments)
@@ -117,9 +149,24 @@ class GenerationParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse((self.root / "catalog/new-output").exists())
 
     def test_selectors_on_other_hardware_commands_are_explicit_errors(self) -> None:
-        result = subprocess.run((sys.executable, "-I", "-B", "-m", "kicad_tooling.hardware", "check",
-                                 "--root", str(self.root), "--project", "controller"),
-                                cwd=self.root, text=True, capture_output=True, check=False)
+        result = subprocess.run(
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.hardware",
+                "check",
+                "--root",
+                str(self.root),
+                "--project",
+                "controller",
+            ),
+            cwd=self.root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
         self.assertEqual(result.returncode, 2)
         self.assertIn("only valid with generate", result.stderr)
 

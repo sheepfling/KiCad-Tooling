@@ -1,4 +1,5 @@
 """Fail-closed static lint for declared KiCad projects and controlled catalogs."""
+
 from __future__ import annotations
 
 import argparse
@@ -38,9 +39,7 @@ class Identified(Protocol):
 Record = TypeVar("Record", bound=Identified)
 
 
-def records_by_id(
-    records: Iterable[Record], label: str, issues: list[str]
-) -> dict[str, Record]:
+def records_by_id(records: Iterable[Record], label: str, issues: list[str]) -> dict[str, Record]:
     result: dict[str, Record] = {}
     casefolded: set[str] = set()
     for record in records:
@@ -56,7 +55,19 @@ def reviewed_value(value: str) -> bool:
     if not value.strip():
         return False
     normalized: str = value.casefold().replace("-", " ").replace("_", " ")
-    return not any(marker in normalized for marker in ("replace with", "unspecified", "do not purchase", "training", "example.invalid", "unknown", "your name", "todo"))
+    return not any(
+        marker in normalized
+        for marker in (
+            "replace with",
+            "unspecified",
+            "do not purchase",
+            "training",
+            "example.invalid",
+            "unknown",
+            "your name",
+            "todo",
+        )
+    )
 
 
 def lint_governance_record(
@@ -85,7 +96,9 @@ def lint_governance_record(
     if not record.required_status_checks or any(
         not reviewed_value(check) for check in record.required_status_checks
     ):
-        issues.append(f"project {identifier}: governance record needs reviewed required_status_checks")
+        issues.append(
+            f"project {identifier}: governance record needs reviewed required_status_checks"
+        )
     people: set[str] = set()
     for field, assigned in (
         ("authors", record.authors),
@@ -97,7 +110,9 @@ def lint_governance_record(
             continue
         people.update(person.casefold() for person in assigned)
     if len(people) < policy.minimum_actors:
-        issues.append(f"project {identifier}: governance record needs {policy.minimum_actors} distinct actors")
+        issues.append(
+            f"project {identifier}: governance record needs {policy.minimum_actors} distinct actors"
+        )
     if policy.independent_review and (
         {person.casefold() for person in record.authors}
         & {person.casefold() for person in record.reviewers}
@@ -115,9 +130,7 @@ def lint_governance_record(
             issues.append(f"project {identifier}: governance record needs reviewed {field}")
 
 
-def lint(
-    root: Path, selected: list[str] | None = None
-) -> GovernanceLintReport:
+def lint(root: Path, selected: list[str] | None = None) -> GovernanceLintReport:
     """Lint all declared project inputs or an explicit project subset."""
     root = root.resolve()
     issues: list[str] = []
@@ -131,23 +144,17 @@ def lint(
             issues,
         )
         interfaces = records_by_id(
-            read_model(
-                repo_path(root, registry.catalogs.interfaces), InterfacesCatalog
-            ).interfaces,
+            read_model(repo_path(root, registry.catalogs.interfaces), InterfacesCatalog).interfaces,
             "interface catalog",
             issues,
         )
         libraries = records_by_id(
-            read_model(
-                repo_path(root, registry.catalogs.libraries), LibrariesCatalog
-            ).libraries,
+            read_model(repo_path(root, registry.catalogs.libraries), LibrariesCatalog).libraries,
             "library catalog",
             issues,
         )
         toolchains = records_by_id(
-            read_model(
-                repo_path(root, registry.catalogs.toolchains), ToolchainsCatalog
-            ).toolchains,
+            read_model(repo_path(root, registry.catalogs.toolchains), ToolchainsCatalog).toolchains,
             "toolchain catalog",
             issues,
         )
@@ -190,7 +197,9 @@ def lint(
         )
         relevant_products = related.products
         part_ids = {
-            part_id for project in relevant_records for part_id in project.component_identity.part_ids
+            part_id
+            for project in relevant_records
+            for part_id in project.component_identity.part_ids
         }
         interface_ids = {
             identifier for project in relevant_records for identifier in project.interfaces
@@ -207,7 +216,8 @@ def lint(
                 issues.append(f"project {project.id}: invalid catalog dependency scope: {exc}")
         for product in relevant_products:
             interface_ids.update(
-                terminal.interface_id for terminal in product.terminals
+                terminal.interface_id
+                for terminal in product.terminals
                 if terminal.interface_id is not None
             )
             for assembly in product.assemblies:
@@ -262,19 +272,17 @@ def lint(
             if alternate is None or alternate_id == part.id:
                 issues.append(f"part {part.id}: unknown or self approved alternate {alternate_id}")
             elif part.status is PartStatus.APPROVED and alternate.status is not PartStatus.APPROVED:
-                issues.append(
-                    f"part {part.id}: approved alternate {alternate_id} must be approved"
-                )
+                issues.append(f"part {part.id}: approved alternate {alternate_id} must be approved")
     for library in (
         libraries[identifier] for identifier in sorted(library_ids) if identifier in libraries
     ):
         try:
             if Path(library.path).parent.as_posix() not in layout(root).library_roots:
-                issues.append(f"library {library.id}: path must be a named directory under library_roots")
-            if not repo_path(root, library.path).is_dir():
                 issues.append(
-                    f"library {library.id}: declared path is missing: {library.path}"
+                    f"library {library.id}: path must be a named directory under library_roots"
                 )
+            if not repo_path(root, library.path).is_dir():
+                issues.append(f"library {library.id}: declared path is missing: {library.path}")
             for label, value, expected in (
                 ("provenance", library.provenance_path, library.provenance_sha256),
                 ("licensing", library.licensing_path, library.licensing_sha256),
@@ -295,7 +303,9 @@ def lint(
             issues.append(f"toolchain {toolchain.id}: image must be digest-pinned")
     policy_classes = [policy.release_class for policy in release_policies]
     if len(set(policy_classes)) != len(policy_classes) or set(policy_classes) != set(ReleaseClass):
-        issues.append("release policies: need exactly one minimum assurance for every release class")
+        issues.append(
+            "release policies: need exactly one minimum assurance for every release class"
+        )
 
     declared = {project.project for project in selected_records}
     if selected is None:
@@ -312,8 +322,7 @@ def lint(
         path.relative_to(root).as_posix()
         for directory in discovery_roots
         for path in directory.rglob("*.kicad_pro")
-        if directory.is_dir()
-        and not any(part.endswith("-backups") for part in path.parts)
+        if directory.is_dir() and not any(part.endswith("-backups") for part in path.parts)
     }
     if declared != discovered:
         issues.append(
@@ -339,8 +348,10 @@ def lint(
 
         from .hwrepo.electrical import policy_issues as electrical_policy_issues
 
-        issues.extend(f"project {identifier}: electrical: {issue}"
-                      for issue in electrical_policy_issues(root, config))
+        issues.extend(
+            f"project {identifier}: electrical: {issue}"
+            for issue in electrical_policy_issues(root, config)
+        )
 
         if config.project_id != project.id:
             issues.append(f"project {identifier}: config project_id must match registry id")
@@ -349,20 +360,17 @@ def lint(
         # Discovery already confines each manifest to a configured root/depth.
         # Its native design must additionally remain inside that same island.
         if not project_file.is_relative_to(repo_path(root, project.config).parent):
-            issues.append(f"project {identifier}: native project must belong to its manifest island")
+            issues.append(
+                f"project {identifier}: native project must belong to its manifest island"
+            )
         if config.project != project.project:
             issues.append(f"project {identifier}: config project path must match registry")
         if config.assurance_profile != project.assurance_profile:
-            issues.append(
-                f"project {identifier}: config assurance_profile must match registry"
-            )
+            issues.append(f"project {identifier}: config assurance_profile must match registry")
         toolchain = toolchains.get(config.toolchain_id)
         if toolchain is None:
             issues.append(f"project {identifier}: config needs a declared toolchain_id")
-        elif (
-            config.kicad_version != toolchain.kicad_version
-            or config.image != toolchain.image
-        ):
+        elif config.kicad_version != toolchain.kicad_version or config.image != toolchain.image:
             issues.append(
                 f"project {identifier}: config toolchain must match declared toolchain {config.toolchain_id}"
             )
@@ -374,8 +382,13 @@ def lint(
                 )
         elif project.assurance_profile == "development":
             if project.status != "engineering" or not config.not_for_manufacture:
-                issues.append(f"project {identifier}: development must be unreleased engineering work")
-            if config.validation.expected_ignored_checks.erc or config.validation.expected_ignored_checks.drc:
+                issues.append(
+                    f"project {identifier}: development must be unreleased engineering work"
+                )
+            if (
+                config.validation.expected_ignored_checks.erc
+                or config.validation.expected_ignored_checks.drc
+            ):
                 issues.append(f"project {identifier}: development cannot disable ERC or DRC checks")
         elif project.assurance_profile == "production":
             if (
@@ -393,15 +406,11 @@ def lint(
                     f"project {identifier}: production profile cannot disable ERC or DRC checks"
                 )
             if project.mechanical_handoff is None:
-                issues.append(
-                    f"project {identifier}: mechanical_handoff record is missing"
-                )
+                issues.append(f"project {identifier}: mechanical_handoff record is missing")
             else:
                 try:
                     if not repo_path(root, project.mechanical_handoff).is_file():
-                        issues.append(
-                            f"project {identifier}: mechanical handoff record is missing"
-                        )
+                        issues.append(f"project {identifier}: mechanical handoff record is missing")
                 except ValueError as exc:
                     issues.append(f"project {identifier}: mechanical_handoff: {exc}")
             lint_governance_record(root, project.governance_record, identifier, issues)
@@ -458,7 +467,11 @@ def lint(
             issues.append(
                 f"project {identifier}: pcb_only cannot require component identity without an authoritative schematic"
             )
-        if project.assurance_profile == "production" and project.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC} and not identity.required:
+        if (
+            project.assurance_profile == "production"
+            and project.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC}
+            and not identity.required
+        ):
             issues.append(
                 f"project {identifier}: production profile must require component identity"
             )
@@ -466,10 +479,16 @@ def lint(
             issues.append(
                 f"project {identifier}: component identity is required but no part ids are declared"
             )
-        if identity.required and isinstance(config.validation, (PcbValidationContract, SchematicValidationContract)):
-            expected_ids = {component.part_id for component in config.validation.components.values()}
+        if identity.required and isinstance(
+            config.validation, (PcbValidationContract, SchematicValidationContract)
+        ):
+            expected_ids = {
+                component.part_id for component in config.validation.components.values()
+            }
             if None in expected_ids or expected_ids != set(identity.part_ids):
-                issues.append(f"project {identifier}: component contracts must bind each reference to its declared part_id")
+                issues.append(
+                    f"project {identifier}: component contracts must bind each reference to its declared part_id"
+                )
         for part_id in identity.part_ids:
             part = parts.get(part_id)
             if part is None:
@@ -499,16 +518,14 @@ def lint(
             library = libraries.get(library_id)
             if library is None:
                 issues.append(f"project {identifier}: unknown library {library_id!r}")
-            elif (
-                project.assurance_profile == "production"
-                and library.status != "approved"
-            ):
+            elif project.assurance_profile == "production" and library.status != "approved":
                 issues.append(
                     f"project {identifier}: production library {library_id} must have status approved"
                 )
         expected_shared_roots = {
             libraries[library_id].path
-            for library_id in project.library_ids if library_id in libraries
+            for library_id in project.library_ids
+            if library_id in libraries
         }
         if set(manifest.shared_source_roots) != expected_shared_roots:
             issues.append(
@@ -530,7 +547,9 @@ def main() -> int:
     parser.add_argument("--tag", action="append", dest="tags")
     parser.add_argument("--product", action="append", dest="products")
     parser.add_argument("--exclude-tag", action="append", dest="excluded_tags")
-    parser.add_argument("--all", action="store_true", help="Lint every declared project (the default).")
+    parser.add_argument(
+        "--all", action="store_true", help="Lint every declared project (the default)."
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     from .hwrepo.selection import ProjectSelector, resolve_project_ids

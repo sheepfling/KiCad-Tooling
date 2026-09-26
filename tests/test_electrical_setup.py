@@ -1,4 +1,5 @@
 """Electrical CLI setup preserves review boundaries and reports useful next steps."""
+
 from __future__ import annotations
 
 import json
@@ -48,11 +49,26 @@ class ElectricalSetupTests(unittest.TestCase):
 
     def command(self, *args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            (sys.executable, "-I", "-B", "-m", "kicad_tooling.electrical", "--root", str(self.root),
-             "--project", PROJECT, *args), text=True, capture_output=True, check=False,
+            (
+                sys.executable,
+                "-I",
+                "-B",
+                "-m",
+                "kicad_tooling.electrical",
+                "--root",
+                str(self.root),
+                "--project",
+                PROJECT,
+                *args,
+            ),
+            text=True,
+            capture_output=True,
+            check=False,
         )
 
-    def test_initialization_connects_pending_requirements_and_preserves_native_expectations(self) -> None:
+    def test_initialization_connects_pending_requirements_and_preserves_native_expectations(
+        self,
+    ) -> None:
         before = read_model(self.native, ProjectTestContract)
         os.chmod(self.native, 0o644)
         report = initialize(self.root, PROJECT)
@@ -62,10 +78,18 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertEqual(report.status, "CREATED")
         contract = read_model(self.sidecar, ElectricalAnalysisContract)
         self.assertEqual(contract.ngspice_version, "UNREVIEWED")
-        self.assertEqual([contract.grounding.mode, contract.power.mode, contract.high_frequency.mode], ["pending"] * 3)
+        self.assertEqual(
+            [contract.grounding.mode, contract.power.mode, contract.high_frequency.mode],
+            ["pending"] * 3,
+        )
         self.assertEqual(simulation_cases(contract), ())
-        self.assertIn("Pending", " ".join(policy_issues(self.root, selected_config(self.root, PROJECT))))
-        with patch("kicad_tooling.hwrepo.electrical_runner.capture") as native, patch("kicad_tooling.hwrepo.electrical_runner.run_case") as spice:
+        self.assertIn(
+            "Pending", " ".join(policy_issues(self.root, selected_config(self.root, PROJECT)))
+        )
+        with (
+            patch("kicad_tooling.hwrepo.electrical_runner.capture") as native,
+            patch("kicad_tooling.hwrepo.electrical_runner.run_case") as spice,
+        ):
             result = analyze(self.root, PROJECT)
         native.assert_not_called()
         spice.assert_not_called()
@@ -86,7 +110,9 @@ class ElectricalSetupTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "already configured"):
             initialize(self.root, PROJECT)
         self.assertEqual((self.native.read_bytes(), self.sidecar.read_bytes()), before)
-        contract = read_model(self.native, ProjectTestContract).model_copy(update={"electrical": None})
+        contract = read_model(self.native, ProjectTestContract).model_copy(
+            update={"electrical": None}
+        )
         write_model(self.native, contract)
         before_native = self.native.read_bytes()
         with self.assertRaisesRegex(ValueError, "overwrite"):
@@ -96,8 +122,13 @@ class ElectricalSetupTests(unittest.TestCase):
 
     def test_failed_pointer_write_rolls_back_only_its_own_sidecar(self) -> None:
         before = self.native.read_bytes()
-        with (patch("kicad_tooling.hwrepo.electrical_setup.os.replace", side_effect=OSError("write blocked")),
-              self.assertRaisesRegex(OSError, "write blocked")):
+        with (
+            patch(
+                "kicad_tooling.hwrepo.electrical_setup.os.replace",
+                side_effect=OSError("write blocked"),
+            ),
+            self.assertRaisesRegex(OSError, "write blocked"),
+        ):
             initialize(self.root, PROJECT)
         self.assertEqual(self.native.read_bytes(), before)
         self.assertFalse(self.sidecar.exists())
@@ -136,7 +167,12 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertEqual(report.model_sha256, {name: digest(deck)})
         self.assertFalse(self.sidecar.exists())
         self.assertEqual(capture_inputs(self.root, PROJECT).model_sha256, {})
-        for path in ("../outside.cir", "README.md", "build/model.cir", "examples/projects/other/model.cir"):
+        for path in (
+            "../outside.cir",
+            "README.md",
+            "build/model.cir",
+            "examples/projects/other/model.cir",
+        ):
             with self.subTest(path=path), self.assertRaises((OSError, ValueError)):
                 capture_inputs(self.root, PROJECT, (path,))
         with self.assertRaises(ValueError):
@@ -151,9 +187,14 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertIn("UNREVIEWED", capture.stdout)
         self.assertIn("0 model files", capture.stdout)
         self.assertIn("inputs.json", capture.stdout)
-        for args in (("--init", "--output", "build/ignored"), ("--model", "x"),
-                     ("--ngspice-version", "47"), ("--init", "--runner", "local"),
-                     ("--capture-inputs", "--ngspice", "other"), ("--format", "json", "--detail", "full")):
+        for args in (
+            ("--init", "--output", "build/ignored"),
+            ("--model", "x"),
+            ("--ngspice-version", "47"),
+            ("--init", "--runner", "local"),
+            ("--capture-inputs", "--ngspice", "other"),
+            ("--format", "json", "--detail", "full"),
+        ):
             with self.subTest(args=args):
                 result = self.command(*args)
                 self.assertEqual(result.returncode, 2, result.stdout)
@@ -173,11 +214,22 @@ class ElectricalSetupTests(unittest.TestCase):
         install_fixture(self.root)
         for banner, code, error, status in (
             ("******\n** ngspice-47 : Circuit level simulation program\n******", 0, None, "PASS"),
-            ("ngspice-470", 0, None, "FAIL"), ("ngspice-46", 0, None, "FAIL"),
-            ("ngspice-47", 1, None, "FAIL"), ("", 127, "not found", "FAIL"),
+            ("ngspice-470", 0, None, "FAIL"),
+            ("ngspice-46", 0, None, "FAIL"),
+            ("ngspice-47", 1, None, "FAIL"),
+            ("", 127, "not found", "FAIL"),
         ):
-            evidence = CommandEvidence(argv=("ngspice",), started_utc="fixture", returncode=code, stdout=banner, error=error)
-            with self.subTest(banner=banner, code=code), patch("kicad_tooling.hwrepo.electrical_doctor.run_command", return_value=evidence):
+            evidence = CommandEvidence(
+                argv=("ngspice",),
+                started_utc="fixture",
+                returncode=code,
+                stdout=banner,
+                error=error,
+            )
+            with (
+                self.subTest(banner=banner, code=code),
+                patch("kicad_tooling.hwrepo.electrical_doctor.run_command", return_value=evidence),
+            ):
                 check = electrical_checks(self.root, PROJECT, "selected-ngspice")[-1]
                 self.assertEqual(check.status, status)
                 if status == "FAIL":
@@ -195,11 +247,17 @@ class ElectricalSetupTests(unittest.TestCase):
 
     def test_electrical_preflight_stops_combined_run_before_native_work(self) -> None:
         install_fixture(self.root)
-        evidence = CommandEvidence(argv=("missing",), started_utc="fixture", returncode=127, error="not found")
-        with (test_verify.VerifyTests.runner_environment("10.0.0"),
-              patch("kicad_tooling.hwrepo.electrical_doctor.run_command", return_value=evidence),
-              patch("kicad_tooling.verify.check_all") as native):
-            report = verify(self.root, PROJECT, depth="electrical", runner="local", ngspice="missing")
+        evidence = CommandEvidence(
+            argv=("missing",), started_utc="fixture", returncode=127, error="not found"
+        )
+        with (
+            test_verify.VerifyTests.runner_environment("10.0.0"),
+            patch("kicad_tooling.hwrepo.electrical_doctor.run_command", return_value=evidence),
+            patch("kicad_tooling.verify.check_all") as native,
+        ):
+            report = verify(
+                self.root, PROJECT, depth="electrical", runner="local", ngspice="missing"
+            )
         native.assert_not_called()
         self.assertEqual(report.status, "FAIL")
         self.assertTrue(report.doctor.electrical_requested)
@@ -208,11 +266,32 @@ class ElectricalSetupTests(unittest.TestCase):
     def test_doctor_cli_routes_electrical_and_simulator_options(self) -> None:
         from kicad_tooling.hwrepo.models import TemplateDoctorReport
 
-        report = TemplateDoctorReport(native_requested=True, electrical_requested=True, checks=(), status="PASS", next_actions=())
-        with (patch("kicad_tooling.template.doctor", return_value=report) as doctor,
-              patch.object(sys, "argv", ["kicad_tooling.template", "doctor", "--electrical", "--project-id", PROJECT,
-                                          "--runner", "container", "--ngspice", "custom"]),
-              patch("sys.stdout", new_callable=StringIO) as output):
+        report = TemplateDoctorReport(
+            native_requested=True,
+            electrical_requested=True,
+            checks=(),
+            status="PASS",
+            next_actions=(),
+        )
+        with (
+            patch("kicad_tooling.template.doctor", return_value=report) as doctor,
+            patch.object(
+                sys,
+                "argv",
+                [
+                    "kicad_tooling.template",
+                    "doctor",
+                    "--electrical",
+                    "--project-id",
+                    PROJECT,
+                    "--runner",
+                    "container",
+                    "--ngspice",
+                    "custom",
+                ],
+            ),
+            patch("sys.stdout", new_callable=StringIO) as output,
+        ):
             self.assertEqual(template_main(), 0)
         self.assertTrue(json.loads(output.getvalue())["electrical_requested"])
         self.assertEqual(doctor.call_args.kwargs["ngspice"], "custom")
@@ -220,8 +299,15 @@ class ElectricalSetupTests(unittest.TestCase):
 
     def test_human_output_has_identity_failure_and_receipt_with_full_json_unchanged(self) -> None:
         report = ElectricalAnalysisReport(
-            project_id=PROJECT, status="FAIL", run_directory="build/electrical/controller-run",
-            checks=tuple(ElectricalCheck(id=f"measure-{n}", status="FAIL", detail=f"Voltage limit {n} exceeded") for n in range(7)),
+            project_id=PROJECT,
+            status="FAIL",
+            run_directory="build/electrical/controller-run",
+            checks=tuple(
+                ElectricalCheck(
+                    id=f"measure-{n}", status="FAIL", detail=f"Voltage limit {n} exceeded"
+                )
+                for n in range(7)
+            ),
         )
         suite = ElectricalSuiteReport(status="FAIL", projects=(report,))
         output = summary("Electrical suite", suite)
@@ -232,20 +318,38 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertIn("7 need attention", format_report(report))
         self.assertIn("measure-6", format_report(report, "full"))
         self.assertEqual(len(json.loads(suite.model_dump_json())["projects"][0]["checks"]), 7)
-        with (patch("kicad_tooling.electrical.analyze", return_value=report),
-              patch.object(sys, "argv", ["kicad_tooling.electrical", "--root", str(self.root), "--project", PROJECT, "--detail", "full"]),
-              patch("sys.stdout", new_callable=StringIO) as stream):
+        with (
+            patch("kicad_tooling.electrical.analyze", return_value=report),
+            patch.object(
+                sys,
+                "argv",
+                [
+                    "kicad_tooling.electrical",
+                    "--root",
+                    str(self.root),
+                    "--project",
+                    PROJECT,
+                    "--detail",
+                    "full",
+                ],
+            ),
+            patch("sys.stdout", new_callable=StringIO) as stream,
+        ):
             self.assertEqual(electrical_main(), 1)
         self.assertIn("measure-6", stream.getvalue())
 
     def test_standalone_example_is_valid_schema_but_has_no_approved_binding(self) -> None:
-        contract = read_model(TEMPLATE_ROOT / "templates/electrical/contract.example.json", ElectricalAnalysisContract)
+        contract = read_model(
+            TEMPLATE_ROOT / "templates/electrical/contract.example.json", ElectricalAnalysisContract
+        )
         self.assertEqual(contract.project_id, "example-board")
         self.assertEqual(len(simulation_cases(contract)), 4)
         for case in simulation_cases(contract):
             self.assertEqual(set(case.source_sha256.values()), {"0" * 64})
             self.assertEqual(set(case.model_sha256.values()), {"0" * 64})
-            self.assertTrue((TEMPLATE_ROOT / "templates/electrical" / Path(case.deck).name).is_file())
+            self.assertTrue(
+                (TEMPLATE_ROOT / "templates/electrical" / Path(case.deck).name).is_file()
+            )
 
     def test_hosted_electrical_workflow_retains_failure_artifacts(self) -> None:
         workflow = (SOURCE_ROOT / ".github/workflows/electrical-analysis.yml").read_text()

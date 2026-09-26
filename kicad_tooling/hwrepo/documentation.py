@@ -1,4 +1,5 @@
 """Typed engine for deterministic Markdown layout and repository-documentation policy."""
+
 from __future__ import annotations
 
 import re
@@ -166,7 +167,7 @@ def split_destination(raw: str) -> tuple[str, str | None]:
     """Separate a local Markdown destination from its optional fragment."""
     destination = raw.strip()
     if destination.startswith("<") and ">" in destination:
-        destination = destination[1:destination.index(">")]
+        destination = destination[1 : destination.index(">")]
     elif " " in destination:
         destination = destination.split(maxsplit=1)[0]
     path, marker, fragment = destination.partition("#")
@@ -365,9 +366,14 @@ def check(root: Path, today: date | None = None) -> DocumentationPolicyReport:
             for directory in ("projects", "products", "examples/projects", "examples/products")
             for path in sorted((resolved_root / directory).glob("*/README.md"))
         )
-        policy = validate_policy_paths(resolved_root, policy.model_copy(update={
-            "roots": tuple(dict.fromkeys((*policy.roots, *island_roots))),
-        }))
+        policy = validate_policy_paths(
+            resolved_root,
+            policy.model_copy(
+                update={
+                    "roots": tuple(dict.fromkeys((*policy.roots, *island_roots))),
+                }
+            ),
+        )
     except (OSError, ValueError) as exc:
         report_findings.append(
             DocumentationIssue(

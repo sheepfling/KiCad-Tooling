@@ -1,4 +1,5 @@
 """Explicit adapter selection for the KiCad CLI and report formats we understand."""
+
 from __future__ import annotations
 
 from typing import Literal
