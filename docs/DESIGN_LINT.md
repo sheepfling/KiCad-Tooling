@@ -39,10 +39,10 @@ set to block by project policy. The CLI exits nonzero for all three statuses.
 
 ## Record a decision in the project
 
-Add `design_lint` inside the project's `tests/contract.json`. This opts native
-`verify` and `ci --kicad` into the lint lane. The report records the
-project-owned contract's path and digest separately from the native schematic
-source hashes:
+Native `verify` and `ci --kicad` run design lint automatically for PCB and
+schematic projects. Add `design_lint` inside the project's `tests/contract.json`
+to record rule overrides or exact ignores. The report records the project-owned
+contract's path and digest separately from the native schematic source hashes:
 
 ```json
 {

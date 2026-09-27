@@ -1093,7 +1093,7 @@
         "check_project"
       ],
       "alignment": "aligned",
-      "reason": "Both dispatch the same portable/native/electrical project verification, preserve connector pin and split return hints on failed native contract checks, run opted-in design lint in native checks, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
+      "reason": "Both dispatch the same portable/native/electrical project verification, preserve connector pin and split return hints on failed native contract checks, run design lint on PCB and schematic native checks, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
       "scope": "core",
       "gaps": [],
       "constraints": [

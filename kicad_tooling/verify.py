@@ -320,14 +320,19 @@ def verify(
                         )
                     else:
                         status = "PASS"
-                if native is not None and config.design_lint is not None:
+                summary_path = native_output / project_id / "summary.json"
+                if (
+                    native is not None
+                    and config.kind.value in {"pcb", "schematic"}
+                    and (summary_path.is_file() or config.design_lint is not None)
+                ):
                     from .hwrepo.design_lint import inspect_summary as inspect_design_lint
 
                     with journal.stage("design-lint"):
                         design_lint_report = inspect_design_lint(
                             root,
                             project_id,
-                            native_output / project_id / "summary.json",
+                            summary_path,
                         )
                         journal.save_model("design-lint", design_lint_report)
                     if design_lint_report.status != "PASS":

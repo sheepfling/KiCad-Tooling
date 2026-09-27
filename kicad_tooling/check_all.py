@@ -13,6 +13,7 @@ from .hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
     ProjectCheckSummary,
+    ProjectKind,
     ProjectRecord,
 )
 from .hwrepo.product import check as check_product
@@ -54,7 +55,7 @@ def check_all(
                 config = load_config(root, project.config)
             except (OSError, ValueError):
                 config = None  # validate retained the malformed-input finding.
-            if config is not None and config.design_lint is not None:
+            if config is not None and config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC}:
                 from .hwrepo.design_lint import inspect_summary
 
                 project_output = output / project.id

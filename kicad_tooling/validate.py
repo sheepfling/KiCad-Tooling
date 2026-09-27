@@ -539,9 +539,8 @@ def validate(
             check_harness_interface_contract(root, config)
             checks["harness_contract"] = CheckEvidence(status="PASS")
         if (
-            config.kind is ProjectKind.PCB
+            config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC}
             or config.electrical is not None
-            or config.design_lint is not None
             or config.component_identity.required
             or (
                 isinstance(config.validation, SchematicValidationContract)
@@ -659,8 +658,8 @@ def validate(
     if config is not None and config.electrical is not None:
         required.add("grounding")
     if config is not None and (
-        config.electrical is not None
-        or config.design_lint is not None
+        config.kind in {ProjectKind.PCB, ProjectKind.SCHEMATIC}
+        or config.electrical is not None
         or config.component_identity.required
         or (
             isinstance(config.validation, SchematicValidationContract)
