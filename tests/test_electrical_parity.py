@@ -31,6 +31,7 @@ from kicad_tooling.hwrepo.models import (
     GroundingAnalysis,
     ProjectVerificationReport,
     TemplateDoctorReport,
+    ValidationSummary,
 )
 from kicad_tooling.hwrepo.spice import expanded_deck
 from tests import test_contract_coach as coach_fixture
@@ -211,6 +212,86 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(evidence.build_authorized)
         self.assertEqual(source_bytes(self.root), before)
         self.assertEqual(source_bytes(self.mcp_root), before)
+
+    async def test_numbered_return_review_matches_cli_and_mcp_analysis(self) -> None:
+        self.configured(grounding=True)
+        for root in (self.root, self.mcp_root):
+            contract_path = root / ISLAND / "tests/electrical.json"
+            contract = read_model(contract_path, ElectricalAnalysisContract)
+            self.assertIsInstance(contract.grounding, GroundingAnalysis)
+            grounding = contract.grounding.model_copy(
+                update={
+                    "domains": (
+                        *contract.grounding.domains,
+                        GroundDomain(net="GND", pins=("J1.9", "J2.9", "J3.9")),
+                    )
+                }
+            )
+            write_model(contract_path, contract.model_copy(update={"grounding": grounding}))
+            native = root / "build/native/controller"
+            netlist = native / "netlist.xml"
+            observed = netlist.read_text(encoding="utf-8")
+            observed = observed.replace(
+                "</components>",
+                '<comp ref="J1"><value>Test</value></comp>'
+                '<comp ref="J2"><value>Test</value></comp>'
+                '<comp ref="J3"><value>Test</value></comp></components>',
+            ).replace(
+                "</nets>",
+                '<net name="GND"><node ref="J1" pin="9"/><node ref="J2" pin="9"/>'
+                '<node ref="J3" pin="9"/></net>'
+                '<net name="USB1_GND"><node ref="J1" pin="4"/></net>'
+                '<net name="USB2_GND"><node ref="J2" pin="4"/></net>'
+                '<net name="USB3_GND"><node ref="J3" pin="4"/></net></nets>',
+            )
+            netlist.write_text(observed, encoding="utf-8")
+            summary_path = native / "summary.json"
+            summary = read_model(summary_path, ValidationSummary)
+            write_model(
+                summary_path,
+                summary.model_copy(
+                    update={
+                        "artifacts_sha256": {
+                            **summary.artifacts_sha256,
+                            "netlist.xml": digest(netlist),
+                        }
+                    }
+                ),
+            )
+        summary = "build/native/controller/summary.json"
+        process = await self.cli(
+            "kicad_tooling.electrical",
+            "--project",
+            PROJECT,
+            "--native-summary",
+            summary,
+            "--output",
+            "build/electrical/split-returns",
+        )
+        self.assertEqual(process.returncode, 1, process.stderr + process.stdout)
+        cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
+        async with Client(create_server(self.mcp_root, allow_checks=True), mode="legacy") as client:
+            result = await client.call_tool(
+                "analyze_electrical",
+                {
+                    "project_id": PROJECT,
+                    "view_id": "split-returns",
+                    "native_summary": summary,
+                },
+            )
+        self.assertFalse(result.is_error, result.content)
+        mcp_report = ElectricalAnalysisReport.model_validate_json(
+            json.dumps(result.structured_content)
+        )
+        self.assertEqual(cli_report.checks, mcp_report.checks)
+        for report in (cli_report, mcp_report):
+            self.assertEqual(report.status, "FAIL")
+            checks = {row.id: row for row in report.checks}
+            self.assertEqual(checks["grounding/GND"].status, "PASS")
+            self.assertEqual(checks["grounding/component-coverage"].status, "PASS")
+            self.assertEqual(checks["grounding/return-net-review"].status, "FAIL")
+            self.assertIn("J1.4", checks["grounding/return-net-review"].detail)
+            self.assertIn("USB3_GND", checks["grounding/return-net-review"].detail)
 
     async def test_external_fixed_simulator_success_and_wrong_version_match_cli(self) -> None:
         self.configured(simulation=True)

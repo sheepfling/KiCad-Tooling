@@ -31,6 +31,7 @@ from .models import (
     SchematicValidationContract,
     ValidationSummary,
 )
+from .return_nets import return_net_groups
 
 Item = TypeVar("Item")
 
@@ -304,6 +305,7 @@ def ready_report(
     selected_runner: Literal["local", "container"] | None = None,
 ) -> ContractCoachReport:
     changes = differences(observed, authored)
+    return_groups = return_net_groups(observed)
     actions = [
         (
             "Compare each UNREVIEWED observation with requirements and the KiCad design; "
@@ -323,6 +325,13 @@ def ready_report(
         actions.append(
             "The native validation failed; inspect ERC, DRC and netlist checks separately."
         )
+    if return_groups:
+        actions.append(
+            "Review the separately numbered return nets against an independently approved "
+            "connector pinout. Declare every return pin in a ground domain, or record a "
+            "reasoned exception for a net that is not a ground return. Determine common, "
+            "bonded or intentionally isolated paths with the electrical owner."
+        )
     actions.append("Rerun the selected portable and native lanes after an authored decision.")
     return ContractCoachReport(
         status="READY_FOR_REVIEW",
@@ -335,6 +344,7 @@ def ready_report(
         observed=observed,
         authored=authored,
         differences=changes,
+        return_net_groups=return_groups,
         next_actions=tuple(actions),
         commands={} if commands is None else commands,
         receipt_dir=receipt_dir,
@@ -540,6 +550,14 @@ def text_report(report: ContractCoachReport, detail: str = "brief") -> str:
             f"{len(report.observed.nets)} nets; differences: {len(report.differences)}"
         )
         lines.append(f"Bound design files: {len(report.source_hashes)}")
+        selected_groups = (
+            report.return_net_groups if detail == "full" else report.return_net_groups[:5]
+        )
+        for group in selected_groups:
+            listed = "; ".join(f"{name}: {', '.join(pins)}" for name, pins in group.nets.items())
+            lines.append(f"Possible split returns ({group.stem}): {listed}")
+        if len(selected_groups) < len(report.return_net_groups):
+            lines.append("More possible split returns are in --detail full or JSON.")
         selected = report.differences if detail == "full" else report.differences[:5]
         for change in selected:
             lines.append(f"- {change.kind} {change.identifier}: {change.difference}")

@@ -32,6 +32,7 @@ from .hwrepo.models import (
     SchematicValidationContract,
     ValidationSummary,
 )
+from .hwrepo.return_nets import return_net_groups
 
 
 def local_state(path: Path) -> bool:
@@ -176,9 +177,19 @@ def check_netlist(
     path: Path, validation: PcbValidationContract | SchematicValidationContract
 ) -> NetlistContract:
     """Compare a native export with reviewed expectations, never an empty scaffold."""
-    if not validation.components:
-        raise ValueError("Complete the component test contract before native validation")
     contract = read_netlist(path)
+    groups = return_net_groups(contract)
+    shown_groups = groups[:5]
+    review = (
+        " Possible split returns need connector-pinout review: "
+        + ", ".join("/".join(group.nets) for group in shown_groups)
+        + (f" (+{len(groups) - len(shown_groups)} more)" if len(groups) > len(shown_groups) else "")
+        + "."
+        if groups
+        else ""
+    )
+    if not validation.components:
+        raise ValueError("Complete the component test contract before native validation." + review)
     compared = {
         reference: component
         if validation.components.get(reference) is not None
@@ -198,7 +209,8 @@ def check_netlist(
             if contract.nets.get(key) != validation.nets.get(key)
         )
         raise ValueError(
-            f"Independent netlist contract mismatch: components={changed_components}, nets={changed_nets}"
+            f"Independent netlist contract mismatch: components={changed_components}, "
+            f"nets={changed_nets}.{review}"
         )
     return contract
 
@@ -483,7 +495,8 @@ def validate(
             check_harness_interface_contract(root, config)
             checks["harness_contract"] = CheckEvidence(status="PASS")
         if (
-            config.electrical is not None
+            config.kind is ProjectKind.PCB
+            or config.electrical is not None
             or config.component_identity.required
             or (
                 isinstance(config.validation, SchematicValidationContract)

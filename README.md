@@ -20,6 +20,9 @@ The MCP works with saved project data and reviewed, hash-bound file edits; it do
 not connect to or control a live KiCad editor session. Live editor integration is
 outside the current scope.
 
+For connector ground and return coverage, see the
+[return-net review workflow](docs/RETURN_NET_REVIEW.md).
+
 ## Try the separate package
 
 From a project checkout, install this repository into a Python 3.11 or newer

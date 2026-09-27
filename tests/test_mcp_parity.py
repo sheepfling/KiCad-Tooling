@@ -584,6 +584,27 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_contract_inspection_parity(self) -> None:
         native = self.native_evidence()
+        netlist = native.parent / "netlist.xml"
+        netlist.write_text(
+            '<export><components><comp ref="J1"><value>Test</value></comp>'
+            '<comp ref="J2"><value>Test</value></comp></components><nets>'
+            '<net name="0V CTRL 1"><node ref="J1" pin="7"/></net>'
+            '<net name="0V CTRL 2"><node ref="J2" pin="7"/></net>'
+            "</nets></export>",
+            encoding="utf-8",
+        )
+        summary = read_model(native, ValidationSummary)
+        write_model(
+            native,
+            summary.model_copy(
+                update={
+                    "artifacts_sha256": {
+                        **summary.artifacts_sha256,
+                        "netlist.xml": digest(netlist),
+                    }
+                }
+            ),
+        )
         async with Client(create_server(self.root), mode="legacy") as client:
             for tampered in (False, True):
                 with self.subTest(tampered=tampered):
@@ -612,6 +633,10 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                     if not tampered:
                         self.assertEqual(mcp.native_status, "FAIL")
                         self.assertEqual(mcp.review_state, "UNREVIEWED")
+                        self.assertEqual(
+                            set(mcp.return_net_groups[0].nets), {"0V CTRL 1", "0V CTRL 2"}
+                        )
+                        self.assertIn("approved connector pinout", " ".join(mcp.next_actions))
                     self.assertFalse(mcp.electrical_coverage)
 
     async def test_model_coverage_parity(self) -> None:

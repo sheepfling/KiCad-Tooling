@@ -1312,6 +1312,13 @@ class NetlistContract(StrictModel):
     nets: Mapping[NetName, tuple[Reference, ...]]
 
 
+class ReturnNetGroup(StrictModel):
+    """Unreviewed, similarly named return nets observed in a native export."""
+
+    stem: NonEmptyText
+    nets: Mapping[NetName, tuple[Reference, ...]]
+
+
 class ValidationSummary(StrictModel):
     schema_version: Literal["1"] = "1"
     lane: Literal["KICAD_CLI"] = "KICAD_CLI"
@@ -1485,6 +1492,7 @@ class ContractCoachReport(StrictModel):
     observed: NetlistContract | None = None
     authored: NetlistContract | None = None
     differences: tuple[ContractDifference, ...] = ()
+    return_net_groups: tuple[ReturnNetGroup, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
     next_actions: tuple[NonEmptyText, ...] = ()
     commands: Mapping[Identifier, CommandEvidence] = Field(default_factory=dict)
@@ -1968,6 +1976,7 @@ class GroundingAnalysis(StrictModel):
     basis: NonEmptyText
     domains: Annotated[tuple[GroundDomain, ...], Field(min_length=1)]
     exempt_components: Mapping[Identifier, NonEmptyText] = Field(default_factory=dict)
+    reviewed_return_exceptions: Mapping[NetName, NonEmptyText] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def distinct_domains(self) -> GroundingAnalysis:
@@ -1975,8 +1984,10 @@ class GroundingAnalysis(StrictModel):
         pins = [pin for domain in self.domains for pin in domain.pins]
         if len(set(names)) != len(names) or len(set(pins)) != len(pins):
             raise ValueError("Ground domains and their pins must be unique")
-        if any(name.startswith("/") for name in names):
+        if any(name.startswith("/") for name in (*names, *self.reviewed_return_exceptions)):
             raise ValueError("Use net names without the leading slash, as in the native contract")
+        if set(names) & set(self.reviewed_return_exceptions):
+            raise ValueError("A return net cannot be both a ground domain and an exception")
         return self
 
 

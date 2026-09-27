@@ -25,6 +25,7 @@ from .models import (
     ProjectManifest,
     TransientAnalysis,
 )
+from .return_nets import return_net_groups
 
 SimulationCase = TransientAnalysis | FrequencyAnalysis
 
@@ -125,7 +126,12 @@ def grounding_checks(
     spec: GroundingAnalysis | AnalysisNotApplicable | AnalysisPending, observed: NetlistContract
 ) -> tuple[ElectricalCheck, ...]:
     if isinstance(spec, AnalysisPending):
-        return (ElectricalCheck(id="grounding", status="NOT_CONFIGURED", detail=spec.reason),)
+        groups = return_net_groups(observed)
+        names = ", ".join("/".join(group.nets) for group in groups[:5])
+        hint = f" Possible split returns need connector-pinout review: {names}." if groups else ""
+        return (
+            ElectricalCheck(id="grounding", status="NOT_CONFIGURED", detail=spec.reason + hint),
+        )
     if isinstance(spec, AnalysisNotApplicable):
         return (ElectricalCheck(id="grounding", status="NOT_APPLICABLE", detail=spec.reason),)
     results: list[ElectricalCheck] = []
@@ -154,6 +160,29 @@ def grounding_checks(
                     f"unknown components={missing_components}"
                     if failed
                     else f"All {len(expected)} declared ground pins match the exported schematic net."
+                ),
+            )
+        )
+    groups = return_net_groups(observed)
+    candidates = {name for group in groups for name in group.nets}
+    declared = {domain.net for domain in spec.domains}
+    exceptions = set(spec.reviewed_return_exceptions)
+    unreviewed = sorted(candidates - declared - exceptions)
+    stale_exceptions = sorted(exceptions - candidates)
+    if groups or exceptions:
+        pins = {name: observed.nets[name] for name in unreviewed}
+        failed = bool(unreviewed or stale_exceptions)
+        results.append(
+            ElectricalCheck(
+                id="grounding/return-net-review",
+                status="FAIL" if failed else "PASS",
+                detail=(
+                    f"Numbered return nets without reviewed ground domains or reasoned "
+                    f"exceptions={pins}; stale or noncandidate exceptions={stale_exceptions}. "
+                    "Check connector pinout and intended common or isolated returns."
+                    if failed
+                    else "All observed numbered return nets have reviewed ground domains or "
+                    "reasoned exceptions."
                 ),
             )
         )

@@ -1076,7 +1076,7 @@
         "check_project"
       ],
       "alignment": "aligned",
-      "reason": "Both dispatch the same portable/native/electrical project verification, preserve failed results and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
+      "reason": "Both dispatch the same portable/native/electrical project verification, preserve split return-net hints on failed native contract checks, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1117,7 +1117,7 @@
         "capture_contract"
       ],
       "alignment": "aligned",
-      "reason": "Both inspect source-bound native evidence and can capture an unreviewed contract candidate.",
+      "reason": "Both inspect source-bound native evidence, flag separately numbered and numbered-port return nets for connector-pinout review, and can capture an unreviewed contract candidate.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1653,7 +1653,7 @@
         "analyze_electrical"
       ],
       "alignment": "aligned",
-      "reason": "Both run reviewed grounding, power and frequency checks using fresh or saved native evidence.",
+      "reason": "Both run reviewed grounding, numbered and numbered-port return-net coverage, power and frequency checks using fresh or saved native evidence.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1661,6 +1661,7 @@
       ],
       "parity_tests": [
         "tests.test_electrical_parity.ElectricalParityTests.test_saved_native_analysis_is_root_relative_and_preserves_native_failure",
+        "tests.test_electrical_parity.ElectricalParityTests.test_numbered_return_review_matches_cli_and_mcp_analysis",
         "tests.test_electrical_parity.ElectricalParityTests.test_external_fixed_simulator_success_and_wrong_version_match_cli"
       ]
     },

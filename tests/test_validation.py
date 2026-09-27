@@ -333,6 +333,101 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Complete the component"):
             check_netlist(path, contract)
 
+    def test_empty_contract_names_numbered_returns_from_synthetic_export(self) -> None:
+        path = self.root / "split-returns.xml"
+        path.write_text(
+            '<export><components><comp ref="J1"><value>Test</value></comp>'
+            '<comp ref="J2"><value>Test</value></comp></components><nets>'
+            '<net name="0V CTRL 1"><node ref="J1" pin="7"/></net>'
+            '<net name="0V CTRL 2"><node ref="J2" pin="7"/></net>'
+            "</nets></export>",
+            encoding="utf-8",
+        )
+        contract = PcbValidationContract(
+            kind=ProjectKind.PCB,
+            components={},
+            nets={},
+            expected_ignored_checks=IgnoredChecks(erc=(), drc=()),
+        )
+        with self.assertRaisesRegex(ValueError, "0V CTRL 1/0V CTRL 2"):
+            check_netlist(path, contract)
+
+    def test_native_pcb_exports_netlist_for_empty_contract_and_names_return_review(self) -> None:
+        self.fixture()
+        self.assertIsInstance(self.config.validation, PcbValidationContract)
+        config = self.config.model_copy(
+            update={
+                "validation": self.config.validation.model_copy(
+                    update={"components": {}, "nets": {}}
+                ),
+                "component_identity": ComponentIdentity(required=False, part_ids=()),
+                "electrical": None,
+            }
+        )
+        calls: list[str] = []
+
+        def run_kicad(
+            argv: tuple[str, ...], _cwd: Path, output: Path, name: str
+        ) -> CommandEvidence:
+            calls.append(name)
+            if name in {"erc", "drc"}:
+                report: JsonObject = {
+                    "$schema": f"https://schemas.kicad.org/{name}.v1.json",
+                    "kicad_version": config.kicad_version,
+                    "included_severities": ["error", "warning", "exclusion"],
+                    "ignored_checks": [
+                        {"key": key}
+                        for key in getattr(config.validation.expected_ignored_checks, name)
+                    ],
+                }
+                if name == "erc":
+                    report["sheets"] = [{"violations": []}]
+                else:
+                    report.update(
+                        {"violations": [], "unconnected_items": [], "schematic_parity": []}
+                    )
+                (output / f"{name}.json").write_text(json.dumps(report), encoding="utf-8")
+            elif name == "schematic_svg":
+                directory = output / "schematic"
+                directory.mkdir()
+                (directory / "sheet.svg").write_text(
+                    '<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8"
+                )
+            elif name == "pcb_svg":
+                (output / "pcb.svg").write_text(
+                    '<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8"
+                )
+            elif name == "netlist":
+                (output / "netlist.xml").write_text(
+                    '<export><components><comp ref="J1"><value>Test</value></comp>'
+                    '<comp ref="J2"><value>Test</value></comp></components><nets>'
+                    '<net name="0V CTRL 1"><node ref="J1" pin="7"/></net>'
+                    '<net name="0V CTRL 2"><node ref="J2" pin="7"/></net>'
+                    "</nets></export>",
+                    encoding="utf-8",
+                )
+            return CommandEvidence(
+                argv=argv,
+                started_utc="2026-01-01T00:00:00+00:00",
+                returncode=0,
+                stdout=f"{config.kicad_version}\n" if name == "version" else "",
+            )
+
+        with (
+            patch("kicad_tooling.validate.load_config", return_value=config),
+            patch("kicad_tooling.validate.cli_executable", return_value="fake-kicad-cli"),
+            patch("kicad_tooling.validate.execute", side_effect=run_kicad),
+        ):
+            result = validate(
+                self.root,
+                self.root / "empty-contract-native",
+                "fake-kicad-cli",
+                Path("examples/projects/controller/project.json"),
+            )
+        self.assertIn("netlist", calls)
+        self.assertEqual(result.status, "FAIL")
+        self.assertIn("0V CTRL 1/0V CTRL 2", result.checks["netlist"].error or "")
+
     def test_realistic_net_names_and_missing_footprints_parse_and_connection_changes_fail(
         self,
     ) -> None:

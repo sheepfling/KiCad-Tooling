@@ -25,6 +25,7 @@ from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.generation import expected_outputs
 from kicad_tooling.hwrepo.models import (
     AnalysisNotApplicable,
+    AnalysisPending,
     CommandEvidence,
     ComponentContract,
     ElectricalAnalysisContract,
@@ -39,6 +40,7 @@ from kicad_tooling.hwrepo.models import (
     SimulationMeasure,
     TransientAnalysis,
 )
+from kicad_tooling.hwrepo.return_nets import return_net_groups
 from kicad_tooling.hwrepo.spice import (
     expanded_deck,
     measured_checks,
@@ -269,6 +271,191 @@ class ElectricalTests(unittest.TestCase):
         self.assertEqual(grounding_checks(spec, observed)[-1].status, "PASS")
         spec = spec.model_copy(update={"exempt_components": {"U1": "Contradictory exemption"}})
         self.assertEqual(grounding_checks(spec, observed)[-1].status, "FAIL")
+
+    def test_numbered_connector_returns_need_pinout_review_even_if_connector_is_covered(
+        self,
+    ) -> None:
+        observed = NetlistContract(
+            components={
+                ref: ComponentContract(value="Synthetic connector", footprint="")
+                for ref in ("J1", "J2")
+            },
+            nets={
+                "GND": ("J1.9", "J2.9"),
+                "0V CTRL 1": ("J1.7",),
+                "0V CTRL 2": ("J2.7",),
+                "CTRL 1": ("J1.1",),
+                "CTRL 2": ("J2.1",),
+            },
+        )
+        groups = return_net_groups(observed)
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(set(groups[0].nets), {"0V CTRL 1", "0V CTRL 2"})
+        spec = GroundingAnalysis(
+            basis="Independent synthetic connector pinout",
+            domains=(GroundDomain(net="GND", pins=("J1.9", "J2.9")),),
+        )
+        checks = {row.id: row for row in grounding_checks(spec, observed)}
+        self.assertEqual(checks["grounding/GND"].status, "PASS")
+        self.assertEqual(checks["grounding/component-coverage"].status, "PASS")
+        self.assertEqual(checks["grounding/return-net-review"].status, "FAIL")
+        self.assertIn("J1.7", checks["grounding/return-net-review"].detail)
+        pending = grounding_checks(
+            AnalysisPending(mode="pending", reason="Connector pinout review pending"), observed
+        )
+        self.assertEqual(pending[0].status, "NOT_CONFIGURED")
+        self.assertIn("0V CTRL 1", pending[0].detail)
+        reviewed = spec.model_copy(
+            update={
+                "domains": (
+                    *spec.domains,
+                    GroundDomain(net="0V CTRL 1", pins=("J1.7",)),
+                    GroundDomain(net="0V CTRL 2", pins=("J2.7",)),
+                )
+            }
+        )
+        self.assertTrue(all(row.status == "PASS" for row in grounding_checks(reviewed, observed)))
+
+    def test_three_usb_signal_grounds_must_match_a_declared_common_net(self) -> None:
+        observed = NetlistContract(
+            components={
+                ref: ComponentContract(value="Synthetic part", footprint="")
+                for ref in ("U1", "J1", "J2", "J3")
+            },
+            nets={
+                "GND": ("U1.2",),
+                "USB1_GND": ("J1.4",),
+                "USB2_GND": ("J2.4",),
+                "USB3_GND": ("J3.4",),
+                "USB1_SHIELD": ("J1.5",),
+                "USB2_SHIELD": ("J2.5",),
+                "USB3_SHIELD": ("J3.5",),
+                "USB1_DP": ("J1.3",),
+            },
+        )
+        groups = return_net_groups(observed)
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(set(groups[0].nets), {"USB1_GND", "USB2_GND", "USB3_GND"})
+        spec = GroundingAnalysis(
+            basis="Synthetic approved pinout requires one signal-ground domain",
+            domains=(GroundDomain(net="GND", pins=("U1.2", "J1.4", "J2.4", "J3.4")),),
+        )
+        checks = {row.id: row for row in grounding_checks(spec, observed)}
+        self.assertEqual(checks["grounding/GND"].status, "FAIL")
+        self.assertEqual(checks["grounding/component-coverage"].status, "PASS")
+        self.assertEqual(checks["grounding/return-net-review"].status, "FAIL")
+        fixed = observed.model_copy(
+            update={
+                "nets": {
+                    **{
+                        name: pins
+                        for name, pins in observed.nets.items()
+                        if name not in {"GND", "USB1_GND", "USB2_GND", "USB3_GND"}
+                    },
+                    "GND": ("U1.2", "J1.4", "J2.4", "J3.4"),
+                }
+            }
+        )
+        self.assertFalse(return_net_groups(fixed))
+        self.assertTrue(all(row.status == "PASS" for row in grounding_checks(spec, fixed)))
+
+    def test_separate_serial_returns_pass_when_isolation_is_declared(self) -> None:
+        observed = NetlistContract(
+            components={
+                ref: ComponentContract(value="Synthetic part", footprint="")
+                for ref in ("U1", "U2", "J1", "J2")
+            },
+            nets={
+                "SERIAL_1_GND": ("U1.3", "J1.5"),
+                "SERIAL_2_GND": ("U2.3", "J2.5"),
+            },
+        )
+        self.assertEqual(set(return_net_groups(observed)[0].nets), {"SERIAL_1_GND", "SERIAL_2_GND"})
+        isolated = GroundingAnalysis(
+            basis="Synthetic approved pinout requires separate isolated returns",
+            domains=(
+                GroundDomain(net="SERIAL_1_GND", pins=("U1.3", "J1.5")),
+                GroundDomain(net="SERIAL_2_GND", pins=("U2.3", "J2.5")),
+            ),
+        )
+        self.assertTrue(all(row.status == "PASS" for row in grounding_checks(isolated, observed)))
+        common = GroundingAnalysis(
+            basis="Synthetic approved pinout requires common returns",
+            domains=(GroundDomain(net="SERIAL_1_GND", pins=("U1.3", "J1.5", "U2.3", "J2.5")),),
+        )
+        checks = {row.id: row for row in grounding_checks(common, observed)}
+        self.assertEqual(checks["grounding/SERIAL_1_GND"].status, "FAIL")
+        self.assertEqual(checks["grounding/return-net-review"].status, "FAIL")
+
+    def test_one_stray_usb_return_is_caught_by_the_declared_pinout(self) -> None:
+        observed = NetlistContract(
+            components={
+                ref: ComponentContract(value="Synthetic part", footprint="")
+                for ref in ("U1", "J1", "J2", "J3")
+            },
+            nets={
+                "GND": ("U1.2", "J1.4", "J2.4"),
+                "USB3_GND": ("J3.4",),
+            },
+        )
+        self.assertFalse(return_net_groups(observed))
+        spec = GroundingAnalysis(
+            basis="Synthetic approved pinout requires one signal-ground domain",
+            domains=(GroundDomain(net="GND", pins=("U1.2", "J1.4", "J2.4", "J3.4")),),
+        )
+        checks = {row.id: row for row in grounding_checks(spec, observed)}
+        self.assertEqual(checks["grounding/GND"].status, "FAIL")
+        self.assertEqual(checks["grounding/component-coverage"].status, "PASS")
+        self.assertNotIn("grounding/return-net-review", checks)
+
+    def test_protocol_numbers_and_shields_are_not_return_group_indices(self) -> None:
+        observed = NetlistContract(
+            components={},
+            nets={
+                "RS232_GND": ("J1.5",),
+                "RS485_GND": ("J2.5",),
+                "USB1_SHIELD": ("J3.5",),
+                "USB2_SHIELD": ("J4.5",),
+            },
+        )
+        self.assertFalse(return_net_groups(observed))
+
+    def test_misleading_return_names_need_reasoned_exceptions_and_no_stale_waiver(self) -> None:
+        observed = NetlistContract(
+            components={"J1": ComponentContract(value="Synthetic connector", footprint="")},
+            nets={"GND": ("J1.9",), "RETURN STATUS 1": ("J1.1",), "RETURN STATUS 2": ("J1.2",)},
+        )
+        spec = GroundingAnalysis(
+            basis="Synthetic pinout distinguishes logic status from ground",
+            domains=(GroundDomain(net="GND", pins=("J1.9",)),),
+            reviewed_return_exceptions={
+                "RETURN STATUS 1": "Logic status, not a return",
+                "RETURN STATUS 2": "Logic status, not a return",
+            },
+        )
+        self.assertTrue(all(row.status == "PASS" for row in grounding_checks(spec, observed)))
+        stale = spec.model_copy(
+            update={
+                "reviewed_return_exceptions": {
+                    **spec.reviewed_return_exceptions,
+                    "RETURN STATUS 3": "Old pinout",
+                }
+            }
+        )
+        self.assertEqual(
+            next(
+                row
+                for row in grounding_checks(stale, observed)
+                if row.id.endswith("return-net-review")
+            ).status,
+            "FAIL",
+        )
+        with self.assertRaises(ValueError):
+            GroundingAnalysis(
+                basis="Conflicting synthetic declaration",
+                domains=(GroundDomain(net="GND", pins=("J1.9",)),),
+                reviewed_return_exceptions={"GND": "Contradiction"},
+            )
 
     def test_strict_contract_round_trip_and_schema(self) -> None:
         root = self.stage()
