@@ -326,6 +326,40 @@ ProjectValidationContract = Annotated[
 ]
 
 
+DesignLintRuleId = Literal[
+    "connector.repeated_pin_function",
+    "net.numbered_returns",
+]
+
+
+class DesignLintRuleOverride(StrictModel):
+    rule_id: DesignLintRuleId
+    mode: Literal["review", "block", "off"]
+    reason: NonEmptyText
+
+
+class DesignLintIgnore(StrictModel):
+    rule_id: DesignLintRuleId
+    fingerprint: Digest
+    reason: NonEmptyText
+
+
+class DesignLintPolicy(StrictModel):
+    """Project-owned review decisions; no observed netlist values become requirements."""
+
+    schema_version: Literal["1"] = "1"
+    rules: tuple[DesignLintRuleOverride, ...] = ()
+    ignores: tuple[DesignLintIgnore, ...] = ()
+
+    @model_validator(mode="after")
+    def unique_decisions(self) -> DesignLintPolicy:
+        if len({item.rule_id for item in self.rules}) != len(self.rules):
+            raise ValueError("design_lint rule overrides must be unique")
+        if len({item.fingerprint for item in self.ignores}) != len(self.ignores):
+            raise ValueError("design_lint ignores must have unique fingerprints")
+        return self
+
+
 class ProjectConfig(StrictModel):
     schema_version: NonEmptyText
     kind: ProjectKind
@@ -342,6 +376,7 @@ class ProjectConfig(StrictModel):
     required_inputs: tuple[RepositoryPath, ...]
     validation: ProjectValidationContract
     electrical: RepositoryPath | None = None
+    design_lint: DesignLintPolicy | None = None
 
     @model_validator(mode="after")
     def matching_project_kind(self) -> ProjectConfig:
@@ -409,6 +444,16 @@ class ProjectTestContract(StrictModel):
     schema_version: Literal["1"] = "1"
     validation: ProjectValidationContract
     electrical: RepositoryPath | None = None
+    design_lint: DesignLintPolicy | None = None
+
+    @model_validator(mode="after")
+    def lint_requires_netlist(self) -> ProjectTestContract:
+        if self.design_lint is not None and self.validation.kind not in {
+            ProjectKind.PCB,
+            ProjectKind.SCHEMATIC,
+        }:
+            raise ValueError("design_lint requires a pcb or schematic netlist")
+        return self
 
 
 class ProjectScaffoldReport(StrictModel):
@@ -1456,6 +1501,7 @@ class ProjectVerificationReport(StrictModel):
     dependency_command: CommandEvidence | None = None
     native_command: CommandEvidence | None = None
     native: CheckAllSummary | None = None
+    design_lint: DesignLintReport | None = None
     electrical: ElectricalAnalysisReport | None = None
     diagnosis: DiagnosticReport | None = None
     status: Literal["PASS", "FAIL", "ERROR"]
@@ -1508,6 +1554,40 @@ class ContractCoachReport(StrictModel):
     next_actions: tuple[NonEmptyText, ...] = ()
     commands: Mapping[Identifier, CommandEvidence] = Field(default_factory=dict)
     receipt_dir: str | None = None
+
+
+class DesignLintFinding(StrictModel):
+    rule_id: DesignLintRuleId
+    fingerprint: Digest
+    subject: NonEmptyText
+    message: NonEmptyText
+    evidence: Mapping[str, tuple[str, ...]]
+    mode: Literal["review", "block", "off"]
+    disposition: Literal["OPEN", "IGNORED", "RULE_OFF"]
+    reason: NonEmptyText | None = None
+
+
+class DesignLintReport(StrictModel):
+    """Source-bound heuristic findings; neither a pinout nor electrical approval."""
+
+    schema_version: Literal["1"] = "1"
+    lane: Literal["DESIGN_LINT"] = "DESIGN_LINT"
+    status: Literal["PASS", "REVIEW", "FAIL", "BLOCKED"]
+    project_id: Identifier
+    review_state: Literal["HEURISTIC"] = "HEURISTIC"
+    build_authorized: Literal[False] = False
+    source_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
+    netlist_sha256: Digest | None = None
+    native_summary: str | None = None
+    native_status: Literal["PASS", "FAIL"] | None = None
+    project_manifest_sha256: Digest | None = None
+    policy_path: RepositoryPath | None = None
+    policy_sha256: Digest | None = None
+    findings: tuple[DesignLintFinding, ...] = ()
+    stale_ignores: tuple[DesignLintIgnore, ...] = ()
+    rule_overrides: tuple[DesignLintRuleOverride, ...] = ()
+    issues: tuple[NonEmptyText, ...] = ()
+    next_actions: tuple[NonEmptyText, ...] = ()
 
 
 class McpArtifactEntry(StrictModel):

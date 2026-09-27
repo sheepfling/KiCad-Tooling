@@ -120,6 +120,16 @@
       ]
     },
     {
+      "module": "kicad_tooling.design_lint",
+      "commands": [],
+      "options": [
+        "--format",
+        "--native-summary",
+        "--project",
+        "--root"
+      ]
+    },
+    {
       "module": "kicad_tooling.docs_policy",
       "commands": [],
       "options": [
@@ -667,6 +677,13 @@
       ]
     },
     {
+      "name": "inspect_design_lint",
+      "parameters": [
+        "native_summary",
+        "project_id"
+      ]
+    },
+    {
       "name": "inspect_sourcing_snapshot",
       "parameters": [
         "path"
@@ -1076,7 +1093,7 @@
         "check_project"
       ],
       "alignment": "aligned",
-      "reason": "Both dispatch the same portable/native/electrical project verification, preserve connector pin and split return hints on failed native contract checks, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
+      "reason": "Both dispatch the same portable/native/electrical project verification, preserve connector pin and split return hints on failed native contract checks, run opted-in design lint in native checks, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1126,6 +1143,25 @@
       "parity_tests": [
         "tests.test_mcp_parity.McpParityTests.test_contract_inspection_parity",
         "tests.test_source_parity.SourceParityTests.test_contract_capture_parity"
+      ]
+    },
+    {
+      "id": "design-lint",
+      "cli": [
+        "kicad_tooling.design_lint"
+      ],
+      "mcp": [
+        "inspect_design_lint"
+      ],
+      "alignment": "aligned",
+      "reason": "Both evaluate source-bound heuristic findings with the same project-owned rule overrides and exact ignores.",
+      "scope": "core",
+      "gaps": [],
+      "constraints": [
+        "MCP accepts only a repository-relative generated native summary; CLI accepts a path to the same evidence."
+      ],
+      "parity_tests": [
+        "tests.test_mcp_parity.McpParityTests.test_design_lint_parity"
       ]
     },
     {

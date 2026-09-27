@@ -32,6 +32,9 @@ from kicad_tooling.hwrepo.models import (
     CheckEvidence,
     ComponentIdentity,
     ContractCoachReport,
+    DesignLintIgnore,
+    DesignLintPolicy,
+    DesignLintReport,
     DiagnosticReport,
     ImportInventoryReport,
     LocalRescueReport,
@@ -45,6 +48,7 @@ from kicad_tooling.hwrepo.models import (
     ProjectManifest,
     ProjectScaffoldReport,
     ProjectStaticPipelineReport,
+    ProjectTestContract,
     ProjectVerificationReport,
     PurchasingPreferences,
     PurchasingReport,
@@ -652,6 +656,86 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(power.pins["J2.1"], ())
                         self.assertIn("approved connector pinout", " ".join(mcp.next_actions))
                     self.assertFalse(mcp.electrical_coverage)
+
+    async def test_design_lint_parity(self) -> None:
+        native = self.native_evidence()
+        netlist = native.parent / "netlist.xml"
+        netlist.write_text(
+            '<export><components><comp ref="J1"><value>Synthetic port</value>'
+            '<libsource lib="Synthetic" part="Port"/></comp><comp ref="J2">'
+            '<value>Synthetic port</value><libsource lib="Synthetic" part="Port"/>'
+            "</comp></components>"
+            '<libparts><libpart lib="Synthetic" part="Port"><pins>'
+            '<pin num="1" name="PWR" type="passive"/>'
+            '<pin num="7" name="GND" type="passive"/></pins></libpart></libparts><nets>'
+            '<net name="GND1"><node ref="J1" pin="7"/></net>'
+            '<net name="GND2"><node ref="J2" pin="7"/></net>'
+            '<net name="+5V"><node ref="J1" pin="1"/></net>'
+            "</nets></export>",
+            encoding="utf-8",
+        )
+        summary = read_model(native, ValidationSummary)
+        summary = summary.model_copy(
+            update={
+                "artifacts_sha256": {
+                    **summary.artifacts_sha256,
+                    "netlist.xml": digest(netlist),
+                }
+            }
+        )
+        write_model(native, summary)
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+
+            async def compare(expected_status: str, exit_code: int) -> DesignLintReport:
+                cli = await self.cli(
+                    "kicad_tooling.design_lint",
+                    DesignLintReport,
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                    expected_exit=exit_code,
+                )
+                mcp = await self.call(
+                    client,
+                    "inspect_design_lint",
+                    DesignLintReport,
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(self.root).as_posix(),
+                    },
+                )
+                self.assertEqual(cli, mcp)
+                self.assertEqual(mcp.status, expected_status, mcp.issues)
+                return mcp
+
+            open_report = await compare("REVIEW", 1)
+            self.assertEqual(open_report.native_status, "FAIL")
+            self.assertEqual(len(open_report.findings), 3)
+            contract_path = self.island / "tests/contract.json"
+            contract = read_model(contract_path, ProjectTestContract)
+            write_model(
+                contract_path,
+                contract.model_copy(
+                    update={
+                        "design_lint": DesignLintPolicy(
+                            ignores=tuple(
+                                DesignLintIgnore(
+                                    rule_id=item.rule_id,
+                                    fingerprint=item.fingerprint,
+                                    reason="Synthetic pinout review accepts this exact observation",
+                                )
+                                for item in open_report.findings
+                            )
+                        )
+                    }
+                ),
+            )
+            accepted = await compare("PASS", 0)
+            self.assertEqual(accepted.netlist_sha256, open_report.netlist_sha256)
+            self.assertNotEqual(accepted.policy_sha256, open_report.policy_sha256)
+            self.assertTrue(all(item.disposition == "IGNORED" for item in accepted.findings))
 
     async def test_model_coverage_parity(self) -> None:
         board = self.island / "kicad/controller.kicad_pcb"

@@ -541,6 +541,7 @@ def validate(
         if (
             config.kind is ProjectKind.PCB
             or config.electrical is not None
+            or config.design_lint is not None
             or config.component_identity.required
             or (
                 isinstance(config.validation, SchematicValidationContract)
@@ -659,6 +660,7 @@ def validate(
         required.add("grounding")
     if config is not None and (
         config.electrical is not None
+        or config.design_lint is not None
         or config.component_identity.required
         or (
             isinstance(config.validation, SchematicValidationContract)

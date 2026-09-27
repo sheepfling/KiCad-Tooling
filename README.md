@@ -22,6 +22,8 @@ outside the current scope.
 
 For reviewed connector power, ground, and other pin relationships, see the
 [connector pin review workflow](docs/CONNECTOR_PIN_REVIEW.md).
+For reviewable pattern warnings, exact ignores, and per-project rule modes,
+see [design lint](docs/DESIGN_LINT.md).
 
 ## Try the separate package
 

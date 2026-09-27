@@ -15,6 +15,7 @@ COMMANDS = (
     "ci_hosted",
     "ci_matrix",
     "contract_coach",
+    "design_lint",
     "docs_policy",
     "electrical",
     "electrical_charts",

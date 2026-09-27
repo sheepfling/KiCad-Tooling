@@ -15,19 +15,26 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
+from kicad_tooling.check_all import check_all
 from kicad_tooling.check_toolchain import cli_executable
 from kicad_tooling.ci import project_static_pipeline
-from kicad_tooling.hwrepo.contracts import write_model
+from kicad_tooling.hwrepo.contracts import read_model, write_model
+from kicad_tooling.hwrepo.discovery import load_config
+from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
     CommandEvidence,
+    DesignLintIgnore,
+    DesignLintPolicy,
     GovernanceLintReport,
     ProductPolicyReport,
     ProjectCheckSummary,
+    ProjectTestContract,
     RepositoryPolicyReport,
     ValidationSummary,
 )
+from kicad_tooling.validate import hashes
 from kicad_tooling.verify import container_command, format_report, run_command, verify
 from tests.support import initialize_git, reference_root
 
@@ -327,6 +334,134 @@ class VerifyTests(unittest.TestCase):
         assert result.diagnosis is not None
         self.assertIn("NATIVE_ERC", {item.code for item in result.diagnosis.findings})
         self.assertTrue((Path(result.run_directory) / "diagnosis.json").is_file())
+
+    def test_opted_in_design_lint_blocks_native_verify_until_reviewed(self) -> None:
+        contract_path = self.root / "examples/projects/controller/tests/contract.json"
+        contract = read_model(contract_path, ProjectTestContract)
+        write_model(
+            contract_path,
+            contract.model_copy(update={"design_lint": DesignLintPolicy()}),
+        )
+
+        def native(root: Path, output: Path, cli: str, projects: list[str]) -> CheckAllSummary:
+            _ = cli, projects
+            project_output = output / "controller"
+            project_output.mkdir(parents=True)
+            netlist = project_output / "netlist.xml"
+            netlist.write_text(
+                '<export><components><comp ref="J1"><value>Synthetic port</value>'
+                '<libsource lib="Synthetic" part="Port"/></comp><comp ref="J2">'
+                '<value>Synthetic port</value><libsource lib="Synthetic" part="Port"/>'
+                '</comp></components><libparts><libpart lib="Synthetic" part="Port"><pins>'
+                '<pin num="1" name="PWR" type="passive"/>'
+                '<pin num="7" name="GND" type="passive"/></pins></libpart></libparts><nets>'
+                '<net name="GND1"><node ref="J1" pin="7"/></net>'
+                '<net name="GND2"><node ref="J2" pin="7"/></net>'
+                '<net name="+5V"><node ref="J1" pin="1"/></net>'
+                "</nets></export>",
+                encoding="utf-8",
+            )
+            evidence = CommandEvidence(
+                argv=("synthetic-kicad-cli",),
+                started_utc=datetime.now(UTC).isoformat(),
+                returncode=0,
+            )
+            write_model(project_output / "netlist.command.json", evidence)
+            config = load_config(root, "examples/projects/controller/project.json")
+            current = hashes(root, config.source_roots)
+            write_model(
+                project_output / "summary.json",
+                ValidationSummary(
+                    timestamp_utc=datetime.now(UTC).isoformat(),
+                    checked_commit="LOCAL_UNBOUND",
+                    project_id="controller",
+                    project_kind=config.kind,
+                    checks={
+                        "source_scope": CheckEvidence(status="PASS", source_hashes=current),
+                        "source_unchanged": CheckEvidence(status="PASS", source_hashes=current),
+                        "toolchain": CheckEvidence(
+                            status="PASS",
+                            observed_version=config.kicad_version,
+                            image=config.image,
+                        ),
+                        "netlist": CheckEvidence(status="PASS", returncode=0),
+                    },
+                    status="PASS",
+                    artifacts_sha256={
+                        "netlist.xml": digest(netlist),
+                        "netlist.command.json": digest(project_output / "netlist.command.json"),
+                    },
+                ),
+            )
+            write_model(output / "summary.json", native_summary())
+            return native_summary()
+
+        with (
+            self.runner_environment("10.0.0"),
+            patch("kicad_tooling.verify.check_all", side_effect=native),
+        ):
+            open_result = verify(self.root, "controller", depth="native", runner="local")
+        self.assertEqual(open_result.status, "FAIL", open_result.error)
+        self.assertIsNotNone(open_result.design_lint)
+        assert open_result.design_lint is not None
+        self.assertEqual(open_result.design_lint.status, "REVIEW")
+        self.assertEqual(len(open_result.design_lint.findings), 3)
+        self.assertTrue((Path(open_result.run_directory) / "design-lint.json").is_file())
+
+        def validated(root: Path, output: Path, cli: str, config_path: Path) -> ValidationSummary:
+            _ = config_path
+            native(root, output.parent, cli, ["controller"])
+            return read_model(output / "summary.json", ValidationSummary)
+
+        with patch("kicad_tooling.check_all.validate", side_effect=validated):
+            ci_open = check_all(
+                self.root,
+                self.root / "build/native-lint-open",
+                "synthetic-kicad-cli",
+                ["controller"],
+            )
+        self.assertEqual(ci_open.status, "FAIL")
+        ci_summary = read_model(
+            self.root / "build/native-lint-open/controller/summary.json", ValidationSummary
+        )
+        self.assertEqual(ci_summary.checks["design_lint"].status, "FAIL")
+        self.assertEqual(ci_summary.status, "FAIL")
+        self.assertTrue(
+            (self.root / "build/native-lint-open/controller/design-lint.json").is_file()
+        )
+
+        write_model(
+            contract_path,
+            contract.model_copy(
+                update={
+                    "design_lint": DesignLintPolicy(
+                        ignores=tuple(
+                            DesignLintIgnore(
+                                rule_id=item.rule_id,
+                                fingerprint=item.fingerprint,
+                                reason="Synthetic reviewed pinout accepts this exact observation",
+                            )
+                            for item in open_result.design_lint.findings
+                        )
+                    )
+                }
+            ),
+        )
+        with (
+            self.runner_environment("10.0.0"),
+            patch("kicad_tooling.verify.check_all", side_effect=native),
+        ):
+            reviewed_result = verify(self.root, "controller", depth="native", runner="local")
+        self.assertEqual(reviewed_result.status, "PASS", reviewed_result.error)
+        self.assertEqual(reviewed_result.design_lint.status, "PASS")
+        with patch("kicad_tooling.check_all.validate", side_effect=validated):
+            ci_reviewed = check_all(
+                self.root,
+                self.root / "build/native-lint-reviewed",
+                "synthetic-kicad-cli",
+                ["controller"],
+            )
+        self.assertEqual(ci_reviewed.status, "PASS")
 
     def test_unavailable_runner_is_an_actionable_failure_before_native_work(self) -> None:
         with (

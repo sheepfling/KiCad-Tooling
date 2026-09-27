@@ -29,6 +29,10 @@ narrow and do not include shield names. Every hint is `UNREVIEWED`: similar
 names or functions are reasons to compare the approved pinout with the design,
 not proof that the pins should be tied.
 
+The separate [design lint lane](DESIGN_LINT.md) gives these patterns stable
+finding fingerprints and project-owned review decisions. Opted-in native
+`verify` and `ci --kicad` runs retain that lint report alongside the KiCad results.
+
 Capture writes only under the project's ignored `build/` directory. A retained
 native summary can be inspected with
 `--native-summary build/<run>/<board-id>/summary.json` after its source,

@@ -42,6 +42,7 @@ CORE_WORKFLOWS = frozenset(
         "scope-checks",
         "native-scope-checks",
         "contract-coach",
+        "design-lint",
         "model-coverage",
         "model-population",
         "three-d-export",

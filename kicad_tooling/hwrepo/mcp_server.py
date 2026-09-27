@@ -38,6 +38,7 @@ from .models import (
     CadSourcingReview,
     CadStepReport,
     ContractCoachReport,
+    DesignLintReport,
     DiagnosticReport,
     ElectricalAnalysisReport,
     ElectricalChartsReport,
@@ -491,6 +492,17 @@ def create_server(
             return workflow.inspect_contract(root, project_id, native_summary)
 
     server.tool(annotations=READ_ONLY)(inspect_contract)
+
+    def inspect_design_lint(project_id: str, native_summary: str) -> DesignLintReport:
+        """Flag matching connector pins and numbered return nets for project-owned review.
+
+        A lint finding is a heuristic, never an electrical requirement or approval.
+        native_summary is a repository-relative generated artifact.
+        """
+        with service_operation(operation):
+            return workflow.inspect_design_lint(root, project_id, native_summary)
+
+    server.tool(annotations=READ_ONLY)(inspect_design_lint)
 
     def inspect_3d_models(project_id: str) -> ModelInventoryReport:
         """Inspect a PCB's placed-footprint model assignments without executing native kicad_tooling.

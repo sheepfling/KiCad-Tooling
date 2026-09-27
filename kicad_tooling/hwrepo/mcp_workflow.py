@@ -15,6 +15,7 @@ from ..ci import static_pipeline
 from ..verify import run_command
 from . import (
     contract_coach,
+    design_lint,
     diagnostics,
     generation,
     model_inventory,
@@ -34,6 +35,7 @@ from .exports import require_declared_variant, verify_exports
 from .mcp_files import artifact_path
 from .models import (
     ContractCoachReport,
+    DesignLintReport,
     DiagnosticReport,
     Identifier,
     LocalRescueReport,
@@ -194,6 +196,11 @@ def inspect_contract(root: Path, project_id: str, native_summary: str) -> Contra
     return contract_coach.inspect_summary(
         root, project_id, native_summary_path(root, native_summary)
     )
+
+
+def inspect_design_lint(root: Path, project_id: str, native_summary: str) -> DesignLintReport:
+    """Review source-bound heuristic findings through the same typed CLI service."""
+    return design_lint.inspect_summary(root, project_id, native_summary_path(root, native_summary))
 
 
 def capture_contract(

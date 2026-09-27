@@ -22,6 +22,7 @@ from .hwrepo.doctor import NativeRunner, doctor
 from .hwrepo.models import (
     CheckAllSummary,
     CommandEvidence,
+    DesignLintReport,
     DiagnosticReport,
     ProjectStaticPipelineReport,
     ProjectVerificationReport,
@@ -127,6 +128,7 @@ def format_report(
     if result.depth in {"native", "electrical"}:
         lines.append(f"Runner: {result.runner}")
         lines.append(f"Native: {result.native.status if result.native is not None else 'NOT_RUN'}")
+    lines.append(f"Design lint: {result.design_lint.status if result.design_lint else 'NOT_RUN'}")
     lines.append(
         f"Electrical analysis: {result.electrical.status if result.electrical else 'NOT_RUN'}"
     )
@@ -170,6 +172,7 @@ def verify(
     native_command = None
     native = None
     electrical_report = None
+    design_lint_report: DesignLintReport | None = None
     diagnosis: DiagnosticReport | None = None
     selected_runner: Literal["none", "local", "container"] = "none"
     next_actions: tuple[str, ...] = ()
@@ -317,6 +320,24 @@ def verify(
                         )
                     else:
                         status = "PASS"
+                if native is not None and config.design_lint is not None:
+                    from .hwrepo.design_lint import inspect_summary as inspect_design_lint
+
+                    with journal.stage("design-lint"):
+                        design_lint_report = inspect_design_lint(
+                            root,
+                            project_id,
+                            native_output / project_id / "summary.json",
+                        )
+                        journal.save_model("design-lint", design_lint_report)
+                    if design_lint_report.status != "PASS":
+                        status = "FAIL"
+                        next_actions += (
+                            (
+                                "Review the design-lint findings and project-owned decisions in "
+                                f"{journal.directory / 'design-lint.json'}."
+                            ),
+                        )
         if depth == "electrical" and status == "PASS":
             from .hwrepo.electrical_runner import analyze
 
@@ -379,6 +400,7 @@ def verify(
         dependency_command=dependency_command,
         native_command=native_command,
         native=native,
+        design_lint=design_lint_report,
         electrical=electrical_report,
         diagnosis=diagnosis,
         status=status,

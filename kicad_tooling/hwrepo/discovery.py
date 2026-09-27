@@ -184,4 +184,5 @@ def load_config(root: Path, value: str | Path) -> ProjectConfig:
             if contract.electrical is None
             else local_name(root, path.parent, contract.electrical)
         ),
+        design_lint=contract.design_lint,
     )
