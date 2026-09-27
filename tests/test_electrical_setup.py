@@ -79,8 +79,13 @@ class ElectricalSetupTests(unittest.TestCase):
         contract = read_model(self.sidecar, ElectricalAnalysisContract)
         self.assertEqual(contract.ngspice_version, "UNREVIEWED")
         self.assertEqual(
-            [contract.grounding.mode, contract.power.mode, contract.high_frequency.mode],
-            ["pending"] * 3,
+            [
+                contract.grounding.mode,
+                contract.pin_connectivity.mode if contract.pin_connectivity else None,
+                contract.power.mode,
+                contract.high_frequency.mode,
+            ],
+            ["pending"] * 4,
         )
         self.assertEqual(simulation_cases(contract), ())
         self.assertIn(
@@ -94,7 +99,7 @@ class ElectricalSetupTests(unittest.TestCase):
         native.assert_not_called()
         spice.assert_not_called()
         self.assertEqual(result.status, "FAIL")
-        self.assertEqual([c.status for c in result.checks], ["NOT_CONFIGURED"] * 3)
+        self.assertEqual([c.status for c in result.checks], ["NOT_CONFIGURED"] * 4)
         portable = project_static_pipeline(self.root, (PROJECT,))
         self.assertEqual(portable.status, "FAIL")
         # The diagnostic points at the authoring source and provides a CLI remedy.

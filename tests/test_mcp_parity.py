@@ -586,10 +586,18 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
         native = self.native_evidence()
         netlist = native.parent / "netlist.xml"
         netlist.write_text(
-            '<export><components><comp ref="J1"><value>Test</value></comp>'
-            '<comp ref="J2"><value>Test</value></comp></components><nets>'
+            '<export><components><comp ref="J1"><value>Synthetic port</value>'
+            '<libsource lib="Synthetic" part="Port"/><units><unit name="A"><pins>'
+            '<pin num="1"/><pin num="7"/></pins></unit></units></comp>'
+            '<comp ref="J2"><value>Synthetic port</value>'
+            '<libsource lib="Synthetic" part="Port"/><units><unit name="A"><pins>'
+            '<pin num="1"/><pin num="7"/></pins></unit></units></comp></components>'
+            '<libparts><libpart lib="Synthetic" part="Port"><pins>'
+            '<pin num="1" name="PWR" type="passive"/>'
+            '<pin num="7" name="GND" type="passive"/></pins></libpart></libparts><nets>'
             '<net name="0V CTRL 1"><node ref="J1" pin="7"/></net>'
             '<net name="0V CTRL 2"><node ref="J2" pin="7"/></net>'
+            '<net name="+5V"><node ref="J1" pin="1"/></net>'
             "</nets></export>",
             encoding="utf-8",
         )
@@ -636,6 +644,12 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(
                             set(mcp.return_net_groups[0].nets), {"0V CTRL 1", "0V CTRL 2"}
                         )
+                        power = next(
+                            group
+                            for group in mcp.similar_connector_pin_groups
+                            if group.function == "PWR"
+                        )
+                        self.assertEqual(power.pins["J2.1"], ())
                         self.assertIn("approved connector pinout", " ".join(mcp.next_actions))
                     self.assertFalse(mcp.electrical_coverage)
 

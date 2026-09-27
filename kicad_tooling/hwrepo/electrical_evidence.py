@@ -9,6 +9,7 @@ from .electrical import (
     bound_inputs,
     grounding_checks,
     load_analysis,
+    pin_relationship_checks,
     policy_issues,
     power_budget_checks,
     selected_config,
@@ -23,6 +24,7 @@ from .models import (
     ElectricalCheck,
     EvidenceFile,
     GroundingAnalysis,
+    PinConnectivityAnalysis,
     ProjectKind,
     ProjectRecord,
     ReleaseClass,
@@ -83,18 +85,34 @@ def verify_electrical(
     if read_model(artifact("requirements.json"), ElectricalAnalysisContract) != contract:
         raise ValueError("Retained electrical requirements differ from committed requirements")
     checks: list[ElectricalCheck] = []
+    netlist = (
+        read_netlist(evidence_path(root, native).parent / "netlist.xml")
+        if isinstance(contract.grounding, GroundingAnalysis)
+        or isinstance(contract.pin_connectivity, PinConnectivityAnalysis)
+        else None
+    )
     if isinstance(contract.grounding, GroundingAnalysis):
-        checks.extend(
-            grounding_checks(
-                contract.grounding, read_netlist(evidence_path(root, native).parent / "netlist.xml")
-            )
-        )
+        assert netlist is not None
+        checks.extend(grounding_checks(contract.grounding, netlist))
     else:
         if not isinstance(contract.grounding, AnalysisNotApplicable):
             raise ValueError("Grounding requirements remain pending")  # noqa: TRY004 - incomplete policy
         checks.append(
             ElectricalCheck(
                 id="grounding", status="NOT_APPLICABLE", detail=contract.grounding.reason
+            )
+        )
+    if isinstance(contract.pin_connectivity, PinConnectivityAnalysis):
+        assert netlist is not None
+        checks.extend(pin_relationship_checks(contract.pin_connectivity, netlist))
+    elif contract.pin_connectivity is not None:
+        if not isinstance(contract.pin_connectivity, AnalysisNotApplicable):
+            raise ValueError("Pin connectivity requirements remain pending")  # noqa: TRY004 - incomplete policy
+        checks.append(
+            ElectricalCheck(
+                id="pin-connectivity",
+                status="NOT_APPLICABLE",
+                detail=contract.pin_connectivity.reason,
             )
         )
     if isinstance(contract.high_frequency, AnalysisNotApplicable):

@@ -18,6 +18,7 @@ from .electrical import (
     bound_inputs,
     grounding_checks,
     load_analysis,
+    pin_relationship_checks,
     power_budget_checks,
     selected_config,
     simulation_cases,
@@ -31,6 +32,7 @@ from .models import (
     ElectricalCheck,
     ElectricalSuiteReport,
     GroundingAnalysis,
+    PinConnectivityAnalysis,
 )
 from .selection import ProjectSelector, resolve_project_ids
 from .spice import executable_path, run_case, simulator_version
@@ -71,7 +73,10 @@ def analyze(
         else:
             inputs = bound_inputs(root, config, contract)
             write_model(output / "requirements.json", contract)
-            if isinstance(contract.grounding, GroundingAnalysis):
+            netlist = None
+            if isinstance(contract.grounding, GroundingAnalysis) or isinstance(
+                contract.pin_connectivity, PinConnectivityAnalysis
+            ):
                 if native_summary is None:
                     netlist_output = output / "netlist"
                     netlist_output.mkdir()
@@ -81,7 +86,9 @@ def analyze(
                 else:
                     observed = inspect_summary(root, project_id, native_summary)
                 write_model(output / "netlist-evidence.json", observed)
-                if observed.observed is None:
+                netlist = observed.observed
+            if isinstance(contract.grounding, GroundingAnalysis):
+                if netlist is None:
                     checks.append(
                         ElectricalCheck(
                             id="grounding",
@@ -90,7 +97,7 @@ def analyze(
                         )
                     )
                 else:
-                    checks.extend(grounding_checks(contract.grounding, observed.observed))
+                    checks.extend(grounding_checks(contract.grounding, netlist))
             else:
                 checks.append(
                     ElectricalCheck(
@@ -99,6 +106,27 @@ def analyze(
                         if isinstance(contract.grounding, AnalysisPending)
                         else "NOT_APPLICABLE",
                         detail=contract.grounding.reason,
+                    )
+                )
+            if isinstance(contract.pin_connectivity, PinConnectivityAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="pin-connectivity",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(pin_relationship_checks(contract.pin_connectivity, netlist))
+            elif contract.pin_connectivity is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="pin-connectivity",
+                        status="NOT_CONFIGURED"
+                        if isinstance(contract.pin_connectivity, AnalysisPending)
+                        else "NOT_APPLICABLE",
+                        detail=contract.pin_connectivity.reason,
                     )
                 )
             if isinstance(contract.high_frequency, (AnalysisNotApplicable, AnalysisPending)):

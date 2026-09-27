@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Literal, cast
 
 from .check_toolchain import cli_executable, toolchain
+from .hwrepo.connector_pins import similar_connector_pin_groups
 from .hwrepo.contracts import repo_path, write_model
 from .hwrepo.discovery import load_config
 from .hwrepo.generation import csv_cell
@@ -152,7 +153,18 @@ def native_report_examples(path: Path, kind: str) -> tuple[str, ...]:
 def read_netlist(path: Path) -> NetlistContract:
     """Parse actual KiCad names, including hierarchical nets and unassigned footprints."""
     tree = ET.parse(path).getroot()
+    library_pins: dict[tuple[str, str], dict[str, str]] = {}
+    for part in tree.findall("./libparts/libpart"):
+        identity = (part.get("lib", ""), part.get("part", ""))
+        if all(identity):
+            library_pins[identity] = {
+                pin.attrib["num"]: name
+                for pin in part.findall("./pins/pin")
+                if (name := pin.get("name", "").strip()) and name != "~"
+            }
     components: dict[str, ComponentContract] = {}
+    component_symbols: dict[str, str] = {}
+    pin_functions: dict[str, str] = {}
     for comp in tree.findall("./components/comp"):
         ref = comp.attrib["ref"]
         if ref in components:
@@ -162,15 +174,38 @@ def read_netlist(path: Path) -> NetlistContract:
             footprint=comp.findtext("footprint", ""),
             part_id=comp.findtext("./fields/field[@name='PART_ID']") or None,
         )
+        source = comp.find("libsource")
+        if source is not None:
+            identity = (source.get("lib", ""), source.get("part", ""))
+            if all(identity):
+                component_symbols[ref] = ":".join(identity)
+                available = library_pins.get(identity, {})
+                numbers = [
+                    pin.attrib["num"] for pin in comp.findall("./units/unit/pins/pin")
+                ] or list(available)
+                for number in numbers:
+                    if function := available.get(number):
+                        pin_functions[f"{ref}.{number}"] = function
     nets: dict[str, tuple[str, ...]] = {}
     for net in tree.findall("./nets/net"):
         name = net.attrib["name"].lstrip("/")
         if name in nets:
             raise ValueError("Duplicate normalized net name")
-        nets[name] = tuple(
-            sorted(f"{node.attrib['ref']}.{node.attrib['pin']}" for node in net.findall("node"))
-        )
-    return NetlistContract(components=components, nets=nets)
+        pins: list[str] = []
+        for node in net.findall("node"):
+            pin = f"{node.attrib['ref']}.{node.attrib['pin']}"
+            pins.append(pin)
+            if pin not in pin_functions and (function := node.get("pinfunction", "")):
+                normalized = function.removesuffix(f"_{node.attrib['pin']}").strip()
+                if normalized and normalized != "~":
+                    pin_functions[pin] = normalized
+        nets[name] = tuple(sorted(pins))
+    return NetlistContract(
+        components=components,
+        nets=nets,
+        component_symbols=component_symbols,
+        pin_functions=pin_functions,
+    )
 
 
 def check_netlist(
@@ -188,6 +223,15 @@ def check_netlist(
         if groups
         else ""
     )
+    similar = similar_connector_pin_groups(contract)
+    if similar:
+        shown = similar[:5]
+        review += (
+            " Similar connector pin functions need review: "
+            + ", ".join(f"{group.symbol} {group.function}" for group in shown)
+            + (f" (+{len(similar) - len(shown)} more)" if len(similar) > len(shown) else "")
+            + "."
+        )
     if not validation.components:
         raise ValueError("Complete the component test contract before native validation." + review)
     compared = {

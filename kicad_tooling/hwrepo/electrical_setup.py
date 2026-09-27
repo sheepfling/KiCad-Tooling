@@ -60,6 +60,9 @@ def initialize(
         grounding=AnalysisPending(
             reason="Review every component's required ground pins and domains."
         ),
+        pin_connectivity=AnalysisPending(
+            reason="Review repeated connector pin functions and declare required common or separate nets."
+        ),
         power=AnalysisPending(
             reason="Author derated rail/load limits and reviewed startup/steady-state models."
         ),
@@ -99,7 +102,7 @@ def initialize(
         contract=relative,
         changed=(relative, checks.relative_to(root).as_posix()),
         next_actions=(
-            f"Open {relative}. All three sections are pending and cannot pass verification.",
+            f"Open {relative}. All four sections are pending and cannot pass verification.",
             f"Follow {GUIDE} and templates/electrical/README.md to author requirements and models.",
             (
                 f"Capture review inputs with python -B -m kicad_tooling.electrical --project {project_id} "

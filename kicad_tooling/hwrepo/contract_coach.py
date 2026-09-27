@@ -16,6 +16,7 @@ from typing import Literal, Protocol, TypeVar
 
 from ..check_toolchain import cli_executable
 from ..validate import hashes, read_netlist
+from .connector_pins import similar_connector_pin_groups
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
 from .evidence import digest
@@ -306,6 +307,7 @@ def ready_report(
 ) -> ContractCoachReport:
     changes = differences(observed, authored)
     return_groups = return_net_groups(observed)
+    similar_groups = similar_connector_pin_groups(observed)
     actions = [
         (
             "Compare each UNREVIEWED observation with requirements and the KiCad design; "
@@ -332,6 +334,12 @@ def ready_report(
             "reasoned exception for a net that is not a ground return. Determine common, "
             "bonded or intentionally isolated paths with the electrical owner."
         )
+    if similar_groups:
+        actions.append(
+            "Review repeated connector pin functions on differing or missing nets against the "
+            "approved pinout. Declare required common or separate pin relationships; a matching "
+            "pin name alone does not establish the intended connection."
+        )
     actions.append("Rerun the selected portable and native lanes after an authored decision.")
     return ContractCoachReport(
         status="READY_FOR_REVIEW",
@@ -345,6 +353,7 @@ def ready_report(
         authored=authored,
         differences=changes,
         return_net_groups=return_groups,
+        similar_connector_pin_groups=similar_groups,
         next_actions=tuple(actions),
         commands={} if commands is None else commands,
         receipt_dir=receipt_dir,
@@ -558,6 +567,19 @@ def text_report(report: ContractCoachReport, detail: str = "brief") -> str:
             lines.append(f"Possible split returns ({group.stem}): {listed}")
         if len(selected_groups) < len(report.return_net_groups):
             lines.append("More possible split returns are in --detail full or JSON.")
+        selected_pins = (
+            report.similar_connector_pin_groups
+            if detail == "full"
+            else report.similar_connector_pin_groups[:5]
+        )
+        for group in selected_pins:
+            listed = "; ".join(
+                f"{pin}: {', '.join(nets) if nets else 'UNCONNECTED'}"
+                for pin, nets in group.pins.items()
+            )
+            lines.append(f"Similar connector pins ({group.symbol} {group.function}): {listed}")
+        if len(selected_pins) < len(report.similar_connector_pin_groups):
+            lines.append("More similar connector pins are in --detail full or JSON.")
         selected = report.differences if detail == "full" else report.differences[:5]
         for change in selected:
             lines.append(f"- {change.kind} {change.identifier}: {change.difference}")

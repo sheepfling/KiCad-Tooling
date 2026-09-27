@@ -8,11 +8,15 @@ import unittest
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.discovery import load_registry
+from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.electrical_evidence import required_projects, verify_electrical
 from kicad_tooling.hwrepo.electrical_runner import analyze
 from kicad_tooling.hwrepo.evidence import digest, source_state
 from kicad_tooling.hwrepo.models import (
     ElectricalAnalysisContract,
+    ElectricalAnalysisReport,
+    PinConnectivityAnalysis,
+    PinRelationshipRule,
     ReleaseClass,
     ReleaseEvidence,
     ReleaseManifest,
@@ -105,6 +109,65 @@ class ElectricalEvidenceTests(unittest.TestCase):
         self.assertIn(
             (self.output / "startup/waveforms.raw").relative_to(self.root).as_posix(), retained
         )
+
+    def test_saved_pin_relationship_is_rechecked_and_cannot_be_omitted(self) -> None:
+        requirement = PinConnectivityAnalysis(
+            basis="Synthetic independently reviewed pin relationship",
+            rules=(
+                PinRelationshipRule(
+                    id="shared-source",
+                    basis="Two selected pins share the synthetic source net",
+                    topology="common_net",
+                    pins=("R1.1", "R3.1"),
+                    net="PILOT_A",
+                ),
+            ),
+        )
+        write_model(
+            self.root / ISLAND / "tests/electrical.json",
+            self.contract.model_copy(update={"pin_connectivity": requirement}),
+        )
+        subprocess.run(
+            (
+                "git",
+                "-C",
+                str(self.root),
+                "-c",
+                "user.name=Synthetic fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qam",
+                "Synthetic pin relationship",
+            ),
+            check=True,
+            capture_output=True,
+        )
+        self.source = source_state(self.root)
+        self.output = self.root / "build/electrical/pin-relationship"
+        result = analyze(
+            self.root,
+            PROJECT,
+            self.output,
+            ngspice=str(self.simulator),
+            runner=coaching.FakeRunner(version=selected_config(self.root, PROJECT).kicad_version),
+        )
+        self.assertEqual(result.status, "PASS", result)
+        self.path = self.output / "electrical.json"
+        self.verify()
+        report = read_model(self.path, ElectricalAnalysisReport)
+        write_model(
+            self.path,
+            report.model_copy(
+                update={
+                    "checks": tuple(
+                        row for row in report.checks if row.id != "pin-connectivity/shared-source"
+                    )
+                }
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, "checks fail or omit"):
+            self.verify()
 
     def test_relabeling_and_rehashing_cannot_hide_missing_or_failed_measurements(self) -> None:
         original = self.path.read_bytes()

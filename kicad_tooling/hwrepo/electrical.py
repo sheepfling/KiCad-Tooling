@@ -1,4 +1,4 @@
-"""Reviewed grounding requirements, conservative power budgets and model bindings."""
+"""Reviewed schematic connectivity, power budgets and model bindings."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from .models import (
     GroundingAnalysis,
     HighFrequencyAnalysis,
     NetlistContract,
+    PinConnectivityAnalysis,
     PowerAnalysis,
     ProjectConfig,
     ProjectKind,
@@ -204,6 +205,46 @@ def grounding_checks(
     return tuple(results)
 
 
+def pin_relationship_checks(
+    spec: PinConnectivityAnalysis, observed: NetlistContract
+) -> tuple[ElectricalCheck, ...]:
+    """Check approved pin relationships against exact exported schematic nets."""
+    pin_nets: dict[str, set[str]] = {}
+    for net, pins in observed.nets.items():
+        for pin in pins:
+            pin_nets.setdefault(pin, set()).add(net)
+    results: list[ElectricalCheck] = []
+    for rule in spec.rules:
+        actual = {pin: tuple(sorted(pin_nets.get(pin, ()))) for pin in rule.pins}
+        single = {pin: nets[0] for pin, nets in actual.items() if len(nets) == 1}
+        unknown = sorted(
+            pin for pin in rule.pins if pin.rsplit(".", 1)[0] not in observed.components
+        )
+        connected = len(single) == len(rule.pins) and not unknown
+        if rule.topology == "common_net":
+            passed = (
+                connected
+                and len(set(single.values())) == 1
+                and (rule.net is None or next(iter(single.values())) == rule.net)
+            )
+            requirement = f"one net{f' named {rule.net}' if rule.net else ''}"
+        else:
+            passed = connected and len(set(single.values())) == len(rule.pins)
+            requirement = "a distinct net for each pin"
+        results.append(
+            ElectricalCheck(
+                id=f"pin-connectivity/{rule.id}",
+                status="PASS" if passed else "FAIL",
+                detail=(
+                    f"All {len(rule.pins)} reviewed pins have {requirement}."
+                    if passed
+                    else f"Expected {requirement}; observed={actual}; unknown components={unknown}."
+                ),
+            )
+        )
+    return tuple(results)
+
+
 def power_budget_checks(
     spec: PowerAnalysis | AnalysisNotApplicable | AnalysisPending,
 ) -> tuple[ElectricalCheck, ...]:
@@ -253,6 +294,7 @@ def pending_sections(contract: ElectricalAnalysisContract) -> tuple[str, ...]:
         name
         for name, section in (
             ("grounding", contract.grounding),
+            ("pin_connectivity", contract.pin_connectivity),
             ("power", contract.power),
             ("high_frequency", contract.high_frequency),
         )

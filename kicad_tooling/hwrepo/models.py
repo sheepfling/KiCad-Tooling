@@ -1310,6 +1310,8 @@ class CheckEvidence(StrictModel):
 class NetlistContract(StrictModel):
     components: Mapping[Identifier, ComponentContract]
     nets: Mapping[NetName, tuple[Reference, ...]]
+    component_symbols: Mapping[Identifier, NonEmptyText] = Field(default_factory=dict)
+    pin_functions: Mapping[Reference, NonEmptyText] = Field(default_factory=dict)
 
 
 class ReturnNetGroup(StrictModel):
@@ -1317,6 +1319,14 @@ class ReturnNetGroup(StrictModel):
 
     stem: NonEmptyText
     nets: Mapping[NetName, tuple[Reference, ...]]
+
+
+class SimilarConnectorPinGroup(StrictModel):
+    """Unreviewed repeated connector pin functions with differing schematic nets."""
+
+    symbol: NonEmptyText
+    function: NonEmptyText
+    pins: Mapping[Reference, tuple[NetName, ...]]
 
 
 class ValidationSummary(StrictModel):
@@ -1493,6 +1503,7 @@ class ContractCoachReport(StrictModel):
     authored: NetlistContract | None = None
     differences: tuple[ContractDifference, ...] = ()
     return_net_groups: tuple[ReturnNetGroup, ...] = ()
+    similar_connector_pin_groups: tuple[SimilarConnectorPinGroup, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
     next_actions: tuple[NonEmptyText, ...] = ()
     commands: Mapping[Identifier, CommandEvidence] = Field(default_factory=dict)
@@ -1991,6 +2002,37 @@ class GroundingAnalysis(StrictModel):
         return self
 
 
+class PinRelationshipRule(StrictModel):
+    id: Identifier
+    basis: NonEmptyText
+    topology: Literal["common_net", "separate_nets"]
+    pins: Annotated[tuple[Reference, ...], Field(min_length=2)]
+    net: NetName | None = None
+
+    @model_validator(mode="after")
+    def valid_relationship(self) -> PinRelationshipRule:
+        if len(set(self.pins)) != len(self.pins):
+            raise ValueError("Pin relationship pins must be unique")
+        if self.topology == "separate_nets" and self.net is not None:
+            raise ValueError("Separate-net relationships cannot name one common net")
+        if self.net is not None and self.net.startswith("/"):
+            raise ValueError("Use the native net name without a leading slash")
+        return self
+
+
+class PinConnectivityAnalysis(StrictModel):
+    mode: Literal["required"] = "required"
+    basis: NonEmptyText
+    rules: Annotated[tuple[PinRelationshipRule, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def distinct_rules(self) -> PinConnectivityAnalysis:
+        identifiers = [rule.id for rule in self.rules]
+        if len(set(identifiers)) != len(identifiers):
+            raise ValueError("Pin relationship IDs must be unique")
+        return self
+
+
 class PowerLoad(StrictModel):
     id: Identifier
     basis: NonEmptyText
@@ -2139,6 +2181,13 @@ class ElectricalAnalysisContract(StrictModel):
     grounding: Annotated[
         GroundingAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
     ]
+    pin_connectivity: (
+        Annotated[
+            PinConnectivityAnalysis | AnalysisNotApplicable | AnalysisPending,
+            Field(discriminator="mode"),
+        ]
+        | None
+    ) = None
     power: Annotated[
         PowerAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
     ]
@@ -2180,6 +2229,7 @@ class ElectricalAnalysisReport(StrictModel):
     checks: tuple[ElectricalCheck, ...]
     limits: tuple[str, ...] = (
         "Grounding covers declared schematic pins; copper return paths and physical bonds need review.",
+        "Pin relationships compare schematic nets; net ties and physical continuity need separate review.",
         "Simulation results apply only to the reviewed models, cases, timestep and frequency grid.",
         "Power budgets use simultaneous worst-case loads and engineer-supplied derated path ratings.",
         "Physical startup, thermal behavior, RF/EMC and manufacturing acceptance remain unverified.",

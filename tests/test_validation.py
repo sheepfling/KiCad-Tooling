@@ -352,6 +352,29 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "0V CTRL 1/0V CTRL 2"):
             check_netlist(path, contract)
 
+    def test_empty_contract_names_repeated_unconnected_connector_power_pin(self) -> None:
+        path = self.root / "missing-power.xml"
+        path.write_text(
+            '<export><components><comp ref="J1"><value>Synthetic port</value>'
+            '<libsource lib="Synthetic" part="Port"/><units><unit name="A"><pins>'
+            '<pin num="1"/></pins></unit></units></comp>'
+            '<comp ref="J2"><value>Synthetic port</value>'
+            '<libsource lib="Synthetic" part="Port"/><units><unit name="A"><pins>'
+            '<pin num="1"/></pins></unit></units></comp></components>'
+            '<libparts><libpart lib="Synthetic" part="Port"><pins>'
+            '<pin num="1" name="PWR" type="passive"/></pins></libpart></libparts>'
+            '<nets><net name="+5V"><node ref="J1" pin="1"/></net></nets></export>',
+            encoding="utf-8",
+        )
+        contract = PcbValidationContract(
+            kind=ProjectKind.PCB,
+            components={},
+            nets={},
+            expected_ignored_checks=IgnoredChecks(erc=(), drc=()),
+        )
+        with self.assertRaisesRegex(ValueError, "Similar connector pin functions.*PWR"):
+            check_netlist(path, contract)
+
     def test_native_pcb_exports_netlist_for_empty_contract_and_names_return_review(self) -> None:
         self.fixture()
         self.assertIsInstance(self.config.validation, PcbValidationContract)

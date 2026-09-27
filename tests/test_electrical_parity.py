@@ -29,6 +29,8 @@ from kicad_tooling.hwrepo.models import (
     ElectricalSuiteReport,
     GroundDomain,
     GroundingAnalysis,
+    PinConnectivityAnalysis,
+    PinRelationshipRule,
     ProjectVerificationReport,
     TemplateDoctorReport,
     ValidationSummary,
@@ -113,8 +115,13 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(after) - set(before), {f"{ISLAND}/tests/electrical.json"})
         contract = read_model(self.root / cli_setup.contract, ElectricalAnalysisContract)
         self.assertEqual(
-            [contract.grounding.mode, contract.power.mode, contract.high_frequency.mode],
-            ["pending"] * 3,
+            [
+                contract.grounding.mode,
+                contract.pin_connectivity.mode if contract.pin_connectivity else None,
+                contract.power.mode,
+                contract.high_frequency.mode,
+            ],
+            ["pending"] * 4,
         )
         name = f"{ISLAND}/tests/draft.cir"
         for root in (self.root, self.mcp_root):
@@ -213,7 +220,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(source_bytes(self.root), before)
         self.assertEqual(source_bytes(self.mcp_root), before)
 
-    async def test_numbered_return_review_matches_cli_and_mcp_analysis(self) -> None:
+    async def test_connector_pin_relationships_match_cli_and_mcp_analysis(self) -> None:
         self.configured(grounding=True)
         for root in (self.root, self.mcp_root):
             contract_path = root / ISLAND / "tests/electrical.json"
@@ -227,7 +234,24 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                     )
                 }
             )
-            write_model(contract_path, contract.model_copy(update={"grounding": grounding}))
+            pin_connectivity = PinConnectivityAnalysis(
+                basis="Synthetic approved connector power pinout",
+                rules=(
+                    PinRelationshipRule(
+                        id="port-power",
+                        basis="Three ports share the same supply rail",
+                        topology="common_net",
+                        pins=("J1.1", "J2.1", "J3.1"),
+                        net="+5V",
+                    ),
+                ),
+            )
+            write_model(
+                contract_path,
+                contract.model_copy(
+                    update={"grounding": grounding, "pin_connectivity": pin_connectivity}
+                ),
+            )
             native = root / "build/native/controller"
             netlist = native / "netlist.xml"
             observed = netlist.read_text(encoding="utf-8")
@@ -242,7 +266,10 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                 '<node ref="J3" pin="9"/></net>'
                 '<net name="USB1_GND"><node ref="J1" pin="4"/></net>'
                 '<net name="USB2_GND"><node ref="J2" pin="4"/></net>'
-                '<net name="USB3_GND"><node ref="J3" pin="4"/></net></nets>',
+                '<net name="USB3_GND"><node ref="J3" pin="4"/></net>'
+                '<net name="+5V"><node ref="J1" pin="1"/>'
+                '<node ref="J2" pin="1"/></net>'
+                '<net name="PORT3_PWR"><node ref="J3" pin="1"/></net></nets>',
             )
             netlist.write_text(observed, encoding="utf-8")
             summary_path = native / "summary.json"
@@ -292,6 +319,8 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(checks["grounding/return-net-review"].status, "FAIL")
             self.assertIn("J1.4", checks["grounding/return-net-review"].detail)
             self.assertIn("USB3_GND", checks["grounding/return-net-review"].detail)
+            self.assertEqual(checks["pin-connectivity/port-power"].status, "FAIL")
+            self.assertIn("J3.1", checks["pin-connectivity/port-power"].detail)
 
     async def test_external_fixed_simulator_success_and_wrong_version_match_cli(self) -> None:
         self.configured(simulation=True)

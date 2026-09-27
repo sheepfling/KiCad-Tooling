@@ -11,11 +11,13 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from kicad_tooling.hwrepo.connector_pins import similar_connector_pin_groups
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.electrical import (
     bound_inputs,
     grounding_checks,
     load_analysis,
+    pin_relationship_checks,
     policy_issues,
     power_budget_checks,
     selected_config,
@@ -34,6 +36,8 @@ from kicad_tooling.hwrepo.models import (
     GroundingAnalysis,
     HighFrequencyAnalysis,
     NetlistContract,
+    PinConnectivityAnalysis,
+    PinRelationshipRule,
     PowerAnalysis,
     PowerLoad,
     PowerRail,
@@ -49,7 +53,7 @@ from kicad_tooling.hwrepo.spice import (
     simulator_version,
     waveform_checks,
 )
-from kicad_tooling.validate import hashes
+from kicad_tooling.validate import hashes, read_netlist
 from tests.support import TEMPLATE_ROOT, reference_root
 
 PROJECT = "controller"
@@ -419,6 +423,90 @@ class ElectricalTests(unittest.TestCase):
             },
         )
         self.assertFalse(return_net_groups(observed))
+
+    def test_repeated_connector_power_pin_missing_from_net_requires_review(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="synthetic-connectors-") as temporary:
+            netlist = Path(temporary) / "netlist.xml"
+            netlist.write_text(
+                "<export><components>"
+                + "".join(
+                    f'<comp ref="J{index}"><value>Synthetic port</value>'
+                    '<libsource lib="Synthetic" part="Port"/>'
+                    '<units><unit name="A"><pins><pin num="1"/><pin num="2"/>'
+                    "</pins></unit></units></comp>"
+                    for index in (1, 2, 3)
+                )
+                + '</components><libparts><libpart lib="Synthetic" part="Port">'
+                '<pins><pin num="1" name="PWR" type="passive"/>'
+                '<pin num="2" name="GND" type="passive"/></pins></libpart></libparts>'
+                '<nets><net name="+5V"><node ref="J1" pin="1"/>'
+                '<node ref="J2" pin="1"/></net>'
+                '<net name="GND"><node ref="J1" pin="2"/>'
+                '<node ref="J2" pin="2"/><node ref="J3" pin="2"/></net>'
+                "</nets></export>",
+                encoding="utf-8",
+            )
+            observed = read_netlist(netlist)
+        self.assertEqual(observed.pin_functions["J3.1"], "PWR")
+        groups = similar_connector_pin_groups(observed)
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0].function, "PWR")
+        self.assertEqual(groups[0].pins["J3.1"], ())
+        spec = PinConnectivityAnalysis(
+            basis="Approved synthetic three-port power pinout",
+            rules=(
+                PinRelationshipRule(
+                    id="port-power",
+                    basis="All three connector power pins share the approved rail",
+                    topology="common_net",
+                    pins=("J1.1", "J2.1", "J3.1"),
+                    net="+5V",
+                ),
+            ),
+        )
+        self.assertEqual(pin_relationship_checks(spec, observed)[0].status, "FAIL")
+        connected = observed.model_copy(
+            update={"nets": {**observed.nets, "+5V": ("J1.1", "J2.1", "J3.1")}}
+        )
+        self.assertFalse(similar_connector_pin_groups(connected))
+        self.assertEqual(pin_relationship_checks(spec, connected)[0].status, "PASS")
+        wrong_rail = connected.model_copy(
+            update={"nets": {"+12V": connected.nets["+5V"], "GND": connected.nets["GND"]}}
+        )
+        self.assertEqual(pin_relationship_checks(spec, wrong_rail)[0].status, "FAIL")
+
+    def test_same_connector_power_labels_can_require_separate_nets(self) -> None:
+        observed = NetlistContract(
+            components={
+                ref: ComponentContract(value="Synthetic port", footprint="") for ref in ("J1", "J2")
+            },
+            nets={"PORT1_PWR": ("J1.1",), "PORT2_PWR": ("J2.1",)},
+            component_symbols={"J1": "Synthetic:Port", "J2": "Synthetic:Port"},
+            pin_functions={"J1.1": "PWR", "J2.1": "PWR"},
+        )
+        self.assertEqual(len(similar_connector_pin_groups(observed)), 1)
+        separate = PinConnectivityAnalysis(
+            basis="Approved independently switched outputs",
+            rules=(
+                PinRelationshipRule(
+                    id="independent-power",
+                    basis="Each connector has an independent output",
+                    topology="separate_nets",
+                    pins=("J1.1", "J2.1"),
+                ),
+            ),
+        )
+        self.assertEqual(pin_relationship_checks(separate, observed)[0].status, "PASS")
+        tied = observed.model_copy(update={"nets": {"PORT1_PWR": ("J1.1", "J2.1")}})
+        self.assertEqual(pin_relationship_checks(separate, tied)[0].status, "FAIL")
+        with self.assertRaises(ValueError):
+            PinRelationshipRule(
+                id="invalid",
+                basis="Contradictory rule",
+                topology="separate_nets",
+                pins=("J1.1", "J2.1"),
+                net="+5V",
+            )
 
     def test_misleading_return_names_need_reasoned_exceptions_and_no_stale_waiver(self) -> None:
         observed = NetlistContract(
