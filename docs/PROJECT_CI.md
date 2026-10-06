@@ -46,10 +46,11 @@ Never replace either pin with an unbounded branch or latest version.
 
 ## Validation and evidence
 
-Portable policy runs on Linux/macOS, with the installed-command and path smoke lane on Windows.
-Native KiCad, simulator builds and release jobs use Linux and declared, pinned native tools.
-The same installed Python commands can be rehearsed locally on supported platforms; GitHub
-runner and artifact setup remains declarative YAML.
+Hosted project acceptance uses Ubuntu 24.04 only. Docker-backed KiCad project lanes run one at a
+time, using each project's declared digest-pinned image. Branch and project selection keep routine
+runs focused; full acceptance remains available for deliberate rehearsals. Run broader
+cross-platform smoke checks locally on supported platforms when changing platform-specific code.
+GitHub runner and artifact setup remains declarative YAML.
 
 The final `Template acceptance` job rejects failed, cancelled, missing or unexpectedly skipped
 prerequisites through `kicad_tooling.ci_hosted gate`. GitHub can qualify a reusable job's check name
