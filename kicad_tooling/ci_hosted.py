@@ -189,15 +189,11 @@ def plan_lane(root: Path, args: argparse.Namespace, log: HostedLog) -> None:
     destination = root / "build/impact.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(plan.model_dump_json(indent=2) + "\n", encoding="utf-8")
-    systems = (
-        ["ubuntu-24.04", "windows-2022", "macos-14"] if plan.scope == "full" else ["ubuntu-24.04"]
-    )
     write_action_outputs(
         {
             "scope": plan.scope,
             "projects": " ".join(plan.projects),
             "docs-changed": str(plan.docs_changed).lower(),
-            "portable-matrix": json.dumps({"os": systems, "python": ["3.11"]}),
         }
     )
     log.event("scope", "PASS", scope=plan.scope, projects=len(plan.projects))

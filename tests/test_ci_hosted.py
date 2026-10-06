@@ -179,12 +179,30 @@ class HostedCiTests(unittest.TestCase):
         selected = set(plan["projects"])
         self.assertEqual(outputs["scope"], "focused")
         self.assertEqual(set(outputs["projects"].split()), selected)
-        self.assertEqual(json.loads(outputs["portable-matrix"])["os"], ["ubuntu-24.04"])
+        self.assertNotIn("portable-matrix", outputs)
         self.assertEqual(outputs["has-projects"], "true")
         self.assertEqual(
             {entry["project"] for entry in json.loads(outputs["matrix"])["include"]},
             selected,
         )
+
+    def test_full_hosted_plan_does_not_expand_a_platform_matrix(self) -> None:
+        destination = self.root / "github-output.txt"
+        destination.write_text("", encoding="utf-8")
+        args = argparse.Namespace(
+            event="local",
+            base="",
+            focus="full",
+            value="",
+            exclude_tag="",
+            shard="",
+            head="HEAD",
+        )
+        with patch.dict(os.environ, {"GITHUB_OUTPUT": str(destination)}):
+            plan_lane(self.root, args, HostedLog(self.root, "plan"))
+        outputs = dict(line.split("=", 1) for line in destination.read_text().splitlines())
+        self.assertEqual(outputs["scope"], "full")
+        self.assertNotIn("portable-matrix", outputs)
 
     def test_focused_portable_lane_keeps_command_and_phase_logs(self) -> None:
         initialize_git(self.root)

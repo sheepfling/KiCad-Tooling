@@ -420,6 +420,17 @@ class CiDriverTests(unittest.TestCase):
         self.assertNotIn("python-tests", native)
         self.assertNotIn("python-tests", release)
 
+    def test_tooling_workflow_runs_preview_tests_in_its_single_linux_package_job(self) -> None:
+        workflow = (SOURCE_ROOT / ".github/workflows/tooling.yml").read_text(encoding="utf-8")
+        driver = (SOURCE_ROOT / "scripts/ci.py").read_text(encoding="utf-8")
+        self.assertEqual(workflow.count("runs-on:"), 1)
+        self.assertIn("runs-on: ubuntu-24.04", workflow)
+        self.assertNotIn("preview-portability", workflow)
+        self.assertNotIn("windows-2022", workflow)
+        self.assertNotIn("macos-14", workflow)
+        self.assertIn("python scripts/ci.py --project-root", workflow)
+        self.assertIn('"unittest", "discover", "-s", "tests", "-v"', driver)
+
     def test_hosted_scope_runs_focused_prs_and_full_main_or_manual_checks(self) -> None:
         workflow = (SOURCE_ROOT / ".github/workflows/kicad-template.yml").read_text(
             encoding="utf-8"
@@ -440,21 +451,21 @@ class CiDriverTests(unittest.TestCase):
             matrix,
         )
         self.assertIn("needs.scope.outputs.scope != 'docs'", matrix)
-        self.assertIn("fromJSON(needs.scope.outputs.portable-matrix)", portable)
+        self.assertIn("runs-on: ubuntu-24.04", portable)
+        self.assertNotIn("strategy:", portable)
         self.assertIn('kicad_tooling.ci_hosted portable --scope "$CHECK_SCOPE"', portable)
         self.assertIn('--projects "$CI_PROJECTS" --docs-changed "$DOCS_CHANGED" --jobs 4', portable)
         self.assertIn("timeout-minutes: 13", portable)
         self.assertIn("cache-dependency-path: requirements-tooling.txt", portable)
-        self.assertIn("if: matrix.os != 'windows-2022'", portable)
         self.assertIn(
             "pip install --disable-pip-version-check -r requirements-tooling.txt", portable
         )
         self.assertNotIn("kicad_tooling.ci_hosted windows-types", portable)
-        self.assertIn("kicad_tooling.ci_hosted windows-smoke", portable)
+        self.assertNotIn("kicad_tooling.ci_hosted windows-smoke", portable)
         self.assertIn("kicad_tooling.ci_hosted source-clean", portable)
-        self.assertIn(
-            "if: needs.scope.outputs.scope == 'full' && matrix.os != 'windows-2022'", portable
-        )
+        self.assertIn("if: needs.scope.outputs.scope == 'full'", portable)
+        native = workflow.split("  kicad:\n", 1)[1].split("  release-rehearsal:\n", 1)[0]
+        self.assertIn("max-parallel: 1", native)
         self.assertIn(
             "if: needs.scope.outputs.scope == 'full' && needs.kicad.result == 'success'", release
         )
@@ -489,7 +500,7 @@ class CiDriverTests(unittest.TestCase):
             "tools/check_all.py",
         ):
             self.assertNotIn(embedded, workflow)
-        for mode in ("plan", "matrix", "portable", "windows-smoke", "native", "release", "gate"):
+        for mode in ("plan", "matrix", "portable", "native", "release", "gate"):
             self.assertIn(f"kicad_tooling.ci_hosted {mode}", workflow)
         self.assertLessEqual(len(workflow.splitlines()), 275)
 
