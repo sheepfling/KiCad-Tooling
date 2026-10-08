@@ -2928,10 +2928,10 @@ class SerialPeerReferenceBondFixtureDefinitionTests(unittest.TestCase):
         )
         expected_hashes = {
             "serial-reference-bond-control.kicad_sch": (
-                "bd2be1be71971943711f2fb6276695bddc0811b03e5e097dbdad7886b0032ae4"
+                "d6efb587268b8a0dcdbb90eb4401090dcbd6d254742b3e2f718d6df12591c785"
             ),
             "serial-reference-bond-fault.kicad_sch": (
-                "2998d62799de92c5f7fca688ef219464381d48562721f088e3fbf9d60ad7abb3"
+                "a8a41b85d776f521df90998e55c5fc8eb55f1afc4839ab50d997b7a9e190aed2"
             ),
             "serial-peer-map.json": (
                 "0d224c8c6d59073902f21dee6ac9cdc6f7191b6659b6cff5bff437be65527c0b"
@@ -2944,6 +2944,12 @@ class SerialPeerReferenceBondFixtureDefinitionTests(unittest.TestCase):
             if path.suffix != ".kicad_sch":
                 continue
             source = raw.decode("utf-8")
+            for endpoint_wire in (
+                "(wire (pts (xy 65 54.92) (xy 55 54.92))",
+                "(wire (pts (xy 140 54.92) (xy 150 54.92))",
+            ):
+                with self.subTest(name=name, wire=endpoint_wire):
+                    self.assertIn(endpoint_wire, source)
             identifiers = re.findall(r'\(uuid\s+"([^"]+)"\)', source)
             self.assertEqual(len(identifiers), len(set(identifiers)), name)
             depth = 0
@@ -3027,8 +3033,8 @@ class NativeSerialPeerFixtureTests(unittest.TestCase):
             "b1c218d4e398b4ae9d311732a2a8227887e3e8cce1b9759fbd2aa2f0be4320fd"
         )
         expected_bond_source_hashes = {
-            "control": "bd2be1be71971943711f2fb6276695bddc0811b03e5e097dbdad7886b0032ae4",
-            "fault": "2998d62799de92c5f7fca688ef219464381d48562721f088e3fbf9d60ad7abb3",
+            "control": "d6efb587268b8a0dcdbb90eb4401090dcbd6d254742b3e2f718d6df12591c785",
+            "fault": "a8a41b85d776f521df90998e55c5fc8eb55f1afc4839ab50d997b7a9e190aed2",
         }
         expected_bond_map_hash = "0d224c8c6d59073902f21dee6ac9cdc6f7191b6659b6cff5bff437be65527c0b"
         self.assertEqual(hashlib.sha256(fixture.read_bytes()).hexdigest(), expected_source_hash)

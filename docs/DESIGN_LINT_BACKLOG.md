@@ -3148,7 +3148,12 @@ is not a reason by itself to expand its scope or change its default policy.
   Repeated digest-pinned KiCad 10.0.0/10.0.5 exports are wired into the existing
   GitHub serial-peer acceptance job. The local host has no running Docker
   daemon, so exact-version native acceptance must be confirmed from the hosted
-  receipt before being claimed.
+  receipt before being claimed. The v0.3.2 hosted run exposed a fixture defect:
+  its J1.3/J2.3 ground wires were 10.16 mm below the actual pin endpoints, so
+  KiCad exported both as unconnected. The synthetic control/fault sources now
+  attach at the pin endpoints, their hashes are pinned, and the local fixture
+  test asserts those wires. Repeated KiCad 10.0.0/10.0.5 exports remain pending
+  in the patch-tag acceptance run.
 
 #### LINT-088 — Fitted two-pin crystal terminals share one net
 
