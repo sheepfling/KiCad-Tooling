@@ -23,7 +23,7 @@ Run it with:
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES=1 \
-.venv/bin/python -I -m unittest tests.test_ci_hosted.NativeTwoPinComponentFixtureTests
+.venv/bin/python -I -m pytest -q tests/test_ci_hosted.py -k NativeTwoPinComponentFixtureTests
 ```
 
 Recognition is limited to fitted exact `Device:Crystal` family symbols with a
