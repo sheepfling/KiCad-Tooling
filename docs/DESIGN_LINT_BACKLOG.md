@@ -183,13 +183,17 @@ and optional ecosystem adapters are `P3`.
   preview jobs also passed. The hosted native lane retained control, fault,
   and ignored-rule receipts for KiCad 10.0.0 and 10.0.5. This follow-up adds
   repeatability comparison over complete canonical violation records, beyond
-  the finding types and exit codes accepted in RC13. Its focused pytest checks
-  pass; tagged hosted acceptance for this stronger comparison remains pending.
-  The `v0.5.0rc14` run (`37849620291`) completed the unit phase, native
-  schematic-geometry lanes, Ruff, Pyright, and Windows type checks, then
-  stopped at `rumdl` because the cohort-candidate table had an `MD060` column
-  alignment issue. The table is corrected locally; the signal-path native lane
-  did not run in that attempt and still needs tagged acceptance.
+  the finding types and exit codes accepted in RC13. The `v0.5.0rc14` run
+  (`37849620291`) passed its unit phase and stopped at `rumdl` on a table
+  alignment issue before the signal-path native lane. After fixing the table,
+  `v0.5.0rc15` (run `37851810081`) passed the package workflow and all three
+  platform preview jobs. Its native signal-path lane passed on digest-pinned
+  KiCad 10.0.0 and 10.0.5: each control and ignored-rule case had no target
+  violations with exit 0; each fault reported both expected violations with
+  exit 5. Canonical full-record hashes matched between repeated runs for all
+  three cases on both versions. Raw DRC report hashes differed in some repeats,
+  so the lane now confirms stable diagnostic records rather than byte-identical
+  report files.
 
 - **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
   passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
@@ -3641,10 +3645,13 @@ is not a reason by itself to expand its scope or change its default policy.
   each fault run reported both length and skew violations, and each ignored-
   rule control was clean. The generated boards, rules, DRC reports, normalized
   command receipts, and hash-bearing events are retained under ignored
-  `build/ci/native-fixtures/pcb-signal-path/`. The baseline passed tagged
-  GitHub acceptance in `v0.5.0rc13` (run `37845619358`); the follow-up now
-  compares canonical hashes of complete violation records across repeated
-  reports, and that stronger assertion awaits its tagged hosted run.
+  `build/ci/native-fixtures/pcb-signal-path/`. Baseline acceptance passed in
+  `v0.5.0rc13` (run `37845619358`); the complete canonical violation-record
+  comparison passed its exact-version hosted lane in `v0.5.0rc15` (run
+  `37851810081`). Repeated control and ignored-rule reports were clean, and
+  repeated fault reports retained both target violation records. Some raw DRC
+  report hashes differed between repeats even when their canonical finding
+  records matched.
 - **Problem:** A board can have valid net assignments and still lack the
   reviewed path-length or bundle-skew limits that the interface depends on.
   KiCad DRC already measures these quantities, but project-authored endpoint
@@ -3702,8 +3709,8 @@ is not a reason by itself to expand its scope or change its default policy.
   installed-wheel external checks. Exact native extraction also passed against
   both pinned KiCad versions. CLI/MCP parity passes from a tooling-owned
   synthetic checkout without the public template. Tagged GitHub acceptance
-  passed in `v0.5.0rc13` (run `37845619358`), including the hosted native
-  fixture lane.
+  passed in `v0.5.0rc13` (run `37845619358`) and was revalidated in
+  `v0.5.0rc15` (run `37851810081`).
 - **Problem:** A project can retain a named keepout while its outline, copper
   layers, or restrictions drift. Generic ERC/DRC does not know that the
   project intended a particular rule-area definition to remain unchanged.
@@ -3731,9 +3738,9 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-097 — Source-mapped RF module antenna keepout coverage
 
 - **Status:** Proposed from the LINT-031 antenna-coverage source audit; not
-  implemented, and no candidate runtime trial is claimed. Keep it behind the
-  current LINT-095/096 hosted acceptance and the review-value work in the
-  suggested delivery order.
+  implemented, and no candidate runtime trial is claimed. LINT-095/096 hosted
+  acceptance is complete in `v0.5.0rc15`; keep this behind the review-value
+  work in the suggested delivery order.
 - **Cohort input:** The pinned `kicad-happy` `KO-001` source checks component
   and via centers against the bounding box of an existing keepout. That can
   prompt review of nearby objects, but cannot detect a missing keepout, check
