@@ -80,10 +80,10 @@ class TwoPinFuseLintTests(unittest.TestCase):
     def test_native_schematic_sources_match_reviewed_hashes(self) -> None:
         fixture_root = Path(__file__).parents[1] / "tests/fixtures/design_lint/two-pin-fuses"
         expected = {
-            "same-net-fuse.kicad_sch": "0aef6e17919aabf2b640183e91d992df28a7cb8db92ea76514afddd31c2f0f93",
-            "distinct-nets-fuse.kicad_sch": "34e303f1ff54b324555cba0b7fa015881edebf3a91b32391fc010d0f5f92cc89",
-            "same-net-polyfuse.kicad_sch": "3f024223a079ab029edcb6dc9314a6beb82eb75fa5d31ca2140425ae210ad6a7",
-            "distinct-nets-polyfuse.kicad_sch": "e243a29359c911e2d04787a8d71dc2566c1c09e287251c94bae22ac9a7cfe4e7",
+            "same-net-fuse.kicad_sch": "11c72397a8dbe96f63f859f005801903468c66fb3bf87d6c870743c5a785bf86",
+            "distinct-nets-fuse.kicad_sch": "2dd483a9805b2d26fa7dbf56444ef018a5550f2ac481cd1f58171df1ec03e790",
+            "same-net-polyfuse.kicad_sch": "9ed09b2d61650c3a91211385bab4371e5582aeb579db9301254050f549f86ac6",
+            "distinct-nets-polyfuse.kicad_sch": "bde58f020f1958e4dd5e9f13f21a2df02b3c3bf74b6779d4e8c933767d412376",
         }
         self.assertEqual(
             {

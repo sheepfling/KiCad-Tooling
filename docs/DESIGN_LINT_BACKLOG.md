@@ -2803,19 +2803,32 @@ is not a reason by itself to expand its scope or change its default policy.
   across three independent Python hash secrets. These results validate the
   shared typed service and adapters, not native source export.
 - **Supplemental native screen (2026-10-08):** After the v0.4.1 failure,
-  generic fuse and polyfuse pins were renamed from repeated `~` placeholders to
-  distinct `Pin_1`/`Pin_2` functions without assigning direction. The locally
-  installed KiCad 10.0.6 CLI exported the revised four synthetic schematics
-  twice; raw and normalized netlist hashes matched on repeats. Same-net
-  `Device:Fuse` and `Device:Polyfuse` cases each emitted one finding, and both
-  distinct-net controls emitted none. Repeated typed-netlist SHA-256 values are
-  `02561b39eefe4b5187287a7bc95613fc8cf02d6694e9f6d0bdb18fa721ad7125`
-  (fuse fault), `afe2df29efb005812b02a320fb01af39a4d55bc7a5fdd598de568b29869ae5d7`
-  (fuse control), `6d63ab47c389442791a6e620fc0cbdc3ec6fd0f2088d5f4893afe4eb73528374`
+  generic fuse and polyfuse pins now use blank native names, matching the
+  corresponding generic KiCad library symbols without assigning direction.
+  The locally installed KiCad 10.0.6 CLI exported each revised synthetic
+  schematic twice with matching raw hashes. The normalized typed-netlist hashes
+  were `368263f15c0627efc7a5f4b58a0b0beddda1dbe4b2d72522d6f24562a98a2a14`
+  (fuse fault), `e2172e8968c16de62855b6ef43ac4b5dd891ef753436133c864932b3e97ec72c`
+  (fuse control), `ff8e60df2a6775da8467b094f760a6b52371c809c4c6ce6d7499b9773a4932ca`
   (polyfuse fault), and
-  `3b8af9b5b84054fc87d583f5428e7de2fd5fcc21fee014d44217d75a17b3841d`
-  (polyfuse control). The 10.0.6 compatibility screen supplements, but does
-  not replace, the digest-pinned acceptance lane.
+  `3cc9839cf451122932c229975be7fad33c7575d8cfa15f07f02823c975146061`
+  (polyfuse control). The `v0.5.0rc1` hosted run showed that the earlier
+  `Pin_1`/`Pin_2` source still failed to load under pinned KiCad 10.0.0 and
+  10.0.5. The revised blank-name sources have not yet been exported by those
+  pinned versions; exact native acceptance remains pending.
+- **Release-candidate regression (2026-10-08):** The `v0.5.0rc1` package job
+  ran 2,236 tests (2 failures, 3 errors, 2 skipped). The connector fixture
+  expected one lint rule ID even though LINT-089 emits one finding per open
+  pin; its assertion now checks both per-pin findings. The two-pin fixture's
+  `Device:Fuse` export failed to load with nonempty generic pin names; the
+  synthetic fuse fixtures now use blank names. The corrected pinned-version
+  results are still pending.
+- **Corrected local package smoke (2026-10-08):** `scripts/ci.py` passed all
+  2,236 tests with 25 native-environment skips, plus formatting, lint, type,
+  Markdown, wheel/sdist, fresh installed-wheel, and external-checkout stages
+  against the separate public `KiCAD-Test` repository. This host has no Docker
+  daemon, so the exact-version KiCad 10.0.0/10.0.5 fixture lane remains for the
+  tagged GitHub acceptance workflow.
 - **Acceptance-lane integrity (2026-10-07):** The shared native-fixture
   manifest mounts `tests/fixtures/design_lint` as its read-only root so both
   `two-pin-components/` and `two-pin-fuses/` sources resolve. An always-run

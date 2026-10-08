@@ -16,11 +16,11 @@
           (stroke (width 0.254) (type default)) (fill (type none))))
       (symbol "Polyfuse_1_1"
         (pin passive line (at -5.08 0 0) (length 2.54)
-          (name "Pin_1" (effects (font (size 1.27 1.27))))
+          (name "" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
         (pin passive line (at 5.08 0 180) (length 2.54)
-          (name "Pin_2" (effects (font (size 1.27 1.27))))
+          (name "" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27)))))))
   )
   (symbol (lib_id "Device:Polyfuse") (at 63.50 63.50 0) (unit 1)

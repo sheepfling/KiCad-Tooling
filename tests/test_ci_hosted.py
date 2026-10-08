@@ -1717,8 +1717,8 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                 self.assertEqual(generic_power_fault["status"], "PASS")
                 self.assertEqual(generic_power_fault["lint_status"], "REVIEW")
                 self.assertEqual(
-                    generic_power_fault["findings"],
-                    "connector.unconnected_power_input",
+                    generic_power_fault["findings"].split(","),
+                    ["connector.unconnected_power_input"] * 2,
                 )
                 self.assertEqual(
                     set(generic_power_fault["subjects"].split(";")),
@@ -4117,10 +4117,10 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
             "two-pin-components/distinct-nets-diode.kicad_sch": "74d19829e8dd9379a26cb6da9dd3cf10a48abce9d724661338f73ce0086bb928",
             "two-pin-crystals/same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
             "two-pin-crystals/distinct-nets-crystal.kicad_sch": "0c000075d25bc1da32b777367079d084f96fe8be88e258146b5796db99bbe39e",
-            "two-pin-fuses/same-net-fuse.kicad_sch": "0aef6e17919aabf2b640183e91d992df28a7cb8db92ea76514afddd31c2f0f93",
-            "two-pin-fuses/distinct-nets-fuse.kicad_sch": "34e303f1ff54b324555cba0b7fa015881edebf3a91b32391fc010d0f5f92cc89",
-            "two-pin-fuses/same-net-polyfuse.kicad_sch": "3f024223a079ab029edcb6dc9314a6beb82eb75fa5d31ca2140425ae210ad6a7",
-            "two-pin-fuses/distinct-nets-polyfuse.kicad_sch": "e243a29359c911e2d04787a8d71dc2566c1c09e287251c94bae22ac9a7cfe4e7",
+            "two-pin-fuses/same-net-fuse.kicad_sch": "11c72397a8dbe96f63f859f005801903468c66fb3bf87d6c870743c5a785bf86",
+            "two-pin-fuses/distinct-nets-fuse.kicad_sch": "2dd483a9805b2d26fa7dbf56444ef018a5550f2ac481cd1f58171df1ec03e790",
+            "two-pin-fuses/same-net-polyfuse.kicad_sch": "9ed09b2d61650c3a91211385bab4371e5582aeb579db9301254050f549f86ac6",
+            "two-pin-fuses/distinct-nets-polyfuse.kicad_sch": "bde58f020f1958e4dd5e9f13f21a2df02b3c3bf74b6779d4e8c933767d412376",
             "two-pin-ferrites/same-net-ferrite.kicad_sch": "8ede05ea1d9c8afb0cec2f1c8c9bddf527eab015ab779097f4ddc528866751f7",
             "two-pin-ferrites/distinct-nets-ferrite.kicad_sch": "199c802ca290b1281622c623f4966b159144f0e95fd99ed0e21a14a0875734a7",
         }
