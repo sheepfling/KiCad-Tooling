@@ -3516,8 +3516,14 @@ is not a reason by itself to expand its scope or change its default policy.
   the fault leaves U2.2 open while U1.2 is assigned, and the control assigns
   outputs to separate nets. A repeated-export lane is configured for the
   digest-pinned KiCad 10.0.0 and 10.0.5 versions. CLI/MCP parity exercises the
-  shared design-lint service. Native acceptance is recorded by the tagged CI
-  run; until that completes, no native result is claimed.
+  shared design-lint service. Tagged acceptance passed in CI run 37796753272
+  (`v0.5.0rc12`): the fault and control fixtures were each exported twice on
+  digest-pinned KiCad 10.0.0 and 10.0.5, with repeatable parsed contracts and
+  the expected REVIEW on U2.2 versus PASS for control. The complete unit gate,
+  source-distribution wheel rebuild and installed-wheel checks against the
+  separate template checkout, and Linux/macOS/Windows preview jobs also passed.
+  This verifies schematic/netlist recognition only; it does not establish PCB
+  connectivity or electrical correctness.
 
 ### P2 — PCB geometry and schematic review assistance
 
