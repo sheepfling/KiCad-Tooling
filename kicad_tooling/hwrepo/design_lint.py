@@ -44,6 +44,7 @@ from .connector_pins import (
     connectors_without_connected_return,
     power_function_key,
     similar_connector_pin_groups,
+    unconnected_generic_power_input_component_pins,
     unconnected_generic_power_input_connector_pins,
     unconnected_named_component_pins,
     unconnected_named_connector_pins,
@@ -976,6 +977,30 @@ def candidates(
                         else {}
                     ),
                 },
+            )
+        )
+    for pin in unconnected_generic_power_input_component_pins(
+        observed, reviewed_connector_references
+    ):
+        evidence = {
+            "symbol": (pin.symbol,),
+            "pin_electrical_type": (pin.electrical_type,),
+            pin.pin: (),
+        }
+        if pin.function is not None:
+            evidence["native_pin_function"] = (pin.function,)
+        found.append(
+            Candidate(
+                rule_id="component.unconnected_power_input",
+                subject=f"{pin.pin}: generic native power-input pin is unassigned",
+                message=(
+                    "KiCad's native symbol metadata classifies this generic component pin as "
+                    "power_in, but the exported netlist assigns it to no net. Review whether the "
+                    "pin is intentionally open or a power/reference connection is missing. The "
+                    "electrical type does not identify the pin's specific role or require it to "
+                    "be connected."
+                ),
+                evidence=evidence,
             )
         )
     for pin in unconnected_named_component_pins(observed, reviewed_connector_references):

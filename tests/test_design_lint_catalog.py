@@ -53,6 +53,7 @@ from tests.test_design_lint import (
     complementary_usb_netlist,
     connector_capacitor_only_netlist,
     control_input_pins,
+    generic_component_power_input_netlist,
     generic_connector_power_input_netlist,
     i2c_netlist,
     i2c_netlist_with_parallel_sda,
@@ -816,6 +817,7 @@ class DesignLintCatalogTests(unittest.TestCase):
         emitted.update(item.rule_id for item in fuse_result.findings)
         ferrite_result = two_pin_ferrite_lint_report(ferrite_netlist())
         emitted.update(item.rule_id for item in ferrite_result.findings)
+        emitted.update(item.rule_id for item in candidates(generic_component_power_input_netlist()))
         emitted.update(
             item.rule_id
             for item in candidates(

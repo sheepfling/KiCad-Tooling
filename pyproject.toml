@@ -58,6 +58,8 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+python_classes = ["*Tests", "*Test"]
+python_functions = ["test_*"]
 
 [tool.ruff]
 # Ruff is pinned in the development extra so its default rule set is reproducible.

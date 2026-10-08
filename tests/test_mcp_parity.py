@@ -2478,6 +2478,86 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                 {item.rule_id for item in configured_control.findings},
             )
 
+    async def test_unconnected_generic_component_power_input_cli_mcp_parity(self) -> None:
+        """Generic native power-input pins use the same review on both surfaces."""
+        native = self.native_evidence()
+        netlist = native.parent / "netlist.xml"
+
+        def write_netlist(connected: bool) -> None:
+            supply = (
+                '<net name="POWER_INPUT_TEST"><node ref="U1" pin="1"/></net>' if connected else ""
+            )
+            netlist.write_text(
+                "<export><components>"
+                '<comp ref="U1"><value>Synthetic component</value>'
+                "<footprint>Synthetic:Component</footprint>"
+                '<libsource lib="Synthetic" part="GenericPowerInputComponent"/>'
+                "</comp></components><libparts>"
+                '<libpart lib="Synthetic" part="GenericPowerInputComponent"><pins>'
+                '<pin num="1" name="1" type="power_in"/>'
+                '<pin num="2" name="2" type="passive"/>'
+                "</pins></libpart></libparts><nets>"
+                '<net name="SIGNAL"><node ref="U1" pin="2"/></net>'
+                f"{supply}</nets></export>",
+                encoding="utf-8",
+            )
+            summary = read_model(native, ValidationSummary)
+            write_model(
+                native,
+                summary.model_copy(
+                    update={
+                        "artifacts_sha256": {
+                            **summary.artifacts_sha256,
+                            "netlist.xml": digest(netlist),
+                        }
+                    }
+                ),
+            )
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+
+            async def compare() -> DesignLintReport:
+                process = await self.cli_process(
+                    "kicad_tooling.design_lint",
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                )
+                cli = parse_model_text(process.stdout, DesignLintReport)
+                self.assertEqual(process.returncode, 1 if cli.status != "PASS" else 0)
+                mcp = await self.call(
+                    client,
+                    "inspect_design_lint",
+                    DesignLintReport,
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(self.root).as_posix(),
+                    },
+                )
+                self.assertEqual(cli, mcp)
+                return mcp
+
+            write_netlist(connected=False)
+            fault = await compare()
+            self.assertEqual(fault.status, "REVIEW", fault.issues)
+            self.assertEqual(
+                {item.rule_id for item in fault.findings},
+                {"component.unconnected_power_input"},
+            )
+            self.assertEqual(
+                fault.findings[0].subject,
+                "U1.1: generic native power-input pin is unassigned",
+            )
+
+            write_netlist(connected=True)
+            control = await compare()
+            self.assertEqual(control.status, "PASS")
+            self.assertNotIn(
+                "component.unconnected_power_input",
+                {item.rule_id for item in control.findings},
+            )
+
     async def test_custom_capacitor_role_lint_cli_mcp_parity(self) -> None:
         """An exact custom capacitor role clears only the shared LINT-046 hint."""
         native = self.native_evidence()

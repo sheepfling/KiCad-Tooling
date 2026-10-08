@@ -379,9 +379,10 @@ def main() -> int:
             )
         unit_environment = os.environ.copy()
         unit_environment.pop("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", None)
+        unit_environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
         stage(
             "unit",
-            (sys.executable, "-B", "-m", "unittest", "discover", "-s", "tests", "-v"),
+            (sys.executable, "-B", "-I", "-m", "pytest", "-q"),
             output,
             cwd=ROOT,
             environment=unit_environment,

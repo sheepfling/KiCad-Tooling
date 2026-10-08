@@ -26,10 +26,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.11'
-      - name: Install tooling
-        run: python -I -m pip install .
+      - name: Install tooling and test dependencies
+        run: python -I -m pip install '.[dev]'
       - name: Exercise portable preview logs and failures
-        run: python -I -B -m unittest discover -s tests -p test_hosted_preview.py -v
+        run: python -I -B -m pytest -q tests/test_hosted_preview.py
   package:
     runs-on: ubuntu-24.04
     timeout-minutes: 45

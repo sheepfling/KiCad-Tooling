@@ -198,6 +198,31 @@ def generic_connector_power_input_netlist(
     )
 
 
+def generic_component_power_input_netlist(
+    *,
+    reference: str = "U1",
+    connected: bool = False,
+    function: str | None = "1",
+    electrical_type: str = "power_in",
+    dnp_references: tuple[str, ...] = (),
+    symbol: str = "Synthetic:GenericPowerInputComponent",
+) -> NetlistContract:
+    pin = f"{reference}.1"
+    pin_functions = {pin: function} if function is not None else {}
+    pin_functions[f"{reference}.2"] = "2"
+    return NetlistContract(
+        components={
+            reference: ComponentContract(value="Synthetic component", footprint="Synthetic:Part")
+        },
+        nets={"POWER_INPUT_TEST": (pin,)} if connected else {"SIGNAL": (f"{reference}.2",)},
+        dnp_components=dnp_references,
+        component_symbols={reference: symbol},
+        component_pin_numbers={reference: ("1", "2")},
+        pin_functions=pin_functions,
+        pin_electrical_types={pin: electrical_type, f"{reference}.2": "passive"},
+    )
+
+
 def three_port_power_pin_drift(common: bool = False) -> NetlistContract:
     """Create sibling generic power contacts with a missing third assignment."""
     if common:
@@ -5064,6 +5089,163 @@ class DesignLintTests(unittest.TestCase):
         self.assertNotIn(
             "connector.unconnected_power_input",
             {item.rule_id for item in connected_report.findings},
+        )
+
+    def test_unconnected_generic_component_power_input_is_reviewable_and_configurable(
+        self,
+    ) -> None:
+        source = generic_component_power_input_netlist()
+        report = evaluate(
+            "synthetic-generic-component-power-input", coach(source), DesignLintPolicy()
+        )
+        self.assertEqual(report.status, "REVIEW")
+        self.assertEqual(len(report.findings), 1)
+        finding = report.findings[0]
+        self.assertEqual(finding.rule_id, "component.unconnected_power_input")
+        self.assertEqual(finding.subject, "U1.1: generic native power-input pin is unassigned")
+        self.assertEqual(
+            finding.evidence,
+            {
+                "symbol": ("Synthetic:GenericPowerInputComponent",),
+                "pin_electrical_type": ("power_in",),
+                "U1.1": (),
+                "native_pin_function": ("1",),
+            },
+        )
+        self.assertIn("does not identify the pin's specific role", finding.message)
+        absent_function = evaluate(
+            "synthetic-generic-component-power-input-absent-function",
+            coach(generic_component_power_input_netlist(function=None)),
+            DesignLintPolicy(),
+        )
+        self.assertEqual(
+            {item.rule_id for item in absent_function.findings},
+            {"component.unconnected_power_input"},
+        )
+        self.assertNotIn("native_pin_function", absent_function.findings[0].evidence)
+
+        controls = (
+            generic_component_power_input_netlist(connected=True),
+            generic_component_power_input_netlist(
+                dnp_references=("U1",),
+            ),
+            generic_component_power_input_netlist(electrical_type="passive"),
+            generic_component_power_input_netlist(electrical_type="power_out"),
+            generic_component_power_input_netlist(function="VCC"),
+            generic_component_power_input_netlist(reference="J1"),
+        )
+        for control in controls:
+            with self.subTest(control=control.model_dump(mode="json")):
+                control_report = evaluate(
+                    "synthetic-generic-component-power-input-control",
+                    coach(control),
+                    DesignLintPolicy(),
+                )
+                self.assertNotIn(
+                    "component.unconnected_power_input",
+                    {item.rule_id for item in control_report.findings},
+                )
+
+        named_supply = evaluate(
+            "synthetic-generic-component-named-supply",
+            coach(generic_component_power_input_netlist(function="VCC")),
+            DesignLintPolicy(),
+        )
+        self.assertEqual(
+            {item.rule_id for item in named_supply.findings},
+            {"component.unconnected_supply_pin"},
+        )
+        connector = evaluate(
+            "synthetic-generic-component-connector-exclusion",
+            coach(generic_component_power_input_netlist(reference="J1")),
+            DesignLintPolicy(),
+        )
+        self.assertEqual(
+            {item.rule_id for item in connector.findings},
+            {"connector.unconnected_power_input"},
+        )
+        reviewed_custom_connector = candidates(
+            generic_component_power_input_netlist(
+                reference="PORT_A",
+                symbol="Synthetic:ReviewedGenericPort",
+            ),
+            reviewed_connector_references=("PORT_A",),
+        )
+        self.assertEqual(
+            {item.rule_id for item in reviewed_custom_connector},
+            {"connector.unconnected_power_input"},
+        )
+
+        blocking = evaluate(
+            "synthetic-generic-component-power-input",
+            coach(source),
+            DesignLintPolicy(
+                rules=(
+                    DesignLintRuleOverride(
+                        rule_id="component.unconnected_power_input",
+                        mode="block",
+                        reason="Synthetic project requires disposition of open power inputs",
+                    ),
+                )
+            ),
+        )
+        self.assertEqual(blocking.status, "FAIL")
+        ignored = evaluate(
+            "synthetic-generic-component-power-input",
+            coach(source),
+            DesignLintPolicy(
+                ignores=(
+                    DesignLintIgnore(
+                        rule_id="component.unconnected_power_input",
+                        fingerprint=finding.fingerprint,
+                        reason="Synthetic approved design intentionally leaves this pin open",
+                    ),
+                )
+            ),
+        )
+        self.assertEqual(ignored.status, "PASS")
+        self.assertEqual(ignored.findings[0].disposition, "IGNORED")
+        disabled = evaluate(
+            "synthetic-generic-component-power-input",
+            coach(source),
+            DesignLintPolicy(
+                rules=(
+                    DesignLintRuleOverride(
+                        rule_id="component.unconnected_power_input",
+                        mode="off",
+                        reason="Synthetic owner confirmed an intentional internal supply connection",
+                    ),
+                )
+            ),
+        )
+        self.assertEqual(disabled.status, "PASS")
+        self.assertEqual(disabled.findings[0].disposition, "RULE_OFF")
+
+    def test_generic_component_power_input_is_order_stable(self) -> None:
+        source = generic_component_power_input_netlist()
+        reordered = source.model_copy(
+            update={
+                "components": dict(reversed(tuple(source.components.items()))),
+                "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+                "component_pin_numbers": dict(
+                    reversed(tuple(source.component_pin_numbers.items()))
+                ),
+                "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+                "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+            }
+        )
+        original = evaluate(
+            "synthetic-generic-component-power-input", coach(source), DesignLintPolicy()
+        )
+        reordered_report = evaluate(
+            "synthetic-generic-component-power-input", coach(reordered), DesignLintPolicy()
+        )
+        self.assertEqual(
+            tuple((item.fingerprint, item.subject, item.evidence) for item in original.findings),
+            tuple(
+                (item.fingerprint, item.subject, item.evidence)
+                for item in reordered_report.findings
+            ),
         )
 
     def test_named_open_connector_supply_and_return_order_and_completion(self) -> None:

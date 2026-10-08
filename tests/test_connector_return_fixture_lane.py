@@ -496,6 +496,30 @@ class ConnectorReturnFixtureLaneTests(unittest.TestCase):
                 },
             ),
         }
+        for case in (
+            "unconnected-generic-component-power-input-fault",
+            "unconnected-generic-component-power-input-control",
+            "unconnected-generic-component-power-input-no-connect-fault",
+            "unconnected-generic-component-power-input-dnp-control",
+        ):
+            connected = case.endswith("-control") and not case.endswith("-dnp-control")
+            self.observed[case] = NetlistContract(
+                components={
+                    "U1": ComponentContract(
+                        value="Synthetic generic power-input component",
+                        footprint="Synthetic:Component",
+                    )
+                },
+                nets={
+                    **({"POWER_INPUT_TEST": ("U1.1",)} if connected else {}),
+                    "SIGNAL": ("U1.2",),
+                },
+                dnp_components=("U1",) if case.endswith("-dnp-control") else (),
+                component_symbols={"U1": "Lint:GenericPowerInputComponent"},
+                component_pin_numbers={"U1": ("1", "2")},
+                pin_functions={"U1.1": "1", "U1.2": "2"},
+                pin_electrical_types={"U1.1": "power_in", "U1.2": "passive"},
+            )
 
     def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(self) -> None:
         def fake_run_command(root: Path, argv: tuple[str, ...], timeout: int) -> CommandEvidence:
@@ -794,6 +818,26 @@ class ConnectorReturnFixtureLaneTests(unittest.TestCase):
         )
         self.assertEqual(generic_power_control["lint_status"], "PASS")
         self.assertEqual(generic_power_control["findings"], "none")
+        generic_component_cases = (
+            "unconnected-generic-component-power-input-fault",
+            "unconnected-generic-component-power-input-no-connect-fault",
+        )
+        for case in generic_component_cases:
+            item = results[f"connector-return-fixture/{case}"]
+            self.assertEqual(item["lint_status"], "REVIEW")
+            self.assertEqual(item["findings"], "component.unconnected_power_input")
+            self.assertEqual(
+                item["subjects"],
+                "U1.1: generic native power-input pin is unassigned",
+            )
+            self.assertEqual(item["pin_electrical_types"], "U1.1=power_in;U1.2=passive")
+        for case in (
+            "unconnected-generic-component-power-input-control",
+            "unconnected-generic-component-power-input-dnp-control",
+        ):
+            item = results[f"connector-return-fixture/{case}"]
+            self.assertEqual(item["lint_status"], "PASS")
+            self.assertEqual(item["findings"], "none")
         self.assertNotEqual(fault["netlist_sha256"], fault["repeat_netlist_sha256"])
         self.assertNotEqual(control["netlist_sha256"], control["repeat_netlist_sha256"])
         self.assertEqual(

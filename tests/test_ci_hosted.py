@@ -1648,6 +1648,10 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                         "connector-return-fixture/control",
                         "connector-return-fixture/unconnected-generic-power-input-fault",
                         "connector-return-fixture/unconnected-generic-power-input-control",
+                        "connector-return-fixture/unconnected-generic-component-power-input-fault",
+                        "connector-return-fixture/unconnected-generic-component-power-input-control",
+                        "connector-return-fixture/unconnected-generic-component-power-input-no-connect-fault",
+                        "connector-return-fixture/unconnected-generic-component-power-input-dnp-control",
                         "connector-return-fixture/cross-symbol-fault",
                         "connector-return-fixture/cross-symbol-control",
                         "connector-return-fixture/cross-symbol-open",
@@ -1738,6 +1742,22 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                     generic_power_control["pin_electrical_types"],
                     generic_power_fault["pin_electrical_types"],
                 )
+                for case in (
+                    "unconnected-generic-component-power-input-fault",
+                    "unconnected-generic-component-power-input-no-connect-fault",
+                ):
+                    item = results[f"connector-return-fixture/{case}"]
+                    self.assertEqual(item["status"], "PASS")
+                    self.assertEqual(item["lint_status"], "REVIEW")
+                    self.assertEqual(item["findings"], "component.unconnected_power_input")
+                for case in (
+                    "unconnected-generic-component-power-input-control",
+                    "unconnected-generic-component-power-input-dnp-control",
+                ):
+                    item = results[f"connector-return-fixture/{case}"]
+                    self.assertEqual(item["status"], "PASS")
+                    self.assertEqual(item["lint_status"], "PASS")
+                    self.assertEqual(item["findings"], "none")
                 cross_fault = results["connector-return-fixture/cross-symbol-fault"]
                 self.assertEqual(cross_fault["lint_status"], "REVIEW")
                 self.assertEqual(

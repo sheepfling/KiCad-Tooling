@@ -866,6 +866,58 @@ def unconnected_generic_power_input_connector_pins(
 
 
 @dataclass(frozen=True)
+class UnconnectedGenericPowerInputComponentPin:
+    pin: str
+    symbol: str
+    function: str | None
+    electrical_type: str
+
+
+def unconnected_generic_power_input_component_pins(
+    observed: NetlistContract,
+    declared_connector_references: tuple[str, ...] = (),
+) -> tuple[UnconnectedGenericPowerInputComponentPin, ...]:
+    """Find unassigned generic ``power_in`` pins on fitted non-connectors."""
+    connector_references = {
+        reference.casefold()
+        for reference in connector_candidate_references(observed, declared_connector_references)
+    }
+    symbols = {
+        reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
+    }
+    component_references = {reference.casefold() for reference in observed.components}
+    unpopulated = {reference.casefold() for reference in observed.dnp_components}
+    connected = {pin.casefold() for pins in observed.nets.values() for pin in pins}
+    functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
+    results: list[UnconnectedGenericPowerInputComponentPin] = []
+    for pin, electrical_type in observed.pin_electrical_types.items():
+        pin_key = pin.casefold()
+        reference = pin.rsplit(".", 1)[0]
+        reference_key = reference.casefold()
+        symbol = symbols.get(reference_key)
+        if (
+            "." not in pin
+            or electrical_type.strip().casefold() != "power_in"
+            or reference_key not in component_references
+            or reference_key in connector_references
+            or reference_key in unpopulated
+            or pin_key in connected
+            or not _pin_function_is_generic(functions.get(pin_key))
+            or symbol is None
+        ):
+            continue
+        results.append(
+            UnconnectedGenericPowerInputComponentPin(
+                pin=pin,
+                symbol=symbol,
+                function=functions.get(pin_key),
+                electrical_type="power_in",
+            )
+        )
+    return tuple(sorted(results, key=lambda item: (item.pin.casefold(), item.pin)))
+
+
+@dataclass(frozen=True)
 class UnconnectedNamedComponentPin:
     pin: str
     function: str

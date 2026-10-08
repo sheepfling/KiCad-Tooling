@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 77 rules are implemented with synthetic regression coverage.
+The following 78 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -76,6 +76,7 @@ Their actual recognition limits are documented in
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
 - `connector.unconnected_power_input`
+- `component.unconnected_power_input`
 - `component.unconnected_supply_pin`
 - `component.unconnected_return_pin`
 - `component.led_directly_across_supply_and_return`
@@ -417,7 +418,7 @@ and optional ecosystem adapters are `P3`.
    retained the peer-pin detection. The four fixtures had zero native ERC
    errors. This does not replace the digest-pinned 10.0.0/10.0.5 lane; see
    LINT-002 for evidence and fixture hashes.
-3. **Verify exact custom-symbol applicability.** LINT-091 extends the
+   3. **Verify exact custom-symbol applicability.** LINT-091 extends the
    project-authored LINT-069 role map with a passive two-pin capacitor role
    consumed only by LINT-046. Synthetic typed cases cover exact identity,
    valid and wrong-return topology, DNP, stale maps, role isolation, and
@@ -425,8 +426,13 @@ and optional ecosystem adapters are `P3`.
    place. The next tagged GitHub acceptance result must confirm exact KiCad
    10.0.0/10.0.5 behavior before native acceptance is recorded as verified.
    This adds custom-symbol applicability to an existing REVIEW heuristic,
-   not a new electrical conclusion.
-4. **Measure the value of existing REVIEW rules.** Continue with public
+   not a new electrical conclusion. LINT-092 extends LINT-089's native
+   `power_in` evidence to non-connector components whose pin functions are
+   generic or absent. The synthetic lane checks open and explicit no-connect
+   faults, connected and DNP controls, connector exclusion, and CLI/MCP parity.
+   It remains REVIEW-only and does not infer the pin's positive-supply or
+   reference role.
+3. **Measure the value of existing REVIEW rules.** Continue with public
    geometry, LED, and peer-connector cases that have applicability signals.
    The public STM32 USB-to-triple-UART sample already recorded under LINT-031
    is an applicability case, not a confirmed-fault benchmark: it has repeated
@@ -520,7 +526,7 @@ and optional ecosystem adapters are `P3`.
    [Antmicro's Debug Toolkit](https://opensource.antmicro.com/projects/ftdi-toolkit/)
    remains inapplicable to direct IC-to-IC peers because it exposes two
    independent FTDI UART channels at headers with selectable IO voltage.
-5. **Advance one cohort candidate at a time.** Use LINT-031 to pin the source
+4. **Advance one cohort candidate at a time.** Use LINT-031 to pin the source
    revision and installation procedure, compare fault and valid-control cases
    with the local baseline, and record unique detections, duplicates, misses,
    localization effort, and maintenance cost. The 2026-10-03 kicad-happy
@@ -1409,7 +1415,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 77 active rules; CI requires every new
+- **Status:** Baseline complete for all 78 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1418,7 +1424,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 77 covered, 0 not applicable, 0 unreviewed.
+  audit: 78 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -3372,6 +3378,47 @@ is not a reason by itself to expand its scope or change its default policy.
   LINT-046 and does not measure false-positive rate or reviewer effort.
 - **Remaining:** Await hosted exact-version acceptance and the package gate.
   No proprietary board source or project expectation is used or stored.
+
+#### LINT-092 — Generic non-connector power-input pin is unassigned
+
+- **Status:** Implemented as a default-`REVIEW` source-bound heuristic using
+  KiCad's native pin electrical type. It extends the exact `power_in` signal
+  used by LINT-089 to non-connector components; it is not a singleton-net
+  warning and does not infer a shared supply/ground requirement.
+- **Cohort and backlog context:** Prior LINT-031 trials found general singleton
+  warnings duplicative of native ERC and rejected a general singleton-net
+  rule. This check uses the narrower native `power_in` type to find an
+  unassigned component pin even when every peer is also open. Named supply and
+  return pins already use dedicated checks; connector pins remain with
+  LINT-089. This is a local extension of that native-evidence boundary. The
+  cohort results reinforce the stop condition: do not broaden it into a generic
+  singleton-net rule. No third-party code, source, or default electrical
+  assumption is imported.
+- **Predicate:** A fitted component with native symbol identity has an
+  unassigned pin whose electrical type is exactly `power_in` after case-folding
+  and whose function is absent, numeric-only, or a generic `Pin_N` placeholder.
+  DNP components and native or source-reviewed connector candidates are
+  excluded. An explicit no-connect marker remains a review candidate because
+  it carries no independent reason why the power-input pin is intentionally
+  open.
+- **Boundary:** `power_in` does not distinguish positive supply from reference
+  or establish that the pin must be connected. This check cannot validate the
+  assigned rail, power source, off-board circuitry, copper, population, or
+  operation. Projects may review, block, disable, or exactly ignore a finding;
+  a required rail relationship belongs in a project-authored contract.
+- **Evidence:** Tooling-owned synthetic native schematics cover a floating
+  generic pin and an explicit no-connect fault, with a connected control and a
+  DNP control. Typed cases also cover missing function metadata, named supply
+  deduplication, passive and `power_out` pins, connector exclusion, project
+  blocking, exact ignore, and input-order stability. CLI/MCP parity checks the
+  fault and connected control. The digest-pinned KiCad 10.0.0/10.0.5 native
+  lane records repeated netlist exports and checks the fault, no-connect,
+  connected, and DNP outcomes. No board or project-owned requirement is used.
+- **Incremental value:** This closes the generic non-connector edge left by
+  LINT-089. It does not duplicate the cohort's broad singleton-net finding;
+  independent fault/control tests show the trigger is the native electrical
+  pin classification.
+- **Remaining:** Await the RC9 exact-version native and package acceptance.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -5949,7 +5996,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 77 active rules. Each entry has a deterministic predicate, evidence
+contains 78 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

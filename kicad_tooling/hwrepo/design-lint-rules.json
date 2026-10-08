@@ -518,6 +518,38 @@
       ]
     },
     {
+      "rule_id": "component.unconnected_power_input",
+      "title": "Generic non-connector power-input pin is unassigned",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "A fitted non-connector component pin has native electrical type power_in, its native pin function is absent, generic, or numeric-only, and no exported net assigns it.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The electrical type does not distinguish positive supply from reference or establish that the pin must be connected.",
+        "The rule reports a review candidate even when an explicit no-connect marker exists; intentional open pins need a reviewed decision or exact ignore.",
+        "Native function text that identifies a supply or return remains with the more specific existing pin checks.",
+        "Connector candidates, including source-reviewed connector references, and DNP components are excluded."
+      ],
+    "fault_fixtures": [
+      "tests.test_design_lint.DesignLintTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
+    ],
+    "valid_control_fixtures": [
+      "tests.test_design_lint.DesignLintTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_design_lint.DesignLintTests.test_generic_component_power_input_is_order_stable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_pins.py#unconnected_generic_power_input_component_pins",
+        "kicad_tooling/hwrepo/design_lint.py#candidates"
+      ]
+    },
+    {
       "rule_id": "component.unconnected_supply_pin",
       "title": "Named component supply pin is unassigned",
       "status": "active",

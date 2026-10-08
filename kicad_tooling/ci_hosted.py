@@ -600,6 +600,18 @@ def connector_return_lint_fixture_lane(
         "unconnected-generic-power-input-control": (
             fixture_root / "unconnected-generic-power-input-connector/control.kicad_sch"
         ),
+        "unconnected-generic-component-power-input-fault": (
+            fixture_root / "generic-component-power-input/fault.kicad_sch"
+        ),
+        "unconnected-generic-component-power-input-control": (
+            fixture_root / "generic-component-power-input/control.kicad_sch"
+        ),
+        "unconnected-generic-component-power-input-no-connect-fault": (
+            fixture_root / "generic-component-power-input/no-connect-fault.kicad_sch"
+        ),
+        "unconnected-generic-component-power-input-dnp-control": (
+            fixture_root / "generic-component-power-input/dnp-control.kicad_sch"
+        ),
     }
     cases = tuple(fixtures)
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
@@ -632,6 +644,10 @@ def connector_return_lint_fixture_lane(
         "single-offboard-port-control": "ceaa7038e372ec74a00f7e7c2cb5311377df01624760ab555adb413c4e02d8e9",
         "unconnected-generic-power-input-fault": "2e16c602d6ba0068360b3f8b493351f6d7e4d7adbe94946d17db883587f0528f",
         "unconnected-generic-power-input-control": "b05c1a3994a4f26f07e18bdfe28c8caaf4a298cbb66b6d1814b20c9a7dce2c13",
+        "unconnected-generic-component-power-input-fault": "40271ae0a6551c8c7209427b30e89d9a95267aa92765eaac1a5cdf65e1ffd1a1",
+        "unconnected-generic-component-power-input-control": "67d6ad249e1caa2095b3a408457e6a1710fb9bb6ef7d8e5cb1fdcdd7710b43ec",
+        "unconnected-generic-component-power-input-no-connect-fault": "664e619ceaba71c27bd7acfaa0bb4563ab3203b33a03c564b2a8f7c6bdf4c4bd",
+        "unconnected-generic-component-power-input-dnp-control": "3be52ef83ba54bf0f43bede043095afe42583319e9fd6fa19f17aba250cc3c81",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Connector-return fixture sources differ from the reviewed hashes")
@@ -806,6 +822,49 @@ def connector_return_lint_fixture_lane(
     ):
         raise ValueError(
             "Generic connector power-input fixture lost its exact native fault/control result"
+        )
+
+    generic_component_fault = reports[("unconnected-generic-component-power-input-fault", "first")]
+    generic_component_control = reports[
+        ("unconnected-generic-component-power-input-control", "first")
+    ]
+    generic_component_no_connect = reports[
+        ("unconnected-generic-component-power-input-no-connect-fault", "first")
+    ]
+    generic_component_dnp = reports[
+        ("unconnected-generic-component-power-input-dnp-control", "first")
+    ]
+    expected_component_subject = "U1.1: generic native power-input pin is unassigned"
+    if (
+        generic_component_fault.status != "REVIEW"
+        or {item.rule_id for item in generic_component_fault.findings}
+        != {"component.unconnected_power_input"}
+        or {item.subject for item in generic_component_fault.findings}
+        != {expected_component_subject}
+        or generic_component_no_connect.status != "REVIEW"
+        or {item.rule_id for item in generic_component_no_connect.findings}
+        != {"component.unconnected_power_input"}
+        or {item.subject for item in generic_component_no_connect.findings}
+        != {expected_component_subject}
+        or generic_component_control.status != "PASS"
+        or generic_component_control.findings
+        or generic_component_dnp.status != "PASS"
+        or generic_component_dnp.findings
+        or observed_contracts[
+            ("unconnected-generic-component-power-input-fault", "first")
+        ].pin_electrical_types
+        != {"U1.1": "power_in", "U1.2": "passive"}
+        or observed_contracts[
+            ("unconnected-generic-component-power-input-control", "first")
+        ].nets.get("POWER_INPUT_TEST")
+        != ("U1.1",)
+        or "U1"
+        not in observed_contracts[
+            ("unconnected-generic-component-power-input-dnp-control", "first")
+        ].dnp_components
+    ):
+        raise ValueError(
+            "Generic component power-input fixture lost its exact native fault/control result"
         )
 
     channel_fault = reports[("channel-power-fault", "first")]
