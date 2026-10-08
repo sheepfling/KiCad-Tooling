@@ -2524,30 +2524,34 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each unique assigned net recognized as a positive supply by power_function_key or an attached native power_in pin function, report fitted non-connector power_in pins when no fitted recognized capacitor-symbol component connects this net to a distinct net with a recognized return-like name or attached pin function.",
+      "predicate": "For each unique assigned net recognized as a positive supply by power_function_key or an attached native power_in pin function, report fitted non-connector power_in pins when no fitted recognized capacitor-symbol component connects this net to a distinct net with a recognized return-like name or attached pin function. A project may classify an exact custom capacitor for this rule only through component_role_map entries that match PART_ID, native symbol, footprint, and complete two-pin passive inventory.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The review prompt covers native power_in pins on non-connector references and recognizes positive rails via power_function_key plus return-like names or pin functions via is_return_like_net_name. Connector classification is limited to numeric J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. Capacitor recognition is limited to common library IDs whose final symbol name is C, begins C_ or CP_, is exactly CP, or contains capacitor.",
         "A capacitor connected between the IC rail and a recognized return-like net does not prove that the device datasheet requires it, that its value is suitable, that it is placed locally on the PCB, or that its physical return path is adequate.",
-        "Unrecognized capacitor symbol IDs and custom return labels without a recognized return pin function may create extra review prompts; off-board or internal decoupling may do the same. Custom/unrecognized rail names without a recognized power_in function can evade the rule. Explicitly DNP ICs are excluded, and DNP capacitors do not satisfy the presence check. Numeric J/P/X/CN references, standard Connector libraries, and exact project-reviewed connector references are excluded; other unreviewed component identities may be treated as IC candidates."
+        "Unrecognized capacitor symbol IDs and custom return labels without a recognized return pin function may create extra review prompts; off-board or internal decoupling may do the same. A custom capacitor counts only when the project's exact role map matches its PART_ID, symbol, footprint, and complete two-pin passive inventory; stale entries block lint, and the role is used only by this decoupling-presence hint. Custom/unrecognized rail names without a recognized power_in function can evade the rule. Explicitly DNP ICs are excluded, and DNP capacitors do not satisfy the presence check. Numeric J/P/X/CN references, standard Connector libraries, and exact project-reviewed connector references are excluded; other unreviewed component identities may be treated as IC candidates."
       ],
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_ic_power_rail_without_fitted_capacitor_needs_review",
-        "tests.test_design_lint.DesignLintTests.test_ic_power_decoupling_enforces_capacitor_and_scope_boundaries"
+        "tests.test_design_lint.DesignLintTests.test_ic_power_decoupling_enforces_capacitor_and_scope_boundaries",
+        "tests.test_design_lint.DesignLintTests.test_custom_decoupling_capacitor_requires_exact_project_role"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_fitted_capacitor_to_return_controls_review",
+        "tests.test_design_lint.DesignLintTests.test_custom_decoupling_capacitor_requires_exact_project_role",
         "tests.test_design_lint.DesignLintTests.test_ic_power_decoupling_review_supports_rule_policy_and_exact_ignore",
         "tests.test_design_lint.DesignLintTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint.DesignLintTests.test_ic_decoupling_prompt_is_order_stable_and_fitted_capacitor_clears_it"
+        "tests.test_design_lint.DesignLintTests.test_ic_decoupling_prompt_is_order_stable_and_fitted_capacitor_clears_it",
+        "tests.test_design_lint.DesignLintTests.test_custom_decoupling_capacitor_suppression_is_input_order_stable"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_decoupling.py#ic_power_rails_without_fitted_capacitors",
+        "kicad_tooling/hwrepo/led_heuristics.py#resolve_component_role_map",
         "kicad_tooling/hwrepo/design_lint.py#candidates"
       ]
     },

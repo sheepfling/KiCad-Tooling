@@ -20,6 +20,9 @@ from kicad_tooling.hwrepo.models import (
     ComplementaryPinFunctionAlias,
     ComplementaryPinFunctionAliasMap,
     ComponentContract,
+    ComponentRoleBinding,
+    ComponentRoleMap,
+    ComponentRolePin,
     ConnectorCoverageEntry,
     ConnectorCoverageReport,
     ContractCoachReport,
@@ -664,6 +667,61 @@ def ic_power_decoupling_fixture(
         component_symbols=component_symbols,
         pin_functions=pin_functions,
         pin_electrical_types=pin_electrical_types,
+    )
+
+
+def custom_ic_decoupling_capacitor_fixture(
+    *, capacitor_reference_net: str | None = "GND", dnp_capacitor: bool = False
+) -> NetlistContract:
+    """Use an opaque exact symbol identity requiring project role classification."""
+    source = ic_power_decoupling_fixture(
+        capacitor_net="+3V3",
+        capacitor_reference_net=capacitor_reference_net,
+        dnp_capacitor=dnp_capacitor,
+    )
+    return source.model_copy(
+        update={
+            "components": {
+                **source.components,
+                "C1": ComponentContract(
+                    value="100n",
+                    footprint="Synthetic:CAP123_0603",
+                    part_id="synthetic-decoupling-capacitor",
+                ),
+            },
+            "component_symbols": {**source.component_symbols, "C1": "Vendor:CAP123"},
+            "component_pin_numbers": {**source.component_pin_numbers, "C1": ("1", "2")},
+            "pin_functions": {
+                **source.pin_functions,
+                "C1.1": "1",
+                "C1.2": "2",
+            },
+            "pin_electrical_types": {
+                **source.pin_electrical_types,
+                "C1.1": "passive",
+                "C1.2": "passive",
+            },
+        }
+    )
+
+
+def custom_decoupling_capacitor_role_map(
+    *, basis: str = "Synthetic fixture reviewed this exact two-pin capacitor identity"
+) -> ComponentRoleMap:
+    return ComponentRoleMap(
+        entries=(
+            ComponentRoleBinding(
+                part_id="synthetic-decoupling-capacitor",
+                symbol="Vendor:CAP123",
+                footprint="Synthetic:CAP123_0603",
+                role="capacitor",
+                pins=(
+                    ComponentRolePin(number="1", function="1", electrical_type="passive"),
+                    ComponentRolePin(number="2", function="2", electrical_type="passive"),
+                ),
+                basis=basis,
+            ),
+        )
     )
 
 
@@ -1979,6 +2037,119 @@ class DesignLintTests(unittest.TestCase):
             "power.ic_rail_without_fitted_capacitor",
             {item.rule_id for item in report.findings},
         )
+
+    def test_custom_decoupling_capacitor_requires_exact_project_role(self) -> None:
+        rule_id = "power.ic_rail_without_fitted_capacitor"
+        source = custom_ic_decoupling_capacitor_fixture()
+        unclassified = evaluate(
+            "synthetic-custom-decoupling-capacitor",
+            coach(source),
+            DesignLintPolicy(),
+        )
+        self.assertEqual(unclassified.status, "REVIEW")
+        self.assertEqual(
+            {item.rule_id for item in unclassified.findings if item.rule_id == rule_id},
+            {rule_id},
+        )
+
+        role_map = custom_decoupling_capacitor_role_map()
+        mapped = evaluate(
+            "synthetic-custom-decoupling-capacitor",
+            coach(source),
+            DesignLintPolicy(component_role_map=role_map),
+        )
+        self.assertEqual(mapped.status, "PASS")
+        self.assertNotIn(rule_id, {item.rule_id for item in mapped.findings})
+        self.assertNotIn(
+            "component.led_directly_driven_from_output",
+            {item.rule_id for item in mapped.findings},
+        )
+
+        wrong_return = evaluate(
+            "synthetic-custom-decoupling-capacitor",
+            coach(custom_ic_decoupling_capacitor_fixture(capacitor_reference_net="CAP_REF")),
+            DesignLintPolicy(component_role_map=role_map),
+        )
+        self.assertEqual(wrong_return.status, "REVIEW")
+        self.assertIn(rule_id, {item.rule_id for item in wrong_return.findings})
+
+        dnp = evaluate(
+            "synthetic-custom-decoupling-capacitor",
+            coach(custom_ic_decoupling_capacitor_fixture(dnp_capacitor=True)),
+            DesignLintPolicy(component_role_map=role_map),
+        )
+        self.assertEqual(dnp.status, "REVIEW")
+        self.assertIn(rule_id, {item.rule_id for item in dnp.findings})
+
+        stale_map = role_map.model_copy(
+            update={
+                "entries": (
+                    role_map.entries[0].model_copy(update={"footprint": "Synthetic:Other"}),
+                )
+            }
+        )
+        stale = evaluate(
+            "synthetic-custom-decoupling-capacitor",
+            coach(source),
+            DesignLintPolicy(component_role_map=stale_map),
+        )
+        self.assertEqual(stale.status, "BLOCKED")
+        self.assertTrue(any("stale at C1" in issue for issue in stale.issues))
+
+        with self.assertRaises(ValidationError):
+            ComponentRoleBinding.model_validate(
+                {
+                    **role_map.entries[0].model_dump(),
+                    "pins": (role_map.entries[0].pins[0].model_dump(),),
+                }
+            )
+        with self.assertRaises(ValidationError):
+            ComponentRoleBinding.model_validate(
+                {
+                    **role_map.entries[0].model_dump(),
+                    "pins": (
+                        role_map.entries[0].pins[0].model_dump(),
+                        {
+                            **role_map.entries[0].pins[1].model_dump(),
+                            "electrical_type": "input",
+                        },
+                    ),
+                }
+            )
+
+    def test_custom_decoupling_capacitor_suppression_is_input_order_stable(self) -> None:
+        source = custom_ic_decoupling_capacitor_fixture()
+        policy = DesignLintPolicy(component_role_map=custom_decoupling_capacitor_role_map())
+        original = evaluate("synthetic-custom-decoupling-capacitor", coach(source), policy)
+        reordered_source = source.model_copy(
+            update={
+                "components": dict(reversed(tuple(source.components.items()))),
+                "nets": dict(reversed(tuple(source.nets.items()))),
+                "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+                "component_pin_numbers": dict(
+                    reversed(tuple(source.component_pin_numbers.items()))
+                ),
+                "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+                "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+            }
+        )
+        role_binding = custom_decoupling_capacitor_role_map().entries[0]
+        reordered_policy = DesignLintPolicy(
+            component_role_map=ComponentRoleMap(
+                entries=(
+                    role_binding.model_copy(update={"pins": tuple(reversed(role_binding.pins))}),
+                )
+            )
+        )
+        repeated = evaluate(
+            "synthetic-custom-decoupling-capacitor",
+            coach(reordered_source),
+            reordered_policy,
+        )
+        self.assertEqual(original.status, "PASS")
+        self.assertEqual(repeated.status, "PASS")
+        self.assertEqual(original.findings, repeated.findings)
+        self.assertEqual(original.issues, repeated.issues)
 
     def test_ic_decoupling_prompt_is_order_stable_and_fitted_capacitor_clears_it(
         self,

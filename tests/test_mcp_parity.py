@@ -2478,6 +2478,132 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                 {item.rule_id for item in configured_control.findings},
             )
 
+    async def test_custom_capacitor_role_lint_cli_mcp_parity(self) -> None:
+        """An exact custom capacitor role clears only the shared LINT-046 hint."""
+        native = self.native_evidence()
+        netlist = native.parent / "netlist.xml"
+
+        def write_netlist(reference_net: str) -> None:
+            netlist.write_text(
+                "<export><components>"
+                '<comp ref="U1"><value>Synthetic IC</value><footprint>Synthetic:IC</footprint>'
+                '<libsource lib="Synthetic" part="PowerInput"/></comp>'
+                '<comp ref="U2"><value>Synthetic source</value>'
+                "<footprint>Synthetic:PowerSource</footprint>"
+                '<libsource lib="Synthetic" part="PowerSource"/></comp>'
+                '<comp ref="C1"><value>100nF</value>'
+                "<footprint>Synthetic:CAP123_0603</footprint>"
+                '<fields><field name="PART_ID">synthetic-decoupling-capacitor</field></fields>'
+                '<libsource lib="Vendor" part="CAP123"/></comp>'
+                "</components><libparts>"
+                '<libpart lib="Synthetic" part="PowerInput"><pins>'
+                '<pin num="1" name="VDD" type="power_in"/>'
+                '<pin num="2" name="GND" type="power_in"/>'
+                "</pins></libpart>"
+                '<libpart lib="Synthetic" part="PowerSource"><pins>'
+                '<pin num="1" name="VOUT" type="power_out"/>'
+                "</pins></libpart>"
+                '<libpart lib="Vendor" part="CAP123"><pins>'
+                '<pin num="1" name="1" type="passive"/>'
+                '<pin num="2" name="2" type="passive"/>'
+                "</pins></libpart></libparts><nets>"
+                '<net name="+3V3"><node ref="U1" pin="1"/>'
+                '<node ref="U2" pin="1"/><node ref="C1" pin="1"/></net>'
+                '<net name="GND"><node ref="U1" pin="2"/>'
+                + ('<node ref="C1" pin="2"/>' if reference_net == "GND" else "")
+                + "</net>"
+                + (
+                    '<net name="CAP_REF"><node ref="C1" pin="2"/></net>'
+                    if reference_net == "CAP_REF"
+                    else ""
+                )
+                + "</nets></export>",
+                encoding="utf-8",
+            )
+            summary = read_model(native, ValidationSummary)
+            write_model(
+                native,
+                summary.model_copy(
+                    update={
+                        "artifacts_sha256": {
+                            **summary.artifacts_sha256,
+                            "netlist.xml": digest(netlist),
+                        }
+                    }
+                ),
+            )
+
+        write_netlist("GND")
+        async with Client(create_server(self.root), mode="legacy") as client:
+
+            async def compare() -> DesignLintReport:
+                process = await self.cli_process(
+                    "kicad_tooling.design_lint",
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                )
+                cli = parse_model_text(process.stdout, DesignLintReport)
+                self.assertEqual(process.returncode, 1 if cli.status != "PASS" else 0)
+                mcp = await self.call(
+                    client,
+                    "inspect_design_lint",
+                    DesignLintReport,
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(self.root).as_posix(),
+                    },
+                )
+                self.assertEqual(cli, mcp)
+                return mcp
+
+            unclassified = await compare()
+            self.assertEqual(unclassified.status, "REVIEW")
+            self.assertIn(
+                "power.ic_rail_without_fitted_capacitor",
+                {item.rule_id for item in unclassified.findings},
+            )
+
+            contract_path = self.island / "tests/contract.json"
+            test_contract = read_model(contract_path, ProjectTestContract)
+            role_map = ComponentRoleMap(
+                entries=(
+                    ComponentRoleBinding(
+                        part_id="synthetic-decoupling-capacitor",
+                        symbol="Vendor:CAP123",
+                        footprint="Synthetic:CAP123_0603",
+                        role="capacitor",
+                        pins=(
+                            ComponentRolePin(number="1", function="1", electrical_type="passive"),
+                            ComponentRolePin(number="2", function="2", electrical_type="passive"),
+                        ),
+                        basis="Synthetic parity fixture reviews the exact opaque capacitor identity",
+                    ),
+                )
+            )
+            project_policy = (test_contract.design_lint or DesignLintPolicy()).model_copy(
+                update={"component_role_map": role_map}
+            )
+            write_model(
+                contract_path,
+                test_contract.model_copy(update={"design_lint": project_policy}),
+            )
+            mapped_control = await compare()
+            self.assertEqual(mapped_control.status, "PASS", mapped_control.issues)
+            self.assertNotIn(
+                "power.ic_rail_without_fitted_capacitor",
+                {item.rule_id for item in mapped_control.findings},
+            )
+
+            write_netlist("CAP_REF")
+            mapped_fault = await compare()
+            self.assertEqual(mapped_fault.status, "REVIEW")
+            self.assertIn(
+                "power.ic_rail_without_fitted_capacitor",
+                {item.rule_id for item in mapped_fault.findings},
+            )
+
     async def test_same_net_two_pin_passive_lint_cli_mcp_parity(self) -> None:
         """Compare the same-net review finding and its distinct-net control."""
         native = self.native_evidence()

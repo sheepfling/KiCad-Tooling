@@ -4766,6 +4766,8 @@ class NativeIcRailCapacitorFixtureTests(unittest.TestCase):
             "source-backed-control": "2a3632b71b5c7bc01b282cb2d23a5b49df5759364a99e588b98b659654c9d45f",
             "source-backed-no-cap": "5db3396470f1e3b8101e428dc25b41c4166f1748e4a68ad88a3ac2757173952a",
             "source-backed-dnp-capacitor": "8184bd9c297b40d0192af1e446206939ec7d5466bc8e306a0292472da7424b6c",
+            "custom-capacitor-role-control": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
+            "custom-capacitor-role-wrong-return": "52edf68703b6fc4052fbb7197778108fc52c0a4ac4195bd533a1d1aaead8669a",
         }
         expected_findings: dict[str, tuple[str, set[str]]] = {
             "positive-rail-no-cap": ("REVIEW", {"+3V3: IC supply decoupling review"}),
@@ -4777,6 +4779,11 @@ class NativeIcRailCapacitorFixtureTests(unittest.TestCase):
                 "REVIEW",
                 {"+3V3: IC supply decoupling review"},
             ),
+            "custom-capacitor-role-control": ("PASS", set()),
+            "custom-capacitor-role-wrong-return": (
+                "REVIEW",
+                {"+3V3: IC supply decoupling review"},
+            ),
         }
         expected_source_path_findings = {
             "positive-rail-no-cap": "none",
@@ -4785,6 +4792,8 @@ class NativeIcRailCapacitorFixtureTests(unittest.TestCase):
             "source-backed-control": "none",
             "source-backed-no-cap": "none",
             "source-backed-dnp-capacitor": "none",
+            "custom-capacitor-role-control": "none",
+            "custom-capacitor-role-wrong-return": "none",
         }
         expected_power_pin_not_driven = {
             "positive-rail-no-cap",
@@ -4819,6 +4828,8 @@ class NativeIcRailCapacitorFixtureTests(unittest.TestCase):
                         "ic-rail-cap-fixture/source-backed-control",
                         "ic-rail-cap-fixture/source-backed-no-cap",
                         "ic-rail-cap-fixture/source-backed-dnp-capacitor",
+                        "ic-rail-cap-fixture/custom-capacitor-role-control",
+                        "ic-rail-cap-fixture/custom-capacitor-role-wrong-return",
                     },
                 )
                 native = results["ic-rail-cap-fixture/native-export"]
@@ -4855,6 +4866,10 @@ class NativeIcRailCapacitorFixtureTests(unittest.TestCase):
                     self.assertEqual(
                         "power_pin_not_driven" in result["native_erc_types"].split(","),
                         case in expected_power_pin_not_driven,
+                    )
+                    self.assertEqual(
+                        result["native_erc_error_types"],
+                        "power_pin_not_driven" if case in expected_power_pin_not_driven else "none",
                     )
                     receipt = root / result["command_receipt"]
                     self.assertTrue(receipt.is_file())

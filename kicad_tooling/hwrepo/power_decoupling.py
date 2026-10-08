@@ -24,6 +24,7 @@ def _is_capacitor_symbol(symbol: str) -> bool:
 def ic_power_rails_without_fitted_capacitors(
     observed: NetlistContract,
     declared_connector_references: tuple[str, ...] = (),
+    mapped_capacitor_references: tuple[str, ...] = (),
 ) -> tuple[PowerRailCapacitorGap, ...]:
     """Find recognized positive rails with no fitted cap on two distinct nets.
 
@@ -48,6 +49,11 @@ def ic_power_rails_without_fitted_capacitors(
         for reference, symbol in observed.component_symbols.items()
         if _is_capacitor_symbol(symbol) and reference.casefold() not in dnp
     }
+    capacitor_references.update(
+        reference.casefold()
+        for reference in mapped_capacitor_references
+        if reference.casefold() not in dnp
+    )
     capacitor_nets_by_reference: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:

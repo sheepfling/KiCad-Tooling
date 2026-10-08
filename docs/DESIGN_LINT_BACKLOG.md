@@ -417,7 +417,16 @@ and optional ecosystem adapters are `P3`.
    retained the peer-pin detection. The four fixtures had zero native ERC
    errors. This does not replace the digest-pinned 10.0.0/10.0.5 lane; see
    LINT-002 for evidence and fixture hashes.
-3. **Measure the value of existing REVIEW rules.** Continue with public
+3. **Verify exact custom-symbol applicability.** LINT-091 extends the
+   project-authored LINT-069 role map with a passive two-pin capacitor role
+   consumed only by LINT-046. Synthetic typed cases cover exact identity,
+   valid and wrong-return topology, DNP, stale maps, role isolation, and
+   ordering; CLI/MCP parity and pinned native fault/control fixtures are in
+   place. The next tagged GitHub acceptance result must confirm exact KiCad
+   10.0.0/10.0.5 behavior before native acceptance is recorded as verified.
+   This adds custom-symbol applicability to an existing REVIEW heuristic,
+   not a new electrical conclusion.
+4. **Measure the value of existing REVIEW rules.** Continue with public
    geometry, LED, and peer-connector cases that have applicability signals.
    The public STM32 USB-to-triple-UART sample already recorded under LINT-031
    is an applicability case, not a confirmed-fault benchmark: it has repeated
@@ -511,7 +520,7 @@ and optional ecosystem adapters are `P3`.
    [Antmicro's Debug Toolkit](https://opensource.antmicro.com/projects/ftdi-toolkit/)
    remains inapplicable to direct IC-to-IC peers because it exposes two
    independent FTDI UART channels at headers with selectable IO voltage.
-4. **Advance one cohort candidate at a time.** Use LINT-031 to pin the source
+5. **Advance one cohort candidate at a time.** Use LINT-031 to pin the source
    revision and installation procedure, compare fault and valid-control cases
    with the local baseline, and record unique detections, duplicates, misses,
    localization effort, and maintenance cost. The 2026-10-03 kicad-happy
@@ -1802,8 +1811,8 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-069 — Project-authored roles for custom symbol identities
 
 - **Status:** Implemented first slice: the `led` role extends
-  `component.led_directly_driven_from_output`. The schema deliberately supports
-  no other component roles yet.
+  `component.led_directly_driven_from_output`. LINT-091 adds an exact
+  `capacitor` role used only by `power.ic_rail_without_fitted_capacitor`.
 - **Evidence:** The public KiCad-Team-Workflow-Template training project at
   commit `ed89536f0dbbcb013145af2994fef41b2250143e` documents an Arduino status
   LED path through `R1` (1 kΩ) and custom symbol
@@ -1820,17 +1829,20 @@ is not a reason by itself to expand its scope or change its default policy.
   footprint text would create unreviewed classifications.
 - **Contract:** `design_lint.component_role_map` in the project test contract
   binds one exact `PART_ID`, native symbol ID, footprint, complete two-pin
-  number/function/electrical-type inventory, finite role (`led` in v1), and
-  review basis. Every native component using that `PART_ID` must match the
+  number/function/electrical-type inventory, finite role (`led` or
+  `capacitor`), and review basis. Capacitor entries require both native pins
+  to be passive. Every native component using that `PART_ID` must match the
   binding. An absent part or changed identity/pin inventory blocks lint and is
   excluded from the heuristic. The accepted map is covered by the existing
   source-bound policy digest; a finding includes the binding and its canonical
   SHA-256, so changing its identity or basis changes the finding fingerprint.
   Pin-order changes do not change the digest or finding.
-- **Predicate:** The role extends only the documented two-pin output-driven
-  LED heuristic. It supplies a reviewed component classification, not an
-  electrical conclusion or net requirement. Unlisted custom symbols stay
-  outside the rule regardless of reference, value, or footprint text.
+- **Predicate:** The `led` role extends only the documented two-pin
+  output-driven LED heuristic. The `capacitor` role is used only by the fitted
+  decoupling-presence hint and requires two native passive pins. Both supply a
+  reviewed component classification, not an electrical conclusion or net
+  requirement. Unlisted custom symbols stay outside these rules regardless
+  of reference, value, or footprint text.
 - **Boundary:** A role map establishes project classification, not component
   correctness, part approval, pinout accuracy, fit, electrical limits, or
   fabricated connectivity. It does not change a finding's default `review`
@@ -3319,6 +3331,47 @@ is not a reason by itself to expand its scope or change its default policy.
   are recorded by GitHub Actions. Project adoption still requires the owner to
   cite and approve the actual limit and port applicability. No private project
   source or requirement was used.
+
+#### LINT-091 — Exact custom-capacitor role for decoupling review
+
+- **Status:** Implemented as an applicability extension to LINT-069 and
+  `power.ic_rail_without_fitted_capacitor`. It does not add a new lint rule or
+  declare that every IC rail requires a capacitor. Digest-pinned KiCad 10.0.0
+  and 10.0.5 native acceptance is pending in GitHub Actions.
+- **Cohort input:** The kicad-happy source-backed trial under LINT-031 reported
+  decoupling-symbol coverage and missing-decoupling observations. That trial
+  identified symbol presence as a candidate review signal, while also
+  showing broader applicability than the local `power_in` predicate. LINT-091
+  addresses a narrower gap in the existing local rule: an opaque custom
+  capacitor symbol is not recognized by its library name. No cohort code,
+  workflow, project source, or rule threshold is imported.
+- **Predicate:** A project-owned `component_role_map` entry classifies a
+  capacitor only when exact `PART_ID`, native symbol, footprint, and complete
+  two-pin number/function/electrical-type inventory match. The native pins
+  must both be passive. A fitted mapped capacitor suppresses LINT-046 only
+  when its two pins occupy distinct recognized positive and return nets. DNP
+  parts do not count. A mapped component with an unrecognized return leaves
+  the review prompt active; a stale map blocks lint. The role cannot activate
+  LED heuristics or other rules.
+- **Boundary:** The map records reviewed component identity, not datasheet
+  suitability, required value, placement, rail demand, copper continuity, or
+  physical effectiveness. The rule remains a default `REVIEW` hint, and
+  project-authored requirements remain responsible for deciding whether a
+  capacitor is required and what values and topology are acceptable.
+- **Evidence:** Tooling-owned synthetic KiCad schematics use an opaque
+  `Vendor:CAP123` symbol, exact synthetic `PART_ID`, footprint, and passive
+  pins named `1` and `2`. The valid control assigns them to `+3V3` and `GND`;
+  the fault assigns the return to `CAP_REF`. Typed cases cover DNP, wrong
+  return, stale footprint, role isolation from the LED rule, and input-order
+  stability. CLI/MCP parity covers unclassified, mapped-valid, and mapped
+  fault states. GitHub native acceptance repeats exports on exact KiCad
+  10.0.0 and 10.0.5, checks the complete identity and pin inventory, confirms
+  zero native ERC errors, and compares deterministic LINT-046 outcomes.
+- **Incremental value:** This improves applicability for explicitly reviewed
+  custom symbols. It adds no independent electrical defect detection beyond
+  LINT-046 and does not measure false-positive rate or reviewer effort.
+- **Remaining:** Await hosted exact-version acceptance and the package gate.
+  No proprietary board source or project expectation is used or stored.
 
 ### P2 — PCB geometry and schematic review assistance
 

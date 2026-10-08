@@ -608,7 +608,16 @@ def candidates(
                 },
             )
         )
-    for gap in ic_power_rails_without_fitted_capacitors(observed, reviewed_connector_references):
+    mapped_capacitor_references = tuple(
+        reference
+        for reference, binding in resolve_component_role_map(
+            observed, component_role_map
+        ).by_reference.items()
+        if binding.role == "capacitor"
+    )
+    for gap in ic_power_rails_without_fitted_capacitors(
+        observed, reviewed_connector_references, mapped_capacitor_references
+    ):
         found.append(
             Candidate(
                 rule_id="power.ic_rail_without_fitted_capacitor",

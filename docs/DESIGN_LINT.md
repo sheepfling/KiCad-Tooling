@@ -220,13 +220,18 @@ The first rules are:
   return-like LED net and a separate recognized return suppresses this direct
   topology prompt; that does not assess resistor adequacy. A custom symbol can
   join this rule only through `design_lint.component_role_map` in the project
-  contract. Each entry binds one exact `PART_ID`, native symbol ID, footprint,
-  complete two-pin number/function/electrical-type inventory, and review basis.
+  contract. The same map can classify an exact custom capacitor identity for
+  `power.ic_rail_without_fitted_capacitor`. Each entry binds one exact
+  `PART_ID`, native symbol ID, footprint, complete two-pin
+  number/function/electrical-type inventory, and review basis; capacitor roles
+  additionally require both native pins to be passive.
   The exact identity is checked against every native component carrying that
   `PART_ID`; a missing or changed part, symbol, footprint, or pin inventory
-  blocks lint and does not receive the mapped role. A mapped finding includes
-  the basis and a deterministic digest of its role binding. Unlisted custom
-  symbols remain outside the rule, including a same-value unrelated symbol.
+  blocks lint and does not receive the mapped role. A mapped LED finding
+  includes the basis and a deterministic digest of its role binding. Unlisted custom
+  symbols remain outside these rules, including a same-value unrelated
+  symbol. A `capacitor` role affects only the decoupling-presence hint; it does
+  not classify the part for other checks.
   It is a default review heuristic, not proof that current limiting is missing. It does not
   infer LED polarity, output limits, off-board paths, board copper, population,
   or runtime behavior. Its native synthetic direct-output fault,
@@ -254,6 +259,17 @@ The first rules are:
               {"number": "2", "function": "K", "electrical_type": "passive"}
             ],
             "basis": "Reviewed the library symbol identity and pin functions"
+          },
+          {
+            "part_id": "training-capacitor",
+            "symbol": "Training:CAP_2PIN",
+            "footprint": "Training:CAP_0603",
+            "role": "capacitor",
+            "pins": [
+              {"number": "1", "function": "1", "electrical_type": "passive"},
+              {"number": "2", "function": "2", "electrical_type": "passive"}
+            ],
+            "basis": "Reviewed this exact custom capacitor and passive pin inventory"
           }
         ]
       }
@@ -267,7 +283,11 @@ The first rules are:
   schematic net. Recognized rails and pin functions use the bounded
   `power_function_key` list, return labels and functions use the existing
   return-name recognizer, and capacitor symbols use common `C`, `C_*`, `CP`,
-  `CP_*`, or `*capacitor*` library names. This default-review hint does not
+  `CP_*`, or `*capacitor*` library names. A project may extend this one hint
+  to a custom symbol through an exact `component_role_map` capacitor entry
+  matching `PART_ID`, symbol, footprint, and complete native pin inventory.
+  A stale entry blocks lint; without a matching entry the custom symbol is
+  not treated as a capacitor. This default-review hint does not
   decide whether the datasheet requires a capacitor, whether its value is
   suitable, or whether it is placed locally with an adequate PCB return path.
   Internal, remote, and off-board
@@ -275,8 +295,11 @@ The first rules are:
   finding. `J`, `P`, `X`, and `CN` references are excluded as connectors;
   projects using other connector prefixes may receive a review prompt.
   Synthetic no-cap, fitted-capacitor, unrecognized-rail, source-backed, and
-  DNP-capacitor cases are exported twice by digest-pinned KiCad 10.0.0 and
-  10.0.5 fixture lanes; normalized netlists and ERC results repeat. The
+  DNP-capacitor cases and exact custom-capacitor role fault/control cases are
+  exported twice by digest-pinned KiCad 10.0.0 and 10.0.5 fixture lanes;
+  normalized netlists and ERC results repeat. The custom role applies only to
+  this presence hint and does not imply value, placement, or physical
+  effectiveness. The
   source-backed DNP case confirms that an unpopulated capacitor does not count
   as coverage. See the
   [fixture trial and native regression record](../tests/fixtures/design_lint/cohort-power-pin-dc/README.md).

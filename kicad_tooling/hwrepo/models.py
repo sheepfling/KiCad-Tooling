@@ -2756,7 +2756,7 @@ class ComponentRoleBinding(StrictModel):
     part_id: Identifier
     symbol: NonEmptyText
     footprint: NonEmptyText
-    role: Literal["led"]
+    role: Literal["led", "capacitor"]
     pins: Annotated[tuple[ComponentRolePin, ...], Field(min_length=2)]
     basis: NonEmptyText
 
@@ -2764,7 +2764,11 @@ class ComponentRoleBinding(StrictModel):
     def complete_unique_pin_signature(self) -> ComponentRoleBinding:
         numbers = tuple(item.number for item in self.pins)
         if len(numbers) != 2 or len(set(numbers)) != len(numbers):
-            raise ValueError("The current led role requires exactly two unique native pins")
+            raise ValueError("Component role maps require exactly two unique native pins")
+        if self.role == "capacitor" and any(
+            item.electrical_type.casefold() != "passive" for item in self.pins
+        ):
+            raise ValueError("The capacitor role requires two native passive pins")
         return self
 
 

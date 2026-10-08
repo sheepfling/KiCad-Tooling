@@ -272,6 +272,8 @@ def leds_directly_driven_without_visible_series_resistor(
         observed.component_symbols.items(), key=lambda item: (item[0].casefold(), item[0])
     ):
         role_binding = roles.get(reference.casefold())
+        if role_binding is not None and role_binding.role != "led":
+            role_binding = None
         if reference.casefold() in dnp or (
             symbol.casefold() not in _SUPPORTED_LED_SYMBOLS and role_binding is None
         ):

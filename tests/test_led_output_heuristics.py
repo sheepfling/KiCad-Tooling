@@ -342,6 +342,30 @@ class LedOutputHeuristicTests(unittest.TestCase):
                 self.assertTrue(any("role map" in issue.casefold() for issue in report.issues))
                 self.assertNotIn(RULE_ID, {item.rule_id for item in report.findings})
 
+    def test_custom_capacitor_role_does_not_activate_led_rule(self) -> None:
+        capacitor = output_led_netlist(
+            led_symbol="Vendor:CAP123",
+            led_part_id="synthetic-capacitor",
+            led_footprint="Synthetic:CAP123_0603",
+        )
+        role_map = ComponentRoleMap(
+            entries=(
+                ComponentRoleBinding(
+                    part_id="synthetic-capacitor",
+                    symbol="Vendor:CAP123",
+                    footprint="Synthetic:CAP123_0603",
+                    role="capacitor",
+                    pins=(
+                        ComponentRolePin(number="1", function="A", electrical_type="passive"),
+                        ComponentRolePin(number="2", function="K", electrical_type="passive"),
+                    ),
+                    basis="Synthetic fixture maps this opaque part only as a capacitor",
+                ),
+            )
+        )
+        report = observed_report(capacitor, DesignLintPolicy(component_role_map=role_map))
+        self.assertNotIn(RULE_ID, {item.rule_id for item in report.findings})
+
     def test_custom_led_role_fingerprint_is_order_stable_and_basis_bound(self) -> None:
         custom = output_led_netlist(
             led_symbol="Training:LED_5mm",

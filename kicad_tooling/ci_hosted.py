@@ -9646,7 +9646,15 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
     from .hwrepo.design_lint import evaluate
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintReport
+    from .hwrepo.led_heuristics import resolve_component_role_map
+    from .hwrepo.models import (
+        ComponentRoleBinding,
+        ComponentRoleMap,
+        ComponentRolePin,
+        ContractCoachReport,
+        DesignLintPolicy,
+        DesignLintReport,
+    )
     from .hwrepo.power_decoupling import ic_power_rails_without_fitted_capacitors
     from .validate import read_netlist
 
@@ -9668,6 +9676,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-control": "source-backed-control.kicad_sch",
         "source-backed-no-cap": "source-backed-no-cap.kicad_sch",
         "source-backed-dnp-capacitor": "source-backed-dnp-capacitor.kicad_sch",
+        "custom-capacitor-role-control": "custom-capacitor-role-control.kicad_sch",
+        "custom-capacitor-role-wrong-return": "custom-capacitor-role-wrong-return.kicad_sch",
     }
     source_hashes = {case: digest(fixture_root / name) for case, name in cases.items()}
     scratch = Path(
@@ -9763,6 +9773,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-control": set(),
         "source-backed-no-cap": {("+3V3", ("U1.1",), ("U1",))},
         "source-backed-dnp-capacitor": {("+3V3", ("U1.1",), ("U1",))},
+        "custom-capacitor-role-control": set(),
+        "custom-capacitor-role-wrong-return": {("+3V3", ("U1.1",), ("U1",))},
     }
     expected_findings: dict[str, set[str]] = {
         "positive-rail-no-cap": {"+3V3: IC supply decoupling review"},
@@ -9771,6 +9783,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-control": set(),
         "source-backed-no-cap": {"+3V3: IC supply decoupling review"},
         "source-backed-dnp-capacitor": {"+3V3: IC supply decoupling review"},
+        "custom-capacitor-role-control": set(),
+        "custom-capacitor-role-wrong-return": {"+3V3: IC supply decoupling review"},
     }
     expected_source_path_findings: dict[str, set[str]] = {
         "positive-rail-no-cap": set(),
@@ -9779,12 +9793,29 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-control": set(),
         "source-backed-no-cap": set(),
         "source-backed-dnp-capacitor": set(),
+        "custom-capacitor-role-control": set(),
+        "custom-capacitor-role-wrong-return": set(),
     }
     expected_power_pin_not_driven = {
         "positive-rail-no-cap",
         "positive-rail-cap-control",
         "unrecognized-rail-control",
     }
+    custom_capacitor_role_map = ComponentRoleMap(
+        entries=(
+            ComponentRoleBinding(
+                part_id="synthetic-decoupling-capacitor",
+                symbol="Vendor:CAP123",
+                footprint="Synthetic:CAP123_0603",
+                role="capacitor",
+                pins=(
+                    ComponentRolePin(number="1", function="1", electrical_type="passive"),
+                    ComponentRolePin(number="2", function="2", electrical_type="passive"),
+                ),
+                basis="Synthetic native fixture uses this exact opaque two-pin capacitor identity",
+            ),
+        )
+    )
     normalized_hashes: dict[tuple[str, str], str] = {}
     normalized_erc_hashes: dict[tuple[str, str], str] = {}
     erc_types: dict[tuple[str, str], tuple[str, ...]] = {}
@@ -9859,9 +9890,36 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                     f"Native {case} ERC power-source result differs from expectation: "
                     f"{erc_types[(case, run)]}"
                 )
+            erc_error_types = tuple(
+                sorted(item.type for item in erc_report.violations if item.severity == "error")
+            )
+            expected_error_types = (
+                ("power_pin_not_driven",) if case in expected_power_pin_not_driven else ()
+            )
+            if erc_error_types != expected_error_types:
+                raise ValueError(
+                    f"Native {case} ERC error set differs from expectation: {erc_error_types}"
+                )
+            policy = (
+                DesignLintPolicy(component_role_map=custom_capacitor_role_map)
+                if case.startswith("custom-capacitor-role-")
+                else DesignLintPolicy()
+            )
+            role_resolution = resolve_component_role_map(observed, policy.component_role_map)
+            if role_resolution.issues:
+                raise ValueError(
+                    f"Native {case} project capacitor role map is stale: {role_resolution.issues}"
+                )
+            mapped_capacitor_references = tuple(
+                reference
+                for reference, binding in role_resolution.by_reference.items()
+                if binding.role == "capacitor"
+            )
             gaps = {
                 (item.net, item.input_pins, item.component_references)
-                for item in ic_power_rails_without_fitted_capacitors(observed)
+                for item in ic_power_rails_without_fitted_capacitors(
+                    observed, mapped_capacitor_references=mapped_capacitor_references
+                )
             }
             if gaps != expected_gaps[case]:
                 raise ValueError(
@@ -9872,11 +9930,13 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 "source-backed-control",
                 "source-backed-no-cap",
                 "source-backed-dnp-capacitor",
+                "custom-capacitor-role-control",
+                "custom-capacitor-role-wrong-return",
             }:
                 expected_source_net = (
-                    ("U1.1", "U2.1") if case == "source-backed-no-cap" else ("C1.1", "U1.1", "U2.1")
+                    {"U1.1", "U2.1"} if case == "source-backed-no-cap" else {"C1.1", "U1.1", "U2.1"}
                 )
-                if tuple(observed.nets.get("+3V3", ())) != expected_source_net:
+                if set(observed.nets.get("+3V3", ())) != expected_source_net:
                     raise ValueError(f"Native {case} does not match its authored +3V3 pin topology")
                 if observed.pin_electrical_types.get("U2.1") != "power_out":
                     raise ValueError(f"Native {case} source pin is not power_out")
@@ -9884,6 +9944,33 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                     raise ValueError(
                         f"Native {case} did not preserve the capacitor population state"
                     )
+            if case.startswith("custom-capacitor-role-"):
+                component = observed.components.get("C1")
+                if (
+                    component is None
+                    or component.part_id != "synthetic-decoupling-capacitor"
+                    or component.footprint != "Synthetic:CAP123_0603"
+                    or observed.component_symbols.get("C1") != "Vendor:CAP123"
+                    or observed.component_pin_numbers.get("C1") != ("1", "2")
+                    or observed.pin_functions.get("C1.1") != "1"
+                    or observed.pin_functions.get("C1.2") != "2"
+                    or observed.pin_electrical_types.get("C1.1") != "passive"
+                    or observed.pin_electrical_types.get("C1.2") != "passive"
+                ):
+                    raise ValueError(
+                        f"Native {case} did not preserve the exact project capacitor-role identity"
+                    )
+                expected_capacitor_reference_net = (
+                    "GND" if case == "custom-capacitor-role-control" else "CAP_REF"
+                )
+                net_by_pin = {
+                    pin.casefold(): net for net, pins in observed.nets.items() for pin in pins
+                }
+                if (
+                    net_by_pin.get("c1.1") != "+3V3"
+                    or net_by_pin.get("c1.2") != expected_capacitor_reference_net
+                ):
+                    raise ValueError(f"Native {case} does not match its authored capacitor nets")
             project_id = f"synthetic-ic-rail-capacitor-{case}"
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
@@ -9891,7 +9978,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 observed=observed,
                 netlist_sha256=raw_hashes[(case, run)],
             )
-            reports[(case, run)] = evaluate(project_id, coach, DesignLintPolicy())
+            reports[(case, run)] = evaluate(project_id, coach, policy)
 
     if any(
         normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")] for case in cases
@@ -9949,6 +10036,14 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
             normalized_erc_sha256=normalized_erc_hashes[(case, "first")],
             repeat_normalized_erc_sha256=normalized_erc_hashes[(case, "repeat")],
             native_erc_types=",".join(erc_types[(case, "first")]) or "none",
+            native_erc_error_types=",".join(
+                sorted(
+                    item.type
+                    for item in read_kicad_erc_report(output / f"{case}.first.erc.json").violations
+                    if item.severity == "error"
+                )
+            )
+            or "none",
             power_pin_not_driven=("true" if case in expected_power_pin_not_driven else "false"),
             lint_status=reports[(case, "first")].status,
             capacitor_findings=";".join(sorted(findings)) or "none",
