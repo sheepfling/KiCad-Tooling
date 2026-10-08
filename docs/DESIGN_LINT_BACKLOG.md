@@ -3316,20 +3316,24 @@ is not a reason by itself to expand its scope or change its default policy.
   passed in both digest-pinned images as part of the package acceptance test
   (`2 passed, 4 subtests` across LINT-077 and LINT-087). For LINT-087, repeated
   normalized netlists matched; the control passed and the fault failed exactly
-  `serial/serial-bond/reference` on both versions. Receipts are under ignored
-  `build/ci/native-serial-peer-project-*/`. Hosted acceptance for the current
-  branch remains unrecorded. The v0.3.2 hosted run exposed a fixture defect:
-  its J1.3/J2.3 ground wires were 10.16 mm below the actual pin endpoints, so
-  KiCad exported both as unconnected. The synthetic control/fault sources now
-  attach at the pin endpoints, their hashes are pinned, and the local fixture
-  test asserts those wires. Repeated KiCad 10.0.0/10.0.5 exports now pass
-  locally; the current revision's hosted receipt remains pending. The v0.4.1
-  hosted run also exposed reversed
-  TX/RX net declarations in the synthetic reference-bond map. The map now
-  follows the schematic's native pin functions (J1.1 TX, J1.2 RX, J2.1 TX on
-  the peer RX net, and J2.2 RX on the peer TX net); its source digest and
-  local contract test were updated. Exact pinned exports pass locally; hosted
-  confirmation remains pending.
+  `serial/serial-bond/reference` on both versions. The earlier v0.3.2 hosted run
+  found ground wires that missed their symbol pins, and v0.4.1 found reversed
+  TX/RX declarations in the authored bond map. Both fixture defects were
+  corrected; the native sources now bind to the pin endpoints and follow the
+  schematic's TX/RX functions.
+  **Tagged hosted acceptance:** GitHub run `37851810081` for
+  `v0.5.0rc15` passed the reference-bond control and broken-bond fault on both
+  digest-pinned KiCad 10.0.0 and 10.0.5. The control matched the authored bond
+  map; the fault identified `R3.2` on `FLOATING_GND` instead of `GND_B` and
+  failed only `serial/serial-bond/reference`. Repeated normalized netlist
+  contracts matched for both cases on both versions. The retained event receipt
+  hashes are
+  `ab290167b3d294ebdc238af0f53157894de9dbb0e88df5e4f0eb4572f5623b3c`
+  (KiCad 10.0.0) and
+  `ac57bdf9a719fcbfe386fbb2021533b0b8a9f543a277509b5e71cc66633f9b0d`
+  (KiCad 10.0.5), under ignored
+  `build/ci/hosted-37851810081/native-serial-peer-project-*/`. The workflow,
+  fixture lane, and rule sources are unchanged from the accepted tag.
 
 #### LINT-088 — Fitted two-pin crystal terminals share one net
 
@@ -8880,8 +8884,9 @@ maintenance cost open wherever they were not measured.
    work deferred until its physical and current-allocation model has a reviewed
    basis.
    Keep LINT-087's serial reference-bond control and broken-bond fault in the
-   exact KiCad 10.0.0/10.0.5 GitHub acceptance lane; wait for the hosted receipt
-   before claiming native acceptance.
+   exact KiCad 10.0.0/10.0.5 GitHub acceptance lane. The tagged
+   `v0.5.0rc15` run (`37851810081`) passed both cases on both versions; retain
+   that lane for future changes to the bond contract or native fixture.
 3. Keep partial `LINT-010` through `LINT-012` aligned with their actual
    evidence boundaries. LINT-011 now checks the optional split midpoint
    capacitor map from a native schematic export as well as typed contract
