@@ -2683,19 +2683,20 @@
         "The rule does not infer LED polarity, output voltage/current limits, resistor value or adequacy, PCB copper connectivity, physical population, or runtime behavior. A parallel resistor across the LED and rail does not count as a series element and does not suppress the candidate."
       ],
       "fault_fixtures": [
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_direct_output_to_led_and_return_is_reviewable_and_configurable",
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_open_drain_output_is_reviewed_but_parallel_resistor_stays_a_fault",
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_custom_led_role_map_is_exact_and_stale_identity_blocks_lint"
+        "tests.test_led_output_heuristics.test_direct_output_to_led_and_return_is_reviewable_and_configurable",
+        "tests.test_led_output_heuristics.test_open_drain_output_is_reviewed",
+        "tests.test_led_output_heuristics.test_parallel_resistor_does_not_clear_led_output_review",
+        "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
+        "tests.test_led_output_heuristics.test_custom_led_role_map_is_exact_and_stale_identity_blocks_lint"
       ],
       "valid_control_fixtures": [
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_visible_series_resistor_and_unrecognized_output_are_controls",
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_custom_led_needs_exact_project_role_map_and_reports_review_basis"
+        "tests.test_led_output_heuristics.test_visible_series_resistor_and_unrecognized_output_are_controls",
+        "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_output_led_finding_is_order_stable_and_clears_on_series_path",
-        "tests.test_led_output_heuristics.LedOutputHeuristicTests.test_custom_led_role_fingerprint_is_order_stable_and_basis_bound"
+        "tests.test_led_output_heuristics.test_output_led_finding_is_order_stable_and_clears_on_series_path",
+        "tests.test_led_output_heuristics.test_custom_led_role_fingerprint_is_order_stable_and_basis_bound"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/led_heuristics.py#leds_directly_driven_without_visible_series_resistor",

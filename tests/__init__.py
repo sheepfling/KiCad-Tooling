@@ -1,1 +1,1 @@
-"""Portable policy regression tests; discover with unittest."""
+"""Portable policy regression tests discovered and run with pytest."""

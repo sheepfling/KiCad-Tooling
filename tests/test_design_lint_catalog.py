@@ -91,7 +91,6 @@ from tests.test_i2c_addressing import (
     responder,
 )
 from tests.test_led_output_heuristics import (
-    LedOutputHeuristicTests,
     output_led_netlist,
 )
 from tests.test_open_drain_heuristics import (
@@ -445,7 +444,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         PowerPathFixtureLaneTests: PowerPathFixtureLaneTests(),
         PowerSourcePathLintTests: PowerSourcePathLintTests(),
         UsbCPortLintTests: UsbCPortLintTests(),
-        LedOutputHeuristicTests: LedOutputHeuristicTests(),
     }
     fixtures: set[tuple[type, str]] = set()
     pytest_fixtures: set[str] = set()
