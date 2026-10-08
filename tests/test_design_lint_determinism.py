@@ -67,6 +67,12 @@ class DesignLintDeterminismTests:
             keys = [pin for pin, _value in metadata]
             assert len(keys) == 24
             assert keys == sorted(keys)
+        assert dict(parsed_pin_metadata["pin_functions"]) == {
+            f"J1.{number}": f"FUNCTION_{number}" for number in range(1, 25)
+        }
+        assert dict(parsed_pin_metadata["pin_electrical_types"]) == {
+            f"J1.{number}": "passive" for number in range(1, 25)
+        }
         fault = reports["fault"]
         assert fault["status"] == "REVIEW"
         assert {"connector.repeated_pin_function", "net.numbered_returns"} <= {

@@ -1831,9 +1831,9 @@ is not a reason by itself to expand its scope or change its default policy.
   one-letter GND suffix extension without treating similar names as a common
   net or changing review disposition. The v32 extension adds a synthetic
   24-pin library symbol to the three-process report probe. It verifies that all
-  pin-function and electrical-type entries are present and serialized in key
-  order. `read_netlist` now sorts pin numbers before building these maps; the
-  change adds no lint rule or native KiCad result.
+  pin-function and electrical-type entries have their expected values and are
+  serialized in key order. `read_netlist` now sorts pin numbers before
+  building these maps; the change adds no lint rule or native KiCad result.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
