@@ -346,6 +346,9 @@ class HostedCiTests(unittest.TestCase):
             patch("kicad_tooling.ci_hosted.led_rail_fixture_lane") as led_fixture,
             patch("kicad_tooling.ci_hosted.two_pin_component_fixture_lane") as component_fixture,
             patch(
+                "kicad_tooling.ci_hosted.component_peer_power_output_fixture_lane"
+            ) as peer_power_fixture,
+            patch(
                 "kicad_tooling.ci_hosted.component_rating_fixtures_lane"
             ) as voltage_rating_fixture,
             patch("kicad_tooling.ci_hosted.power_sequence_fixture_lane") as sequence_fixture,
@@ -410,6 +413,12 @@ class HostedCiTests(unittest.TestCase):
             log=log,
         )
         component_fixture.assert_called_once_with(
+            self.root,
+            project="controller",
+            image="fixture@sha256:" + "a" * 64,
+            log=log,
+        )
+        peer_power_fixture.assert_called_once_with(
             self.root,
             project="controller",
             image="fixture@sha256:" + "a" * 64,

@@ -6378,32 +6378,6 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                 raise ValueError(f"Native USB fixture omitted {netlist_path.name}")
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
-            expected_assignments = (
-                {"U1.2": ("VOUT",), "U2.2": ()}
-                if case == "fault"
-                else {"U1.2": ("VOUT_A",), "U2.2": ("VOUT_B",)}
-            )
-            actual_assignments = {
-                pin: tuple(sorted(net for net, pins in observed.nets.items() if pin in pins))
-                for pin in expected_assignments
-            }
-            if actual_assignments != expected_assignments:
-                raise ValueError(
-                    f"Native {case} expected schematic output assignments "
-                    f"{expected_assignments}, observed {actual_assignments}"
-                )
-            if (
-                observed.component_symbols.get("U1") != "Synthetic:PowerModule"
-                or observed.component_symbols.get("U2") != "Synthetic:PowerModule"
-                or observed.component_pin_numbers.get("U1") != ("1", "2")
-                or observed.component_pin_numbers.get("U2") != ("1", "2")
-                or observed.pin_electrical_types.get("U1.2") != "power_out"
-                or observed.pin_electrical_types.get("U2.2") != "power_out"
-            ):
-                raise ValueError(
-                    f"Native {case} export omitted the exact peer symbol, pin inventory, "
-                    "or native power_out pin types"
-                )
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -8184,6 +8158,32 @@ def component_peer_power_output_fixture_lane(
                 raise ValueError(f"Native peer power-output fixture omitted {netlist_path.name}")
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
+            expected_assignments = (
+                {"U1.2": ("VOUT",), "U2.2": ()}
+                if case == "fault"
+                else {"U1.2": ("VOUT_A",), "U2.2": ("VOUT_B",)}
+            )
+            actual_assignments = {
+                pin: tuple(sorted(net for net, pins in observed.nets.items() if pin in pins))
+                for pin in expected_assignments
+            }
+            if actual_assignments != expected_assignments:
+                raise ValueError(
+                    f"Native {case} expected schematic output assignments "
+                    f"{expected_assignments}, observed {actual_assignments}"
+                )
+            if (
+                observed.component_symbols.get("U1") != "Synthetic:PowerModule"
+                or observed.component_symbols.get("U2") != "Synthetic:PowerModule"
+                or observed.component_pin_numbers.get("U1") != ("1", "2")
+                or observed.component_pin_numbers.get("U2") != ("1", "2")
+                or observed.pin_electrical_types.get("U1.2") != "power_out"
+                or observed.pin_electrical_types.get("U2.2") != "power_out"
+            ):
+                raise ValueError(
+                    f"Native {case} export omitted the exact peer symbol, pin inventory, "
+                    "or native power_out pin types"
+                )
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
