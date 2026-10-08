@@ -1632,16 +1632,19 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v31. Fault/control and applicability reports cover synthetic DB9 returns,
-  same-net two-pin diodes, fuses, and SPST switches, direct and parallel-resistor output-driven LED
-  faults with a series-resistor control, generic peer-pin outliers, project-mapped connector
-  returns, series power paths, power sequences, UART-label discovery, STM32 CubeMX pin maps, the
-  multi-UART split-reference heuristic, SPI/UART voltage-domain review with exact-map controls, CAN
-  peer asymmetry, a connector-only SPI/UART boundary control, coverage-sensitive connector peer
-  finding suppression, mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
-  open-contact case, plus the typed contact-rating boundary and over-limit checks, DB9 grounding and
-  pin-connectivity requirements, multi-device MOSFET stress checks, source-mapped USB data-path
-  fault and topology controls, synthetic PCB signal-path rule coverage, synthetic keepout
+- **Status:** Implemented v32. Fault/control and applicability reports cover
+  synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
+  direct and parallel-resistor output-driven LED faults with a series-resistor
+  control, generic peer-pin outliers, project-mapped connector returns, series
+  power paths, power sequences, UART-label discovery, STM32 CubeMX pin maps,
+  the multi-UART split-reference heuristic, SPI/UART voltage-domain review
+  with exact-map controls, CAN peer asymmetry, a connector-only SPI/UART
+  boundary control, coverage-sensitive connector peer finding suppression,
+  mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
+  open-contact case, plus the typed contact-rating boundary and over-limit
+  checks, DB9 grounding and pin-connectivity requirements, multi-device
+  MOSFET stress checks, source-mapped USB data-path fault and topology
+  controls, synthetic PCB signal-path rule coverage, synthetic keepout
   restriction coverage, and switching-loop route ambiguity reports. The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -1826,7 +1829,11 @@ is not a reason by itself to expand its scope or change its default policy.
   candidates, numbered `GNDA1`/`GNDA2` candidates, and an explicit GND/RTN pin-
   function control across independent hash seeds. This covers the bounded
   one-letter GND suffix extension without treating similar names as a common
-  net or changing review disposition.
+  net or changing review disposition. The v32 extension adds a synthetic
+  24-pin library symbol to the three-process report probe. It verifies that all
+  pin-function and electrical-type entries are present and serialized in key
+  order. `read_netlist` now sorts pin numbers before building these maps; the
+  change adds no lint rule or native KiCad result.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
