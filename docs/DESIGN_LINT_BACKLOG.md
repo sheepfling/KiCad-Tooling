@@ -3232,16 +3232,21 @@ is not a reason by itself to expand its scope or change its default policy.
   not a supported peer-pair non-finding, precision datapoint, or proof of
   physical behavior. Only hashes and this summary are recorded here; the
   public source and generated exports remain outside the repository.
-  A source-level review of the public
-  [StickHub schematic](https://github.com/rbtsco/StickHub/blob/main/StickHub.kicad_sch)
-  on 2026-10-07 found numbered hub pin functions such as `USB1D+`, `USB1D-`,
-  through `USB7D+` and `USB7D-`. The repository declares CC BY-NC-SA 4.0 with
-  an additional commercial-use exemption. Its current commit could not be
-  pinned through the available network, and no source or native export was
-  copied or used as a project trial. This was a bounded alias-family lead only;
-  the tooling-owned synthetic multiport fixture now exercises these names at
-  the exact-version native gate. It does not add a public-board applicability
-  datapoint.
+  **Pinned public source lead (2026-10-08):** The public
+  [StickHub schematic][stickhub-schematic] at commit
+  `5f369a785bedc4b1d3b99222c841ac684e04f016` contains native pin-function
+  text for `USB1D+`/`USB1D-` through `USB7D+`/`USB7D-`. Its
+  [license][stickhub-license] is CC BY-NC-SA 4.0 with a commercial-use
+  exemption; the license SHA-256 is
+  `9962b75e57113a5df84ba397cec20b8d937a6d5e86dc407471f505ac5a064d88`, and
+  the schematic SHA-256 is
+  `bf7616095dbeb01b9f3a70f25da4e9916dc9b5424e8414c47dd5f204320d1932`.
+  This host has no `kicad-cli`, and the Docker daemon is unavailable, so no
+  native export or source-bound USB applicability result was produced. This
+  remains a pinned alias-family lead only; the tooling-owned synthetic
+  multiport fixture exercises these aliases at the exact-version native gate.
+  The public source stays outside the repository; only its commit, hashes, and
+  this bounded result are recorded here.
 - **Bundled KiCad-demo root replay (2026-10-07):** Re-ran the bounded scanner
   on 35 retained root-project netlists from the pinned KiCad 10.0.5 demo image.
   Every first/repeat XML hash matched its earlier receipt, and all 35 pairs
@@ -9031,3 +9036,5 @@ quality, or first-article continuity.
 [antmicro-cm4]: https://github.com/antmicro/cm4-baseboard/tree/d248c2921e8e7f4c9b30c96ea5f376d9b2780f1e
 [cynthion-hardware]: https://github.com/greatscottgadgets/cynthion-hardware/tree/13aa71c2fb0be3837cd2ec580ee5d2c25fc1c678
 [cynthion-license]: https://github.com/greatscottgadgets/cynthion-hardware/blob/13aa71c2fb0be3837cd2ec580ee5d2c25fc1c678/LICENSE
+[stickhub-schematic]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/StickHub.kicad_sch
+[stickhub-license]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/LICENSE.md
