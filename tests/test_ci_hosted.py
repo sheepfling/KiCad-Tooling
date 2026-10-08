@@ -2928,10 +2928,10 @@ class SerialPeerReferenceBondFixtureDefinitionTests(unittest.TestCase):
         )
         expected_hashes = {
             "serial-reference-bond-control.kicad_sch": (
-                "3d5a3a4e332fd4a4fbc4cc5387e8fc7f5aca37cc06f4c85e215cea296dd9e92e"
+                "bd2be1be71971943711f2fb6276695bddc0811b03e5e097dbdad7886b0032ae4"
             ),
             "serial-reference-bond-fault.kicad_sch": (
-                "d7517285b3106a2c3f895de8d8f24d782a844b8de388fce0492e9a26a4ab05f4"
+                "2998d62799de92c5f7fca688ef219464381d48562721f088e3fbf9d60ad7abb3"
             ),
             "serial-peer-map.json": (
                 "0d224c8c6d59073902f21dee6ac9cdc6f7191b6659b6cff5bff437be65527c0b"
@@ -3027,8 +3027,8 @@ class NativeSerialPeerFixtureTests(unittest.TestCase):
             "b1c218d4e398b4ae9d311732a2a8227887e3e8cce1b9759fbd2aa2f0be4320fd"
         )
         expected_bond_source_hashes = {
-            "control": "3d5a3a4e332fd4a4fbc4cc5387e8fc7f5aca37cc06f4c85e215cea296dd9e92e",
-            "fault": "d7517285b3106a2c3f895de8d8f24d782a844b8de388fce0492e9a26a4ab05f4",
+            "control": "bd2be1be71971943711f2fb6276695bddc0811b03e5e097dbdad7886b0032ae4",
+            "fault": "2998d62799de92c5f7fca688ef219464381d48562721f088e3fbf9d60ad7abb3",
         }
         expected_bond_map_hash = "0d224c8c6d59073902f21dee6ac9cdc6f7191b6659b6cff5bff437be65527c0b"
         self.assertEqual(hashlib.sha256(fixture.read_bytes()).hexdigest(), expected_source_hash)
@@ -3634,7 +3634,7 @@ class NativeUsbDataPathFixtureTests(unittest.TestCase):
                 self.assertEqual(series_peer_fault["lint_status"], "REVIEW")
                 self.assertEqual(
                     series_peer_fault["usb_reference_findings"],
-                    "J1 / U1: USB reference-domain review",
+                    "J1 / U1: USB reference-domain review (port 1)",
                 )
                 fault = results["usb-data-path-fixture/external-bypass"]
                 self.assertEqual(fault["status"], "PASS")
@@ -4122,28 +4122,28 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
                 case_expectations = (
                     (
                         "same-net-passive",
-                        "same-net.kicad_sch",
+                        "two-pin-components/same-net.kicad_sch",
                         "component.two_pin_passive_same_net",
                         "R1 (10k resistor) has both pins on one net",
                         "REVIEW",
                     ),
                     (
                         "distinct-nets-passive",
-                        "distinct-nets.kicad_sch",
+                        "two-pin-components/distinct-nets.kicad_sch",
                         "component.two_pin_passive_same_net",
                         "none",
                         "PASS",
                     ),
                     (
                         "same-net-diode",
-                        "same-net-diode.kicad_sch",
+                        "two-pin-components/same-net-diode.kicad_sch",
                         "component.two_pin_diode_same_net",
                         "D1 (1N4148 diode) has both pins on one net",
                         "REVIEW",
                     ),
                     (
                         "distinct-nets-diode",
-                        "distinct-nets-diode.kicad_sch",
+                        "two-pin-components/distinct-nets-diode.kicad_sch",
                         "component.two_pin_diode_same_net",
                         "none",
                         "PASS",

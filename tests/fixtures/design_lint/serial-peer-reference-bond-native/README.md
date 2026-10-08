@@ -16,8 +16,8 @@ detail. The map remains unchanged across both cases.
 
 | File                                      | SHA-256                                                            |
 | ----------------------------------------- | ------------------------------------------------------------------ |
-| `serial-reference-bond-control.kicad_sch` | `3d5a3a4e332fd4a4fbc4cc5387e8fc7f5aca37cc06f4c85e215cea296dd9e92e` |
-| `serial-reference-bond-fault.kicad_sch`   | `d7517285b3106a2c3f895de8d8f24d782a844b8de388fce0492e9a26a4ab05f4` |
+| `serial-reference-bond-control.kicad_sch` | `bd2be1be71971943711f2fb6276695bddc0811b03e5e097dbdad7886b0032ae4` |
+| `serial-reference-bond-fault.kicad_sch`   | `2998d62799de92c5f7fca688ef219464381d48562721f088e3fbf9d60ad7abb3` |
 | `serial-peer-map.json`                    | `0d224c8c6d59073902f21dee6ac9cdc6f7191b6659b6cff5bff437be65527c0b` |
 
 ## Native evidence
