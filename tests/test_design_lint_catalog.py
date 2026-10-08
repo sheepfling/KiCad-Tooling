@@ -218,10 +218,7 @@ from tests.test_two_pin_crystals import (
 from tests.test_two_pin_crystals import (
     lint_report as two_pin_crystal_lint_report,
 )
-from tests.test_two_pin_diodes import (
-    TwoPinDiodeLintTests,
-    diode_netlist,
-)
+from tests.test_two_pin_diodes import diode_netlist
 from tests.test_two_pin_diodes import (
     lint_report as two_pin_diode_lint_report,
 )
@@ -443,7 +440,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         Stm32PinMapTests: Stm32PinMapTests(),
         SerialPeerReferenceReviewTests: SerialPeerReferenceReviewTests(),
         UsbPeerReferenceReviewTests: UsbPeerReferenceReviewTests(),
-        TwoPinDiodeLintTests: TwoPinDiodeLintTests(),
         PowerPathTests: PowerPathTests(),
         PowerSequenceTests: PowerSequenceTests(),
         PowerPathFixtureLaneTests: PowerPathFixtureLaneTests(),

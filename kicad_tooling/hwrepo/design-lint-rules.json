@@ -296,17 +296,17 @@
         "The schematic netlist does not prove copper connectivity, component behavior, footprint pin mapping, or physical population. DNP components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_diodes.TwoPinDiodeLintTests.test_detects_exact_device_diode_families_on_one_net"
+        "tests.test_two_pin_diodes.test_detects_exact_device_diode_families_on_one_net"
       ],
       "valid_control_fixtures": [
-        "tests.test_two_pin_diodes.TwoPinDiodeLintTests.test_native_schematic_sources_match_reviewed_hashes",
-        "tests.test_two_pin_diodes.TwoPinDiodeLintTests.test_distinct_pin_nets_are_the_no_finding_control",
-        "tests.test_two_pin_diodes.TwoPinDiodeLintTests.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_diodes.TwoPinDiodeLintTests.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_diodes.test_native_schematic_sources_match_reviewed_hashes",
+        "tests.test_two_pin_diodes.test_distinct_pin_nets_are_the_no_finding_control",
+        "tests.test_two_pin_diodes.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
+        "tests.test_two_pin_diodes.test_rule_policy_and_exact_ignore_are_project_configurable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_diodes.TwoPinDiodeLintTests.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+        "tests.test_two_pin_diodes.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
