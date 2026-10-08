@@ -2,9 +2,9 @@
 
 Tooling owns the shared GitHub job definitions as well as their Python implementation. A project
 repository keeps four small callers, project data, a reviewed `requirements-tooling.txt`, and its
-own triggers and selection controls. The public
-[template workflows](https://github.com/sheepfling/KiCad-Team-Workflow-Template/tree/main/.github/workflows)
-show the complete callers.
+own triggers and selection controls. The public template's `.github/workflows/`
+directory shows the complete callers. Find the template through
+[GitHub repository search](https://github.com/search?q=KiCad-Team-Workflow-Template&type=repositories).
 
 ## Workflow interfaces
 
@@ -28,7 +28,7 @@ permissions:
 jobs:
   acceptance:
     name: Verification
-    uses: sheepfling/KiCad-Tooling/.github/workflows/kicad-template.yml@<reviewed-40-character-commit>
+    uses: <organization>/KiCad-Tooling/.github/workflows/kicad-template.yml@<reviewed-40-character-commit>
 ```
 
 Keep cancellation policy and manual input menus in the caller. Do not copy the reusable jobs,

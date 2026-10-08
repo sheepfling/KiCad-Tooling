@@ -7,6 +7,7 @@ Pydantic model from hwrepo.models; dictionaries do not cross this boundary.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import TYPE_CHECKING, TypeVar, cast
 
@@ -18,6 +19,33 @@ if TYPE_CHECKING:
     from .models import CadProviderIdentity
 
 Model = TypeVar("Model", bound=BaseModel)
+
+
+@dataclass(frozen=True)
+class KiCadErcItem:
+    """Small typed projection of one native ERC detail item."""
+
+    description: str | None
+    x: int | float | None
+    y: int | float | None
+
+
+@dataclass(frozen=True)
+class KiCadErcViolation:
+    """Native ERC rule result used by deterministic fixture comparisons."""
+
+    type: str
+    severity: str
+    description: str | None
+    items: tuple[KiCadErcItem, ...]
+
+
+@dataclass(frozen=True)
+class KiCadErcReport:
+    """Versioned, narrow projection of a KiCad ERC JSON report."""
+
+    kicad_version: str
+    violations: tuple[KiCadErcViolation, ...]
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -76,6 +104,98 @@ def _read_external_json(path: Path) -> object:
         )
     except (OSError, UnicodeError, ValueError) as exc:
         raise ValueError(f"{path}: invalid KiCad JSON: {exc}") from exc
+
+
+def read_kicad_erc_report(path: Path) -> KiCadErcReport:
+    """Decode native ERC JSON into the exact fields used by fixture checks."""
+    document = _read_external_json(path)
+    if not isinstance(document, dict):
+        raise ValueError(f"{path}: expected an ERC report object")  # noqa: TRY004 - input boundary
+    report = cast(dict[str, object], document)
+    version = report.get("kicad_version")
+    if not isinstance(version, str) or not version.strip():
+        raise ValueError(f"{path}: ERC report has no KiCad version")
+    sheets = report.get("sheets")
+    if not isinstance(sheets, list):
+        raise ValueError(f"{path}: ERC report sheets must be a list")  # noqa: TRY004 - input boundary
+
+    violations: list[KiCadErcViolation] = []
+    for sheet_index, raw_sheet in enumerate(cast(list[object], sheets)):
+        if not isinstance(raw_sheet, dict):
+            raise ValueError(f"{path}: ERC sheet {sheet_index} must be an object")  # noqa: TRY004 - input boundary
+        raw_violations = cast(dict[str, object], raw_sheet).get("violations", [])
+        if not isinstance(raw_violations, list):
+            raise ValueError(f"{path}: ERC sheet {sheet_index} violations must be a list")  # noqa: TRY004 - input boundary
+        for violation_index, raw_violation in enumerate(cast(list[object], raw_violations)):
+            if not isinstance(raw_violation, dict):
+                raise ValueError(  # noqa: TRY004 - input boundary
+                    f"{path}: ERC sheet {sheet_index} violation {violation_index} must be an object"
+                )
+            values = cast(dict[str, object], raw_violation)
+            violation_type = values.get("type")
+            severity = values.get("severity")
+            if not isinstance(violation_type, str) or not violation_type.strip():
+                raise ValueError(
+                    f"{path}: ERC sheet {sheet_index} violation {violation_index} has no type"
+                )
+            if not isinstance(severity, str) or not severity.strip():
+                raise ValueError(
+                    f"{path}: ERC sheet {sheet_index} violation {violation_index} has no severity"
+                )
+            description = values.get("description")
+            if description is not None and not isinstance(description, str):
+                raise ValueError(
+                    f"{path}: ERC sheet {sheet_index} violation {violation_index} has an invalid description"
+                )
+            raw_items = values.get("items", [])
+            if not isinstance(raw_items, list):
+                raise ValueError(  # noqa: TRY004 - input boundary
+                    f"{path}: ERC sheet {sheet_index} violation {violation_index} items must be a list"
+                )
+            items: list[KiCadErcItem] = []
+            for item_index, raw_item in enumerate(cast(list[object], raw_items)):
+                if not isinstance(raw_item, dict):
+                    raise ValueError(  # noqa: TRY004 - input boundary
+                        f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} must be an object"
+                    )
+                item = cast(dict[str, object], raw_item)
+                item_description = item.get("description")
+                if item_description is not None and not isinstance(item_description, str):
+                    raise ValueError(
+                        f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} has an invalid description"
+                    )
+                raw_position = item.get("pos", {})
+                if not isinstance(raw_position, dict):
+                    raise ValueError(  # noqa: TRY004 - input boundary
+                        f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} position must be an object"
+                    )
+                position = cast(dict[str, object], raw_position)
+                coordinates: list[int | float | None] = []
+                for axis in ("x", "y"):
+                    coordinate = position.get(axis)
+                    if coordinate is not None and (
+                        isinstance(coordinate, bool) or not isinstance(coordinate, (int, float))
+                    ):
+                        raise ValueError(
+                            f"{path}: ERC sheet {sheet_index} violation {violation_index} item {item_index} has an invalid {axis} coordinate"
+                        )
+                    coordinates.append(coordinate)
+                items.append(
+                    KiCadErcItem(
+                        description=item_description,
+                        x=coordinates[0],
+                        y=coordinates[1],
+                    )
+                )
+            violations.append(
+                KiCadErcViolation(
+                    type=violation_type,
+                    severity=severity,
+                    description=description,
+                    items=tuple(items),
+                )
+            )
+    return KiCadErcReport(kicad_version=version, violations=tuple(violations))
 
 
 def kicad_variant_names(path: Path) -> tuple[str, ...]:

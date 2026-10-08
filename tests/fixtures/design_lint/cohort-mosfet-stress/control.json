@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "required_states": ["off", "on"],
+  "states": {
+    "off": {
+      "description": "synthetic MOSFET disabled state",
+      "assumptions": "steady state only",
+      "source": "synthetic fixture basis",
+      "nets": {
+        "D_NET": 0,
+        "G_NET": 0,
+        "S_NET": 0
+      }
+    },
+    "on": {
+      "description": "synthetic MOSFET enabled state",
+      "assumptions": "steady state only",
+      "source": "synthetic fixture basis",
+      "nets": {
+        "D_NET": 48,
+        "G_NET": 10,
+        "S_NET": 0
+      }
+    }
+  }
+}

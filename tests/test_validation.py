@@ -11,10 +11,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 from kicad_tooling.check_all import check_all
+from kicad_tooling.hwrepo.contracts import parse_model_text
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     ComponentIdentity,
+    ContractCoachReport,
     IgnoredChecks,
     NetlistIdentityReport,
     PcbOnlyValidationContract,
@@ -374,6 +376,42 @@ class ValidationTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "Similar connector pin functions.*PWR"):
             check_netlist(path, contract)
+
+    def test_read_netlist_retains_unconnected_and_unnamed_symbol_pin_numbers(self) -> None:
+        path = self.root / "connector-pins.xml"
+        path.write_text(
+            '<export><components><comp ref="J1"><value>Synthetic</value>'
+            '<libsource lib="Synthetic" part="Port"/></comp></components>'
+            '<libparts><libpart lib="Synthetic" part="Port"><pins>'
+            '<pin num="1" name="TX" type="passive"/>'
+            '<pin num="2" name="~" type="open_collector"/>'
+            '<pin num="3" name="SHIELD" type="input"/>'
+            "</pins></libpart></libparts><nets>"
+            '<net name="TX"><node ref="J1" pin="1"/></net>'
+            '<net name="unconnected-(J1-SHIELD-Pad3)"><node ref="J1" pin="3"/>'
+            "</net></nets></export>",
+            encoding="utf-8",
+        )
+        observed = read_netlist(path)
+        self.assertEqual(observed.component_pin_numbers["J1"], ("1", "2", "3"))
+        self.assertEqual(observed.nets, {"TX": ("J1.1",)})
+        self.assertEqual(
+            observed.unconnected_nets,
+            {"unconnected-(J1-SHIELD-Pad3)": ("J1.3",)},
+        )
+        self.assertEqual(
+            observed.pin_electrical_types,
+            {"J1.1": "passive", "J1.2": "open_collector", "J1.3": "input"},
+        )
+        report = ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id="native-unconnected-roundtrip",
+            observed=observed,
+        )
+        self.assertEqual(
+            parse_model_text(report.model_dump_json(), ContractCoachReport),
+            report,
+        )
 
     def test_native_pcb_exports_netlist_for_empty_contract_and_names_return_review(self) -> None:
         self.fixture()

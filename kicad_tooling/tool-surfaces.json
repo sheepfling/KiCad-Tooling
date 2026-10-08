@@ -123,6 +123,7 @@
       "module": "kicad_tooling.design_lint",
       "commands": [],
       "options": [
+        "--catalog",
         "--format",
         "--native-summary",
         "--project",
@@ -702,6 +703,10 @@
       ]
     },
     {
+      "name": "list_design_lint_rules",
+      "parameters": []
+    },
+    {
       "name": "list_projects",
       "parameters": []
     },
@@ -1093,7 +1098,7 @@
         "check_project"
       ],
       "alignment": "aligned",
-      "reason": "Both dispatch the same portable/native/electrical project verification, preserve connector pin and split return hints on failed native contract checks, run design lint on PCB and schematic native checks, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
+      "reason": "Both dispatch the same portable/native/electrical project verification, preserve repeated pin plus cross-symbol return, named supply, numbered supply rail, and missing connector return hints on failed native contract checks, run design lint on PCB and schematic native checks including complementary-pair assignment review, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1134,11 +1139,12 @@
         "capture_contract"
       ],
       "alignment": "aligned",
-      "reason": "Both inspect source-bound native evidence, flag repeated connector pin functions and numbered return nets for review, and can capture an unreviewed contract candidate.",
+      "reason": "Both inspect source-bound native evidence, flag repeated connector pin functions, cross-symbol return and named supply functions, and numbered return and positive-supply nets for review, and can capture an unreviewed contract candidate. Unconnected named connector/component supply and return pins, unconnected I2C/SPI/USB-C/CAN pins, missing and low-equivalent I2C pull-up hints, active-low SPI chip-select bias hints, connected reset/enable/boot input bias prompts, direct supply-to-return LED bridge review hints, CAN termination hints, and complementary-pair assignment hints are specific to design lint.",
       "scope": "core",
       "gaps": [],
       "constraints": [
-        "CLI selects --cli and --output; MCP fixes the command and capture directory, and existing evidence must be an allowed repository artifact."
+        "CLI selects --cli and --output; MCP fixes the command and capture directory, and existing evidence must be an allowed repository artifact.",
+        "A hash-valid native netlist without component records is blocked, even when the export command returned success."
       ],
       "parity_tests": [
         "tests.test_mcp_parity.McpParityTests.test_contract_inspection_parity",
@@ -1151,17 +1157,62 @@
         "kicad_tooling.design_lint"
       ],
       "mcp": [
-        "inspect_design_lint"
+        "inspect_design_lint",
+        "list_design_lint_rules"
       ],
       "alignment": "aligned",
-      "reason": "Both evaluate source-bound heuristic findings with the same project-owned rule overrides and exact ignores.",
+      "reason": "Both evaluate the same source-bound heuristic findings and project-owned decisions, including source-matched return-role review across connector symbols and generic supply-role review when connector contacts share the same exact authored voltage_domain. Source-matched peer_assignment_group entries scope generic or signal connector comparisons only when every participating connector has current review evidence; return and supply comparisons remain cross-group. Partial or stale group evidence preserves the broad comparison. The surfaces also provide prompts for differing generic peer connector pins with incomplete role metadata and matching power/return pins on repeated non-connector symbols that use different nets; checks for supported two-pin resistor/capacitor/inductor symbols whose pins share one net, exact two-pin Device:Fuse and Device:Polyfuse symbols bypassed by one net, and exact two-pin Device:FerriteBead family symbols bypassed by one net; flag connector/capacitor-only nets without a visible local DC anchor, report connector interface inventory and return-distribution coverage, numbered positive-supply rails, name-based complementary-pair review prompts, opt-in project aliases bound to exact native symbol identities with stale-map blocking, independently configurable opt-in schematic wire/pin/label/crossing/T-junction and coincident free-text anchor review rules across source-hashed hierarchical sheet instances, mapped I2C address and likely unlisted-responder coverage prompts, unconnected bus pins, I2C pull-up hints resolved only by exact source-bound mapped-array requirements with passing authored checks, and address hints, active-low SPI chip-select bias hints, source-hashed review prompts for assigned UART TX/RX pairs omitted from project serial-peer maps and unmapped UART-like peers across voltage-named rails, with bounded endpoint, direct-link, rail-comparison, exact-map suppression, and review-group coverage counts, and direct UART peers, including connector endpoints, whose explicit native reference pins use separate nets and exact bonded maps verify the named passive bond before suppressing the serial prompt, direct USB 2.0 D+/D− connector-to-PHY links whose explicit reference pins use separate nets, connected reset/enable/boot input bias prompts resolved only by exact source-bound control-input requirements with passing endpoint and driver checks, CAN termination, external-protection, crystal load-network, regulator feedback, RC filter, PHY-specific USB data-path topology and project-authored common/separate reference-pin decisions, exact series power-path and power-sequence dependency maps, source-hashed project-local CubeMX IOC comparisons against explicit STM32 package-pin, symbol-pin, net, signal, and label maps, and unmapped-device review prompts, PCB decoupling placement with optional project-set capacitor-return-to-native-connected-via distance limits, PCB track-width and explicitly mapped adjacent reference-plane centerline coverage, switching-loop geometry and return-plane, and differential-pair native DRC rule coverage, and include the digest-bound rule catalog with predicates, limitations, supported evidence, and fault/control regressions. Schematic geometry reports bind the root, canonical source-tree digest, child source hashes, and exact sheet-instance paths. PCB geometry measurements bind exact mapped pins, native pad centers, fitted footprints, connectivity, copper stack, KiCad version, board source, and probe digest. PCB track-width measurements bind exact native segment UUIDs, layers, integer widths and endpoints to the same KiCad version, board source and probe digest. PCB reference-plane measurements bind mapped net/layer scopes to exact rational centerline coverage over each immediately adjacent same-net filled-zone layer, always list tracks excluded below the authored minimum, and support the per-requirement review_excluded_short_tracks option; mapped endpoint-via centers in reference-zone holes remain context without claiming hole ownership or return-current continuity. PCB snapshot schema 8 records track geometry kind and pad/via/track endpoint contacts; schema 9 adds canonical filled-zone island outlines and holes; current source-bound KiCad 10 captures use schema 10 and include target aperture shape and diameter in access-probe observations. A synthetic native via-antipad fixture repeats exact 2799/4000 centerline coverage with 0.75 fault and 0.5 control thresholds on KiCad 10.0.0 and 10.0.5. An opt-in switching-loop edge map can resolve unique native trace chains, report per-edge centerlines and lengths, and identify filled-island contour area while leaving component internals and full routed-loop area unsupported. Differential-pair coverage binds the project-authored pair and bounds to its native rule file, ignored-check evidence, board, and DRC receipt.",
       "scope": "core",
       "gaps": [],
       "constraints": [
-        "MCP accepts only a repository-relative generated native summary; CLI accepts a path to the same evidence."
+        "MCP accepts only a repository-relative generated native summary; CLI accepts a path to the same evidence.",
+        "Both surfaces block source-bound lint when the hash-valid native netlist contains no component records.",
+        "The standalone rule catalog can be listed without selecting a project or native evidence.",
+        "Connector review coverage requires project-owned connector inventory basis and per-candidate interface or not-applicable decisions; the prefix scan is not exhaustive.",
+        "Connector peer-assignment groups require a group ID and reviewed basis per connector. They scope generic and signal-function comparisons only when every participating connector has current, complete, source-matched coverage; ground/return and supply role comparisons remain cross-group, and incomplete or stale coverage keeps the broad comparison.",
+        "STM32 pin maps require a reviewed complete package-pin inventory and exact project-local IOC expectations; unsupported or ambiguous IOC pin assignments block the comparison.",
+        "The pcb_protection_path report binds exact project-mapped connector/protector pads, native connectivity, configured pad-distance and reference-via limits, and the native PCB snapshot digest through the same typed service for CLI and MCP.",
+        "mapped_check_runs distinguishes NOT_CONFIGURED from EVALUATED for USB data-path, series power-path, and power-sequence maps; evaluated entries bind exact map and native-netlist digests and count authored map entries and emitted findings.",
+        "digital_peer_voltage_coverage reports bounded named-function direct U/IC scope for SPI and UART/USART, binds counts to the native netlist and authored-map provenance, and does not claim complete interface discovery.",
+        "USB path maps may record exact connector and PHY reference pins and an explicit common_net, separate_nets, or bonded policy; bonded maps also name the exact passive two-pin component, value, footprint, and side-pin net assignments. CLI and MCP apply the same source-bound check, while schematic assignments do not prove physical conduction or PCB copper continuity.",
+        "usb_peer_reference_coverage binds each recognized connector/PHY USB endpoint group and its SUPPORTED, INCOMPLETE, or DNP disposition, plus supported paths, common or separate references, map-covered paths, and emitted candidates, to the native netlist and typed USB map; a supported endpoint group does not imply a matched peer path, and bounded status does not claim complete USB discovery.",
+        "serial_peer_reference_coverage binds each native-function or channel-label UART link identity, signal nets and pins, and INCOMPLETE, COMMON_REFERENCE, SEPARATE_REFERENCE_REVIEW, or MAP_COVERED_SEPARATE_REFERENCE disposition to the native netlist and authored-map provenance, alongside balanced counts and emitted review groups; its bounded status does not claim complete serial-interface discovery."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_design_lint_parity"
+        "tests.test_mcp_parity.McpParityTests.test_design_lint_parity",
+        "tests.test_mcp_parity.McpParityTests.test_standard_and_reviewed_custom_connector_identity_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_empty_native_netlist_blocks_design_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_serial_peer_voltage_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_serial_connector_reference_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_peer_component_power_pin_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_i2c_mapped_array_hint_resolution_cli_mcp_parity",
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_bonded_uart_reference_map_suppresses_only_valid_bond_on_cli_and_mcp",
+        "tests.test_mcp_parity.McpParityTests.test_design_lint_rule_catalog_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_passive_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_diode_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_fuse_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_ferrite_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_schematic_geometry_opt_in_parity",
+        "tests.test_mcp_parity.McpParityTests.test_reused_child_sheet_geometry_source_binding_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_schematic_pin_tip_on_wire_interior_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_schematic_label_near_wire_endpoint_cli_mcp_parity",
+        "tests.test_mcp_parity.McpParityTests.test_i2c_address_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_external_protection_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_crystal_network_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_regulator_feedback_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_rc_filter_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_usb_data_path_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_usb_peer_reference_lint_cli_mcp_parity",
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_dual_uart_split_reference_localizes_one_header_on_cli_and_mcp",
+        "tests.test_mcp_parity.McpParityTests.test_power_path_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_power_sequence_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_mapped_output_to_enable_cycle_parity",
+        "tests.test_mcp_parity.McpParityTests.test_connector_return_distribution_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_pcb_decoupling_track_width_and_switching_loop_map_parity",
+        "tests.test_mcp_parity.McpParityTests.test_pcb_differential_pair_rule_coverage_parity",
+        "tests.test_mcp_parity.McpParityTests.test_stm32_cube_mx_pin_map_parity"
       ]
     },
     {
@@ -1651,7 +1702,7 @@
         "init_electrical"
       ],
       "alignment": "aligned",
-      "reason": "Both create pending electrical requirements without replacing reviewed inputs.",
+      "reason": "Both create pending electrical requirements, including PCB return-path applicability and per-contact current-rating review, without replacing reviewed inputs.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1689,7 +1740,7 @@
         "analyze_electrical"
       ],
       "alignment": "aligned",
-      "reason": "Both run reviewed grounding, connector pin relationships, numbered return-net coverage, power and frequency checks using fresh or saved native evidence.",
+      "reason": "Both run reviewed grounding, exact PCB return-pad copper connectivity and net-tie requirements, connected copper-zone identities, filled-island counts, per-pad island indexes and islands without observed pad anchors, geometry-derived via identities with layer spans, positions, dimensions, types, multiplicities and per-pad component membership, and retain native track segment/arc kind plus pad/via copper contacts at each endpoint. They also check connector pin relationships and per-contact current-rating requirements, I2C direct resistor and explicitly mapped array channel requirements, CAN, USB-C, SPI, UART peer reference policies including exact passive bond components between distinct reference nets, mapped direct digital-peer voltage limits, exact component voltage-rating and stress requirements, state-aware exact three-pin MOSFET VDS/VGS intervals, RS-485 topology, power source/load membership contracts, numbered return-net coverage, and power/frequency using source-bound native evidence. A mapped bond checks schematic component and pin-to-net assignments; it does not prove physical conduction or PCB copper continuity.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1697,7 +1748,18 @@
       ],
       "parity_tests": [
         "tests.test_electrical_parity.ElectricalParityTests.test_saved_native_analysis_is_root_relative_and_preserves_native_failure",
+        "tests.test_electrical_parity.ElectricalParityTests.test_pcb_return_path_contract_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_parity.ElectricalParityTests.test_connector_pin_relationships_match_cli_and_mcp_analysis",
+        "tests.test_electrical_parity.ElectricalParityTests.test_bus_requirements_match_cli_and_mcp_analysis",
+        "tests.test_electrical_parity.ElectricalParityTests.test_i2c_array_pullups_match_cli_and_mcp_for_pass_and_fault",
+        "tests.test_electrical_parity.ElectricalParityTests.test_serial_peer_requirements_match_cli_and_mcp_analysis",
+        "tests.test_electrical_parity.ElectricalParityTests.test_serial_peer_bonded_reference_matches_cli_and_mcp_for_pass_and_fault",
+        "tests.test_electrical_parity.ElectricalParityTests.test_digital_peer_voltage_requirements_match_cli_and_mcp",
+        "tests.test_electrical_parity.ElectricalParityTests.test_component_voltage_rating_requirement_matches_cli_and_mcp",
+        "tests.test_electrical_parity.ElectricalParityTests.test_connector_contact_rating_requirement_matches_cli_and_mcp",
+        "tests.test_electrical_parity.ElectricalParityTests.test_mosfet_state_stress_requirement_matches_cli_and_mcp",
+        "tests.test_electrical_parity.ElectricalParityTests.test_rs485_contract_matches_cli_and_mcp_for_pass_and_fault",
+        "tests.test_electrical_parity.ElectricalParityTests.test_power_connectivity_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_parity.ElectricalParityTests.test_external_fixed_simulator_success_and_wrong_version_match_cli"
       ]
     },
@@ -1893,12 +1955,20 @@
       ],
       "mcp": [],
       "alignment": "cli_only",
-      "reason": "Hosted runner orchestration belongs to Actions and the operator CLI; project selection and portable checks remain available through plan_impact and check_scope in MCP. Preview logging and Actions summaries wrap the same renderer used by MCP export_3d.",
+      "reason": "Hosted runner orchestration belongs to Actions and the operator CLI; the native lane runs source-bound PCB return-path controls, alternate-layer connected/open cases with retained via geometry, component membership, and per-track endpoint pad/via contacts; connected/split-plane fixtures with SMD and plated through-hole pads; an extra filled island without a pad anchor; fitted/DNP net-tie controls; valid/bridged separate-domain isolation cases; a mapped 4/15 signal-centerline coverage fault with a 0.25 valid control and repeated source-bound geometry capture; and probe-envelope geometry fault/control fixtures through the exact project image. Package acceptance runs these fixtures on the reviewed KiCad 10.0.0 and 10.0.5 images. Project selection and portable checks remain available through plan_impact and check_scope in MCP. Preview logging and Actions summaries wrap the same renderer used by MCP export_3d.",
       "scope": "administration",
       "gaps": [],
       "constraints": [],
       "exception": "MCP does not schedule GitHub jobs, pull Docker images or run the release rehearsal. Its shared planning and check services expose the project, tag and shard decisions.",
-      "parity_tests": []
+      "parity_tests": [
+        "tests.test_ci_hosted.HostedCiTests.test_native_lane_cannot_pass_when_declared_electrical_fails",
+        "tests.test_ci_hosted.HostedCiTests.test_pcb_access_fixture_checks_native_probe_faults_controls_and_repeatability",
+        "tests.test_ci_hosted.HostedCiTests.test_pcb_access_fixture_rejects_an_untested_kicad_minor_before_native_execution",
+        "tests.test_ci_hosted.NativePcbAccessFixtureTests.test_native_probe_envelope_fixtures_on_supported_images",
+        "tests.test_ci_hosted.NativePcbAccessFixtureTests.test_pcb_geometry_probe_controls_on_supported_images",
+        "tests.test_ci_hosted.HostedCiTests.test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evidence",
+        "tests.test_ci_hosted.HostedCiTests.test_pcb_return_fixture_rejects_an_untested_kicad_minor_before_native_execution"
+      ]
     }
   ]
 }

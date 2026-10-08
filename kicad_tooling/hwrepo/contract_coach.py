@@ -325,7 +325,8 @@ def ready_report(
         )
     if native_status == "FAIL":
         actions.append(
-            "The native validation failed; inspect ERC, DRC and netlist checks separately."
+            "The validation summary is FAIL; inspect individual check states to distinguish "
+            "native export failures from contract or design-lint review findings."
         )
     if return_groups:
         actions.append(
@@ -437,6 +438,11 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Contra
         if command.returncode != 0 or command.error is not None:
             raise ValueError("Native netlist command evidence records a failed export")
         observed = read_netlist(netlist_path)
+        if not observed.components:
+            raise ValueError(
+                "Native netlist contains no component records; source-bound inventory and "
+                "design lint cannot be evaluated"
+            )
         if hashes(root, config.source_roots) != current:
             raise ValueError("Declared source changed while reading native evidence")
         return ready_report(
@@ -593,6 +599,8 @@ def text_report(report: ContractCoachReport, detail: str = "brief") -> str:
                 )
             for name, nodes in sorted(report.observed.nets.items()):
                 lines.append(f"UNREVIEWED net {name!r}: {', '.join(nodes)}")
+            for name, pins in sorted(report.observed.unconnected_nets.items()):
+                lines.append(f"UNCONNECTED native pin assignment {name!r}: {', '.join(pins)}")
     for issue in report.issues:
         lines.append(f"Blocked: {issue}")
     for action in report.next_actions:

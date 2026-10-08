@@ -60,11 +60,73 @@ def initialize(
         grounding=AnalysisPending(
             reason="Review every component's required ground pins and domains."
         ),
+        pcb_return_paths=AnalysisPending(
+            reason=(
+                "For PCB projects, identify connector/reference return pads and declare direct, "
+                "bonded, or intentionally isolated domains."
+            )
+        ),
         pin_connectivity=AnalysisPending(
             reason="Review repeated connector pin functions and declare required common or separate nets."
         ),
+        i2c_pullups=AnalysisPending(
+            reason="Identify each local I2C bus and review whether its fitted pull-up topology needs a local requirement."
+        ),
+        can_termination=AnalysisPending(
+            reason="Identify each CAN bus topology, local or external termination, and required resistor population."
+        ),
+        usb_c=AnalysisPending(
+            reason="Identify USB-C port roles, CC behavior, VBUS/GND pin assignments, and protection requirements."
+        ),
+        spi=AnalysisPending(
+            reason="Map each SPI controller, device, signal pin, chip-select owner, and any declared bridge path."
+        ),
+        serial_peers=AnalysisPending(
+            reason="Review UART TX/RX peer perspective, reference pins, and any level-shifted or external path."
+        ),
+        digital_peer_voltages=AnalysisPending(
+            reason=(
+                "For directly connected non-UART digital peers, map exact output/input pins and "
+                "review their guaranteed voltage ranges and operating conditions."
+            )
+        ),
+        component_power_ratings=AnalysisPending(
+            reason=(
+                "For in-scope parts, review exact datasheet power ratings, thermal derating "
+                "conditions, and worst-case dissipation sources."
+            )
+        ),
+        connector_contact_ratings=AnalysisPending(
+            reason=(
+                "For in-scope connector contacts, review exact part identity, pin/function/net "
+                "assignments, sourced contact-current limits and conditions, derating, and "
+                "maximum per-contact current; record not applicable when no scoped contacts need it."
+            )
+        ),
+        mosfet_stress=AnalysisPending(
+            reason=(
+                "For in-scope three-pin MOSFETs, review exact drain/gate/source identity, "
+                "required operating states, terminal-net potential intervals, and sourced VDS/VGS limits."
+            )
+        ),
+        rs485=AnalysisPending(
+            reason="Review RS-485 duplex topology, pair pin maps, endpoint termination, bias, transceiver fail-safe claims, and reference pins."
+        ),
+        control_inputs=AnalysisPending(
+            reason="Review each reset, enable, and boot-strap pin's required local or internal bias, control net, and approved driver set."
+        ),
+        test_access=AnalysisPending(
+            reason=(
+                "List each required rail, programming, and factory measurement net with its exact "
+                "schematic access pin, or record an explicit reason that access is not required. "
+                "Decide separately whether the PCB pad/mask stage applies."
+            )
+        ),
         power=AnalysisPending(
             reason="Author derated rail/load limits and reviewed startup/steady-state models."
+        ),
+        power_connectivity=AnalysisPending(
+            reason="Map every reviewed rail source group and all budgeted load pins to the schematic nets."
         ),
         high_frequency=AnalysisPending(
             reason="Determine frequency/edge requirements and reviewed AC/transient models."
@@ -102,7 +164,7 @@ def initialize(
         contract=relative,
         changed=(relative, checks.relative_to(root).as_posix()),
         next_actions=(
-            f"Open {relative}. All four sections are pending and cannot pass verification.",
+            f"Open {relative}. Pending sections cannot pass verification until reviewed.",
             f"Follow {GUIDE} and templates/electrical/README.md to author requirements and models.",
             (
                 f"Capture review inputs with python -B -m kicad_tooling.electrical --project {project_id} "

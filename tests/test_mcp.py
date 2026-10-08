@@ -45,6 +45,7 @@ DEFAULT_TOOLS = {
     "preview_project_edit",
     "inspect_contract",
     "inspect_design_lint",
+    "list_design_lint_rules",
     "check_release",
     "verify_package",
     "inspect_3d_models",

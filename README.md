@@ -8,10 +8,11 @@ choices, physical fit, purchasing or manufacturing release.
 
 Project source, requirements, catalog records, and engineering decisions stay in
 a project repository created from the
-[KiCad team workflow template](https://github.com/sheepfling/KiCad-Team-Workflow-Template).
+[KiCad team workflow template](https://github.com/search?q=KiCad-Team-Workflow-Template&type=repositories).
 The same installed package provides both command surfaces.
 
-The template now consumes this package through an exact dependency pin. It keeps
+The reference template currently consumes a reviewed Git commit. Project
+repositories can pin the same way until a package release is available. The template keeps
 project structure, catalogs, engineering contracts, agent guidance, and onboarding
 documents. Shared Python implementation, reusable GitHub workflows and their regression
 suite live here. See [project CI](docs/PROJECT_CI.md) for pinned callers and upgrades.
@@ -24,6 +25,8 @@ For reviewed connector power, ground, and other pin relationships, see the
 [connector pin review workflow](docs/CONNECTOR_PIN_REVIEW.md).
 For reviewable pattern warnings, exact ignores, and per-project rule modes,
 see [design lint](docs/DESIGN_LINT.md).
+For the planned lint and heuristic work, priorities, and completion evidence,
+see the [design lint backlog](docs/DESIGN_LINT_BACKLOG.md).
 
 ## Try the separate package
 
@@ -53,9 +56,8 @@ with an absolute project root:
 ```
 
 The server starts read-only. Explicit flags enable checks, source creation,
-reviewed edits, exports, downloads, or supplier submissions. See the project's
-[MCP guide](https://github.com/sheepfling/KiCad-Team-Workflow-Template/blob/main/docs/workflow/MCP.md)
-for the permission and review workflow.
+reviewed edits, exports, downloads, or supplier submissions. The template's
+`docs/workflow/MCP.md` describes its permission and review workflow.
 
 The board renderer creates six orthographic and four angled views by default.
 See [3D view selection](docs/3D_VIEWS.md) to request a smaller view set from

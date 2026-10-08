@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo.contracts import parse_model, read_model
+from kicad_tooling.hwrepo.contracts import parse_model, read_kicad_erc_report, read_model
 from kicad_tooling.hwrepo.discovery import load_registry
 from kicad_tooling.hwrepo.generation import (
     bom_rows,
@@ -52,6 +52,76 @@ class TypedContractsTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="typed-contract-")
         self.addCleanup(self.temporary.cleanup)
         self.temp = Path(self.temporary.name)
+
+    def test_kicad_erc_report_is_projected_to_typed_fixture_evidence(self) -> None:
+        path = self.temp / "erc.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "kicad_version": "10.0.5",
+                    "date": "ignored native metadata",
+                    "sheets": [
+                        {
+                            "path": "/root/sheet",
+                            "violations": [
+                                {
+                                    "type": "power_pin_not_driven",
+                                    "severity": "error",
+                                    "description": "Power input is undriven",
+                                    "excluded": False,
+                                    "items": [
+                                        {
+                                            "description": "U1.1",
+                                            "pos": {"x": 12.7, "y": 25.4, "unit": "mm"},
+                                        }
+                                    ],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        report = read_kicad_erc_report(path)
+
+        self.assertEqual(report.kicad_version, "10.0.5")
+        self.assertEqual(len(report.violations), 1)
+        finding = report.violations[0]
+        self.assertEqual((finding.type, finding.severity), ("power_pin_not_driven", "error"))
+        self.assertEqual(finding.items[0].description, "U1.1")
+        self.assertEqual((finding.items[0].x, finding.items[0].y), (12.7, 25.4))
+
+    def test_kicad_erc_report_rejects_malformed_required_structure(self) -> None:
+        path = self.temp / "erc.json"
+        invalid_documents: tuple[object, ...] = (
+            {"sheets": []},
+            {"kicad_version": "10.0.5", "sheets": {}},
+            {
+                "kicad_version": "10.0.5",
+                "sheets": [{"violations": [{"severity": "error"}]}],
+            },
+            {
+                "kicad_version": "10.0.5",
+                "sheets": [
+                    {
+                        "violations": [
+                            {
+                                "type": "bad",
+                                "severity": "error",
+                                "items": [{"pos": {"x": True}}],
+                            }
+                        ]
+                    }
+                ],
+            },
+        )
+        for document in invalid_documents:
+            with self.subTest(document=document):
+                path.write_text(json.dumps(document), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    read_kicad_erc_report(path)
 
     def codes(self, product: ProductRecord) -> set[str]:
         return {

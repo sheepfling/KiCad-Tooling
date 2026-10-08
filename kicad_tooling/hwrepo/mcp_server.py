@@ -39,6 +39,7 @@ from .models import (
     CadStepReport,
     ContractCoachReport,
     DesignLintReport,
+    DesignLintRuleCatalog,
     DiagnosticReport,
     ElectricalAnalysisReport,
     ElectricalChartsReport,
@@ -227,7 +228,8 @@ def create_server(
         log_level="WARNING",
         instructions=(
             f"Use only this checkout: {root}. Start with list_projects and doctor. "
-            "Use inspect_tool_surfaces to see CLI/MCP coverage and intentional gaps. "
+            "Use inspect_tool_surfaces to see CLI/MCP coverage and intentional gaps, "
+            "and list_design_lint_rules to review heuristic defaults and boundaries. "
             "Inventory input presence and import previews are not design validation. "
             "Read the status and next actions in every report. Passing checks are not "
             "electrical approval or manufacturing authorization. Follow scan/preview/import, "
@@ -494,15 +496,34 @@ def create_server(
     server.tool(annotations=READ_ONLY)(inspect_contract)
 
     def inspect_design_lint(project_id: str, native_summary: str) -> DesignLintReport:
-        """Flag matching connector pins and numbered return nets for project-owned review.
+        """Flag deterministic schematic patterns and report the active rule catalog.
 
-        A lint finding is a heuristic, never an electrical requirement or approval.
-        native_summary is a repository-relative generated artifact.
+        Findings include repeated connector pins, unconnected supply/return pins,
+        protocol hints, named return patterns and complementary-pair review,
+        opt-in schematic geometry
+        localization, project-mapped schematic checks, PCB decoupling placement,
+        PCB track-width screens, and authored differential-pair native DRC rule
+        coverage. Geometry and width evidence bind to the exact
+        board source, native KiCad version/image, and probe digest. Schematic
+        geometry reports unsupported coverage; its current KiCad version scope
+        is 10.0.6. I2C coverage binds declared responder pins and strap nets to
+        the native netlist; dynamic or incomplete maps remain visible coverage
+        gaps. The report includes each rule's predicate, evidence boundary,
+        limitations, and synthetic fault/control regressions. Findings are review
+        hints, never requirements or approval. native_summary is a
+        repository-relative generated artifact.
         """
         with service_operation(operation):
             return workflow.inspect_design_lint(root, project_id, native_summary)
 
     server.tool(annotations=READ_ONLY)(inspect_design_lint)
+
+    def list_design_lint_rules() -> DesignLintRuleCatalog:
+        """List each deterministic design-lint rule, evidence boundary and default mode."""
+        with service_operation(operation):
+            return workflow.list_design_lint_rules()
+
+    server.tool(annotations=READ_ONLY)(list_design_lint_rules)
 
     def inspect_3d_models(project_id: str) -> ModelInventoryReport:
         """Inspect a PCB's placed-footprint model assignments without executing native kicad_tooling.
@@ -965,7 +986,7 @@ def create_server(
             native_summary: str | None = None,
             runner: NativeRunner = "auto",
         ) -> ElectricalAnalysisReport:
-            """Analyze reviewed grounding, power and frequency requirements with fixed executables.
+            """Analyze reviewed circuit and PCB return-path requirements with fixed toolchains.
 
             Optional native_summary is source-bound build evidence. FAIL/NOT_CONFIGURED
             remain explicit. Simulated results do not establish physical acceptance.

@@ -1,0 +1,58 @@
+{
+  "mode": "required",
+  "basis": "Synthetic project-authored serial-peer map",
+  "links": [
+    {
+      "id": "console-a",
+      "basis": "Synthetic reviewed direct UART connector pair A",
+      "endpoint": {
+        "id": "J1",
+        "reference": "J1",
+        "symbol": "Synthetic:UART_Endpoint",
+        "footprint": "Synthetic:Header",
+        "logic_domain": "3V3",
+        "tx": { "pin": "J1.1", "net": "SERIAL_A_TX" },
+        "rx": { "pin": "J1.2", "net": "SERIAL_A_RX" }
+      },
+      "peer": {
+        "mode": "direct",
+        "endpoint": {
+          "id": "J2",
+          "reference": "J2",
+          "symbol": "Synthetic:UART_Endpoint",
+          "footprint": "Synthetic:Header",
+          "logic_domain": "3V3",
+          "tx": { "pin": "J2.1", "net": "SERIAL_A_RX" },
+          "rx": { "pin": "J2.2", "net": "SERIAL_A_TX" }
+        }
+      },
+      "reference_policy": "not_applicable"
+    },
+    {
+      "id": "console-b",
+      "basis": "Synthetic reviewed direct UART connector pair B",
+      "endpoint": {
+        "id": "J3",
+        "reference": "J3",
+        "symbol": "Synthetic:UART_Endpoint",
+        "footprint": "Synthetic:Header",
+        "logic_domain": "3V3",
+        "tx": { "pin": "J3.1", "net": "SERIAL_B_TX" },
+        "rx": { "pin": "J3.2", "net": "SERIAL_B_RX" }
+      },
+      "peer": {
+        "mode": "direct",
+        "endpoint": {
+          "id": "J4",
+          "reference": "J4",
+          "symbol": "Synthetic:UART_Endpoint",
+          "footprint": "Synthetic:Header",
+          "logic_domain": "3V3",
+          "tx": { "pin": "J4.1", "net": "SERIAL_B_RX" },
+          "rx": { "pin": "J4.2", "net": "SERIAL_B_TX" }
+        }
+      },
+      "reference_policy": "not_applicable"
+    }
+  ]
+}

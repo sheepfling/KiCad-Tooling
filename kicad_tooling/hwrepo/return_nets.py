@@ -17,6 +17,11 @@ _RETURN_TOKEN = re.compile(rf"(?<![A-Z0-9])(?:{_RETURN_WORDS})(?![A-Z0-9])", re.
 _COMPACT_PORT_STEMS = frozenset({"USB", "UART", "SERIAL", "PORT", "COM"})
 
 
+def is_return_like_net_name(name: str) -> bool:
+    """Recognize return-like net labels for review context, not pin-role inference."""
+    return _RETURN_TOKEN.search(name) is not None
+
+
 def _indexed_return(name: str) -> tuple[str, int] | None:
     match = _INDEXED_NET.fullmatch(name)
     if match is not None:
@@ -49,4 +54,26 @@ def return_net_groups(observed: NetlistContract) -> tuple[ReturnNetGroup, ...]:
         )
         for _, entries in sorted(grouped.items())
         if len({index for _, index, _ in entries}) > 1
+    )
+
+
+def return_label_groups_without_pin_roles(observed: NetlistContract) -> tuple[ReturnNetGroup, ...]:
+    """Find multiple return-like labels whose mapped pins have no named return role."""
+    numbered_net_names = {name for group in return_net_groups(observed) for name in group.nets}
+    candidates = {
+        name: tuple(sorted(pins))
+        for name, pins in sorted(observed.nets.items())
+        if pins
+        and _RETURN_TOKEN.search(name) is not None
+        and name not in numbered_net_names
+        and not any(_RETURN_TOKEN.search(observed.pin_functions.get(pin, "")) for pin in pins)
+    }
+    if len(candidates) < 2:
+        return ()
+
+    return (
+        ReturnNetGroup(
+            stem="return-like net labels without explicit pin roles",
+            nets=candidates,
+        ),
     )

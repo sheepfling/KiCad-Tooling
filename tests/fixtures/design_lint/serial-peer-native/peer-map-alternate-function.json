@@ -1,0 +1,32 @@
+{
+  "mode": "required",
+  "basis": "Synthetic project-authored alternate-function UART map",
+  "links": [
+    {
+      "id": "mcu-header",
+      "basis": "Synthetic exact MCU-to-header endpoint mapping",
+      "endpoint": {
+        "id": "U1",
+        "reference": "U1",
+        "symbol": "Synthetic:GPIO_MCU",
+        "footprint": "Synthetic:MCU",
+        "logic_domain": "3V3",
+        "tx": { "pin": "U1.1", "net": "UART_TX" },
+        "rx": { "pin": "U1.2", "net": "UART_RX" }
+      },
+      "peer": {
+        "mode": "direct",
+        "endpoint": {
+          "id": "J5",
+          "reference": "J5",
+          "symbol": "Synthetic:GenericHeader",
+          "footprint": "Synthetic:Header",
+          "logic_domain": "3V3",
+          "tx": { "pin": "J5.2", "net": "UART_RX" },
+          "rx": { "pin": "J5.1", "net": "UART_TX" }
+        }
+      },
+      "reference_policy": "not_applicable"
+    }
+  ]
+}

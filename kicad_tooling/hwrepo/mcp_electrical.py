@@ -41,7 +41,7 @@ def analyze_electrical(
     native_summary: str | None = None,
     runner: NativeRunner = "auto",
 ) -> ElectricalAnalysisReport:
-    """Run declared analyses with fixed executables and optional source-bound native evidence."""
+    """Run declared circuit and PCB return checks with source-bound native evidence."""
     root = root.resolve()
     selected_project(root, project_id)
     if runner not in {"auto", "local", "container"}:

@@ -24,6 +24,7 @@ from .models import (
     ProjectConfig,
     ProjectKind,
     ProjectManifest,
+    TestAccessAnalysis,
     TransientAnalysis,
 )
 from .return_nets import return_net_groups
@@ -220,7 +221,22 @@ def pin_relationship_checks(
         unknown = sorted(
             pin for pin in rule.pins if pin.rsplit(".", 1)[0] not in observed.components
         )
-        connected = len(single) == len(rule.pins) and not unknown
+        unknown_pins = sorted(
+            pin
+            for pin in rule.pins
+            if pin.rsplit(".", 1)[0] in observed.component_pin_numbers
+            and pin.rsplit(".", 1)[1] not in observed.component_pin_numbers[pin.rsplit(".", 1)[0]]
+        )
+        missing_pin_inventory = sorted(
+            {
+                pin.rsplit(".", 1)[0]
+                for pin in rule.pins
+                if rule.topology == "unconnected"
+                and pin.rsplit(".", 1)[0] in observed.components
+                and pin.rsplit(".", 1)[0] not in observed.component_pin_numbers
+            }
+        )
+        connected = len(single) == len(rule.pins) and not unknown and not unknown_pins
         if rule.topology == "common_net":
             passed = (
                 connected
@@ -228,9 +244,22 @@ def pin_relationship_checks(
                 and (rule.net is None or next(iter(single.values())) == rule.net)
             )
             requirement = f"one net{f' named {rule.net}' if rule.net else ''}"
-        else:
+        elif rule.topology == "separate_nets":
             passed = connected and len(set(single.values())) == len(rule.pins)
             requirement = "a distinct net for each pin"
+        else:
+            passed = (
+                not unknown
+                and not unknown_pins
+                and not missing_pin_inventory
+                and all(not nets for nets in actual.values())
+            )
+            requirement = "no net assignment (intentionally unused)"
+        inventory_detail = (
+            f"; missing symbol pin inventory={missing_pin_inventory}"
+            if rule.topology == "unconnected"
+            else ""
+        )
         results.append(
             ElectricalCheck(
                 id=f"pin-connectivity/{rule.id}",
@@ -238,7 +267,8 @@ def pin_relationship_checks(
                 detail=(
                     f"All {len(rule.pins)} reviewed pins have {requirement}."
                     if passed
-                    else f"Expected {requirement}; observed={actual}; unknown components={unknown}."
+                    else f"Expected {requirement}; observed={actual}; unknown components={unknown}; "
+                    f"unknown symbol pins={unknown_pins}{inventory_detail}."
                 ),
             )
         )
@@ -290,16 +320,37 @@ def power_budget_checks(
 
 
 def pending_sections(contract: ElectricalAnalysisContract) -> tuple[str, ...]:
-    return tuple(
+    pending = tuple(
         name
         for name, section in (
             ("grounding", contract.grounding),
+            ("pcb_return_paths", contract.pcb_return_paths),
             ("pin_connectivity", contract.pin_connectivity),
+            ("i2c_pullups", contract.i2c_pullups),
+            ("can_termination", contract.can_termination),
+            ("usb_c", contract.usb_c),
+            ("spi", contract.spi),
+            ("serial_peers", contract.serial_peers),
+            ("digital_peer_voltages", contract.digital_peer_voltages),
+            ("component_voltage_ratings", contract.component_voltage_ratings),
+            ("component_power_ratings", contract.component_power_ratings),
+            ("connector_contact_ratings", contract.connector_contact_ratings),
+            ("mosfet_stress", contract.mosfet_stress),
+            ("rs485", contract.rs485),
+            ("control_inputs", contract.control_inputs),
             ("power", contract.power),
+            ("power_connectivity", contract.power_connectivity),
             ("high_frequency", contract.high_frequency),
         )
         if isinstance(section, AnalysisPending)
     )
+    if contract.test_access is None:
+        return (*pending, "test_access")
+    if isinstance(contract.test_access, TestAccessAnalysis) and isinstance(
+        contract.test_access.pcb_accessibility, AnalysisPending
+    ):
+        return (*pending, "test_access.pcb_accessibility")
+    return pending
 
 
 def policy_issues(root: Path, config: ProjectConfig) -> tuple[str, ...]:

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import re
+import tomllib
 from datetime import UTC, date, datetime
 from pathlib import Path, PurePosixPath
+from typing import TypedDict, cast
 from urllib.parse import unquote
 
 from .contracts import read_model, repo_path
@@ -37,6 +39,22 @@ HEADING_PATTERN = re.compile(r"^(?P<level>#{1,6})\s+(?P<label>\S.*?)(?:\s+#+)?$"
 FENCE_PATTERN = re.compile(r"^\s*(?P<fence>`{3,}|~{3,})")
 LINK_PATTERN = re.compile(r"!?\[[^\]\n]*\]\((?P<destination>[^\n)]*)\)")
 EXTERNAL_SCHEMES = ("data:", "http:", "https:", "mailto:", "tel:")
+
+
+class _PyprojectSettings(TypedDict, total=False):
+    tool: object
+
+
+class _ToolSettings(TypedDict, total=False):
+    mdrepo: object
+
+
+class _MdrepoSettings(TypedDict, total=False):
+    orphans: object
+
+
+class _OrphanSettings(TypedDict, total=False):
+    roots: object
 
 
 def label(path: Path, root: Path) -> str:
@@ -361,6 +379,34 @@ def check(root: Path, today: date | None = None) -> DocumentationPolicyReport:
             resolved_root,
             read_model(repo_path(resolved_root, POLICY_PATH), DocumentationPolicy),
         )
+        mdrepo_roots: tuple[str, ...] = ()
+        project_configuration = repo_path(resolved_root, "pyproject.toml")
+        if project_configuration.is_file():
+            project_settings = cast(
+                _PyprojectSettings,
+                tomllib.loads(project_configuration.read_text(encoding="utf-8")),
+            )
+            tool_value = project_settings.get("tool", {})
+            if not isinstance(tool_value, dict):
+                raise ValueError("pyproject.toml [tool] must be a table")
+            tool_settings = cast(_ToolSettings, tool_value)
+            mdrepo_value = tool_settings.get("mdrepo", {})
+            if not isinstance(mdrepo_value, dict):
+                raise ValueError("pyproject.toml [tool.mdrepo] must be a table")
+            mdrepo_settings = cast(_MdrepoSettings, mdrepo_value)
+            orphan_value = mdrepo_settings.get("orphans", {})
+            if not isinstance(orphan_value, dict):
+                raise ValueError("pyproject.toml [tool.mdrepo.orphans] must be a table")
+            orphan_settings = cast(_OrphanSettings, orphan_value)
+            configured_roots = orphan_settings.get("roots", [])
+            if not isinstance(configured_roots, list):
+                raise ValueError("tool.mdrepo.orphans.roots must be an array of paths")
+            root_paths: list[str] = []
+            for path in cast(list[object], configured_roots):
+                if not isinstance(path, str):
+                    raise TypeError("tool.mdrepo.orphans.roots must be an array of paths")
+                root_paths.append(path)
+            mdrepo_roots = tuple(root_paths)
         island_roots = tuple(
             path.relative_to(resolved_root).as_posix()
             for directory in ("projects", "products", "examples/projects", "examples/products")
@@ -370,11 +416,11 @@ def check(root: Path, today: date | None = None) -> DocumentationPolicyReport:
             resolved_root,
             policy.model_copy(
                 update={
-                    "roots": tuple(dict.fromkeys((*policy.roots, *island_roots))),
+                    "roots": tuple(dict.fromkeys((*policy.roots, *mdrepo_roots, *island_roots))),
                 }
             ),
         )
-    except (OSError, ValueError) as exc:
+    except (OSError, TypeError, ValueError) as exc:
         report_findings.append(
             DocumentationIssue(
                 code="DOC900",

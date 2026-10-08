@@ -25,11 +25,14 @@ from kicad_tooling.hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
     CommandEvidence,
+    ConnectorInterfaceReview,
+    ConnectorInventoryReview,
     DesignLintIgnore,
     DesignLintPolicy,
     GovernanceLintReport,
     ProductPolicyReport,
     ProjectCheckSummary,
+    ProjectManifest,
     ProjectTestContract,
     RepositoryPolicyReport,
     ValidationSummary,
@@ -401,6 +404,8 @@ class VerifyTests(unittest.TestCase):
         self.assertIsNotNone(open_result.design_lint)
         assert open_result.design_lint is not None
         self.assertEqual(open_result.design_lint.status, "REVIEW")
+        assert open_result.design_lint.connector_coverage is not None
+        self.assertEqual(open_result.design_lint.connector_coverage.status, "UNDECLARED")
         self.assertEqual(len(open_result.design_lint.findings), 3)
         self.assertTrue((Path(open_result.run_directory) / "design-lint.json").is_file())
 
@@ -448,8 +453,45 @@ class VerifyTests(unittest.TestCase):
             patch("kicad_tooling.verify.check_all", side_effect=native),
         ):
             reviewed_result = verify(self.root, "controller", depth="native", runner="local")
-        self.assertEqual(reviewed_result.status, "PASS", reviewed_result.error)
-        self.assertEqual(reviewed_result.design_lint.status, "PASS")
+        self.assertEqual(reviewed_result.status, "FAIL", reviewed_result.error)
+        assert reviewed_result.design_lint is not None
+        self.assertEqual(reviewed_result.design_lint.status, "REVIEW")
+        assert reviewed_result.design_lint.connector_coverage is not None
+        self.assertEqual(reviewed_result.design_lint.connector_coverage.status, "UNDECLARED")
+
+        manifest_path = self.root / "examples/projects/controller/project.json"
+        manifest = read_model(manifest_path, ProjectManifest)
+        write_model(
+            manifest_path,
+            manifest.model_copy(
+                update={
+                    "connector_reviews": tuple(
+                        ConnectorInterfaceReview(
+                            reference=reference,
+                            disposition="not_applicable",
+                            basis="Synthetic fixture does not define external connector requirements",
+                        )
+                        for reference in ("J1", "J2")
+                    ),
+                    "connector_inventory_review": ConnectorInventoryReview(
+                        basis="Synthetic review covered every connector in the schematic"
+                    ),
+                }
+            ),
+        )
+        with (
+            self.runner_environment("10.0.0"),
+            patch("kicad_tooling.verify.check_all", side_effect=native),
+        ):
+            accepted_result = verify(self.root, "controller", depth="native", runner="local")
+        self.assertEqual(accepted_result.status, "PASS", accepted_result.error)
+        assert accepted_result.design_lint is not None
+        self.assertEqual(accepted_result.design_lint.status, "PASS")
+        assert accepted_result.design_lint.connector_coverage is not None
+        self.assertEqual(
+            accepted_result.design_lint.connector_coverage.inventory_review_basis,
+            "Synthetic review covered every connector in the schematic",
+        )
         with patch("kicad_tooling.check_all.validate", side_effect=validated):
             ci_reviewed = check_all(
                 self.root,

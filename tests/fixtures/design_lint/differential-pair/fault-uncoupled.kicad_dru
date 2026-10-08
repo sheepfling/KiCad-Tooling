@@ -1,0 +1,13 @@
+(version 1)
+(rule "synthetic-dp-width"
+  (condition "A.inDiffPair('USB_D_')")
+  (constraint track_width (min 0.25mm)))
+(rule "synthetic-dp-gap"
+  (condition "A.inDiffPair('USB_D_')")
+  (constraint diff_pair_gap (min 0.15mm) (max 0.5mm)))
+(rule "synthetic-dp-skew"
+  (condition "A.inDiffPair('USB_D_')")
+  (constraint skew (max 0.1mm)))
+(rule "synthetic-dp-uncoupled"
+  (condition "A.inDiffPair('USB_D_')")
+  (constraint diff_pair_uncoupled (max 0.2mm)))

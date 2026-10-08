@@ -9,10 +9,11 @@ import unittest
 import venv
 from importlib.metadata import PackageNotFoundError
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from kicad_tooling import package_version
-from kicad_tooling.native_deps import copy_runtime, prepare
+from kicad_tooling.native_deps import copy_runtime, prepare, runtime_metadata
 
 
 class NativeDependencyTests(unittest.TestCase):
@@ -49,6 +50,30 @@ class NativeDependencyTests(unittest.TestCase):
         self.assertTrue((package / "tool-surfaces.json").is_file())
         self.assertFalse((self.root / "build/deps/tools").exists())
 
+    def test_runtime_metadata_prefers_installed_dist_info_to_checkout_egg_info(self) -> None:
+        site_packages = self.root / "site-packages"
+        source_metadata = site_packages / "kicad_team_tooling.egg-info"
+        installed_metadata = site_packages / "kicad_team_tooling-0.1.dist-info"
+        source_metadata.mkdir(parents=True)
+        installed_metadata.mkdir(parents=True)
+        source = SimpleNamespace(
+            files=(Path("kicad_team_tooling.egg-info/PKG-INFO"),),
+            locate_file=lambda item: site_packages / item,
+        )
+        installed = SimpleNamespace(
+            files=(Path("kicad_team_tooling-0.1.dist-info/METADATA"),),
+            locate_file=lambda item: site_packages / item,
+        )
+
+        with (
+            patch("kicad_tooling.native_deps.distributions", return_value=(source, installed)),
+            patch(
+                "kicad_tooling.native_deps.distribution",
+                side_effect=AssertionError("legacy metadata should not win"),
+            ),
+        ):
+            self.assertEqual(runtime_metadata(), installed_metadata)
+
     def test_copied_runtime_imports_in_a_standard_environment_without_path_injection(self) -> None:
         environment = self.root / "environment"
         venv.EnvBuilder(with_pip=False).create(environment)
@@ -72,6 +97,7 @@ class NativeDependencyTests(unittest.TestCase):
 
     def test_missing_package_identity_stops_before_container_or_dependency_download(self) -> None:
         with (
+            patch("kicad_tooling.native_deps.distributions", return_value=()),
             patch(
                 "kicad_tooling.native_deps.distribution",
                 side_effect=PackageNotFoundError("kicad-team-tooling"),

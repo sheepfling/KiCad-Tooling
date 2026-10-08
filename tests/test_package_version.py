@@ -6,6 +6,8 @@ import contextlib
 import io
 import unittest
 from importlib.metadata import PackageNotFoundError
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from kicad_tooling import package_version
@@ -15,10 +17,25 @@ from kicad_tooling.hwrepo import __version__ as policy_version
 
 class PackageVersionTest(unittest.TestCase):
     def test_reads_distribution_metadata_without_conflating_policy_version(self) -> None:
-        with patch("kicad_tooling.version", return_value="2.0.0") as metadata:
+        with (
+            patch("kicad_tooling.distributions", return_value=()),
+            patch("kicad_tooling.version", return_value="2.0.0") as metadata,
+        ):
             self.assertEqual("2.0.0", package_version())
         metadata.assert_called_once_with("kicad-team-tooling")
         self.assertEqual("1.3.2", policy_version)
+
+    def test_prefers_installed_dist_info_to_stale_checkout_egg_info(self) -> None:
+        stale_checkout = SimpleNamespace(files=(Path("README.md"),), version="0.1.old")
+        installed = SimpleNamespace(
+            files=(Path("kicad_team_tooling-0.1.dist-info/METADATA"),),
+            version="0.1.current",
+        )
+        with (
+            patch("kicad_tooling.distributions", return_value=(stale_checkout, installed)),
+            patch("kicad_tooling.version", side_effect=AssertionError("fallback used")),
+        ):
+            self.assertEqual("0.1.current", package_version())
 
     def test_version_cli_does_not_require_a_project_checkout(self) -> None:
         output = io.StringIO()

@@ -390,5 +390,5 @@ class PartsWorkflowTests(unittest.TestCase):
         html = render_html(report)
         self.assertNotIn("<img src=x", html)
         self.assertIn("&lt;img src=x onerror=alert(1)&gt;", html)
-        self.assertIn("native validation failed", html.lower())
+        self.assertIn("validation summary is fail", html.lower())
         self.assertIn('href="digikey.csv"', html)

@@ -1,0 +1,66 @@
+{
+  "mode": "required",
+  "basis": "Synthetic direct UART peers with an exact passive reference-bond control",
+  "links": [
+    {
+      "id": "serial-bond",
+      "basis": "Synthetic serial endpoint reference nets are declared bonded through R3",
+      "endpoint": {
+        "id": "connector-a",
+        "reference": "J1",
+        "symbol": "Synthetic:UART_Endpoint",
+        "footprint": "Synthetic:Header",
+        "logic_domain": "logic-3v3",
+        "tx": {
+          "pin": "J1.1",
+          "net": "SERIAL_A_RX"
+        },
+        "rx": {
+          "pin": "J1.2",
+          "net": "SERIAL_A_TX"
+        },
+        "reference_pins": [
+          {
+            "pin": "J1.3",
+            "net": "GND_A"
+          }
+        ]
+      },
+      "peer": {
+        "mode": "direct",
+        "endpoint": {
+          "id": "connector-b",
+          "reference": "J2",
+          "symbol": "Synthetic:UART_Endpoint",
+          "footprint": "Synthetic:Header",
+          "logic_domain": "logic-3v3",
+          "tx": {
+            "pin": "J2.1",
+            "net": "SERIAL_A_TX"
+          },
+          "rx": {
+            "pin": "J2.2",
+            "net": "SERIAL_A_RX"
+          },
+          "reference_pins": [
+            {
+              "pin": "J2.3",
+              "net": "GND_B"
+            }
+          ]
+        }
+      },
+      "reference_policy": "bonded",
+      "reference_bond": {
+        "reference": "R3",
+        "expected_symbol": "Device:R",
+        "expected_footprint": "Synthetic:0603",
+        "expected_value": "0R",
+        "side_a_pin": "R3.1",
+        "side_b_pin": "R3.2",
+        "side_a_net": "GND_A",
+        "side_b_net": "GND_B"
+      }
+    }
+  ]
+}

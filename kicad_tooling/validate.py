@@ -154,21 +154,47 @@ def read_netlist(path: Path) -> NetlistContract:
     """Parse actual KiCad names, including hierarchical nets and unassigned footprints."""
     tree = ET.parse(path).getroot()
     library_pins: dict[tuple[str, str], dict[str, str]] = {}
+    library_pin_types: dict[tuple[str, str], dict[str, str]] = {}
+    library_pin_numbers: dict[tuple[str, str], tuple[str, ...]] = {}
     for part in tree.findall("./libparts/libpart"):
         identity = (part.get("lib", ""), part.get("part", ""))
         if all(identity):
+            library_elements = part.findall("./pins/pin")
             library_pins[identity] = {
                 pin.attrib["num"]: name
-                for pin in part.findall("./pins/pin")
+                for pin in library_elements
+                if "num" in pin.attrib
                 if (name := pin.get("name", "").strip()) and name != "~"
             }
+            library_pin_numbers[identity] = tuple(
+                sorted({pin.attrib["num"] for pin in library_elements if pin.get("num")})
+            )
+            library_pin_types[identity] = {
+                pin.attrib["num"]: pin.get("type", "").strip().casefold()
+                for pin in library_elements
+                if pin.get("num") and pin.get("type", "").strip()
+            }
     components: dict[str, ComponentContract] = {}
+    dnp_components: list[str] = []
     component_symbols: dict[str, str] = {}
     pin_functions: dict[str, str] = {}
+    pin_electrical_types: dict[str, str] = {}
+    component_pin_numbers: dict[str, tuple[str, ...]] = {}
     for comp in tree.findall("./components/comp"):
         ref = comp.attrib["ref"]
         if ref in components:
             raise ValueError("Duplicate reference in netlist")
+        dnp_properties = comp.findall("./property[@name='dnp']")
+        if len(dnp_properties) > 1:
+            raise ValueError(f"Repeated native dnp property at {ref}")
+        if dnp_properties:
+            property_ = dnp_properties[0]
+            if len(property_):
+                raise ValueError(f"Nested native dnp property at {ref}")
+            dnp_value = property_.get("value", property_.text or "").strip().casefold()
+            if dnp_value not in {"", "true", "yes", "1"}:
+                raise ValueError(f"Ambiguous native dnp property at {ref}")
+            dnp_components.append(ref)
         components[ref] = ComponentContract(
             value=comp.findtext("value", ""),
             footprint=comp.findtext("footprint", ""),
@@ -180,12 +206,19 @@ def read_netlist(path: Path) -> NetlistContract:
             if all(identity):
                 component_symbols[ref] = ":".join(identity)
                 available = library_pins.get(identity, {})
-                numbers = [
-                    pin.attrib["num"] for pin in comp.findall("./units/unit/pins/pin")
-                ] or list(available)
+                available_types = library_pin_types.get(identity, {})
+                numbers = set(library_pin_numbers.get(identity, ()))
+                numbers.update(
+                    pin.attrib["num"]
+                    for pin in comp.findall("./units/unit/pins/pin")
+                    if pin.get("num")
+                )
+                component_pin_numbers[ref] = tuple(sorted(numbers))
                 for number in numbers:
                     if function := available.get(number):
                         pin_functions[f"{ref}.{number}"] = function
+                    if electrical_type := available_types.get(number):
+                        pin_electrical_types[f"{ref}.{number}"] = electrical_type
     nets: dict[str, tuple[str, ...]] = {}
     for net in tree.findall("./nets/net"):
         name = net.attrib["name"].lstrip("/")
@@ -199,12 +232,20 @@ def read_netlist(path: Path) -> NetlistContract:
                 normalized = function.removesuffix(f"_{node.attrib['pin']}").strip()
                 if normalized and normalized != "~":
                     pin_functions[pin] = normalized
+            reference, number = pin.rsplit(".", 1)
+            if reference in components:
+                component_pin_numbers[reference] = tuple(
+                    sorted(set(component_pin_numbers.get(reference, ())) | {number})
+                )
         nets[name] = tuple(sorted(pins))
     return NetlistContract(
         components=components,
         nets=nets,
+        dnp_components=tuple(sorted(dnp_components)),
         component_symbols=component_symbols,
         pin_functions=pin_functions,
+        pin_electrical_types=pin_electrical_types,
+        component_pin_numbers=component_pin_numbers,
     )
 
 

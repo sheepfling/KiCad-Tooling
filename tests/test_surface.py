@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import builtins
 import os
 import shutil
@@ -24,6 +25,7 @@ from kicad_tooling.hwrepo.surface import (
     CATALOG,
     discover_mcp,
     inspect_tool_surfaces,
+    parity_issues,
 )
 from tests.support import SOURCE_ROOT, TEST_ROOT, reference_root
 
@@ -64,6 +66,19 @@ class ToolSurfaceTests(unittest.TestCase):
         text = source.read_text(encoding="utf-8")
         self.assertIn(old, text)
         source.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+    def test_parity_references_reuse_each_module_ast_within_a_check(self) -> None:
+        catalog = read_model(SOURCE_ROOT / CATALOG, ToolSurfacesCatalog)
+        core_references = tuple(
+            reference
+            for mapping in catalog.capabilities
+            if mapping.scope == "core"
+            for reference in mapping.parity_tests
+        )
+        modules = {".".join(reference.split(".")[:-2]) for reference in core_references}
+        with patch("kicad_tooling.hwrepo.surface.ast.parse", wraps=ast.parse) as parse:
+            self.assertFalse(parity_issues(SOURCE_ROOT, catalog.capabilities))
+        self.assertEqual(parse.call_count, len(modules))
 
     def test_real_checkout_and_full_registration_are_tracked(self) -> None:
         report = inspect_tool_surfaces(reference_root(), require_live_mcp=True)

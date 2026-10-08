@@ -44,6 +44,23 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
             "kicad_tooling/markdown_check/__main__.py",
             "kicad_tooling/fixtures/foreign-eagle-board.xml",
             "kicad_tooling/fixtures/scaffold-license.txt",
+            "kicad_tooling/hwrepo/design-lint-rules.json",
+            "kicad_tooling/hwrepo/schematic-text-metrics.json",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-via.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-open.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-zone-connected.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-zone-split.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-zone-through-hole-split.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-net-tie-connected.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-net-tie-dnp.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-isolation-open.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-isolation-bridged.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-access-probe-envelope.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-decoupling-placement.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-protection-entry-path.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-switching-loop.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-switching-loop-inner-plane.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-switching-loop-split-plane.kicad_pcb",
             "kicad_tooling/hwrepo/kicad_library_license.txt",
         }
         if not required <= payload.keys():
@@ -56,6 +73,17 @@ def only_artifact(directory: Path, pattern: str) -> Path:
     if len(matches) != 1:
         raise RuntimeError(f"Expected exactly one {pattern} in {directory}")
     return matches[0]
+
+
+def clear_distribution_build_cache() -> None:
+    """Remove setuptools staging trees so stale modules cannot leak into a wheel."""
+    build_root = ROOT / "build"
+    paths = (build_root / "lib", *build_root.glob("bdist.*"), *build_root.glob("temp.*"))
+    for path in paths:
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
 
 
 def stage(
@@ -94,6 +122,7 @@ def stage(
 
 def build_distributions(output: Path, build_python: str) -> tuple[Path, str]:
     """Prove a source archive reproduces its wheel without access to Git metadata."""
+    clear_distribution_build_cache()
     wheels = output / "wheels"
     wheels.mkdir()
     stage(
@@ -346,12 +375,19 @@ def main() -> int:
                 "Install this checkout with python -m pip install -e '.[dev]' "
                 "before running its regression suite"
             )
+        unit_environment = os.environ.copy()
+        unit_environment.pop("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", None)
         stage(
             "unit",
             (sys.executable, "-B", "-m", "unittest", "discover", "-s", "tests", "-v"),
             output,
             cwd=ROOT,
+            environment=unit_environment,
         )
+        if os.environ.get("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY") == "1":
+            from kicad_tooling.hwrepo.native_geometry_lane import run
+
+            run(ROOT, output, stage)
         stage(
             "ruff-format",
             (

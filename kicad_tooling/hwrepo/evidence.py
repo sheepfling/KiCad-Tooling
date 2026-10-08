@@ -289,16 +289,91 @@ def verify_native(
 
     if config.electrical is not None:
         from ..validate import read_netlist
+        from .bus_heuristics import can_termination_checks, i2c_pullup_checks
+        from .control_inputs import control_input_checks
         from .electrical import grounding_checks, load_analysis
+        from .models import (
+            AnalysisPending,
+            CanTerminationAnalysis,
+            ControlInputsAnalysis,
+            I2cPullupAnalysis,
+            PcbAccessAnalysis,
+            PowerConnectivityAnalysis,
+            Rs485Analysis,
+            TestAccessAnalysis,
+        )
+        from .power_connectivity import power_connectivity_checks
+        from .rs485_heuristics import rs485_checks
+        from .test_access import evaluate_test_access_checks, pcb_accessibility_checks
 
         electrical = load_analysis(root, config)
-        if electrical is not None and any(
-            row.status not in {"PASS", "NOT_APPLICABLE"}
-            for row in grounding_checks(
-                electrical.grounding, read_netlist(path.parent / "netlist.xml")
-            )
-        ):
-            raise ValueError("Retained netlist fails current grounding requirements")
+        if electrical is not None:
+            netlist = read_netlist(path.parent / "netlist.xml")
+            if any(
+                row.status not in {"PASS", "NOT_APPLICABLE"}
+                for row in grounding_checks(electrical.grounding, netlist)
+            ):
+                raise ValueError("Retained netlist fails current grounding requirements")
+            if isinstance(electrical.i2c_pullups, I2cPullupAnalysis) and any(
+                row.status != "PASS" for row in i2c_pullup_checks(electrical.i2c_pullups, netlist)
+            ):
+                raise ValueError("Retained netlist fails current I2C pull-up requirements")
+            if isinstance(electrical.i2c_pullups, AnalysisPending):
+                raise ValueError("Current I2C pull-up requirements remain pending")
+            if isinstance(electrical.can_termination, CanTerminationAnalysis) and any(
+                row.status not in {"PASS", "NOT_APPLICABLE"}
+                for row in can_termination_checks(electrical.can_termination, netlist)
+            ):
+                raise ValueError("Retained netlist fails current CAN termination requirements")
+            if isinstance(electrical.can_termination, AnalysisPending):
+                raise ValueError("Current CAN termination requirements remain pending")
+            if isinstance(electrical.rs485, Rs485Analysis) and any(
+                row.status not in {"PASS", "NOT_APPLICABLE"}
+                for row in rs485_checks(electrical.rs485, netlist)
+            ):
+                raise ValueError("Retained netlist fails current RS-485 requirements")
+            if isinstance(electrical.rs485, AnalysisPending):
+                raise ValueError("Current RS-485 requirements remain pending")
+            if isinstance(electrical.control_inputs, ControlInputsAnalysis) and any(
+                row.status not in {"PASS", "NOT_APPLICABLE"}
+                for row in control_input_checks(electrical.control_inputs, netlist)
+            ):
+                raise ValueError("Retained netlist fails current control-input requirements")
+            if isinstance(electrical.control_inputs, AnalysisPending):
+                raise ValueError("Current control-input requirements remain pending")
+            if isinstance(electrical.test_access, TestAccessAnalysis) and any(
+                row.status not in {"PASS", "NOT_APPLICABLE"}
+                for row in evaluate_test_access_checks(electrical.test_access, netlist)
+            ):
+                raise ValueError("Retained netlist fails current test-access requirements")
+            if isinstance(electrical.test_access, TestAccessAnalysis):
+                if isinstance(electrical.test_access.pcb_accessibility, PcbAccessAnalysis):
+                    if config.kind is not ProjectKind.PCB:
+                        raise ValueError("Current PCB access requirements need a PCB project")
+                    board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
+                    if any(
+                        row.status not in {"PASS", "NOT_APPLICABLE"}
+                        for row in pcb_accessibility_checks(
+                            electrical.test_access,
+                            electrical.test_access.pcb_accessibility,
+                            board_path,
+                        )
+                    ):
+                        raise ValueError("Retained PCB pad access fails current requirements")
+                elif isinstance(electrical.test_access.pcb_accessibility, AnalysisPending):
+                    raise ValueError("Current PCB test-access requirements remain pending")  # noqa: TRY004
+            if (
+                isinstance(electrical.test_access, AnalysisPending)
+                or electrical.test_access is None
+            ):
+                raise ValueError("Current test-access requirements remain pending")
+            if isinstance(electrical.power_connectivity, PowerConnectivityAnalysis) and any(
+                row.status not in {"PASS", "NOT_APPLICABLE"}
+                for row in power_connectivity_checks(electrical.power_connectivity, netlist)
+            ):
+                raise ValueError("Retained netlist fails current power connectivity requirements")
+            if isinstance(electrical.power_connectivity, AnalysisPending):
+                raise ValueError("Current power connectivity requirements remain pending")
 
     commands = {"version"}
     if isinstance(config.validation, PcbOnlyValidationContract):

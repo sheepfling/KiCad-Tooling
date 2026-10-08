@@ -1,4 +1,4 @@
-"""Set up or run grounding, power and high-frequency circuit checks."""
+"""Set up or run grounding, PCB return-path, power and frequency checks."""
 
 from __future__ import annotations
 
@@ -61,7 +61,9 @@ def main() -> int:
         "--runner",
         choices=("auto", "local", "container"),
         default="auto",
-        help="KiCad netlist runner; ngspice runs on the host",
+        help=(
+            "Schematic netlist runner; PCB return-path checks use the project-pinned KiCad container"
+        ),
     )
     parser.add_argument("--cli", default="kicad-cli", help="Exact local KiCad executable")
     parser.add_argument(

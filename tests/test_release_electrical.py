@@ -40,8 +40,10 @@ class ReleaseElectricalTests(unittest.TestCase):
                 project_id=fixture.project_id,
                 ngspice_version="47",
                 grounding=na,
+                pcb_return_paths=na,
                 power=na,
                 high_frequency=na,
+                test_access=na,
             ),
         )
         contract_path = self.root / f"examples/projects/{fixture.project_id}/tests/contract.json"

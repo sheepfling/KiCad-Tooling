@@ -6,6 +6,10 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
+from .bus_heuristics import can_termination_checks, i2c_pullup_checks, spi_checks, usb_c_checks
+from .component_power_ratings import component_power_rating_checks
+from .component_voltage_ratings import component_voltage_rating_checks
+from .connector_contact_ratings import connector_contact_rating_checks
 from .contract_coach import (
     AutoNetlistRunner,
     NetlistRunner,
@@ -13,7 +17,9 @@ from .contract_coach import (
     inspect_summary,
     receipt_directory,
 )
-from .contracts import write_model
+from .contracts import repo_path, write_model
+from .control_inputs import control_input_checks
+from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
     bound_inputs,
     grounding_checks,
@@ -27,15 +33,47 @@ from .evidence import digest, source_state
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
+    CanTerminationAnalysis,
     CommandEvidence,
+    ComponentPowerRatingAnalysis,
+    ComponentVoltageRatingAnalysis,
+    ConnectorContactRatingAnalysis,
+    ControlInputsAnalysis,
+    DigitalPeerVoltageAnalysis,
     ElectricalAnalysisReport,
     ElectricalCheck,
     ElectricalSuiteReport,
     GroundingAnalysis,
+    I2cPullupAnalysis,
+    MosfetStressAnalysis,
+    PcbAccessAnalysis,
+    PcbReturnPathsAnalysis,
     PinConnectivityAnalysis,
+    PowerConnectivityAnalysis,
+    ProjectKind,
+    Rs485Analysis,
+    SerialPeerAnalysis,
+    SpiAnalysis,
+    TestAccessAnalysis,
+    UsbCAnalysis,
 )
+from .mosfet_stress import mosfet_stress_checks
+from .pcb_return_paths import (
+    capture_native_pcb_connectivity,
+    expected_probe_sha256,
+    pcb_return_path_checks,
+)
+from .power_connectivity import power_connectivity_checks
+from .rs485_heuristics import rs485_checks
 from .selection import ProjectSelector, resolve_project_ids
+from .serial_heuristics import serial_peer_checks
 from .spice import executable_path, run_case, simulator_version
+from .test_access import (
+    evaluate_test_access_checks,
+    pcb_access_probe_request_set,
+    pcb_accessibility_checks,
+    pcb_probe_envelope_checks,
+)
 
 
 def analyze(
@@ -74,9 +112,27 @@ def analyze(
             inputs = bound_inputs(root, config, contract)
             write_model(output / "requirements.json", contract)
             netlist = None
-            if isinstance(contract.grounding, GroundingAnalysis) or isinstance(
-                contract.pin_connectivity, PinConnectivityAnalysis
-            ):
+            needs_netlist = any(
+                (
+                    isinstance(contract.grounding, GroundingAnalysis),
+                    isinstance(contract.pin_connectivity, PinConnectivityAnalysis),
+                    isinstance(contract.i2c_pullups, I2cPullupAnalysis),
+                    isinstance(contract.can_termination, CanTerminationAnalysis),
+                    isinstance(contract.usb_c, UsbCAnalysis),
+                    isinstance(contract.spi, SpiAnalysis),
+                    isinstance(contract.serial_peers, SerialPeerAnalysis),
+                    isinstance(contract.digital_peer_voltages, DigitalPeerVoltageAnalysis),
+                    isinstance(contract.component_voltage_ratings, ComponentVoltageRatingAnalysis),
+                    isinstance(contract.component_power_ratings, ComponentPowerRatingAnalysis),
+                    isinstance(contract.connector_contact_ratings, ConnectorContactRatingAnalysis),
+                    isinstance(contract.mosfet_stress, MosfetStressAnalysis),
+                    isinstance(contract.rs485, Rs485Analysis),
+                    isinstance(contract.control_inputs, ControlInputsAnalysis),
+                    isinstance(contract.power_connectivity, PowerConnectivityAnalysis),
+                    isinstance(contract.test_access, TestAccessAnalysis),
+                )
+            )
+            if needs_netlist:
                 if native_summary is None:
                     netlist_output = output / "netlist"
                     netlist_output.mkdir()
@@ -108,6 +164,87 @@ def analyze(
                         detail=contract.grounding.reason,
                     )
                 )
+            access_probe_requests = (
+                pcb_access_probe_request_set(contract.test_access)
+                if isinstance(contract.test_access, TestAccessAnalysis)
+                else None
+            )
+            pcb_snapshot = None
+            pcb_probe_error: str | None = None
+            needs_pcb_probe = (
+                isinstance(contract.pcb_return_paths, PcbReturnPathsAnalysis)
+                or access_probe_requests is not None
+            )
+            if needs_pcb_probe and config.kind is ProjectKind.PCB:
+                try:
+                    if access_probe_requests is None:
+                        command, pcb_snapshot = capture_native_pcb_connectivity(
+                            root, config, output / "pcb-connectivity"
+                        )
+                    else:
+                        command, pcb_snapshot = capture_native_pcb_connectivity(
+                            root,
+                            config,
+                            output / "pcb-connectivity",
+                            access_probe_requests=access_probe_requests,
+                        )
+                    commands["pcb-connectivity"] = command
+                    if pcb_snapshot is None:
+                        pcb_probe_error = (
+                            "KiCad native PCB probing did not produce evidence; inspect "
+                            "pcb-connectivity/native.command.json."
+                        )
+                    else:
+                        write_model(output / "pcb-connectivity/snapshot.json", pcb_snapshot)
+                except (OSError, ValueError) as exc:
+                    pcb_probe_error = str(exc)
+            if isinstance(contract.pcb_return_paths, PcbReturnPathsAnalysis):
+                if config.kind is not ProjectKind.PCB:
+                    checks.append(
+                        ElectricalCheck(
+                            id="pcb-return-paths/source",
+                            status="FAIL",
+                            detail="PCB return-path requirements need an authoritative PCB project.",
+                        )
+                    )
+                else:
+                    if pcb_snapshot is None:
+                        checks.append(
+                            ElectricalCheck(
+                                id="pcb-return-paths/native-probe",
+                                status="NOT_RUN",
+                                detail=pcb_probe_error
+                                or "KiCad native PCB probing did not produce evidence.",
+                            )
+                        )
+                    else:
+                        board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
+                        checks.extend(
+                            pcb_return_path_checks(
+                                contract.pcb_return_paths,
+                                pcb_snapshot,
+                                board_sha256=digest(board_path),
+                                kicad_version=config.kicad_version,
+                                image=config.image,
+                                probe_sha256=expected_probe_sha256(),
+                            )
+                        )
+            elif isinstance(contract.pcb_return_paths, AnalysisPending):
+                checks.append(
+                    ElectricalCheck(
+                        id="pcb-return-paths",
+                        status="NOT_CONFIGURED",
+                        detail=contract.pcb_return_paths.reason,
+                    )
+                )
+            else:
+                checks.append(
+                    ElectricalCheck(
+                        id="pcb-return-paths",
+                        status="NOT_APPLICABLE",
+                        detail=contract.pcb_return_paths.reason,
+                    )
+                )
             if isinstance(contract.pin_connectivity, PinConnectivityAnalysis):
                 if netlist is None:
                     checks.append(
@@ -127,6 +264,419 @@ def analyze(
                         if isinstance(contract.pin_connectivity, AnalysisPending)
                         else "NOT_APPLICABLE",
                         detail=contract.pin_connectivity.reason,
+                    )
+                )
+            if isinstance(contract.i2c_pullups, I2cPullupAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="i2c-pullups",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(i2c_pullup_checks(contract.i2c_pullups, netlist))
+            elif contract.i2c_pullups is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="i2c-pullups",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.i2c_pullups, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.i2c_pullups.reason,
+                    )
+                )
+            if isinstance(contract.can_termination, CanTerminationAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="can-termination",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(can_termination_checks(contract.can_termination, netlist))
+            elif contract.can_termination is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="can-termination",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.can_termination, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.can_termination.reason,
+                    )
+                )
+            if isinstance(contract.usb_c, UsbCAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="usb-c",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(usb_c_checks(contract.usb_c, netlist))
+            elif contract.usb_c is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="usb-c",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.usb_c, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.usb_c.reason,
+                    )
+                )
+            if isinstance(contract.spi, SpiAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="spi",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(spi_checks(contract.spi, netlist))
+            elif contract.spi is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="spi",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.spi, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.spi.reason,
+                    )
+                )
+            if isinstance(contract.serial_peers, SerialPeerAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="serial-peers",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(serial_peer_checks(contract.serial_peers, netlist))
+            elif contract.serial_peers is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="serial-peers",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.serial_peers, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.serial_peers.reason,
+                    )
+                )
+            if isinstance(contract.digital_peer_voltages, DigitalPeerVoltageAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="digital-peer-voltages",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(
+                        digital_peer_voltage_checks(contract.digital_peer_voltages, netlist)
+                    )
+            elif contract.digital_peer_voltages is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="digital-peer-voltages",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.digital_peer_voltages, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.digital_peer_voltages.reason,
+                    )
+                )
+            if isinstance(contract.component_voltage_ratings, ComponentVoltageRatingAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="component-voltage-ratings",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(
+                        component_voltage_rating_checks(contract.component_voltage_ratings, netlist)
+                    )
+            elif contract.component_voltage_ratings is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="component-voltage-ratings",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.component_voltage_ratings, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.component_voltage_ratings.reason,
+                    )
+                )
+            if isinstance(contract.component_power_ratings, ComponentPowerRatingAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="component-power-ratings",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(
+                        component_power_rating_checks(contract.component_power_ratings, netlist)
+                    )
+            elif contract.component_power_ratings is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="component-power-ratings",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.component_power_ratings, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.component_power_ratings.reason,
+                    )
+                )
+            if isinstance(contract.connector_contact_ratings, ConnectorContactRatingAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="connector-contact-ratings",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(
+                        connector_contact_rating_checks(contract.connector_contact_ratings, netlist)
+                    )
+            elif contract.connector_contact_ratings is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="connector-contact-ratings",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.connector_contact_ratings, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.connector_contact_ratings.reason,
+                    )
+                )
+            if isinstance(contract.mosfet_stress, MosfetStressAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="mosfet-stress",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(mosfet_stress_checks(contract.mosfet_stress, netlist))
+            elif contract.mosfet_stress is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="mosfet-stress",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.mosfet_stress, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.mosfet_stress.reason,
+                    )
+                )
+            if isinstance(contract.rs485, Rs485Analysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="rs485",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(rs485_checks(contract.rs485, netlist))
+            elif contract.rs485 is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="rs485",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.rs485, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.rs485.reason,
+                    )
+                )
+            if isinstance(contract.control_inputs, ControlInputsAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="control-inputs",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(control_input_checks(contract.control_inputs, netlist))
+            elif contract.control_inputs is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="control-inputs",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.control_inputs, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.control_inputs.reason,
+                    )
+                )
+            if isinstance(contract.power_connectivity, PowerConnectivityAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="power-connectivity",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(power_connectivity_checks(contract.power_connectivity, netlist))
+            elif contract.power_connectivity is not None:
+                checks.append(
+                    ElectricalCheck(
+                        id="power-connectivity",
+                        status=(
+                            "NOT_CONFIGURED"
+                            if isinstance(contract.power_connectivity, AnalysisPending)
+                            else "NOT_APPLICABLE"
+                        ),
+                        detail=contract.power_connectivity.reason,
+                    )
+                )
+            if isinstance(contract.test_access, TestAccessAnalysis):
+                if netlist is None:
+                    checks.append(
+                        ElectricalCheck(
+                            id="test-access/schematic",
+                            status="FAIL",
+                            detail="No current source-bound netlist; inspect netlist-evidence.json.",
+                        )
+                    )
+                else:
+                    checks.extend(evaluate_test_access_checks(contract.test_access, netlist))
+                if isinstance(contract.test_access.pcb_accessibility, PcbAccessAnalysis):
+                    if config.kind is not ProjectKind.PCB:
+                        checks.append(
+                            ElectricalCheck(
+                                id="test-access/pcb-accessibility/source",
+                                status="FAIL",
+                                detail="PCB access evidence is required, but this project has no PCB project kind.",
+                            )
+                        )
+                    else:
+                        board_path = repo_path(root, config.project).with_suffix(".kicad_pcb")
+                        checks.extend(
+                            pcb_accessibility_checks(
+                                contract.test_access,
+                                contract.test_access.pcb_accessibility,
+                                board_path,
+                            )
+                        )
+                elif isinstance(contract.test_access.pcb_accessibility, AnalysisPending):
+                    checks.append(
+                        ElectricalCheck(
+                            id="test-access/pcb-accessibility",
+                            status="NOT_CONFIGURED",
+                            detail=contract.test_access.pcb_accessibility.reason,
+                        )
+                    )
+                else:
+                    checks.append(
+                        ElectricalCheck(
+                            id="test-access/pcb-accessibility",
+                            status="NOT_APPLICABLE",
+                            detail=contract.test_access.pcb_accessibility.reason,
+                        )
+                    )
+                if access_probe_requests is not None:
+                    if config.kind is not ProjectKind.PCB:
+                        checks.append(
+                            ElectricalCheck(
+                                id="test-access/pcb-probe-envelope/source",
+                                status="FAIL",
+                                detail="Probe-envelope evidence requires an authoritative PCB project.",
+                            )
+                        )
+                    elif pcb_snapshot is None:
+                        checks.append(
+                            ElectricalCheck(
+                                id="test-access/pcb-probe-envelope/native-probe",
+                                status="NOT_RUN",
+                                detail=pcb_probe_error
+                                or "KiCad native PCB probing did not produce evidence.",
+                            )
+                        )
+                    else:
+                        checks.extend(pcb_probe_envelope_checks(contract.test_access, pcb_snapshot))
+            elif contract.test_access is not None:
+                access_status = (
+                    "NOT_CONFIGURED"
+                    if isinstance(contract.test_access, AnalysisPending)
+                    else "NOT_APPLICABLE"
+                )
+                checks.append(
+                    ElectricalCheck(
+                        id="test-access/schematic",
+                        status=access_status,
+                        detail=contract.test_access.reason,
+                    )
+                )
+                checks.append(
+                    ElectricalCheck(
+                        id="test-access/pcb-accessibility",
+                        status=access_status,
+                        detail=contract.test_access.reason,
+                    )
+                )
+            else:
+                checks.append(
+                    ElectricalCheck(
+                        id="test-access/schematic",
+                        status="NOT_CONFIGURED",
+                        detail=(
+                            "No test_access requirement or explicit not-applicable decision is "
+                            "recorded in tests/electrical.json."
+                        ),
+                    )
+                )
+                checks.append(
+                    ElectricalCheck(
+                        id="test-access/pcb-accessibility",
+                        status="NOT_CONFIGURED",
+                        detail=(
+                            "No PCB test-access requirements or explicit not-applicable decision "
+                            "is recorded in tests/electrical.json."
+                        ),
                     )
                 )
             if isinstance(contract.high_frequency, (AnalysisNotApplicable, AnalysisPending)):

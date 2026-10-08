@@ -344,19 +344,34 @@ def _compare(
     return issues
 
 
-def _test_exists(root: Path, reference: str) -> bool:
+def _test_exists(
+    root: Path,
+    reference: str,
+    *,
+    ast_cache: dict[Path, ast.Module | None] | None = None,
+) -> bool:
     """Resolve a unittest method from source without importing/executing tests."""
     parts = reference.split(".")
     if len(parts) < 4 or parts[0] != "tests" or not parts[-1].startswith("test_"):
         return False
     if any(not part.isidentifier() for part in parts):
         return False
+    path: Path | None = None
     try:
         path = repo_path(root, "/".join(parts[:-2]) + ".py")
         if not path.is_file():
             return False
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        if ast_cache is not None and path in ast_cache:
+            tree = ast_cache[path]
+        else:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            if ast_cache is not None:
+                ast_cache[path] = tree
     except (OSError, SyntaxError, ValueError):
+        if ast_cache is not None and path is not None:
+            ast_cache[path] = None
+        return False
+    if tree is None:
         return False
     return any(
         isinstance(node, ast.ClassDef)
@@ -375,6 +390,7 @@ def parity_issues(
     """Check core policy, and resolve test references when package source is available."""
     issues: list[PolicyIssue] = []
     by_id = {mapping.id: mapping for mapping in mappings}
+    test_ast_cache: dict[Path, ast.Module | None] = {}
     for identifier in sorted(CORE_WORKFLOWS):
         mapping = by_id.get(identifier)
         if mapping is None or mapping.scope != "core":
@@ -421,7 +437,7 @@ def parity_issues(
                 )
             )
         for reference in mapping.parity_tests:
-            if root is not None and not _test_exists(root, reference):
+            if root is not None and not _test_exists(root, reference, ast_cache=test_ast_cache):
                 issues.append(
                     PolicyIssue(
                         code="missing_parity_test",

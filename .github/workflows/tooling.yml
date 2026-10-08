@@ -32,7 +32,7 @@ jobs:
         run: python -I -B -m unittest discover -s tests -p test_hosted_preview.py -v
   package:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -40,7 +40,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          repository: sheepfling/KiCad-Team-Workflow-Template
+          repository: ${{ github.repository_owner }}/KiCad-Team-Workflow-Template
           ref: 5ca79bedf665a9b6577d96b1d47f13ccd518c968
           path: build/acceptance-template
           persist-credentials: false
@@ -50,6 +50,29 @@ jobs:
       - name: Install package check dependencies
         run: python -m pip install --disable-pip-version-check -e '.[dev]'
       - name: Check tooling and installed wheel against a separate project
+        env:
+          KICAD_RUN_NATIVE_PCB_FIXTURES: '1'
+          KICAD_RUN_NATIVE_CONNECTOR_FIXTURES: '1'
+          KICAD_RUN_NATIVE_EMPTY_NETLIST_FIXTURES: '1'
+          KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES: '1'
+          KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES: '1'
+          KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES: '1'
+          KICAD_RUN_NATIVE_POWER_PATH_FIXTURES: '1'
+          KICAD_RUN_NATIVE_LED_RAIL_FIXTURES: '1'
+          KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES: '1'
+          KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES: '1'
+          KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES: '1'
+          KICAD_RUN_NATIVE_NET_DC_REFERENCE_FIXTURES: '1'
+          KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES: '1'
+          KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES: '1'
+          KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES: '1'
+          KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES: '1'
+          KICAD_RUN_NATIVE_CAN_PEER_FIXTURES: '1'
+          KICAD_RUN_NATIVE_OPEN_DRAIN_FIXTURES: '1'
+          KICAD_RUN_NATIVE_STM32_PIN_MAP_FIXTURES: '1'
+          KICAD_RUN_NATIVE_USB_C_PORT_FIXTURES: '1'
+          KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY: '1'
+          KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES: '1'
         run: python scripts/ci.py --project-root build/acceptance-template
       - name: Keep stage logs
         if: always()

@@ -35,7 +35,7 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.scaffold import new_project
-from kicad_tooling.validate import hashes
+from kicad_tooling.validate import hashes, read_netlist
 from tests.support import reference_root
 
 NETLIST = """<export>
@@ -130,6 +130,24 @@ class ContractCoachTests(unittest.TestCase):
         )
         write_model(self.native / "summary.json", self.summary)
 
+    def test_netlist_retains_dnp_status_for_population_heuristics(self) -> None:
+        path = self.root / "build" / "dnp-netlist.xml"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            NETLIST.replace('<comp ref="R1">', '<comp ref="R1"><property name="dnp"/>'),
+            encoding="utf-8",
+        )
+        observed = read_netlist(path)
+        self.assertEqual(observed.dnp_components, ("R1",))
+
+        ambiguous = self.root / "build" / "ambiguous-dnp-netlist.xml"
+        ambiguous.write_text(
+            NETLIST.replace('<comp ref="R1">', '<comp ref="R1"><property name="dnp" value="no"/>'),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(ValueError, "Ambiguous native dnp property"):
+            read_netlist(ambiguous)
+
     def test_failed_contract_check_still_yields_bound_unreviewed_inventory(self) -> None:
         contract = self.root / "examples/projects/controller/tests/contract.json"
         before = contract.read_bytes()
@@ -139,6 +157,11 @@ class ContractCoachTests(unittest.TestCase):
         self.assertFalse(report.electrical_coverage)
         self.assertEqual(report.native_summary, str(self.native / "summary.json"))
         self.assertEqual(report.native_status, "FAIL")
+        self.assertIn(
+            "The validation summary is FAIL; inspect individual check states to distinguish "
+            "native export failures from contract or design-lint review findings.",
+            report.next_actions,
+        )
         self.assertEqual(
             {
                 component.identifier
@@ -149,6 +172,27 @@ class ContractCoachTests(unittest.TestCase):
         )
         self.assertIn("UNREVIEWED component R3", text_report(report, "full"))
         self.assertEqual(contract.read_bytes(), before)
+
+    def test_successful_empty_netlist_export_is_blocked_as_lint_evidence(self) -> None:
+        netlist = self.native / "netlist.xml"
+        netlist.write_text("<export><components/><nets/></export>", encoding="utf-8")
+        write_model(
+            self.native / "summary.json",
+            self.summary.model_copy(
+                update={
+                    "artifacts_sha256": {
+                        **self.summary.artifacts_sha256,
+                        "netlist.xml": digest(netlist),
+                    }
+                }
+            ),
+        )
+
+        report = inspect_summary(self.root, self.project_id, self.native / "summary.json")
+
+        self.assertEqual(report.status, "BLOCKED")
+        self.assertIn("contains no component records", report.issues[0])
+        self.assertIsNone(report.observed)
 
     def test_tampered_wrong_project_and_stale_source_are_blocked(self) -> None:
         netlist = self.native / "netlist.xml"

@@ -7,14 +7,31 @@ import re
 import shutil
 import subprocess
 import sys
-from importlib.metadata import PackageNotFoundError, distribution
+from importlib.metadata import PackageNotFoundError, distribution, distributions
 from pathlib import Path, PurePosixPath
 
 from .hwrepo.contracts import repo_path
 
 
 def runtime_metadata() -> Path:
-    """Locate the caller's installed distribution identity without private metadata APIs."""
+    """Locate the installed identity that package_version reports.
+
+    Editable checkouts can expose both source ``.egg-info`` and installed
+    ``.dist-info`` metadata. Prefer ``.dist-info`` so copied runtimes report
+    the same immutable version as ``kicad_tooling.package_version``.
+    """
+    for installed in distributions(name="kicad-team-tooling"):
+        entries = installed.files or ()
+        metadata = tuple(
+            Path(str(installed.locate_file(entry))).parent.resolve()
+            for entry in entries
+            if entry.name == "METADATA" and entry.parent.name.endswith(".dist-info")
+        )
+        if metadata:
+            if len(metadata) != 1 or not metadata[0].is_dir():
+                raise ValueError("Installed kicad-team-tooling distribution metadata is incomplete")
+            return metadata[0]
+
     try:
         installed = distribution("kicad-team-tooling")
     except PackageNotFoundError as exc:

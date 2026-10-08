@@ -185,4 +185,7 @@ def load_config(root: Path, value: str | Path) -> ProjectConfig:
             else local_name(root, path.parent, contract.electrical)
         ),
         design_lint=contract.design_lint,
+        interfaces=manifest.interfaces,
+        connector_reviews=manifest.connector_reviews,
+        connector_inventory_review=manifest.connector_inventory_review,
     )

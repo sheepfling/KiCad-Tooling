@@ -68,7 +68,7 @@ it does not inherit packages from the host or consuming project's directories.
 
 The hosted workflow runs for pull requests, main, and `v*` tags. It does not publish
 a package. Native and release acceptance runs against the separately pinned template.
-PyPI publication remains a separate release action. See the
+PyPI publication remains a separate release step. See the
 [repository boundary](../README.md#repository-boundary).
 
 Once published, project repositories should pin an exact tested package version.

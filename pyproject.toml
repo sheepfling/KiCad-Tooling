@@ -7,7 +7,8 @@ name = "kicad-team-tooling"
 dynamic = ["version"]
 description = "Guided KiCad workflows for onboarding, triage, verification, BOMs, and review evidence"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
   "pydantic==2.13.5",
@@ -24,6 +25,7 @@ charts = ["matplotlib==3.11.2"]
 cad = ["easyeda2kicad==1.0.1"]
 dev = [
   "build>=1.2",
+  "pytest==9.1.1",
   "setuptools>=80",
   "setuptools-scm>=8",
   "mcp==2.2.0",
@@ -46,7 +48,16 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 
 [tool.setuptools.package-data]
 "kicad_tooling" = ["py.typed", "tool-surfaces.json", "fixtures/*.xml", "fixtures/*.txt"]
-"kicad_tooling.hwrepo" = ["kicad_library_license.txt"]
+"kicad_tooling.hwrepo" = [
+  "kicad_library_license.txt",
+  "design-lint-rules.json",
+  "native_pcb_probe.py.in",
+  "schematic-text-metrics.json",
+  "fixtures/*.kicad_pcb",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.ruff]
 # Ruff is pinned in the development extra so its default rule set is reproducible.

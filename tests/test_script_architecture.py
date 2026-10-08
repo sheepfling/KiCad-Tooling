@@ -14,6 +14,10 @@ JSON_ADAPTERS = {
     "kicad_tooling/hwrepo/hosted_governance.py",
     "kicad_tooling/validate.py",
     "kicad_tooling/fault_probe.py",
+    # Native PCB probe output is validated as a strict snapshot before models are built.
+    "kicad_tooling/hwrepo/pcb_return_paths.py",
+    # KiCad DRC JSON is decoded only to its small ignored-check evidence surface.
+    "kicad_tooling/hwrepo/pcb_drc_coverage.py",
 }
 # Discover services automatically so a new module cannot evade architecture checks.
 CORE_MODULES = tuple(

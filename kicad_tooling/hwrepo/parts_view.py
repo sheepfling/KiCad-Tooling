@@ -67,8 +67,8 @@ def render_html(report: PurchasingReport) -> str:
     title = escape(report.project_id)
     if report.native_status == "FAIL":
         sections.append(
-            '<section class="notice"><strong>Existing native validation failed.</strong>'
-            "<p>Inspect the native receipt and resolve its findings before using this parts plan. "
+            '<section class="notice"><strong>Validation summary is FAIL.</strong>'
+            "<p>Inspect the retained receipt and its individual check states before using this parts plan. "
             "Part metadata can still be reviewed here.</p></section>"
         )
     if report.plan is None:

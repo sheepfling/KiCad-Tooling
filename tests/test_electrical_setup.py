@@ -81,16 +81,32 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertEqual(
             [
                 contract.grounding.mode,
+                contract.pcb_return_paths.mode,
                 contract.pin_connectivity.mode if contract.pin_connectivity else None,
+                contract.i2c_pullups.mode if contract.i2c_pullups else None,
+                contract.can_termination.mode if contract.can_termination else None,
+                contract.usb_c.mode if contract.usb_c else None,
+                contract.spi.mode if contract.spi else None,
+                contract.serial_peers.mode if contract.serial_peers else None,
+                contract.digital_peer_voltages.mode if contract.digital_peer_voltages else None,
+                contract.component_power_ratings.mode if contract.component_power_ratings else None,
+                contract.connector_contact_ratings.mode
+                if contract.connector_contact_ratings
+                else None,
+                contract.mosfet_stress.mode if contract.mosfet_stress else None,
+                contract.rs485.mode if contract.rs485 else None,
+                contract.control_inputs.mode if contract.control_inputs else None,
+                contract.test_access.mode if contract.test_access else None,
                 contract.power.mode,
+                contract.power_connectivity.mode if contract.power_connectivity else None,
                 contract.high_frequency.mode,
             ],
-            ["pending"] * 4,
+            ["pending"] * 18,
         )
         self.assertEqual(simulation_cases(contract), ())
-        self.assertIn(
-            "Pending", " ".join(policy_issues(self.root, selected_config(self.root, PROJECT)))
-        )
+        pending_summary = " ".join(policy_issues(self.root, selected_config(self.root, PROJECT)))
+        self.assertIn("Pending", pending_summary)
+        self.assertIn("digital_peer_voltages", pending_summary)
         with (
             patch("kicad_tooling.hwrepo.electrical_runner.capture") as native,
             patch("kicad_tooling.hwrepo.electrical_runner.run_case") as spice,
@@ -99,7 +115,12 @@ class ElectricalSetupTests(unittest.TestCase):
         native.assert_not_called()
         spice.assert_not_called()
         self.assertEqual(result.status, "FAIL")
-        self.assertEqual([c.status for c in result.checks], ["NOT_CONFIGURED"] * 4)
+        self.assertEqual([c.status for c in result.checks], ["NOT_CONFIGURED"] * 19)
+        self.assertIn("test-access/schematic", {row.id for row in result.checks})
+        self.assertIn("test-access/pcb-accessibility", {row.id for row in result.checks})
+        self.assertIn("digital-peer-voltages", {row.id for row in result.checks})
+        self.assertIn("component-power-ratings", {row.id for row in result.checks})
+        self.assertIn("mosfet-stress", {row.id for row in result.checks})
         portable = project_static_pipeline(self.root, (PROJECT,))
         self.assertEqual(portable.status, "FAIL")
         # The diagnostic points at the authoring source and provides a CLI remedy.
@@ -108,6 +129,16 @@ class ElectricalSetupTests(unittest.TestCase):
         electrical = next(row for row in findings if row.code == "ELECTRICAL_SETUP")
         self.assertIn("electrical", electrical.location)
         self.assertIn("doctor", electrical.action)
+
+        write_model(self.sidecar, contract.model_copy(update={"test_access": None}))
+        legacy = analyze(self.root, PROJECT)
+        access_check = next(row for row in legacy.checks if row.id == "test-access/schematic")
+        self.assertEqual(access_check.status, "NOT_CONFIGURED")
+        pcb_check = next(row for row in legacy.checks if row.id == "test-access/pcb-accessibility")
+        self.assertEqual(pcb_check.status, "NOT_CONFIGURED")
+        self.assertIn(
+            "test_access", " ".join(policy_issues(self.root, selected_config(self.root, PROJECT)))
+        )
 
     def test_repeated_init_and_existing_sidecar_never_overwrite(self) -> None:
         initialize(self.root, PROJECT, "47")

@@ -39,6 +39,13 @@ def ignore_local(directory: str, names: list[str]) -> set[str]:
     }
 
 
+def ignore_example_catalog_readme(directory: str, names: list[str]) -> set[str]:
+    """Keep the live catalog guide when example catalog data is copied into place."""
+    if Path(directory) == TEMPLATE_ROOT / "examples/catalog" and "README.md" in names:
+        return {"README.md"}
+    return set()
+
+
 def initialize_git(root: Path) -> None:
     # Disposable repositories are deleted immediately after each test. Keep Git
     # from starting background maintenance that can recreate .git/objects during
@@ -80,7 +87,12 @@ def reference_root() -> Path:
         readme = TEMPLATE_ROOT / directory / "README.md"
         if readme.exists():
             shutil.copy2(readme, destination / directory / "README.md")
-    shutil.copytree(TEMPLATE_ROOT / "examples/catalog", destination / "catalog", dirs_exist_ok=True)
+    shutil.copytree(
+        TEMPLATE_ROOT / "examples/catalog",
+        destination / "catalog",
+        dirs_exist_ok=True,
+        ignore=ignore_example_catalog_readme,
+    )
     shutil.copy2(
         TEMPLATE_ROOT / "catalog/documentation-policy.json",
         destination / "catalog/documentation-policy.json",

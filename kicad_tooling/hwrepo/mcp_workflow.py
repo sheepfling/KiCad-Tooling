@@ -36,6 +36,7 @@ from .mcp_files import artifact_path
 from .models import (
     ContractCoachReport,
     DesignLintReport,
+    DesignLintRuleCatalog,
     DiagnosticReport,
     Identifier,
     LocalRescueReport,
@@ -201,6 +202,11 @@ def inspect_contract(root: Path, project_id: str, native_summary: str) -> Contra
 def inspect_design_lint(root: Path, project_id: str, native_summary: str) -> DesignLintReport:
     """Review source-bound heuristic findings through the same typed CLI service."""
     return design_lint.inspect_summary(root, project_id, native_summary_path(root, native_summary))
+
+
+def list_design_lint_rules() -> DesignLintRuleCatalog:
+    """Return the packaged rule catalog without reading project evidence."""
+    return design_lint.rule_catalog()
 
 
 def capture_contract(
