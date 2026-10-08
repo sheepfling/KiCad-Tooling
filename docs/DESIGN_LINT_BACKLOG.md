@@ -170,12 +170,14 @@ and optional ecosystem adapters are `P3`.
   Three supported public common-reference examples were quiet, and temporary
   split-reference mutations prompted review in all three. These are exploratory
   applicability screens, not a measured precision rate. The next work is to
-  record false prompts, seeded misses, and reviewer effort on approved,
-  nonconfidential examples. Count a quiet result as a supported non-finding
-  only for common-reference paths in the report's `common_reference_path_count`;
+  apply the reviewer-value protocol under LINT-086 to approved, nonconfidential
+  examples. Record supported/common/separate/mapped path counts, independently
+  supported dispositions, baseline duplicates, seeded mutation outcomes, and
+  review time. Count a quiet result as a supported non-finding only for
+  common-reference paths in `common_reference_path_count`;
   `NO_SUPPORTED_PEER_PATHS` contributes no non-finding, and `INCOMPLETE` remains
-  a partial screen. Keep project defaults unchanged and keep the prompt
-  review-only while that evidence is gathered.
+  a partial screen. Keep unresolved labels visible and keep project defaults
+  and the review-only prompt unchanged while evidence is gathered.
 
 - **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
   passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
@@ -3300,6 +3302,40 @@ is not a reason by itself to expand its scope or change its default policy.
   tagged sources; current uncommitted changes do not modify those files. This
   establishes exact-version schematic-export compatibility for synthetic
   cases, not physical continuity or product approval.
+- **Reviewer-value measurement protocol:** Use one row per uniquely matched
+  connector-to-IC path, plus a run header. Freeze the tooling commit, public or
+  approved source URL and immutable revision, license/permission basis, source
+  file hash, exact KiCad version and image digest, raw export hash, and
+  normalized netlist hash. Capture the report status and the typed
+  `supported_data_path_count`, `common_reference_path_count`,
+  `separate_reference_path_count`, `mapped_separate_reference_path_count`, and
+  emitted prompt count. Do not collapse connector ports, duplicate contacts,
+  or multiple PHYs into a single denominator when the report distinguishes
+  them.
+
+  Record a quiet common-reference path as `supported_non_finding`. Give every
+  prompted path one independently reviewed disposition: `actionable_policy_gap`
+  (the prompt caused an authored common/separate/bond decision or exposed a
+  mismatch against that decision), `documented_no_action` (approved design
+  evidence already resolves the path and no review or contract update is
+  needed), `baseline_duplicate` (the same review was already required by ERC or
+  another authored check), or `unresolved` (the evidence does not establish
+  intended policy). Call a prompt false only for `documented_no_action`; missing
+  documentation is `unresolved`, not a false positive. A
+  `supported_non_finding` means only that the predicate was quiet on a supported
+  path; it does not prove common reference is required. Keep `INCOMPLETE`,
+  `NO_SUPPORTED_PEER_PATHS`, DNP-only, and unsupported paths in coverage totals
+  but outside the supported-path non-finding denominator.
+
+  Run synthetic split-reference mutations only on tooling-owned fixtures and
+  record mutation ID, expected prompt, observed prompt, and miss/pass. These
+  measure fixture sensitivity, not field recall. Record reviewer minutes from
+  opening the source-bound evidence to a written disposition. To claim a time
+  reduction, compare baseline-only and report-assisted review with
+  counterbalanced order and publish both sample counts and unresolved cases.
+  Report counts and denominators; do not publish a precision or false-positive
+  rate when a prompt lacks an independent disposition. Keep source files,
+  exports, and reviewer identities out of the tooling repository.
 - **Next:** Keep this review-only and measure reviewer usefulness and false
   prompts on approved nonconfidential boards. Do not make common reference a
   universal USB rule. Reviewer effort, false-positive rate, multi-pin
