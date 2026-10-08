@@ -82,7 +82,6 @@ from tests.test_external_protection import (
     observed_netlist as protection_netlist,
 )
 from tests.test_i2c_addressing import I2cAddressingTests, address_map, address_netlist, responder
-from tests.test_i2c_pullup_heuristic_coverage import I2cPullupHeuristicCoverageTests
 from tests.test_led_output_heuristics import LedOutputHeuristicTests, output_led_netlist
 from tests.test_native_pcb_probe import NativePcbProbeGeometryTests
 from tests.test_open_drain_heuristics import (
@@ -398,7 +397,6 @@ class DesignLintCatalogTests(unittest.TestCase):
             DesignLintTests: DesignLintTests(),
             ConnectorCoverageTests: ConnectorCoverageTests(),
             I2cAddressingTests: I2cAddressingTests(),
-            I2cPullupHeuristicCoverageTests: I2cPullupHeuristicCoverageTests(),
             SchematicGeometryTests: SchematicGeometryTests(),
             ExternalProtectionTests: ExternalProtectionTests(),
             CrystalNetworkTests: CrystalNetworkTests(),

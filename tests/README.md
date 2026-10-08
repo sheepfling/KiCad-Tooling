@@ -7,8 +7,10 @@ The shared Python regression suite belongs to this repository. Board contracts,
 firmware checks, and product integration tests remain in their project repository.
 Pytest is the canonical test runner. Write new tests as `test_*` functions using
 plain `assert`, pytest fixtures, and parametrization where they clarify cases.
-Existing `unittest.TestCase` tests remain supported; migrate them incrementally
-when a suite is already being changed. `unittest.mock` remains useful with pytest.
+Do not add new `unittest.TestCase` tests. Existing `TestCase` tests remain
+supported while we migrate the suite incrementally, prioritizing lint and
+verification coverage. Convert the touched regression tests to pytest functions
+when extending a legacy suite. `unittest.mock` remains useful with pytest.
 
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:

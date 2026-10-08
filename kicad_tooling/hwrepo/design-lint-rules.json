@@ -857,15 +857,15 @@
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
         "tests.test_design_lint.DesignLintTests.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
-        "tests.test_i2c_pullup_heuristic_coverage.I2cPullupHeuristicCoverageTests.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
-        "tests.test_i2c_pullup_heuristic_coverage.I2cPullupHeuristicCoverageTests.test_requirement_for_a_different_ordered_bus_does_not_resolve_hint",
-        "tests.test_i2c_pullup_heuristic_coverage.I2cPullupHeuristicCoverageTests.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing"
+        "tests.test_i2c_pullup_heuristic_coverage.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
+        "tests.test_i2c_pullup_heuristic_coverage.test_requirement_for_a_different_ordered_bus_does_not_resolve_hint",
+        "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
         "tests.test_design_lint.DesignLintTests.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
-        "tests.test_i2c_pullup_heuristic_coverage.I2cPullupHeuristicCoverageTests.test_valid_mapped_array_resolves_only_its_exact_missing_path_hint",
-        "tests.test_i2c_pullup_heuristic_coverage.I2cPullupHeuristicCoverageTests.test_symmetric_array_pin_orientation_is_a_valid_control"
+        "tests.test_i2c_pullup_heuristic_coverage.test_valid_mapped_array_resolves_only_its_exact_missing_path_hint",
+        "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
