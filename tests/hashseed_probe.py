@@ -115,6 +115,7 @@ from tests.test_two_pin_crystals import crystal_netlist
 from tests.test_two_pin_diodes import diode_netlist
 from tests.test_two_pin_ferrites import ferrite_netlist
 from tests.test_two_pin_fuses import fuse_netlist
+from tests.test_two_pin_switches import switch_netlist
 from tests.test_usb_data_paths import (
     usb_bonded_reference_map,
     usb_bonded_reference_netlist,
@@ -773,6 +774,16 @@ def test_emit_four_port_db9_fault_and_control_reports() -> None:
         "ferrite_control": evaluate(
             "synthetic-two-pin-ferrite-hash-seed-control",
             coach(ferrite_netlist(same_net=False)),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "switch_fault": evaluate(
+            "synthetic-two-pin-switch-hash-seed-fault",
+            coach(switch_netlist()),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "switch_control": evaluate(
+            "synthetic-two-pin-switch-hash-seed-control",
+            coach(switch_netlist(same_net=False)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "peer_pin_fault": evaluate(

@@ -216,6 +216,7 @@ from tests.test_two_pin_passives import (
 from tests.test_two_pin_passives import (
     lint_report as two_pin_passive_lint_report,
 )
+from tests.test_two_pin_switches import switch_netlist as two_pin_switch_netlist
 from tests.test_usb_c_ports import UsbCPortLintTests, usb_c_netlist
 from tests.test_usb_data_paths import UsbDataPathTests, usb_data_map, usb_netlist
 from tests.test_usb_peer_reference_review import (
@@ -426,6 +427,7 @@ class DesignLintCatalogTests(unittest.TestCase):
             OpenDrainBiasHeuristicTests: OpenDrainBiasHeuristicTests(),
         }
         fixtures: set[tuple[type, str]] = set()
+        pytest_fixtures: set[str] = set()
         metamorphic_rules: set[str] = set()
         for entry in rule_catalog().rules:
             self.assertTrue(entry.fault_fixtures)
@@ -437,14 +439,34 @@ class DesignLintCatalogTests(unittest.TestCase):
                 *entry.valid_control_fixtures,
                 *entry.metamorphic_fixtures,
             ):
-                module_name, class_name, method_name = name.rsplit(".", 2)
-                module = importlib.import_module(module_name)
-                test_case = getattr(module, class_name)
-                self.assertTrue(callable(getattr(test_case, method_name)), name)
-                self.assertIn(test_case, instances, name)
-                fixtures.add((test_case, method_name))
+                parts = name.split(".")
+                module = None
+                module_length = 0
+                for length in range(len(parts) - 1, 0, -1):
+                    try:
+                        module = importlib.import_module(".".join(parts[:length]))
+                    except ModuleNotFoundError:
+                        continue
+                    module_length = length
+                    break
+                self.assertIsNotNone(module, name)
+                assert module is not None
+                attributes = parts[module_length:]
+                owner = module
+                for attribute in attributes[:-1]:
+                    owner = getattr(owner, attribute)
+                target = getattr(owner, attributes[-1])
+                self.assertTrue(callable(target), name)
+                if isinstance(owner, type) and issubclass(owner, unittest.TestCase):
+                    self.assertIn(owner, instances, name)
+                    fixtures.add((owner, attributes[-1]))
+                else:
+                    self.assertEqual(len(attributes), 1, name)
+                    self.assertTrue(target.__name__.startswith("test_"), name)
+                    pytest_fixtures.add(name)
 
         self.assertGreaterEqual(len(metamorphic_rules), 2)
+        self.assertTrue(pytest_fixtures, "catalog should support pytest function fixtures")
 
         for test_case, method_name in sorted(
             fixtures, key=lambda fixture: (fixture[0].__name__, fixture[1])
@@ -817,6 +839,7 @@ class DesignLintCatalogTests(unittest.TestCase):
         emitted.update(item.rule_id for item in fuse_result.findings)
         ferrite_result = two_pin_ferrite_lint_report(ferrite_netlist())
         emitted.update(item.rule_id for item in ferrite_result.findings)
+        emitted.update(item.rule_id for item in candidates(two_pin_switch_netlist()))
         emitted.update(item.rule_id for item in candidates(generic_component_power_input_netlist()))
         emitted.update(
             item.rule_id

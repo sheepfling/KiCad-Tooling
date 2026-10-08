@@ -4102,7 +4102,7 @@ class NativeComplementaryPairFixtureTests(unittest.TestCase):
 class TwoPinComponentFixtureManifestTests(unittest.TestCase):
     def test_every_native_case_resolves_under_the_read_only_fixture_mount(self) -> None:
         fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
-        self.assertEqual(len(TWO_PIN_COMPONENT_FIXTURE_CASES), 12)
+        self.assertEqual(len(TWO_PIN_COMPONENT_FIXTURE_CASES), 14)
         for case, (
             relative_source,
             _rule_id,
@@ -4159,6 +4159,8 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
             "two-pin-fuses/distinct-nets-polyfuse.kicad_sch": "f4d7ba7f0d27d295c725f2286dace93fa4163b3dbb04130d0c913f05660fc037",
             "two-pin-ferrites/same-net-ferrite.kicad_sch": "8ede05ea1d9c8afb0cec2f1c8c9bddf527eab015ab779097f4ddc528866751f7",
             "two-pin-ferrites/distinct-nets-ferrite.kicad_sch": "199c802ca290b1281622c623f4966b159144f0e95fd99ed0e21a14a0875734a7",
+            "two-pin-switches/same-net-spst.kicad_sch": "1ddb2e72f4759c3edddd0f1c7077090c911fa3cbd36d48ef5a0850d6146c25b4",
+            "two-pin-switches/distinct-nets-spst.kicad_sch": "2f9e43e716fe6bc89645734768ced5ff5491ba8b62330aa1c544db236d31e147",
         }
         self.assertEqual(
             {
@@ -4194,6 +4196,8 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
                     "distinct-nets-polyfuse",
                     "same-net-ferrite",
                     "distinct-nets-ferrite",
+                    "same-net-switch",
+                    "distinct-nets-switch",
                 )
                 self.assertEqual(
                     set(results),
@@ -4283,6 +4287,20 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
                         "distinct-nets-ferrite",
                         "two-pin-ferrites/distinct-nets-ferrite.kicad_sch",
                         "component.two_pin_ferrite_same_net",
+                        "none",
+                        "PASS",
+                    ),
+                    (
+                        "same-net-switch",
+                        "two-pin-switches/same-net-spst.kicad_sch",
+                        "component.two_pin_switch_same_net",
+                        "SW1 (Synthetic SPST switch) has both pins on one net",
+                        "REVIEW",
+                    ),
+                    (
+                        "distinct-nets-switch",
+                        "two-pin-switches/distinct-nets-spst.kicad_sch",
+                        "component.two_pin_switch_same_net",
                         "none",
                         "PASS",
                     ),

@@ -168,6 +168,14 @@ The first rules are:
   disable, or exactly ignore the source-bound candidate. The hint does not
   establish component impedance, filtering effectiveness, footprint mapping,
   or PCB copper connectivity.
+- `component.two_pin_switch_same_net` prompts review when both pins of a fitted,
+  exactly inventoried `Switch:SW_SPST` symbol are assigned to one schematic
+  net. The switch cannot separate those nets in the exported netlist, but that
+  bypass may be intentional. Other switch identities, multi-pin symbols,
+  incomplete or ambiguous inventories, and DNP parts are outside the
+  predicate. The finding does not establish physical switch state, footprint
+  pin mapping, assembly population, or PCB copper continuity. See the
+  [synthetic native fixture record](../tests/fixtures/design_lint/two-pin-switches/README.md).
 - `connector.no_connected_return` flags a connector with at least three
   connected non-shield pins and no connected ground/return-like symbol pin
   function or source-matched project interface return role. A shield pin alone
@@ -811,7 +819,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 78 active rules. They
+`synthetic_validated`; the catalog currently contains 79 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow

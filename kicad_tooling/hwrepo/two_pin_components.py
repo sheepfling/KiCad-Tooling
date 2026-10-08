@@ -7,11 +7,12 @@ from dataclasses import dataclass
 
 from .models import NetlistContract
 
-_SUPPORTED_COMPONENT_SYMBOL = re.compile(
+_SUPPORTED_DEVICE_SYMBOL = re.compile(
     r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead|Crystal)"
     r"(?:_(?P<variant>[A-Za-z0-9_]+))?$",
     re.IGNORECASE,
 )
+_SUPPORTED_SWITCH_SYMBOL = re.compile(r"^Switch:SW_SPST$", re.IGNORECASE)
 _KIND_NAMES = {
     "r": "resistor",
     "c": "capacitor",
@@ -41,10 +42,11 @@ def two_pin_components_on_same_net(
 ) -> tuple[TwoPinComponentOnSameNet, ...]:
     """Return bounded review candidates without deciding whether a short is intentional.
 
-    Recognition requires an exact ``Device:R/C/L/D/Fuse/Polyfuse/FerriteBead/Crystal``
-    symbol family, exactly two distinct native pin numbers, one unambiguous
-    net per pin, and a fitted component. Project-specific symbols and
-    incomplete inventories are skipped.
+    Recognition requires an exact supported symbol identity, exactly two
+    distinct native pin numbers, one unambiguous net per pin, and a fitted
+    component. Supported identities are the listed ``Device`` families and
+    ``Switch:SW_SPST``. Project-specific symbols and incomplete inventories
+    are skipped.
     """
     dnp = {reference.casefold() for reference in observed.dnp_components}
     nets_by_pin: dict[str, set[str]] = {}
@@ -56,12 +58,18 @@ def two_pin_components_on_same_net(
     for reference, symbol in observed.component_symbols.items():
         if reference.casefold() in dnp:
             continue
-        match = _SUPPORTED_COMPONENT_SYMBOL.fullmatch(symbol)
-        if match is None:
-            continue
-        if match.group("kind").casefold() == "ferritebead" and (
-            match.group("variant") or ""
-        ).casefold() not in {"", "small"}:
+        match = _SUPPORTED_DEVICE_SYMBOL.fullmatch(symbol)
+        if match is not None:
+            native_kind = match.group("kind").casefold()
+            if native_kind == "ferritebead" and (match.group("variant") or "").casefold() not in {
+                "",
+                "small",
+            }:
+                continue
+            kind = _KIND_NAMES[native_kind]
+        elif _SUPPORTED_SWITCH_SYMBOL.fullmatch(symbol):
+            kind = "switch"
+        else:
             continue
 
         raw_pin_numbers = observed.component_pin_numbers.get(reference)
@@ -103,7 +111,7 @@ def two_pin_components_on_same_net(
                 reference=reference,
                 symbol=symbol,
                 value=component.value,
-                kind=_KIND_NAMES[match.group("kind").casefold()],
+                kind=kind,
                 pin_numbers=(pin_numbers[0], pin_numbers[1]),
                 net=first_net,
             )

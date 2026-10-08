@@ -7825,6 +7825,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_ferrite_same_net",
         set(),
     ),
+    "same-net-switch": (
+        "two-pin-switches/same-net-spst.kicad_sch",
+        "component.two_pin_switch_same_net",
+        {"SW1 (Synthetic SPST switch) has both pins on one net"},
+    ),
+    "distinct-nets-switch": (
+        "two-pin-switches/distinct-nets-spst.kicad_sch",
+        "component.two_pin_switch_same_net",
+        set(),
+    ),
 }
 
 
@@ -7962,6 +7972,7 @@ def two_pin_component_fixture_lane(root: Path, *, project: str, image: str, log:
                 "component.two_pin_crystal_same_net": {"crystal"},
                 "component.two_pin_fuse_same_net": {"fuse", "polyfuse"},
                 "component.two_pin_ferrite_same_net": {"ferrite_bead"},
+                "component.two_pin_switch_same_net": {"switch"},
             }[rule_id]
             matching_candidates = tuple(item for item in candidates if item.kind in candidate_kinds)
             expected_candidate_count = len(case_expected_subjects)

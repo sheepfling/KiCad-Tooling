@@ -911,6 +911,15 @@ def candidates(
                 "does not establish that the topology is wrong."
             )
             kind_evidence = {"component_kind": (component.kind,)}
+        elif component.kind == "switch":
+            rule_id = "component.two_pin_switch_same_net"
+            message = (
+                "Both pins of this supported fitted two-pin SPST switch are assigned to the same "
+                "schematic net, so the switch cannot separate those nets in this netlist. Review "
+                "whether the bypass is intentional. This finding does not establish that the "
+                "topology is wrong."
+            )
+            kind_evidence = {"component_kind": (component.kind,)}
         else:
             rule_id = "component.two_pin_passive_same_net"
             message = (

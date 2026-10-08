@@ -3098,6 +3098,89 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                 {item.rule_id for item in control.findings},
             )
 
+    async def test_same_net_two_pin_switch_lint_cli_mcp_parity(self) -> None:
+        """Compare exact SPST bypass review and the distinct-net control on both surfaces."""
+        native = self.native_evidence()
+        netlist = native.parent / "netlist.xml"
+
+        def write_netlist(same_net: bool) -> None:
+            if same_net:
+                nets = '<net name="SHARED"><node ref="SW1" pin="1"/>'
+                nets += '<node ref="SW1" pin="2"/></net>'
+            else:
+                nets = (
+                    '<net name="INPUT"><node ref="SW1" pin="1"/></net>'
+                    '<net name="OUTPUT"><node ref="SW1" pin="2"/></net>'
+                )
+            netlist.write_text(
+                "<export><components>"
+                '<comp ref="SW1"><value>Synthetic SPST</value>'
+                "<footprint>Synthetic:SPST_THT</footprint>"
+                '<libsource lib="Switch" part="SW_SPST"/></comp>'
+                "</components><libparts>"
+                '<libpart lib="Switch" part="SW_SPST"><pins>'
+                '<pin num="1" name="A" type="passive"/>'
+                '<pin num="2" name="B" type="passive"/>'
+                f"</pins></libpart></libparts><nets>{nets}</nets></export>",
+                encoding="utf-8",
+            )
+            summary = read_model(native, ValidationSummary)
+            write_model(
+                native,
+                summary.model_copy(
+                    update={
+                        "artifacts_sha256": {
+                            **summary.artifacts_sha256,
+                            "netlist.xml": digest(netlist),
+                        }
+                    }
+                ),
+            )
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+
+            async def compare() -> DesignLintReport:
+                process = await self.cli_process(
+                    "kicad_tooling.design_lint",
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                )
+                cli = parse_model_text(process.stdout, DesignLintReport)
+                self.assertEqual(process.returncode, 1 if cli.status != "PASS" else 0)
+                mcp = await self.call(
+                    client,
+                    "inspect_design_lint",
+                    DesignLintReport,
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(self.root).as_posix(),
+                    },
+                )
+                self.assertEqual(cli, mcp)
+                return mcp
+
+            write_netlist(same_net=True)
+            fault = await compare()
+            self.assertEqual(fault.status, "REVIEW")
+            finding = next(
+                item
+                for item in fault.findings
+                if item.rule_id == "component.two_pin_switch_same_net"
+            )
+            self.assertEqual(
+                finding.evidence["pin_assignments"], ("SW1.1 -> SHARED", "SW1.2 -> SHARED")
+            )
+            self.assertEqual(finding.evidence["symbol"], ("Switch:SW_SPST",))
+
+            write_netlist(same_net=False)
+            control = await compare()
+            self.assertNotIn(
+                "component.two_pin_switch_same_net",
+                {item.rule_id for item in control.findings},
+            )
+
     async def test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity(self) -> None:
         """Compare a connector/capacitor-only net hint and local-driver control."""
         native = self.native_evidence()

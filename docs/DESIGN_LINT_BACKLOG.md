@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 78 rules are implemented with synthetic regression coverage.
+The following 79 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -72,6 +72,7 @@ Their actual recognition limits are documented in
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
+- `component.two_pin_switch_same_net`
 - `connector.no_connected_return`
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
@@ -1415,7 +1416,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 78 active rules; CI requires every new
+- **Status:** Baseline complete for all 79 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1424,7 +1425,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 78 covered, 0 not applicable, 0 unreviewed.
+  audit: 79 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -1556,7 +1557,9 @@ is not a reason by itself to expand its scope or change its default policy.
   mapped 10 kΩ pull-up path is fitted.
   Same-net resistor, capacitor, and inductor prompts preserve their evidence
   under component/net-map reordering; splitting each passive's pins clears
-  only that part's finding.
+  only that part's finding. The exact `Switch:SW_SPST` same-net prompt follows
+  the same insertion-order and causal-split axis; the distinct-net control
+  stays quiet.
   External-protection findings retain their semantic evidence under net-map
   reordering while the synthetic source hashes change. An authored
   `not_required` decision clears the applicability prompt, and restoring the
@@ -1588,22 +1591,18 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v26. Fault/control and applicability reports cover
-  synthetic DB9 returns, same-net two-pin diodes and fuses, direct and parallel-resistor
-  output-driven LED faults with a series-resistor control, generic peer-pin outliers, project-mapped
-  connector returns, series power paths, power sequences, UART-label
-  discovery, STM32 CubeMX pin maps, the multi-UART split-reference heuristic,
-  SPI/UART voltage-domain review with exact-map controls, CAN peer asymmetry,
-  a connector-only SPI/UART boundary control, coverage-sensitive connector
-  peer finding suppression, mapped PCB decoupling boundary reports, and a
-  cross-symbol mapped-supply open-contact case, plus the typed contact-rating
-  boundary and over-limit checks, DB9 grounding and pin-connectivity
-  requirements, multi-device MOSFET stress checks, and source-mapped USB
-  data-path fault and topology controls. The
-  test runs the shared typed services in three isolated Python processes,
-  verifies that their runtime hash secrets differ, and compares complete
-  serialized design-lint reports plus typed contact-rating and grounding check
-  results byte-for-byte.
+- **Status:** Implemented v27. Fault/control and applicability reports cover synthetic DB9 returns,
+  same-net two-pin diodes, fuses, and SPST switches, direct and parallel-resistor output-driven LED
+  faults with a series-resistor control, generic peer-pin outliers, project-mapped connector
+  returns, series power paths, power sequences, UART-label discovery, STM32 CubeMX pin maps, the
+  multi-UART split-reference heuristic, SPI/UART voltage-domain review with exact-map controls, CAN
+  peer asymmetry, a connector-only SPI/UART boundary control, coverage-sensitive connector peer
+  finding suppression, mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
+  open-contact case, plus the typed contact-rating boundary and over-limit checks, DB9 grounding and
+  pin-connectivity requirements, multi-device MOSFET stress checks, and source-mapped USB data-path
+  fault and topology controls. The test runs the shared typed services in three isolated Python
+  processes, verifies that their runtime hash secrets differ, and compares complete serialized
+  design-lint reports plus typed contact-rating and grounding check results byte-for-byte.
 - **Priority:** P0 determinism foundation. Input-reordering metamorphic tests
   exercise explicit mapping changes in one process; they do not detect all
   output instability caused by set iteration or process hash randomization.
@@ -3422,6 +3421,42 @@ is not a reason by itself to expand its scope or change its default policy.
   KiCad 10.0.0 and 10.0.5 fixture lanes. Both versions repeated native exports
   and produced REVIEW for the fault and no-connect cases, with PASS for the
   connected and DNP controls.
+
+#### LINT-093 — Exact two-pin SPST switch is bypassed by one net
+
+- **Status:** Implemented as `component.two_pin_switch_same_net`, defaulting
+  to `REVIEW` and using the shared native two-pin inventory. The rule supports
+  project `review`, `block`, `off`, and exact-fingerprint ignore decisions.
+- **Priority:** P1 component-topology coverage. The existing same-net family
+  covered passives, diodes, crystals, fuses, and ferrite beads, but omitted a
+  fitted two-terminal switch whose pins had collapsed to one native net.
+  LINT-056 also lists switch topologies as unsupported source-path elements;
+  this rule checks only the exact same-net bypass case and does not teach the
+  source-path heuristic that a switch is a conducting path.
+- **Cohort context:** The kicad-happy same-net SP-001 concept and its synthetic
+  trial contributed to the existing exact-family checks. This extension adds
+  one standard symbol identity where the local two-pin predicate had no
+  coverage. No candidate code, package, example, board, or project expectation
+  was imported.
+- **Predicate:** For exact `Switch:SW_SPST`, require a fitted component, a
+  complete inventory of exactly two distinct native pin numbers, and one
+  unambiguous assigned net per pin. Emit `REVIEW` only when both assignments
+  name the same net. DNP parts, multi-pin or incomplete inventories, open or
+  ambiguous assignments, and other switch identities—including `SW_SPDT`,
+  `SW_SPST_LED`, and vendor symbols—are outside the predicate.
+- **Boundary:** The netlist shows that this schematic net assignment bypasses
+  the switch contacts; it does not establish a real switch state, a required
+  switching function, the selected footprint's pin mapping, assembly
+  population, or PCB copper. A same-net symbol may be deliberate. The rule
+  does not infer that all switches should separate nets, and it remains
+  review-only by default.
+- **Fixtures and evidence:** Synthetic `Switch:SW_SPST` same-net fault and
+  distinct-net control schematics are source-hashed. Typed tests cover policy,
+  exact ignore, DNP, incomplete, multi-pin, open, ambiguous, and unsupported
+  switch identities; order-reversal stability and a one-switch net split are
+  metamorphic controls. CLI/MCP parity and the shared two-pin native fixture
+  lane are wired for exact KiCad 10.0.0/10.0.5 exports. Native acceptance is
+  pending the next tagged GitHub package run.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -5999,7 +6034,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 78 active rules. Each entry has a deterministic predicate, evidence
+contains 79 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

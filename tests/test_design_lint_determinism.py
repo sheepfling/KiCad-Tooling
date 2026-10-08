@@ -237,6 +237,14 @@ class DesignLintDeterminismTests(unittest.TestCase):
         )
         self.assertEqual(reports["ferrite_control"]["status"], "PASS")
         self.assertEqual(reports["ferrite_control"]["findings"], [])
+        switch_fault = reports["switch_fault"]
+        self.assertEqual(switch_fault["status"], "REVIEW")
+        self.assertEqual(
+            {finding["rule_id"] for finding in switch_fault["findings"]},
+            {"component.two_pin_switch_same_net"},
+        )
+        self.assertEqual(reports["switch_control"]["status"], "PASS")
+        self.assertEqual(reports["switch_control"]["findings"], [])
         for report_name in (
             "led_output_direct_fault",
             "led_output_parallel_resistor_fault",

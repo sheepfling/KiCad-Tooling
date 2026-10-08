@@ -380,6 +380,40 @@
       ]
     },
     {
+      "rule_id": "component.two_pin_switch_same_net",
+      "title": "Supported two-pin SPST switch is bypassed by one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted exact Switch:SW_SPST symbol with exactly two native pin numbers, report when each pin has one unambiguous schematic net assignment and both pins use the same net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A same-net SPST switch may be an intentional bypass; this is a review prompt and does not establish that the topology is wrong.",
+        "Only the exact Switch:SW_SPST identity with a complete two-pin native inventory is recognized; other switch symbols, custom symbols, multi-pin, and incomplete symbols are outside the predicate.",
+        "The schematic netlist does not establish physical switch state, copper connectivity, footprint pin mapping, or assembly population. DNP components are excluded."
+      ],
+      "fault_fixtures": [
+        "tests.test_two_pin_switches.test_detects_exact_spst_switch_bypassed_by_one_net"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_two_pin_switches.test_distinct_pin_nets_are_the_no_finding_control",
+        "tests.test_two_pin_switches.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
+        "tests.test_two_pin_switches.test_rule_policy_and_exact_ignore_are_project_configurable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_two_pin_switches.test_order_is_stable_and_splitting_the_switch_clears_the_finding"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/two_pin_switches.py#two_pin_switches_on_same_net",
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint.py#candidates"
+      ]
+    },
+    {
       "rule_id": "connector.no_connected_return",
       "title": "Multiconductor connector has no named connected return",
       "status": "active",
