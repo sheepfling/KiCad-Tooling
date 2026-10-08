@@ -222,6 +222,49 @@ def filled_zone_islands(filled: Any) -> list[dict[str, Any]]:
     return result
 
 
+def rule_area_observation(zone: Any, board: Any) -> dict[str, Any] | None:
+    """Return exact native outline, layer, and restriction evidence for one rule area."""
+    if not bool(zone.GetIsRuleArea()):
+        return None
+    outline_set = zone.Outline()
+    polygons: list[dict[str, Any]] = []
+    for outline_index in range(outline_set.OutlineCount()):
+        holes = sorted(
+            canonical_ring_nm(outline_set.CHole(outline_index, hole_index))
+            for hole_index in range(outline_set.HoleCount(outline_index))
+        )
+        polygons.append(
+            {
+                "outline_nm": canonical_ring_nm(outline_set.COutline(outline_index)),
+                "holes_nm": holes,
+            }
+        )
+    if not polygons:
+        raise ValueError("Native PCB rule area has no authored polygon outline")
+    polygons.sort(
+        key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":"))
+    )
+    layer_set = zone.GetLayerSet()
+    copper_layers = board.GetEnabledLayers().CuStack()
+    layers = [
+        board.GetLayerName(layer)
+        for layer in copper_layers
+        if layer_set.Contains(layer)
+    ]
+    return {
+        "uuid": zone.m_Uuid.AsString(),
+        "name": zone.GetZoneName() or "",
+        "layers": layers,
+        "net": zone.GetNetname() or None,
+        "polygons": polygons,
+        "forbids_tracks": bool(zone.GetDoNotAllowTracks()),
+        "forbids_vias": bool(zone.GetDoNotAllowVias()),
+        "forbids_pads": bool(zone.GetDoNotAllowPads()),
+        "forbids_zone_fills": bool(zone.GetDoNotAllowZoneFills()),
+        "forbids_footprints": bool(zone.GetDoNotAllowFootprints()),
+    }
+
+
 def normalized_filled_zone_polygons(zone: Any, layer: Any) -> Any:
     """Copy fractured zone contours and restore explicit outline/hole topology."""
     filled = native_pcbnew.SHAPE_POLY_SET(zone.GetFilledPolysList(layer))
@@ -249,7 +292,14 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
     zone_rows: dict[tuple[str, str], dict[str, Any]] = {}
     zone_objects: dict[tuple[str, str], Any] = {}
     filled_polygons: dict[tuple[str, str], Any] = {}
+    rule_areas: list[dict[str, Any]] = []
     for zone in zones:
+        if zone.GetIsRuleArea():
+            observation = rule_area_observation(zone, board)
+            if observation is None:
+                raise ValueError("Native rule-area classification changed during extraction")
+            rule_areas.append(observation)
+            continue
         uuid = zone.m_Uuid.AsString()
         layer = board.GetLayerName(zone.GetLayer())
         identity = (uuid.casefold(), layer.casefold())
@@ -543,7 +593,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
     access_observations = access_probe_observations(access_requests, pad_geometry)
 
     output = {
-        "schema_version": "10",
+        "schema_version": "11",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,
@@ -554,6 +604,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
             zone_rows.values(),
             key=lambda row: (row["uuid"].casefold(), row["layer"].casefold()),
         ),
+        "rule_areas": sorted(rule_areas, key=lambda row: row["uuid"].casefold()),
         "access_probe_observations": access_observations,
         "access_probe_requests_sha256": access_requests_sha256,
         "tracks": sorted(track_rows, key=lambda row: row["uuid"].casefold()),

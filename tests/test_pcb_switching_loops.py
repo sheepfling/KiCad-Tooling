@@ -488,6 +488,42 @@ def coach() -> ContractCoachReport:
     )
 
 
+def design_lint_report(*, ambiguous_route: bool):
+    """Build a complete synthetic routed-loop report for hash-seed coverage."""
+    specification = routed_mapping()
+    observed = routed_snapshot(branch=ambiguous_route)
+    return evaluate(
+        "synthetic-switching-loop-route-ambiguity",
+        coach(),
+        DesignLintPolicy(pcb_switching_loop_map=specification),
+        pcb_switching_loop_coverage=coverage(specification, observed),
+    )
+
+
+def test_design_lint_reports_ambiguous_trace_chain_incomplete() -> None:
+    report = design_lint_report(ambiguous_route=True)
+    entry = report.pcb_switching_loop.entries[0]
+    trace = entry.route_edges[0]
+
+    assert report.status == "REVIEW"
+    assert entry.route_status == "INCOMPLETE"
+    assert trace.status == "INCOMPLETE"
+    assert trace.issue == "More than one native track chain connects the mapped pads"
+    assert {finding.rule_id for finding in report.findings} == {RULE}
+
+
+def test_design_lint_keeps_unmeasured_edge_review_after_unique_trace() -> None:
+    report = design_lint_report(ambiguous_route=False)
+    entry = report.pcb_switching_loop.entries[0]
+    trace = entry.route_edges[0]
+
+    assert report.status == "REVIEW"
+    assert trace.status == "RESOLVED"
+    assert trace.length_nm == 1_000_000
+    assert any("component geometry is not measured" in issue for issue in entry.issues)
+    assert {finding.rule_id for finding in report.findings} == {RULE}
+
+
 class PcbSwitchingLoopTests(unittest.TestCase):
     def test_compact_loop_and_shared_multilayer_plane_pass_authored_geometry_screen(self) -> None:
         result = pcb_switching_loop_entries(mapping(), snapshot())[0]

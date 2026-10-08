@@ -43,10 +43,16 @@ from kicad_tooling.hwrepo.models import (
     ReleaseManifest,
     ReleaseStatus,
     RequiredTestAccess,
-    TestAccessAnalysis,
-    TestAccessEndpointRequirement,
-    TestAccessProbeEnvelope,
     ValidationSummary,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessAnalysis as AccessAnalysis,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessEndpointRequirement as AccessEndpointRequirement,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessProbeEnvelope as AccessProbeEnvelope,
 )
 from kicad_tooling.hwrepo.pcb_return_paths import (
     capture_native_pcb_connectivity,
@@ -448,7 +454,7 @@ class ElectricalEvidenceTests(unittest.TestCase):
             board_path.write_bytes(original)
 
     def test_saved_pcb_access_stages_replay_source_bound_pad_evidence(self) -> None:
-        access = TestAccessAnalysis(
+        access = AccessAnalysis(
             basis="Synthetic service procedure requires a logic-rail measurement",
             pcb_accessibility=PcbAccessAnalysis(
                 basis="Synthetic test pad must be placed and mask-open"
@@ -460,7 +466,7 @@ class ElectricalEvidenceTests(unittest.TestCase):
                     basis="Synthetic factory measurement point",
                     net="+3V3",
                     endpoints=(
-                        TestAccessEndpointRequirement(
+                        AccessEndpointRequirement(
                             kind="test_point",
                             reference="TP1",
                             symbol="TestPoint:TestPoint",
@@ -468,7 +474,7 @@ class ElectricalEvidenceTests(unittest.TestCase):
                             pin="TP1.1",
                             electrical_type="passive",
                             approach_side="front",
-                            probe_envelope=TestAccessProbeEnvelope(
+                            probe_envelope=AccessProbeEnvelope(
                                 tip_diameter_mm=0.8,
                                 clearance_mm=0.1,
                             ),
@@ -714,7 +720,14 @@ class ElectricalEvidenceTests(unittest.TestCase):
             self.contract.model_copy(
                 update={
                     "pin_connectivity": requirement,
-                    "i2c_pullups": i2c_pullup_window_requirement("R4", "R5"),
+                    "i2c_pullups": i2c_pullup_window_requirement(
+                        "R4",
+                        "R5",
+                        maximum_per_resistor_tolerance_percent=5.0,
+                        resistor_tolerance_basis=(
+                            "Synthetic maximum tolerance bound for each series pull-up resistor"
+                        ),
+                    ),
                     "can_termination": can_split_termination_requirement("R7", "R8"),
                     "usb_c": usb_c_requirement(
                         connector="J9",
@@ -1085,6 +1098,14 @@ class ElectricalEvidenceTests(unittest.TestCase):
         self.assertEqual(checks["usb-c/host-port/vbus-path/input-path"].status, "PASS")
         self.assertEqual(checks["i2c-pullup/series-bus/sda/voltage-compatibility"].status, "PASS")
         self.assertEqual(checks["i2c-pullup/series-bus/scl/voltage-compatibility"].status, "PASS")
+        self.assertEqual(
+            checks["i2c-pullup/series-bus/sda/electrical-window/minimum-sink-resistance"].status,
+            "PASS",
+        )
+        self.assertEqual(
+            checks["i2c-pullup/series-bus/sda/electrical-window/maximum-rise-resistance"].status,
+            "PASS",
+        )
         for omitted in (
             "pin-connectivity/shared-source",
             "i2c-pullup/series-bus/sda/series/sda-chain",

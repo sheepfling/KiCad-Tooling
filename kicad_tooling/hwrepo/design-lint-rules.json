@@ -761,15 +761,15 @@
         "Internal bias, off-board bias, receiver thresholds, resistor adequacy, runtime behavior, and PCB copper continuity are not modeled. I2C, recognized reset/enable/boot inputs, and active-low SPI chip-select lines remain with their narrower rules."
       ],
       "fault_fixtures": [
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_open_collector_signal_without_visible_pullup_is_review_candidate"
+        "tests.test_open_drain_heuristics.test_open_collector_signal_without_visible_pullup_is_review_candidate"
       ],
       "valid_control_fixtures": [
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_expected_bias_polarity_clears_only_matching_open_output",
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules"
+        "tests.test_open_drain_heuristics.test_expected_bias_polarity_clears_only_matching_open_output",
+        "tests.test_open_drain_heuristics.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_net_order_does_not_change_open_output_bias_rule_identity"
+        "tests.test_open_drain_heuristics.test_net_order_does_not_change_open_output_bias_rule_identity"
       ],
       "implementation_refs": [
         "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps",
@@ -793,15 +793,15 @@
         "Internal bias, off-board bias, receiver thresholds, resistor adequacy, runtime behavior, and PCB copper continuity are not modeled. I2C, recognized reset/enable/boot inputs, and active-low SPI chip-select lines remain with their narrower rules."
       ],
       "fault_fixtures": [
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_open_emitter_has_an_independent_policy_and_ignore_identity"
+        "tests.test_open_drain_heuristics.test_open_emitter_has_an_independent_policy_and_ignore_identity"
       ],
       "valid_control_fixtures": [
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_expected_bias_polarity_clears_only_matching_open_output",
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules"
+        "tests.test_open_drain_heuristics.test_expected_bias_polarity_clears_only_matching_open_output",
+        "tests.test_open_drain_heuristics.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_open_drain_heuristics.OpenDrainBiasHeuristicTests.test_net_order_does_not_change_open_output_bias_rule_identity"
+        "tests.test_open_drain_heuristics.test_net_order_does_not_change_open_output_bias_rule_identity"
       ],
       "implementation_refs": [
         "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps",
@@ -892,7 +892,7 @@
       "limitations": [
         "The 1 kΩ boundary is a broad review threshold, not a universal electrical requirement; project-specific requirements and rule modes remain authoritative.",
         "Only directly connected or unbranched series paths of discrete resistors are recognized; arrays, branched paths, multiple pull-up rails, internal pull-ups, and remote pull-ups are not calculated.",
-        "Nominal resistance does not establish tolerance, sink-current margin, bus voltage compatibility, capacitance, rise time, or timing."
+        "This heuristic uses nominal resistance only and does not establish resistor tolerance, sink-current margin, bus voltage compatibility, capacitance, rise time, or timing. A separate project-authored electrical-window check can optionally apply a maximum per-resistor tolerance bound, but does not verify its cited source or scope."
       ],
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
@@ -1342,7 +1342,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes.",
+      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized ground stem may use a one-letter suffix such as GNDA before an optional numeric suffix.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -1352,11 +1352,13 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_open_findings_include_missing_power_and_separate_returns",
-        "tests.test_design_lint.DesignLintTests.test_four_db9_return_domains_surface_review_and_keep_common_control"
+        "tests.test_design_lint.DesignLintTests.test_four_db9_return_domains_surface_review_and_keep_common_control",
+        "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_common_return_across_symbols_passes_and_shield_stays_separate",
-        "tests.test_design_lint.DesignLintTests.test_four_db9_return_domains_surface_review_and_keep_common_control"
+        "tests.test_design_lint.DesignLintTests.test_four_db9_return_domains_surface_review_and_keep_common_control",
+        "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_numbered_return_order_is_stable_and_commoning_changes_the_hint"
@@ -1374,20 +1376,23 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct populated net names contain a recognized return token, are not already included in a numbered-return group, and have no attached exported symbol pin function that identifies a return.",
+      "predicate": "At least two distinct populated net names contain a recognized return token, are not already included in a numbered-return group, and have no attached exported symbol pin function that identifies a return. Recognized ground names include one-letter suffixes such as GNDA and GNDD.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Net-label text does not establish that domains must be connected, bonded, or isolated; the finding only prompts review.",
-        "Only documented return tokens and native pin-function text are recognized; unrelated labels, missing symbol metadata, or an attached pin with a recognized return function can suppress this candidate.",
+        "Only documented return tokens and native pin-function text are recognized; a one-letter suffix extends GND only (for example GNDA or GNDD). Longer labels such as GNDAUDIO are not matched. Unrelated labels, missing symbol metadata, or an attached pin with a recognized return function can suppress this candidate.",
         "The rule does not inspect PCB copper, off-board wiring, connector datasheets, or physical continuity."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint.DesignLintTests.test_unindexed_return_labels_without_pin_roles_need_review"
+        "tests.test_design_lint.DesignLintTests.test_unindexed_return_labels_without_pin_roles_need_review",
+        "tests.test_return_net_lint.test_letter_suffixed_ground_nets_without_return_pin_roles_request_review"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint.DesignLintTests.test_unindexed_return_labels_without_pin_roles_need_review"
+        "tests.test_design_lint.DesignLintTests.test_unindexed_return_labels_without_pin_roles_need_review",
+        "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
+        "tests.test_return_net_lint.test_longer_non_return_tokens_do_not_match_letter_suffix_rule"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_unindexed_return_label_order_is_stable_and_single_label_clears_the_hint"
@@ -1940,20 +1945,20 @@
         "This heuristic does not establish that a peer, connection, shared ground, voltage domain, or UART requirement is intended. It does not discover missing power or reference pins; those require connector inventory and authored pinout coverage."
       ],
       "fault_fixtures": [
-        "tests.test_serial_participants.SerialParticipantLintTests.test_unmapped_endpoints_are_deterministic_and_exact_mapped_pairs_clear",
-        "tests.test_serial_participants.SerialParticipantLintTests.test_explicit_uart_net_labels_discover_alternate_function_mcu_pins",
-        "tests.test_serial_participants.SerialParticipantLintTests.test_missing_map_and_pending_states_prompt_without_asserting_intent"
+        "tests.test_serial_participants.test_unmapped_endpoints_are_deterministic_and_exact_mapped_pairs_clear",
+        "tests.test_serial_participants.test_explicit_uart_net_labels_discover_alternate_function_mcu_pins",
+        "tests.test_serial_participants.test_missing_map_and_pending_states_prompt_without_asserting_intent"
       ],
       "valid_control_fixtures": [
-        "tests.test_serial_participants.SerialParticipantLintTests.test_net_label_serial_discovery_rejects_ambiguous_or_incomplete_controls",
-        "tests.test_serial_participants.SerialParticipantLintTests.test_net_label_discovery_is_order_stable_and_does_not_duplicate_pin_function_findings",
-        "tests.test_serial_participants.SerialParticipantLintTests.test_dnp_ambiguous_and_differential_function_pairs_are_excluded",
-        "tests.test_serial_participants.SerialParticipantLintTests.test_rule_mode_and_exact_ignore_remain_project_configurable"
+        "tests.test_serial_participants.test_net_label_serial_discovery_rejects_ambiguous_or_incomplete_controls",
+        "tests.test_serial_participants.test_net_label_discovery_is_order_stable_and_does_not_duplicate_pin_function_findings",
+        "tests.test_serial_participants.test_dnp_ambiguous_and_differential_function_pairs_are_excluded",
+        "tests.test_serial_participants.test_rule_mode_and_exact_ignore_remain_project_configurable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_serial_participants.SerialParticipantLintTests.test_unmapped_endpoints_are_deterministic_and_exact_mapped_pairs_clear",
-        "tests.test_serial_participants.SerialParticipantLintTests.test_net_label_discovery_is_order_stable_and_does_not_duplicate_pin_function_findings"
+        "tests.test_serial_participants.test_unmapped_endpoints_are_deterministic_and_exact_mapped_pairs_clear",
+        "tests.test_serial_participants.test_net_label_discovery_is_order_stable_and_does_not_duplicate_pin_function_findings"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/serial_participants.py#unmapped_serial_peers",
@@ -1979,16 +1984,16 @@
         "This schematic-netlist check does not prove PCB copper continuity, internal transfer behavior, signal timing, or firmware configuration."
       ],
       "fault_fixtures": [
-        "tests.test_spi_participants.SpiParticipantLintTests.test_unmapped_spi_ic_without_roster_is_review_candidate",
-        "tests.test_spi_participants.SpiParticipantLintTests.test_unlisted_spi_peer_is_found_when_roster_covers_another_device"
+        "tests.test_spi_participants.test_unmapped_spi_ic_without_roster_is_review_candidate",
+        "tests.test_spi_participants.test_unlisted_spi_peer_is_found_when_roster_covers_another_device"
       ],
       "valid_control_fixtures": [
-        "tests.test_spi_participants.SpiParticipantLintTests.test_rostered_spi_device_and_controller_are_suppressed",
-        "tests.test_spi_participants.SpiParticipantLintTests.test_dnp_non_ic_and_incomplete_signal_patterns_are_excluded"
+        "tests.test_spi_participants.test_rostered_spi_device_and_controller_are_suppressed",
+        "tests.test_spi_participants.test_dnp_non_ic_and_incomplete_signal_patterns_are_excluded"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_spi_participants.SpiParticipantLintTests.test_unlisted_participant_is_order_stable_and_roster_entry_clears_it"
+        "tests.test_spi_participants.test_unlisted_participant_is_order_stable_and_roster_entry_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_participants.py#unmapped_spi_participants",
@@ -2286,16 +2291,16 @@
         "Contact counts do not prove return-current capacity, PCB copper continuity, shield termination, chassis bonding, isolation, off-board wiring, or physical connector assembly."
       ],
       "fault_fixtures": [
-        "tests.test_connector_return_distribution.ConnectorReturnDistributionTests.test_ratio_adds_a_distinct_finding_with_explicit_pin_evidence",
-        "tests.test_connector_return_distribution.ConnectorReturnDistributionTests.test_missing_role_or_incomplete_pin_mapping_keeps_coverage_at_review"
+        "tests.test_connector_return_distribution.test_ratio_adds_a_distinct_finding_with_explicit_pin_evidence",
+        "tests.test_connector_return_distribution.test_missing_role_or_incomplete_pin_mapping_keeps_coverage_at_review"
       ],
       "valid_control_fixtures": [
-        "tests.test_connector_return_distribution.ConnectorReturnDistributionTests.test_exact_boundary_passes_and_net_grouping_does_not_change_the_ratio",
-        "tests.test_connector_return_distribution.ConnectorReturnDistributionTests.test_below_scope_power_connector_does_not_trigger_the_signal_ratio",
-        "tests.test_connector_return_distribution.ConnectorReturnDistributionTests.test_no_threshold_is_not_requested"
+        "tests.test_connector_return_distribution.test_exact_boundary_passes_and_net_grouping_does_not_change_the_ratio",
+        "tests.test_connector_return_distribution.test_below_scope_power_connector_does_not_trigger_the_signal_ratio",
+        "tests.test_connector_return_distribution.test_no_threshold_is_not_requested"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_return_distribution.ConnectorReturnDistributionTests.test_mapping_order_preserves_findings_and_ratio_threshold_is_causal"
+        "tests.test_connector_return_distribution.test_mapping_order_preserves_findings_and_ratio_threshold_is_causal"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_distribution.py#scan_connector_return_distribution_map",
@@ -2428,6 +2433,7 @@
         "Filled copper along a segment does not prove plane continuity to endpoint pads, connectivity between plane islands or layers, return-current adequacy, emissions, or electrical performance. Thresholds are project-authored review screens, not universal limits."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_reference_plane_lint.test_mapped_reference_plane_gap_is_reviewable",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_narrow_midtrace_void_between_two_mm_samples_is_reviewed",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_hole_is_subtracted_and_exact_threshold_control_passes",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_only_immediately_adjacent_exact_reference_net_copper_counts",
@@ -2436,6 +2442,7 @@
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_branched_route_reports_only_the_branch_crossing_a_reference_gap"
       ],
       "valid_control_fixtures": [
+        "tests.test_pcb_reference_plane_lint.test_complete_reference_plane_control_is_quiet",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_narrow_midtrace_void_between_two_mm_samples_is_reviewed",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_hole_is_subtracted_and_exact_threshold_control_passes",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_inner_route_needs_one_adjacent_layer_to_meet_threshold",
@@ -2485,10 +2492,11 @@
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_split_filled_return_plane_is_reported",
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_multiple_shared_plane_islands_are_reported_as_ambiguous",
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_schema_nine_requires_valid_contours_for_every_filled_island",
-        "tests.test_native_pcb_probe.NativePcbProbeGeometryTests.test_canonicalization_rejects_degenerate_native_rings",
+        "tests.test_native_pcb_probe.test_canonicalization_rejects_degenerate_native_rings",
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_absent_layer_is_unsupported_and_missing_stack_is_schema_error",
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_missing_branching_and_arc_trace_paths_are_incomplete",
-        "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope"
+        "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope",
+        "tests.test_pcb_switching_loops.test_design_lint_reports_ambiguous_trace_chain_incomplete"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_compact_loop_and_shared_multilayer_plane_pass_authored_geometry_screen",
@@ -2497,8 +2505,11 @@
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_route_resolution_is_visible_in_review_finding_and_text_report",
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_multilayer_trace_joins_at_an_observed_via_and_checks_scope",
         "tests.test_pcb_switching_loops.PcbSwitchingLoopTests.test_missing_threshold_emits_review_and_policy_is_configurable",
-        "tests.test_native_pcb_probe.NativePcbProbeGeometryTests.test_ring_canonicalization_ignores_rotation_direction_and_duplicate_points",
-        "tests.test_native_pcb_probe.NativePcbProbeGeometryTests.test_island_contours_keep_native_indexes_and_sort_canonical_holes"
+        "tests.test_native_pcb_probe.test_ring_canonicalization_ignores_rotation_direction_and_duplicate_points",
+        "tests.test_native_pcb_probe.test_island_contours_keep_native_indexes_and_sort_canonical_holes",
+        "tests.test_native_pcb_probe.test_rule_area_observation_serializes_outline_holes_layers_and_restrictions",
+        "tests.test_native_pcb_probe.test_rule_area_observation_ignores_non_rule_zones",
+        "tests.test_pcb_switching_loops.test_design_lint_keeps_unmeasured_edge_review_after_unique_trace"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -2533,21 +2544,94 @@
         "A matching rule does not prove the project-authored limit is appropriate for the interface, stack-up, impedance, or signal-integrity target. Additional unconfigured rules are not independently evaluated by this audit."
       ],
       "fault_fixtures": [
-        "tests.test_pcb_drc_coverage.PcbDrcCoverageTests.test_missing_rules_are_a_coverage_gap",
-        "tests.test_pcb_drc_coverage.PcbDrcCoverageTests.test_wrong_bound_is_a_mismatch",
-        "tests.test_pcb_drc_coverage.PcbDrcCoverageTests.test_native_ignored_severity_is_not_credited_as_coverage"
+        "tests.test_pcb_drc_coverage.test_missing_rules_are_a_coverage_gap",
+        "tests.test_pcb_drc_coverage.test_wrong_bound_is_a_mismatch",
+        "tests.test_pcb_drc_coverage.test_native_ignored_severity_is_not_credited_as_coverage"
       ],
       "valid_control_fixtures": [
-        "tests.test_pcb_drc_coverage.PcbDrcCoverageTests.test_exact_native_rules_cover_authored_pair_constraints",
-        "tests.test_pcb_drc_coverage.PcbDrcCoverageTests.test_rule_for_another_pair_does_not_cover_requirement"
+        "tests.test_pcb_drc_coverage.test_exact_native_rules_cover_authored_pair_constraints",
+        "tests.test_pcb_drc_coverage.test_rule_for_another_pair_does_not_cover_requirement"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_drc_coverage.PcbDrcCoverageTests.test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_detected"
+        "tests.test_pcb_drc_coverage.test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_detected"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_coverage.py#compare_native_rules",
         "kicad_tooling/hwrepo/design_lint.py#inspect_summary"
+      ]
+    },
+    {
+      "rule_id": "pcb.signal_path_rule_coverage",
+      "title": "Mapped PCB signal paths lack exact native DRC length or skew coverage",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored exact PCB pad paths and bundles compared with source-bound KiCad 10 DRC rules, DRC receipt, native PCB connectivity snapshot, and schematic netlist",
+      "predicate": "For each mapped exact pad-to-pad path, require matching source-netlist and PCB pad assignments, non-DNP endpoints in one native copper component, and exactly one active A.fromTo rule with the authored length bounds; for each bundle, require the native wildcard endpoint set to equal the mapped endpoint set and exactly one active A.fromTo skew rule with the authored maximum.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "This audits project-authored rule coverage and native endpoint connectivity only. KiCad native DRC remains responsible for measuring actual route length and skew.",
+        "A matching rule does not prove the authored endpoints, length limit, or skew limit are appropriate for the interface, timing budget, impedance, stack-up, or electrical safety target.",
+        "Bundle pad selectors must resolve exactly to the mapped fitted board endpoints. Other condition syntax, incomplete netlists, non-mapped paths, off-board wiring, and physical continuity remain outside this audit."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_signal_path_coverage.test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete",
+        "tests.test_pcb_signal_path_coverage.test_source_net_and_copper_faults_remain_incomplete",
+        "tests.test_pcb_signal_path_coverage.test_bundle_selector_must_not_include_unmapped_pads"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_signal_path_coverage.test_exact_path_and_bundle_rules_cover_reviewed_map",
+        "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
+        "tests.test_pcb_signal_path_coverage.test_wrong_bound_and_wildcard_expansion_mutations_are_detected"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_coverage.py#compare_native_signal_path_rules",
+        "kicad_tooling/hwrepo/design_lint.py#_scan_pcb_geometry",
+        "kicad_tooling/hwrepo/design_lint.py#inspect_summary"
+      ]
+    },
+    {
+      "rule_id": "pcb.keepout_intent_coverage",
+      "title": "Named PCB keepout areas differ from reviewed geometry intent",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored named keepout signature compared with source-bound KiCad 10 native PCB rule-area geometry, copper layers, and restriction flags",
+      "predicate": "For each mapped named copper keepout, require exactly one native rule area with the reviewed canonical outline-and-hole digest, exact copper-layer set, and exact track/via/pad/zone-fill/footprint restriction flags; missing, duplicate, renamed, reshaped, layer-changed, or restriction-changed areas remain incomplete.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; rule-area geometry is emitted in native PCB snapshot schema 11"
+      ],
+      "limitations": [
+        "The check verifies that a reviewed native keepout definition remains unchanged. It does not establish that the reviewed shape, layer scope, or restrictions are appropriate for an antenna, RF module, connector, thermal region, or any other engineering requirement.",
+        "A project owner must author the mapped area name, signature, copper layers, restriction flags, and basis from an independent approved source. A stale or inaccurate contract can preserve the wrong geometry.",
+        "This compares authored KiCad rule-area definitions only. It does not prove that the rule area covers an external datasheet region, that all relevant copper layers are enabled or included, or that fabricated copper and assembly match the source."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_keepouts.test_geometry_layer_and_restriction_changes_are_incomplete",
+        "tests.test_pcb_keepouts.test_missing_or_duplicate_named_areas_are_not_credited",
+        "tests.test_pcb_keepouts.test_snapshot_schema_before_rule_area_evidence_is_incomplete",
+        "tests.test_pcb_keepouts.test_keepout_lint_finding_supports_review_block_off_and_exact_ignore"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_keepouts.test_exact_keepout_signature_matches_one_named_native_area",
+        "tests.test_pcb_keepouts.test_geometry_digest_ignores_polygon_and_hole_order"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_keepouts.test_geometry_digest_ignores_polygon_and_hole_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_keepouts.py#pcb_keepout_entries",
+        "kicad_tooling/hwrepo/design_lint.py#candidates",
+        "kicad_tooling/hwrepo/design_lint.py#_scan_pcb_geometry",
+        "kicad_tooling/hwrepo/native_pcb_probe.py.in#rule_area_observation"
       ]
     },
     {

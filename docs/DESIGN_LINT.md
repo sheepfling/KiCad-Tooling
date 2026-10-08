@@ -666,7 +666,11 @@ have been connected.
   isolated synthetic library setup reports the expected symbol/footprint
   library warnings, recorded with the fixture evidence.
 - `net.numbered_returns` flags two or more return-like nets with the same stem
-  and distinct numeric suffixes, such as `GND1` and `GND2`.
+  and distinct numeric suffixes, such as `GND1` and `GND2`. Its recognized
+  ground token also permits one-letter suffixes, so `GNDA1` and `GNDA2` can
+  prompt review. KiCad's [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
+  shows `GND*` matching both `GND` and `GNDA`; that naming similarity does not
+  establish that the nets should be joined.
 - `net.numbered_power_rails` flags separately numbered nets with a bounded
   recognized positive-supply stem. It recognizes explicit suffix forms such as
   `+5V_1` and `5V-2`, plus bounded `P`, `CH`, and `RAIL` prefix forms such as
@@ -678,7 +682,7 @@ have been connected.
   return-like net labels when none of their attached exported pin functions
   identifies a return. Nets already included in a numbered-return group are
   left to `net.numbered_returns`. It is intended to catch separate labels such
-  as `USB_GND` and `SERIAL_RETURN` on numeric connector pins. This asks for review;
+  as `USB_GND`, `SERIAL_RETURN`, `GNDA`, and `GNDD` on numeric connector pins. This asks for review;
   it does not determine whether the domains should be common, bonded, or
   isolated. Numbered sibling nets remain under `net.numbered_returns`, and
   explicit return pin functions leave this candidate to the connector rules.
@@ -832,7 +836,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 80 active rules. They
+`synthetic_validated`; the catalog currently contains 82 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow
@@ -1966,11 +1970,14 @@ The auditor compares each declared constraint with exactly one rule in the
 project's `.kicad_dru` file using the exact
 `A.inDiffPair('<pair_selector>')` condition and exact min/max values. It reads
 ignored severities from the native DRC report, so a rule configured to Ignore
-does not count as active. Supported lengths are `mm` and `mil`; supported net
-suffixes are `_P`/`_N` and `+`/`-`. Missing rules, changed limits, duplicate
-matches, ignored checks, unsupported syntax or units, and unrecognized pair
-names remain incomplete review findings. A missing `.kicad_dru` file is
-reported as missing coverage.
+does not count as active. It also reads each matching rule's optional
+`(severity ...)` clause: an explicit `(severity ignore)` does not count as
+coverage, while an unrecognized or repeated severity clause remains
+unsupported. Supported lengths are `mm` and `mil`; supported net suffixes are
+`_P`/`_N` and `+`/`-`. Missing rules, changed limits, duplicate matches,
+ignored checks, unsupported syntax or units, and unrecognized pair names
+remain incomplete review findings. A missing `.kicad_dru` file is reported as
+missing coverage.
 
 The report binds the project settings, board, optional rule file, native DRC
 report and command, validation summary, selected KiCad version, project image,
@@ -1985,6 +1992,135 @@ When no pair map is present, `pcb.differential_pair_rule_coverage` remains
 `signal.named_pair_without_reviewed_requirement` heuristic can still identify
 common complementary net-name patterns and ask for review; it does not convert
 those names into requirements or geometric limits.
+
+## Review mapped PCB signal-path length and bundle skew
+
+Use `design_lint.pcb_signal_path_rule_map` when a reviewed interface or timing
+requirement defines exact PCB endpoint pads and a route-length or bundle-skew
+limit. The values below are synthetic examples only:
+
+```json
+{
+  "design_lint": {
+    "pcb_signal_path_rule_map": {
+      "schema_version": "1",
+      "basis": "Reviewed synthetic serial-interface timing requirement",
+      "paths": [
+        {
+          "id": "clock",
+          "basis": "Synthetic clock path",
+          "net": "SYNTH_CLK",
+          "from_pad": "J1.1",
+          "to_pad": "U1.1",
+          "length": {"max_nm": 20000000}
+        },
+        {
+          "id": "data",
+          "basis": "Synthetic data path",
+          "net": "SYNTH_DATA",
+          "from_pad": "J1.2",
+          "to_pad": "U1.2",
+          "length": {"max_nm": 20000000}
+        }
+      ],
+      "bundles": [
+        {
+          "id": "serial-bundle",
+          "basis": "Synthetic inter-signal skew requirement",
+          "path_ids": ["clock", "data"],
+          "from_pad_pattern": "J1-*",
+          "to_pad_pattern": "U1-*",
+          "max_skew": {"max_nm": 100000}
+        }
+      ]
+    },
+    "rules": [
+      {
+        "rule_id": "pcb.signal_path_rule_coverage",
+        "mode": "review",
+        "reason": "Review native route rules against approved interface limits"
+      }
+    ]
+  }
+}
+```
+
+The audit requires every exact endpoint to appear on the mapped net in both the
+source-bound schematic netlist and native PCB inventory. Endpoint pads must be
+fitted, assigned to that net, and present in the same native copper component.
+For a bundle, each KiCad `fromTo()` wildcard must resolve to exactly the mapped
+endpoint set; an additional matching board pad makes coverage incomplete. The
+project's `.kicad_dru` must contain exactly one matching `A.fromTo()` rule with
+the authored integer-nanometer length or skew bounds. Ignored native DRC
+severities and a matching custom rule with `(severity ignore)` do not count as
+coverage. Absent or duplicate rules, changed bounds, unsupported syntax, stale
+endpoints, and disconnected pads remain review findings.
+
+The report binds the project and board, optional rule file, native DRC receipt,
+native PCB snapshot and command, KiCad version, and source inventory. Projects
+can select `review`, `block`, `off`, or an exact fingerprint ignore. Missing
+maps stay `NOT_REQUESTED`; net-name patterns do not create endpoint or timing
+requirements. KiCad native DRC measures actual route length and skew. This
+audit checks that the reviewed requirements are represented by active native
+rules and that mapped endpoints agree with source and copper evidence; it does
+not establish that a chosen limit is electrically appropriate, nor prove
+off-board wiring or physical continuity.
+
+## Review mapped PCB keepout intent
+
+Use `design_lint.pcb_keepout_map` when an independently reviewed requirement
+identifies a named copper keepout whose exact shape, copper layers, and
+restrictions must remain stable. The signature is SHA-256 over the canonical
+native polygon outlines and holes in nanometers. The example is synthetic and
+its digest is only a valid-format placeholder; do not copy it as a design
+requirement.
+
+```json
+{
+  "design_lint": {
+    "pcb_keepout_map": {
+      "schema_version": "1",
+      "basis": "Synthetic approved module keepout drawing, revision 1",
+      "requirements": [
+        {
+          "id": "synthetic-module-keepout",
+          "basis": "Synthetic keepout drawing and layer note",
+          "name": "ANTENNA_NO_COPPER",
+          "geometry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "layers": ["F.Cu", "B.Cu"],
+          "forbids_tracks": true,
+          "forbids_vias": true,
+          "forbids_pads": true,
+          "forbids_zone_fills": true,
+          "forbids_footprints": false
+        }
+      ]
+    },
+    "rules": [
+      {
+        "rule_id": "pcb.keepout_intent_coverage",
+        "mode": "review",
+        "reason": "Review the native keepout against the approved source geometry"
+      }
+    ]
+  }
+}
+```
+
+The checker requires exactly one native rule area with the mapped name, exact
+geometry digest, exact copper-layer set, and exact track, via, pad, zone-fill,
+and footprint restrictions. A missing or duplicate name, changed geometry,
+changed layer, changed restriction, or native snapshot older than schema 11 is
+incomplete. The project owner must author the digest, layers, flags, and basis
+from an independent approved source; do not generate the requirement by
+accepting whatever shape happens to be on the board.
+
+The default is `review`; project policy can choose `block`, `off`, or an exact
+fingerprint ignore. With no map, coverage is `NOT_REQUESTED`. This is a
+regression check for the authored KiCad rule area only. It does not establish
+that the chosen region is large enough or in the correct location for an
+antenna, RF module, connector, or other engineering requirement, and it does
+not prove fabricated copper or physical assembly matches the board source.
 
 ## Review mapped PCB decoupling placement
 
@@ -2524,20 +2660,30 @@ idealized 30%-to-70% relation `tr = 0.8473 × Rp × Cb`:
   "maximum_bus_capacitance_pf": 100.0,
   "bus_capacitance_basis": "Synthetic total local and cable capacitance bound",
   "maximum_rise_time_ns": 300.0,
-  "rise_time_basis": "Synthetic interface timing requirement"
+  "rise_time_basis": "Synthetic interface timing requirement",
+  "maximum_per_resistor_tolerance_percent": 5.0,
+  "resistor_tolerance_basis": "Synthetic worst-case datasheet tolerance for every pull-up element"
 }
 ```
 
 The authored `minimum_ohms` and `maximum_ohms` are checked against those
-derived bounds. Equality passes. The bound values and source notes remain
-project inputs; this is not a capacitance extraction or waveform simulation.
+derived bounds. Equality passes. When both optional tolerance fields are
+present, the check applies the per-resistor bound to the nominal equivalent
+range, then verifies that its worst-case minimum and maximum remain inside the
+derived physical window. The bound must cover every resistor element in the
+mapped local pull-up network; the tool does not verify the cited datasheets or
+which parts the basis covers. Omit both fields for the existing nominal-only
+check. The window values and source notes remain project inputs; this is not a
+capacitance extraction or waveform simulation.
 The authored `maximum_low_level_voltage_v` and `minimum_sink_current_ma` must
 describe the same guaranteed operating point for the weakest applicable bus
 device, and the capacitance scope must include all local and remote endpoints
 covered by the requirement.
-The model does not account for resistor tolerances, nonlinear/active pull-ups,
-buffers, off-board loading beyond the authored capacitance, or device-to-device
-dynamic behavior. NXP [UM10204 §7.1](https://www.nxp.com/docs/en/user-guide/UM10204.pdf)
+The model does not verify resistor tolerance sources, nonlinear/active
+pull-ups, buffers, off-board loading beyond the authored capacitance, or
+device-to-device dynamic behavior. The optional tolerance bound does not
+account for temperature drift or aging unless the project includes those in
+its authored bound. NXP [UM10204 §7.1](https://www.nxp.com/docs/en/user-guide/UM10204.pdf)
 derives the 0.8473 factor and pull-up sizing from rise time and bus capacitance;
 TI [SLVA689](https://www.ti.com/lit/an/slva689/slva689.pdf) presents the
 corresponding sink-current lower bound. Cite the actual part and interface

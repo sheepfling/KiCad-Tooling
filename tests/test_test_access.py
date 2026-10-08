@@ -18,9 +18,15 @@ from kicad_tooling.hwrepo.models import (
     PcbConnectivitySnapshot,
     PcbPadConnectivityObservation,
     RequiredTestAccess,
-    TestAccessAnalysis,
-    TestAccessEndpointRequirement,
-    TestAccessProbeEnvelope,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessAnalysis as AccessAnalysis,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessEndpointRequirement as AccessEndpointRequirement,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessProbeEnvelope as AccessProbeEnvelope,
 )
 from kicad_tooling.hwrepo.test_access import (
     evaluate_test_access_checks,
@@ -35,8 +41,8 @@ def access_requirement(
     *,
     selection: str = "all",
     approach_side: Literal["front", "back", "either"] = "either",
-) -> TestAccessAnalysis:
-    return TestAccessAnalysis(
+) -> AccessAnalysis:
+    return AccessAnalysis(
         basis="Synthetic connector pinout and factory reset access requirement",
         pcb_accessibility=AnalysisNotApplicable(
             mode="not_applicable",
@@ -50,7 +56,7 @@ def access_requirement(
                 net="RESET_N",
                 selection=selection,
                 endpoints=(
-                    TestAccessEndpointRequirement(
+                    AccessEndpointRequirement(
                         kind="programming_connector",
                         reference="J1",
                         symbol="Synthetic:DB9",
@@ -148,13 +154,13 @@ def probe_access_snapshot(
 
 def probe_access_requirement(
     *, approach_side: Literal["front", "back", "either"]
-) -> TestAccessAnalysis:
+) -> AccessAnalysis:
     requirement = access_requirement(approach_side=approach_side)
     decision = requirement.decisions[0]
     assert isinstance(decision, RequiredTestAccess)
     endpoint = decision.endpoints[0].model_copy(
         update={
-            "probe_envelope": TestAccessProbeEnvelope(
+            "probe_envelope": AccessProbeEnvelope(
                 tip_diameter_mm=0.8,
                 clearance_mm=0.1,
             )
@@ -260,9 +266,9 @@ class TestAccessChecksTests(unittest.TestCase):
             raw["decisions"][0] | {"id": "duplicate-reset"},
         )
         with self.assertRaisesRegex(ValueError, "one explicit decision"):
-            TestAccessAnalysis.model_validate(raw)
+            AccessAnalysis.model_validate(raw)
         with self.assertRaisesRegex(ValueError, "must belong"):
-            TestAccessEndpointRequirement.model_validate(
+            AccessEndpointRequirement.model_validate(
                 {
                     "kind": "test_point",
                     "reference": "TP1",
@@ -276,13 +282,13 @@ class TestAccessChecksTests(unittest.TestCase):
         assert isinstance(decision, RequiredTestAccess)
         endpoint = decision.endpoints[0]
         with self.assertRaisesRegex(ValueError, "approach_side"):
-            TestAccessEndpointRequirement.model_validate(
+            AccessEndpointRequirement.model_validate(
                 endpoint.model_dump() | {"approach_side": "top"}
             )
 
     def test_probe_envelope_requires_pcb_stage_and_finite_positive_dimensions(self) -> None:
         with self.assertRaisesRegex(ValueError, "require the PCB accessibility stage"):
-            TestAccessAnalysis.model_validate(
+            AccessAnalysis.model_validate(
                 access_requirement().model_dump()
                 | {
                     "decisions": (
@@ -296,7 +302,7 @@ class TestAccessChecksTests(unittest.TestCase):
                                     .endpoints[0]
                                     .model_copy(
                                         update={
-                                            "probe_envelope": TestAccessProbeEnvelope(
+                                            "probe_envelope": AccessProbeEnvelope(
                                                 tip_diameter_mm=0.8,
                                                 clearance_mm=0.1,
                                             )
@@ -311,9 +317,9 @@ class TestAccessChecksTests(unittest.TestCase):
                 }
             )
         with self.assertRaises(ValueError):
-            TestAccessProbeEnvelope(tip_diameter_mm=float("inf"), clearance_mm=0.1)
+            AccessProbeEnvelope(tip_diameter_mm=float("inf"), clearance_mm=0.1)
         with self.assertRaises(ValueError):
-            TestAccessProbeEnvelope(tip_diameter_mm=0.8, clearance_mm=-0.01)
+            AccessProbeEnvelope(tip_diameter_mm=0.8, clearance_mm=-0.01)
 
     def test_probe_request_sides_and_clearance_boundary_are_deterministic(self) -> None:
         requirement = access_requirement(approach_side="either")
@@ -321,7 +327,7 @@ class TestAccessChecksTests(unittest.TestCase):
         assert isinstance(decision, RequiredTestAccess)
         endpoint = decision.endpoints[0].model_copy(
             update={
-                "probe_envelope": TestAccessProbeEnvelope(
+                "probe_envelope": AccessProbeEnvelope(
                     tip_diameter_mm=0.8,
                     clearance_mm=0.1,
                 )
@@ -432,7 +438,7 @@ class TestAccessChecksTests(unittest.TestCase):
             )
 
     def test_pending_pcb_stage_remains_a_policy_coverage_gap(self) -> None:
-        access = TestAccessAnalysis(
+        access = AccessAnalysis(
             basis="Synthetic required test-access scope",
             pcb_accessibility=AnalysisPending(reason="Review PCB pad access"),
             decisions=(

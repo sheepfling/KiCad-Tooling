@@ -86,6 +86,12 @@ from tests.test_pcb_decoupling import (
 from tests.test_pcb_decoupling import (
     snapshot as pcb_decoupling_snapshot,
 )
+from tests.test_pcb_keepouts import design_lint_report as pcb_keepout_lint_report
+from tests.test_pcb_reference_plane_lint import (
+    design_lint_report as pcb_reference_plane_lint_report,
+)
+from tests.test_pcb_signal_path_coverage import design_lint_report as pcb_signal_path_lint_report
+from tests.test_pcb_switching_loops import design_lint_report as pcb_switching_loop_lint_report
 from tests.test_power_paths import (
     lint_report as power_path_lint_report,
 )
@@ -100,6 +106,7 @@ from tests.test_power_sequences import (
     power_sequence_map,
     power_sequence_netlist,
 )
+from tests.test_return_net_lint import lint_report as return_net_lint_report
 from tests.test_serial_participants import (
     alternate_function_serial_netlist,
     alternate_function_serial_peer_analysis,
@@ -699,6 +706,15 @@ def test_emit_four_port_db9_fault_and_control_reports() -> None:
             coach(four_db9_return_domains(common=True)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
+        "letter_suffixed_unindexed_return_fault": return_net_lint_report(
+            ("GNDA", "GNDD")
+        ).model_dump(mode="json"),
+        "letter_suffixed_numbered_return_fault": return_net_lint_report(
+            ("GNDA1", "GNDA2")
+        ).model_dump(mode="json"),
+        "letter_suffixed_return_roles_control": return_net_lint_report(
+            ("GNDA", "GNDD"), pin_functions=("GND", "RTN")
+        ).model_dump(mode="json"),
         "generic_power_input_fault": evaluate(
             "synthetic-generic-power-input-hash-seed-fault",
             coach(generic_connector_power_input_netlist()),
@@ -824,6 +840,22 @@ def test_emit_four_port_db9_fault_and_control_reports() -> None:
         "pcb_decoupling_distance_control": pcb_decoupling_lint_report(
             capacitor_distance_nm=100_000
         ),
+        "pcb_signal_path_fault": pcb_signal_path_lint_report(fault=True).model_dump(mode="json"),
+        "pcb_signal_path_control": pcb_signal_path_lint_report(fault=False).model_dump(mode="json"),
+        "pcb_keepout_fault": pcb_keepout_lint_report(fault=True).model_dump(mode="json"),
+        "pcb_keepout_control": pcb_keepout_lint_report(fault=False).model_dump(mode="json"),
+        "pcb_reference_plane_fault": pcb_reference_plane_lint_report(fault=True).model_dump(
+            mode="json"
+        ),
+        "pcb_reference_plane_control": pcb_reference_plane_lint_report(fault=False).model_dump(
+            mode="json"
+        ),
+        "pcb_switching_loop_route_ambiguity": pcb_switching_loop_lint_report(
+            ambiguous_route=True
+        ).model_dump(mode="json"),
+        "pcb_switching_loop_unique_trace": pcb_switching_loop_lint_report(
+            ambiguous_route=False
+        ).model_dump(mode="json"),
         "mapped_power_path_fault": power_path_lint_report(
             power_path_netlist(fault="open-element"),
             power_path_map(),

@@ -54,7 +54,7 @@ The reproducible test command is:
 ```sh
 export KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test
 export KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1
-.venv/bin/python -B -m unittest -q tests.test_ci_hosted.NativeComponentRatingFixtureTests
+.venv/bin/python -B -m pytest -q tests/test_ci_hosted.py::NativeComponentRatingFixtureTests
 ```
 
 The intervals, rating limits, and utilization threshold in these checks are

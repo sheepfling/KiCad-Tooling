@@ -129,61 +129,134 @@ from tests.test_regulator_feedback import regulator_feedback_map as synthetic_re
 from tests.test_usb_data_paths import usb_data_map as synthetic_usb_data_path_map
 
 
+def parity_workspace(base: Path) -> tuple[Path, Path, Path]:
+    root = base / "repository"
+    shutil.copytree(
+        reference_root(),
+        root,
+        ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
+    )
+    manifest_path = root / "examples/projects/controller/project.json"
+    manifest = read_model(manifest_path, ProjectManifest)
+    write_model(
+        manifest_path,
+        manifest.model_copy(
+            update={
+                "connector_inventory_review": ConnectorInventoryReview(
+                    basis="Synthetic parity fixture reviewed the complete schematic interface inventory"
+                )
+            }
+        ),
+    )
+    initialize_git(root)
+    island = root / "examples/projects/controller"
+    incoming = root / "build/incoming/Incoming board.kicad_pro"
+    incoming.parent.mkdir(parents=True)
+    incoming.write_text("{}", encoding="utf-8")
+    incoming.with_suffix(".kicad_sch").write_text("(kicad_sch)", encoding="utf-8")
+    incoming.with_suffix(".kicad_pcb").write_text("(kicad_pcb)", encoding="utf-8")
+    return root, island, incoming
+
+
+async def parity_cli_process(base: Path, root: Path, module: str, *arguments: str):
+    # A foreign cwd proves --root rather than process cwd selects the board.
+    return await asyncio.to_thread(
+        subprocess.run,
+        (
+            sys.executable,
+            "-I",
+            "-B",
+            "-m",
+            module,
+            "--root",
+            str(root),
+            *arguments,
+            "--format",
+            "json",
+        ),
+        cwd=base,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=60,
+    )
+
+
+def parity_native_evidence(root: Path, island: Path) -> Path:
+    """Retain a valid netlist whose independent electrical check explicitly failed."""
+    manifest_path = island / "project.json"
+    manifest = read_model(manifest_path, ProjectManifest)
+    write_model(
+        manifest_path,
+        manifest.model_copy(
+            update={
+                "component_identity": ComponentIdentity(required=True, part_ids=("resistor-1k",)),
+            }
+        ),
+    )
+    write_model(
+        root / "catalog/parts.json",
+        PartsCatalog(
+            schema_version="0.1",
+            parts=(
+                PartRecord(
+                    id="resistor-1k",
+                    revision="A",
+                    description="Synthetic parity-test identity",
+                    part_class="resistor",
+                    unit="each",
+                    manufacturer="Vishay",
+                    mpn="MRS25000C1001FCT00",
+                    datasheet_url="https://example.invalid/test-only",
+                    lifecycle="active",
+                    status=PartStatus.APPROVED,
+                ),
+            ),
+        ),
+    )
+    config = load_config(root, manifest_path)
+    directory = root / "build/native/controller"
+    directory.mkdir(parents=True)
+    (directory / "netlist.xml").write_text(native_fixture.NETLIST, encoding="utf-8")
+    write_model(directory / "netlist.command.json", native_fixture.command())
+    current = hashes(root, config.source_roots)
+    write_model(
+        directory / "summary.json",
+        ValidationSummary(
+            timestamp_utc="2026-09-24T00:00:00+00:00",
+            checked_commit="LOCAL_UNBOUND",
+            project_id="controller",
+            project_kind=ProjectKind.PCB,
+            checks={
+                "source_scope": CheckEvidence(status="PASS", source_hashes=current),
+                "source_unchanged": CheckEvidence(status="PASS", source_hashes=current),
+                "toolchain": CheckEvidence(
+                    status="PASS", observed_version=config.kicad_version, image=config.image
+                ),
+                "netlist": CheckEvidence(
+                    status="FAIL", returncode=0, error="Independent electrical contract differs"
+                ),
+            },
+            status="FAIL",
+            artifacts_sha256={
+                "netlist.xml": digest(directory / "netlist.xml"),
+                "netlist.command.json": digest(directory / "netlist.command.json"),
+            },
+        ),
+    )
+    return directory / "summary.json"
+
+
 class McpParityTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         temporary = tempfile.TemporaryDirectory(prefix="mcp-semantic-parity-")
         self.addCleanup(temporary.cleanup)
         self.base = Path(temporary.name).resolve()
-        self.root = self.base / "repository"
-        shutil.copytree(
-            reference_root(),
-            self.root,
-            ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
-        )
-        manifest_path = self.root / "examples/projects/controller/project.json"
-        manifest = read_model(manifest_path, ProjectManifest)
-        write_model(
-            manifest_path,
-            manifest.model_copy(
-                update={
-                    "connector_inventory_review": ConnectorInventoryReview(
-                        basis="Synthetic parity fixture reviewed the complete schematic interface inventory"
-                    )
-                }
-            ),
-        )
-        initialize_git(self.root)
-        self.island = self.root / "examples/projects/controller"
-        self.incoming = self.root / "build/incoming/Incoming board.kicad_pro"
-        self.incoming.parent.mkdir(parents=True)
-        self.incoming.write_text("{}", encoding="utf-8")
-        self.incoming.with_suffix(".kicad_sch").write_text("(kicad_sch)", encoding="utf-8")
-        self.incoming.with_suffix(".kicad_pcb").write_text("(kicad_pcb)", encoding="utf-8")
+        self.root, self.island, self.incoming = parity_workspace(self.base)
 
     async def cli_process(self, module, *arguments):
-        # A foreign cwd proves --root rather than process cwd selects the board.
-        process = await asyncio.to_thread(
-            subprocess.run,
-            (
-                sys.executable,
-                "-I",
-                "-B",
-                "-m",
-                module,
-                "--root",
-                str(self.root),
-                *arguments,
-                "--format",
-                "json",
-            ),
-            cwd=self.base,
-            env=os.environ.copy(),
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=60,
-        )
-        return process
+        return await parity_cli_process(self.base, self.root, module, *arguments)
 
     async def cli(self, module, model, *arguments, expected_exit=0):
         process = await self.cli_process(module, *arguments)
@@ -1103,69 +1176,7 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
 
     def native_evidence(self) -> Path:
         """Retain a valid netlist whose independent electrical check explicitly failed."""
-        manifest_path = self.island / "project.json"
-        manifest = read_model(manifest_path, ProjectManifest)
-        write_model(
-            manifest_path,
-            manifest.model_copy(
-                update={
-                    "component_identity": ComponentIdentity(
-                        required=True, part_ids=("resistor-1k",)
-                    ),
-                }
-            ),
-        )
-        write_model(
-            self.root / "catalog/parts.json",
-            PartsCatalog(
-                schema_version="0.1",
-                parts=(
-                    PartRecord(
-                        id="resistor-1k",
-                        revision="A",
-                        description="Synthetic parity-test identity",
-                        part_class="resistor",
-                        unit="each",
-                        manufacturer="Vishay",
-                        mpn="MRS25000C1001FCT00",
-                        datasheet_url="https://example.invalid/test-only",
-                        lifecycle="active",
-                        status=PartStatus.APPROVED,
-                    ),
-                ),
-            ),
-        )
-        config = load_config(self.root, manifest_path)
-        directory = self.root / "build/native/controller"
-        directory.mkdir(parents=True)
-        (directory / "netlist.xml").write_text(native_fixture.NETLIST, encoding="utf-8")
-        write_model(directory / "netlist.command.json", native_fixture.command())
-        current = hashes(self.root, config.source_roots)
-        write_model(
-            directory / "summary.json",
-            ValidationSummary(
-                timestamp_utc="2026-09-24T00:00:00+00:00",
-                checked_commit="LOCAL_UNBOUND",
-                project_id="controller",
-                project_kind=ProjectKind.PCB,
-                checks={
-                    "source_scope": CheckEvidence(status="PASS", source_hashes=current),
-                    "source_unchanged": CheckEvidence(status="PASS", source_hashes=current),
-                    "toolchain": CheckEvidence(
-                        status="PASS", observed_version=config.kicad_version, image=config.image
-                    ),
-                    "netlist": CheckEvidence(
-                        status="FAIL", returncode=0, error="Independent electrical contract differs"
-                    ),
-                },
-                status="FAIL",
-                artifacts_sha256={
-                    "netlist.xml": digest(directory / "netlist.xml"),
-                    "netlist.command.json": digest(directory / "netlist.command.json"),
-                },
-            ),
-        )
-        return directory / "summary.json"
+        return parity_native_evidence(self.root, self.island)
 
     async def test_inventory_parity(self) -> None:
         async with Client(create_server(self.root), mode="legacy") as client:

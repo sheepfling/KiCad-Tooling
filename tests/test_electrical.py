@@ -133,7 +133,6 @@ from kicad_tooling.hwrepo.spice import (
     waveform_checks,
 )
 from kicad_tooling.validate import hashes, read_netlist
-from tests.support import TEMPLATE_ROOT, reference_root
 
 PROJECT = "controller"
 ISLAND = "examples/projects/controller"
@@ -169,6 +168,8 @@ def i2c_pullup_window_requirement(
     minimum_sink_current_ma: float = 3.0,
     maximum_bus_capacitance_pf: float = 50.0,
     maximum_rise_time_ns: float = 300.0,
+    maximum_per_resistor_tolerance_percent: float | None = None,
+    resistor_tolerance_basis: str | None = None,
 ) -> I2cPullupAnalysis:
     base = i2c_pullup_voltage_requirement(
         first_reference,
@@ -187,6 +188,8 @@ def i2c_pullup_window_requirement(
         bus_capacitance_basis="Synthetic board and endpoint capacitance bound",
         maximum_rise_time_ns=maximum_rise_time_ns,
         rise_time_basis="Synthetic interface timing requirement",
+        maximum_per_resistor_tolerance_percent=maximum_per_resistor_tolerance_percent,
+        resistor_tolerance_basis=resistor_tolerance_basis,
     )
     bus = base.buses[0]
     sda = bus.sda.model_copy(
@@ -1839,6 +1842,8 @@ def usb_c_netlist(
 
 def install_fixture(root: Path, version: str = "47") -> ElectricalAnalysisContract:
     """Author synthetic requirements only in a disposable copy of the training island."""
+    from tests.support import TEMPLATE_ROOT
+
     directory = root / ISLAND / "tests/electrical"
     directory.mkdir(parents=True)
     for name in ("startup.cir", "signal.cir"):
@@ -2001,6 +2006,8 @@ def install_fixture(root: Path, version: str = "47") -> ElectricalAnalysisContra
 
 class ElectricalTests(unittest.TestCase):
     def stage(self) -> Path:
+        from tests.support import reference_root
+
         temporary = tempfile.TemporaryDirectory(prefix="electrical-test-")
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name) / "repository"

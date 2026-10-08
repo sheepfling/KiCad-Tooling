@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 80 rules are implemented with synthetic regression coverage.
+The following 82 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -139,6 +139,8 @@ Their actual recognition limits are documented in
 - `pcb.reference_plane_coverage`
 - `pcb.switching_loop_geometry`
 - `pcb.differential_pair_rule_coverage`
+- `pcb.signal_path_rule_coverage`
+- `pcb.keepout_intent_coverage`
 - `connector.return_distribution`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
@@ -159,19 +161,32 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
-- **LINT-094 — Open native power outputs on exact-symbol peers.** This adds a
-  deterministic `REVIEW` prompt for an unassigned native `power_out` pin when
-  another fitted instance of the exact same symbol has a single net
-  assignment. It addresses the open-pin gap left by assigned-pin divergence
-  checks without asserting the outputs should share a net. Synthetic typed
-  tests cover intentional separate outputs, common outputs, DNP and all-open
-  peers, incomplete or mismatched inventories, ambiguous assignments, native
-  type/function exclusions, order stability, and configurable policy. A
-  synthetic schematic pair is registered for repeated exports on exact KiCad
-  10.0.0 and 10.0.5 images; CLI/MCP uses the existing shared `inspect_design_lint`
-  service and has a parity regression. No candidate code or project source was
-  imported. Record the tagged acceptance result before calling the native lane
-  validated.
+- **LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage.**
+  This adds project-authored exact pad paths and skew bundles, checked against
+  active native `A.fromTo()` DRC bounds and source-bound schematic/PCB endpoint
+  evidence. KiCad remains the route-length and skew measurement engine. The
+  deterministic comparison covers missing, changed, duplicate, ignored, and
+  unsupported rules, stale or misassigned endpoints, disconnected copper, and
+  wildcard expansion. Synthetic pytest coverage and policy behavior are in
+  place. Exact-version native fixtures passed locally on 2026-10-08 against
+  digest-pinned KiCad 10.0.0 and 10.0.5 images; the passing receipts retain
+  repeated control, fault, and ignored-rule DRC results under ignored
+  `build/ci/native-fixtures/`. The GitHub package workflow enables and uploads
+  these receipts. The full local package gate passed against the exact
+  CI-pinned public template commit `5ca79bedf665a9b6577d96b1d47f13ccd518c968`:
+  2,266 tests passed, 54 skipped, and 2,030 legacy subtests passed, with wheel
+  and source builds, installed-wheel external checks, and playtest. Signal-path
+  orchestration and parity tests now use a tooling-owned synthetic checkout and
+  collect without `KICAD_TEMPLATE_ROOT`. Hosted acceptance for the current
+  branch and tagged package remains required before publishing this gate.
+
+- **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
+  passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
+  including repeatable synthetic exports on digest-pinned KiCad 10.0.0 and
+  10.0.5, the CLI/MCP parity test, and the installed-wheel external-template
+  check. Its review prompt covers an open `power_out` pin when a matching
+  fitted peer has one assigned net, without claiming that peers should share
+  nets. No project source or candidate code was imported.
 
 1. **Fail closed on empty native netlists.** LINT-078 now blocks source-bound
    lint when KiCad returns a successful export with zero component records. The
@@ -186,7 +201,9 @@ and optional ecosystem adapters are `P3`.
    LINT-047 cover split-return, missing peer-power-contact, and peer-pin fault
    controls with synthetic source-bound native exports. The
    `NativeConnectorReturnFixtureTests` lane passed both pinned KiCad versions
-   on 2026-10-03. It now includes an explicit no-connect-marker peer fault;
+   on 2026-10-03 and was rerun locally on 2026-10-08 against the current
+   checkout: 2 tests and 4 subtests passed. It includes an explicit
+   no-connect-marker peer fault;
    J2.1 remains a REVIEW candidate on both versions, while the common-net
    control passes. LINT-079 extends that lane with a current interface role map
    over numeric-only connector pin functions; the pinned KiCad 10.0.0/10.0.5
@@ -874,6 +891,15 @@ is not a reason by itself to expand its scope or change its default policy.
   control, generic missing peer-power pin, peer-pin
   outlier/divergence cases, and the cross-symbol return/shield controls. It
   used only synthetic fixtures and retained receipts under ignored `build/`.
+- **Current local exact-version rerun (2026-10-08):** The same lane passed on
+  KiCad 10.0.0 and 10.0.5. The four-port DB9 fault reported
+  `connector.repeated_pin_function` and `net.numbered_returns`; the common-net
+  control was clean. Numeric-only pin functions with neutral net labels still
+  surfaced the pin mismatch while the common-net control removed that mismatch.
+  The mapped grounding and pin-connectivity requirements, peer-power faults,
+  cross-symbol controls, and normalized repeated exports also passed. Receipts
+  remain under ignored `build/ci/native-connector-return-project-*/`; hosted
+  acceptance for the current branch is not recorded.
 - **Supplemental local native screen (2026-10-07):** The KiCad 10.0.6 CLI
   bundled with the installed application exported the DB9 split-return fault,
   common-return control, and both numeric-function/neutral-label variants
@@ -1285,7 +1311,9 @@ is not a reason by itself to expand its scope or change its default policy.
   native ERC errors are absent. The synthetic contact requirement passes at
   1.60 A and fails at 1.61 A in both versions. Raw XML hashes differ between
   KiCad versions; repeatability is measured over normalized typed netlists and
-  ERC evidence.
+  ERC evidence. The local exact-version rerun on 2026-10-08 also passed against
+  both digest-pinned images; the current dirty branch still has no hosted
+  acceptance result.
 - **Next:** Keep this lane enabled in GitHub CI. Before adopting the check on a
   project, independently review exact connector identity, contact ratings,
   environmental derating, and the maximum current assigned to each contact.
@@ -1367,9 +1395,10 @@ is not a reason by itself to expand its scope or change its default policy.
   design-lint, rule-catalog, fixture-orchestration, and reviewed
   custom-connector CLI/MCP parity suites passed on 2026-10-07: 574 tests and
   683 subtests. Existing pinned native fixtures have recorded actual exports
-  on KiCad 10.0.0 and 10.0.5. This turn did not rerun that native lane because
-  the local Docker API denied access; the LINT-079 deduplication change only
-  deduplicates typed findings and changes no source fixture or native adapter.
+  on KiCad 10.0.0 and 10.0.5. The current exact-version lane was rerun locally
+  on 2026-10-08 and passed on both versions. Numeric-only pin functions with
+  neutral net labels still surfaced the mismatch, and the common-net control
+  cleared it. Hosted acceptance for this revision remains pending.
 - **Priority:** P0 connector coverage. A connector library may leave an
   interface contact generic or number-only, hiding the return or supply role
   from native-function heuristics. The reviewed interface catalog is already
@@ -1431,7 +1460,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 80 active rules; CI requires every new
+- **Status:** Baseline complete for all 82 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1440,7 +1469,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 80 covered, 0 not applicable, 0 unreviewed.
+  audit: 82 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -1606,7 +1635,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v27. Fault/control and applicability reports cover synthetic DB9 returns,
+- **Status:** Implemented v31. Fault/control and applicability reports cover synthetic DB9 returns,
   same-net two-pin diodes, fuses, and SPST switches, direct and parallel-resistor output-driven LED
   faults with a series-resistor control, generic peer-pin outliers, project-mapped connector
   returns, series power paths, power sequences, UART-label discovery, STM32 CubeMX pin maps, the
@@ -1614,10 +1643,13 @@ is not a reason by itself to expand its scope or change its default policy.
   peer asymmetry, a connector-only SPI/UART boundary control, coverage-sensitive connector peer
   finding suppression, mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
   open-contact case, plus the typed contact-rating boundary and over-limit checks, DB9 grounding and
-  pin-connectivity requirements, multi-device MOSFET stress checks, and source-mapped USB data-path
-  fault and topology controls. The test runs the shared typed services in three isolated Python
-  processes, verifies that their runtime hash secrets differ, and compares complete serialized
-  design-lint reports plus typed contact-rating and grounding check results byte-for-byte.
+  pin-connectivity requirements, multi-device MOSFET stress checks, source-mapped USB data-path
+  fault and topology controls, synthetic PCB signal-path rule coverage, synthetic keepout
+  restriction coverage, and switching-loop route ambiguity reports. The test
+  runs the shared typed services in three isolated Python processes, verifies
+  that their runtime hash secrets differ, and compares complete serialized
+  design-lint reports plus typed contact-rating and grounding check results
+  byte-for-byte.
 - **Priority:** P0 determinism foundation. Input-reordering metamorphic tests
   exercise explicit mapping changes in one process; they do not detect all
   output instability caused by set iteration or process hash randomization.
@@ -1626,7 +1658,7 @@ is not a reason by itself to expand its scope or change its default policy.
   determinism gate and fixes for hash-seed-dependent analyzer output. Its
   `SP-001` passive-short check overlaps local LINT-051, so this increment
   adopts the determinism test method only and adds no detector or dependency.
-- **Evidence:** `tests/test_design_lint_determinism.py` launches
+- **Evidence:** The pytest-style `tests/test_design_lint_determinism.py` launches
   `tests/hashseed_probe.py` through the active interpreter's isolated pytest
   module entry point with `PYTHONHASHSEED` unset, checks that each process has
   hash randomization enabled and a distinct hash marker, and compares full JSON
@@ -1685,6 +1717,25 @@ is not a reason by itself to expand its scope or change its default policy.
   remains `REVIEW` with `pcb.decoupling_proximity`; the boundary control is
   `PASS`. Both retain the same map digest, while their synthetic typed snapshot
   digests differ.
+  The LINT-080 v28 extension compares complete serialized signal-path reports
+  for a synthetic clock-rule limit changed from 20 mm to 19 mm and for the
+  exact-rule control. The fault remains `REVIEW` with
+  `pcb.signal_path_rule_coverage` and `INCOMPLETE` typed coverage; the control
+  is `PASS` with `COMPLETE` coverage. A second pair compares a synthetic
+  keepout snapshot missing its reviewed track prohibition with the exact
+  keepout signature: the fault reports `pcb.keepout_intent_coverage` and
+  `INCOMPLETE`, while the control is `PASS` and `COMPLETE`. Pytest-style
+  scenario tests assert these fault/control outcomes. Both report pairs are
+  included in the existing three-process complete-JSON hash-seed comparison.
+  Their provenance fields are deterministic synthetic fixtures; these cases
+  do not invoke native export or establish board-level evidence.
+  The LINT-080 v29 extension compares a synthetic switching-loop trace with
+  two possible track chains against a unique direct-chain control. The ambiguous
+  route remains `INCOMPLETE` with an explicit multi-chain issue; the unique
+  trace resolves to exactly 1,000,000 nm. The complete design-lint report
+  remains `REVIEW` in both cases because component internals are intentionally
+  unmeasured. Pytest tests assert both outcomes, and both full reports join the
+  three-process JSON comparison to exercise graph traversal ordering.
   It also compares a project-mapped series power-path open-element fault and
   repaired control; the fault retains one `EVALUATED` authored requirement and
   one mismatch finding while the control passes. The power-sequence case
@@ -1767,6 +1818,18 @@ is not a reason by itself to expand its scope or change its default policy.
   typed multi-device state calculations only; its separate pinned native lane
   remains evidence for parsing the synthetic MOSFET identity and pin map, not
   real-part suitability or process-level native export behavior.
+  The LINT-080 v30 extension adds a pytest-style mapped reference-plane gap and
+  a complete coverage control. The fault's synthetic zone hole leaves the
+  straight-track centerline at exactly 4/5 coverage against a 9/10 authored
+  threshold and emits `pcb.reference_plane_coverage`; the full-zone control
+  measures 1/1 and stays quiet. Both complete source-bound typed reports join
+  the three-process JSON comparison. These use synthetic typed geometry and do
+  not invoke native export or establish board-level or physical evidence.
+  The LINT-080 v31 extension compares unindexed `GNDA`/`GNDD` return-label
+  candidates, numbered `GNDA1`/`GNDA2` candidates, and an explicit GND/RTN pin-
+  function control across independent hash seeds. This covers the bounded
+  one-letter GND suffix extension without treating similar names as a common
+  net or changing review disposition.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
@@ -1812,8 +1875,13 @@ is not a reason by itself to expand its scope or change its default policy.
   groups attach only to pins without a recognized return function, the rule
   asks for review. Numbered-return groups are left to
   `net.numbered_returns`; explicitly named return pins are left to the
-  connector pin-function rule.
+  connector pin-function rule. The bounded return vocabulary now accepts a
+  one-letter suffix on `GND`, including `GNDA` and `GNDD`, which KiCad's
+  [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
+  lists as a net matched by `GND*`. Matching names remain review-only and do
+  not imply a common electrical domain.
 - **Boundary:** The recognized label and pin-function vocabularies are narrow.
+  Longer names such as `GNDAUDIO` do not match the one-letter suffix form.
   The rule does not infer that similarly named nets must connect, discover
   off-board grounds, or establish PCB copper or physical continuity. Separate
   analog, chassis, shield, isolated-interface, or other return domains may be
@@ -2266,7 +2334,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v5. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v6. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
@@ -2283,9 +2351,12 @@ is not a reason by itself to expand its scope or change its default policy.
   derives a lower bound from authored pull-up voltage, VOL and sink-current
   limits, and an upper bound from authored bus capacitance and rise-time limit
   using the idealized 30%-to-70% RC relation. This covers an otherwise valid
-  mapped resistor array the heuristic cannot recognize. The report retains the electrical
-  contract digest, native netlist digest, bus ID, and exact passing check IDs
-  used for that resolution.
+  mapped resistor array the heuristic cannot recognize. An optional
+  project-authored maximum per-resistor tolerance and basis applies a
+  conservative worst-case bound to the nominal range before comparing it with
+  the derived sink-current and rise-time limits. The report retains the
+  electrical contract digest, native netlist digest, bus ID, and exact passing
+  check IDs used for that resolution.
 - **Problem:** The review heuristic recognizes direct conventional resistors
   and unbranched resistor chains but cannot resolve resistor arrays, branched
   networks, or rail-voltage compatibility on its own. Only a matching passing
@@ -2317,15 +2388,16 @@ is not a reason by itself to expand its scope or change its default policy.
   does not prove physical board return paths, copper connectivity, fitted
   resistor behavior, or off-board pull-up behavior. Project rule overrides or
   exact ignores continue to control only heuristic disposition. The optional
-  resistor window checks the authored nominal acceptance bounds; it does not
-  apply unrecorded part tolerances.
+  resistor window remains nominal-only unless a maximum per-resistor tolerance
+  and basis are supplied. The tool does not verify that source or its coverage
+  of every resistor element.
 - **Boundary:** The voltage comparison does not verify that the rail ceiling
   or datasheet limits are correct. Its `operating` or `absolute_maximum` limit
   kind is recorded but not independently validated. The optional resistor
   window uses project-supplied maximum bus capacitance and rise time and
   minimum sink current; it does not extract capacitance, model nonlinear or
-  active pull-ups, include component tolerances, model device dynamics, or
-  predict measured waveforms. Netlist topology does not establish transient
+  active pull-ups, verify the authored resistor-tolerance source, model device
+  dynamics, or predict measured waveforms. Netlist topology does not establish transient
   compatibility or off-board behavior.
 - **Fixtures:** Two direct 4.7 kΩ resistors passing at 2.35 kΩ equivalent;
   parallel 1 kΩ resistors failing the configured range; missing path; wrong
@@ -2342,7 +2414,9 @@ is not a reason by itself to expand its scope or change its default policy.
   tool-surface registration without the external reference template;
   retained-evidence replay; source-bound resistor-window passes, lower- and
   upper-bound equality, violations on both sides, and an empty calculated
-  window; CLI/MCP parity for passing and excessive-capacitance controls.
+  window; per-resistor tolerance controls for worst-case pass, exact inclusive
+  boundaries, lower- and upper-side failures, missing basis, and out-of-range
+  percentages; CLI/MCP parity for passing and excessive-capacitance controls.
   Release verification replays authored voltage and resistor-window checks
   against the source-hashed netlist and rejects omission of any result.
 - **Native fixture evidence (2026-10-03):** The synthetic mapped-array
@@ -2361,10 +2435,10 @@ is not a reason by itself to expand its scope or change its default policy.
   See the [native fixture notes](../tests/fixtures/design_lint/i2c-array-native/README.md)
   for the reproducible command and image pins.
 - **Remaining:** Rail ceiling and pin-voltage limits remain reviewed inputs;
-  the checker does not verify cited source documents, component tolerances,
-  actual bus capacitance, or transient behavior. Internal and off-board
-  pull-ups remain an explicit not-applicable decision for this local-netlist
-  contract.
+  the checker does not verify cited source documents or whether the authored
+  resistor-tolerance bound covers every element. Actual bus capacitance and
+  transient behavior remain reviewed inputs. Internal and off-board pull-ups
+  remain an explicit not-applicable decision for this local-netlist contract.
 
 #### LINT-011 — CAN termination topology and bus-end declarations
 
@@ -2878,8 +2952,9 @@ is not a reason by itself to expand its scope or change its default policy.
   Ruff, Linux and Windows type checks, Markdown, repository links, wheel/sdist
   reproducibility, a fresh installed-wheel check, and external inventory,
   verify, adaptation, and playtest stages against a separate public template
-  checkout. This host has no Docker daemon; the exact KiCad 10.0.0/10.0.5
-  matrix was subsequently exercised by the RC5 GitHub package lane below.
+  checkout. The sandboxed package run could not access the Docker socket; the
+  exact KiCad 10.0.0/10.0.5 matrix was subsequently exercised by the RC5
+  GitHub package lane and rerun locally with Docker access on 2026-10-08 below.
 - **Acceptance-lane integrity (2026-10-07):** The shared native-fixture
   manifest mounts `tests/fixtures/design_lint` as its read-only root so both
   `two-pin-components/` and `two-pin-fuses/` sources resolve. An always-run
@@ -2888,11 +2963,15 @@ is not a reason by itself to expand its scope or change its default policy.
   fuse, and polyfuse fault/control sources; the revised fuse sources are
   covered by the 2026-10-08 screen above. Those local screens did not replace
   pinned acceptance; the RC5 GitHub run recorded above supplies that evidence.
-- **Remaining:** This host has no reachable Docker daemon, so it cannot run
-  the digest-pinned KiCad 10.0.0/10.0.5 matrix locally. The exact-version cases
-  are exercised in the GitHub package acceptance job and passed under RC5.
-  Full candidate acceptance still requires the RC6 workflow to pass formatting
-  and the complete package job.
+- **Exact-version local rerun (2026-10-08):** The current synthetic native lane
+  passed on digest-pinned KiCad 10.0.0 and 10.0.5: 1 test and 30 subtests.
+  Both same-net fuse and polyfuse cases reported `REVIEW`; their distinct-net
+  controls passed. Every export repeated with the expected normalized
+  netlist. The corrected crystal fault/control, ferrite fault/control, and
+  switch fault/control also passed in the same lane.
+- **Remaining:** The current dirty branch still needs hosted package acceptance
+  before release. RC5's earlier native lane passed, but its package job stopped
+  at Ruff; RC6 must pass the complete package workflow.
 
 #### LINT-085 — Fitted two-pin ferrite bead bypassed by one net
 
@@ -2938,10 +3017,12 @@ is not a reason by itself to expand its scope or change its default policy.
   not distinguish this topology fault from its valid control. These results
   validate the typed rule, adapters, and 10.0.6 compatibility, not a real
   ferrite part or filter performance.
-- **Remaining:** The exact-version native lane is enabled in GitHub CI but has
-  no hosted result for this dirty branch. Require the digest-pinned KiCad
-  10.0.0/10.0.5 GitHub result before treating that native acceptance as
-  verified.
+- **Exact-version local rerun (2026-10-08):** The current native lane passed on
+  both digest-pinned images. The same-net fault reported one
+  `component.two_pin_ferrite_same_net` review and the distinct-net control
+  reported none. Repeated normalized netlists matched.
+- **Remaining:** The exact-version native lane is enabled in GitHub CI, but the
+  current dirty branch has no hosted package result.
 - **Cohort boundary:** This is a first-party deterministic extension prompted
   by the inspected series-path concept. No third-party source, board, fixture,
   or install workflow was copied.
@@ -3222,18 +3303,24 @@ is not a reason by itself to expand its scope or change its default policy.
   LINT-085's exact native ferrite identity and passive-pin evidence; it is not
   an end-to-end native ferrite-bond export.
   Repeated digest-pinned KiCad 10.0.0/10.0.5 exports are wired into the existing
-  GitHub serial-peer acceptance job. The local host has no running Docker
-  daemon, so exact-version native acceptance must be confirmed from the hosted
-  receipt before being claimed. The v0.3.2 hosted run exposed a fixture defect:
+  GitHub serial-peer acceptance job. A local exact-version rerun on 2026-10-08
+  passed in both digest-pinned images as part of the package acceptance test
+  (`2 passed, 4 subtests` across LINT-077 and LINT-087). For LINT-087, repeated
+  normalized netlists matched; the control passed and the fault failed exactly
+  `serial/serial-bond/reference` on both versions. Receipts are under ignored
+  `build/ci/native-serial-peer-project-*/`. Hosted acceptance for the current
+  branch remains unrecorded. The v0.3.2 hosted run exposed a fixture defect:
   its J1.3/J2.3 ground wires were 10.16 mm below the actual pin endpoints, so
   KiCad exported both as unconnected. The synthetic control/fault sources now
   attach at the pin endpoints, their hashes are pinned, and the local fixture
-  test asserts those wires. Repeated KiCad 10.0.0/10.0.5 exports remain pending
-  in the patch-tag acceptance run. The v0.4.1 hosted run also exposed reversed
+  test asserts those wires. Repeated KiCad 10.0.0/10.0.5 exports now pass
+  locally; the current revision's hosted receipt remains pending. The v0.4.1
+  hosted run also exposed reversed
   TX/RX net declarations in the synthetic reference-bond map. The map now
   follows the schematic's native pin functions (J1.1 TX, J1.2 RX, J2.1 TX on
   the peer RX net, and J2.2 RX on the peer TX net); its source digest and
-  local contract test were updated. Exact pinned exports remain pending.
+  local contract test were updated. Exact pinned exports pass locally; hosted
+  confirmation remains pending.
 
 #### LINT-088 — Fitted two-pin crystal terminals share one net
 
@@ -3269,7 +3356,10 @@ is not a reason by itself to expand its scope or change its default policy.
   custom-symbol cases remain quiet. CLI/MCP returns identical evidence for
   fault and control; metamorphic tests preserve the unaffected peer finding
   when one crystal's pins are split. Exact native exports are wired into
-  GitHub CI; the hosted receipt is pending for this revision.
+  GitHub CI. The exact-version local rerun on 2026-10-08 passed in both pinned
+  images: the same-net crystal stayed `REVIEW`, the distinct-net control passed,
+  and repeated normalized netlists matched. Hosted package acceptance for this
+  revision remains pending.
 
 #### LINT-089 — Generic connector power-input pin is unassigned
 
@@ -3305,7 +3395,9 @@ is not a reason by itself to expand its scope or change its default policy.
   repeatably, preserved native `power_in`, reported exactly the two fault pins,
   and left the control clean. Digest-pinned KiCad 10.0.0 and 10.0.5 repeated
   exports run through `NativeConnectorReturnFixtureTests` in GitHub CI; the
-  tag workflow records their exact-version result.
+  current local rerun on 2026-10-08 also passed on both exact versions. The
+  open `power_in` fault remained `REVIEW` and the connected control passed;
+  hosted acceptance for the current branch remains unrecorded.
 
 #### LINT-090 — USB-C port-side VBUS capacitance contract
 
@@ -3527,6 +3619,101 @@ is not a reason by itself to expand its scope or change its default policy.
 
 ### P2 — PCB geometry and schematic review assistance
 
+#### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
+
+- **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
+  The full local package gate passed on 2026-10-08 (2,266 tests passed, 54
+  skipped, 2,030 subtests passed), including source and wheel builds,
+  rebuilt-wheel equality, and installed-wheel checks against the exact
+  CI-pinned public template. Exact-version native fixtures separately passed on
+  the same date for KiCad 10.0.0 and 10.0.5: each repeated control run was clean,
+  each fault run reported both length and skew violations, and each ignored-
+  rule control was clean. The generated boards, rules, DRC reports, normalized
+  command receipts, and hash-bearing events are retained under ignored
+  `build/ci/native-fixtures/pcb-signal-path/`. Hosted GitHub acceptance for
+  the current branch and tagged package acceptance remain pending.
+- **Problem:** A board can have valid net assignments and still lack the
+  reviewed path-length or bundle-skew limits that the interface depends on.
+  KiCad DRC already measures these quantities, but project-authored endpoint
+  intent can be absent or can drift away from the active native rule.
+- **Predicate:** The project maps exact `reference.pad` endpoints, native net,
+  independent basis, optional length bounds, and bundles with exact member
+  path IDs, pad-selector patterns, and maximum skew. Each endpoint must be on
+  the declared net in both the current native schematic netlist and PCB pad
+  inventory; it must be fitted and in the same native copper component as its
+  mate. Each endpoint rule requires exactly one `A.fromTo()` rule with exact
+  supported bounds and a non-ignored native DRC severity. Bundle selectors
+  must resolve to exactly the mapped endpoint set before their one exact skew
+  rule can be credited.
+- **Controls:** Missing rules, wrong bounds, duplicate matches, ignored
+  severities, stale schematic endpoints, PCB net mismatches, DNP endpoints,
+  split copper components, extra wildcard matches, reordered map/rule inputs,
+  review/block/off/exact-ignore behavior, and explicit custom-rule
+  `(severity ignore)` have synthetic pytest cases. An ignored custom rule cannot
+  count as active coverage. Local lane, schedule, and native fixture tests use a
+  tooling-owned synthetic checkout independent of the external template.
+  CLI and MCP continue to share `inspect_design_lint`; disabled-policy parity
+  passes from a tooling-owned synthetic project without the external template
+  checkout. The generated control, fault, and
+  explicit-ignore boards and their exact-version lane are documented in the
+  [synthetic fixture record](../tests/fixtures/design_lint/signal-path/README.md).
+  Hosted acceptance records hashes for each generated board, rule file, and raw
+  DRC report, plus native exit codes and the command receipt. The native lane
+  includes an identical-geometry case whose mapped rules explicitly use
+  `(severity ignore)` and requires those target findings to disappear. Local
+  mocked orchestration tests verify the evidence fields and reject both a fault
+  missing a target DRC violation and an ignored rule that still reports one;
+  they are not native KiCad results.
+- **Evidence boundary:** The report binds project settings, board, optional
+  rule file, native DRC receipt, exact native PCB connectivity snapshot and
+  command, KiCad version, and source hashes. KiCad DRC measures geometry; this
+  audit only verifies that the reviewed map is represented by an active rule
+  and that its endpoints match source and copper evidence. It does not select
+  an electrically appropriate length or skew limit, evaluate off-board
+  wiring, or establish physical continuity.
+- **Privacy:** Tooling-owned synthetic data only. No project-specific source,
+  observed pinout, contract, or candidate implementation is retained.
+
+#### LINT-096 — Project-authored PCB keepout signature regression
+
+- **Status:** Implemented as the opt-in `pcb.keepout_intent_coverage` rule.
+  The native probe records rule-area names, canonical outlines and holes,
+  copper-layer membership, and track/via/pad/zone-fill/footprint restrictions
+  in snapshot schema 11. Synthetic extraction was run with the exact
+  digest-pinned KiCad 10.0.0 and 10.0.5 images. Synthetic pytest cases cover
+  exact matches, changed geometry/layers/restrictions, missing and duplicate
+  names, unsupported snapshot schema, digest order stability, and review,
+  block, off, and exact-ignore policy. The full local package gate passed on
+  2026-10-08 against the exact CI-pinned public template (2,266 tests passed,
+  54 skipped, 2,030 subtests passed), including wheel and source builds and
+  installed-wheel external checks. Exact native extraction also passed against
+  both pinned KiCad versions. CLI/MCP parity passes from a tooling-owned
+  synthetic checkout without the public template. Hosted GitHub acceptance for
+  the current branch and tagged package remains pending.
+- **Problem:** A project can retain a named keepout while its outline, copper
+  layers, or restrictions drift. Generic ERC/DRC does not know that the
+  project intended a particular rule-area definition to remain unchanged.
+- **Predicate:** The project maps one unique keepout name to an independently
+  reviewed canonical geometry digest, exact copper-layer set, and all five
+  native restriction flags. The source-bound probe must return exactly one
+  native rule area with that name, and every observed property must match.
+  Missing, duplicate, renamed, reshaped, layer-changed, restriction-changed,
+  or unsupported-schema cases remain incomplete.
+- **Controls:** Synthetic tests compare exact geometry, changed outlines,
+  polygon/hole ordering, layer sets, restriction flags, duplicate and missing
+  names, and a pre-schema-11 snapshot. Lint behavior is checked under review,
+  block, off, and an exact fingerprint ignore. The geometry digest is stable
+  under polygon and hole collection reordering.
+- **Evidence boundary:** This checks regression of a project-authored KiCad
+  rule-area definition. It cannot prove that the reviewed shape, layer set, or
+  restriction flags correctly express a vendor drawing or engineering need;
+  it does not establish copper exclusion on fabricated boards, module
+  placement, RF behavior, or physical continuity. The map must come from an
+  independent approved source, not the observed board alone.
+- **Privacy:** Tooling-owned synthetic data only. No customer board, module
+  outline, connector pinout, project contract, or proprietary expectation is
+  retained.
+
 #### LINT-020 — Decoupling-capacitor proximity and connection evidence
 
 - **Status:** Implemented v2 as the opt-in `pcb.decoupling_proximity` rule with
@@ -3644,7 +3831,8 @@ is not a reason by itself to expand its scope or change its default policy.
   constraint is not evidence that the pair meets its intended requirement.
 - **Fixtures:** Exact synthetic rules cover width, gap, skew, and uncoupled
   bounds; missing files, wrong-pair selectors, wrong bounds, duplicate rules,
-  ignored checks, unsupported units, and unsupported net suffixes remain
+  globally ignored checks, custom rules with `(severity ignore)`, unsupported
+  severity clauses, unsupported units, and unsupported net suffixes remain
   visible. The native DRC matrix above verifies that KiCad 10.0.0 and 10.0.5
   catch each corresponding geometry fault when its authored rule exists.
 - **Done for v1:** Typed pair map, exact rule parser, source-bound board,
@@ -6101,7 +6289,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 80 active rules. Each entry has a deterministic predicate, evidence
+contains 82 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to
@@ -8489,6 +8677,35 @@ without importing a product design.
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | Compare an authored driver-output-to-string map with exact LED/current-control component pins and connectivity; test multi-channel and valid constant-current alternatives against current LED prompts.                                            | The proposed check merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied.                                           |
 | Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data. | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                |
 
+#### Preliminary source audit: antenna keepout coverage (2026-10-08)
+
+A pinned source inspection of
+[kicad-happy `analyze_pcb.py` at `a6bba1a`][happy-pcb-analysis]
+and its [PCB layout guidance][happy-pcb-layout]
+found a useful idea but not a reusable antenna-coverage check. The guidance
+calls for vendor-sourced antenna-area geometry and copper keepout coverage on
+the relevant layers. Its inspected `KO-001` implementation checks component
+and via center points against the bounding box of an already-present keepout;
+that predicate cannot find a missing antenna keepout, verify its exact outline,
+or bind the area to an RF pad and module identity. The implementation reports
+those findings with error severity, so its disposition is not a suitable local
+default.
+
+The local candidate is an opt-in, project-authored map of an exact module
+footprint, RF pad and net, vendor-basis text, expected board-space polygon,
+required copper layers, and required keepout restrictions. A native-version
+PCB probe would compare the authored polygon with rule-area geometry; native
+DRC would remain responsible for copper-rule violations. Default disposition
+would be `REVIEW`, with project policy able to select `block` or `off` and an
+exact fingerprint ignore. Synthetic controls must include missing and
+undersized areas, incomplete layer coverage, wrong restrictions, a moved or
+changed module, a DNP module, and an explicitly mapped external antenna. This
+was a source-audit note about the candidate evaluation boundary. LINT-096
+subsequently implemented a narrower project-authored native rule-area
+signature regression; it does not establish vendor antenna coverage or
+validate RF-module placement. No candidate code or dependency was copied, and
+no kicad-happy runtime trial is claimed here.
+
 These candidates were transcribed from public domain-detector descriptions
 reviewed on 2026-10-01. They need exact cohort revision pins and isolated
 synthetic runtime comparisons under LINT-031 before implementation planning;
@@ -8704,6 +8921,8 @@ quality, or first-article continuity.
 [happy-uc-releases]: https://github.com/aklofas/kicad-happy/releases
 [usb-c-spec-release]: https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25
 [usb-cap-fixture-readme]: ../tests/fixtures/design_lint/usb-c-vbus-capacitance-native/README.md
+[happy-pcb-analysis]: <https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/analyze_pcb.py>
+[happy-pcb-layout]: <https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/references/pcb-layout-analysis.md>
 [happy-pcb-methodology]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/methodology_pcb.md
 [happy-cross-verify]: https://github.com/aklofas/kicad-happy/blob/main/release-notes.md
 [kicad-skills-pcb]: <https://github.com/sabas0ba/kicad_skills/blob/main/docs/guides/kicad-pcb-review.md>

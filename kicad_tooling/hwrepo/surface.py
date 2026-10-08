@@ -350,37 +350,48 @@ def _test_exists(
     *,
     ast_cache: dict[Path, ast.Module | None] | None = None,
 ) -> bool:
-    """Resolve a unittest method from source without importing/executing tests."""
+    """Resolve a pytest function or unittest method without importing tests."""
     parts = reference.split(".")
-    if len(parts) < 4 or parts[0] != "tests" or not parts[-1].startswith("test_"):
+    if len(parts) < 3 or parts[0] != "tests" or not parts[-1].startswith("test_"):
         return False
     if any(not part.isidentifier() for part in parts):
         return False
-    path: Path | None = None
-    try:
-        path = repo_path(root, "/".join(parts[:-2]) + ".py")
-        if not path.is_file():
-            return False
-        if ast_cache is not None and path in ast_cache:
-            tree = ast_cache[path]
-        else:
+
+    def read_tree(module_parts: list[str]) -> ast.Module | None:
+        path: Path | None = None
+        try:
+            path = repo_path(root, "/".join(module_parts) + ".py")
+            if not path.is_file():
+                return None
+            if ast_cache is not None and path in ast_cache:
+                return ast_cache[path]
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             if ast_cache is not None:
                 ast_cache[path] = tree
-    except (OSError, SyntaxError, ValueError):
-        if ast_cache is not None and path is not None:
-            ast_cache[path] = None
-        return False
-    if tree is None:
-        return False
-    return any(
-        isinstance(node, ast.ClassDef)
-        and node.name == parts[-2]
-        and any(
-            isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)) and method.name == parts[-1]
-            for method in node.body
-        )
-        for node in tree.body
+            return tree
+        except (OSError, SyntaxError, ValueError):
+            if ast_cache is not None and path is not None:
+                ast_cache[path] = None
+            return None
+
+    if len(parts) >= 4:
+        class_tree = read_tree(parts[:-2])
+        if class_tree is not None and any(
+            isinstance(node, ast.ClassDef)
+            and node.name == parts[-2]
+            and any(
+                isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and method.name == parts[-1]
+                for method in node.body
+            )
+            for node in class_tree.body
+        ):
+            return True
+
+    function_tree = read_tree(parts[:-1])
+    return function_tree is not None and any(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == parts[-1]
+        for node in function_tree.body
     )
 
 

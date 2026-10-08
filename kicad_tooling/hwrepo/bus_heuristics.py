@@ -926,6 +926,10 @@ def _i2c_pullup_electrical_window_checks(
     maximum_ohms = (
         window.maximum_rise_time_ns * 1_000 / (0.8473 * window.maximum_bus_capacitance_pf)
     )
+    tolerance = window.maximum_per_resistor_tolerance_percent
+    tolerance_fraction = 0.0 if tolerance is None else tolerance / 100
+    minimum_actual_ohms = line.minimum_ohms * (1 - tolerance_fraction)
+    maximum_actual_ohms = line.maximum_ohms * (1 + tolerance_fraction)
     feasible = minimum_ohms < maximum_ohms or math.isclose(
         minimum_ohms, maximum_ohms, rel_tol=1e-12
     )
@@ -934,26 +938,43 @@ def _i2c_pullup_electrical_window_checks(
         if not feasible
         else ""
     )
-    minimum_meets_window = line.minimum_ohms > minimum_ohms or math.isclose(
-        line.minimum_ohms, minimum_ohms, rel_tol=1e-12
+    minimum_meets_window = minimum_actual_ohms > minimum_ohms or math.isclose(
+        minimum_actual_ohms, minimum_ohms, rel_tol=1e-12
     )
-    maximum_meets_window = line.maximum_ohms < maximum_ohms or math.isclose(
-        line.maximum_ohms, maximum_ohms, rel_tol=1e-12
+    maximum_meets_window = maximum_actual_ohms < maximum_ohms or math.isclose(
+        maximum_actual_ohms, maximum_ohms, rel_tol=1e-12
     )
     minimum_status = "PASS" if feasible and minimum_meets_window else "FAIL"
     maximum_status = "PASS" if feasible and maximum_meets_window else "FAIL"
     prefix = f"i2c-pullup/{bus_id}/{line_name.casefold()}/electrical-window"
+    minimum_note = (
+        ""
+        if tolerance is None
+        else (
+            f"; with the project-authored maximum per-resistor tolerance of {tolerance:g}% "
+            f"({window.resistor_tolerance_basis}), the conservative minimum is "
+            f"{minimum_actual_ohms:g}Ω"
+        )
+    )
+    maximum_note = (
+        ""
+        if tolerance is None
+        else (
+            f"; with the project-authored maximum per-resistor tolerance of {tolerance:g}% "
+            f"({window.resistor_tolerance_basis}), the conservative maximum is "
+            f"{maximum_actual_ohms:g}Ω"
+        )
+    )
     return (
         ElectricalCheck(
             id=f"{prefix}/minimum-sink-resistance",
             status=minimum_status,
-            observed=line.minimum_ohms,
+            observed=(line.minimum_ohms if tolerance is None else minimum_actual_ohms),
             unit="Ω",
             detail=(
-                f"The authored {line_name} nominal resistance lower bound to "
-                f"{line.rail} is "
-                f"{line.minimum_ohms:g}Ω; the minimum derived from pull-up rail, "
-                f"low-level voltage, and sink-current limits is {minimum_ohms:g}Ω "
+                f"The authored {line_name} nominal resistance lower bound to {line.rail} is "
+                f"{line.minimum_ohms:g}Ω{minimum_note}; the minimum derived from pull-up rail, low-level "
+                f"voltage, and sink-current limits is {minimum_ohms:g}Ω "
                 f"(Vpullup,max={window.maximum_pullup_voltage_v:g}V; "
                 f"VOL,max={window.maximum_low_level_voltage_v:g}V; "
                 f"IOL,min={window.minimum_sink_current_ma:g}mA). Sources: "
@@ -964,13 +985,12 @@ def _i2c_pullup_electrical_window_checks(
         ElectricalCheck(
             id=f"{prefix}/maximum-rise-resistance",
             status=maximum_status,
-            observed=line.maximum_ohms,
+            observed=(line.maximum_ohms if tolerance is None else maximum_actual_ohms),
             unit="Ω",
             detail=(
-                f"The authored {line_name} nominal resistance upper bound to "
-                f"{line.rail} is "
-                f"{line.maximum_ohms:g}Ω; the maximum derived from the 30%-to-70% "
-                f"RC rise-time model is {maximum_ohms:g}Ω "
+                f"The authored {line_name} nominal resistance upper bound to {line.rail} is "
+                f"{line.maximum_ohms:g}Ω{maximum_note}; the maximum derived from the 30%-to-70% RC "
+                f"rise-time model is {maximum_ohms:g}Ω "
                 f"(tr,max={window.maximum_rise_time_ns:g}ns; "
                 f"Cb,max={window.maximum_bus_capacitance_pf:g}pF; "
                 "tr=0.8473×Rp×Cb). Sources: "

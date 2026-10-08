@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from datetime import date
 from enum import Enum
+from fnmatch import fnmatchcase
 from fractions import Fraction
 from typing import Annotated, Literal, cast
 
@@ -464,6 +465,8 @@ DesignLintRuleId = Literal[
     "pcb.reference_plane_coverage",
     "pcb.switching_loop_geometry",
     "pcb.differential_pair_rule_coverage",
+    "pcb.signal_path_rule_coverage",
+    "pcb.keepout_intent_coverage",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",
@@ -2130,6 +2133,161 @@ class PcbDrcMaximumRequirement(StrictModel):
     max_nm: PositiveCount
 
 
+PcbDrcPadSelectorPattern = Annotated[
+    str,
+    StringConstraints(pattern=r"^[A-Za-z0-9_.?*-]+$", min_length=3),
+]
+
+
+class PcbSignalPathRequirement(StrictModel):
+    """One project-mapped PCB pad-to-pad path and its optional native length limit."""
+
+    id: Identifier
+    basis: NonEmptyText
+    net: NetName
+    from_pad: Reference
+    to_pad: Reference
+    length: PcbDrcMinMaxRequirement | None = None
+
+    @model_validator(mode="after")
+    def exact_path_endpoints(self) -> PcbSignalPathRequirement:
+        if self.net.startswith("/"):
+            raise ValueError("Use the native net name without a leading slash")
+        if self.from_pad.casefold() == self.to_pad.casefold():
+            raise ValueError("A PCB signal path needs two distinct endpoint pads")
+        if self.from_pad.count(".") != 1 or self.to_pad.count(".") != 1:
+            raise ValueError("PCB signal-path endpoints must use exact reference.pad values")
+        return self
+
+
+class PcbSignalPathBundleRequirement(StrictModel):
+    """Exact member paths and pad patterns for one project-reviewed skew group."""
+
+    id: Identifier
+    basis: NonEmptyText
+    path_ids: Annotated[tuple[Identifier, ...], Field(min_length=2)]
+    from_pad_pattern: PcbDrcPadSelectorPattern
+    to_pad_pattern: PcbDrcPadSelectorPattern
+    max_skew: PcbDrcMaximumRequirement
+
+    @model_validator(mode="after")
+    def wildcard_pad_patterns(self) -> PcbSignalPathBundleRequirement:
+        if not any(character in self.from_pad_pattern for character in "*?"):
+            raise ValueError("A signal-path bundle from-pad pattern must use a wildcard")
+        if not any(character in self.to_pad_pattern for character in "*?"):
+            raise ValueError("A signal-path bundle to-pad pattern must use a wildcard")
+        if "-" not in self.from_pad_pattern or "-" not in self.to_pad_pattern:
+            raise ValueError("Native fromTo pad patterns must use reference-pad syntax")
+        if len({item.casefold() for item in self.path_ids}) != len(self.path_ids):
+            raise ValueError("A signal-path bundle cannot repeat a member path")
+        return self
+
+
+class PcbSignalPathRuleMap(StrictModel):
+    """Project-authored pad paths and skew groups for auditing native DRC rule coverage."""
+
+    schema_version: Literal["1"] = "1"
+    basis: NonEmptyText
+    paths: Annotated[tuple[PcbSignalPathRequirement, ...], Field(min_length=1)]
+    bundles: tuple[PcbSignalPathBundleRequirement, ...] = ()
+
+    @model_validator(mode="after")
+    def unique_paths_and_valid_bundles(self) -> PcbSignalPathRuleMap:
+        path_ids = {item.id.casefold() for item in self.paths}
+        all_ids = [item.id.casefold() for item in self.paths] + [
+            item.id.casefold() for item in self.bundles
+        ]
+        if len(set(all_ids)) != len(all_ids):
+            raise ValueError("PCB signal-path and bundle IDs must be unique")
+        endpoints = [
+            tuple(sorted((item.from_pad.casefold(), item.to_pad.casefold()))) for item in self.paths
+        ]
+        if len(set(endpoints)) != len(endpoints):
+            raise ValueError("A PCB pad-to-pad signal path can only be mapped once")
+        bundle_members: set[str] = set()
+        for bundle in self.bundles:
+            missing = {item.casefold() for item in bundle.path_ids} - path_ids
+            if missing:
+                raise ValueError(
+                    f"Signal-path bundle {bundle.id!r} refers to unknown path IDs: "
+                    f"{', '.join(sorted(missing))}"
+                )
+            members = tuple(
+                item
+                for item in self.paths
+                if item.id.casefold() in {path_id.casefold() for path_id in bundle.path_ids}
+            )
+            if len({item.net.casefold() for item in members}) != len(members):
+                raise ValueError("Signal-path bundle members must use distinct nets")
+            if len({item.from_pad.casefold() for item in members}) != len(members) or len(
+                {item.to_pad.casefold() for item in members}
+            ) != len(members):
+                raise ValueError("Signal-path bundle members must have unique endpoint pads")
+            if not all(
+                fnmatchcase(
+                    _pcb_drc_pad_selector(item.from_pad).casefold(),
+                    bundle.from_pad_pattern.casefold(),
+                )
+                and fnmatchcase(
+                    _pcb_drc_pad_selector(item.to_pad).casefold(),
+                    bundle.to_pad_pattern.casefold(),
+                )
+                for item in members
+            ):
+                raise ValueError("Signal-path bundle pad patterns must match every member path")
+            member_keys = {item.id.casefold() for item in members}
+            if bundle_members & member_keys:
+                raise ValueError("A signal path can belong to only one skew bundle")
+            bundle_members.update(member_keys)
+        if any(
+            item.length is None and item.id.casefold() not in bundle_members for item in self.paths
+        ):
+            raise ValueError("Every signal path needs a length bound or a skew-bundle membership")
+        return self
+
+
+class PcbKeepoutRequirement(StrictModel):
+    """Reviewed identity and exact native signature for one PCB keepout rule area."""
+
+    id: Identifier
+    basis: NonEmptyText
+    name: NonEmptyText
+    geometry_sha256: Digest
+    layers: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
+    forbids_tracks: bool
+    forbids_vias: bool
+    forbids_pads: bool
+    forbids_zone_fills: bool
+    forbids_footprints: bool
+
+    @model_validator(mode="after")
+    def unique_layers(self) -> PcbKeepoutRequirement:
+        if len({item.casefold() for item in self.layers}) != len(self.layers):
+            raise ValueError("PCB keepout requirement layers must be unique")
+        return self
+
+
+class PcbKeepoutMap(StrictModel):
+    """Project-owned signatures for reviewed copper keepout rule areas."""
+
+    schema_version: Literal["1"] = "1"
+    basis: NonEmptyText
+    requirements: Annotated[tuple[PcbKeepoutRequirement, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def unique_keepouts(self) -> PcbKeepoutMap:
+        if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
+            raise ValueError("PCB keepout requirement IDs must be unique")
+        if len({item.name.casefold() for item in self.requirements}) != len(self.requirements):
+            raise ValueError("A named PCB keepout can be mapped only once")
+        return self
+
+
+def _pcb_drc_pad_selector(pad: str) -> str:
+    reference, pad_number = pad.split(".", 1)
+    return f"{reference}-{pad_number}"
+
+
 class PcbDifferentialPairRuleRequirement(StrictModel):
     """Project-reviewed pair identity and the exact native DRC bounds it requires."""
 
@@ -2180,7 +2338,9 @@ class PcbDifferentialPairRuleMap(StrictModel):
         return self
 
 
-PcbDrcConstraintName = Literal["track_width", "diff_pair_gap", "skew", "diff_pair_uncoupled"]
+PcbDrcConstraintName = Literal[
+    "track_width", "diff_pair_gap", "skew", "diff_pair_uncoupled", "length"
+]
 PcbDrcConstraintCoverageStatus = Literal[
     "COVERED", "MISSING", "MISMATCH", "AMBIGUOUS", "IGNORED", "UNSUPPORTED"
 ]
@@ -2286,6 +2446,225 @@ class PcbDifferentialPairRuleCoverageReport(StrictModel):
                 raise ValueError("Differential-pair report status must match its mapped entries")
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked differential-pair rule coverage must explain the gap")
+        return self
+
+
+class PcbSignalPathRuleCoverageEntry(StrictModel):
+    """Native DRC coverage for one exact pad path or mapped skew bundle."""
+
+    id: Identifier
+    kind: Literal["path", "bundle"]
+    basis: NonEmptyText
+    net: NetName | None = None
+    from_pad: Reference | None = None
+    to_pad: Reference | None = None
+    from_pad_pattern: PcbDrcPadSelectorPattern | None = None
+    to_pad_pattern: PcbDrcPadSelectorPattern | None = None
+    path_ids: tuple[Identifier, ...] = ()
+    status: Literal["COMPLETE", "INCOMPLETE"]
+    constraints: tuple[PcbDrcConstraintCoverage, ...]
+    issues: tuple[NonEmptyText, ...] = ()
+
+    @model_validator(mode="after")
+    def entry_matches_kind_and_status(self) -> PcbSignalPathRuleCoverageEntry:
+        if self.kind == "path":
+            if (
+                self.net is None
+                or self.from_pad is None
+                or self.to_pad is None
+                or self.from_pad_pattern is not None
+                or self.to_pad_pattern is not None
+                or self.path_ids
+            ):
+                raise ValueError("Signal-path coverage entries need exact path endpoints")
+            if not any(item.constraint == "length" for item in self.constraints):
+                raise ValueError("Signal-path coverage entries need a length constraint")
+        elif (
+            self.from_pad_pattern is None
+            or self.to_pad_pattern is None
+            or len(self.path_ids) < 2
+            or self.net is not None
+            or self.from_pad is not None
+            or self.to_pad is not None
+            or not any(item.constraint == "skew" for item in self.constraints)
+        ):
+            raise ValueError("Signal-path bundle coverage entries need mapped paths and skew")
+        complete = not self.issues and all(item.status == "COVERED" for item in self.constraints)
+        if (self.status == "COMPLETE") != complete:
+            raise ValueError("Signal-path coverage status must match its exact constraints")
+        return self
+
+
+class PcbSignalPathRuleCoverageReport(StrictModel):
+    """Source-bound audit of mapped signal paths against native KiCad DRC rules."""
+
+    status: Literal["NOT_REQUESTED", "DISABLED", "COMPLETE", "INCOMPLETE", "BLOCKED"] = (
+        "NOT_REQUESTED"
+    )
+    mode: Literal["review", "block", "off"] | None = None
+    map_sha256: Digest | None = None
+    source_inventory_sha256: Digest | None = None
+    project_path: RepositoryPath | None = None
+    project_sha256: Digest | None = None
+    rules_path: RepositoryPath | None = None
+    rules_sha256: Digest | None = None
+    board_path: RepositoryPath | None = None
+    board_sha256: Digest | None = None
+    native_summary_path: RepositoryPath | None = None
+    native_summary_sha256: Digest | None = None
+    native_drc_path: RepositoryPath | None = None
+    native_drc_sha256: Digest | None = None
+    pcb_snapshot_path: RepositoryPath | None = None
+    pcb_snapshot_sha256: Digest | None = None
+    pcb_command_path: RepositoryPath | None = None
+    pcb_command_sha256: Digest | None = None
+    pcb_probe_sha256: Digest | None = None
+    kicad_version: NonEmptyText | None = None
+    image: NonEmptyText | None = None
+    entries: tuple[PcbSignalPathRuleCoverageEntry, ...] = ()
+    issue: NonEmptyText | None = None
+
+    @model_validator(mode="after")
+    def scanned_report_is_bound(self) -> PcbSignalPathRuleCoverageReport:
+        if self.status in {"COMPLETE", "INCOMPLETE"} and any(
+            item is None
+            for item in (
+                self.map_sha256,
+                self.source_inventory_sha256,
+                self.project_path,
+                self.project_sha256,
+                self.rules_path,
+                self.board_path,
+                self.board_sha256,
+                self.native_summary_path,
+                self.native_summary_sha256,
+                self.native_drc_path,
+                self.native_drc_sha256,
+                self.pcb_snapshot_path,
+                self.pcb_snapshot_sha256,
+                self.pcb_command_path,
+                self.pcb_command_sha256,
+                self.pcb_probe_sha256,
+                self.kicad_version,
+                self.image,
+            )
+        ):
+            raise ValueError("Scanned signal-path rule coverage must bind all inputs")
+        if self.status in {"COMPLETE", "INCOMPLETE"}:
+            if not self.entries:
+                raise ValueError("Scanned signal-path coverage must include every mapped path")
+            any_incomplete = any(item.status == "INCOMPLETE" for item in self.entries)
+            if (self.status == "COMPLETE" and any_incomplete) or (
+                self.status == "INCOMPLETE" and not any_incomplete
+            ):
+                raise ValueError("Signal-path report status must match its mapped entries")
+        if self.status == "BLOCKED" and self.issue is None:
+            raise ValueError("Blocked signal-path rule coverage must explain the evidence gap")
+        return self
+
+
+class PcbKeepoutCoverageEntry(StrictModel):
+    """Comparison between one reviewed keepout signature and a native rule area."""
+
+    id: Identifier
+    basis: NonEmptyText
+    name: NonEmptyText
+    expected_geometry_sha256: Digest
+    observed_uuid: NativePcbUuid | None = None
+    observed_geometry_sha256: Digest | None = None
+    expected_layers: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
+    observed_layers: tuple[NonEmptyText, ...] = ()
+    expected_forbids_tracks: bool
+    expected_forbids_vias: bool
+    expected_forbids_pads: bool
+    expected_forbids_zone_fills: bool
+    expected_forbids_footprints: bool
+    observed_forbids_tracks: bool | None = None
+    observed_forbids_vias: bool | None = None
+    observed_forbids_pads: bool | None = None
+    observed_forbids_zone_fills: bool | None = None
+    observed_forbids_footprints: bool | None = None
+    status: Literal["COMPLETE", "INCOMPLETE"]
+    issues: tuple[NonEmptyText, ...] = ()
+
+    @model_validator(mode="after")
+    def status_matches_observation(self) -> PcbKeepoutCoverageEntry:
+        observed_flags = (
+            self.observed_forbids_tracks,
+            self.observed_forbids_vias,
+            self.observed_forbids_pads,
+            self.observed_forbids_zone_fills,
+            self.observed_forbids_footprints,
+        )
+        if self.status == "COMPLETE":
+            if self.issues or any(item is None for item in observed_flags):
+                raise ValueError("Complete PCB keepout coverage needs full matching evidence")
+            expected_layers = {item.casefold() for item in self.expected_layers}
+            observed_layers = {item.casefold() for item in self.observed_layers}
+            expected_flags = (
+                self.expected_forbids_tracks,
+                self.expected_forbids_vias,
+                self.expected_forbids_pads,
+                self.expected_forbids_zone_fills,
+                self.expected_forbids_footprints,
+            )
+            if (
+                self.observed_geometry_sha256 != self.expected_geometry_sha256
+                or observed_layers != expected_layers
+                or observed_flags != expected_flags
+            ):
+                raise ValueError("Complete PCB keepout coverage must match its exact signature")
+        elif not self.issues:
+            raise ValueError("Incomplete PCB keepout coverage must explain its gap")
+        return self
+
+
+class PcbKeepoutCoverageReport(StrictModel):
+    """Source-bound comparison of reviewed keepout signatures with native rule areas."""
+
+    status: Literal["NOT_REQUESTED", "DISABLED", "COMPLETE", "INCOMPLETE", "BLOCKED"] = (
+        "NOT_REQUESTED"
+    )
+    mode: Literal["review", "block", "off"] | None = None
+    map_sha256: Digest | None = None
+    board_path: RepositoryPath | None = None
+    board_sha256: Digest | None = None
+    snapshot_path: RepositoryPath | None = None
+    snapshot_sha256: Digest | None = None
+    probe_sha256: Digest | None = None
+    kicad_version: NonEmptyText | None = None
+    image: NonEmptyText | None = None
+    netlist_sha256: Digest | None = None
+    entries: tuple[PcbKeepoutCoverageEntry, ...] = ()
+    issue: NonEmptyText | None = None
+
+    @model_validator(mode="after")
+    def source_bound_when_scanned(self) -> PcbKeepoutCoverageReport:
+        if self.status in {"COMPLETE", "INCOMPLETE"} and any(
+            item is None
+            for item in (
+                self.map_sha256,
+                self.board_path,
+                self.board_sha256,
+                self.snapshot_path,
+                self.snapshot_sha256,
+                self.probe_sha256,
+                self.kicad_version,
+                self.image,
+                self.netlist_sha256,
+            )
+        ):
+            raise ValueError("Scanned PCB keepout evidence must bind all source and tool inputs")
+        if self.status in {"COMPLETE", "INCOMPLETE"}:
+            if not self.entries:
+                raise ValueError("Scanned PCB keepout coverage must contain every mapped area")
+            any_incomplete = any(item.status == "INCOMPLETE" for item in self.entries)
+            if (self.status == "COMPLETE" and any_incomplete) or (
+                self.status == "INCOMPLETE" and not any_incomplete
+            ):
+                raise ValueError("PCB keepout report status must match its mapped entries")
+        if self.status == "BLOCKED" and self.issue is None:
+            raise ValueError("Blocked PCB keepout coverage must explain its evidence gap")
         return self
 
 
@@ -2935,6 +3314,8 @@ class DesignLintPolicy(StrictModel):
     pcb_reference_plane_map: PcbReferencePlaneMap | None = None
     pcb_switching_loop_map: PcbSwitchingLoopMap | None = None
     pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None
+    pcb_signal_path_rule_map: PcbSignalPathRuleMap | None = None
+    pcb_keepout_map: PcbKeepoutMap | None = None
 
     @model_validator(mode="after")
     def unique_decisions(self) -> DesignLintPolicy:
@@ -3026,6 +3407,8 @@ class ProjectConfig(StrictModel):
                 or self.design_lint.pcb_reference_plane_map is not None
                 or self.design_lint.pcb_switching_loop_map is not None
                 or self.design_lint.pcb_differential_pair_rule_map is not None
+                or self.design_lint.pcb_signal_path_rule_map is not None
+                or self.design_lint.pcb_keepout_map is not None
             )
             and self.kind is not ProjectKind.PCB
         ):
@@ -3126,6 +3509,8 @@ class ProjectTestContract(StrictModel):
                 or self.design_lint.pcb_reference_plane_map is not None
                 or self.design_lint.pcb_switching_loop_map is not None
                 or self.design_lint.pcb_differential_pair_rule_map is not None
+                or self.design_lint.pcb_signal_path_rule_map is not None
+                or self.design_lint.pcb_keepout_map is not None
             )
             and self.validation.kind is not ProjectKind.PCB
         ):
@@ -5441,6 +5826,10 @@ class DesignLintReport(StrictModel):
     pcb_differential_pair_rules: PcbDifferentialPairRuleCoverageReport = Field(
         default_factory=PcbDifferentialPairRuleCoverageReport
     )
+    pcb_signal_path_rules: PcbSignalPathRuleCoverageReport = Field(
+        default_factory=PcbSignalPathRuleCoverageReport
+    )
+    pcb_keepout_coverage: PcbKeepoutCoverageReport = Field(default_factory=PcbKeepoutCoverageReport)
     stale_ignores: tuple[DesignLintIgnore, ...] = ()
     rule_overrides: tuple[DesignLintRuleOverride, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
@@ -6159,6 +6548,60 @@ class PcbZoneFilledIslandObservation(StrictModel):
         return self
 
 
+class PcbRuleAreaPolygonObservation(StrictModel):
+    """Canonical authored outline and holes for one native PCB rule area."""
+
+    outline_nm: tuple[tuple[int, int], ...]
+    holes_nm: tuple[tuple[tuple[int, int], ...], ...] = ()
+
+    @model_validator(mode="after")
+    def valid_rule_area_contours(self) -> PcbRuleAreaPolygonObservation:
+        for label, ring in (
+            ("outline", self.outline_nm),
+            *(("hole", hole) for hole in self.holes_nm),
+        ):
+            if len(ring) < 3 or len(set(ring)) < 3 or ring[0] == ring[-1]:
+                raise ValueError(
+                    f"Native PCB rule-area {label} needs three distinct open-ring vertices"
+                )
+            area_twice = sum(
+                first[0] * ring[(index + 1) % len(ring)][1]
+                - ring[(index + 1) % len(ring)][0] * first[1]
+                for index, first in enumerate(ring)
+            )
+            if area_twice == 0:
+                raise ValueError(f"Native PCB rule-area {label} has zero area")
+        return self
+
+
+class PcbRuleAreaObservation(StrictModel):
+    """Native KiCad keepout or placement rule area and its effective restrictions."""
+
+    uuid: Annotated[
+        str,
+        StringConstraints(
+            pattern=r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        ),
+    ]
+    name: str
+    layers: tuple[NonEmptyText, ...]
+    net: NetName | None
+    polygons: Annotated[tuple[PcbRuleAreaPolygonObservation, ...], Field(min_length=1)]
+    forbids_tracks: bool
+    forbids_vias: bool
+    forbids_pads: bool
+    forbids_zone_fills: bool
+    forbids_footprints: bool
+
+    @model_validator(mode="after")
+    def unique_rule_area_layers(self) -> PcbRuleAreaObservation:
+        if len({item.casefold() for item in self.layers}) != len(self.layers):
+            raise ValueError("Native PCB rule-area layers must be unique")
+        if len({(item.outline_nm, item.holes_nm) for item in self.polygons}) != len(self.polygons):
+            raise ValueError("Native PCB rule-area polygons must be unique")
+        return self
+
+
 class PcbZoneObservation(PcbZoneIdentity):
     """Filled copper zone metadata and connected island count from KiCad."""
 
@@ -6353,7 +6796,7 @@ class PcbNetTieObservation(StrictModel):
 class PcbConnectivitySnapshot(StrictModel):
     """Retained, deterministic native connectivity evidence for an exact board."""
 
-    schema_version: Literal["2", "3", "4", "5", "6", "7", "8", "9", "10"] = "3"
+    schema_version: Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11"] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
     image: NonEmptyText
@@ -6367,6 +6810,7 @@ class PcbConnectivitySnapshot(StrictModel):
     access_probe_requests_sha256: Digest | None = None
     tracks: tuple[PcbTrackObservation, ...] = ()
     copper_layers: tuple[NonEmptyText, ...] = ()
+    rule_areas: tuple[PcbRuleAreaObservation, ...] = ()
 
     @model_validator(mode="after")
     def unique_observed_items(self) -> PcbConnectivitySnapshot:
@@ -6380,7 +6824,7 @@ class PcbConnectivitySnapshot(StrictModel):
         track_ids = [item.uuid.casefold() for item in self.tracks]
         if len(set(track_ids)) != len(track_ids):
             raise ValueError("Native PCB evidence contains duplicate track identities")
-        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10"}:
+        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11"}:
             if "vias" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v3 requires an explicit via inventory")
             if any("connected_vias" not in item.model_fields_set for item in self.pads):
@@ -6437,7 +6881,7 @@ class PcbConnectivitySnapshot(StrictModel):
                 mapped_islands_by_zone.setdefault(key, set()).add(island.island_index)
             if mapped_zone_keys != connected_zone_keys:
                 raise ValueError("Native PCB connected zones need exact filled-island evidence")
-        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10"}:
+        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11"}:
             for key, zone in zones_by_key.items():
                 expected_unanchored = set(range(zone.filled_island_count)) - (
                     mapped_islands_by_zone.get(key, set())
@@ -6447,7 +6891,7 @@ class PcbConnectivitySnapshot(StrictModel):
                         "Native PCB zone unanchored-to-pad island indexes do not match "
                         "the pad-to-island evidence"
                     )
-        if self.schema_version in {"4", "5", "6", "7", "8", "9", "10"}:
+        if self.schema_version in {"4", "5", "6", "7", "8", "9", "10", "11"}:
             if "access_probe_observations" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v4+ requires explicit probe observations")
             if "access_probe_requests_sha256" not in self.model_fields_set:
@@ -6456,26 +6900,26 @@ class PcbConnectivitySnapshot(StrictModel):
                 self.access_probe_requests_sha256 is not None
             ):
                 raise ValueError("Native PCB probe observations need matching request evidence")
-        if self.schema_version in {"5", "6", "7", "8", "9", "10"} and any(
+        if self.schema_version in {"5", "6", "7", "8", "9", "10", "11"} and any(
             "positions_nm" not in item.model_fields_set or not item.positions_nm
             for item in self.pads
         ):
             raise ValueError("Native PCB schema v5+ requires physical pad-center positions")
         if (
-            self.schema_version in {"6", "7", "8", "9", "10"}
+            self.schema_version in {"6", "7", "8", "9", "10", "11"}
             and "tracks" not in self.model_fields_set
         ):
             raise ValueError(
                 f"Native PCB schema v{self.schema_version} requires an explicit track inventory"
             )
-        if self.schema_version in {"7", "8", "9", "10"}:
+        if self.schema_version in {"7", "8", "9", "10", "11"}:
             if "copper_layers" not in self.model_fields_set or len(self.copper_layers) < 2:
                 raise ValueError(
                     f"Native PCB schema v{self.schema_version} requires the actual copper stack inventory"
                 )
             if len({item.casefold() for item in self.copper_layers}) != len(self.copper_layers):
                 raise ValueError("Native PCB copper stack contains duplicate layer names")
-        if self.schema_version in {"8", "9", "10"}:
+        if self.schema_version in {"8", "9", "10", "11"}:
             tracks_by_uuid = {item.uuid.casefold(): item for item in self.tracks}
             for track in self.tracks:
                 if any(
@@ -6523,7 +6967,7 @@ class PcbConnectivitySnapshot(StrictModel):
                     for contact in (*track.start_tracks, *track.end_tracks)
                 ):
                     raise ValueError("Native PCB track endpoint contact has a different net")
-        if self.schema_version in {"9", "10"}:
+        if self.schema_version in {"9", "10", "11"}:
             for zone in self.zones:
                 if "filled_islands" not in zone.model_fields_set:
                     raise ValueError(
@@ -6554,11 +6998,25 @@ class PcbConnectivitySnapshot(StrictModel):
                     )
                 if obstacle.net != item.obstacle_net:
                     raise ValueError("Native PCB probe obstacle net differs from its pad inventory")
-            if self.schema_version == "10" and any(
+            if self.schema_version in {"10", "11"} and any(
                 field not in item.model_fields_set
                 for field in ("target_aperture_shape", "target_aperture_diameter_nm")
             ):
-                raise ValueError("Native PCB schema v10 requires explicit target aperture evidence")
+                raise ValueError(
+                    "Native PCB schema v10+ requires explicit target aperture evidence"
+                )
+        if self.schema_version == "11":
+            if "rule_areas" not in self.model_fields_set:
+                raise ValueError("Native PCB schema v11 requires explicit rule-area evidence")
+            rule_area_ids = [item.uuid.casefold() for item in self.rule_areas]
+            if len(set(rule_area_ids)) != len(rule_area_ids):
+                raise ValueError("Native PCB evidence contains duplicate rule-area identities")
+            for area in self.rule_areas:
+                if "name" not in area.model_fields_set:
+                    raise ValueError("Native PCB schema v11 requires explicit rule-area names")
+                copper_layers = {layer.casefold() for layer in self.copper_layers}
+                if any(layer.casefold() not in copper_layers for layer in area.layers):
+                    raise ValueError("Native PCB rule-area layers are outside the copper stack")
         for tie in self.net_ties:
             for member in (pad for group in tie.pad_groups for pad in group):
                 observed = pads_by_name.get(member.casefold())
@@ -6700,6 +7158,10 @@ class I2cPullupElectricalWindow(StrictModel):
     bus_capacitance_basis: NonEmptyText
     maximum_rise_time_ns: ElectricalPositive
     rise_time_basis: NonEmptyText
+    maximum_per_resistor_tolerance_percent: (
+        Annotated[float, Field(gt=0, lt=100, allow_inf_nan=False)] | None
+    ) = None
+    resistor_tolerance_basis: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def valid_pullup_voltage_window(self) -> I2cPullupElectricalWindow:
@@ -6707,6 +7169,10 @@ class I2cPullupElectricalWindow(StrictModel):
             raise ValueError(
                 "I2C pull-up maximum voltage must exceed the maximum low-level voltage"
             )
+        if (self.maximum_per_resistor_tolerance_percent is None) != (
+            self.resistor_tolerance_basis is None
+        ):
+            raise ValueError("I2C resistor tolerance and its basis must be supplied together")
         return self
 
 

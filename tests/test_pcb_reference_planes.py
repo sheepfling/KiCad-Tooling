@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-import unittest
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
@@ -175,7 +175,7 @@ def coach() -> ContractCoachReport:
     )
 
 
-class PcbReferencePlaneTests(unittest.TestCase):
+class PcbReferencePlaneTests:
     def test_narrow_midtrace_void_between_two_mm_samples_is_reviewed(self) -> None:
         via_id = "d" * 64
         via = PcbViaObservation(
@@ -251,28 +251,19 @@ class PcbReferencePlaneTests(unittest.TestCase):
 
         control_entry = pcb_reference_plane_entries(spec, control_source)[0]
         fault_entry = pcb_reference_plane_entries(spec, fault_source)[0]
-        self.assertEqual(control_entry.status, "COMPLETE")
-        self.assertEqual(fault_entry.status, "COMPLETE")
-        self.assertEqual(
-            (
-                control_entry.tracks[0].covered_fraction_numerator,
-                control_entry.tracks[0].covered_fraction_denominator,
-                control_entry.tracks[0].below_minimum,
-            ),
-            (7, 10, False),
-        )
-        self.assertEqual(
-            (
-                fault_entry.tracks[0].covered_fraction_numerator,
-                fault_entry.tracks[0].covered_fraction_denominator,
-                fault_entry.tracks[0].below_minimum,
-            ),
-            (3, 5, True),
-        )
-        self.assertEqual(
-            fault_entry.tracks[0].endpoint_via_ids_with_center_in_reference_holes,
-            (via_id,),
-        )
+        assert control_entry.status == "COMPLETE"
+        assert fault_entry.status == "COMPLETE"
+        assert (
+            control_entry.tracks[0].covered_fraction_numerator,
+            control_entry.tracks[0].covered_fraction_denominator,
+            control_entry.tracks[0].below_minimum,
+        ) == (7, 10, False)
+        assert (
+            fault_entry.tracks[0].covered_fraction_numerator,
+            fault_entry.tracks[0].covered_fraction_denominator,
+            fault_entry.tracks[0].below_minimum,
+        ) == (3, 5, True)
+        assert fault_entry.tracks[0].endpoint_via_ids_with_center_in_reference_holes == (via_id,)
 
         control = evaluate(
             "synthetic-narrow-reference-void-control",
@@ -286,9 +277,9 @@ class PcbReferencePlaneTests(unittest.TestCase):
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, fault_source),
         )
-        self.assertEqual(control.status, "PASS")
-        self.assertEqual(fault.status, "REVIEW")
-        self.assertTrue(any(item.rule_id == RULE for item in fault.findings))
+        assert control.status == "PASS"
+        assert fault.status == "REVIEW"
+        assert any(item.rule_id == RULE for item in fault.findings)
 
     def test_hole_is_subtracted_and_exact_threshold_control_passes(self) -> None:
         hole = (
@@ -300,14 +291,11 @@ class PcbReferencePlaneTests(unittest.TestCase):
         diagonal = track(start=(0, 0), end=(10_000_000, 10_000_000))
         fault_source = snapshot(diagonal, zones=(zone(ZONE_GND, holes=(hole,)),))
         fault = pcb_reference_plane_entries(mapping(), fault_source)[0]
-        self.assertEqual(
-            (
-                fault.tracks[0].covered_fraction_numerator,
-                fault.tracks[0].covered_fraction_denominator,
-            ),
-            (4, 5),
-        )
-        self.assertTrue(fault.tracks[0].below_minimum)
+        assert (
+            fault.tracks[0].covered_fraction_numerator,
+            fault.tracks[0].covered_fraction_denominator,
+        ) == (4, 5)
+        assert fault.tracks[0].below_minimum
 
         exact_hole = (
             (4_000_000, 4_000_000),
@@ -317,14 +305,11 @@ class PcbReferencePlaneTests(unittest.TestCase):
         )
         control_source = snapshot(diagonal, zones=(zone(ZONE_GND, holes=(exact_hole,)),))
         control = pcb_reference_plane_entries(mapping(), control_source)[0]
-        self.assertEqual(
-            (
-                control.tracks[0].covered_fraction_numerator,
-                control.tracks[0].covered_fraction_denominator,
-            ),
-            (9, 10),
-        )
-        self.assertFalse(control.tracks[0].below_minimum)
+        assert (
+            control.tracks[0].covered_fraction_numerator,
+            control.tracks[0].covered_fraction_denominator,
+        ) == (9, 10)
+        assert not control.tracks[0].below_minimum
 
     def test_disjoint_same_net_filled_zones_combine_on_one_layer(self) -> None:
         left = zone(
@@ -341,15 +326,12 @@ class PcbReferencePlaneTests(unittest.TestCase):
             ),
         )
         entry = pcb_reference_plane_entries(mapping(), snapshot(track(), zones=(left, right)))[0]
-        self.assertEqual(entry.status, "COMPLETE")
-        self.assertEqual(
-            (
-                entry.tracks[0].covered_fraction_numerator,
-                entry.tracks[0].covered_fraction_denominator,
-            ),
-            (1, 1),
-        )
-        self.assertEqual(entry.tracks[0].reference_zone_uuids, (ZONE_GND, ZONE_OTHER))
+        assert entry.status == "COMPLETE"
+        assert (
+            entry.tracks[0].covered_fraction_numerator,
+            entry.tracks[0].covered_fraction_denominator,
+        ) == (1, 1)
+        assert entry.tracks[0].reference_zone_uuids == (ZONE_GND, ZONE_OTHER)
 
     def test_split_reference_plane_gap_is_reviewed_and_explicit_alternate_net_passes(self) -> None:
         left = zone(
@@ -368,46 +350,40 @@ class PcbReferencePlaneTests(unittest.TestCase):
         split_source = snapshot(track(), zones=(left, right))
         gnd_spec = mapping(requirement(reference_net="GND", minimum_fraction=0.9))
         gnd_entry = pcb_reference_plane_entries(gnd_spec, split_source)[0]
-        self.assertEqual(
-            (
-                gnd_entry.tracks[0].covered_fraction_numerator,
-                gnd_entry.tracks[0].covered_fraction_denominator,
-            ),
-            (4, 5),
-        )
-        self.assertTrue(gnd_entry.tracks[0].below_minimum)
+        assert (
+            gnd_entry.tracks[0].covered_fraction_numerator,
+            gnd_entry.tracks[0].covered_fraction_denominator,
+        ) == (4, 5)
+        assert gnd_entry.tracks[0].below_minimum
         review = evaluate(
             "synthetic-split-plane",
             coach(),
             DesignLintPolicy(pcb_reference_plane_map=gnd_spec),
             pcb_reference_plane_coverage=report(gnd_spec, split_source),
         )
-        self.assertEqual(review.status, "REVIEW")
-        self.assertIn(
-            track().uuid,
-            next(item for item in review.findings if item.rule_id == RULE).evidence[
+        assert review.status == "REVIEW"
+        assert (
+            track().uuid
+            in next(item for item in review.findings if item.rule_id == RULE).evidence[
                 "below_threshold_track_uuids"
-            ],
+            ]
         )
 
         agnd_spec = mapping(requirement(reference_net="AGND", minimum_fraction=0.9))
         agnd_source = snapshot(track(), zones=(zone(ZONE_GND, net="AGND"),))
         agnd_entry = pcb_reference_plane_entries(agnd_spec, agnd_source)[0]
-        self.assertEqual(
-            (
-                agnd_entry.tracks[0].covered_fraction_numerator,
-                agnd_entry.tracks[0].covered_fraction_denominator,
-            ),
-            (1, 1),
-        )
+        assert (
+            agnd_entry.tracks[0].covered_fraction_numerator,
+            agnd_entry.tracks[0].covered_fraction_denominator,
+        ) == (1, 1)
         control = evaluate(
             "synthetic-split-plane-alternate-domain",
             coach(),
             DesignLintPolicy(pcb_reference_plane_map=agnd_spec),
             pcb_reference_plane_coverage=report(agnd_spec, agnd_source),
         )
-        self.assertEqual(control.status, "PASS")
-        self.assertFalse(any(item.rule_id == RULE for item in control.findings))
+        assert control.status == "PASS"
+        assert not any(item.rule_id == RULE for item in control.findings)
 
     def test_branched_route_reports_only_the_branch_crossing_a_reference_gap(self) -> None:
         trunk = track("1")
@@ -426,18 +402,15 @@ class PcbReferencePlaneTests(unittest.TestCase):
         source = snapshot(trunk, branch, zones=(zone(ZONE_GND, holes=(branch_gap,)),))
         spec = mapping(requirement(minimum_fraction=0.9))
         entry = pcb_reference_plane_entries(spec, source)[0]
-        self.assertEqual(
-            [
-                (
-                    item.track_uuid,
-                    item.covered_fraction_numerator,
-                    item.covered_fraction_denominator,
-                    item.below_minimum,
-                )
-                for item in entry.tracks
-            ],
-            [(trunk.uuid, 1, 1, False), (branch.uuid, 2, 25, True)],
-        )
+        assert [
+            (
+                item.track_uuid,
+                item.covered_fraction_numerator,
+                item.covered_fraction_denominator,
+                item.below_minimum,
+            )
+            for item in entry.tracks
+        ] == [(trunk.uuid, 1, 1, False), (branch.uuid, 2, 25, True)]
 
         lint = evaluate(
             "synthetic-branched-route",
@@ -446,11 +419,11 @@ class PcbReferencePlaneTests(unittest.TestCase):
             pcb_reference_plane_coverage=report(spec, source),
         )
         finding = next(item for item in lint.findings if item.rule_id == RULE)
-        self.assertEqual(lint.status, "REVIEW")
-        self.assertEqual(finding.evidence["below_threshold_track_uuids"], (branch.uuid,))
+        assert lint.status == "REVIEW"
+        assert finding.evidence["below_threshold_track_uuids"] == (branch.uuid,)
 
         reordered = snapshot(branch, trunk, zones=(zone(ZONE_GND, holes=(branch_gap,)),))
-        self.assertEqual(pcb_reference_plane_entries(spec, reordered)[0], entry)
+        assert pcb_reference_plane_entries(spec, reordered)[0] == entry
 
         control_source = snapshot(
             trunk,
@@ -475,8 +448,8 @@ class PcbReferencePlaneTests(unittest.TestCase):
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, control_source),
         )
-        self.assertEqual(control.status, "PASS")
-        self.assertFalse(any(item.rule_id == RULE for item in control.findings))
+        assert control.status == "PASS"
+        assert not any(item.rule_id == RULE for item in control.findings)
 
     def test_signal_via_antipad_is_measured_as_uncovered_review_area(self) -> None:
         via_id = "d" * 64
@@ -505,29 +478,23 @@ class PcbReferencePlaneTests(unittest.TestCase):
         )
         spec = mapping(requirement(minimum_fraction=0.9))
         entry = pcb_reference_plane_entries(spec, source)[0]
-        self.assertEqual(entry.status, "COMPLETE")
-        self.assertEqual(
-            (
-                entry.tracks[0].covered_fraction_numerator,
-                entry.tracks[0].covered_fraction_denominator,
-            ),
-            (2, 5),
-        )
-        self.assertEqual(entry.tracks[0].endpoint_via_ids, (via_id,))
-        self.assertEqual(
-            entry.tracks[0].endpoint_via_ids_with_center_in_reference_holes,
-            (via_id,),
-        )
+        assert entry.status == "COMPLETE"
+        assert (
+            entry.tracks[0].covered_fraction_numerator,
+            entry.tracks[0].covered_fraction_denominator,
+        ) == (2, 5)
+        assert entry.tracks[0].endpoint_via_ids == (via_id,)
+        assert entry.tracks[0].endpoint_via_ids_with_center_in_reference_holes == (via_id,)
         lint = evaluate(
             "synthetic-plane",
             coach(),
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, source),
         )
-        self.assertEqual(lint.status, "REVIEW")
+        assert lint.status == "REVIEW"
         finding = next(item for item in lint.findings if item.rule_id == RULE)
-        self.assertIn("do not identify which clearance created a hole", finding.message)
-        self.assertEqual(finding.evidence["endpoint_via_hole_candidates"], (via_id,))
+        assert "do not identify which clearance created a hole" in finding.message
+        assert finding.evidence["endpoint_via_hole_candidates"] == (via_id,)
 
         unrelated_gap = (
             (0, 700_000),
@@ -554,8 +521,8 @@ class PcbReferencePlaneTests(unittest.TestCase):
             pcb_reference_plane_coverage=report(spec, unrelated_candidate),
         )
         unrelated_finding = next(item for item in unrelated_lint.findings if item.rule_id == RULE)
-        self.assertNotIn("may be expected antipads", unrelated_finding.message)
-        self.assertEqual(unrelated_finding.evidence["endpoint_via_hole_candidates"], ())
+        assert "may be expected antipads" not in unrelated_finding.message
+        assert unrelated_finding.evidence["endpoint_via_hole_candidates"] == ()
 
         offset_clearance = (
             (200_000, 4_700_000),
@@ -575,15 +542,12 @@ class PcbReferencePlaneTests(unittest.TestCase):
                 vias=(via,),
             ),
         )[0]
-        self.assertEqual(
-            unrelated_hole.tracks[0].covered_fraction_numerator,
-            entry.tracks[0].covered_fraction_numerator,
+        assert (
+            unrelated_hole.tracks[0].covered_fraction_numerator
+            == entry.tracks[0].covered_fraction_numerator
         )
-        self.assertEqual(unrelated_hole.tracks[0].endpoint_via_ids, (via_id,))
-        self.assertEqual(
-            unrelated_hole.tracks[0].endpoint_via_ids_with_center_in_reference_holes,
-            (),
-        )
+        assert unrelated_hole.tracks[0].endpoint_via_ids == (via_id,)
+        assert unrelated_hole.tracks[0].endpoint_via_ids_with_center_in_reference_holes == ()
 
     def test_merged_clearance_hole_does_not_assign_hole_ownership_to_endpoint_via(self) -> None:
         endpoint_via_id = "d" * 64
@@ -629,17 +593,11 @@ class PcbReferencePlaneTests(unittest.TestCase):
         )
         spec = mapping(requirement(minimum_fraction=0.9))
         entry = pcb_reference_plane_entries(spec, source)[0]
-        self.assertEqual(
-            (
-                entry.tracks[0].covered_fraction_numerator,
-                entry.tracks[0].covered_fraction_denominator,
-            ),
-            (1, 5),
-        )
-        self.assertEqual(
-            entry.tracks[0].endpoint_via_ids_with_center_in_reference_holes,
-            (endpoint_via_id,),
-        )
+        assert (
+            entry.tracks[0].covered_fraction_numerator,
+            entry.tracks[0].covered_fraction_denominator,
+        ) == (1, 5)
+        assert entry.tracks[0].endpoint_via_ids_with_center_in_reference_holes == (endpoint_via_id,)
 
         lint = evaluate(
             "synthetic-plane",
@@ -648,9 +606,9 @@ class PcbReferencePlaneTests(unittest.TestCase):
             pcb_reference_plane_coverage=report(spec, source),
         )
         finding = next(item for item in lint.findings if item.rule_id == RULE)
-        self.assertIn("do not identify which clearance created a hole", finding.message)
-        self.assertIn("inspect the geometry", finding.message)
-        self.assertEqual(finding.evidence["endpoint_via_hole_candidates"], (endpoint_via_id,))
+        assert "do not identify which clearance created a hole" in finding.message
+        assert "inspect the geometry" in finding.message
+        assert finding.evidence["endpoint_via_hole_candidates"] == (endpoint_via_id,)
 
     def test_only_immediately_adjacent_exact_reference_net_copper_counts(self) -> None:
         source = snapshot(
@@ -661,12 +619,12 @@ class PcbReferencePlaneTests(unittest.TestCase):
             ),
         )
         entry = pcb_reference_plane_entries(mapping(), source)[0]
-        self.assertEqual(entry.status, "COMPLETE")
-        self.assertEqual(len(entry.tracks), 1)
-        self.assertEqual(entry.tracks[0].reference_layer, "In1.Cu")
-        self.assertEqual(entry.tracks[0].reference_zone_uuids, ())
-        self.assertEqual(entry.tracks[0].covered_fraction_numerator, 0)
-        self.assertTrue(entry.tracks[0].below_minimum)
+        assert entry.status == "COMPLETE"
+        assert len(entry.tracks) == 1
+        assert entry.tracks[0].reference_layer == "In1.Cu"
+        assert entry.tracks[0].reference_zone_uuids == ()
+        assert entry.tracks[0].covered_fraction_numerator == 0
+        assert entry.tracks[0].below_minimum
 
     def test_inner_route_needs_one_adjacent_layer_to_meet_threshold(self) -> None:
         hole = (
@@ -683,18 +641,15 @@ class PcbReferencePlaneTests(unittest.TestCase):
             ),
         )
         entry = pcb_reference_plane_entries(mapping(requirement(layer="In1.Cu")), source)[0]
-        self.assertEqual(
-            [
-                (
-                    item.reference_layer,
-                    item.covered_fraction_numerator,
-                    item.covered_fraction_denominator,
-                    item.below_minimum,
-                )
-                for item in entry.tracks
-            ],
-            [("F.Cu", 4, 5, True), ("B.Cu", 0, 1, True)],
-        )
+        assert [
+            (
+                item.reference_layer,
+                item.covered_fraction_numerator,
+                item.covered_fraction_denominator,
+                item.below_minimum,
+            )
+            for item in entry.tracks
+        ] == [("F.Cu", 4, 5, True), ("B.Cu", 0, 1, True)]
 
         full_source = snapshot(
             track(layer="In1.Cu"),
@@ -703,7 +658,7 @@ class PcbReferencePlaneTests(unittest.TestCase):
         full_entry = pcb_reference_plane_entries(mapping(requirement(layer="In1.Cu")), full_source)[
             0
         ]
-        self.assertFalse(all(item.below_minimum for item in full_entry.tracks))
+        assert not all(item.below_minimum for item in full_entry.tracks)
         spec = mapping(requirement(layer="In1.Cu"))
         control = evaluate(
             "synthetic-plane",
@@ -711,22 +666,22 @@ class PcbReferencePlaneTests(unittest.TestCase):
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, full_source),
         )
-        self.assertEqual(control.status, "PASS")
-        self.assertFalse(any(item.rule_id == RULE for item in control.findings))
+        assert control.status == "PASS"
+        assert not any(item.rule_id == RULE for item in control.findings)
 
     def test_short_segments_are_excluded_and_arcs_keep_coverage_incomplete(self) -> None:
         short = track("1", start=(0, 0), end=(999_999, 0))
         short_entry = pcb_reference_plane_entries(
             mapping(requirement(minimum_length_um=1000)), snapshot(short)
         )[0]
-        self.assertEqual(short_entry.status, "INCOMPLETE")
-        self.assertEqual(short_entry.excluded_short_track_uuids, (short.uuid,))
-        self.assertIn("minimum segment length", short_entry.issues[0])
+        assert short_entry.status == "INCOMPLETE"
+        assert short_entry.excluded_short_track_uuids == (short.uuid,)
+        assert "minimum segment length" in short_entry.issues[0]
 
         arc_entry = pcb_reference_plane_entries(mapping(), snapshot(track(geometry="arc")))[0]
-        self.assertEqual(arc_entry.status, "INCOMPLETE")
-        self.assertIn("unsupported arc geometry", arc_entry.issues[0])
-        self.assertEqual(arc_entry.tracks, ())
+        assert arc_entry.status == "INCOMPLETE"
+        assert "unsupported arc geometry" in arc_entry.issues[0]
+        assert arc_entry.tracks == ()
 
     def test_excluded_short_track_review_is_opt_in_and_cli_text_keeps_ids_visible(self) -> None:
         long_track = track("2", start=(0, 0), end=(5_000_000, 0))
@@ -735,38 +690,38 @@ class PcbReferencePlaneTests(unittest.TestCase):
 
         quiet_spec = mapping(requirement(minimum_length_um=1000))
         quiet_entry = pcb_reference_plane_entries(quiet_spec, source)[0]
-        self.assertEqual(quiet_entry.status, "COMPLETE")
-        self.assertEqual(quiet_entry.excluded_short_track_uuids, (short_track.uuid,))
+        assert quiet_entry.status == "COMPLETE"
+        assert quiet_entry.excluded_short_track_uuids == (short_track.uuid,)
         quiet = evaluate(
             "synthetic-short-track-policy",
             coach(),
             DesignLintPolicy(pcb_reference_plane_map=quiet_spec),
             pcb_reference_plane_coverage=report(quiet_spec, source),
         )
-        self.assertEqual(quiet.status, "PASS")
-        self.assertFalse(any(item.rule_id == RULE for item in quiet.findings))
+        assert quiet.status == "PASS"
+        assert not any(item.rule_id == RULE for item in quiet.findings)
         quiet_text = text_report(quiet)
-        self.assertIn("short-track review disabled", quiet_text)
-        self.assertIn(short_track.uuid, quiet_text)
+        assert "short-track review disabled" in quiet_text
+        assert short_track.uuid in quiet_text
 
         review_spec = mapping(
             requirement(minimum_length_um=1000, review_excluded_short_tracks=True)
         )
         review_entry = pcb_reference_plane_entries(review_spec, source)[0]
-        self.assertEqual(review_entry.status, "INCOMPLETE")
-        self.assertIn("require review", review_entry.issues[0])
+        assert review_entry.status == "INCOMPLETE"
+        assert "require review" in review_entry.issues[0]
         reviewed = evaluate(
             "synthetic-short-track-policy",
             coach(),
             DesignLintPolicy(pcb_reference_plane_map=review_spec),
             pcb_reference_plane_coverage=report(review_spec, source),
         )
-        self.assertEqual(reviewed.status, "REVIEW")
+        assert reviewed.status == "REVIEW"
         finding = next(item for item in reviewed.findings if item.rule_id == RULE)
-        self.assertEqual(finding.evidence["excluded_short_track_uuids"], (short_track.uuid,))
-        self.assertEqual(finding.evidence["review_excluded_short_tracks"], ("true",))
-        self.assertIn("were excluded", finding.message)
-        self.assertIn("short-track review enabled", text_report(reviewed))
+        assert finding.evidence["excluded_short_track_uuids"] == (short_track.uuid,)
+        assert finding.evidence["review_excluded_short_tracks"] == ("true",)
+        assert "were excluded" in finding.message
+        assert "short-track review enabled" in text_report(reviewed)
 
         blocking = evaluate(
             "synthetic-short-track-policy",
@@ -783,23 +738,21 @@ class PcbReferencePlaneTests(unittest.TestCase):
             ),
             pcb_reference_plane_coverage=report(review_spec, source),
         )
-        self.assertEqual(blocking.status, "FAIL")
+        assert blocking.status == "FAIL"
 
         reordered = snapshot(short_track, long_track)
-        self.assertEqual(pcb_reference_plane_entries(quiet_spec, reordered)[0], quiet_entry)
+        assert pcb_reference_plane_entries(quiet_spec, reordered)[0] == quiet_entry
 
     def test_unmapped_track_and_missing_stack_layer_remain_incomplete(self) -> None:
         no_tracks = pcb_reference_plane_entries(mapping(), snapshot())[0]
-        self.assertEqual(no_tracks.status, "INCOMPLETE")
-        self.assertIn("No native track items", no_tracks.issues[0])
+        assert no_tracks.status == "INCOMPLETE"
+        assert "No native track items" in no_tracks.issues[0]
 
         missing_layer = snapshot(track(), copper_layers=("In1.Cu", "B.Cu"))
         incomplete = pcb_reference_plane_entries(mapping(), missing_layer)[0]
-        self.assertEqual(incomplete.status, "INCOMPLETE")
-        self.assertIn("Mapped signal layer F.Cu is absent", incomplete.issues[0])
-        self.assertTrue(
-            any("no observed adjacent copper layer" in item for item in incomplete.issues)
-        )
+        assert incomplete.status == "INCOMPLETE"
+        assert "Mapped signal layer F.Cu is absent" in incomplete.issues[0]
+        assert any("no observed adjacent copper layer" in item for item in incomplete.issues)
 
     def test_exactly_mapped_fault_is_reviewable_and_control_is_quiet(self) -> None:
         hole = (
@@ -818,9 +771,9 @@ class PcbReferencePlaneTests(unittest.TestCase):
             ),
         )
         finding = next(item for item in fault.findings if item.rule_id == RULE)
-        self.assertEqual(fault.status, "REVIEW")
-        self.assertIn(track().uuid, finding.evidence["below_threshold_track_uuids"])
-        self.assertIn("does not establish a continuous return-current path", finding.message)
+        assert fault.status == "REVIEW"
+        assert track().uuid in finding.evidence["below_threshold_track_uuids"]
+        assert "does not establish a continuous return-current path" in finding.message
 
         control = evaluate(
             "synthetic-plane",
@@ -828,8 +781,8 @@ class PcbReferencePlaneTests(unittest.TestCase):
             DesignLintPolicy(pcb_reference_plane_map=spec),
             pcb_reference_plane_coverage=report(spec, snapshot(track())),
         )
-        self.assertEqual(control.status, "PASS")
-        self.assertFalse(any(item.rule_id == RULE for item in control.findings))
+        assert control.status == "PASS"
+        assert not any(item.rule_id == RULE for item in control.findings)
 
         blocking = evaluate(
             "synthetic-plane",
@@ -844,16 +797,16 @@ class PcbReferencePlaneTests(unittest.TestCase):
                 spec, snapshot(track(), zones=(zone(ZONE_GND, holes=(hole,)),))
             ),
         )
-        self.assertEqual(blocking.status, "FAIL")
+        assert blocking.status == "FAIL"
 
     def test_map_scope_is_unique_and_threshold_is_bounded(self) -> None:
-        with self.assertRaisesRegex(ValidationError, "only one reference-plane screen"):
+        with pytest.raises(ValidationError, match="only one reference-plane screen"):
             mapping(requirement(), requirement(id="duplicate-scope"))
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             requirement(minimum_fraction=1.1)
 
     def test_report_rejects_unreduced_fraction_and_underlength_measurement(self) -> None:
-        with self.assertRaisesRegex(ValidationError, "must be reduced"):
+        with pytest.raises(ValidationError, match="must be reduced"):
             PcbReferencePlaneTrackMeasurement(
                 track_uuid=track().uuid,
                 signal_layer="F.Cu",
@@ -874,7 +827,7 @@ class PcbReferencePlaneTests(unittest.TestCase):
             covered_fraction_denominator=1,
             below_minimum=True,
         )
-        with self.assertRaisesRegex(ValidationError, "meet the authored length"):
+        with pytest.raises(ValidationError, match="meet the authored length"):
             PcbReferencePlaneCoverageEntry(
                 id="data-reference",
                 status="COMPLETE",
@@ -886,7 +839,3 @@ class PcbReferencePlaneTests(unittest.TestCase):
                 minimum_referenced_fraction=0.9,
                 tracks=(measurement,),
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

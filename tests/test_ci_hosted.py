@@ -353,6 +353,7 @@ class HostedCiTests(unittest.TestCase):
             ) as voltage_rating_fixture,
             patch("kicad_tooling.ci_hosted.power_sequence_fixture_lane") as sequence_fixture,
             patch("kicad_tooling.ci_hosted.ic_rail_capacitor_fixture_lane") as rail_cap_fixture,
+            patch("kicad_tooling.ci_hosted.pcb_signal_path_drc_fixture_lane"),
             patch("kicad_tooling.ci_hosted.pcb_return_fixture_lane") as pcb_fixture,
             patch("kicad_tooling.ci_hosted.pcb_access_fixture_lane") as access_fixture,
             patch("kicad_tooling.ci_hosted.pcb_decoupling_fixture_lane") as decoupling_fixture,

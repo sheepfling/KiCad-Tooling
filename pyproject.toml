@@ -58,7 +58,8 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_classes = ["*Tests", "*Test"]
+# Prefer pytest's Test* convention while retaining discovery of unmigrated classes.
+python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
 
 [tool.ruff]

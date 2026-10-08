@@ -29,7 +29,7 @@ profiles with:
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1 \
-.venv/bin/python -B -m unittest tests.test_ci_hosted.NativeUsbDataPathFixtureTests
+.venv/bin/python -B -m pytest -q tests/test_ci_hosted.py::NativeUsbDataPathFixtureTests
 ```
 
 The fixture sources and expected outcomes are registered here. A local

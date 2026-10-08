@@ -301,7 +301,7 @@ Reproduce against the public tooling acceptance checkout:
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_POWER_PATH_FIXTURES=1 \
-.venv/bin/python -B -m unittest tests.test_power_path_fixture_lane.NativePowerPathFixtureTests
+.venv/bin/python -B -m pytest -q tests/test_power_path_fixture_lane.py::NativePowerPathFixtureTests
 ```
 
 The mapped check compares only project-authored identities and net

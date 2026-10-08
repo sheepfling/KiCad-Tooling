@@ -37,6 +37,6 @@ checkout configured:
 ```sh
 KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 \
-  .venv/bin/python -m unittest \
-  tests.test_ci_hosted.NativeConnectorReturnFixtureTests.test_native_netlist_split_return_fault_and_common_return_control -v
+  .venv/bin/python -m pytest -v \
+  tests/test_ci_hosted.py::NativeConnectorReturnFixtureTests::test_native_netlist_split_return_fault_and_common_return_control
 ```

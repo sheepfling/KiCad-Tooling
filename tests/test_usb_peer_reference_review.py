@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import unittest
 from typing import Literal
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.bus_heuristics import (
@@ -557,88 +557,86 @@ def lint_report(
     )
 
 
-class UsbPeerReferenceReviewTests(unittest.TestCase):
+class UsbPeerReferenceReviewTests:
     def test_coverage_binds_common_split_and_mapped_peer_paths(self) -> None:
         split = lint_report(usb_peer_netlist())
         split_coverage = split.usb_peer_reference_coverage
-        self.assertIsNotNone(split_coverage)
+        assert (split_coverage) is not None
         assert split_coverage is not None
-        self.assertEqual(split_coverage.status, "EVALUATED")
-        self.assertEqual(split_coverage.netlist_sha256, split.netlist_sha256)
-        self.assertEqual(split_coverage.recognized_connector_group_count, 1)
-        self.assertEqual(split_coverage.supported_connector_group_count, 1)
-        self.assertEqual(split_coverage.recognized_phy_group_count, 1)
-        self.assertEqual(split_coverage.supported_phy_group_count, 1)
-        self.assertEqual(split_coverage.supported_data_path_count, 1)
-        self.assertEqual(split_coverage.separate_reference_path_count, 1)
-        self.assertEqual(split_coverage.candidate_group_count, 1)
-        self.assertIn("USB peer-reference heuristic coverage:", text_report(split))
-        self.assertIn(
-            "At least one supported connector-to-PHY path was checked.", text_report(split)
-        )
+        assert (split_coverage.status) == ("EVALUATED")
+        assert (split_coverage.netlist_sha256) == (split.netlist_sha256)
+        assert (split_coverage.recognized_connector_group_count) == (1)
+        assert (split_coverage.supported_connector_group_count) == (1)
+        assert (split_coverage.recognized_phy_group_count) == (1)
+        assert (split_coverage.supported_phy_group_count) == (1)
+        assert (split_coverage.supported_data_path_count) == (1)
+        assert (split_coverage.separate_reference_path_count) == (1)
+        assert (split_coverage.candidate_group_count) == (1)
+        assert ("USB peer-reference heuristic coverage:") in (text_report(split))
+        assert ("At least one supported connector-to-PHY path was checked.") in (text_report(split))
 
         common = lint_report(
             usb_peer_netlist(connector_reference_net="BOARD_GND", phy_reference_net="BOARD_GND")
         )
         common_coverage = common.usb_peer_reference_coverage
-        self.assertIsNotNone(common_coverage)
+        assert (common_coverage) is not None
         assert common_coverage is not None
-        self.assertEqual(common_coverage.common_reference_path_count, 1)
-        self.assertEqual(common_coverage.separate_reference_path_count, 0)
-        self.assertEqual(common_coverage.candidate_group_count, 0)
+        assert (common_coverage.common_reference_path_count) == (1)
+        assert (common_coverage.separate_reference_path_count) == (0)
+        assert (common_coverage.candidate_group_count) == (0)
 
         mapped = lint_report(
             usb_peer_netlist(), path_map=usb_data_map(reference_policy="separate_nets")
         )
         mapped_coverage = mapped.usb_peer_reference_coverage
-        self.assertIsNotNone(mapped_coverage)
+        assert (mapped_coverage) is not None
         assert mapped_coverage is not None
-        self.assertIsNotNone(mapped_coverage.usb_data_path_map_sha256)
-        self.assertEqual(mapped_coverage.mapped_separate_reference_path_count, 1)
-        self.assertEqual(mapped_coverage.candidate_group_count, 0)
+        assert (mapped_coverage.usb_data_path_map_sha256) is not None
+        assert (mapped_coverage.mapped_separate_reference_path_count) == (1)
+        assert (mapped_coverage.candidate_group_count) == (0)
 
     def test_coverage_marks_missing_usb_endpoints_and_incomplete_groups(self) -> None:
         empty = NetlistContract(components={}, nets={})
         empty_scan = scan_usb_peer_reference_reviews(empty)
-        self.assertEqual(empty_scan.coverage.recognized_connector_group_count, 0)
-        self.assertEqual(empty_scan.coverage.recognized_phy_group_count, 0)
+        assert (empty_scan.coverage.recognized_connector_group_count) == (0)
+        assert (empty_scan.coverage.recognized_phy_group_count) == (0)
         empty_coverage = lint_report(empty).usb_peer_reference_coverage
-        self.assertIsNotNone(empty_coverage)
+        assert (empty_coverage) is not None
         assert empty_coverage is not None
-        self.assertEqual(empty_coverage.status, "NO_USB_ENDPOINTS")
-        self.assertIn(
-            "No supported USB data-pin function groups were recognized",
-            text_report(lint_report(empty)),
+        assert (empty_coverage.status) == ("NO_USB_ENDPOINTS")
+        assert ("No supported USB data-pin function groups were recognized") in (
+            text_report(lint_report(empty))
         )
 
         incomplete = usb_peer_netlist(incomplete=True)
         incomplete_coverage = lint_report(incomplete).usb_peer_reference_coverage
-        self.assertIsNotNone(incomplete_coverage)
+        assert (incomplete_coverage) is not None
         assert incomplete_coverage is not None
-        self.assertEqual(incomplete_coverage.status, "INCOMPLETE")
-        self.assertEqual(incomplete_coverage.incomplete_group_count, 1)
-        self.assertEqual(
+        assert (incomplete_coverage.status) == ("INCOMPLETE")
+        assert (incomplete_coverage.incomplete_group_count) == (1)
+        assert (
             tuple(
                 (item.endpoint_role, item.reference, item.port_group, item.disposition)
                 for item in incomplete_coverage.endpoint_groups or ()
-            ),
+            )
+        ) == (
             (
                 ("connector", "J1", None, "SUPPORTED"),
                 ("phy", "U1", None, "INCOMPLETE"),
-            ),
+            )
         )
         incomplete_text = text_report(lint_report(incomplete))
-        self.assertIn("lacked complete evidence", incomplete_text)
-        self.assertIn("PHY U1 (unnumbered port): INCOMPLETE", incomplete_text)
+        assert ("lacked complete evidence") in (incomplete_text)
+        assert ("PHY U1 (unnumbered port): INCOMPLETE") in (incomplete_text)
 
         legacy_payload = incomplete_coverage.model_dump()
         legacy_payload.pop("endpoint_groups")
-        self.assertIsNone(
+        assert (
             UsbPeerReferenceCoverageReport.model_validate(legacy_payload).endpoint_groups
-        )
+        ) is None
         inconsistent_payload = incomplete_coverage.model_dump()
         inconsistent_payload["incomplete_group_count"] = 0
-        with self.assertRaisesRegex(ValidationError, "incomplete group count"):
+        with pytest.raises(ValidationError, match="incomplete group count"):
             UsbPeerReferenceCoverageReport.model_validate(inconsistent_payload)
 
     def test_coverage_distinguishes_unsupported_paths_and_dnp_endpoints(self) -> None:
@@ -653,53 +651,53 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             }
         )
         uncoupled_coverage = lint_report(uncoupled).usb_peer_reference_coverage
-        self.assertIsNotNone(uncoupled_coverage)
+        assert (uncoupled_coverage) is not None
         assert uncoupled_coverage is not None
-        self.assertEqual(uncoupled_coverage.status, "NO_SUPPORTED_PEER_PATHS")
-        self.assertEqual(uncoupled_coverage.supported_connector_group_count, 1)
-        self.assertEqual(uncoupled_coverage.supported_phy_group_count, 1)
-        self.assertEqual(uncoupled_coverage.incomplete_group_count, 0)
-        self.assertEqual(uncoupled_coverage.supported_data_path_count, 0)
-        self.assertIn(
-            "No direct or single-resistor USB D+/D− connector-to-PHY path matched",
-            text_report(lint_report(uncoupled)),
+        assert (uncoupled_coverage.status) == ("NO_SUPPORTED_PEER_PATHS")
+        assert (uncoupled_coverage.supported_connector_group_count) == (1)
+        assert (uncoupled_coverage.supported_phy_group_count) == (1)
+        assert (uncoupled_coverage.incomplete_group_count) == (0)
+        assert (uncoupled_coverage.supported_data_path_count) == (0)
+        assert ("No direct or single-resistor USB D+/D− connector-to-PHY path matched") in (
+            text_report(lint_report(uncoupled))
         )
 
         dnp_coverage = lint_report(usb_peer_netlist(dnp=("U1",))).usb_peer_reference_coverage
-        self.assertIsNotNone(dnp_coverage)
+        assert (dnp_coverage) is not None
         assert dnp_coverage is not None
-        self.assertEqual(dnp_coverage.status, "NO_SUPPORTED_PEER_PATHS")
-        self.assertEqual(dnp_coverage.dnp_group_count, 1)
-        self.assertEqual(dnp_coverage.incomplete_group_count, 0)
-        self.assertEqual(dnp_coverage.supported_phy_group_count, 0)
-        self.assertEqual(
+        assert (dnp_coverage.status) == ("NO_SUPPORTED_PEER_PATHS")
+        assert (dnp_coverage.dnp_group_count) == (1)
+        assert (dnp_coverage.incomplete_group_count) == (0)
+        assert (dnp_coverage.supported_phy_group_count) == (0)
+        assert (
             tuple(
                 (item.endpoint_role, item.reference, item.port_group, item.disposition)
                 for item in dnp_coverage.endpoint_groups or ()
-            ),
+            )
+        ) == (
             (
                 ("connector", "J1", None, "SUPPORTED"),
                 ("phy", "U1", None, "DNP"),
-            ),
+            )
         )
 
     def test_single_port_numbered_usb_data_functions_are_recognized(self) -> None:
-        self.assertEqual(usb_data_function_side("DP1"), "positive")
-        self.assertEqual(usb_data_function_side("DM1"), "negative")
-        self.assertEqual(usb_data_function_side("DP2"), "positive")
-        self.assertEqual(usb_data_function_side("DM2"), "negative")
-        self.assertEqual(usb_data_function_identity("USB_DP3"), ("3", "positive"))
-        self.assertEqual(usb_data_function_identity("DP2"), ("2", "positive"))
-        self.assertEqual(usb_data_function_identity("USB1D+"), ("1", "positive"))
-        self.assertEqual(usb_data_function_identity("USB2D-"), ("2", "negative"))
-        self.assertEqual(usb_data_function_identity("USB0D+"), None)
-        self.assertEqual(usb_data_function_identity("1D+"), None)
-        self.assertEqual(usb_data_function_identity("D-"), (None, "negative"))
+        assert (usb_data_function_side("DP1")) == ("positive")
+        assert (usb_data_function_side("DM1")) == ("negative")
+        assert (usb_data_function_side("DP2")) == ("positive")
+        assert (usb_data_function_side("DM2")) == ("negative")
+        assert (usb_data_function_identity("USB_DP3")) == (("3", "positive"))
+        assert (usb_data_function_identity("DP2")) == (("2", "positive"))
+        assert (usb_data_function_identity("USB1D+")) == (("1", "positive"))
+        assert (usb_data_function_identity("USB2D-")) == (("2", "negative"))
+        assert (usb_data_function_identity("USB0D+")) == (None)
+        assert (usb_data_function_identity("1D+")) == (None)
+        assert (usb_data_function_identity("D-")) == ((None, "negative"))
 
     def test_numbered_multiport_hub_groups_each_connector_with_its_usb_port(self) -> None:
         observed = usb_multiport_peer_netlist()
         reviews = usb_peer_reference_reviews(observed)
-        self.assertEqual(
+        assert (
             tuple(
                 (
                     item.connector_reference,
@@ -709,36 +707,37 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                     item.data_link.phy_negative_pins,
                 )
                 for item in reviews
-            ),
+            )
+        ) == (
             (
                 ("J1", "U1", "1", ("U1.1",), ("U1.2",)),
                 ("J2", "U1", "2", ("U1.4",), ("U1.5",)),
-            ),
+            )
         )
         report = lint_report(observed)
         findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
         coverage = report.usb_peer_reference_coverage
-        self.assertIsNotNone(coverage)
+        assert (coverage) is not None
         assert coverage is not None
-        self.assertEqual(
+        assert (
             tuple(
                 (item.endpoint_role, item.reference, item.port_group, item.disposition)
                 for item in coverage.endpoint_groups or ()
-            ),
+            )
+        ) == (
             (
                 ("connector", "J1", None, "SUPPORTED"),
                 ("connector", "J2", None, "SUPPORTED"),
                 ("phy", "U1", "1", "SUPPORTED"),
                 ("phy", "U1", "2", "SUPPORTED"),
-            ),
+            )
         )
-        self.assertEqual(report.status, "REVIEW")
-        self.assertEqual(
-            tuple((item.subject, item.evidence["USB_port_group"]) for item in findings),
+        assert (report.status) == ("REVIEW")
+        assert (tuple((item.subject, item.evidence["USB_port_group"]) for item in findings)) == (
             (
                 ("J1 / U1: USB reference-domain review (port 1)", ("1",)),
                 ("J2 / U1: USB reference-domain review (port 2)", ("2",)),
-            ),
+            )
         )
         reordered = observed.model_copy(
             update={
@@ -754,27 +753,26 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 ),
             }
         )
-        self.assertEqual(lint_report(observed), lint_report(reordered))
+        assert (lint_report(observed)) == (lint_report(reordered))
 
         common = usb_multiport_peer_netlist(common_references=True)
-        self.assertEqual(usb_peer_reference_reviews(common), ())
-        self.assertNotIn(RULE_ID, {item.rule_id for item in lint_report(common).findings})
+        assert (usb_peer_reference_reviews(common)) == (())
+        assert (RULE_ID) not in ({item.rule_id for item in lint_report(common).findings})
 
         exact_map = usb_multiport_data_map()
         mapped = lint_report(observed, path_map=exact_map)
-        self.assertNotIn(RULE_ID, {item.rule_id for item in mapped.findings})
-        self.assertNotIn(PATH_RULE_ID, {item.rule_id for item in mapped.findings})
+        assert (RULE_ID) not in ({item.rule_id for item in mapped.findings})
+        assert (PATH_RULE_ID) not in ({item.rule_id for item in mapped.findings})
 
         stale_map = lint_report(
             observed,
             path_map=usb_multiport_data_map(second_port_group="3"),
         )
         stale_peer_findings = tuple(item for item in stale_map.findings if item.rule_id == RULE_ID)
-        self.assertEqual(
-            tuple(item.subject for item in stale_peer_findings),
-            ("J2 / U1: USB reference-domain review (port 2)",),
+        assert (tuple(item.subject for item in stale_peer_findings)) == (
+            ("J2 / U1: USB reference-domain review (port 2)",)
         )
-        self.assertIn(PATH_RULE_ID, {item.rule_id for item in stale_map.findings})
+        assert (PATH_RULE_ID) in ({item.rule_id for item in stale_map.findings})
 
     def test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels(self) -> None:
         observed = usb_multiport_peer_netlist()
@@ -787,7 +785,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 }
             }
         )
-        self.assertEqual(usb_peer_reference_reviews(crossed), ())
+        assert (usb_peer_reference_reviews(crossed)) == (())
 
         one_channel_open = observed.model_copy(
             update={
@@ -798,81 +796,78 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             }
         )
         reviews = usb_peer_reference_reviews(one_channel_open)
-        self.assertEqual(
-            tuple((item.connector_reference, item.data_link.port_group) for item in reviews),
-            (("J1", "1"),),
-        )
+        assert (
+            tuple((item.connector_reference, item.data_link.port_group) for item in reviews)
+        ) == ((("J1", "1"),))
 
     def test_split_reference_direct_usb_pair_emits_exact_review_evidence(self) -> None:
         observed = usb_peer_netlist()
         reviews = usb_peer_reference_reviews(observed)
-        self.assertEqual(len(reviews), 1)
+        assert (len(reviews)) == (1)
         review = reviews[0]
-        self.assertEqual((review.connector_reference, review.phy_reference), ("J1", "U1"))
-        self.assertEqual(review.connector_reference_net, "USB_GND")
-        self.assertEqual(review.phy_reference_net, "BOARD_GND")
-        self.assertEqual(tuple(item.pin for item in review.connector_reference_pins), ("J1.3",))
-        self.assertEqual(tuple(item.pin for item in review.phy_reference_pins), ("U1.3",))
+        assert ((review.connector_reference, review.phy_reference)) == (("J1", "U1"))
+        assert (review.connector_reference_net) == ("USB_GND")
+        assert (review.phy_reference_net) == ("BOARD_GND")
+        assert (tuple(item.pin for item in review.connector_reference_pins)) == (("J1.3",))
+        assert (tuple(item.pin for item in review.phy_reference_pins)) == (("U1.3",))
         report = lint_report(observed)
         finding = next(item for item in report.findings if item.rule_id == RULE_ID)
-        self.assertEqual(report.status, "REVIEW")
-        self.assertEqual(finding.subject, "J1 / U1: USB reference-domain review")
-        self.assertEqual(finding.evidence["USB_D+_link"], ("J1.1 / U1.1=USB_DP",))
-        self.assertEqual(finding.evidence["USB_D-_link"], ("J1.2 / U1.2=USB_DM",))
+        assert (report.status) == ("REVIEW")
+        assert (finding.subject) == ("J1 / U1: USB reference-domain review")
+        assert (finding.evidence["USB_D+_link"]) == (("J1.1 / U1.1=USB_DP",))
+        assert (finding.evidence["USB_D-_link"]) == (("J1.2 / U1.2=USB_DM",))
 
     def test_common_reference_is_a_quiet_control(self) -> None:
         observed = usb_peer_netlist(
             connector_reference_net="BOARD_GND", phy_reference_net="BOARD_GND"
         )
-        self.assertEqual(usb_peer_reference_reviews(observed), ())
-        self.assertNotIn(RULE_ID, {item.rule_id for item in lint_report(observed).findings})
+        assert (usb_peer_reference_reviews(observed)) == (())
+        assert (RULE_ID) not in ({item.rule_id for item in lint_report(observed).findings})
 
     def test_fitted_series_resistors_preserve_usb_peer_reference_review(self) -> None:
         observed = usb_peer_series_netlist()
         reviews = usb_peer_reference_reviews(observed)
-        self.assertEqual(len(reviews), 1)
+        assert (len(reviews)) == (1)
         link = reviews[0].data_link
-        self.assertEqual(link.connector_positive_net, "USB_DP")
-        self.assertEqual(link.phy_positive_net, "USB_DP_PHY")
-        self.assertEqual(link.connector_negative_net, "USB_DM")
-        self.assertEqual(link.phy_negative_net, "USB_DM_PHY")
-        self.assertEqual(link.positive_series_resistor.reference, "R1")
-        self.assertEqual(link.positive_series_resistor.connector_pin, "R1.1")
-        self.assertEqual(link.positive_series_resistor.phy_pin, "R1.2")
-        self.assertEqual(link.negative_series_resistor.reference, "R2")
+        assert (link.connector_positive_net) == ("USB_DP")
+        assert (link.phy_positive_net) == ("USB_DP_PHY")
+        assert (link.connector_negative_net) == ("USB_DM")
+        assert (link.phy_negative_net) == ("USB_DM_PHY")
+        assert (link.positive_series_resistor.reference) == ("R1")
+        assert (link.positive_series_resistor.connector_pin) == ("R1.1")
+        assert (link.positive_series_resistor.phy_pin) == ("R1.2")
+        assert (link.negative_series_resistor.reference) == ("R2")
 
         report = lint_report(observed)
         finding = next(item for item in report.findings if item.rule_id == RULE_ID)
-        self.assertEqual(
-            finding.evidence["USB_D+_link"],
-            ("J1.1 / U1.1=USB_DP to USB_DP_PHY through R1",),
+        assert (finding.evidence["USB_D+_link"]) == (
+            ("J1.1 / U1.1=USB_DP to USB_DP_PHY through R1",)
         )
-        self.assertEqual(
-            finding.evidence["USB_D+_series_resistor"],
-            ("R1 (Device:R, 27R; R1.1=USB_DP, R1.2=USB_DP_PHY)",),
+        assert (finding.evidence["USB_D+_series_resistor"]) == (
+            ("R1 (Device:R, 27R; R1.1=USB_DP, R1.2=USB_DP_PHY)",)
         )
 
         mapped = lint_report(observed, path_map=usb_series_data_map())
-        self.assertNotIn(RULE_ID, {item.rule_id for item in mapped.findings})
-        self.assertNotIn(PATH_RULE_ID, {item.rule_id for item in mapped.findings})
+        assert (RULE_ID) not in ({item.rule_id for item in mapped.findings})
+        assert (PATH_RULE_ID) not in ({item.rule_id for item in mapped.findings})
 
         stale_map = lint_report(
             observed,
             path_map=usb_series_data_map(positive_resistor="R9"),
         )
-        self.assertIn(RULE_ID, {item.rule_id for item in stale_map.findings})
-        self.assertIn(PATH_RULE_ID, {item.rule_id for item in stale_map.findings})
+        assert (RULE_ID) in ({item.rule_id for item in stale_map.findings})
+        assert (PATH_RULE_ID) in ({item.rule_id for item in stale_map.findings})
 
         common = usb_peer_series_netlist(
             connector_reference_net="BOARD_GND", phy_reference_net="BOARD_GND"
         )
-        self.assertEqual(usb_peer_reference_reviews(common), ())
-        self.assertNotIn(RULE_ID, {item.rule_id for item in lint_report(common).findings})
+        assert (usb_peer_reference_reviews(common)) == (())
+        assert (RULE_ID) not in ({item.rule_id for item in lint_report(common).findings})
 
     def test_series_resistor_recognition_rejects_dnp_incomplete_and_extra_peers(self) -> None:
         observed = usb_peer_series_netlist()
         dnp = observed.model_copy(update={"dnp_components": ("R1",)})
-        self.assertEqual(usb_peer_reference_reviews(dnp), ())
+        assert (usb_peer_reference_reviews(dnp)) == (())
 
         incomplete = observed.model_copy(
             update={
@@ -882,7 +877,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 }
             }
         )
-        self.assertEqual(usb_peer_reference_reviews(incomplete), ())
+        assert (usb_peer_reference_reviews(incomplete)) == (())
 
         extra_peer = observed.model_copy(
             update={
@@ -908,41 +903,36 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 },
             }
         )
-        self.assertEqual(usb_peer_reference_reviews(extra_peer), ())
+        assert (usb_peer_reference_reviews(extra_peer)) == (())
 
     def test_usb_c_duplicate_contacts_and_two_pin_diode_shunts_emit_exact_review(self) -> None:
         observed = usb_c_peer_netlist()
         reviews = usb_peer_reference_reviews(observed)
-        self.assertEqual(len(reviews), 1)
+        assert (len(reviews)) == (1)
         link = reviews[0].data_link
-        self.assertEqual(link.connector_positive_pins, ("J1.A6", "J1.B6"))
-        self.assertEqual(link.connector_negative_pins, ("J1.A7", "J1.B7"))
-        self.assertEqual(link.phy_positive_pins, ("U1.1",))
-        self.assertEqual(link.phy_negative_pins, ("U1.2",))
-        self.assertEqual(
+        assert (link.connector_positive_pins) == (("J1.A6", "J1.B6"))
+        assert (link.connector_negative_pins) == (("J1.A7", "J1.B7"))
+        assert (link.phy_positive_pins) == (("U1.1",))
+        assert (link.phy_negative_pins) == (("U1.2",))
+        assert (
             (
                 link.positive_shunt_branches[0].data_pin,
                 link.positive_shunt_branches[0].reference_pin,
-            ),
-            ("D1.2", "D1.1"),
-        )
+            )
+        ) == (("D1.2", "D1.1"))
         report = lint_report(observed)
         finding = next(item for item in report.findings if item.rule_id == RULE_ID)
-        self.assertEqual(
-            finding.evidence["USB_D+_link"],
-            ("J1.A6, J1.B6 / U1.1=USB_DP",),
-        )
-        self.assertEqual(
-            finding.evidence["USB_D+_shunt_branches"],
-            ("D1.2 (Synthetic:TVS) to D1.1=USB_GND",),
+        assert (finding.evidence["USB_D+_link"]) == (("J1.A6, J1.B6 / U1.1=USB_DP",))
+        assert (finding.evidence["USB_D+_shunt_branches"]) == (
+            ("D1.2 (Synthetic:TVS) to D1.1=USB_GND",)
         )
 
     def test_usb_c_common_reference_with_duplicate_contacts_and_diodes_is_control(self) -> None:
         observed = usb_c_peer_netlist(
             connector_reference_net="BOARD_GND", phy_reference_net="BOARD_GND"
         )
-        self.assertEqual(usb_peer_reference_reviews(observed), ())
-        self.assertNotIn(RULE_ID, {item.rule_id for item in lint_report(observed).findings})
+        assert (usb_peer_reference_reviews(observed)) == (())
+        assert (RULE_ID) not in ({item.rule_id for item in lint_report(observed).findings})
 
     def test_usb_c_does_not_accept_extra_peers_incomplete_or_non_diode_branches(self) -> None:
         base = usb_c_peer_netlist()
@@ -964,7 +954,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 },
             }
         )
-        self.assertEqual(usb_peer_reference_reviews(extra_peer), ())
+        assert (usb_peer_reference_reviews(extra_peer)) == (())
 
         resistor_branch = base.model_copy(
             update={
@@ -987,7 +977,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 },
             }
         )
-        self.assertEqual(usb_peer_reference_reviews(resistor_branch), ())
+        assert (usb_peer_reference_reviews(resistor_branch)) == (())
 
         incomplete_diode = base.model_copy(
             update={
@@ -997,7 +987,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 }
             }
         )
-        self.assertEqual(usb_peer_reference_reviews(incomplete_diode), ())
+        assert (usb_peer_reference_reviews(incomplete_diode)) == (())
 
         split_contacts = base.model_copy(
             update={
@@ -1008,30 +998,28 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 }
             }
         )
-        self.assertEqual(usb_peer_reference_reviews(split_contacts), ())
+        assert (usb_peer_reference_reviews(split_contacts)) == (())
 
     def test_usb_c_map_must_name_every_duplicate_contact_before_suppressing_review(self) -> None:
         observed = usb_c_peer_netlist()
         exact = usb_c_data_map()
         exact_report = lint_report(observed, path_map=exact)
-        self.assertNotIn(RULE_ID, {item.rule_id for item in exact_report.findings})
-        self.assertNotIn(PATH_RULE_ID, {item.rule_id for item in exact_report.findings})
+        assert (RULE_ID) not in ({item.rule_id for item in exact_report.findings})
+        assert (PATH_RULE_ID) not in ({item.rule_id for item in exact_report.findings})
 
         incomplete_report = lint_report(
             observed,
             path_map=usb_c_data_map(include_duplicate_contacts=False),
         )
-        self.assertIn(RULE_ID, {item.rule_id for item in incomplete_report.findings})
+        assert (RULE_ID) in ({item.rule_id for item in incomplete_report.findings})
         path_findings = tuple(
             item for item in incomplete_report.findings if item.rule_id == PATH_RULE_ID
         )
-        self.assertEqual({item.evidence["line"][0] for item in path_findings}, {"D+", "D-"})
-        self.assertTrue(
-            all(
-                "mapped D+ pin inventory" in " ".join(item.evidence["issues"])
-                or "mapped D- pin inventory" in " ".join(item.evidence["issues"])
-                for item in path_findings
-            )
+        assert ({item.evidence["line"][0] for item in path_findings}) == ({"D+", "D-"})
+        assert all(
+            "mapped D+ pin inventory" in " ".join(item.evidence["issues"])
+            or "mapped D- pin inventory" in " ".join(item.evidence["issues"])
+            for item in path_findings
         )
 
     def test_input_order_is_stable_and_commoning_clears_only_this_review(self) -> None:
@@ -1050,7 +1038,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 ),
             }
         )
-        self.assertEqual(lint_report(observed), lint_report(reordered))
+        assert (lint_report(observed)) == (lint_report(reordered))
         commoned = observed.model_copy(
             update={
                 "nets": {
@@ -1064,7 +1052,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             }
         )
         commoned_report = lint_report(commoned)
-        self.assertNotIn(RULE_ID, {item.rule_id for item in commoned_report.findings})
+        assert (RULE_ID) not in ({item.rule_id for item in commoned_report.findings})
 
     def test_exact_common_and_separate_usb_maps_resolve_the_review(self) -> None:
         cases = (
@@ -1084,10 +1072,11 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             ),
         )
         for observed, path_map in cases:
-            with self.subTest(policy=path_map.interfaces[0].reference_policy):
-                report = lint_report(observed, path_map=path_map)
-                self.assertNotIn(RULE_ID, {item.rule_id for item in report.findings})
-                self.assertNotIn(PATH_RULE_ID, {item.rule_id for item in report.findings})
+            report = lint_report(observed, path_map=path_map)
+            rule_ids = {item.rule_id for item in report.findings}
+            context = path_map.interfaces[0].reference_policy
+            assert RULE_ID not in rule_ids, context
+            assert PATH_RULE_ID not in rule_ids, context
 
     def test_source_matched_map_reports_stale_reference_assignment(self) -> None:
         report = lint_report(
@@ -1096,25 +1085,23 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 reference_policy="common_net", expected_phy_reference_net="USB_GND"
             ),
         )
-        self.assertNotIn(
-            RULE_ID,
-            {item.rule_id for item in report.findings},
-            "the explicit current map owns this decision and should avoid a duplicate prompt",
+        assert (RULE_ID) not in ({item.rule_id for item in report.findings}), (
+            "the explicit current map owns this decision and should avoid a duplicate prompt"
         )
         mismatch = next(item for item in report.findings if item.rule_id == PATH_RULE_ID)
-        self.assertEqual(mismatch.subject, "usb-interface-1: USB reference path")
-        self.assertIn("U1 reference assignments differ", " ".join(mismatch.evidence["issues"]))
+        assert (mismatch.subject) == ("usb-interface-1: USB reference path")
+        assert ("U1 reference assignments differ") in (" ".join(mismatch.evidence["issues"]))
 
     def test_stale_map_identity_does_not_suppress_peer_review(self) -> None:
         path_map = usb_data_map(reference_policy="separate_nets", phy_reference_pin="U1.8")
         report = lint_report(usb_peer_netlist(), path_map=path_map)
-        self.assertIn(RULE_ID, {item.rule_id for item in report.findings})
-        self.assertIn(PATH_RULE_ID, {item.rule_id for item in report.findings})
+        assert (RULE_ID) in ({item.rule_id for item in report.findings})
+        assert (PATH_RULE_ID) in ({item.rule_id for item in report.findings})
 
     def test_extra_data_peers_and_ambiguous_metadata_fail_closed(self) -> None:
-        self.assertEqual(usb_peer_reference_reviews(usb_peer_netlist(dnp=("U1",))), ())
-        self.assertEqual(usb_peer_reference_reviews(usb_peer_netlist(incomplete=True)), ())
-        self.assertEqual(usb_peer_reference_reviews(usb_peer_netlist(extra_positive_pin=True)), ())
+        assert (usb_peer_reference_reviews(usb_peer_netlist(dnp=("U1",)))) == (())
+        assert (usb_peer_reference_reviews(usb_peer_netlist(incomplete=True))) == (())
+        assert (usb_peer_reference_reviews(usb_peer_netlist(extra_positive_pin=True))) == (())
         explicit_suffix = usb_peer_netlist()
         explicit_suffix_functions = dict(explicit_suffix.pin_functions)
         explicit_suffix_functions["J1.3"] = "GND_A"
@@ -1122,12 +1109,12 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
         explicit_suffix = explicit_suffix.model_copy(
             update={"pin_functions": explicit_suffix_functions}
         )
-        self.assertEqual(len(usb_peer_reference_reviews(explicit_suffix)), 1)
+        assert (len(usb_peer_reference_reviews(explicit_suffix))) == (1)
         shield_only = usb_peer_netlist()
         shield_functions = dict(shield_only.pin_functions)
         shield_functions["J1.3"] = "GND_SHIELD"
         shield_only = shield_only.model_copy(update={"pin_functions": shield_functions})
-        self.assertEqual(usb_peer_reference_reviews(shield_only), ())
+        assert (usb_peer_reference_reviews(shield_only)) == (())
 
     def test_phy_with_multiple_reference_domains_is_outside_predicate(self) -> None:
         observed = usb_peer_netlist()
@@ -1148,9 +1135,9 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(usb_peer_reference_reviews(isolated_reference), ())
+        assert (usb_peer_reference_reviews(isolated_reference)) == (())
         report = lint_report(isolated_reference)
-        self.assertNotIn(RULE_ID, {item.rule_id for item in report.findings})
+        assert (RULE_ID) not in ({item.rule_id for item in report.findings})
 
     def test_isolator_mediated_usb_path_is_not_traced_across_domains(self) -> None:
         observed = NetlistContract(
@@ -1212,18 +1199,18 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             },
         )
 
-        self.assertEqual(usb_peer_reference_reviews(observed), ())
+        assert (usb_peer_reference_reviews(observed)) == (())
         report = lint_report(observed)
-        self.assertNotIn(RULE_ID, {item.rule_id for item in report.findings})
+        assert (RULE_ID) not in ({item.rule_id for item in report.findings})
         coverage = report.usb_peer_reference_coverage
-        self.assertIsNotNone(coverage)
+        assert (coverage) is not None
         assert coverage is not None
-        self.assertEqual(coverage.status, "INCOMPLETE")
-        self.assertEqual(coverage.recognized_connector_group_count, 1)
-        self.assertEqual(coverage.recognized_phy_group_count, 3)
-        self.assertEqual(coverage.supported_phy_group_count, 1)
-        self.assertEqual(coverage.incomplete_group_count, 2)
-        self.assertEqual(coverage.supported_data_path_count, 0)
+        assert (coverage.status) == ("INCOMPLETE")
+        assert (coverage.recognized_connector_group_count) == (1)
+        assert (coverage.recognized_phy_group_count) == (3)
+        assert (coverage.supported_phy_group_count) == (1)
+        assert (coverage.incomplete_group_count) == (2)
+        assert (coverage.supported_data_path_count) == (0)
 
     def test_review_block_off_and_exact_ignore_are_project_configurable(self) -> None:
         fault = lint_report(usb_peer_netlist())
@@ -1237,7 +1224,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             ),
         )
         ignored_finding = next(item for item in ignored.findings if item.rule_id == RULE_ID)
-        self.assertEqual(ignored_finding.disposition, "IGNORED")
+        assert (ignored_finding.disposition) == ("IGNORED")
         blocked = lint_report(
             usb_peer_netlist(),
             override=DesignLintRuleOverride(
@@ -1246,7 +1233,7 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                 reason="Synthetic acceptance mode",
             ),
         )
-        self.assertEqual(blocked.status, "FAIL")
+        assert (blocked.status) == ("FAIL")
         disabled = lint_report(
             usb_peer_netlist(),
             override=DesignLintRuleOverride(
@@ -1256,12 +1243,12 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
             ),
         )
         disabled_finding = next(item for item in disabled.findings if item.rule_id == RULE_ID)
-        self.assertEqual(disabled_finding.disposition, "RULE_OFF")
+        assert (disabled_finding.disposition) == ("RULE_OFF")
 
     def test_reference_map_requires_complete_commonality_decision_shape(self) -> None:
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             usb_data_map(reference_policy="common_net")
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             UsbDataInterfaceRequirement.model_validate(
                 {
                     **usb_data_map(reference_policy="separate_nets").interfaces[0].model_dump(),
@@ -1269,7 +1256,3 @@ class UsbPeerReferenceReviewTests(unittest.TestCase):
                     "phy_reference_pins": ({"pin": "U1.3", "net": "BOARD_GND"},),
                 }
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

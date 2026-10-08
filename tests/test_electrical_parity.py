@@ -45,10 +45,16 @@ from kicad_tooling.hwrepo.models import (
     ProjectVerificationReport,
     RequiredTestAccess,
     TemplateDoctorReport,
-    TestAccessAnalysis,
-    TestAccessEndpointRequirement,
-    TestAccessProbeEnvelope,
     ValidationSummary,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessAnalysis as AccessAnalysis,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessEndpointRequirement as AccessEndpointRequirement,
+)
+from kicad_tooling.hwrepo.models import (
+    TestAccessProbeEnvelope as AccessProbeEnvelope,
 )
 from kicad_tooling.hwrepo.spice import expanded_deck
 from kicad_tooling.validate import hashes
@@ -649,6 +655,33 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             device_references=("U11", "U12"),
             device2_symbol="Synthetic:SpiWriteOnly",
         )
+        pullups = i2c_pullup_requirement()
+        tolerance_window = (
+            i2c_pullup_window_requirement(
+                maximum_per_resistor_tolerance_percent=5.0,
+                resistor_tolerance_basis="Synthetic resistor tolerance for every pull-up element",
+            )
+            .buses[0]
+            .sda.electrical_window
+        )
+        self.assertIsNotNone(tolerance_window)
+        bus = pullups.buses[0]
+        pullups = pullups.model_copy(
+            update={
+                "buses": (
+                    bus.model_copy(
+                        update={
+                            "sda": bus.sda.model_copy(
+                                update={"electrical_window": tolerance_window}
+                            ),
+                            "scl": bus.scl.model_copy(
+                                update={"electrical_window": tolerance_window}
+                            ),
+                        }
+                    ),
+                )
+            }
+        )
         for root in (self.root, self.mcp_root):
             contract_path = root / ISLAND / "tests/electrical.json"
             contract = read_model(contract_path, ElectricalAnalysisContract)
@@ -657,7 +690,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                 contract.model_copy(
                     update={
                         "pin_connectivity": NA,
-                        "i2c_pullups": i2c_pullup_requirement(),
+                        "i2c_pullups": pullups,
                         "can_termination": can_split_termination_requirement(),
                         "usb_c": usb_c_requirement(
                             connector="J9",
@@ -724,6 +757,14 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
         checks = {item.id: item for item in cli_report.checks}
         self.assertEqual(checks["i2c-pullup/control/sda"].observed, 2_350)
         self.assertEqual(checks["i2c-pullup/control/scl"].observed, 4_700)
+        self.assertEqual(
+            checks["i2c-pullup/control/sda/electrical-window/minimum-sink-resistance"].status,
+            "PASS",
+        )
+        self.assertEqual(
+            checks["i2c-pullup/control/sda/electrical-window/maximum-rise-resistance"].status,
+            "PASS",
+        )
         self.assertEqual(checks["can-termination/fieldbus/local"].status, "PASS")
         self.assertEqual(checks["can-termination/fieldbus/local/midpoint-capacitor"].status, "PASS")
         self.assertEqual(checks["usb-c/host-port/connector-pins"].status, "PASS")
@@ -2413,7 +2454,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
     async def test_control_input_requirements_match_cli_mcp_and_retained_evidence(self) -> None:
         self.configured()
         requirement = control_requirement()
-        access_requirement = TestAccessAnalysis(
+        access_requirement = AccessAnalysis(
             basis="Synthetic service procedure and interface pin review",
             pcb_accessibility=NA,
             decisions=(
@@ -2423,7 +2464,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                     basis="Factory service requires access to reset",
                     net="RESET_N",
                     endpoints=(
-                        TestAccessEndpointRequirement(
+                        AccessEndpointRequirement(
                             kind="programming_connector",
                             reference="J1",
                             symbol="Synthetic:DB9",
@@ -2549,7 +2590,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_pcb_test_access_schematic_and_board_stages_match_cli_and_mcp(self) -> None:
         self.configured()
-        access = TestAccessAnalysis(
+        access = AccessAnalysis(
             basis="Synthetic manufacturing access requirements",
             pcb_accessibility=PcbAccessAnalysis(
                 basis="Synthetic probe pad must be placed and mask-open"
@@ -2561,7 +2602,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                     basis="Synthetic fixture measures the logic rail",
                     net="+3V3",
                     endpoints=(
-                        TestAccessEndpointRequirement(
+                        AccessEndpointRequirement(
                             kind="test_point",
                             reference="TP1",
                             symbol="TestPoint:TestPoint",
@@ -2569,7 +2610,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                             pin="TP1.1",
                             electrical_type="passive",
                             approach_side="front",
-                            probe_envelope=TestAccessProbeEnvelope(
+                            probe_envelope=AccessProbeEnvelope(
                                 tip_diameter_mm=0.8,
                                 clearance_mm=0.1,
                             ),

@@ -112,10 +112,14 @@ from .models import (
     PcbDecouplingMap,
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
+    PcbKeepoutCoverageReport,
+    PcbKeepoutMap,
     PcbProtectionPathCoverageReport,
     PcbProtectionPathMap,
     PcbReferencePlaneCoverageReport,
     PcbReferencePlaneMap,
+    PcbSignalPathRuleCoverageReport,
+    PcbSignalPathRuleMap,
     PcbSwitchingLoopCoverageReport,
     PcbSwitchingLoopMap,
     PcbTrackWidthCoverageReport,
@@ -150,7 +154,8 @@ from .models import (
 from .net_dc_reference import connector_capacitor_only_nets
 from .open_drain_heuristics import open_output_bias_gaps
 from .pcb_decoupling import pcb_decoupling_entries
-from .pcb_drc_coverage import scan_source_bound_rule_map
+from .pcb_drc_coverage import scan_source_bound_rule_map, scan_source_bound_signal_path_map
+from .pcb_keepouts import pcb_keepout_entries
 from .pcb_protection_path import pcb_protection_path_entries
 from .pcb_reference_planes import pcb_reference_plane_entries
 from .pcb_return_paths import (
@@ -500,6 +505,8 @@ def candidates(
     digital_peer_voltage_scan: DigitalPeerVoltageScan | None = None,
     usb_peer_reference_scan: UsbPeerReferenceScan | None = None,
     serial_peer_reference_scan: SerialPeerReferenceScan | None = None,
+    pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
+    pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Named rules share one fingerprint and review-decision lifecycle."""
     reviewed_connector_pins = source_matched_connector_pin_evidence(
@@ -3049,6 +3056,77 @@ def candidates(
                     },
                 )
             )
+    if pcb_signal_path_coverage is not None:
+        for entry in pcb_signal_path_coverage.entries:
+            if entry.status != "INCOMPLETE":
+                continue
+            subject = (
+                f"{entry.id}: {entry.net} {entry.from_pad} to {entry.to_pad}"
+                if entry.kind == "path"
+                else f"{entry.id}: {entry.from_pad_pattern} to {entry.to_pad_pattern} bundle"
+            )
+            constraint_evidence = tuple(
+                f"{item.constraint}: {item.status}"
+                + ("" if item.issue is None else f" ({item.issue})")
+                for item in entry.constraints
+                if item.status != "COVERED"
+            )
+            found.append(
+                Candidate(
+                    rule_id="pcb.signal_path_rule_coverage",
+                    subject=subject,
+                    message=(
+                        "This mapped PCB signal-path requirement lacks exact active native DRC "
+                        "coverage or its mapped pads do not match source-bound board evidence. "
+                        "Review the path map, native rule, and endpoint connectivity."
+                    ),
+                    evidence={
+                        "basis": (entry.basis,),
+                        "constraints": constraint_evidence,
+                        "issues": entry.issues,
+                        "path_ids": entry.path_ids,
+                    },
+                )
+            )
+    if pcb_keepout_coverage is not None:
+        for entry in pcb_keepout_coverage.entries:
+            if entry.status != "INCOMPLETE":
+                continue
+            observed_restrictions = tuple(
+                f"{name}={value}"
+                for name, value in (
+                    ("tracks", entry.observed_forbids_tracks),
+                    ("vias", entry.observed_forbids_vias),
+                    ("pads", entry.observed_forbids_pads),
+                    ("zone_fills", entry.observed_forbids_zone_fills),
+                    ("footprints", entry.observed_forbids_footprints),
+                )
+                if value is not None
+            )
+            found.append(
+                Candidate(
+                    rule_id="pcb.keepout_intent_coverage",
+                    subject=f"{entry.id}: named keepout {entry.name}",
+                    message=(
+                        "This named PCB keepout differs from its project-reviewed geometry, "
+                        "copper-layer, or restriction signature. Review the independent source "
+                        "requirement and the native rule area before updating either record."
+                    ),
+                    evidence={
+                        "basis": (entry.basis,),
+                        "expected_geometry_sha256": (entry.expected_geometry_sha256,),
+                        "observed_geometry_sha256": (
+                            ()
+                            if entry.observed_geometry_sha256 is None
+                            else (entry.observed_geometry_sha256,)
+                        ),
+                        "expected_layers": entry.expected_layers,
+                        "observed_layers": entry.observed_layers,
+                        "observed_restrictions": observed_restrictions,
+                        "issues": entry.issues,
+                    },
+                )
+            )
     if stm32_pin_map_coverage is not None:
         for device in stm32_pin_map_coverage.unmapped_devices:
             found.append(
@@ -3369,9 +3447,89 @@ def evaluate(
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None,
     digital_peer_voltage_context: DigitalPeerVoltageLintContext | None = None,
     serial_peer_roster: SerialPeerRosterContext | None = None,
+    pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
+    pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
 ) -> DesignLintReport:
     """Apply independently authored decisions without treating findings as requirements."""
     catalog = rule_catalog()
+    signal_path_map = policy.pcb_signal_path_rule_map
+    signal_path_override = next(
+        (item for item in policy.rules if item.rule_id == "pcb.signal_path_rule_coverage"),
+        None,
+    )
+    signal_path_mode: Literal["review", "block", "off"] = (
+        "review" if signal_path_override is None else signal_path_override.mode
+    )
+    signal_path_map_sha256 = (
+        hashlib.sha256(signal_path_map.model_dump_json().encode("utf-8")).hexdigest()
+        if signal_path_map is not None
+        else None
+    )
+    if signal_path_map is None:
+        pcb_signal_path_coverage = pcb_signal_path_coverage or PcbSignalPathRuleCoverageReport()
+    elif signal_path_mode == "off":
+        pcb_signal_path_coverage = PcbSignalPathRuleCoverageReport(
+            status="DISABLED", mode="off", map_sha256=signal_path_map_sha256
+        )
+    elif pcb_signal_path_coverage is None:
+        pcb_signal_path_coverage = PcbSignalPathRuleCoverageReport(
+            status="BLOCKED",
+            mode=signal_path_mode,
+            map_sha256=signal_path_map_sha256,
+            issue="Source-bound native PCB and DRC evidence was not supplied for the signal-path map",
+        )
+    elif (
+        pcb_signal_path_coverage.map_sha256 != signal_path_map_sha256
+        or pcb_signal_path_coverage.status == "NOT_REQUESTED"
+    ):
+        pcb_signal_path_coverage = PcbSignalPathRuleCoverageReport(
+            status="BLOCKED",
+            mode=signal_path_mode,
+            map_sha256=signal_path_map_sha256,
+            issue="Signal-path coverage does not bind the current project-authored map",
+        )
+    else:
+        pcb_signal_path_coverage = pcb_signal_path_coverage.model_copy(
+            update={"mode": signal_path_mode}
+        )
+    keepout_map = policy.pcb_keepout_map
+    keepout_override = next(
+        (item for item in policy.rules if item.rule_id == "pcb.keepout_intent_coverage"),
+        None,
+    )
+    keepout_mode: Literal["review", "block", "off"] = (
+        "review" if keepout_override is None else keepout_override.mode
+    )
+    keepout_map_sha256 = (
+        hashlib.sha256(keepout_map.model_dump_json().encode("utf-8")).hexdigest()
+        if keepout_map is not None
+        else None
+    )
+    if keepout_map is None:
+        pcb_keepout_coverage = pcb_keepout_coverage or PcbKeepoutCoverageReport()
+    elif keepout_mode == "off":
+        pcb_keepout_coverage = PcbKeepoutCoverageReport(
+            status="DISABLED", mode="off", map_sha256=keepout_map_sha256
+        )
+    elif pcb_keepout_coverage is None:
+        pcb_keepout_coverage = PcbKeepoutCoverageReport(
+            status="BLOCKED",
+            mode=keepout_mode,
+            map_sha256=keepout_map_sha256,
+            issue="Source-bound native PCB geometry was not supplied for the keepout map",
+        )
+    elif pcb_keepout_coverage.map_sha256 != keepout_map_sha256 or pcb_keepout_coverage.status in {
+        "NOT_REQUESTED",
+        "DISABLED",
+    }:
+        pcb_keepout_coverage = PcbKeepoutCoverageReport(
+            status="BLOCKED",
+            mode=keepout_mode,
+            map_sha256=keepout_map_sha256,
+            issue="Keepout coverage does not bind the current project-authored map",
+        )
+    else:
+        pcb_keepout_coverage = pcb_keepout_coverage.model_copy(update={"mode": keepout_mode})
     if i2c_pullup_heuristic_coverage is not None:
         coverage_issue = (
             i2c_pullup_heuristic_coverage.issue
@@ -3397,6 +3555,8 @@ def evaluate(
                 native_status=coach.native_status,
                 rule_catalog=catalog,
                 i2c_pullup_heuristic_coverage=blocked_coverage,
+                pcb_signal_path_rules=pcb_signal_path_coverage,
+                pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
                 issues=(coverage_issue,),
                 next_actions=(
                     "Recreate I2C pull-up coverage from the current native netlist and contract.",
@@ -3619,6 +3779,8 @@ def evaluate(
             pcb_reference_plane=pcb_reference_plane_coverage,
             pcb_switching_loop=pcb_switching_loop_coverage,
             pcb_differential_pair_rules=pcb_differential_pair_coverage,
+            pcb_signal_path_rules=pcb_signal_path_coverage,
+            pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
             stm32_pin_map_coverage=stm32_pin_map_coverage,
             issues=missing_evidence_issues,
             next_actions=("Repair the native evidence, then rerun design lint.",),
@@ -3893,6 +4055,8 @@ def evaluate(
         serial_peer_roster,
         reviewed_connector_references,
         complementary_alias_resolution,
+        pcb_signal_path_coverage=pcb_signal_path_coverage,
+        pcb_keepout_coverage=pcb_keepout_coverage,
         connector_coverage=connector_coverage,
         digital_peer_voltage_scan=digital_peer_voltage_scan,
         usb_peer_reference_scan=usb_peer_reference_scan,
@@ -4002,6 +4166,8 @@ def evaluate(
                 pcb_reference_plane=pcb_reference_plane_coverage,
                 pcb_switching_loop=pcb_switching_loop_coverage,
                 pcb_differential_pair_rules=pcb_differential_pair_coverage,
+                pcb_signal_path_rules=pcb_signal_path_coverage,
+                pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
                 stm32_pin_map_coverage=stm32_pin_map_coverage,
                 control_input_bias_coverage=(
                     control_input_bias_coverage or ControlInputBiasHeuristicCoverage()
@@ -4052,6 +4218,8 @@ def evaluate(
         or pcb_reference_plane_coverage.status == "BLOCKED"
         or pcb_switching_loop_coverage.status == "BLOCKED"
         or pcb_differential_pair_coverage.status == "BLOCKED"
+        or pcb_signal_path_coverage.status == "BLOCKED"
+        or pcb_keepout_coverage.status == "BLOCKED"
         or stm32_pin_map_coverage.status == "BLOCKED"
         or any(item.status == "BLOCKED" for item in mapped_check_runs)
         else "FAIL"
@@ -4072,6 +4240,8 @@ def evaluate(
         or pcb_reference_plane_coverage.status == "INCOMPLETE"
         or pcb_switching_loop_coverage.status == "INCOMPLETE"
         or pcb_differential_pair_coverage.status == "INCOMPLETE"
+        or pcb_signal_path_coverage.status == "INCOMPLETE"
+        or pcb_keepout_coverage.status == "INCOMPLETE"
         or stm32_pin_map_coverage.status == "INCOMPLETE"
         or (
             connector_peer_pin_coverage is not None
@@ -4125,6 +4295,7 @@ def evaluate(
             if pcb_differential_pair_coverage.issue is None
             else (pcb_differential_pair_coverage.issue,)
         )
+        + (() if pcb_signal_path_coverage.issue is None else (pcb_signal_path_coverage.issue,))
         + (() if stm32_pin_map_coverage.issue is None else (stm32_pin_map_coverage.issue,))
         + tuple(
             item.reason
@@ -4247,6 +4418,20 @@ def evaluate(
         actions += (
             "Review each authored differential-pair requirement against the exact active native DRC rule and supported KiCad pair names.",
         )
+    if pcb_signal_path_coverage.status == "BLOCKED":
+        actions += (
+            "Restore source-bound native PCB and DRC evidence, then rerun signal-path lint.",
+        )
+    if pcb_signal_path_coverage.status == "INCOMPLETE":
+        actions += (
+            "Review each mapped signal path against its source-netlist endpoints, native copper component, and exact active KiCad DRC length or skew rule.",
+        )
+    if pcb_keepout_coverage.status == "BLOCKED":
+        actions += ("Repair source-bound PCB keepout evidence, then rerun design lint.",)
+    if pcb_keepout_coverage.status == "INCOMPLETE":
+        actions += (
+            "Review each named PCB keepout against its approved geometry, copper layers, and restriction settings.",
+        )
     if stm32_pin_map_coverage.status == "BLOCKED":
         actions += ("Repair the CubeMX source or pin-map evidence, then rerun design lint.",)
     if stm32_pin_map_coverage.status == "INCOMPLETE":
@@ -4322,6 +4507,8 @@ def evaluate(
         pcb_reference_plane=pcb_reference_plane_coverage,
         pcb_switching_loop=pcb_switching_loop_coverage,
         pcb_differential_pair_rules=pcb_differential_pair_coverage,
+        pcb_signal_path_rules=pcb_signal_path_coverage,
+        pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
         stale_ignores=stale,
         rule_overrides=policy.rules,
         issues=issues,
@@ -4796,12 +4983,15 @@ def _scan_pcb_geometry(
     config: ProjectConfig,
     coach: ContractCoachReport,
     policy: DesignLintPolicy,
+    native_summary: Path,
 ) -> tuple[
     PcbDecouplingCoverageReport,
     PcbProtectionPathCoverageReport,
     PcbTrackWidthCoverageReport,
     PcbReferencePlaneCoverageReport,
     PcbSwitchingLoopCoverageReport,
+    PcbSignalPathRuleCoverageReport,
+    PcbKeepoutCoverageReport,
 ]:
     """Capture one native PCB snapshot for all configured geometry review maps."""
     decoupling_map: PcbDecouplingMap | None = policy.pcb_decoupling_map
@@ -4809,12 +4999,16 @@ def _scan_pcb_geometry(
     track_width_map: PcbTrackWidthMap | None = policy.pcb_track_width_map
     reference_plane_map: PcbReferencePlaneMap | None = policy.pcb_reference_plane_map
     switching_loop_map: PcbSwitchingLoopMap | None = policy.pcb_switching_loop_map
+    signal_path_map: PcbSignalPathRuleMap | None = policy.pcb_signal_path_rule_map
+    keepout_map: PcbKeepoutMap | None = policy.pcb_keepout_map
     if (
         decoupling_map is None
         and protection_path_map is None
         and track_width_map is None
         and reference_plane_map is None
         and switching_loop_map is None
+        and signal_path_map is None
+        and keepout_map is None
     ):
         return (
             PcbDecouplingCoverageReport(),
@@ -4822,6 +5016,8 @@ def _scan_pcb_geometry(
             PcbTrackWidthCoverageReport(),
             PcbReferencePlaneCoverageReport(),
             PcbSwitchingLoopCoverageReport(),
+            PcbSignalPathRuleCoverageReport(),
+            PcbKeepoutCoverageReport(),
         )
     overrides = {item.rule_id: item for item in policy.rules}
     decoupling_override = overrides.get("pcb.decoupling_proximity")
@@ -4836,6 +5032,10 @@ def _scan_pcb_geometry(
     switching_loop_mode = (
         "review" if switching_loop_override is None else switching_loop_override.mode
     )
+    signal_path_override = overrides.get("pcb.signal_path_rule_coverage")
+    signal_path_mode = "review" if signal_path_override is None else signal_path_override.mode
+    keepout_override = overrides.get("pcb.keepout_intent_coverage")
+    keepout_mode = "review" if keepout_override is None else keepout_override.mode
     reference_plane_override = overrides.get("pcb.reference_plane_coverage")
     reference_plane_mode = (
         "review" if reference_plane_override is None else reference_plane_override.mode
@@ -4845,12 +5045,16 @@ def _scan_pcb_geometry(
     track_width_disabled = track_width_map is None or track_width_mode == "off"
     reference_plane_disabled = reference_plane_map is None or reference_plane_mode == "off"
     switching_loop_disabled = switching_loop_map is None or switching_loop_mode == "off"
+    signal_path_disabled = signal_path_map is None or signal_path_mode == "off"
+    keepout_disabled = keepout_map is None or keepout_mode == "off"
     if (
         decoupling_disabled
         and protection_path_disabled
         and track_width_disabled
         and reference_plane_disabled
         and switching_loop_disabled
+        and signal_path_disabled
+        and keepout_disabled
     ):
         return (
             PcbDecouplingCoverageReport(status="DISABLED", mode=decoupling_mode)
@@ -4868,6 +5072,12 @@ def _scan_pcb_geometry(
             PcbSwitchingLoopCoverageReport(status="DISABLED", mode=switching_loop_mode)
             if switching_loop_map is not None
             else PcbSwitchingLoopCoverageReport(),
+            PcbSignalPathRuleCoverageReport(status="DISABLED", mode=signal_path_mode)
+            if signal_path_map is not None
+            else PcbSignalPathRuleCoverageReport(),
+            PcbKeepoutCoverageReport(status="DISABLED", mode=keepout_mode)
+            if keepout_map is not None
+            else PcbKeepoutCoverageReport(),
         )
     board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
     board_path = repo_path(root, board_relative)
@@ -4890,7 +5100,7 @@ def _scan_pcb_geometry(
                 f"{output.relative_to(root).as_posix()}/native.command.json"
             )
         if (
-            snapshot.schema_version != "10"
+            snapshot.schema_version not in {"10", "11"}
             or snapshot.board_sha256 != board_hash
             or snapshot.kicad_version != config.kicad_version
             or snapshot.image != pinned_image(config.image)
@@ -5015,6 +5225,62 @@ def _scan_pcb_geometry(
                     netlist_sha256=coach.netlist_sha256,
                     entries=entries,
                 )
+        signal_path_report = PcbSignalPathRuleCoverageReport()
+        if signal_path_map is not None:
+            if signal_path_mode == "off":
+                signal_path_report = PcbSignalPathRuleCoverageReport(
+                    status="DISABLED",
+                    mode=signal_path_mode,
+                    map_sha256=hashlib.sha256(
+                        signal_path_map.model_dump_json().encode("utf-8")
+                    ).hexdigest(),
+                )
+            else:
+                if coach.observed is None:
+                    raise ValueError("Source-bound native netlist is unavailable for mapped paths")
+                pcb_command_path = output / "native.command.json"
+                signal_path_report = scan_source_bound_signal_path_map(
+                    root,
+                    config,
+                    signal_path_map,
+                    coach.observed,
+                    dict(coach.source_hashes),
+                    native_summary,
+                    snapshot,
+                    snapshot_path,
+                    snapshot_hash,
+                    command,
+                    pcb_command_path,
+                    digest(pcb_command_path),
+                    signal_path_mode,
+                )
+        keepout_report = PcbKeepoutCoverageReport()
+        if keepout_map is not None:
+            keepout_map_sha256 = hashlib.sha256(
+                keepout_map.model_dump_json().encode("utf-8")
+            ).hexdigest()
+            if keepout_mode == "off":
+                keepout_report = PcbKeepoutCoverageReport(
+                    status="DISABLED", mode=keepout_mode, map_sha256=keepout_map_sha256
+                )
+            else:
+                entries = pcb_keepout_entries(keepout_map, snapshot)
+                keepout_report = PcbKeepoutCoverageReport(
+                    status="COMPLETE"
+                    if all(item.status == "COMPLETE" for item in entries)
+                    else "INCOMPLETE",
+                    mode=keepout_mode,
+                    map_sha256=keepout_map_sha256,
+                    board_path=board_relative,
+                    board_sha256=board_hash,
+                    snapshot_path=snapshot_relative,
+                    snapshot_sha256=snapshot_hash,
+                    probe_sha256=probe_hash,
+                    kicad_version=snapshot.kicad_version,
+                    image=snapshot.image,
+                    netlist_sha256=coach.netlist_sha256,
+                    entries=entries,
+                )
         protection_path_report = PcbProtectionPathCoverageReport()
         if protection_path_map is not None:
             if protection_path_mode == "off":
@@ -5047,6 +5313,8 @@ def _scan_pcb_geometry(
             track_width_report,
             reference_plane_report,
             switching_loop_report,
+            signal_path_report,
+            keepout_report,
         )
     except (OSError, ValueError, TypeError) as exc:
         issue = f"Could not bind native PCB geometry evidence: {exc}"
@@ -5125,12 +5393,43 @@ def _scan_pcb_geometry(
             if switching_loop_map is not None
             else PcbSwitchingLoopCoverageReport()
         )
+        signal_path_report = (
+            PcbSignalPathRuleCoverageReport(
+                status="BLOCKED",
+                mode=signal_path_mode,
+                map_sha256=hashlib.sha256(
+                    signal_path_map.model_dump_json().encode("utf-8")
+                ).hexdigest(),
+                issue=issue,
+            )
+            if signal_path_map is not None and not signal_path_disabled
+            else PcbSignalPathRuleCoverageReport(status="DISABLED", mode=signal_path_mode)
+            if signal_path_map is not None
+            else PcbSignalPathRuleCoverageReport()
+        )
+        keepout_report = (
+            PcbKeepoutCoverageReport(
+                status="BLOCKED",
+                mode=keepout_mode,
+                map_sha256=hashlib.sha256(
+                    keepout_map.model_dump_json().encode("utf-8")
+                ).hexdigest(),
+                board_path=board_relative,
+                issue=issue,
+            )
+            if keepout_map is not None and not keepout_disabled
+            else PcbKeepoutCoverageReport(status="DISABLED", mode=keepout_mode)
+            if keepout_map is not None
+            else PcbKeepoutCoverageReport()
+        )
     return (
         decoupling_report,
         protection_path_report,
         track_width_report,
         reference_plane_report,
         switching_loop_report,
+        signal_path_report,
+        keepout_report,
     )
 
 
@@ -5265,7 +5564,9 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Design
             pcb_track_width_coverage,
             pcb_reference_plane_coverage,
             pcb_switching_loop_coverage,
-        ) = _scan_pcb_geometry(root, config, coach, policy)
+            pcb_signal_path_coverage,
+            pcb_keepout_coverage,
+        ) = _scan_pcb_geometry(root, config, coach, policy, native_summary)
         pair_map: PcbDifferentialPairRuleMap | None = policy.pcb_differential_pair_rule_map
         pair_override = next(
             (
@@ -5361,6 +5662,8 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Design
             pcb_reference_plane_coverage=pcb_reference_plane_coverage,
             pcb_switching_loop_coverage=pcb_switching_loop_coverage,
             pcb_differential_pair_coverage=pair_rule_coverage,
+            pcb_signal_path_coverage=pcb_signal_path_coverage,
+            pcb_keepout_coverage=pcb_keepout_coverage,
             stm32_pin_map_coverage=stm32_pin_map_coverage,
             spi_roster=spi_roster,
             serial_peer_roster=serial_peer_roster,
@@ -5860,6 +6163,86 @@ def text_report(report: DesignLintReport) -> str:
             lines.append(f"    Coverage issue: {issue}")
     if pair_rules.issue is not None:
         lines.append(f"  Coverage issue: {pair_rules.issue}")
+    signal_paths = report.pcb_signal_path_rules
+    lines.append(
+        "PCB signal-path DRC rule coverage: "
+        f"{signal_paths.status} (mode: {signal_paths.mode or 'not configured'})"
+    )
+    if signal_paths.project_path is not None:
+        lines.append(
+            f"  Project settings: {signal_paths.project_path} "
+            f"(SHA-256 {signal_paths.project_sha256 or 'unavailable'})"
+        )
+    if signal_paths.rules_path is not None:
+        lines.append(
+            f"  Native rules: {signal_paths.rules_path} "
+            f"(SHA-256 {signal_paths.rules_sha256 or 'absent'})"
+        )
+    if signal_paths.board_path is not None:
+        lines.append(
+            f"  Board: {signal_paths.board_path} "
+            f"(SHA-256 {signal_paths.board_sha256 or 'unavailable'})"
+        )
+    if signal_paths.native_drc_path is not None:
+        lines.append(
+            f"  Native DRC: {signal_paths.native_drc_path} "
+            f"(SHA-256 {signal_paths.native_drc_sha256 or 'unavailable'})"
+        )
+    if signal_paths.pcb_snapshot_path is not None:
+        lines.append(
+            f"  Native PCB snapshot: {signal_paths.pcb_snapshot_path} "
+            f"(SHA-256 {signal_paths.pcb_snapshot_sha256 or 'unavailable'})"
+        )
+    if signal_paths.kicad_version is not None:
+        lines.append(f"  KiCad version: {signal_paths.kicad_version}")
+    for entry in signal_paths.entries:
+        if entry.kind == "path":
+            identity = f"{entry.net}: {entry.from_pad} to {entry.to_pad}"
+        else:
+            identity = (
+                f"{entry.from_pad_pattern} to {entry.to_pad_pattern}; "
+                f"members {', '.join(entry.path_ids)}"
+            )
+        lines.append(f"  {entry.id}: {entry.status}; {identity}")
+        for item in entry.constraints:
+            expected = f"min={item.expected_min_nm}, max={item.expected_max_nm} nm"
+            observed = f"min={item.observed_min_nm}, max={item.observed_max_nm} nm"
+            rules = ", ".join(item.rule_names) or "none"
+            lines.append(
+                f"    {item.constraint}: {item.status}; expected {expected}; "
+                f"observed {observed}; rules {rules}"
+            )
+            if item.issue is not None:
+                lines.append(f"      Issue: {item.issue}")
+        for issue in entry.issues:
+            lines.append(f"    Coverage issue: {issue}")
+    if signal_paths.issue is not None:
+        lines.append(f"  Coverage issue: {signal_paths.issue}")
+    keepouts = report.pcb_keepout_coverage
+    lines.append(
+        f"PCB keepout intent coverage: {keepouts.status} "
+        f"(mode: {keepouts.mode or 'not configured'})"
+    )
+    if keepouts.board_path is not None:
+        lines.append(
+            f"  Board: {keepouts.board_path} (SHA-256 {keepouts.board_sha256 or 'unavailable'})"
+        )
+    if keepouts.snapshot_path is not None:
+        lines.append(
+            f"  Native PCB snapshot: {keepouts.snapshot_path} "
+            f"(SHA-256 {keepouts.snapshot_sha256 or 'unavailable'})"
+        )
+    for entry in keepouts.entries:
+        observed_geometry = entry.observed_geometry_sha256 or "unavailable"
+        observed_layers = ", ".join(entry.observed_layers) or "none"
+        lines.append(
+            f"  {entry.id} ({entry.name}): {entry.status}; "
+            f"geometry {observed_geometry}; layers {observed_layers}"
+        )
+        for issue in entry.issues:
+            lines.append(f"    Coverage issue: {issue}")
+    if keepouts.issue is not None:
+        lines.append(f"  Coverage issue: {keepouts.issue}")
     if geometry.netlist_sha256 is not None:
         lines.append(f"  Native netlist SHA-256: {geometry.netlist_sha256}")
     if geometry.kicad_version is not None:

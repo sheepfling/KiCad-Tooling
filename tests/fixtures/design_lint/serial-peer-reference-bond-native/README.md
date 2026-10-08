@@ -32,3 +32,14 @@ electrical analysis. The native lane is registered in the GitHub serial-peer
 acceptance job. A passing native export demonstrates the bounded schematic
 contract behavior; it does not establish component conduction, PCB copper
 continuity, external wiring, electrical suitability, or physical continuity.
+
+The local exact-version rerun on 2026-10-08 passed on both pinned images. The
+control passed, and the fault failed only `serial/serial-bond/reference` in
+both versions. The normalized control hash was
+`5e530be356d5e584c8ad994eada95b8cfae78031145881890bcfb6cf690ffe80`; the
+normalized fault hash was
+`748d80edfe816b59c7b876f1d20a816f7de4652172e7e5d19c485f985965c20c`. Each
+hash matched its repeated export and across KiCad versions. The raw commands and
+exports are retained under ignored `build/ci/native-serial-peer-project-*/`
+directories. This is local synthetic-fixture evidence; the current branch's
+hosted acceptance has not run.
