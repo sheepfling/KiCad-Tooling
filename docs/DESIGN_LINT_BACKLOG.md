@@ -2811,16 +2811,21 @@ is not a reason by itself to expand its scope or change its default policy.
   the crystal README and test manifests. Local KiCad 10.0.6 exported the fixed
   control twice with the same normalized typed-netlist digest
   `b489d9e0960c31e0b98aa9da98627e2762a1b97cd5f136291672a83324b2f3c9`; it
-  produces no same-net crystal candidate and the lint report passes. This does
-  not yet establish pinned-version acceptance.
+  produces no same-net crystal candidate and the lint report passes. The RC5
+  GitHub package lane then passed the crystal, fuse, and polyfuse native
+  fault/control exports on pinned KiCad 10.0.0 and 10.0.5, including repeated
+  normalized-netlist checks.
   Local KiCad 10.0.6 also exported all four fuse sources twice with identical
   normalized typed-netlist digests:
   - Fuse fault: `368263f15c0627efc7a5f4b58a0b0beddda1dbe4b2d72522d6f24562a98a2a14`
   - Fuse control: `e2172e8968c16de62855b6ef43ac4b5dd891ef753436133c864932b3e97ec72c`
   - Polyfuse fault: `ff8e60df2a6775da8467b094f760a6b52371c809c4c6ce6d7499b9773a4932ca`
   - Polyfuse control: `3cc9839cf451122932c229975be7fad33c7575d8cfa15f07f02823c975146061`
-  The fault cases each produce one REVIEW finding; both controls pass. The RC5
-  GitHub result is needed to verify these fixtures with the pinned versions.
+  The fault cases each produce one REVIEW finding; both controls pass. RC5 also
+  passed the native geometry checks on KiCad 10.0.5 and 10.0.6. Its package job
+  completed all 2,238 tests (2 skipped) and then failed only at Ruff formatting
+  in `tests/test_serial_peer_reference_review.py`; RC6 carries that formatting
+  correction for a full candidate rerun.
 - **Release-candidate regression (2026-10-08):** The `v0.5.0rc1` package job
   ran 2,236 tests (2 failures, 3 errors, 2 skipped). The connector fixture
   expected one lint rule ID even though LINT-089 emits one finding per open
@@ -2830,28 +2835,32 @@ is not a reason by itself to expand its scope or change its default policy.
   all three preview jobs; its package job had the two native fixture errors.
   RC3 and RC4 command receipts stop at the malformed distinct-net crystal
   control before reaching the fuse cases. RC4 ran 2,238 tests with two errors
-  and two skips; RC5 carries the corrected crystal source structure.
+  and two skips; RC5 carries the corrected crystal source structure. RC5 ran
+  2,238 tests successfully (2 skipped), passed pinned KiCad 10.0.0/10.0.5
+  native fault/control exports plus the 10.0.5/10.0.6 geometry checks, and then
+  failed at the repository Ruff formatting gate. RC6 contains the formatter's
+  correction and must pass its full package workflow before this candidate is
+  considered green.
 - **Local package smoke (2026-10-08):** After the fixture correction,
   `scripts/ci.py` passed all 2,236 tests with 25 environment skips, formatting,
   Ruff, Linux and Windows type checks, Markdown, repository links, wheel/sdist
   reproducibility, a fresh installed-wheel check, and external inventory,
   verify, adaptation, and playtest stages against a separate public template
-  checkout. This host has no Docker daemon, so exact KiCad 10.0.0/10.0.5
-  results remain for the next GitHub candidate workflow.
+  checkout. This host has no Docker daemon; the exact KiCad 10.0.0/10.0.5
+  matrix was subsequently exercised by the RC5 GitHub package lane below.
 - **Acceptance-lane integrity (2026-10-07):** The shared native-fixture
   manifest mounts `tests/fixtures/design_lint` as its read-only root so both
   `two-pin-components/` and `two-pin-fuses/` sources resolve. An always-run
   test checks each registered source path before the optional Docker lane.
   The 10.0.6 screen at that time covered the original eight passive, diode,
   fuse, and polyfuse fault/control sources; the revised fuse sources are
-  covered by the 2026-10-08 screen above. Neither run substitutes for the
-  pinned KiCad 10.0.0/10.0.5 result.
+  covered by the 2026-10-08 screen above. Those local screens did not replace
+  pinned acceptance; the RC5 GitHub run recorded above supplies that evidence.
 - **Remaining:** This host has no reachable Docker daemon, so it cannot run
   the digest-pinned KiCad 10.0.0/10.0.5 matrix locally. The exact-version cases
-  are enabled in the GitHub package acceptance job. The revised fixtures have
-  now passed repeated exports and fault/control checks with local KiCad 10.0.6;
-  the RC5 GitHub result is required before the pinned native lane can be treated
-  as verified.
+  are exercised in the GitHub package acceptance job and passed under RC5.
+  Full candidate acceptance still requires the RC6 workflow to pass formatting
+  and the complete package job.
 
 #### LINT-085 — Fitted two-pin ferrite bead bypassed by one net
 

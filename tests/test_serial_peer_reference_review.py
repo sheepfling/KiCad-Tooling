@@ -224,9 +224,7 @@ def ferrite_bonded_serial_reference_netlist(*, fault: bool = False) -> NetlistCo
         update={
             "components": {
                 **source.components,
-                "FB1": ComponentContract(
-                    value="600R @100MHz", footprint="Synthetic:0603Ferrite"
-                ),
+                "FB1": ComponentContract(value="600R @100MHz", footprint="Synthetic:0603Ferrite"),
             },
             "nets": {
                 **source.nets,
