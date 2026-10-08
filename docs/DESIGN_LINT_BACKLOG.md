@@ -171,7 +171,10 @@ and optional ecosystem adapters are `P3`.
   split-reference mutations prompted review in all three. These are exploratory
   applicability screens, not a measured precision rate. The next work is to
   record false prompts, seeded misses, and reviewer effort on approved,
-  nonconfidential examples. Keep project defaults unchanged and keep the prompt
+  nonconfidential examples. Count a quiet result as a supported non-finding
+  only for common-reference paths in the report's `common_reference_path_count`;
+  `NO_SUPPORTED_PEER_PATHS` contributes no non-finding, and `INCOMPLETE` remains
+  a partial screen. Keep project defaults unchanged and keep the prompt
   review-only while that evidence is gathered.
 
 - **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
@@ -3186,6 +3189,26 @@ is not a reason by itself to expand its scope or change its default policy.
   named public projects remain outside this repository. These two quiet
   baselines and two synthetic mutations are applicability checks, not a
   measured precision rate or evidence of product defects.
+
+  **Coverage-boundary screen (2026-10-08):** Re-evaluated two retained public
+  [Cynthion hardware exports][cynthion-hardware] under the current USB
+  coverage report. The pinned source commit is
+  `13aa71c2fb0be3837cd2ec580ee5d2c25fc1c678`; the root schematic SHA-256 is
+  `eca9bda94e301f054081c860a184768a242c477a9da9aadd6825ba443cdd1d51`, and
+  the repository's [CERN-OHL-P license][cynthion-license]
+  SHA-256 is `a389939159561c106f62c5eb8862e0ce90f3a8185fa40dac79631ba55e77644f`.
+  Both XML exports identify KiCad 10.0.6 and parse to equal typed netlists;
+  their raw XML hashes are `9ea8fc24395a08b90209b30ff534f69e0bc49beb93e12034087f97cc5bff303a`
+  and `ae1d9a25a854ec8b0906ced2b7e14663515ce4f97db58c0012d5b4545d0ad9f0`.
+  Coverage is `INCOMPLETE`: all four connector groups (J1–J4) and three of
+  four PHY groups (U8, U9, U11) are supported; U16 (`PI3USB102G`) is the
+  incomplete multi-pin data group. No connector-to-PHY data path matched, so
+  the report counted zero common-reference paths, zero separate-reference
+  paths, and zero review candidates. Although the inspected reference pins
+  share `GND`, this is not a supported non-finding or precision sample. The
+  screen demonstrates that coverage makes a zero-finding, unsupported topology
+  visible. The public source and exports remain outside the repository in
+  temporary storage; only hashes and this summary are recorded here.
 
   The public [ADAU1701 module](https://github.com/Kononenko-K/ADAU1701_module)
   is pinned at `b05cf09906c4bbb11d92d8b18b25df11f1327d8f`; its hardware
@@ -8999,3 +9022,5 @@ quality, or first-article continuity.
 [calcumaker-display-floorplan]: <https://github.com/calcumaker/calcumaker/blob/113a283/hardware/calcumaker-display/FLOORPLAN.md>
 [calcumaker-wiring-review]: <https://github.com/calcumaker/calcumaker/blob/113a283/hardware/WIRING_REVIEW.md>
 [antmicro-cm4]: https://github.com/antmicro/cm4-baseboard/tree/d248c2921e8e7f4c9b30c96ea5f376d9b2780f1e
+[cynthion-hardware]: https://github.com/greatscottgadgets/cynthion-hardware/tree/13aa71c2fb0be3837cd2ec580ee5d2c25fc1c678
+[cynthion-license]: https://github.com/greatscottgadgets/cynthion-hardware/blob/13aa71c2fb0be3837cd2ec580ee5d2c25fc1c678/LICENSE

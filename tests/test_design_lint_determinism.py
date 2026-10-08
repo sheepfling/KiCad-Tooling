@@ -62,6 +62,11 @@ class DesignLintDeterminismTests:
         assert digests[1] == digests[2], "full report JSON changed across hash seeds"
 
         reports = json.loads(outputs[0])
+        parsed_pin_metadata = reports["parsed_netlist_pin_metadata"]
+        for metadata in parsed_pin_metadata.values():
+            keys = [pin for pin, _value in metadata]
+            assert len(keys) == 24
+            assert keys == sorted(keys)
         fault = reports["fault"]
         assert fault["status"] == "REVIEW"
         assert {"connector.repeated_pin_function", "net.numbered_returns"} <= {

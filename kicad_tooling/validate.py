@@ -214,7 +214,7 @@ def read_netlist(path: Path) -> NetlistContract:
                     if pin.get("num")
                 )
                 component_pin_numbers[ref] = tuple(sorted(numbers))
-                for number in numbers:
+                for number in sorted(numbers):
                     if function := available.get(number):
                         pin_functions[f"{ref}.{number}"] = function
                     if electrical_type := available_types.get(number):

@@ -33,6 +33,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.mosfet_stress import mosfet_stress_checks
 from kicad_tooling.hwrepo.serial_heuristics import serial_peer_checks
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
+from kicad_tooling.validate import read_netlist
 from tests.test_connector_contact_ratings import (
     contact as connector_contact,
 )
@@ -694,8 +695,32 @@ def serial_bonded_reference_checks(*, fault: bool) -> list[dict[str, object]]:
     return [item.model_dump(mode="json") for item in serial_peer_checks(spec, observed)]
 
 
+def parsed_netlist_pin_metadata() -> dict[str, list[tuple[str, str]]]:
+    """Serialize parser maps built from a synthetic, multi-pin library symbol."""
+    pin_numbers = tuple(str(number) for number in range(1, 25))
+    library_pins = "".join(
+        f'<pin num="{number}" name="FUNCTION_{number}" type="passive"/>'
+        for number in pin_numbers
+    )
+    with TemporaryDirectory() as directory:
+        path = Path(directory) / "synthetic-netlist.xml"
+        path.write_text(
+            '<export><components><comp ref="J1"><value>Synthetic</value>'
+            '<libsource lib="Synthetic" part="Port"/></comp></components>'
+            '<libparts><libpart lib="Synthetic" part="Port"><pins>'
+            f"{library_pins}</pins></libpart></libparts><nets/></export>",
+            encoding="utf-8",
+        )
+        observed = read_netlist(path)
+    return {
+        "pin_functions": list(observed.pin_functions.items()),
+        "pin_electrical_types": list(observed.pin_electrical_types.items()),
+    }
+
+
 def test_emit_four_port_db9_fault_and_control_reports() -> None:
     reports = {
+        "parsed_netlist_pin_metadata": parsed_netlist_pin_metadata(),
         "fault": evaluate(
             "synthetic-four-db9-hash-seed-fault",
             coach(four_db9_return_domains()),
