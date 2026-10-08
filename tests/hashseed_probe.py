@@ -109,6 +109,7 @@ from tests.test_serial_peer_reference_review import (
 from tests.test_stm32_pin_map import _IOC_FIXTURE
 from tests.test_stm32_pin_map import sample_map as stm32_sample_map
 from tests.test_stm32_pin_map import sample_netlist as stm32_sample_netlist
+from tests.test_two_pin_crystals import crystal_netlist
 from tests.test_two_pin_diodes import diode_netlist
 from tests.test_two_pin_ferrites import ferrite_netlist
 from tests.test_two_pin_fuses import fuse_netlist
@@ -720,6 +721,16 @@ def test_emit_four_port_db9_fault_and_control_reports() -> None:
         "diode_control": evaluate(
             "synthetic-two-pin-diode-hash-seed-control",
             coach(diode_netlist(same_net=False)),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "crystal_fault": evaluate(
+            "synthetic-two-pin-crystal-hash-seed-fault",
+            coach(crystal_netlist()),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "crystal_control": evaluate(
+            "synthetic-two-pin-crystal-hash-seed-control",
+            coach(crystal_netlist(same_net=False)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "fuse_fault": evaluate(

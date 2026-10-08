@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from .models import NetlistContract
 
 _SUPPORTED_COMPONENT_SYMBOL = re.compile(
-    r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead)"
+    r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead|Crystal)"
     r"(?:_(?P<variant>[A-Za-z0-9_]+))?$",
     re.IGNORECASE,
 )
@@ -20,6 +20,7 @@ _KIND_NAMES = {
     "fuse": "fuse",
     "polyfuse": "polyfuse",
     "ferritebead": "ferrite_bead",
+    "crystal": "crystal",
 }
 
 
@@ -40,7 +41,7 @@ def two_pin_components_on_same_net(
 ) -> tuple[TwoPinComponentOnSameNet, ...]:
     """Return bounded review candidates without deciding whether a short is intentional.
 
-    Recognition requires an exact ``Device:R/C/L/D/Fuse/Polyfuse/FerriteBead``
+    Recognition requires an exact ``Device:R/C/L/D/Fuse/Polyfuse/FerriteBead/Crystal``
     symbol family, exactly two distinct native pin numbers, one unambiguous
     net per pin, and a fitted component. Project-specific symbols and
     incomplete inventories are skipped.

@@ -4024,7 +4024,7 @@ class NativeComplementaryPairFixtureTests(unittest.TestCase):
 class TwoPinComponentFixtureManifestTests(unittest.TestCase):
     def test_every_native_case_resolves_under_the_read_only_fixture_mount(self) -> None:
         fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
-        self.assertEqual(len(TWO_PIN_COMPONENT_FIXTURE_CASES), 10)
+        self.assertEqual(len(TWO_PIN_COMPONENT_FIXTURE_CASES), 12)
         for case, (
             relative_source,
             _rule_id,
@@ -4073,6 +4073,8 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
             "two-pin-components/distinct-nets.kicad_sch": "338deb4b9194e37a80813b3a3c447d21c14fa59fef78b0925898f595a27fbdea",
             "two-pin-components/same-net-diode.kicad_sch": "c7b34973f881f5c8d8e8ac26b07c03dec70b061f66b8338d61fb085583c2aa8b",
             "two-pin-components/distinct-nets-diode.kicad_sch": "74d19829e8dd9379a26cb6da9dd3cf10a48abce9d724661338f73ce0086bb928",
+            "two-pin-crystals/same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
+            "two-pin-crystals/distinct-nets-crystal.kicad_sch": "0c000075d25bc1da32b777367079d084f96fe8be88e258146b5796db99bbe39e",
             "two-pin-fuses/same-net-fuse.kicad_sch": "b24e66eea8f73d9796223509a4c640ee5fe9c51546e78160df5939681eb3e146",
             "two-pin-fuses/distinct-nets-fuse.kicad_sch": "239758b4394ab8107e3d6d72ebcac426b61e219ff238c8429ea593a4ccb16fb7",
             "two-pin-fuses/same-net-polyfuse.kicad_sch": "3ed2ea8ee4ccbc9706525ad238a03c500d508e8fe5a65953a2682ac69409b30a",
@@ -4106,6 +4108,8 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
                     "distinct-nets-passive",
                     "same-net-diode",
                     "distinct-nets-diode",
+                    "same-net-crystal",
+                    "distinct-nets-crystal",
                     "same-net-fuse",
                     "distinct-nets-fuse",
                     "same-net-polyfuse",
@@ -4145,6 +4149,20 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
                         "distinct-nets-diode",
                         "two-pin-components/distinct-nets-diode.kicad_sch",
                         "component.two_pin_diode_same_net",
+                        "none",
+                        "PASS",
+                    ),
+                    (
+                        "same-net-crystal",
+                        "two-pin-crystals/same-net-crystal.kicad_sch",
+                        "component.two_pin_crystal_same_net",
+                        "Y1 (16 MHz crystal) has both pins on one net",
+                        "REVIEW",
+                    ),
+                    (
+                        "distinct-nets-crystal",
+                        "two-pin-crystals/distinct-nets-crystal.kicad_sch",
+                        "component.two_pin_crystal_same_net",
                         "none",
                         "PASS",
                     ),

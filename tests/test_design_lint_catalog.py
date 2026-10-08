@@ -177,6 +177,15 @@ from tests.test_stm32_pin_map import (
 from tests.test_stm32_pin_map import (
     sample_netlist as stm32_sample_netlist,
 )
+from tests.test_two_pin_crystals import (
+    TwoPinCrystalLintTests,
+)
+from tests.test_two_pin_crystals import (
+    crystal_netlist as two_pin_crystal_netlist,
+)
+from tests.test_two_pin_crystals import (
+    lint_report as two_pin_crystal_lint_report,
+)
 from tests.test_two_pin_diodes import (
     TwoPinDiodeLintTests,
     diode_netlist,
@@ -403,6 +412,7 @@ class DesignLintCatalogTests(unittest.TestCase):
             UsbPeerReferenceReviewTests: UsbPeerReferenceReviewTests(),
             TwoPinPassiveLintTests: TwoPinPassiveLintTests(),
             TwoPinDiodeLintTests: TwoPinDiodeLintTests(),
+            TwoPinCrystalLintTests: TwoPinCrystalLintTests(),
             TwoPinFuseLintTests: TwoPinFuseLintTests(),
             TwoPinFerriteLintTests: TwoPinFerriteLintTests(),
             PowerPathTests: PowerPathTests(),
@@ -798,6 +808,8 @@ class DesignLintCatalogTests(unittest.TestCase):
         emitted.update(item.rule_id for item in passive_result.findings)
         diode_result = two_pin_diode_lint_report(diode_netlist())
         emitted.update(item.rule_id for item in diode_result.findings)
+        crystal_result = two_pin_crystal_lint_report(two_pin_crystal_netlist())
+        emitted.update(item.rule_id for item in crystal_result.findings)
         fuse_result = two_pin_fuse_lint_report(fuse_netlist())
         emitted.update(item.rule_id for item in fuse_result.findings)
         ferrite_result = two_pin_ferrite_lint_report(ferrite_netlist())

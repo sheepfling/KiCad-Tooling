@@ -278,6 +278,41 @@
       ]
     },
     {
+      "rule_id": "component.two_pin_crystal_same_net",
+      "title": "Supported two-pin crystal terminals share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted exact Device:Crystal symbol-family member with exactly two native pin numbers, report when each pin has one unambiguous schematic net assignment and both pins use the same net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A two-pin crystal on one net may be an intentional bypass or disabled circuit; this is a review prompt and does not establish that the topology is wrong.",
+        "Only exact Device:Crystal family symbols with a complete two-pin native inventory are recognized; custom, multi-pin, incomplete, active-oscillator, and DNP parts are outside the predicate.",
+        "The schematic netlist does not prove crystal operation, frequency suitability, footprint pin mapping, physical population, or PCB copper connectivity."
+      ],
+      "fault_fixtures": [
+        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_detects_exact_device_crystal_families_on_one_net"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_native_schematic_sources_match_reviewed_hashes",
+        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_distinct_pin_nets_are_the_no_finding_control",
+        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_skips_dnp_incomplete_ambiguous_multi_pin_open_and_custom_symbols",
+        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_rule_policy_and_exact_ignore_are_project_configurable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_order_is_stable_and_splitting_one_crystal_clears_only_its_finding"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/two_pin_crystals.py#two_pin_crystals_on_same_net",
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net",
+        "kicad_tooling/hwrepo/design_lint.py#candidates"
+      ]
+    },
+    {
       "rule_id": "component.two_pin_fuse_same_net",
       "title": "Supported two-pin fuse is bypassed by one net",
       "status": "active",

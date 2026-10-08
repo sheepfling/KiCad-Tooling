@@ -7602,6 +7602,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_diode_same_net",
         set(),
     ),
+    "same-net-crystal": (
+        "two-pin-crystals/same-net-crystal.kicad_sch",
+        "component.two_pin_crystal_same_net",
+        {"Y1 (16 MHz crystal) has both pins on one net"},
+    ),
+    "distinct-nets-crystal": (
+        "two-pin-crystals/distinct-nets-crystal.kicad_sch",
+        "component.two_pin_crystal_same_net",
+        set(),
+    ),
     "same-net-fuse": (
         "two-pin-fuses/same-net-fuse.kicad_sch",
         "component.two_pin_fuse_same_net",
@@ -7765,6 +7775,7 @@ def two_pin_component_fixture_lane(root: Path, *, project: str, image: str, log:
             candidate_kinds = {
                 "component.two_pin_passive_same_net": {"resistor", "capacitor", "inductor"},
                 "component.two_pin_diode_same_net": {"diode"},
+                "component.two_pin_crystal_same_net": {"crystal"},
                 "component.two_pin_fuse_same_net": {"fuse", "polyfuse"},
                 "component.two_pin_ferrite_same_net": {"ferrite_bead"},
             }[rule_id]

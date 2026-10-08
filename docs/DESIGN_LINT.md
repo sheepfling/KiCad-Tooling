@@ -140,6 +140,15 @@ The first rules are:
   or exactly ignore the source-bound candidate. The hint does not establish
   the correct diode polarity, footprint mapping, PCB copper connection, or
   whether a diode is required.
+- `component.two_pin_crystal_same_net` prompts review when a fitted, exactly inventoried
+  `Device:Crystal` family symbol has two pins assigned to the same schematic net. This shorts the
+  two terminals in the exported netlist. A bypassed or disabled crystal can be intentional, so the
+  rule defaults to review and supports project-level `review`, `block`, `off`, and exact-ignore
+  decisions. Active oscillator symbols, custom identities, multi-pin components, incomplete or
+  ambiguous assignments, and DNP parts are outside the predicate. The report does not establish
+  oscillation, frequency suitability, footprint pin mapping, physical population, or PCB copper
+  connectivity. See the
+  [synthetic source fixtures and hashes](../tests/fixtures/design_lint/two-pin-crystals/README.md).
 - `component.two_pin_fuse_same_net` prompts review when both pins of a fitted,
   exactly inventoried `Device:Fuse` or `Device:Polyfuse` family symbol resolve
   to the same schematic net. The fuse is bypassed in that schematic topology.
@@ -757,7 +766,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 75 active rules. They
+`synthetic_validated`; the catalog currently contains 76 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow

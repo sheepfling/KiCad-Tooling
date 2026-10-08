@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 75 rules are implemented with synthetic regression coverage.
+The following 76 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -69,6 +69,7 @@ Their actual recognition limits are documented in
 - `component.peer_power_pin_assignment_divergence`
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
+- `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
 - `connector.no_connected_return`
@@ -1391,7 +1392,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 75 active rules; CI requires every new
+- **Status:** Baseline complete for all 76 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1400,7 +1401,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 75 covered, 0 not applicable, 0 unreviewed.
+  audit: 76 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -3145,8 +3146,45 @@ is not a reason by itself to expand its scope or change its default policy.
   fault; the exact fixture hashes and outcome are recorded in the
   [synthetic fixture README](../tests/fixtures/design_lint/serial-peer-reference-bond-native/README.md).
   Repeated digest-pinned KiCad 10.0.0/10.0.5 exports are wired into the existing
-  GitHub serial-peer acceptance job. They have not run on this host, and no
-  GitHub result is recorded for this dirty branch yet.
+  GitHub serial-peer acceptance job. The local host has no running Docker
+  daemon, so exact-version native acceptance must be confirmed from the hosted
+  receipt before being claimed.
+
+#### LINT-088 — Fitted two-pin crystal terminals share one net
+
+- **Status:** Implemented as `component.two_pin_crystal_same_net`, defaulting
+  to `REVIEW`, with project `review`/`block`/`off` overrides and exact
+  fingerprint ignores. It uses the shared native two-pin inventory and is
+  covered by fault/control, unsupported-case, metamorphic, CLI/MCP, and
+  three-process hash-seed tests.
+- **Priority:** P1 topology review. The project-mapped LINT-035 crystal
+  network contract can compare a reviewed design, but without that map the
+  generic design-lint catalog did not flag a fitted two-terminal crystal whose
+  two native pins collapse to one net.
+- **Cohort comparison:** The inspected [kicad-happy crystal detector][happy-crystal-detector]
+  recognizes crystal circuits and load-capacitor topology, but does not emit
+  this bounded same-net finding. No candidate code or runtime dependency was
+  adopted; this is a first-party extension of the exact-symbol same-net checks.
+- **Predicate:** Recognize only fitted `Device:Crystal` family symbols with
+  exactly two distinct native pin numbers, where each has one unambiguous
+  native net assignment and both assignments name the same net. Report exact
+  component, symbol, value, pins, and net. Project policy may review, block,
+  disable, or exactly ignore the finding.
+- **Boundary:** A bypassed or disabled crystal can be intentional. This reports
+  schematic netlist topology only; it does not establish oscillator behavior,
+  frequency suitability, pin-function correctness, footprint mapping, physical
+  population, or PCB copper connectivity. Active oscillator symbols, custom
+  identities, multi-pin or incomplete inventories, ambiguous/open pins, and
+  DNP parts are outside the predicate.
+- **Fixtures and evidence:** Tooling-owned same-net fault and distinct-net
+  control schematics are source-hashed and run twice on the digest-pinned KiCad
+  10.0.0 and 10.0.5 images in the existing two-pin component acceptance lane.
+  Typed-netlist tests cover `Device:Crystal` and `Device:Crystal_Small`, while
+  a three-pin crystal-family control, DNP, incomplete, ambiguous, open, and
+  custom-symbol cases remain quiet. CLI/MCP returns identical evidence for
+  fault and control; metamorphic tests preserve the unaffected peer finding
+  when one crystal's pins are split. Exact native exports are wired into
+  GitHub CI; the hosted receipt is pending for this revision.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -5724,7 +5762,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 75 active rules. Each entry has a deterministic predicate, evidence
+contains 76 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to
@@ -8320,6 +8358,7 @@ not establish electrical approval, manufacturing readiness, PCB fabrication
 quality, or first-article continuity.
 
 [thomson-kicad-review]: <https://github.com/holla2040/ThomsonLint/blob/main/docs/KiCad_Review_Guide.md>
+[happy-crystal-detector]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L818-L950
 [happy-datasheets]: <https://github.com/aklofas/kicad-happy#-datasheets--sync-and-extract>
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md

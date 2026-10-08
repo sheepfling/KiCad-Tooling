@@ -835,6 +835,15 @@ def candidates(
                 "establish that the topology is wrong."
             )
             kind_evidence = {"component_kind": (component.kind,)}
+        elif component.kind == "crystal":
+            rule_id = "component.two_pin_crystal_same_net"
+            message = (
+                "Both pins of this supported fitted two-pin crystal are assigned to the same "
+                "schematic net, shorting its two terminals in that netlist. Review whether the "
+                "crystal is intentionally bypassed or a resonator path is missing. This finding "
+                "does not establish that the topology is wrong."
+            )
+            kind_evidence = {"component_kind": (component.kind,)}
         elif component.kind in {"fuse", "polyfuse"}:
             rule_id = "component.two_pin_fuse_same_net"
             message = (

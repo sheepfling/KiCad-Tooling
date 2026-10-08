@@ -185,6 +185,17 @@ class DesignLintDeterminismTests(unittest.TestCase):
         )
         self.assertEqual(reports["diode_control"]["status"], "PASS")
         self.assertEqual(reports["diode_control"]["findings"], [])
+        crystal_fault = reports["crystal_fault"]
+        self.assertEqual(crystal_fault["status"], "REVIEW")
+        self.assertEqual(
+            sum(
+                finding["rule_id"] == "component.two_pin_crystal_same_net"
+                for finding in crystal_fault["findings"]
+            ),
+            2,
+        )
+        self.assertEqual(reports["crystal_control"]["status"], "PASS")
+        self.assertEqual(reports["crystal_control"]["findings"], [])
         fuse_fault = reports["fuse_fault"]
         self.assertEqual(fuse_fault["status"], "REVIEW")
         self.assertIn(
