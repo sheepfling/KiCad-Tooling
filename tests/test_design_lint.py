@@ -60,7 +60,16 @@ def observed(power_j3_connected: bool = False) -> NetlistContract:
     return NetlistContract(
         components={},
         nets=nets,
-        component_symbols={"J1": "Synthetic:Port", "J2": "Synthetic:Port", "J3": "Synthetic:Port"},
+        component_symbols={
+            "J1": "Synthetic:Port",
+            "J2": "Synthetic:Port",
+            "J3": "Synthetic:PowerOnlyPort",
+        },
+        component_pin_numbers={
+            "J1": ("1", "7"),
+            "J2": ("1", "7"),
+            "J3": ("1",),
+        },
         pin_functions={
             "J1.1": "PWR",
             "J2.1": "PWR",
@@ -134,6 +143,7 @@ def four_db9_return_domains(common: bool = False) -> NetlistContract:
         components={},
         nets=nets,
         component_symbols={f"J{reference}": "Synthetic:DB9" for reference in range(1, 5)},
+        component_pin_numbers={f"J{reference}": ("7", "9") for reference in range(1, 5)},
         pin_functions={pin: pin.rsplit(".", 1)[1] for pin in return_pins},
     )
 
@@ -170,6 +180,7 @@ def three_port_power_pin_drift(common: bool = False) -> NetlistContract:
         component_symbols={
             f"J{reference}": "Synthetic:PeripheralPort" for reference in range(1, 4)
         },
+        component_pin_numbers={f"J{reference}": ("1",) for reference in range(1, 4)},
         pin_functions={f"J{reference}.1": "1" for reference in range(1, 4)},
     )
 

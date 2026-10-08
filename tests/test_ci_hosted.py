@@ -1709,6 +1709,37 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                 self.assertEqual(peer_pin_control["status"], "PASS")
                 self.assertEqual(peer_pin_control["lint_status"], "PASS")
                 self.assertEqual(peer_pin_control["findings"], "none")
+                for (
+                    case,
+                    expected_connectors,
+                    expected_outliers,
+                    expected_common,
+                    expected_open,
+                ) in (
+                    ("peer-pin-outlier-fault", 3, 1, 1, 1),
+                    ("peer-pin-outlier-control", 3, 0, 2, 0),
+                    ("two-peer-open-fault", 2, 1, 1, 1),
+                    ("two-peer-no-connect-fault", 2, 1, 1, 1),
+                    ("two-peer-common-control", 2, 0, 2, 0),
+                ):
+                    result = results[f"connector-return-fixture/{case}"]
+                    coverage = json.loads(result["connector_peer_pin_coverage"])
+                    self.assertEqual(coverage["status"], "EVALUATED")
+                    self.assertEqual(coverage["netlist_sha256"], result["netlist_sha256"])
+                    self.assertEqual(coverage["connector_candidate_count"], expected_connectors)
+                    self.assertEqual(coverage["fitted_connector_count"], expected_connectors)
+                    self.assertEqual(coverage["exact_symbol_peer_group_count"], 1)
+                    self.assertEqual(coverage["exact_symbol_pin_group_count"], 2)
+                    self.assertEqual(coverage["incomplete_pin_inventory_references"], [])
+                    self.assertEqual(coverage["peer_pin_outlier_finding_count"], expected_outliers)
+                    self.assertEqual(
+                        coverage["exact_symbol_pin_groups_with_common_assignment_count"],
+                        expected_common,
+                    )
+                    self.assertEqual(
+                        coverage["exact_symbol_pin_groups_with_open_assignment_count"],
+                        expected_open,
+                    )
                 two_peer_fault = results["connector-return-fixture/two-peer-open-fault"]
                 two_peer_control = results["connector-return-fixture/two-peer-common-control"]
                 self.assertEqual(two_peer_fault["status"], "PASS")

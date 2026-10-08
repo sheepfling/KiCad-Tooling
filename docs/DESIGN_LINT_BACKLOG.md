@@ -1088,7 +1088,14 @@ is not a reason by itself to expand its scope or change its default policy.
   relationships, map-covered split paths, emitted candidates, and the native
   netlist plus typed USB map digests. The CLI text report explains each status
   so a zero-finding run distinguishes absent recognition, incomplete evidence,
-  unsupported topology, and a completed path review.
+  unsupported topology, and a completed path review. The connector peer-pin
+  review now has a similarly bounded coverage summary: it records candidate
+  and fitted connector counts, exact-symbol pin groups, assignment and function
+  metadata states, repeated-function groups, finding counts, and the native
+  netlist digest. It distinguishes candidates that are all DNP, no exact-symbol
+  peers, no comparable pins, incomplete native pin inventories, and evaluated
+  groups. A missing, empty, or inconsistent same-symbol inventory raises
+  `REVIEW` and identifies its references.
 - **Cohort input:** The public
   [kicad-happy v2.2.1 changelog](https://github.com/aklofas/kicad-happy/blob/v2.2.1/CHANGELOG.md)
   describes a `checks_run` manifest with run/skip reasons and examined counts,
@@ -1121,6 +1128,32 @@ is not a reason by itself to expand its scope or change its default policy.
   dispositions, including incomplete, DNP, and unsupported-path controls; the
   input-order and cross-process hash-seed regressions compare the full report.
   Its CLI/MCP parity case compares the same source-bound coverage report.
+  `tests/test_connector_peer_pin_coverage.py` covers common-net controls,
+  split meaningful returns, two-peer and three-peer open-pin controls,
+  incomplete pin inventory, mismatched same-symbol inventories, and an all-DNP
+  candidate set. The existing connector CLI/MCP case compares
+  the full `DesignLintReport`, including this coverage section. The three-process
+  Python hash-seed regression also asserts that the connector peer fault and
+  common control retain evaluated, netlist-bound counts across runs. The exact-
+  version KiCad 10.0.0/10.0.5 connector fixture lane also asserts the native fault and
+  common-control coverage states, counts, finding totals, and netlist hashes
+  for both two-peer and three-peer groups, and records those summaries in its
+  hosted receipt.
+  A local KiCad 10.0.6 compatibility replay (2026-10-08 UTC) of the synthetic
+  native exports produced raw netlist hashes
+  `6a3d3499390a99cff28dc81e1b4b7c326510d74bebba9308e473b2dd1feb70b6`
+  (three-peer fault),
+  `ef15956f3023f2b23e27f57343bf50580917f8a15b2197aa7fa48ba409839900`
+  (three-peer control),
+  `058dfe318e503e6ac872b05415ab66347befd7d735a9831f05e79dbff9fff345`
+  (two-peer open contact),
+  `d9bb4e9728b34c4dd7b19a0d1b5ca70f937fcc279342c5f02485b3aeb68c2abc`
+  (two-peer explicit no-connect marker), and
+  `d9c4af9d8d127b301a44db42d6eef7f635f473d3ae28c87f60b26c071caf8e61`
+  (two-peer common-net control). All reports were `EVALUATED` and source-hash
+  bound; open and marked-open faults each counted one peer-pin outlier, and
+  common controls counted none. The exact pinned KiCad 10.0.0/10.0.5 hosted
+  results remain necessary.
   Existing parity cases compare the full report for each configured map family.
 - **Audit result:** `DesignLintPolicy` maps for STM32 pin assignment, I2C
   addresses, external protection, crystal networks, regulator feedback, RC
@@ -1147,7 +1180,9 @@ is not a reason by itself to expand its scope or change its default policy.
   evidence acceptance.
 - **Next:** Reopen only when a new enabled check family lacks an observable
   outcome or a fixture demonstrates that a configured check can be skipped
-  silently. Any added status must bind to actual service execution.
+  silently. Connector peer-pin coverage closes the identified gap without
+  creating a global status registry. Any further status must bind to actual
+  service execution.
 
 #### LINT-077 — Source-bound per-contact connector current-rating contract
 
@@ -8116,7 +8151,10 @@ maintenance cost open wherever they were not measured.
    domain-specific cohort families above remain conditional research items.
 7. LINT-076 now covers mapped-check execution plus bounded applicability
    counts for LINT-066's direct-peer voltage heuristics, LINT-086's USB
-   peer-reference heuristic, and LINT-074's direct serial reference review.
+   peer-reference heuristic, LINT-074's direct serial reference review, and
+   the existing connector peer-pin comparisons. The connector coverage summary
+   makes exact-symbol pin groups and open/different assignments visible even
+   when the checker has no finding to emit.
    Continue it only when an audit identifies another enabled check that can
    silently skip without a matching coverage report or finding; do not add a
    global status registry that only restates the catalog.

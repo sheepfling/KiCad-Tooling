@@ -40,6 +40,7 @@ from .connector_pins import (
     component_supply_pins_on_different_nets,
     connector_peer_pin_assignment_divergences,
     connector_peer_pin_assignment_outliers,
+    connector_peer_pin_heuristic_coverage,
     connectors_without_connected_return,
     power_function_key,
     similar_connector_pin_groups,
@@ -3780,6 +3781,27 @@ def evaluate(
         usb_peer_reference_scan=usb_peer_reference_scan,
         serial_peer_reference_scan=serial_peer_reference_scan,
     )
+    connector_peer_pin_coverage = (
+        None
+        if coach.netlist_sha256 is None
+        else connector_peer_pin_heuristic_coverage(
+            coach.observed,
+            coach.netlist_sha256,
+            reviewed_connector_references,
+            source_matched_connector_pin_evidence(coach.observed, connector_coverage),
+            source_matched_connector_peer_assignment_groups(coach.observed, connector_coverage),
+            repeated_function_finding_count=sum(
+                item.rule_id == "connector.repeated_pin_function" for item in candidate_items
+            ),
+            peer_pin_outlier_finding_count=sum(
+                item.rule_id == "connector.peer_pin_assignment_outlier" for item in candidate_items
+            ),
+            peer_pin_divergence_finding_count=sum(
+                item.rule_id == "connector.peer_pin_assignment_divergence"
+                for item in candidate_items
+            ),
+        )
+    )
     usb_rule_id: Literal["bus.usb_data_path_mismatch"] = "bus.usb_data_path_mismatch"
     power_path_rule_id: Literal["power.mapped_series_path_mismatch"] = (
         "power.mapped_series_path_mismatch"
@@ -3870,6 +3892,7 @@ def evaluate(
                 i2c_pullup_heuristic_coverage=(
                     i2c_pullup_heuristic_coverage or I2cPullupHeuristicCoverage()
                 ),
+                connector_peer_pin_coverage=connector_peer_pin_coverage,
                 issues=(f"Ignore {key} names the wrong rule",),
             )
         disposition: Literal["OPEN", "IGNORED", "RULE_OFF"] = (
@@ -3933,6 +3956,10 @@ def evaluate(
         or pcb_switching_loop_coverage.status == "INCOMPLETE"
         or pcb_differential_pair_coverage.status == "INCOMPLETE"
         or stm32_pin_map_coverage.status == "INCOMPLETE"
+        or (
+            connector_peer_pin_coverage is not None
+            and connector_peer_pin_coverage.status == "INCOMPLETE_PIN_INVENTORY"
+        )
         else "PASS"
     )
     actions: tuple[str, ...] = ()
@@ -4060,6 +4087,13 @@ def evaluate(
                 "design lint."
             ),
         )
+    if (
+        connector_peer_pin_coverage is not None
+        and connector_peer_pin_coverage.status == "INCOMPLETE_PIN_INVENTORY"
+    ):
+        actions += (
+            "Review exact-symbol connector peer coverage and restore complete native pin-number inventories for the listed references before relying on open-pin comparisons.",
+        )
     if pcb_decoupling_coverage.status == "BLOCKED":
         actions += ("Repair source-bound PCB geometry evidence, then rerun design lint.",)
     if pcb_decoupling_coverage.status == "INCOMPLETE":
@@ -4155,6 +4189,7 @@ def evaluate(
         digital_peer_voltage_coverage=digital_peer_voltage_coverage,
         usb_peer_reference_coverage=usb_peer_reference_coverage,
         serial_peer_reference_coverage=serial_peer_reference_coverage,
+        connector_peer_pin_coverage=connector_peer_pin_coverage,
         connector_coverage=connector_coverage,
         stm32_pin_map_coverage=stm32_pin_map_coverage,
         schematic_geometry=geometry_coverage,
@@ -6020,6 +6055,45 @@ def text_report(report: DesignLintReport) -> str:
                 lines.append(f"    Unknown component pin: {pin}")
             for issue in entry.issues:
                 lines.append(f"    Issue: {issue}")
+    peer_coverage = report.connector_peer_pin_coverage
+    if peer_coverage is not None:
+        lines.append(f"Connector peer-pin heuristic coverage: {peer_coverage.status}")
+        lines.append(f"  Native netlist SHA-256: {peer_coverage.netlist_sha256}")
+        lines.append(
+            f"  Connector candidates: {peer_coverage.connector_candidate_count}; fitted: "
+            f"{peer_coverage.fitted_connector_count}; exact-symbol peer groups: "
+            f"{peer_coverage.exact_symbol_peer_group_count}"
+        )
+        lines.append(
+            f"  Exact-symbol pin groups: {peer_coverage.exact_symbol_pin_group_count}; "
+            f"unknown functions: "
+            f"{peer_coverage.exact_symbol_pin_groups_with_unknown_function_count}; "
+            f"common assignments: {peer_coverage.exact_symbol_pin_groups_with_common_assignment_count}; "
+            f"different assignments: "
+            f"{peer_coverage.exact_symbol_pin_groups_with_different_assignments_count}; "
+            f"all unassigned: {peer_coverage.exact_symbol_pin_groups_all_unassigned_count}; "
+            f"with an open assignment: "
+            f"{peer_coverage.exact_symbol_pin_groups_with_open_assignment_count}"
+        )
+        lines.append(
+            f"  Repeated function groups: {peer_coverage.repeated_function_group_count}; "
+            f"common assignments: "
+            f"{peer_coverage.repeated_function_groups_with_common_assignment_count}; "
+            f"different assignments: "
+            f"{peer_coverage.repeated_function_groups_with_different_assignments_count}; "
+            f"all unassigned: {peer_coverage.repeated_function_groups_all_unassigned_count}; "
+            f"with an open assignment: "
+            f"{peer_coverage.repeated_function_groups_with_open_assignment_count}"
+        )
+        lines.append(
+            "  Review findings: repeated-function "
+            f"{peer_coverage.repeated_function_finding_count}; peer outliers "
+            f"{peer_coverage.peer_pin_outlier_finding_count}; peer divergences "
+            f"{peer_coverage.peer_pin_divergence_finding_count}"
+        )
+        lines.append(f"  Scope: {peer_coverage.scope}")
+        for reference in peer_coverage.incomplete_pin_inventory_references:
+            lines.append(f"  Incomplete exact-symbol pin inventory: {reference}")
     for finding in report.findings:
         lines.append(
             f"{finding.disposition} [{finding.rule_id}] {finding.subject} ({finding.fingerprint})"

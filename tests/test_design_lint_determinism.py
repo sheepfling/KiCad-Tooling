@@ -227,6 +227,25 @@ class DesignLintDeterminismTests(unittest.TestCase):
         )
         self.assertEqual(reports["peer_pin_control"]["status"], "PASS")
         self.assertEqual(reports["peer_pin_control"]["findings"], [])
+        for peer_report, expected_outliers, expected_common, expected_open in (
+            (peer_pin_fault, 1, 1, 1),
+            (reports["peer_pin_control"], 0, 2, 0),
+        ):
+            peer_coverage = peer_report["connector_peer_pin_coverage"]
+            self.assertEqual(peer_coverage["status"], "EVALUATED")
+            self.assertEqual(peer_coverage["netlist_sha256"], peer_report["netlist_sha256"])
+            self.assertEqual(peer_coverage["connector_candidate_count"], 3)
+            self.assertEqual(peer_coverage["exact_symbol_peer_group_count"], 1)
+            self.assertEqual(peer_coverage["exact_symbol_pin_group_count"], 2)
+            self.assertEqual(
+                peer_coverage["exact_symbol_pin_groups_with_common_assignment_count"],
+                expected_common,
+            )
+            self.assertEqual(
+                peer_coverage["exact_symbol_pin_groups_with_open_assignment_count"],
+                expected_open,
+            )
+            self.assertEqual(peer_coverage["peer_pin_outlier_finding_count"], expected_outliers)
 
         separate_peer_scopes = reports["connector_peer_scope_separate"]
         separate_peer_rule_ids = {

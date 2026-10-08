@@ -4372,6 +4372,114 @@ class ConnectorCoverageReport(StrictModel):
         return self
 
 
+class ConnectorPeerPinHeuristicCoverage(StrictModel):
+    """Source-bound applicability counts for connector pin peer heuristics."""
+
+    status: Literal[
+        "NO_CONNECTOR_CANDIDATES",
+        "NO_FITTED_CONNECTORS",
+        "NO_EXACT_SYMBOL_PEERS",
+        "NO_COMPARABLE_PIN_GROUPS",
+        "INCOMPLETE_PIN_INVENTORY",
+        "EVALUATED",
+    ]
+    netlist_sha256: Digest
+    scope: NonEmptyText
+    connector_candidate_count: NonNegativeCount
+    fitted_connector_count: NonNegativeCount
+    exact_symbol_peer_group_count: NonNegativeCount
+    exact_symbol_pin_group_count: NonNegativeCount
+    exact_symbol_pin_groups_with_unknown_function_count: NonNegativeCount
+    exact_symbol_pin_groups_with_meaningful_functions_count: NonNegativeCount
+    exact_symbol_pin_groups_with_common_assignment_count: NonNegativeCount
+    exact_symbol_pin_groups_with_different_assignments_count: NonNegativeCount
+    exact_symbol_pin_groups_all_unassigned_count: NonNegativeCount
+    exact_symbol_pin_groups_with_open_assignment_count: NonNegativeCount
+    incomplete_pin_inventory_references: tuple[Reference, ...] = ()
+    repeated_function_group_count: NonNegativeCount
+    repeated_function_groups_with_common_assignment_count: NonNegativeCount
+    repeated_function_groups_with_different_assignments_count: NonNegativeCount
+    repeated_function_groups_all_unassigned_count: NonNegativeCount
+    repeated_function_groups_with_open_assignment_count: NonNegativeCount
+    repeated_function_finding_count: NonNegativeCount
+    peer_pin_outlier_finding_count: NonNegativeCount
+    peer_pin_divergence_finding_count: NonNegativeCount
+
+    @model_validator(mode="after")
+    def consistent_connector_peer_coverage(self) -> ConnectorPeerPinHeuristicCoverage:
+        if self.fitted_connector_count > self.connector_candidate_count:
+            raise ValueError("Fitted connector count cannot exceed candidate connector count")
+        if self.exact_symbol_peer_group_count > self.fitted_connector_count:
+            raise ValueError("Exact-symbol peer groups cannot exceed fitted connector count")
+        if self.exact_symbol_peer_group_count > self.fitted_connector_count // 2:
+            raise ValueError("Each exact-symbol peer group requires at least two fitted connectors")
+        if self.exact_symbol_pin_group_count != (
+            self.exact_symbol_pin_groups_with_common_assignment_count
+            + self.exact_symbol_pin_groups_with_different_assignments_count
+            + self.exact_symbol_pin_groups_all_unassigned_count
+        ):
+            raise ValueError("Exact-symbol pin assignment states must account for every peer group")
+        if self.exact_symbol_pin_groups_with_open_assignment_count > (
+            self.exact_symbol_pin_groups_with_different_assignments_count
+            + self.exact_symbol_pin_groups_all_unassigned_count
+        ):
+            raise ValueError(
+                "Open exact-symbol assignments must be classified as different or empty"
+            )
+        if self.exact_symbol_pin_group_count != (
+            self.exact_symbol_pin_groups_with_unknown_function_count
+            + self.exact_symbol_pin_groups_with_meaningful_functions_count
+        ):
+            raise ValueError("Exact-symbol function states must account for every peer group")
+        if self.repeated_function_group_count != (
+            self.repeated_function_groups_with_common_assignment_count
+            + self.repeated_function_groups_with_different_assignments_count
+            + self.repeated_function_groups_all_unassigned_count
+        ):
+            raise ValueError("Repeated-function assignment states must account for every group")
+        if self.repeated_function_groups_with_open_assignment_count > (
+            self.repeated_function_groups_with_different_assignments_count
+            + self.repeated_function_groups_all_unassigned_count
+        ):
+            raise ValueError(
+                "Open repeated-function assignments must be classified as different or empty"
+            )
+        if self.repeated_function_finding_count > self.repeated_function_group_count:
+            raise ValueError("Repeated-function findings cannot exceed compared groups")
+        if (
+            self.peer_pin_outlier_finding_count + self.peer_pin_divergence_finding_count
+            > self.exact_symbol_pin_group_count
+        ):
+            raise ValueError("Peer-pin findings cannot exceed exact-symbol pin groups")
+        if self.status == "NO_CONNECTOR_CANDIDATES" and self.connector_candidate_count:
+            raise ValueError("No-connector coverage cannot contain connector candidates")
+        if self.status == "NO_FITTED_CONNECTORS" and (
+            not self.connector_candidate_count or self.fitted_connector_count
+        ):
+            raise ValueError("No-fitted coverage requires candidates that are all unpopulated")
+        if self.status == "NO_EXACT_SYMBOL_PEERS" and self.exact_symbol_peer_group_count:
+            raise ValueError("No-peer coverage cannot contain exact-symbol peer groups")
+        if self.status == "NO_EXACT_SYMBOL_PEERS" and (
+            not self.connector_candidate_count or not self.fitted_connector_count
+        ):
+            raise ValueError("No-peer coverage requires at least one fitted connector candidate")
+        if self.status == "NO_COMPARABLE_PIN_GROUPS" and (
+            not self.exact_symbol_peer_group_count
+            or self.exact_symbol_pin_group_count
+            or self.incomplete_pin_inventory_references
+        ):
+            raise ValueError(
+                "No-comparable-pin coverage requires complete but empty peer inventories"
+            )
+        if self.status == "INCOMPLETE_PIN_INVENTORY" and not (
+            self.incomplete_pin_inventory_references
+        ):
+            raise ValueError("Incomplete connector peer coverage requires missing pin inventories")
+        if self.status == "EVALUATED" and not self.exact_symbol_pin_group_count:
+            raise ValueError("Evaluated connector peer coverage requires comparable pin groups")
+        return self
+
+
 class ConnectorReturnDistributionEntry(StrictModel):
     """Role counts and threshold result for one mapped connector instance."""
 
@@ -5282,6 +5390,7 @@ class DesignLintReport(StrictModel):
     digital_peer_voltage_coverage: tuple[DigitalPeerVoltageRuleCoverage, ...] = ()
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None = None
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None = None
+    connector_peer_pin_coverage: ConnectorPeerPinHeuristicCoverage | None = None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage = Field(
         default_factory=ControlInputBiasHeuristicCoverage
     )
@@ -5384,6 +5493,32 @@ class DesignLintReport(StrictModel):
                 raise ValueError(
                     "Serial peer-reference candidate counts must match report findings"
                 )
+        if self.connector_peer_pin_coverage is not None:
+            item = self.connector_peer_pin_coverage
+            if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:
+                raise ValueError(
+                    "Connector peer-pin coverage must use this report's native netlist"
+                )
+            expected_counts = (
+                (
+                    "connector.repeated_pin_function",
+                    item.repeated_function_finding_count,
+                ),
+                (
+                    "connector.peer_pin_assignment_outlier",
+                    item.peer_pin_outlier_finding_count,
+                ),
+                (
+                    "connector.peer_pin_assignment_divergence",
+                    item.peer_pin_divergence_finding_count,
+                ),
+            )
+            for rule_id, expected_count in expected_counts:
+                actual_count = sum(finding.rule_id == rule_id for finding in self.findings)
+                if actual_count != expected_count:
+                    raise ValueError(
+                        f"Connector peer-pin coverage count must match {rule_id} findings"
+                    )
         if self.rule_catalog is None:
             return self
         known = {item.rule_id for item in self.rule_catalog.rules if item.status == "active"}

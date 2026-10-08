@@ -31,6 +31,9 @@ class ConnectorReturnFixtureLaneTests(unittest.TestCase):
                     "GND2": ("J2.1", "J2.2"),
                 },
                 component_symbols={"J1": "Synthetic:Port6", "J2": "Synthetic:Port6"},
+                component_pin_numbers={
+                    f"J{reference}": tuple(str(pin) for pin in range(1, 7)) for reference in (1, 2)
+                },
                 pin_functions={
                     f"J{reference}.{pin}": "GND" for reference in (1, 2) for pin in (1, 2)
                 },
@@ -39,6 +42,9 @@ class ConnectorReturnFixtureLaneTests(unittest.TestCase):
                 components={},
                 nets={"GND": ("J1.1", "J1.2", "J2.1", "J2.2")},
                 component_symbols={"J1": "Synthetic:Port6", "J2": "Synthetic:Port6"},
+                component_pin_numbers={
+                    f"J{reference}": tuple(str(pin) for pin in range(1, 7)) for reference in (1, 2)
+                },
                 pin_functions={
                     f"J{reference}.{pin}": "GND" for reference in (1, 2) for pin in (1, 2)
                 },
@@ -152,12 +158,18 @@ class ConnectorReturnFixtureLaneTests(unittest.TestCase):
                 components={},
                 nets={"CH2_VDD": ("J1.3",), "CH3_VDD": ("J2.3",)},
                 component_symbols={"J1": "Lint:Port6", "J2": "Lint:Port6"},
+                component_pin_numbers={
+                    reference: tuple(str(pin) for pin in range(1, 7)) for reference in ("J1", "J2")
+                },
                 pin_functions={"J1.3": "VDD", "J2.3": "VDD"},
             ),
             "channel-power-control": NetlistContract(
                 components={},
                 nets={"CH2_VDD": ("J1.3", "J2.3")},
                 component_symbols={"J1": "Lint:Port6", "J2": "Lint:Port6"},
+                component_pin_numbers={
+                    reference: tuple(str(pin) for pin in range(1, 7)) for reference in ("J1", "J2")
+                },
                 pin_functions={"J1.3": "VDD", "J2.3": "VDD"},
             ),
             "peer-power-fault": NetlistContract(

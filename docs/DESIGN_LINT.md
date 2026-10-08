@@ -99,6 +99,17 @@ The first rules are:
   outlier and named-pin rules, and supports the same per-project `review`,
   `block`, `off`, and exact-ignore decisions. Source-matched peer groups scope
   fully reviewed connectors; partial group coverage does not silence the prompt.
+- `connector_peer_pin_coverage` is an observability summary for these existing
+  connector heuristics. It binds candidate and fitted connector counts,
+  exact-symbol pin comparison counts, common/different/open assignments,
+  native function-metadata availability, repeated-function group outcomes,
+  emitted finding counts, and the native netlist digest. Its status distinguishes
+  no candidate connectors, candidates that are all DNP, no exact-symbol peers,
+  no comparable pin groups, incomplete pin inventories, and evaluated groups.
+  An incomplete or inconsistent exact-symbol pin inventory leaves lint at
+  `REVIEW` and names the affected references. A quiet evaluated result shows
+  which bounded peer comparisons ran; it does not prove that matching pins
+  must share a net or that every physical connector was identified.
 - `component.repeated_supply_pin_function` flags recognized matching supply
   functions on one fitted non-connector component when assigned pins use
   different or ambiguous schematic nets. It asks whether the split is

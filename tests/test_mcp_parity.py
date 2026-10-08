@@ -3050,6 +3050,15 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                 return mcp
 
             fault = await compare()
+            assert fault.connector_peer_pin_coverage is not None
+            self.assertEqual(
+                fault.connector_peer_pin_coverage.netlist_sha256,
+                fault.netlist_sha256,
+            )
+            self.assertEqual(
+                fault.connector_peer_pin_coverage.repeated_function_finding_count,
+                sum(item.rule_id == "connector.repeated_pin_function" for item in fault.findings),
+            )
             repeated_rule_ids = {
                 item.rule_id
                 for item in fault.findings

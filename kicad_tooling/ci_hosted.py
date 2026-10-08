@@ -1212,6 +1212,43 @@ def connector_return_lint_fixture_lane(
     peer_pin_control = reports[("peer-pin-outlier-control", "first")]
     if peer_pin_control.status != "PASS" or peer_pin_control.findings:
         raise ValueError("Common generic exact-symbol peer pin control no longer passes cleanly")
+    peer_pin_coverage_receipts: dict[str, str] = {}
+    for (
+        case,
+        expected_connector_count,
+        expected_outlier_findings,
+        expected_common_groups,
+        expected_open_groups,
+    ) in (
+        ("peer-pin-outlier-fault", 3, 1, 1, 1),
+        ("peer-pin-outlier-control", 3, 0, 2, 0),
+        ("two-peer-open-fault", 2, 1, 1, 1),
+        ("two-peer-no-connect-fault", 2, 1, 1, 1),
+        ("two-peer-common-control", 2, 0, 2, 0),
+    ):
+        report = reports[(case, "first")]
+        coverage = report.connector_peer_pin_coverage
+        if (
+            coverage is None
+            or coverage.status != "EVALUATED"
+            or coverage.netlist_sha256 != netlist_hashes[(case, "first")]
+            or coverage.connector_candidate_count != expected_connector_count
+            or coverage.fitted_connector_count != expected_connector_count
+            or coverage.exact_symbol_peer_group_count != 1
+            or coverage.exact_symbol_pin_group_count != 2
+            or coverage.incomplete_pin_inventory_references
+            or coverage.exact_symbol_pin_groups_with_common_assignment_count
+            != expected_common_groups
+            or coverage.exact_symbol_pin_groups_with_open_assignment_count != expected_open_groups
+            or coverage.peer_pin_outlier_finding_count != expected_outlier_findings
+        ):
+            raise ValueError(f"Native {case} lost source-bound connector peer-pin coverage")
+        peer_pin_coverage_receipts[case] = json.dumps(
+            coverage.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
     two_peer_fault = reports[("two-peer-open-fault", "first")]
     two_peer_findings = {finding.rule_id: finding for finding in two_peer_fault.findings}
     if (
@@ -1986,6 +2023,11 @@ def connector_return_lint_fixture_lane(
             pin_functions=";".join(
                 f"{pin}={name}"
                 for pin, name in sorted(observed_contracts[(case, "first")].pin_functions.items())
+            ),
+            **(
+                {"connector_peer_pin_coverage": peer_pin_coverage_receipts[case]}
+                if case in peer_pin_coverage_receipts
+                else {}
             ),
             repeatable="true",
             repeatability_basis="normalized_netlist_contract",
