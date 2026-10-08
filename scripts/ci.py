@@ -61,6 +61,8 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
             "kicad_tooling/hwrepo/fixtures/pcb-switching-loop.kicad_pcb",
             "kicad_tooling/hwrepo/fixtures/pcb-switching-loop-inner-plane.kicad_pcb",
             "kicad_tooling/hwrepo/fixtures/pcb-switching-loop-split-plane.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-reference-narrow-void-control.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-reference-narrow-void-fault.kicad_pcb",
             "kicad_tooling/hwrepo/kicad_library_license.txt",
         }
         if not required <= payload.keys():

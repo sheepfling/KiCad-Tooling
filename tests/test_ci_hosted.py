@@ -360,6 +360,9 @@ class HostedCiTests(unittest.TestCase):
                 "kicad_tooling.ci_hosted.pcb_reference_plane_via_fixture_lane"
             ) as reference_plane_fixture,
             patch(
+                "kicad_tooling.ci_hosted.pcb_reference_plane_narrow_void_fixture_lane"
+            ) as narrow_void_fixture,
+            patch(
                 "kicad_tooling.ci_hosted.electrical_lane",
                 side_effect=RuntimeError("Electrical measurement failed"),
             ) as electrical,
@@ -455,6 +458,12 @@ class HostedCiTests(unittest.TestCase):
             log=log,
         )
         reference_plane_fixture.assert_called_once_with(
+            self.root,
+            project="controller",
+            image="fixture@sha256:" + "a" * 64,
+            log=log,
+        )
+        narrow_void_fixture.assert_called_once_with(
             self.root,
             project="controller",
             image="fixture@sha256:" + "a" * 64,
@@ -1202,7 +1211,10 @@ class HostedCiTests(unittest.TestCase):
     def test_reference_plane_via_fixture_rejects_an_untested_kicad_minor(
         self,
     ) -> None:
-        from kicad_tooling.ci_hosted import pcb_reference_plane_via_fixture_lane
+        from kicad_tooling.ci_hosted import (
+            pcb_reference_plane_narrow_void_fixture_lane,
+            pcb_reference_plane_via_fixture_lane,
+        )
         from kicad_tooling.hwrepo.electrical import selected_config
 
         config = selected_config(self.root, "controller")
@@ -1214,14 +1226,21 @@ class HostedCiTests(unittest.TestCase):
                 return_value=unsupported,
             ),
             patch("kicad_tooling.hwrepo.pcb_return_paths.capture_native_pcb_connectivity") as probe,
-            self.assertRaisesRegex(ValueError, "do not cover KiCad 10.0.6"),
         ):
-            pcb_reference_plane_via_fixture_lane(
-                self.root,
-                project="controller",
-                image=config.image,
-                log=log,
-            )
+            for lane in (
+                pcb_reference_plane_via_fixture_lane,
+                pcb_reference_plane_narrow_void_fixture_lane,
+            ):
+                with (
+                    self.subTest(lane=lane.__name__),
+                    self.assertRaisesRegex(ValueError, "do not cover KiCad 10.0.6"),
+                ):
+                    lane(
+                        self.root,
+                        project="controller",
+                        image=config.image,
+                        log=log,
+                    )
         probe.assert_not_called()
 
     def test_release_rehearsal_restores_examples_after_adoption_without_copying_live_data(
@@ -1382,6 +1401,7 @@ class NativePcbAccessFixtureTests(unittest.TestCase):
         from kicad_tooling.ci_hosted import (
             HostedLog,
             pcb_decoupling_fixture_lane,
+            pcb_reference_plane_narrow_void_fixture_lane,
             pcb_reference_plane_via_fixture_lane,
             pcb_return_fixture_lane,
             pcb_switching_loop_fixture_lane,
@@ -1539,6 +1559,35 @@ class NativePcbAccessFixtureTests(unittest.TestCase):
                 self.assertEqual(via_result["intervals_remain_uncovered"], "true")
                 self.assertEqual(via_result["repeatable"], "true")
                 reference_via_coverages.append(via_result["covered_fraction"])
+
+                narrow_void_log = HostedLog(root, f"native-pcb-reference-narrow-void-{project}")
+                pcb_reference_plane_narrow_void_fixture_lane(
+                    root,
+                    project=project,
+                    image=config.image,
+                    log=narrow_void_log,
+                )
+                narrow_void_result = next(
+                    item
+                    for item in (
+                        json.loads(line) for line in narrow_void_log.events.read_text().splitlines()
+                    )
+                    if item.get("stage") == "pcb-reference-plane-fixture/narrow-void"
+                )
+                self.assertEqual(narrow_void_result["status"], "PASS")
+                self.assertEqual(narrow_void_result["kicad_version"], version)
+                self.assertEqual(narrow_void_result["minimum_fraction"], 0.65)
+                from fractions import Fraction
+
+                control_fraction = Fraction(narrow_void_result["control_coverage"])
+                fault_fraction = Fraction(narrow_void_result["fault_coverage"])
+                self.assertGreaterEqual(control_fraction, Fraction("0.65"))
+                self.assertLess(fault_fraction, Fraction("0.65"))
+                self.assertGreater(control_fraction, fault_fraction)
+                self.assertEqual(narrow_void_result["control_below_threshold"], "false")
+                self.assertEqual(narrow_void_result["fault_below_threshold"], "true")
+                self.assertEqual(narrow_void_result["endpoint_via_hole_context"], "retained")
+                self.assertEqual(narrow_void_result["repeatable"], "true")
 
                 return_log = HostedLog(root, f"native-pcb-return-{project}")
                 pcb_return_fixture_lane(

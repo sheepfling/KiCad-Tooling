@@ -1752,7 +1752,11 @@ retain a reasoned exact fingerprint ignore. The report binds the map, board,
 KiCad version and image, native snapshot, netlist, and probe digest. Synthetic
 geometry and CLI/MCP parity controls are available; the native fixture lane
 validates source-bound filled-contour extraction, including a through-via
-antipad and its native track-endpoint contact, on pinned KiCad versions.
+antipad and its native track-endpoint contact, on pinned KiCad versions. A
+second native fault/control pair places a 0.2 mm void between the 2 mm-spaced
+samples used by a cohort analyzer; the first-party exact centerline geometry
+must review the fault while keeping the intact control quiet. This fixture
+tests geometric coverage only and does not imply a universal threshold.
 
 ## Review switching-current loop geometry
 

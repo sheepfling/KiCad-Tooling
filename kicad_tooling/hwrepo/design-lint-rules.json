@@ -2259,6 +2259,7 @@
         "Filled copper along a segment does not prove plane continuity to endpoint pads, connectivity between plane islands or layers, return-current adequacy, emissions, or electrical performance. Thresholds are project-authored review screens, not universal limits."
       ],
       "fault_fixtures": [
+        "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_narrow_midtrace_void_between_two_mm_samples_is_reviewed",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_hole_is_subtracted_and_exact_threshold_control_passes",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_only_immediately_adjacent_exact_reference_net_copper_counts",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_excluded_short_track_review_is_opt_in_and_cli_text_keeps_ids_visible",
@@ -2266,6 +2267,7 @@
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_branched_route_reports_only_the_branch_crossing_a_reference_gap"
       ],
       "valid_control_fixtures": [
+        "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_narrow_midtrace_void_between_two_mm_samples_is_reviewed",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_hole_is_subtracted_and_exact_threshold_control_passes",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_inner_route_needs_one_adjacent_layer_to_meet_threshold",
         "tests.test_pcb_reference_planes.PcbReferencePlaneTests.test_exactly_mapped_fault_is_reviewable_and_control_is_quiet",
@@ -2286,7 +2288,10 @@
         "kicad_tooling/hwrepo/native_pcb_probe.py.in",
         "kicad_tooling/hwrepo/design_lint.py#_scan_pcb_geometry",
         "kicad_tooling/ci_hosted.py#pcb_reference_plane_via_fixture_lane",
-        "kicad_tooling/hwrepo/fixtures/pcb-reference-via-antipad.kicad_pcb"
+        "kicad_tooling/ci_hosted.py#pcb_reference_plane_narrow_void_fixture_lane",
+        "kicad_tooling/hwrepo/fixtures/pcb-reference-via-antipad.kicad_pcb",
+        "kicad_tooling/hwrepo/fixtures/pcb-reference-narrow-void-control.kicad_pcb",
+        "kicad_tooling/hwrepo/fixtures/pcb-reference-narrow-void-fault.kicad_pcb"
       ]
     },
     {

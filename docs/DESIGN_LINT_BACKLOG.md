@@ -4928,6 +4928,57 @@ is not a reason by itself to expand its scope or change its default policy.
   false-positive rates across real interface naming conventions. No private
   design was inspected.
 
+##### Follow-up trial: pcb-inspector HEUR-GND-001 narrow-void pair (2026-10-08)
+
+- **Candidate and provenance:** `takzen/pcb-inspector` at pinned commit
+  [`d29e120`](https://github.com/takzen/pcb-inspector/tree/d29e1208d4cdcd07ebac7f8632c9554cbd18121b),
+  package version `0.1.0`, declared MIT. The pinned `LICENSE` SHA-256 is
+  `3eae2a63788fe64ea502c55590fd655b9193bee63180c3ee55b7836fad7b1cda`; the
+  selected `return_paths.py` SHA-256 is
+  `1ba2f3d991ef50c59ed3a1458342b93c6bd4b0e326d6d16725a5264fd8db9ef2`.
+  The disposable Python 3.11 install resolved `mcp 2.2.0`, `pydantic 2.13.5`,
+  and `shapely 2.1.2` along with the candidate's other declared dependencies.
+  Checkout, environment, configuration, and reports stayed under
+  `/private/tmp`; no candidate code was copied into Tooling.
+- **Invocation:** Ran `pcb-inspector analyze <board.kicad_pcb> --format json
+  --output <report.json> --config <rules.yaml>` twice for each fixture. The
+  temporary config disabled native DRC/ERC and vision, enabled heuristics,
+  and set `HEUR-GND-001.min_track_length_mm: 0.1` plus
+  `min_referenced_fraction: 0.65`. These values include this 2 mm test route
+  and separate its measured fault from its control; they are not product-board
+  defaults or project requirements.
+- **Inputs:** The same tooling-owned two-layer synthetic boards used by
+  LINT-058: a 2 mm F.Cu `DATA` segment over a B.Cu `GND` fill with one endpoint
+  through-via clearance; the fault adds a 0.2 mm midpoint notch. Source hashes
+  are `2ac9f1f5680219ee04e3a27ac398922dbeede4abfd41a478a6b35eb035cc6113`
+  (control) and `4d1a2f44dcc8f4eb8605d0668d3bb1556c94d49c849308b88082f31a2252a7fc`
+  (fault). No external board or project expectation was used.
+- **Observed result:** Both runs of the control passed with no findings. Both
+  runs of the fault emitted one `HEUR-GND-001` warning on `DATA`, locating the
+  segment midpoint at `(11, 13)` mm. Its report describes the full `2.0 mm`
+  segment as affected and recommends expanding the ground pour; it does not
+  report the exact uncovered interval or assign the notch to a physical cause.
+  The candidate reads the filled copper contours from the PCB source directly
+  and measures the route against them. Full report bytes include timestamps;
+  after normalizing the timestamp and runtime, repeat reports matched with
+  SHA-256 `a03e9ca10e19dc2649cdc50e57eb69f8b86405056d58d4cfe2fc94e3c0f3058d`
+  (control) and
+  `77e8b39c90c206bfcc4a4fe6a433ce4e3fcc7d9db46f52495129a38194dca6d8`
+  (fault).
+- **First-party comparison and disposition:** LINT-058 measures the same
+  source-bound fixture pair at `2799/4000` for the control and `2399/4000` for
+  the fault; with the same 0.65 review threshold, it passes the control and
+  reports the fault. This candidate trial corroborates the narrow-void
+  regression, but adds no distinct defect detection beyond LINT-058. Keep the
+  first-party gate and its exact native evidence; do not add a runtime
+  dependency. The candidate's segment-level output is less specific than the
+  source-bound covered fractions and via-hole context already reported here.
+  Like LINT-058, its result is a geometric review hint, not proof of actual
+  return-current continuity or an electrical defect.
+- **Still unmeasured:** Broader-board false-positive and false-negative rates,
+  reviewer effort, and performance on large pours. The pinned KiCad 10.0.0 and
+  10.0.5 hosted repeat for LINT-058 remains pending.
+
 ##### Recorded trial: KiDiff schematic revision comparison
 
 - **Candidate:** [INTI-CMNB/KiDiff](https://github.com/INTI-CMNB/KiDiff), v2.6.0;
@@ -5614,6 +5665,63 @@ is not a reason by itself to expand its scope or change its default policy.
   candidate container workflow, reviewer effort, applicability on exact parts,
   and results on approved non-proprietary designs. No product or proprietary source
   was used.
+
+##### Recorded trial: kicad-happy `GP-001` narrow reference-plane void
+
+- **Candidate and provenance:** `aklofas/kicad-happy` tag `v2.3.1`, commit
+  `06840467ad0f5d76af45f64449b1f5ecb10f052f`, declared MIT; the pinned
+  `LICENSE` SHA-256 is
+  `f542344efc2d21d18c81507e8168ab256c32ece6e7acb1bc8bde71950c9b6bb5`.
+  The trial analyzed `skills/kicad/scripts/analyze_pcb.py` (SHA-256
+  `943ae5f9c2db2f394b3965d13f68ae0e9e2f246c7773a725f9b9aa6116f878cd`)
+  and `skills/emc/scripts/emc_rules.py` (SHA-256
+  `9d77a407d6a8687f0e21b989e5dec18ed4e3f2c9f962da355a4338836deae2d1`).
+  Its README documents PCB analysis for KiCad 6 through 10. The candidate says
+  its analysis scripts need Python 3.10+ and no required packages; the trial
+  cloned the repository under `/private/tmp` and invoked the selected scripts
+  directly, without installing or copying candidate code into Tooling.
+- **Inputs and invocation:** Two synthetic two-layer boards use a
+  2 mm F.Cu `DATA` segment, a B.Cu `GND` zone, and the same endpoint through-via
+  clearance. The control has continuous copper apart from that expected
+  clearance. The fault adds a 0.2 mm notch across the route midpoint. Input
+  board SHA-256 values are `2ac9f1f5680219ee04e3a27ac398922dbeede4abfd41a478a6b35eb035cc6113`
+  (control) and `4d1a2f44dcc8f4eb8605d0668d3bb1556c94d49c849308b88082f31a2252a7fc`
+  (fault). The selected analyzer was run with `python3.11 -I
+  skills/kicad/scripts/analyze_pcb.py --full --only-deterministic
+  --gp001-debug <board>` and its EMC consumer was run separately. Candidate
+  The two candidate JSON output hashes repeated byte-for-byte. Control:
+  `7bb3046edbde5db9ff20898ca92e1fef37d000b58d9af20c79f5386d071b85fb`;
+  fault: `6d67504f9ce78180c283d9808fc373b44f4cc3319e03cfc2e87b00ee005d38da`.
+  The original output receipts remain in temporary storage; only
+  hashes and synthetic fixture identities are retained here.
+- **Observed result:** GP-001 samples at a fixed 2 mm interval. On this 2 mm
+  route it inspected only the two endpoints: the first sample was credited to
+  the via's antipad, and the second found plane copper. It emitted no GP-001
+  finding for either input, missing the narrow midpoint void. The EMC consumer
+  also emitted “Return path analysis data not available” for both no-finding
+  reports because the producer omits the empty analysis section; this is
+  inconclusive evidence status, not a second electrical finding. Candidate
+  outputs were deterministic across repeated runs.
+- **First-party comparison:** LINT-058 measured the same native source-bound
+  geometry with exact polygon/centerline intersection. With a fixture-only
+  0.65 threshold, the intact control measured `2799/4000` and passed; the
+  notched fault measured `2399/4000` and remained `REVIEW`. Both reports retain
+  the endpoint via-hole context while counting its clearance as uncovered.
+  Board hashes match the fixtures
+  `kicad_tooling/hwrepo/fixtures/pcb-reference-narrow-void-control.kicad_pcb`
+  and `...-fault.kicad_pcb`. The native probe snapshots repeated exactly on
+  the installed KiCad 10.0.6 compatibility environment, with hashes
+  `0e181b461e407af820a73335ea092d42488868231a58ed9bffef62dffb3fdbc0`
+  (control) and `469f8970fe5e699172071d9771712b3e9b2e5a2cbb51e4d67b681d55a161bce9`
+  (fault). A hosted repeat lane now runs the fault/control pair on the pinned
+  KiCad 10.0.0 and 10.0.5 images; those exact-version results remain pending.
+- **Disposition and limits:** The selected cohort heuristic misses this
+  deliberately narrow defect; this comparison justifies retaining the
+  first-party exact-geometry rule and regression pair. It does not establish a
+  field miss rate, endorse the fixture's threshold for product boards, or
+  prove return-current continuity. No cohort implementation, source board,
+  proprietary project, or product expectation was adopted. Reviewer effort and
+  long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
 contains 75 active rules. Each entry has a deterministic predicate, evidence
@@ -6570,7 +6678,11 @@ it does not claim field validation or effectiveness against private boards.
   passed twice on each pinned KiCad 10.0.0 and 10.0.5 image with the same exact
   4/15 coverage result, a 0.3 fault threshold, and a 0.25 control threshold. A
   separate native via-hole fixture repeats an exact 2799/4000 coverage result
-  on both versions with 0.75 fault and 0.5 control thresholds.
+  on both versions with 0.75 fault and 0.5 control thresholds. A new synthetic
+  narrow-void pair uses a 0.65 fixture threshold to distinguish its continuous
+  control from a 0.2 mm midpoint notch. Installed KiCad 10.0.6 compatibility
+  evidence measured `2799/4000` and `2399/4000`, respectively; the hosted
+  10.0.0/10.0.5 repeat lane is added and awaiting execution.
 - **Cohort input:** pcb-inspector documents `HEUR-GND-001` as a configurable
   track-to-reference-plane screen with a minimum track length and covered
   fraction. Its manual examples use 5 mm and 0.9; these are not copied as
@@ -6583,6 +6695,12 @@ it does not claim field validation or effectiveness against private boards.
   detection. See
   [pcb-inspector's manual](https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md)
   and [kicad-happy's changelog](https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md).
+  The separate pinned kicad-happy `GP-001` runtime trial under LINT-031 misses
+  the midpoint notch because its 2 mm sampling checks only both endpoints.
+  A pinned `pcb-inspector` `HEUR-GND-001` trial under LINT-031 detects this
+  narrow-void fault and clears the matching control with a fixture-only 0.65
+  threshold. It corroborates, but does not extend, this gate: its report marks
+  the entire segment affected and gives no exact uncovered-interval measure.
 - **Predicate:** For each explicitly mapped signal net and copper layer, the
   checker measures each native straight-track centerline against the union of
   same-net filled-zone polygons on each immediately adjacent copper layer.
@@ -6610,8 +6728,9 @@ it does not claim field validation or effectiveness against private boards.
   project policy; a known signal-via-antipad review false-positive with a
   shifted-hole control that leaves the measured score unchanged; native via
   antipad, endpoint-contact, and hole-context controls on KiCad 10.0.0 and 10.0.5;
-  source-bound report equality through CLI and MCP. No proprietary board or
-  project fixture is used.
+  a native two-layer 0.2 mm narrow-void fault/control lane is configured for
+  the same pinned versions; source-bound report equality through CLI and MCP.
+  No proprietary board or project fixture is used.
 - **Remaining:** The center-in-hole annotation is context, not proof of via
   ownership; a synthetic merged-clearance regression now confirms that a hole
   containing an unrelated via remains fully uncovered and is not attributed to
@@ -6623,7 +6742,9 @@ it does not claim field validation or effectiveness against private boards.
   surfaces. The new per-requirement `review_excluded_short_tracks` option can
   make any such exclusion an explicit `REVIEW` coverage gap; the default leaves
   the project-authored minimum as the scope boundary. Synthetic quiet/review/
-  block controls and CLI/MCP parity cover both choices.
+  block controls and CLI/MCP parity cover both choices. Exact hosted results
+  for the new narrow-void lane are pending; the local 10.0.6 compatibility run
+  does not substitute for the pinned 10.0.0/10.0.5 evidence.
 
 #### LINT-059 — I2C pull-up rail-family review
 
@@ -7911,7 +8032,7 @@ engineering advice applies to every design.
 | RC filter cutoff                                       | kicad-happy passive-network analysis                                                               | LINT-037 adopted as an explicitly mapped first-order source-bound review; a synthetic value mutation preserves connectivity and triggers a corner-range finding. Multi-stage and loaded networks need separate models.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Decoupling placement                                   | pcb-inspector, ThomsonLint, and kicad-happy EMC `DC-003`                                           | LINT-020 now optionally checks an authored maximum distance from an exact capacitor return pad to the nearest via in that pad's native copper component. The rule reports the via identity and measured geometry; it does not estimate loop inductance or require a via when the project omits the limit. KiCad 10.0.0/10.0.5 fixtures cover a connected via at the boundary, a moved-via fault, and unconnected nearby-via control. No cohort implementation or board fixture was imported.                                                                                                                                                                                                                                                                                                                                                                                       |
 | Mapped track-width screen                              | pcb-inspector power-width analysis; ThomsonLint thermal/power guidance                             | LINT-021 implements project-authored per-net minimum-width screening with native segment evidence. Zone-only nets remain incomplete; current, thermal, via, and plane analysis is deferred.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Adjacent reference-plane coverage                      | pcb-inspector `HEUR-GND-001`; kicad-happy `GP-001`                                                 | LINT-058 maps exact signal nets/layers and measures centerline fraction over adjacent same-net filled copper. The 5 mm/0.9 cohort example is not a default. It reports mapped endpoint-via centers inside reference-zone holes as context while keeping those intervals uncovered; synthetic controls cover this annotation, a native synthetic via-antipad fixture verifies endpoint contact and hole extraction, while merged-hole ownership remains unknown. The check remains review-only and does not prove return-current continuity.                                                                                                                                                                                                                                                                                                                                        |
+| Adjacent reference-plane coverage                      | pcb-inspector `HEUR-GND-001`; kicad-happy `GP-001`                                                 | LINT-058 maps exact signal nets/layers and measures centerline fraction over adjacent same-net filled copper. The 5 mm/0.9 cohort example is not a default. A pinned kicad-happy `GP-001` run sampled only the endpoints of a 2 mm route and missed a 0.2 mm midpoint void; a pinned pcb-inspector `HEUR-GND-001` run detects the same fault and clears the control at a fixture-only 0.65 threshold, but reports the full segment affected and adds no unique detection. LINT-058's exact native geometry distinguishes the synthetic fault from its continuous control and reports endpoint-via clearance context while keeping those intervals uncovered; merged-hole ownership remains unknown. The hosted 10.0.0/10.0.5 repeat is pending. This review rule does not prove return-current continuity.                                                                         |
 | Differential-pair constraints                          | pcb-inspector and ThomsonLint `HS_DIFF_001`                                                        | LINT-022 comparison on synthetic boards showed KiCad 10.0.0/10.0.5 DRC catches configured width, gap, skew, and uncoupled-length faults; no pair finding appears without an authored rule. The tooling now audits project-authored limits against the exact source-bound active native rules. Independent geometry checking is deferred; no cohort implementation or board was imported.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Missing differential-pair review coverage              | pcb-inspector `HEUR-DIFF-001`                                                                      | LINT-031 measured a unique 0.50 mm skew warning without native pair rules, but its default 0.15 mm limit is not universal and it misses equal-length gap/uncoupled faults. LINT-041 adopts only a deterministic name-pattern prompt for an explicit project pair requirement; native geometry limits remain project-authored under LINT-022.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Switching-loop geometry                                | pcb-inspector and ThomsonLint buck hot-loop guidance                                               | LINT-023 reports a project-authored pad-center polygon proxy and same-island return-plane check. Native F.Cu, connected In1.Cu, and split In1.Cu synthetic fixtures pass on KiCad 10.0.0/10.0.5. LINT-039 captures why routed comparison needs explicit edge roles and unique route resolution; converter-topology coverage remains open.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
