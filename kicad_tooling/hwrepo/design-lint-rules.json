@@ -211,6 +211,42 @@
       ]
     },
     {
+      "rule_id": "component.peer_power_output_unconnected",
+      "title": "Power-output pin is unassigned on one fitted peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted non-connector components with the exact same native symbol and complete matching pin inventories, report a pin classified by native KiCad metadata as power_out when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "An open power-output pin may be intentional; matching component identity does not require peer outputs to share a net or prove that an output is used.",
+        "Only fitted non-connector peers with an exact shared symbol identity, complete equal pin-number inventories, and a matching native power_out pin type are compared. DNP peers, incomplete inventories, absent type metadata, and ambiguous assignments are outside the predicate.",
+        "The schematic netlist does not prove output function, component operation, current capacity, PCB copper continuity, off-board connections, or physical population. Recognized named supply and return functions remain with their more specific existing findings; shield-labelled power outputs remain eligible because there is no corresponding component-level unconnected-shield rule."
+      ],
+      "fault_fixtures": [
+        "tests.test_peer_power_output.test_reports_an_open_native_power_output_pin_when_an_exact_peer_is_connected",
+        "tests.test_peer_power_output.test_shield_named_power_output_remains_eligible_without_a_component_shield_rule",
+        "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_peer_power_output.test_assigned_peer_outputs_are_valid_same_or_separate_net_controls",
+        "tests.test_peer_power_output.test_skips_open_all_dnp_different_symbol_incomplete_ambiguous_and_non_output_cases",
+        "tests.test_peer_power_output.test_named_supply_and_return_outputs_keep_their_specific_findings",
+        "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_peer_power_output.test_finding_is_stable_under_map_order_changes"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_pins.py#component_peer_power_output_pin_outliers",
+        "kicad_tooling/hwrepo/design_lint.py#candidates"
+      ]
+    },
+    {
       "rule_id": "component.two_pin_passive_same_net",
       "title": "Supported two-pin passive is bypassed by one net",
       "status": "active",
@@ -329,16 +365,16 @@
         "The schematic netlist does not prove copper connectivity, fuse behavior, footprint pin mapping, or physical population. DNP parts are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_fuses.TwoPinFuseLintTests.test_detects_exact_fuse_and_polyfuse_families_on_one_net"
+        "tests.test_two_pin_fuses.test_detects_exact_fuse_and_polyfuse_families_on_one_net"
       ],
       "valid_control_fixtures": [
-        "tests.test_two_pin_fuses.TwoPinFuseLintTests.test_distinct_pin_nets_are_the_no_finding_control",
-        "tests.test_two_pin_fuses.TwoPinFuseLintTests.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_fuses.TwoPinFuseLintTests.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_fuses.test_distinct_pin_nets_are_the_no_finding_control",
+        "tests.test_two_pin_fuses.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
+        "tests.test_two_pin_fuses.test_rule_policy_and_exact_ignore_are_project_configurable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_fuses.TwoPinFuseLintTests.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+        "tests.test_two_pin_fuses.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_fuses.py#two_pin_fuses_on_same_net",

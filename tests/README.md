@@ -5,18 +5,22 @@ It uses `python -m pip install -e '.[dev,cad]'` from this tooling checkout in an
 environment; the project-facing extras alone do not install Ruff, Pyright or package build tools.
 The shared Python regression suite belongs to this repository. Board contracts,
 firmware checks, and product integration tests remain in their project repository.
+Pytest is the canonical test runner. Write new tests as `test_*` functions using
+plain `assert`, pytest fixtures, and parametrization where they clarify cases.
+Existing `unittest.TestCase` tests remain supported; migrate them incrementally
+when a suite is already being changed. `unittest.mock` remains useful with pytest.
 
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:
 
 ```sh
 export KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template
-python -B -m unittest discover -s tests -v
+python -I -B -m pytest -q
 ```
 
 For PowerShell, set the variable with
 `$env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"`.
-Run one module with `python -B -m unittest tests.test_product -v`.
+Run one module with `python -I -B -m pytest -q tests/test_product.py`.
 
 `tests.support.reference_root()` copies the template's public examples, catalogs,
 and guidance into a disposable repository. It never copies reusable Python tools

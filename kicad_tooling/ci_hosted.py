@@ -6378,6 +6378,32 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                 raise ValueError(f"Native USB fixture omitted {netlist_path.name}")
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
+            expected_assignments = (
+                {"U1.2": ("VOUT",), "U2.2": ()}
+                if case == "fault"
+                else {"U1.2": ("VOUT_A",), "U2.2": ("VOUT_B",)}
+            )
+            actual_assignments = {
+                pin: tuple(sorted(net for net, pins in observed.nets.items() if pin in pins))
+                for pin in expected_assignments
+            }
+            if actual_assignments != expected_assignments:
+                raise ValueError(
+                    f"Native {case} expected schematic output assignments "
+                    f"{expected_assignments}, observed {actual_assignments}"
+                )
+            if (
+                observed.component_symbols.get("U1") != "Synthetic:PowerModule"
+                or observed.component_symbols.get("U2") != "Synthetic:PowerModule"
+                or observed.component_pin_numbers.get("U1") != ("1", "2")
+                or observed.component_pin_numbers.get("U2") != ("1", "2")
+                or observed.pin_electrical_types.get("U1.2") != "power_out"
+                or observed.pin_electrical_types.get("U2.2") != "power_out"
+            ):
+                raise ValueError(
+                    f"Native {case} export omitted the exact peer symbol, pin inventory, "
+                    "or native power_out pin types"
+                )
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -8032,6 +8058,203 @@ def two_pin_component_fixture_lane(root: Path, *, project: str, image: str, log:
         for case, (filename, _, _) in cases.items()
     ):
         raise ValueError("Synthetic two-pin component fixture source changed during native export")
+
+
+def component_peer_power_output_fixture_lane(
+    root: Path, *, project: str, image: str, log: HostedLog
+) -> None:
+    """Verify open peer power-output review against repeated pinned KiCad exports."""
+    import hashlib
+    import os
+
+    from .hwrepo.contract_coach import pinned_image, run_command
+    from .hwrepo.design_lint import evaluate
+    from .hwrepo.electrical import selected_config
+    from .hwrepo.evidence import digest
+    from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintReport
+    from .validate import read_netlist
+
+    root = root.resolve()
+    config = selected_config(root, project)
+    if config.image != image:
+        raise ValueError(f"{project}: native fixture image differs from its reviewed toolchain")
+    if config.kicad_version not in {"10.0.0", "10.0.5"}:
+        raise ValueError(f"Peer power-output fixtures do not cover KiCad {config.kicad_version}")
+    pinned = pinned_image(config.image)
+    fixture_root = (
+        Path(__file__).resolve().parents[1]
+        / "tests/fixtures/design_lint/component-peer-power-output-native"
+    )
+    cases = {
+        "fault": ("fault.kicad_sch", ("U2.2",)),
+        "control": ("control.kicad_sch", ()),
+    }
+    source_hashes = {case: digest(fixture_root / filename) for case, (filename, _) in cases.items()}
+    scratch = Path(
+        tempfile.mkdtemp(prefix=f"peer-power-output-{project}-", dir=log.directory.resolve())
+    )
+    output = scratch / "output"
+    output.mkdir()
+    user: tuple[str, ...] = ()
+    if sys.platform != "win32":
+        user = ("--user", f"{os.getuid()}:{os.getgid()}")
+
+    source_lines = [
+        'mkdir -p "$HOME"\n',
+        'actual="$(kicad-cli version)"\n',
+        'printf "kicad_version=%s\\n" "$actual"\n',
+        f'test "$actual" = "{config.kicad_version}"\n',
+    ]
+    for case, (filename, _) in cases.items():
+        source_lines.extend(
+            (
+                f'printf "exporting_fixture=%s\\n" "{filename}"\n',
+                (
+                    f"for run in first repeat; do kicad-cli sch export netlist "
+                    f'--format kicadxml --output "/output/{case}.${{run}}.netlist.xml" '
+                    f'"/fixtures/{filename}"; done\n'
+                ),
+            )
+        )
+    argv = (
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/tmp:rw,nosuid,nodev,size=64m",
+        *user,
+        "-e",
+        "HOME=/tmp/kicad-peer-power-output-fixtures",
+        "-v",
+        f"{fixture_root.resolve()}:/fixtures:ro",
+        "-v",
+        f"{output}:/output:rw",
+        "-w",
+        "/fixtures",
+        "--entrypoint",
+        "/bin/sh",
+        pinned,
+        "-ec",
+        "".join(source_lines),
+    )
+    log.event(
+        "component-peer-power-output-fixture/native-export",
+        "START",
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+    )
+    command = run_command(root, argv, timeout=600)
+    write_model(scratch / "native.command.json", command)
+    if command.returncode != 0 or command.error is not None:
+        log.event(
+            "component-peer-power-output-fixture/native-export",
+            "FAIL",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+            error=command.stderr or command.error or f"exit {command.returncode}",
+        )
+        raise ValueError(
+            f"Native peer power-output fixture command failed: {command.stderr or command.error}"
+        )
+    log.event(
+        "component-peer-power-output-fixture/native-export",
+        "PASS",
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+        source_hashes=",".join(f"{case}:{source_hashes[case]}" for case in cases),
+        command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+    )
+
+    normalized_hashes: dict[tuple[str, str], str] = {}
+    raw_hashes: dict[tuple[str, str], str] = {}
+    reports: dict[tuple[str, str], DesignLintReport] = {}
+    for case, (_, expected_unassigned) in cases.items():
+        for run in ("first", "repeat"):
+            netlist_path = output / f"{case}.{run}.netlist.xml"
+            if not netlist_path.is_file():
+                raise ValueError(f"Native peer power-output fixture omitted {netlist_path.name}")
+            raw_hashes[(case, run)] = digest(netlist_path)
+            observed = read_netlist(netlist_path)
+            normalized = json.dumps(
+                observed.model_dump(mode="json"),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode("utf-8")
+            normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
+            project_id = f"synthetic-peer-power-output-{case}"
+            coach = ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id=project_id,
+                observed=observed,
+                netlist_sha256=raw_hashes[(case, run)],
+            )
+            reports[(case, run)] = evaluate(project_id, coach, DesignLintPolicy())
+            findings = tuple(
+                item
+                for item in reports[(case, run)].findings
+                if item.rule_id == "component.peer_power_output_unconnected"
+            )
+            actual_unassigned = findings[0].evidence.get("unassigned_pins", ()) if findings else ()
+            expected_finding_count = 1 if expected_unassigned else 0
+            if actual_unassigned != expected_unassigned or len(findings) != expected_finding_count:
+                raise ValueError(
+                    f"Native {case} expected peer power-output pins {expected_unassigned}, "
+                    f"observed {actual_unassigned}"
+                )
+            expected_status = "REVIEW" if expected_unassigned else "PASS"
+            if reports[(case, run)].status != expected_status:
+                raise ValueError(
+                    f"Native {case} expected lint status {expected_status}, "
+                    f"observed {reports[(case, run)].status}"
+                )
+
+    if any(
+        normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")] for case in cases
+    ):
+        raise ValueError(
+            "Native peer power-output exports differ after normalization to parsed contracts"
+        )
+    for case, (filename, expected_unassigned) in cases.items():
+        report = reports[(case, "first")]
+        findings = tuple(
+            item
+            for item in report.findings
+            if item.rule_id == "component.peer_power_output_unconnected"
+        )
+        log.event(
+            f"component-peer-power-output-fixture/{case}",
+            "PASS",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            source_sha256=source_hashes[case],
+            netlist_sha256=raw_hashes[(case, "first")],
+            repeat_netlist_sha256=raw_hashes[(case, "repeat")],
+            normalized_netlist_sha256=normalized_hashes[(case, "first")],
+            repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
+            lint_status=report.status,
+            unassigned_pins=",".join(expected_unassigned) or "none",
+            finding_count=len(findings),
+            repeatable="true",
+            repeatability_basis="normalized_netlist_contract",
+            command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+        )
+
+    if any(
+        digest(fixture_root / filename) != source_hashes[case]
+        for case, (filename, _) in cases.items()
+    ):
+        raise ValueError("Synthetic peer power-output fixture source changed during native export")
 
 
 def complementary_pair_fixture_lane(
@@ -12826,6 +13049,7 @@ def native_lane(
         stm32_pin_map_fixture_lane(root, project=project, image=image, log=log)
         led_rail_fixture_lane(root, project=project, image=image, log=log)
         two_pin_component_fixture_lane(root, project=project, image=image, log=log)
+        component_peer_power_output_fixture_lane(root, project=project, image=image, log=log)
         component_rating_fixtures_lane(root, project=project, image=image, log=log)
         power_sequence_fixture_lane(root, project=project, image=image, log=log)
         ic_rail_capacitor_fixture_lane(root, project=project, image=image, log=log)

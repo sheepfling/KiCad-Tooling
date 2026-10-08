@@ -1033,6 +1033,125 @@ class PeerPowerPinAssignmentDivergence:
     assignments: dict[str, tuple[str, ...]]
 
 
+@dataclass(frozen=True)
+class PeerPowerOutputPinOutlier:
+    symbol: str
+    pin_number: str
+    assignments: dict[str, tuple[str, ...]]
+
+
+def component_peer_power_output_pin_outliers(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> tuple[PeerPowerOutputPinOutlier, ...]:
+    """Find an open native power-output pin among fitted peers of one exact symbol.
+
+    A same-symbol, same-pin output assignment is a review clue only. The other
+    instances may intentionally use the output differently or leave it open.
+    """
+    unpopulated = {reference.casefold() for reference in observed.dnp_components}
+    connector_references = {
+        reference.casefold()
+        for reference in connector_candidate_references(observed, declared_references)
+    }
+    known_components = {reference.casefold() for reference in observed.components}
+    references_by_symbol: dict[str, list[str]] = {}
+    symbols_by_key: dict[str, str] = {}
+    for reference, symbol in observed.component_symbols.items():
+        reference_key = reference.casefold()
+        if (
+            reference_key not in known_components
+            or reference_key in unpopulated
+            or reference_key in connector_references
+        ):
+            continue
+        symbol_key = symbol.casefold()
+        references_by_symbol.setdefault(symbol_key, []).append(reference)
+        symbols_by_key[symbol_key] = symbol
+
+    inventories = {
+        reference.casefold(): tuple(sorted(numbers, key=str.casefold))
+        for reference, numbers in observed.component_pin_numbers.items()
+    }
+    electrical_types = {
+        pin.casefold(): electrical_type.strip().casefold()
+        for pin, electrical_type in observed.pin_electrical_types.items()
+    }
+    functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
+    pin_nets: dict[str, set[str]] = {}
+    for net, pins in observed.nets.items():
+        for pin in pins:
+            pin_nets.setdefault(pin.casefold(), set()).add(net)
+
+    results: list[PeerPowerOutputPinOutlier] = []
+    for symbol_key, references in sorted(references_by_symbol.items()):
+        peers = tuple(sorted(references, key=str.casefold))
+        if len(peers) < 2:
+            continue
+        peer_inventories = tuple(inventories.get(reference.casefold(), ()) for reference in peers)
+        if (
+            not peer_inventories[0]
+            or any(not numbers for numbers in peer_inventories)
+            or any(
+                {number.casefold() for number in numbers}
+                != {number.casefold() for number in peer_inventories[0]}
+                for numbers in peer_inventories[1:]
+            )
+            or len({number.casefold() for number in peer_inventories[0]})
+            != len(peer_inventories[0])
+        ):
+            continue
+
+        for pin_number in peer_inventories[0]:
+            pins = tuple(f"{reference}.{pin_number}" for reference in peers)
+            if any(electrical_types.get(pin.casefold()) != "power_out" for pin in pins):
+                continue
+            peer_functions = tuple(functions.get(pin.casefold()) for pin in pins)
+            if (
+                len(
+                    {
+                        function.casefold() if function is not None else None
+                        for function in peer_functions
+                    }
+                )
+                > 1
+            ):
+                continue
+            assignments = {
+                pin: tuple(sorted(pin_nets.get(pin.casefold(), ()), key=str.casefold))
+                for pin in pins
+            }
+            if any(len(nets) > 1 for nets in assignments.values()):
+                continue
+            open_pins = tuple(pin for pin, nets in assignments.items() if not nets)
+            assigned_pins = tuple(pin for pin, nets in assignments.items() if nets)
+            if not open_pins or not assigned_pins:
+                continue
+            if any(
+                function is not None
+                and (_is_named_supply_function(function) or _is_return_function(function))
+                for pin in open_pins
+                for function in (functions.get(pin.casefold()),)
+            ):
+                # Preserve the more specific existing named supply/return prompt.
+                continue
+            results.append(
+                PeerPowerOutputPinOutlier(
+                    symbol=symbols_by_key[symbol_key],
+                    pin_number=pin_number,
+                    assignments=dict(
+                        sorted(assignments.items(), key=lambda item: item[0].casefold())
+                    ),
+                )
+            )
+    return tuple(
+        sorted(
+            results,
+            key=lambda item: (item.symbol.casefold(), item.pin_number.casefold()),
+        )
+    )
+
+
 def component_peer_power_pin_assignment_divergences(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),

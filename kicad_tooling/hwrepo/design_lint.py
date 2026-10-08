@@ -36,6 +36,7 @@ from .connector_coverage import (
     source_matched_connector_pin_evidence,
 )
 from .connector_pins import (
+    component_peer_power_output_pin_outliers,
     component_peer_power_pin_assignment_divergences,
     component_supply_pins_on_different_nets,
     connector_peer_pin_assignment_divergences,
@@ -1028,6 +1029,31 @@ def candidates(
                     "Review whether the pin is intentionally unused or a connection is missing."
                 ),
                 evidence={pin.pin: ()},
+            )
+        )
+    for group in component_peer_power_output_pin_outliers(observed, reviewed_connector_references):
+        open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        found.append(
+            Candidate(
+                rule_id="component.peer_power_output_unconnected",
+                subject=(
+                    f"{group.symbol} pin {group.pin_number}: fitted peer power-output assignment "
+                    "is missing"
+                ),
+                message=(
+                    "A fitted component with this exact native symbol has an unassigned pin that "
+                    "KiCad classifies as power_out, while at least one fitted peer's matching pin "
+                    "has a net assignment. Review whether the open output is intentionally unused "
+                    "or its connection is missing; identical symbols do not require their outputs "
+                    "to share a net."
+                ),
+                evidence={
+                    **group.assignments,
+                    "symbol": (group.symbol,),
+                    "pin_number": (group.pin_number,),
+                    "pin_electrical_type": ("power_out",),
+                    "unassigned_pins": open_pins,
+                },
             )
         )
     for pin in unconnected_control_inputs(observed):

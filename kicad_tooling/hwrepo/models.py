@@ -404,6 +404,7 @@ DesignLintRuleId = Literal[
     "connector.peer_pin_assignment_divergence",
     "component.repeated_supply_pin_function",
     "component.peer_power_pin_assignment_divergence",
+    "component.peer_power_output_unconnected",
     "component.two_pin_passive_same_net",
     "component.two_pin_diode_same_net",
     "component.two_pin_crystal_same_net",

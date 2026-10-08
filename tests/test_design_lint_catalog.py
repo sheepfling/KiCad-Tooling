@@ -137,6 +137,12 @@ from tests.test_pcb_track_width import mapping as pcb_track_width_map
 from tests.test_pcb_track_width import requirement as pcb_track_width_requirement
 from tests.test_pcb_track_width import snapshot as pcb_track_width_snapshot
 from tests.test_pcb_track_width import track as pcb_track_width_track
+from tests.test_peer_power_output import (
+    lint_report as peer_power_output_lint_report,
+)
+from tests.test_peer_power_output import (
+    peer_power_output_netlist,
+)
 from tests.test_power_path_fixture_lane import PowerPathFixtureLaneTests
 from tests.test_power_paths import PowerPathTests, power_path_map, power_path_netlist
 from tests.test_power_pin_paths import PowerSourcePathLintTests, source_path_netlist
@@ -203,7 +209,6 @@ from tests.test_two_pin_ferrites import (
     lint_report as two_pin_ferrite_lint_report,
 )
 from tests.test_two_pin_fuses import (
-    TwoPinFuseLintTests,
     fuse_netlist,
 )
 from tests.test_two_pin_fuses import (
@@ -416,7 +421,6 @@ class DesignLintCatalogTests(unittest.TestCase):
             TwoPinPassiveLintTests: TwoPinPassiveLintTests(),
             TwoPinDiodeLintTests: TwoPinDiodeLintTests(),
             TwoPinCrystalLintTests: TwoPinCrystalLintTests(),
-            TwoPinFuseLintTests: TwoPinFuseLintTests(),
             TwoPinFerriteLintTests: TwoPinFerriteLintTests(),
             PowerPathTests: PowerPathTests(),
             PowerSequenceTests: PowerSequenceTests(),
@@ -837,6 +841,8 @@ class DesignLintCatalogTests(unittest.TestCase):
         emitted.update(item.rule_id for item in crystal_result.findings)
         fuse_result = two_pin_fuse_lint_report(fuse_netlist())
         emitted.update(item.rule_id for item in fuse_result.findings)
+        peer_power_output_result = peer_power_output_lint_report(peer_power_output_netlist())
+        emitted.update(item.rule_id for item in peer_power_output_result.findings)
         ferrite_result = two_pin_ferrite_lint_report(ferrite_netlist())
         emitted.update(item.rule_id for item in ferrite_result.findings)
         emitted.update(item.rule_id for item in candidates(two_pin_switch_netlist()))

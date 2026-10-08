@@ -124,6 +124,19 @@ The first rules are:
   intentional, and the rule never joins nets. DNP peers, incomplete pin
   inventories, unknown functions, and open power pins are excluded; open pins
   stay with the component unconnected-pin checks.
+- `component.peer_power_output_unconnected` prompts when one fitted
+  non-connector with an exact shared symbol has an unassigned native
+  `power_out` pin while a matching pin on another fitted peer has one
+  unambiguous net assignment. It covers the open-output case left outside the
+  assigned-pin divergence rule. Review whether the output is intentionally
+  unused or its assignment is missing; identical components do not require
+  their outputs to share a net. DNP peers, connector candidates, incomplete or
+  mismatched pin inventories, missing electrical-type metadata, ambiguous
+  assignments, and recognized named supply/return pins are outside this
+  prompt. Shield-labelled native power outputs remain eligible for review
+  because there is no component-level unconnected-shield rule. It does not
+  establish output function, component operation, current capacity, PCB copper
+  continuity, off-board wiring, or physical population.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
   resolve to the same schematic net. The assigned net bypasses the passive in
@@ -819,7 +832,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 79 active rules. They
+`synthetic_validated`; the catalog currently contains 80 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow
