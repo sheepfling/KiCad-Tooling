@@ -7730,6 +7730,7 @@ def two_pin_component_fixture_lane(root: Path, *, project: str, image: str, log:
         f'test "$actual" = "{config.kicad_version}"\n',
     ]
     for case, (filename, _, _) in cases.items():
+        source_lines.append(f'printf "exporting_fixture=%s\\n" "{filename}"\n')
         source_lines.append(
             f"for run in first repeat; do kicad-cli sch export netlist "
             f'--format kicadxml --output "/output/{case}.${{run}}.netlist.xml" '

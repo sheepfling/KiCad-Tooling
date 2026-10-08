@@ -2802,33 +2802,30 @@ is not a reason by itself to expand its scope or change its default policy.
   checks passed 25 tests and 308 subtests. The new report stayed identical
   across three independent Python hash secrets. These results validate the
   shared typed service and adapters, not native source export.
-- **Supplemental native screen (2026-10-08):** After the v0.4.1 failure,
-  generic fuse and polyfuse pins now use blank native names, matching the
-  corresponding generic KiCad library symbols without assigning direction.
-  The locally installed KiCad 10.0.6 CLI exported each revised synthetic
-  schematic twice with matching raw hashes. The normalized typed-netlist hashes
-  were `368263f15c0627efc7a5f4b58a0b0beddda1dbe4b2d72522d6f24562a98a2a14`
-  (fuse fault), `e2172e8968c16de62855b6ef43ac4b5dd891ef753436133c864932b3e97ec72c`
-  (fuse control), `ff8e60df2a6775da8467b094f760a6b52371c809c4c6ce6d7499b9773a4932ca`
-  (polyfuse fault), and
-  `3cc9839cf451122932c229975be7fad33c7575d8cfa15f07f02823c975146061`
-  (polyfuse control). The `v0.5.0rc1` hosted run showed that the earlier
-  `Pin_1`/`Pin_2` source still failed to load under pinned KiCad 10.0.0 and
-  10.0.5. The revised blank-name sources have not yet been exported by those
-  pinned versions; exact native acceptance remains pending.
+- **Supplemental native screen (2026-10-08):** The `v0.5.0rc1` and `rc2` hosted runs both stopped at
+  `same-net-fuse.kicad_sch` with `Failed to load schematic` under pinned KiCad 10.0.0 and 10.0.5.
+  The synthetic fuses now embed legacy-form generic `Device:Fuse` and `Device:Polyfuse` symbols,
+  including neutral `~` pin names, symbol metadata, geometry, and pin locations. On local KiCad
+  10.0.6, all four fault/control sources exported twice with the same normalized typed-netlist
+  hashes: `5b9c8486edc879625a6786ed0ac9a68c0047a60465838c500c2af79a3a7f5dc5` (fuse fault),
+  `c8f4d81f63bdbc8b56ef657e86aa045b5acd816c1d6cbbf2a88bea0d2e6e830d` (fuse control),
+  `d653d5413cff0a711e2ca9a024df5d9076f2c9d652c611b703abb5645df83a50` (polyfuse fault), and
+  `0634fcc205e7da504caf52a11e30515e51d4eabc75bd8f79575492a8d22b8ada` (polyfuse control). The hosted
+  exact-version result remains pending for the next candidate; the native command receipt now prints
+  each fixture path before export to localize any further failure.
 - **Release-candidate regression (2026-10-08):** The `v0.5.0rc1` package job
   ran 2,236 tests (2 failures, 3 errors, 2 skipped). The connector fixture
   expected one lint rule ID even though LINT-089 emits one finding per open
-  pin; its assertion now checks both per-pin findings. The two-pin fixture's
-  `Device:Fuse` export failed to load with nonempty generic pin names; the
-  synthetic fuse fixtures now use blank names. The corrected pinned-version
-  results are still pending.
-- **Corrected local package smoke (2026-10-08):** `scripts/ci.py` passed all
-  2,236 tests with 25 native-environment skips, plus formatting, lint, type,
-  Markdown, wheel/sdist, fresh installed-wheel, and external-checkout stages
-  against the separate public `KiCAD-Test` repository. This host has no Docker
-  daemon, so the exact-version KiCad 10.0.0/10.0.5 fixture lane remains for the
-  tagged GitHub acceptance workflow.
+  pin; the assertion now checks both per-pin findings. `v0.5.0rc2` passed all
+  three portability preview jobs; its package job ran 2,236 tests and had only
+  the two pinned native fuse-fixture errors remaining.
+- **Local package smoke (2026-10-08):** After the fixture correction,
+  `scripts/ci.py` passed all 2,236 tests with 25 environment skips, formatting,
+  Ruff, Linux and Windows type checks, Markdown, repository links, wheel/sdist
+  reproducibility, a fresh installed-wheel check, and external inventory,
+  verify, adaptation, and playtest stages against a separate public template
+  checkout. This host has no Docker daemon, so exact KiCad 10.0.0/10.0.5
+  results remain for the next GitHub candidate workflow.
 - **Acceptance-lane integrity (2026-10-07):** The shared native-fixture
   manifest mounts `tests/fixtures/design_lint` as its read-only root so both
   `two-pin-components/` and `two-pin-fuses/` sources resolve. An always-run
