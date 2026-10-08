@@ -405,8 +405,8 @@ and optional ecosystem adapters are `P3`.
    `Device:Polyfuse` symbols with both pins on one net produce an opt-in-capable
    REVIEW hint. Fault/control, policy, catalog, CLI/MCP parity, and three-process
    hash-seed tests passed locally. The exact KiCad 10.0.0/10.0.5 fixture cases
-   are wired into the GitHub package job; wait for that result before counting
-   the pinned native lane as verified. A supplementary local KiCad 10.0.6
+   are wired into the GitHub package job; the RC4 result must pass before
+   counting the pinned native lane as verified. A supplementary local KiCad 10.0.6
    export of all four tooling-owned fuse fixtures now repeats and matches the
    expected fault/control findings; see LINT-084. Keep the predicate limited
    to the two named symbol families and do not infer that every fuse must be
@@ -2802,23 +2802,30 @@ is not a reason by itself to expand its scope or change its default policy.
   checks passed 25 tests and 308 subtests. The new report stayed identical
   across three independent Python hash secrets. These results validate the
   shared typed service and adapters, not native source export.
-- **Supplemental native screen (2026-10-08):** The `v0.5.0rc1` and `rc2` hosted runs both stopped at
-  `same-net-fuse.kicad_sch` with `Failed to load schematic` under pinned KiCad 10.0.0 and 10.0.5.
-  The synthetic fuses now embed legacy-form generic `Device:Fuse` and `Device:Polyfuse` symbols,
-  including neutral `~` pin names, symbol metadata, geometry, and pin locations. On local KiCad
-  10.0.6, all four fault/control sources exported twice with the same normalized typed-netlist
-  hashes: `5b9c8486edc879625a6786ed0ac9a68c0047a60465838c500c2af79a3a7f5dc5` (fuse fault),
-  `c8f4d81f63bdbc8b56ef657e86aa045b5acd816c1d6cbbf2a88bea0d2e6e830d` (fuse control),
-  `d653d5413cff0a711e2ca9a024df5d9076f2c9d652c611b703abb5645df83a50` (polyfuse fault), and
-  `0634fcc205e7da504caf52a11e30515e51d4eabc75bd8f79575492a8d22b8ada` (polyfuse control). The hosted
-  exact-version result remains pending for the next candidate; the native command receipt now prints
-  each fixture path before export to localize any further failure.
+- **Supplemental native screen (2026-10-08):** The hosted package runs for
+  `v0.5.0rc1`, `rc2`, and `rc3` all stopped at `same-net-fuse.kicad_sch` with
+  `Failed to load schematic` under pinned KiCad
+  10.0.0 and 10.0.5. Inspection traced the failure to embedded Fuse/Polyfuse caches that did not
+  match the pinned library format. The synthetic cache metadata and geometry now follow the public
+  KiCad Symbols 10.0.5 library at commit `60d2dc9981920ee40eb5caa4dc01b23f713beca7`; attribution
+  and license details are in the fixture README. On local KiCad 10.0.6, all four sources exported
+  twice and produced identical normalized typed-netlist digests:
+  - Fuse fault: `368263f15c0627efc7a5f4b58a0b0beddda1dbe4b2d72522d6f24562a98a2a14`
+  - Fuse control: `e2172e8968c16de62855b6ef43ac4b5dd891ef753436133c864932b3e97ec72c`
+  - Polyfuse fault: `ff8e60df2a6775da8467b094f760a6b52371c809c4c6ce6d7499b9773a4932ca`
+  - Polyfuse control: `3cc9839cf451122932c229975be7fad33c7575d8cfa15f07f02823c975146061`
+  The two
+  fault cases each produce one REVIEW finding; both controls pass. This local 10.0.6 result does not
+  replace the exact-version acceptance still required from the next GitHub candidate.
 - **Release-candidate regression (2026-10-08):** The `v0.5.0rc1` package job
   ran 2,236 tests (2 failures, 3 errors, 2 skipped). The connector fixture
   expected one lint rule ID even though LINT-089 emits one finding per open
   pin; the assertion now checks both per-pin findings. `v0.5.0rc2` passed all
   three portability preview jobs; its package job ran 2,236 tests and had only
-  the two pinned native fuse-fixture errors remaining.
+  the two pinned native fuse-fixture errors remaining. `v0.5.0rc3` also passed
+  all three preview jobs; its package job was blocked by the same two native
+  schematic-load errors. RC4 carries the public-library cache correction and
+  refreshed source hashes.
 - **Local package smoke (2026-10-08):** After the fixture correction,
   `scripts/ci.py` passed all 2,236 tests with 25 environment skips, formatting,
   Ruff, Linux and Windows type checks, Markdown, repository links, wheel/sdist
@@ -2836,13 +2843,10 @@ is not a reason by itself to expand its scope or change its default policy.
   pinned KiCad 10.0.0/10.0.5 result.
 - **Remaining:** This host has no reachable Docker daemon, so it cannot run
   the digest-pinned KiCad 10.0.0/10.0.5 matrix locally. The exact-version cases
-  are enabled in the GitHub package acceptance job. The v0.4.1 hosted package
-  run stopped at `same-net-fuse.kicad_sch` with `Failed to load schematic` on
-  both pinned versions before reaching the fuse controls. The local KiCad
-  10.0.6 CLI exports all four cases, which does not resolve the exact-version
-  failure. The fixture pin functions now use distinct generic names instead of
-  repeated `~` placeholders; this compatibility change still needs the pinned
-  GitHub result before the native lane can be treated as verified.
+  are enabled in the GitHub package acceptance job. The revised fixtures have
+  now passed repeated exports and fault/control checks with local KiCad 10.0.6;
+  the RC4 GitHub result is required before the pinned native lane can be treated
+  as verified.
 
 #### LINT-085 — Fitted two-pin ferrite bead bypassed by one net
 
@@ -3165,6 +3169,12 @@ is not a reason by itself to expand its scope or change its default policy.
   schematics bind J1/J2 references to a 0R R3 control and an R3.2 floating-net
   fault; the exact fixture hashes and outcome are recorded in the
   [synthetic fixture README](../tests/fixtures/design_lint/serial-peer-reference-bond-native/README.md).
+  A second typed fault/control pair verifies that an exact fitted
+  `Device:FerriteBead` may satisfy the same reviewed bond contract, and that a
+  moved bead pin restores the review. The focused serial-reference suite passed
+  24 tests and 13 subtests. This composes the shared bond validator with
+  LINT-085's exact native ferrite identity and passive-pin evidence; it is not
+  an end-to-end native ferrite-bond export.
   Repeated digest-pinned KiCad 10.0.0/10.0.5 exports are wired into the existing
   GitHub serial-peer acceptance job. The local host has no running Docker
   daemon, so exact-version native acceptance must be confirmed from the hosted

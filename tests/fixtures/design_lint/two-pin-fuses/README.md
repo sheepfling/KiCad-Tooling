@@ -10,17 +10,22 @@ design or customer source.
 | `same-net-polyfuse.kicad_sch`      | Both `Device:Polyfuse` pins share one local label.           | `component.two_pin_fuse_same_net` reports F1. |
 | `distinct-nets-polyfuse.kicad_sch` | `Device:Polyfuse` pins use separate input and output labels. | No same-net fuse finding.                     |
 
-The embedded symbols use the generic KiCad fuse metadata and neutral `~` pin
-names. The numbered contacts do not imply polarity or current direction.
+The embedded Fuse and Polyfuse symbol metadata and geometry are adapted from
+the [KiCad Symbols 10.0.5 library](https://gitlab.com/kicad/libraries/kicad-symbols/-/tree/10.0.5),
+commit `60d2dc9981920ee40eb5caa4dc01b23f713beca7`, under the library's
+[CC BY-SA 4.0 license and exception](https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/LICENSE.md).
+Fixture references, values, UUIDs, wires, labels, and contracts are synthetic.
+The pins are unnamed; contacts 1 and 2 do not imply polarity or current
+direction.
 
 Source SHA-256 values:
 
 | Fixture                            | SHA-256                                                            |
 | ---------------------------------- | ------------------------------------------------------------------ |
-| `same-net-fuse.kicad_sch`          | `97be0fedbe366d9fc04dea730f46552ed9c5c594cb914122205dd5ab58d660a2` |
-| `distinct-nets-fuse.kicad_sch`     | `dece283ca01dbd04c034f4b959b9fae8a8423f4e9769592087daebf926e3745e` |
-| `same-net-polyfuse.kicad_sch`      | `d35437ae768aafafeadccb7db37ef71b323ea4550a95c8c0ba559fe81a88f67a` |
-| `distinct-nets-polyfuse.kicad_sch` | `564dff3e5a0c9e443693d4baa531a334e205f4d7e9a4aae40aaefb603a0caeec` |
+| `same-net-fuse.kicad_sch`          | `b69792902442ef89c103f5a4b783b73633b88d9519ab01c5b77df9b654df62ca` |
+| `distinct-nets-fuse.kicad_sch`     | `c9c6afa14db03137c1bbc78b82875d159f79b5ebabbb7ea21c6eac1e33fc6edb` |
+| `same-net-polyfuse.kicad_sch`      | `1537a762c427dbc77e3afb35fd2faecb494e69674b8ca3f7e04e7497fd96e3ad` |
+| `distinct-nets-polyfuse.kicad_sch` | `f4d7ba7f0d27d295c725f2286dace93fa4163b3dbb04130d0c913f05660fc037` |
 
 The native fixture lane exports each source twice with the exact digest-pinned
 KiCad 10.0.0 and 10.0.5 toolchains selected by the public acceptance projects.

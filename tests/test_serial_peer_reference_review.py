@@ -23,6 +23,7 @@ from kicad_tooling.hwrepo.models import (
     SerialPeerReferenceCoverageReport,
     SerialPinNetRequirement,
 )
+from kicad_tooling.hwrepo.reference_bonds import reference_bond_issues
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.serial_peer_reference_review import (
     unmapped_serial_peer_reference_reviews,
@@ -210,6 +211,43 @@ def bonded_serial_reference_netlist(*, fault: bool = False) -> NetlistContract:
                 **source.pin_electrical_types,
                 "R3.1": "passive",
                 "R3.2": "passive",
+            },
+        }
+    )
+
+
+def ferrite_bonded_serial_reference_netlist(*, fault: bool = False) -> NetlistContract:
+    """Represent an exact two-pin ferrite bead between reviewed reference nets."""
+    source = serial_reference_netlist()
+    floating_net = "FLOATING_GND" if fault else "GND_B"
+    return source.model_copy(
+        update={
+            "components": {
+                **source.components,
+                "FB1": ComponentContract(
+                    value="600R @100MHz", footprint="Synthetic:0603Ferrite"
+                ),
+            },
+            "nets": {
+                **source.nets,
+                "GND_A": ("U1.9", "FB1.1"),
+                "GND_B": ("U2.9",) if fault else ("U2.9", "FB1.2"),
+                **({floating_net: ("FB1.2",)} if fault else {}),
+            },
+            "component_symbols": {**source.component_symbols, "FB1": "Device:FerriteBead"},
+            "component_pin_numbers": {
+                **source.component_pin_numbers,
+                "FB1": ("1", "2"),
+            },
+            "pin_functions": {
+                **source.pin_functions,
+                "FB1.1": "~",
+                "FB1.2": "~",
+            },
+            "pin_electrical_types": {
+                **source.pin_electrical_types,
+                "FB1.1": "passive",
+                "FB1.2": "passive",
             },
         }
     )
@@ -821,6 +859,33 @@ class SerialPeerReferenceReviewTests(unittest.TestCase):
         )
         self.assertEqual(len(labelled_fault), 1)
         self.assertEqual(len(labelled_fault[0].label_links), 1)
+
+    def test_bonded_reference_map_accepts_an_exact_fitted_ferrite(self) -> None:
+        bond = ReferenceBondRequirement(
+            reference="FB1",
+            expected_symbol="Device:FerriteBead",
+            expected_footprint="Synthetic:0603Ferrite",
+            expected_value="600R @100MHz",
+            side_a_pin="FB1.1",
+            side_b_pin="FB1.2",
+            side_a_net="GND_A",
+            side_b_net="GND_B",
+        )
+        reviewed = serial_peer_map(
+            reference_policy="bonded",
+            output_reference_net="GND_A",
+            input_reference_net="GND_B",
+            reference_bond=bond,
+        )
+
+        control = ferrite_bonded_serial_reference_netlist()
+        self.assertEqual(reference_bond_issues(control, bond), ())
+        self.assertEqual(unmapped_serial_peer_reference_reviews(control, reviewed), ())
+
+        fault = ferrite_bonded_serial_reference_netlist(fault=True)
+        issues = reference_bond_issues(fault, bond)
+        self.assertEqual(issues, ("FB1.2 is on FLOATING_GND; expected GND_B",))
+        self.assertEqual(len(unmapped_serial_peer_reference_reviews(fault, reviewed)), 1)
 
     def test_stale_reference_map_does_not_suppress_prompt(self) -> None:
         source = serial_reference_netlist()
