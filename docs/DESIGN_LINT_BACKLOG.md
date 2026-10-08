@@ -2802,30 +2802,35 @@ is not a reason by itself to expand its scope or change its default policy.
   checks passed 25 tests and 308 subtests. The new report stayed identical
   across three independent Python hash secrets. These results validate the
   shared typed service and adapters, not native source export.
-- **Supplemental native screen (2026-10-08):** The hosted package runs for
-  `v0.5.0rc1`, `rc2`, and `rc3` all stopped at `same-net-fuse.kicad_sch` with
-  `Failed to load schematic` under pinned KiCad
-  10.0.0 and 10.0.5. Inspection traced the failure to embedded Fuse/Polyfuse caches that did not
-  match the pinned library format. The synthetic cache metadata and geometry now follow the public
-  KiCad Symbols 10.0.5 library at commit `60d2dc9981920ee40eb5caa4dc01b23f713beca7`; attribution
-  and license details are in the fixture README. On local KiCad 10.0.6, all four sources exported
-  twice and produced identical normalized typed-netlist digests:
+- **Supplemental native screen (2026-10-08):** The RC3 and RC4 command receipts
+  show the pinned KiCad 10.0.0 and 10.0.5 lanes stopping at
+  `two-pin-crystals/distinct-nets-crystal.kicad_sch`, before any fuse fixture is
+  reached. The crystal control had `page` outside the root `path` in its
+  `sheet_instances` form. The source now uses the same nested form as its fault
+  control and other accepted fixtures; its reviewed source hash is updated in
+  the crystal README and test manifests. Local KiCad 10.0.6 exported the fixed
+  control twice with the same normalized typed-netlist digest
+  `b489d9e0960c31e0b98aa9da98627e2762a1b97cd5f136291672a83324b2f3c9`; it
+  produces no same-net crystal candidate and the lint report passes. This does
+  not yet establish pinned-version acceptance.
+  Local KiCad 10.0.6 also exported all four fuse sources twice with identical
+  normalized typed-netlist digests:
   - Fuse fault: `368263f15c0627efc7a5f4b58a0b0beddda1dbe4b2d72522d6f24562a98a2a14`
   - Fuse control: `e2172e8968c16de62855b6ef43ac4b5dd891ef753436133c864932b3e97ec72c`
   - Polyfuse fault: `ff8e60df2a6775da8467b094f760a6b52371c809c4c6ce6d7499b9773a4932ca`
   - Polyfuse control: `3cc9839cf451122932c229975be7fad33c7575d8cfa15f07f02823c975146061`
-  The two
-  fault cases each produce one REVIEW finding; both controls pass. This local 10.0.6 result does not
-  replace the exact-version acceptance still required from the next GitHub candidate.
+  The fault cases each produce one REVIEW finding; both controls pass. The RC5
+  GitHub result is needed to verify these fixtures with the pinned versions.
 - **Release-candidate regression (2026-10-08):** The `v0.5.0rc1` package job
   ran 2,236 tests (2 failures, 3 errors, 2 skipped). The connector fixture
   expected one lint rule ID even though LINT-089 emits one finding per open
   pin; the assertion now checks both per-pin findings. `v0.5.0rc2` passed all
   three portability preview jobs; its package job ran 2,236 tests and had only
   the two pinned native fuse-fixture errors remaining. `v0.5.0rc3` also passed
-  all three preview jobs; its package job was blocked by the same two native
-  schematic-load errors. RC4 carries the public-library cache correction and
-  refreshed source hashes.
+  all three preview jobs; its package job had the two native fixture errors.
+  RC3 and RC4 command receipts stop at the malformed distinct-net crystal
+  control before reaching the fuse cases. RC4 ran 2,238 tests with two errors
+  and two skips; RC5 carries the corrected crystal source structure.
 - **Local package smoke (2026-10-08):** After the fixture correction,
   `scripts/ci.py` passed all 2,236 tests with 25 environment skips, formatting,
   Ruff, Linux and Windows type checks, Markdown, repository links, wheel/sdist
@@ -2845,7 +2850,7 @@ is not a reason by itself to expand its scope or change its default policy.
   the digest-pinned KiCad 10.0.0/10.0.5 matrix locally. The exact-version cases
   are enabled in the GitHub package acceptance job. The revised fixtures have
   now passed repeated exports and fault/control checks with local KiCad 10.0.6;
-  the RC4 GitHub result is required before the pinned native lane can be treated
+  the RC5 GitHub result is required before the pinned native lane can be treated
   as verified.
 
 #### LINT-085 — Fitted two-pin ferrite bead bypassed by one net

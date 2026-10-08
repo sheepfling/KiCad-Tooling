@@ -88,7 +88,7 @@ class TwoPinCrystalLintTests(unittest.TestCase):
         fixture_root = Path(__file__).parents[1] / "tests/fixtures/design_lint/two-pin-crystals"
         expected = {
             "same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
-            "distinct-nets-crystal.kicad_sch": "0c000075d25bc1da32b777367079d084f96fe8be88e258146b5796db99bbe39e",
+            "distinct-nets-crystal.kicad_sch": "4c4fa54184ba74eb8194016a166e068c1a41646b4e59686d187395d981c4bc13",
         }
         self.assertEqual(
             {

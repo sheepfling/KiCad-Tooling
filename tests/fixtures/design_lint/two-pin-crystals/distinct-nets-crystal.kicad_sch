@@ -43,5 +43,5 @@
   (label "XTAL_OUT" (at 76.20 63.50 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid "53100000-0000-4000-8000-000000000123"))
-  (sheet_instances (path "/") (page "1")))
+  (sheet_instances (path "/" (page "1"))))
 )
