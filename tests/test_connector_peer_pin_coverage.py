@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import unittest
+import pytest
 
 from kicad_tooling.hwrepo.connector_pins import connector_peer_pin_heuristic_coverage
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
@@ -90,119 +90,114 @@ def report_for(observed: NetlistContract) -> DesignLintReport:
     )
 
 
-class ConnectorPeerPinCoverageTests(unittest.TestCase):
-    def test_common_peer_assignments_are_counted_without_a_finding(self) -> None:
-        report = report_for(peer_netlist())
-        coverage = report.connector_peer_pin_coverage
+def test_common_peer_assignments_are_counted_without_a_finding() -> None:
+    report = report_for(peer_netlist())
+    coverage = report.connector_peer_pin_coverage
 
-        self.assertIsNotNone(coverage)
-        assert coverage is not None
-        self.assertEqual(coverage.status, "EVALUATED")
-        self.assertEqual(coverage.netlist_sha256, _NETLIST_SHA256)
-        self.assertEqual(coverage.connector_candidate_count, 3)
-        self.assertEqual(coverage.fitted_connector_count, 3)
-        self.assertEqual(coverage.exact_symbol_peer_group_count, 1)
-        self.assertEqual(coverage.exact_symbol_pin_group_count, 2)
-        self.assertEqual(coverage.exact_symbol_pin_groups_with_common_assignment_count, 2)
-        self.assertEqual(coverage.exact_symbol_pin_groups_with_different_assignments_count, 0)
-        self.assertEqual(coverage.peer_pin_outlier_finding_count, 0)
-        self.assertEqual(coverage.repeated_function_finding_count, 0)
-        self.assertIn("Connector peer-pin heuristic coverage: EVALUATED", text_report(report))
-        self.assertIn(_NETLIST_SHA256, text_report(report))
-
-    def test_split_meaningful_returns_are_reported_and_counted(self) -> None:
-        report = report_for(peer_netlist(split_return=True))
-        coverage = report.connector_peer_pin_coverage
-
-        self.assertIsNotNone(coverage)
-        assert coverage is not None
-        self.assertEqual(coverage.exact_symbol_pin_groups_with_common_assignment_count, 1)
-        self.assertEqual(coverage.exact_symbol_pin_groups_with_different_assignments_count, 1)
-        self.assertEqual(coverage.repeated_function_group_count, 2)
-        self.assertEqual(coverage.repeated_function_groups_with_common_assignment_count, 1)
-        self.assertEqual(coverage.repeated_function_groups_with_different_assignments_count, 1)
-        self.assertEqual(coverage.repeated_function_finding_count, 1)
-        findings = {item.rule_id for item in report.findings}
-        self.assertIn("connector.repeated_pin_function", findings)
-        self.assertNotIn("connector.peer_pin_assignment_outlier", findings)
-
-    def test_open_generic_peer_pin_is_reported_with_a_valid_common_control(self) -> None:
-        report = report_for(peer_netlist(open_generic_pin=True))
-        coverage = report.connector_peer_pin_coverage
-
-        self.assertIsNotNone(coverage)
-        assert coverage is not None
-        self.assertEqual(coverage.exact_symbol_pin_groups_with_open_assignment_count, 1)
-        self.assertEqual(coverage.peer_pin_outlier_finding_count, 1)
-        self.assertIn(
-            "connector.peer_pin_assignment_outlier",
-            {item.rule_id for item in report.findings},
-        )
-
-    def test_two_peer_open_pin_coverage_counts_fault_and_common_control(self) -> None:
-        cases = (
-            (peer_netlist(references=("J1", "J2"), open_generic_pin=True), 1, 1),
-            (peer_netlist(references=("J1", "J2")), 0, 2),
-        )
-        for observed, expected_findings, expected_common_groups in cases:
-            with self.subTest(expected_findings=expected_findings):
-                report = report_for(observed)
-                coverage = report.connector_peer_pin_coverage
-
-                self.assertIsNotNone(coverage)
-                assert coverage is not None
-                self.assertEqual(coverage.status, "EVALUATED")
-                self.assertEqual(coverage.connector_candidate_count, 2)
-                self.assertEqual(coverage.fitted_connector_count, 2)
-                self.assertEqual(coverage.exact_symbol_peer_group_count, 1)
-                self.assertEqual(coverage.exact_symbol_pin_group_count, 2)
-                self.assertEqual(
-                    coverage.exact_symbol_pin_groups_with_common_assignment_count,
-                    expected_common_groups,
-                )
-                self.assertEqual(
-                    coverage.exact_symbol_pin_groups_with_open_assignment_count,
-                    1 if expected_findings else 0,
-                )
-                self.assertEqual(coverage.peer_pin_outlier_finding_count, expected_findings)
-
-    def test_incomplete_inventory_is_visible_as_a_coverage_gap(self) -> None:
-        cases = (
-            peer_netlist(missing_inventory_reference="J3"),
-            peer_netlist(empty_inventory_reference="J3"),
-            peer_netlist(mismatched_inventory_reference="J3"),
-            peer_netlist(extra_assigned_pin="J3.3"),
-        )
-        for observed in cases:
-            with self.subTest(inventory=observed.component_pin_numbers.get("J3")):
-                coverage = connector_peer_pin_heuristic_coverage(
-                    observed,
-                    _NETLIST_SHA256,
-                    repeated_function_finding_count=0,
-                    peer_pin_outlier_finding_count=0,
-                    peer_pin_divergence_finding_count=0,
-                )
-
-                self.assertEqual(coverage.status, "INCOMPLETE_PIN_INVENTORY")
-                self.assertEqual(coverage.incomplete_pin_inventory_references, ("J3",))
-                report = report_for(observed)
-                self.assertEqual(report.status, "REVIEW")
-                self.assertIn("Incomplete exact-symbol pin inventory: J3", text_report(report))
-
-    def test_all_dnp_candidates_have_a_distinct_no_fitted_status(self) -> None:
-        coverage = connector_peer_pin_heuristic_coverage(
-            peer_netlist(dnp_references=_REFERENCES),
-            _NETLIST_SHA256,
-            repeated_function_finding_count=0,
-            peer_pin_outlier_finding_count=0,
-            peer_pin_divergence_finding_count=0,
-        )
-
-        self.assertEqual(coverage.status, "NO_FITTED_CONNECTORS")
-        self.assertEqual(coverage.connector_candidate_count, 3)
-        self.assertEqual(coverage.fitted_connector_count, 0)
-        self.assertEqual(coverage.exact_symbol_peer_group_count, 0)
+    assert coverage is not None
+    assert coverage.status == "EVALUATED"
+    assert coverage.netlist_sha256 == _NETLIST_SHA256
+    assert coverage.connector_candidate_count == 3
+    assert coverage.fitted_connector_count == 3
+    assert coverage.exact_symbol_peer_group_count == 1
+    assert coverage.exact_symbol_pin_group_count == 2
+    assert coverage.exact_symbol_pin_groups_with_common_assignment_count == 2
+    assert coverage.exact_symbol_pin_groups_with_different_assignments_count == 0
+    assert coverage.peer_pin_outlier_finding_count == 0
+    assert coverage.repeated_function_finding_count == 0
+    assert "Connector peer-pin heuristic coverage: EVALUATED" in text_report(report)
+    assert _NETLIST_SHA256 in text_report(report)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_split_meaningful_returns_are_reported_and_counted() -> None:
+    report = report_for(peer_netlist(split_return=True))
+    coverage = report.connector_peer_pin_coverage
+
+    assert coverage is not None
+    assert coverage.exact_symbol_pin_groups_with_common_assignment_count == 1
+    assert coverage.exact_symbol_pin_groups_with_different_assignments_count == 1
+    assert coverage.repeated_function_group_count == 2
+    assert coverage.repeated_function_groups_with_common_assignment_count == 1
+    assert coverage.repeated_function_groups_with_different_assignments_count == 1
+    assert coverage.repeated_function_finding_count == 1
+    findings = {item.rule_id for item in report.findings}
+    assert "connector.repeated_pin_function" in findings
+    assert "connector.peer_pin_assignment_outlier" not in findings
+
+
+def test_open_generic_peer_pin_is_reported_with_a_valid_common_control() -> None:
+    report = report_for(peer_netlist(open_generic_pin=True))
+    coverage = report.connector_peer_pin_coverage
+
+    assert coverage is not None
+    assert coverage.exact_symbol_pin_groups_with_open_assignment_count == 1
+    assert coverage.peer_pin_outlier_finding_count == 1
+    assert "connector.peer_pin_assignment_outlier" in {item.rule_id for item in report.findings}
+
+
+@pytest.mark.parametrize(
+    ("observed", "expected_findings", "expected_common_groups"),
+    (
+        (peer_netlist(references=("J1", "J2"), open_generic_pin=True), 1, 1),
+        (peer_netlist(references=("J1", "J2")), 0, 2),
+    ),
+    ids=("open-pin-fault", "common-assignment-control"),
+)
+def test_two_peer_open_pin_coverage_counts_fault_and_common_control(
+    observed: NetlistContract, expected_findings: int, expected_common_groups: int
+) -> None:
+    report = report_for(observed)
+    coverage = report.connector_peer_pin_coverage
+
+    assert coverage is not None
+    assert coverage.status == "EVALUATED"
+    assert coverage.connector_candidate_count == 2
+    assert coverage.fitted_connector_count == 2
+    assert coverage.exact_symbol_peer_group_count == 1
+    assert coverage.exact_symbol_pin_group_count == 2
+    assert coverage.exact_symbol_pin_groups_with_common_assignment_count == expected_common_groups
+    assert coverage.exact_symbol_pin_groups_with_open_assignment_count == (
+        1 if expected_findings else 0
+    )
+    assert coverage.peer_pin_outlier_finding_count == expected_findings
+
+
+@pytest.mark.parametrize(
+    "observed",
+    (
+        peer_netlist(missing_inventory_reference="J3"),
+        peer_netlist(empty_inventory_reference="J3"),
+        peer_netlist(mismatched_inventory_reference="J3"),
+        peer_netlist(extra_assigned_pin="J3.3"),
+    ),
+    ids=("missing", "empty", "mismatched", "extra-assigned-pin"),
+)
+def test_incomplete_inventory_is_visible_as_a_coverage_gap(observed: NetlistContract) -> None:
+    coverage = connector_peer_pin_heuristic_coverage(
+        observed,
+        _NETLIST_SHA256,
+        repeated_function_finding_count=0,
+        peer_pin_outlier_finding_count=0,
+        peer_pin_divergence_finding_count=0,
+    )
+
+    assert coverage.status == "INCOMPLETE_PIN_INVENTORY"
+    assert coverage.incomplete_pin_inventory_references == ("J3",)
+    report = report_for(observed)
+    assert report.status == "REVIEW"
+    assert "Incomplete exact-symbol pin inventory: J3" in text_report(report)
+
+
+def test_all_dnp_candidates_have_a_distinct_no_fitted_status() -> None:
+    coverage = connector_peer_pin_heuristic_coverage(
+        peer_netlist(dnp_references=_REFERENCES),
+        _NETLIST_SHA256,
+        repeated_function_finding_count=0,
+        peer_pin_outlier_finding_count=0,
+        peer_pin_divergence_finding_count=0,
+    )
+
+    assert coverage.status == "NO_FITTED_CONNECTORS"
+    assert coverage.connector_candidate_count == 3
+    assert coverage.fitted_connector_count == 0
+    assert coverage.exact_symbol_peer_group_count == 0
