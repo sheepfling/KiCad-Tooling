@@ -5,6 +5,7 @@ from __future__ import annotations
 import http.client
 import json
 import shutil
+import socket
 import tempfile
 import threading
 import time
@@ -13,6 +14,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import urlencode
+
+import pytest
 
 from kicad_tooling.hwrepo.contract_coach import NetlistRunner, project_context
 from kicad_tooling.hwrepo.evidence import digest
@@ -137,6 +140,19 @@ class FormTests(unittest.TestCase):
         self.assertLess(html.index('id="source-heading"'), html.index('id="cad-heading"'))
 
 
+def _loopback_bind_available() -> bool:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+            listener.bind(("127.0.0.1", 0))
+    except PermissionError:
+        return False
+    return True
+
+
+@pytest.mark.skipif(
+    not _loopback_bind_available(),
+    reason="This environment does not permit loopback HTTP integration tests",
+)
 class AssistantHttpTests(unittest.TestCase):
     def setUp(self) -> None:
         temporary = tempfile.TemporaryDirectory(prefix="parts-assistant-")

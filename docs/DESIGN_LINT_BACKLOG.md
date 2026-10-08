@@ -177,8 +177,14 @@ and optional ecosystem adapters are `P3`.
   2,266 tests passed, 54 skipped, and 2,030 legacy subtests passed, with wheel
   and source builds, installed-wheel external checks, and playtest. Signal-path
   orchestration and parity tests now use a tooling-owned synthetic checkout and
-  collect without `KICAD_TEMPLATE_ROOT`. Hosted acceptance for the current
-  branch and tagged package remains required before publishing this gate.
+  collect without `KICAD_TEMPLATE_ROOT`. Tagged baseline acceptance passed in
+  `v0.5.0rc13` (GitHub run `37845619358`) on 2026-10-08: 2,307 tests passed,
+  26 skipped, and 2,078 legacy subtests passed; Linux, macOS, and Windows
+  preview jobs also passed. The hosted native lane retained control, fault,
+  and ignored-rule receipts for KiCad 10.0.0 and 10.0.5. This follow-up adds
+  repeatability comparison over complete canonical violation records, beyond
+  the finding types and exit codes accepted in RC13. Its focused pytest checks
+  pass; tagged hosted acceptance for this stronger comparison remains pending.
 
 - **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
   passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
@@ -3630,8 +3636,10 @@ is not a reason by itself to expand its scope or change its default policy.
   each fault run reported both length and skew violations, and each ignored-
   rule control was clean. The generated boards, rules, DRC reports, normalized
   command receipts, and hash-bearing events are retained under ignored
-  `build/ci/native-fixtures/pcb-signal-path/`. Hosted GitHub acceptance for
-  the current branch and tagged package acceptance remain pending.
+  `build/ci/native-fixtures/pcb-signal-path/`. The baseline passed tagged
+  GitHub acceptance in `v0.5.0rc13` (run `37845619358`); the follow-up now
+  compares canonical hashes of complete violation records across repeated
+  reports, and that stronger assertion awaits its tagged hosted run.
 - **Problem:** A board can have valid net assignments and still lack the
   reviewed path-length or bundle-skew limits that the interface depends on.
   KiCad DRC already measures these quantities, but project-authored endpoint
@@ -3688,8 +3696,9 @@ is not a reason by itself to expand its scope or change its default policy.
   54 skipped, 2,030 subtests passed), including wheel and source builds and
   installed-wheel external checks. Exact native extraction also passed against
   both pinned KiCad versions. CLI/MCP parity passes from a tooling-owned
-  synthetic checkout without the public template. Hosted GitHub acceptance for
-  the current branch and tagged package remains pending.
+  synthetic checkout without the public template. Tagged GitHub acceptance
+  passed in `v0.5.0rc13` (run `37845619358`), including the hosted native
+  fixture lane.
 - **Problem:** A project can retain a named keepout while its outline, copper
   layers, or restrictions drift. Generic ERC/DRC does not know that the
   project intended a particular rule-area definition to remain unchanged.
@@ -3713,6 +3722,51 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Privacy:** Tooling-owned synthetic data only. No customer board, module
   outline, connector pinout, project contract, or proprietary expectation is
   retained.
+
+#### LINT-097 — Source-mapped RF module antenna keepout coverage
+
+- **Status:** Proposed from the LINT-031 antenna-coverage source audit; not
+  implemented, and no candidate runtime trial is claimed. Keep it behind the
+  current LINT-095/096 hosted acceptance and the review-value work in the
+  suggested delivery order.
+- **Cohort input:** The pinned `kicad-happy` `KO-001` source checks component
+  and via centers against the bounding box of an existing keepout. That can
+  prompt review of nearby objects, but cannot detect a missing keepout, check
+  its exact outline, or bind it to an RF module and feed. Do not copy its code,
+  thresholds, severity, or dependency.
+- **Problem:** LINT-096 detects drift in an independently mapped rule-area
+  signature, but does not establish which RF module or feed the area protects.
+  A named area can still become detached from the antenna region when the
+  module moves or changes.
+- **Candidate contract:** A project-authored map names the exact module
+  reference and footprint identity, RF feed pad and native net, keepout name,
+  vendor-document basis, local-coordinate polygon and holes, copper layers,
+  and all rule-area restriction flags. It must also explicitly disposition a
+  DNP module or an external-antenna design; neither is inferred from names.
+- **Predicate:** The native PCB evidence must bind the fitted footprint and RF
+  pad/net to the schematic source, capture footprint position, orientation and
+  board side, and return exactly one named rule area. Transform the reviewed
+  local polygon through the observed footprint placement and compare its exact
+  canonical outline, layers and restrictions. Missing, duplicate, stale,
+  unsupported, identity-changed or mismatched evidence remains incomplete.
+  Default disposition is `REVIEW`; project policy may select `block`, `off`,
+  or an exact fingerprint ignore.
+- **Fault/control cases:** Missing, undersized, offset, wrong-side and duplicate
+  areas; changed footprint identity or RF pad/net; module moved without its
+  area; module and area moved together; explicit DNP disposition; and explicit
+  external-antenna disposition. Include input-order stability and stale native
+  source/snapshot checks. Exercise CLI/MCP parity through the shared typed
+  service and repeat native exports on the exact supported KiCad versions.
+- **Evidence boundary:** The check compares project-reviewed placement intent
+  with native PCB geometry. It cannot validate that the vendor drawing was
+  interpreted correctly, establish antenna performance, or prove copper
+  exclusion on a fabricated board. Native DRC remains a separate check.
+- **Stop condition:** Defer implementation if the native probe cannot provide
+  stable footprint transforms and bind the mapped RF pad and area to the same
+  source-bound board, or if an exact vendor basis and valid external-antenna
+  disposition cannot be represented without name-based guessing.
+- **Privacy:** Develop with tooling-owned synthetic boards and maps only. Do
+  not retain customer or proprietary module layouts or contracts.
 
 #### LINT-020 — Decoupling-capacitor proximity and connection evidence
 
@@ -8671,7 +8725,7 @@ without importing a product design.
 
 | Candidate family                                     | Existing overlap                                                              | First bounded work                                                                                                                                                                                                                                 | Stop or defer when                                                                                                                                                                                                 |
 | ---------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Wireless module antenna and RF feed review           | Connector/pin coverage, protection maps, mapped PCB geometry                  | Trial exact module identity, RF pin and feed-path mapping, and datasheet-sourced keepout geometry on synthetic schematic/board pairs. Keep the result as review evidence for that exact module family.                                             | Symbol/value text is the only identity evidence, antenna geometry is absent, or the check cannot distinguish module antennas from external RF connectors and intentional keepouts.                                 |
+| Wireless module antenna and RF feed review           | Connector/pin coverage, protection maps, mapped PCB geometry                  | See proposed LINT-097: bind exact module identity and RF pad/net to a vendor-sourced module-local keepout map, then test only on synthetic schematic/board pairs.                                                                                   | Symbol/value text is the only identity evidence, antenna geometry is absent, or the check cannot distinguish module antennas from external RF connectors and intentional keepouts.                                 |
 | Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts       | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.  | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings. |
 | Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps         | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.     | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                             |
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | Compare an authored driver-output-to-string map with exact LED/current-control component pins and connectivity; test multi-channel and valid constant-current alternatives against current LED prompts.                                            | The proposed check merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied.                                           |
@@ -8691,20 +8745,20 @@ or bind the area to an RF pad and module identity. The implementation reports
 those findings with error severity, so its disposition is not a suitable local
 default.
 
-The local candidate is an opt-in, project-authored map of an exact module
-footprint, RF pad and net, vendor-basis text, expected board-space polygon,
-required copper layers, and required keepout restrictions. A native-version
-PCB probe would compare the authored polygon with rule-area geometry; native
-DRC would remain responsible for copper-rule violations. Default disposition
-would be `REVIEW`, with project policy able to select `block` or `off` and an
-exact fingerprint ignore. Synthetic controls must include missing and
-undersized areas, incomplete layer coverage, wrong restrictions, a moved or
-changed module, a DNP module, and an explicitly mapped external antenna. This
-was a source-audit note about the candidate evaluation boundary. LINT-096
-subsequently implemented a narrower project-authored native rule-area
-signature regression; it does not establish vendor antenna coverage or
-validate RF-module placement. No candidate code or dependency was copied, and
-no kicad-happy runtime trial is claimed here.
+The local candidate is tracked as proposed LINT-097: an opt-in, project-authored
+map of an exact module footprint, RF pad and net, vendor-basis text,
+module-local keepout polygon, required copper layers, and required rule-area
+restrictions. The native PCB probe must capture footprint transforms so the
+module-local polygon can be compared with the observed board-space rule area;
+native DRC remains responsible for copper-rule violations. Default
+disposition would be `REVIEW`, with project policy able to select `block` or
+`off` and an exact fingerprint ignore. Synthetic controls must include missing
+and undersized areas, incomplete layer coverage, wrong restrictions, a moved
+or changed module, a DNP module, and an explicitly mapped external antenna.
+LINT-096 implements a narrower project-authored native rule-area signature
+regression; it does not establish vendor antenna coverage or validate
+RF-module placement. No candidate code or dependency was copied, and no
+kicad-happy runtime trial is claimed here.
 
 These candidates were transcribed from public domain-detector descriptions
 reviewed on 2026-10-01. They need exact cohort revision pins and isolated

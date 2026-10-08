@@ -36,9 +36,9 @@ origin before the suite; tests do not prepend source directories to `PYTHONPATH`
 The installed-wheel rehearsal runs separately to prove packaging without editable imports.
 
 Tests must not depend on private designs, hardware, provider credentials, or
-network access. The parts assistant tests open a local loopback server; restricted
-test environments must allow that local socket. Native acceptance runs separately
-against the project's approved KiCad toolchain.
+network access. The parts assistant HTTP tests use a local loopback server and
+skip with an explicit reason when the environment denies local socket binding.
+Native acceptance runs separately against the project's approved KiCad toolchain.
 
 The complete package gate also checks source and wheel distributions, the CLI/MCP
 surface declarations, and an installed wheel against external project layouts:

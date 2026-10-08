@@ -391,16 +391,25 @@ def test_bundle_selector_must_not_include_unmapped_pads() -> None:
 
 
 def test_native_drc_fixture_report_adapter_extracts_typed_fields(tmp_path: Path) -> None:
+    violations = [
+        {
+            "type": "skew_out_of_range",
+            "severity": "error",
+            "items": [{"uuid": "synthetic-skew", "position": {"x": 10, "y": 20}}],
+        },
+        {
+            "type": "length_out_of_range",
+            "severity": "error",
+            "items": [{"uuid": "synthetic-length", "position": {"x": 30, "y": 40}}],
+        },
+    ]
     report_path = tmp_path / "control.json"
     report_path.write_text(
         json.dumps(
             {
                 "kicad_version": "10.0.5",
                 "source": "/output/control.kicad_pcb",
-                "violations": [
-                    {"type": "skew_out_of_range"},
-                    {"type": "length_out_of_range"},
-                ],
+                "violations": violations,
                 "ignored_checks": [],
             }
         ),
@@ -412,6 +421,40 @@ def test_native_drc_fixture_report_adapter_extracts_typed_fields(tmp_path: Path)
     assert report.kicad_version == "10.0.5"
     assert report.source == "/output/control.kicad_pcb"
     assert report.violation_types == ("length_out_of_range", "skew_out_of_range")
+    assert len(report.violation_records_sha256) == 64
+
+    reordered_path = tmp_path / "reordered.json"
+    reordered_path.write_text(
+        json.dumps(
+            {
+                "kicad_version": "10.0.5",
+                "source": "/output/control.kicad_pcb",
+                "violations": list(reversed(violations)),
+            }
+        ),
+        encoding="utf-8",
+    )
+    reordered = read_native_pcb_drc_fixture_report(reordered_path)
+    assert reordered.violation_records_sha256 == report.violation_records_sha256
+
+    changed_path = tmp_path / "changed.json"
+    changed_violations = [dict(item) for item in violations]
+    changed_violations[0] = {
+        **changed_violations[0],
+        "items": [{"uuid": "synthetic-skew", "position": {"x": 11, "y": 20}}],
+    }
+    changed_path.write_text(
+        json.dumps(
+            {
+                "kicad_version": "10.0.5",
+                "source": "/output/control.kicad_pcb",
+                "violations": changed_violations,
+            }
+        ),
+        encoding="utf-8",
+    )
+    changed = read_native_pcb_drc_fixture_report(changed_path)
+    assert changed.violation_records_sha256 != report.violation_records_sha256
 
 
 def test_map_order_and_native_rule_order_are_stable() -> None:

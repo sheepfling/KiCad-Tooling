@@ -94,6 +94,7 @@ class NativePcbDrcFixtureReport:
     kicad_version: str
     source: str
     violation_types: tuple[str, ...]
+    violation_records_sha256: str
 
 
 def _length_nm(value: str) -> int:
@@ -322,6 +323,7 @@ def read_native_pcb_drc_fixture_report(path: Path) -> NativePcbDrcFixtureReport:
     if not isinstance(violations, list):
         raise TypeError(f"{path}: native DRC violations must be a list")
     violation_types: list[str] = []
+    canonical_violations: list[str] = []
     for index, raw_item in enumerate(cast(list[object], violations)):
         if not isinstance(raw_item, dict):
             raise TypeError(f"{path}: native DRC violation {index} must be an object")
@@ -330,10 +332,17 @@ def read_native_pcb_drc_fixture_report(path: Path) -> NativePcbDrcFixtureReport:
         if not isinstance(violation_type, str) or not violation_type.strip():
             raise TypeError(f"{path}: native DRC violation {index} has no type")
         violation_types.append(violation_type)
+        canonical_violations.append(
+            json.dumps(item, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        )
+    violation_payload = json.dumps(
+        sorted(canonical_violations), ensure_ascii=False, separators=(",", ":")
+    ).encode("utf-8")
     return NativePcbDrcFixtureReport(
         kicad_version=version,
         source=source,
         violation_types=tuple(sorted(violation_types)),
+        violation_records_sha256=hashlib.sha256(violation_payload).hexdigest(),
     )
 
 

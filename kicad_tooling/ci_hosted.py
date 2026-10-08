@@ -10711,7 +10711,7 @@ def pcb_signal_path_drc_fixture_lane(
         for kind, suffix in (("board", "kicad_pcb"), ("rules", "kicad_dru"))
     }
     target_types = {"length_out_of_range", "skew_out_of_range"}
-    observed: dict[str, dict[str, tuple[tuple[str, ...], int]]] = {}
+    observed: dict[str, dict[str, tuple[tuple[str, ...], str, int]]] = {}
     report_hashes: dict[str, str] = {}
     for case in ("control", "fault", "ignored"):
         observed[case] = {}
@@ -10731,15 +10731,16 @@ def pcb_signal_path_drc_fixture_lane(
                 raise ValueError(f"Native signal-path {case} DRC has an unexpected exit code")
             observed[case][run] = (
                 report.violation_types,
+                report.violation_records_sha256,
                 exit_code,
             )
 
         if observed[case]["first"] != observed[case]["repeat"]:
             raise ValueError(f"Repeated native signal-path {case} DRC findings changed")
 
-    control_types, control_exit = observed["control"]["first"]
-    fault_types, fault_exit = observed["fault"]["first"]
-    ignored_types, ignored_exit = observed["ignored"]["first"]
+    control_types, control_records_sha256, control_exit = observed["control"]["first"]
+    fault_types, fault_records_sha256, fault_exit = observed["fault"]["first"]
+    ignored_types, ignored_records_sha256, ignored_exit = observed["ignored"]["first"]
     if control_exit != 0 or target_types & set(control_types):
         raise ValueError(f"Native signal-path control produced target findings: {control_types}")
     if fault_exit != 5 or not target_types <= set(fault_types):
@@ -10762,6 +10763,9 @@ def pcb_signal_path_drc_fixture_lane(
         ignored_exit_code=ignored_exit,
         expected_findings=",".join(sorted(target_types)),
         repeatable="true",
+        control_violation_records_sha256=control_records_sha256,
+        fault_violation_records_sha256=fault_records_sha256,
+        ignored_violation_records_sha256=ignored_records_sha256,
         artifact_directory=output.relative_to(root).as_posix(),
         control_board_sha256=source_hashes["control_board"],
         control_rules_sha256=source_hashes["control_rules"],
