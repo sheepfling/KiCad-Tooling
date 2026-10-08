@@ -3454,9 +3454,14 @@ is not a reason by itself to expand its scope or change its default policy.
   distinct-net control schematics are source-hashed. Typed tests cover policy,
   exact ignore, DNP, incomplete, multi-pin, open, ambiguous, and unsupported
   switch identities; order-reversal stability and a one-switch net split are
-  metamorphic controls. CLI/MCP parity and the shared two-pin native fixture
-  lane are wired for exact KiCad 10.0.0/10.0.5 exports. Native acceptance is
-  pending the next tagged GitHub package run.
+  metamorphic controls. CLI/MCP parity passed, and the tagged GitHub package
+  run `37785605719` passed the shared two-pin native fixture lane on the
+  digest-pinned KiCad 10.0.0 and 10.0.5 images. The lane exported all 14
+  tooling-owned fault/control schematics twice and matched expected lint
+  statuses, including the switch same-net fault and distinct-net control. The
+  full package acceptance and all portable preview jobs passed. These are
+  synthetic native-export checks; they do not establish physical switch state,
+  footprint mapping, assembly population, or PCB continuity.
 
 ### P2 — PCB geometry and schematic review assistance
 
