@@ -3418,7 +3418,10 @@ is not a reason by itself to expand its scope or change its default policy.
   LINT-089. It does not duplicate the cohort's broad singleton-net finding;
   independent fault/control tests show the trigger is the native electrical
   pin classification.
-- **Remaining:** Await the RC9 exact-version native and package acceptance.
+- **Acceptance:** GitHub run `37777586540` for `v0.5.0rc9` passed the pinned
+  KiCad 10.0.0 and 10.0.5 fixture lanes. Both versions repeated native exports
+  and produced REVIEW for the fault and no-connect cases, with PASS for the
+  connected and DNP controls.
 
 ### P2 — PCB geometry and schematic review assistance
 
