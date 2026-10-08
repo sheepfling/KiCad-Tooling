@@ -3275,6 +3275,51 @@ is not a reason by itself to expand its scope or change its default policy.
   exports run through `NativeConnectorReturnFixtureTests` in GitHub CI; the
   tag workflow records their exact-version result.
 
+#### LINT-090 — USB-C port-side VBUS capacitance contract
+
+- **Status:** Implemented as an explicit per-port disposition in the typed
+  USB-C electrical contract. A required declaration binds each fitted
+  capacitor by reference, symbol, footprint, pin inventory, and exact VBUS/return
+  net assignments, then compares the nominal total to project-authored
+  inclusive limits. `pending` remains `NOT_CONFIGURED`; `not_applicable`
+  requires a reason. The current native fault/control fixtures are tooling-owned
+  and synthetic; their digest-pinned KiCad 10.0.0/10.0.5 GitHub run is pending.
+- **Inspiration:** The kicad-happy USB checks include UC-004 for undersized
+  VBUS capacitance ([candidate releases][happy-uc-releases]). The local
+  baseline had USB-C CC, VBUS path, and protection checks but no port-side VBUS
+  capacitance comparison. This implementation uses the candidate as a gap
+  signal, not as copied code or a universal rule.
+- **Predicate:** For a configured USB-C port with `vbus_capacitance.mode` set
+  to `required`, every authored capacitor must exist exactly once, be fitted,
+  match its symbol and footprint, expose the exact two-pin native inventory,
+  assign its pins to the authored port VBUS and ground nets, and have a
+  supported nominal capacitance value. The nominal values are summed in nF and
+  compared to the authored inclusive range. An additional fitted capacitor
+  candidate touching port-side VBUS must be mapped or the check fails.
+- **Boundary:** The project supplies the source, applicability decision, and
+  numeric limits; the tooling does not provide a Type-C threshold or infer a
+  requirement from net names. A project may cite the applicable revision and
+  section of its approved source, such as the
+  [USB-IF Type-C specification release selected by the project][usb-c-spec-release].
+  A passing result does not establish USB
+  compliance, tolerance or bias derating, transient response, source-state
+  behavior, placement, copper continuity, or hardware acceptance. Capacitors
+  on another VBUS domain are outside this port-side inventory. A reviewer may
+  choose `not_applicable` only with a project-owned reason.
+- **Evidence:** Synthetic fault/control schematics cover 2.2 uF below a
+  4500–5000 nF window and 4.7 uF inside it. Focused unit cases also cover
+  missing and extra inventory items, DNP, wrong identity, wrong net, unsupported
+  values, pending, and not-applicable. CLI and MCP invoke the same typed
+  electrical service, with a parity test for pass and under-range fault. The
+  native acceptance lane repeats both schematics and compares normalized
+  netlists before running the same check; source hashes are pinned in
+  `NativeUsbCPortFixtureTests`. The synthetic sources and evidence boundary are
+  documented in the [fixture README][usb-cap-fixture-readme].
+- **Remaining:** The exact-version native result and full package acceptance
+  are recorded by GitHub Actions. Project adoption still requires the owner to
+  cite and approve the actual limit and port applicability. No private project
+  source or requirement was used.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-020 — Decoupling-capacitor proximity and connection evidence
@@ -8451,6 +8496,9 @@ quality, or first-article continuity.
 [happy-datasheets]: <https://github.com/aklofas/kicad-happy#-datasheets--sync-and-extract>
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
+[happy-uc-releases]: https://github.com/aklofas/kicad-happy/releases
+[usb-c-spec-release]: https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25
+[usb-cap-fixture-readme]: ../tests/fixtures/design_lint/usb-c-vbus-capacitance-native/README.md
 [happy-pcb-methodology]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/methodology_pcb.md
 [happy-cross-verify]: https://github.com/aklofas/kicad-happy/blob/main/release-notes.md
 [kicad-skills-pcb]: <https://github.com/sabas0ba/kicad_skills/blob/main/docs/guides/kicad-pcb-review.md>

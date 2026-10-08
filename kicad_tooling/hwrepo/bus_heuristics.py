@@ -7,6 +7,7 @@ import json
 import math
 import re
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Literal
 
 from .connector_pins import power_function_key
@@ -36,6 +37,7 @@ from .models import (
     UsbCAnalysis,
     UsbCcResistorAttachment,
     UsbCProtectionAnalysis,
+    UsbCVbusCapacitanceRequirement,
     UsbCVbusPathRequirement,
 )
 from .return_nets import is_return_like_net_name
@@ -1496,6 +1498,176 @@ def _usb_c_vbus_path_check(
     )
 
 
+def usb_c_vbus_capacitance_check(
+    requirement: UsbCVbusCapacitanceRequirement,
+    *,
+    vbus_net: str,
+    ground_net: str,
+    observed: NetlistContract,
+    check_id: str,
+) -> ElectricalCheck:
+    """Compare mapped nominal port-side capacitance with project-authored limits."""
+    issues: list[str] = []
+    expected_nets = {vbus_net.casefold(), ground_net.casefold()}
+    if len(expected_nets) != 2:
+        return ElectricalCheck(
+            id=check_id,
+            status="FAIL",
+            detail="The authored VBUS and ground nets are not distinct.",
+        )
+
+    pin_nets: dict[str, set[str]] = {}
+    for net, pins in observed.nets.items():
+        for pin in pins:
+            pin_nets.setdefault(pin.casefold(), set()).add(net)
+
+    mapped_references = {item.reference.casefold() for item in requirement.capacitors}
+    dnp = {reference.casefold() for reference in observed.dnp_components}
+    component_index: dict[str, list[tuple[str, ComponentContract]]] = {}
+    for reference, component in observed.components.items():
+        component_index.setdefault(reference.casefold(), []).append((reference, component))
+    symbol_index: dict[str, list[str]] = {}
+    for reference, symbol in observed.component_symbols.items():
+        symbol_index.setdefault(reference.casefold(), []).append(symbol)
+    inventory_index: dict[str, list[tuple[str, ...]]] = {}
+    for reference, numbers in observed.component_pin_numbers.items():
+        inventory_index.setdefault(reference.casefold(), []).append(
+            tuple(str(number) for number in numbers)
+        )
+
+    total_pf = Decimal(0)
+    complete_values = True
+    for capacitor in requirement.capacitors:
+        key = capacitor.reference.casefold()
+        matches = component_index.get(key, [])
+        if len(matches) != 1:
+            issues.append(
+                f"{capacitor.reference} is "
+                + ("absent" if not matches else "ambiguous")
+                + " in the native netlist"
+            )
+            complete_values = False
+            continue
+        reference, component = matches[0]
+        if key in dnp:
+            issues.append(f"{reference} is DNP but the VBUS capacitance map requires it fitted")
+
+        symbols = symbol_index.get(key, [])
+        if len(symbols) != 1 or symbols[0] != capacitor.symbol:
+            actual = symbols[0] if len(symbols) == 1 else "<unknown>"
+            issues.append(f"{reference} symbol is {actual}; expected {capacitor.symbol}")
+        if component.footprint != capacitor.footprint:
+            issues.append(
+                f"{reference} footprint is {component.footprint or '<empty>'}; "
+                f"expected {capacitor.footprint}"
+            )
+
+        inventories = inventory_index.get(key, [])
+        expected_pins = {item.pin.rsplit(".", 1)[1].casefold() for item in capacitor.pins}
+        if len(inventories) != 1:
+            issues.append(
+                f"{reference} native pin inventory is "
+                + ("missing" if not inventories else "ambiguous")
+            )
+        else:
+            actual_pins = {number.casefold() for number in inventories[0]}
+            if actual_pins != expected_pins:
+                issues.append(
+                    f"{reference} native pin inventory is {sorted(actual_pins)}; "
+                    f"expected {sorted(expected_pins)}"
+                )
+
+        assigned_nets: set[str] = set()
+        for assignment in capacitor.pins:
+            expected_net = assignment.net.casefold()
+            if expected_net not in expected_nets:
+                issues.append(
+                    f"{assignment.pin} maps to {assignment.net}; expected the port VBUS or ground net"
+                )
+            actual = pin_nets.get(assignment.pin.casefold(), set())
+            if actual != {assignment.net}:
+                rendered = ", ".join(sorted(actual)) if actual else "unconnected"
+                issues.append(
+                    f"{assignment.pin} is assigned to {rendered}; expected only {assignment.net}"
+                )
+            assigned_nets.update(net.casefold() for net in actual)
+        if assigned_nets != expected_nets:
+            issues.append(f"{reference} does not span exactly {vbus_net} and {ground_net}")
+
+        capacitance_pf = parse_capacitance_pf(component.value)
+        if capacitance_pf is None:
+            issues.append(f"{reference} value {component.value!r} is not a supported capacitance")
+            complete_values = False
+        else:
+            total_pf += capacitance_pf
+
+    for key, matches in sorted(component_index.items()):
+        if key in mapped_references or key in dnp or len(matches) != 1:
+            continue
+        reference, _component = matches[0]
+        symbols = symbol_index.get(key, [])
+        symbol_suggests_capacitor = len(symbols) == 1 and (
+            "capacitor" in symbols[0].rsplit(":", 1)[-1].casefold()
+            or symbols[0].rsplit(":", 1)[-1].casefold() in {"c", "cp"}
+            or symbols[0].rsplit(":", 1)[-1].casefold().startswith(("c_", "cp_"))
+        )
+        reference_suggests_capacitor = key.startswith(("c", "cp"))
+        if not (symbol_suggests_capacitor or reference_suggests_capacitor):
+            continue
+        inventories = inventory_index.get(key, [])
+        relevant_assigned_pins = [
+            pin
+            for pin, nets in pin_nets.items()
+            if pin.rsplit(".", 1)[0] == key
+            and any(net.casefold() == vbus_net.casefold() for net in nets)
+        ]
+        if not relevant_assigned_pins:
+            continue
+        if len(inventories) != 1:
+            issues.append(
+                f"Unmapped capacitor candidate {reference} touches the port VBUS net "
+                "but its native pin inventory is unavailable"
+            )
+            continue
+        if len(inventories[0]) != 2:
+            issues.append(
+                f"Unmapped capacitor candidate {reference} touches the port VBUS net "
+                "but is not a two-pin component"
+            )
+            continue
+        issues.append(
+            f"Unmapped capacitor candidate {reference} touches the port VBUS net; "
+            "include it in the reviewed capacitance inventory"
+        )
+
+    total_nf = total_pf / Decimal(1000)
+    minimum_nf = Decimal(str(requirement.minimum_nf))
+    maximum_nf = Decimal(str(requirement.maximum_nf))
+    total_text = format(total_nf.normalize(), "f")
+    minimum_text = format(minimum_nf.normalize(), "f")
+    maximum_text = format(maximum_nf.normalize(), "f")
+    if complete_values and not minimum_nf <= total_nf <= maximum_nf:
+        issues.append(
+            f"Mapped nominal total is {total_text} nF; expected {minimum_text}–{maximum_text} nF"
+        )
+
+    return ElectricalCheck(
+        id=check_id,
+        status="FAIL" if issues else "PASS",
+        observed=float(total_nf) if complete_values else None,
+        unit="nF",
+        detail=(
+            "; ".join(issues)
+            if issues
+            else (
+                f"Mapped nominal total {total_text} nF is within the "
+                f"project-authored {minimum_text}–{maximum_text} nF range "
+                f"({requirement.basis})."
+            )
+        ),
+    )
+
+
 def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[ElectricalCheck, ...]:
     """Compare authored USB-C CC, connector pin, component, and protection facts."""
     pin_nets: dict[str, set[str]] = {}
@@ -1558,6 +1730,32 @@ def usb_c_checks(spec: UsbCAnalysis, observed: NetlistContract) -> tuple[Electri
                     port.vbus_path,
                     observed,
                     f"{base}/vbus-path/{port.vbus_path.id}",
+                )
+            )
+        if isinstance(port.vbus_capacitance, UsbCVbusCapacitanceRequirement):
+            results.append(
+                usb_c_vbus_capacitance_check(
+                    port.vbus_capacitance,
+                    vbus_net=port.vbus_net,
+                    ground_net=port.ground_net,
+                    observed=observed,
+                    check_id=f"{base}/vbus-capacitance",
+                )
+            )
+        elif isinstance(port.vbus_capacitance, AnalysisPending):
+            results.append(
+                ElectricalCheck(
+                    id=f"{base}/vbus-capacitance",
+                    status="NOT_CONFIGURED",
+                    detail=port.vbus_capacitance.reason,
+                )
+            )
+        else:
+            results.append(
+                ElectricalCheck(
+                    id=f"{base}/vbus-capacitance",
+                    status="NOT_APPLICABLE",
+                    detail=port.vbus_capacitance.reason,
                 )
             )
 

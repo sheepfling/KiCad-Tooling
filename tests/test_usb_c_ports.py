@@ -82,6 +82,10 @@ def usb_c_analysis(connector: str = "J1") -> UsbCAnalysis:
                 ),
                 ground_net="GND",
                 ground_pins=(f"{connector}.2", "U1.5"),
+                vbus_capacitance=AnalysisNotApplicable(
+                    mode="not_applicable",
+                    reason="Synthetic roster test does not assess port-side capacitance.",
+                ),
                 source_rail="+5V",
                 protection=AnalysisNotApplicable(
                     mode="not_applicable", reason="Synthetic protection is tested separately."

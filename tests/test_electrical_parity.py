@@ -535,6 +535,10 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             '<libsource lib="Synthetic" part="CanMidpointCapacitor"/>'
             '<units><unit name="A"><pins><pin num="1"/><pin num="2"/></pins></unit></units>'
             "</comp>"
+            '<comp ref="C2"><value>4.7uF</value><footprint>Synthetic:CAP</footprint>'
+            '<libsource lib="Device" part="C"/>'
+            '<units><unit name="A"><pins><pin num="1"/><pin num="2"/></pins></unit></units>'
+            "</comp>"
             '<comp ref="J9"><value>USB-C receptacle</value>'
             '<libsource lib="Synthetic" part="UsbCReceptacle"/>'
             '<units><unit name="A"><pins><pin num="1"/><pin num="2"/><pin num="3"/>'
@@ -581,6 +585,9 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             '<libpart lib="Synthetic" part="CanMidpointCapacitor"><pins>'
             '<pin num="1" name="MIDPOINT" type="passive"/>'
             '<pin num="2" name="GND" type="passive"/></pins></libpart>'
+            '<libpart lib="Device" part="C"><pins>'
+            '<pin num="1" name="~" type="passive"/>'
+            '<pin num="2" name="~" type="passive"/></pins></libpart>'
             '<libpart lib="Synthetic" part="UsbCReceptacle"><pins>'
             '<pin num="1" name="VBUS" type="passive"/>'
             '<pin num="2" name="GND" type="passive"/>'
@@ -621,10 +628,11 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             '<net name="CC1"><node ref="J9" pin="4"/><node ref="D9" pin="1"/>'
             '<node ref="R6" pin="1"/></net>'
             '<net name="CC2"><node ref="J9" pin="5"/><node ref="R7" pin="1"/></net>'
-            '<net name="VBUS_PORT"><node ref="J9" pin="1"/></net>'
+            '<net name="VBUS_PORT"><node ref="J9" pin="1"/><node ref="C2" pin="1"/></net>'
             '<net name="VBUS_SYSTEM"><node ref="U9" pin="1"/></net>'
             '<net name="GND"><node ref="J9" pin="2"/><node ref="J9" pin="3"/>'
-            '<node ref="U9" pin="5"/><node ref="D9" pin="2"/><node ref="C1" pin="2"/></net>'
+            '<node ref="U9" pin="5"/><node ref="D9" pin="2"/><node ref="C1" pin="2"/>'
+            '<node ref="C2" pin="2"/></net>'
             '<net name="+5V"><node ref="R6" pin="2"/><node ref="R7" pin="2"/></net>'
             '<net name="SPI_SCK"><node ref="U10" pin="1"/><node ref="U11" pin="1"/>'
             '<node ref="U12" pin="1"/></net>'
@@ -656,6 +664,9 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                             board_component="U9",
                             protection_reference="D9",
                             resistor_references=("R6", "R7"),
+                            vbus_capacitance=True,
+                            vbus_capacitor_reference="C2",
+                            vbus_capacitor_footprint="Synthetic:CAP",
                         ),
                         "spi": spi,
                     }
@@ -718,6 +729,8 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(checks["usb-c/host-port/connector-pins"].status, "PASS")
         self.assertEqual(checks["usb-c/host-port/cc1-attachment"].status, "PASS")
         self.assertEqual(checks["usb-c/host-port/protection/D9"].status, "PASS")
+        self.assertEqual(checks["usb-c/host-port/vbus-capacitance"].status, "PASS")
+        self.assertEqual(checks["usb-c/host-port/vbus-capacitance"].observed, 4_700)
 
         self.assertEqual(checks["spi/control/controller-identity"].status, "PASS")
         self.assertEqual(checks["spi/control/device/sensor/route/sck"].status, "PASS")
@@ -728,6 +741,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             .replace('<comp ref="R2"><value>4.7k', '<comp ref="R2"><value>1k')
             .replace('<comp ref="R4"><value>60R', '<comp ref="R4"><value>100R')
             .replace('<comp ref="C1"><value>100pF', '<comp ref="C1"><value>120pF')
+            .replace('<comp ref="C2"><value>4.7uF', '<comp ref="C2"><value>2.2uF')
             .replace('<comp ref="R6"><value>56k', '<comp ref="R6"><value>100k')
             .replace(
                 '<net name="SPI_CS1"><node ref="U10" pin="5"/><node ref="U12" pin="4"/></net>',
@@ -785,6 +799,8 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             fault_checks["can-termination/fieldbus/local/midpoint-capacitor"].status, "FAIL"
         )
         self.assertEqual(fault_checks["usb-c/host-port/cc1-attachment"].status, "FAIL")
+        self.assertEqual(fault_checks["usb-c/host-port/vbus-capacitance"].status, "FAIL")
+        self.assertEqual(fault_checks["usb-c/host-port/vbus-capacitance"].observed, 2_200)
         self.assertEqual(fault_checks["spi/control/device/memory/pins"].status, "FAIL")
 
     async def test_i2c_array_pullups_match_cli_and_mcp_for_pass_and_fault(self) -> None:

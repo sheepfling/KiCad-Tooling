@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.design_lint import _mapped_usb_c_protection_pins, cand
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
 from kicad_tooling.hwrepo.external_protection import evaluate
 from kicad_tooling.hwrepo.models import (
+    AnalysisNotApplicable,
     ComponentContract,
     ConnectorCoverageEntry,
     ConnectorCoverageReport,
@@ -90,6 +91,10 @@ def usb_c_protection_requirement() -> UsbCAnalysis:
                 ),
                 ground_net="GND",
                 ground_pins=("J1.2", "U1.5"),
+                vbus_capacitance=AnalysisNotApplicable(
+                    mode="not_applicable",
+                    reason="Synthetic protection test does not assess port-side capacitance.",
+                ),
                 source_rail="+5V",
                 protection=protection,
             ),

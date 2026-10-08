@@ -3512,6 +3512,8 @@ class NativeUsbCPortFixtureTests(unittest.TestCase):
             "connector": "42935f2e21f3b86acc33a87916072b466d5c75b61cddd472a40fb6219d59ce9a",
             "source-rp-control": "b9913fa1e44adaaa3837257dc0756bcb39411b9bb79dcd1568c1a264248a1f8f",
             "sink-rd-control": "5ac40420e4adcc7f2005e1808f1ebdeb765fd4907113bfa5be657407d2d6d789",
+            "vbus-capacitance-control": "d664fe8ece994d847c133187c14bcc279c2466eb917ddddddac4faa22c17c6ca",
+            "vbus-capacitance-fault": "c126f173af020b3aa2eeebf74657064685e87eac684b4b197a15d82992970560",
         }
         for project, version in expected_versions.items():
             with self.subTest(project=project):
@@ -3534,6 +3536,8 @@ class NativeUsbCPortFixtureTests(unittest.TestCase):
                         "usb-c-port-fixture/mapped",
                         "usb-c-port-fixture/source-rp-control",
                         "usb-c-port-fixture/sink-rd-control",
+                        "usb-c-port-fixture/vbus-capacitance-control",
+                        "usb-c-port-fixture/vbus-capacitance-fault",
                     },
                 )
                 unmapped = results["usb-c-port-fixture/unmapped"]
@@ -3554,11 +3558,23 @@ class NativeUsbCPortFixtureTests(unittest.TestCase):
                         self.assertEqual(result["cc_pin_functions"], "J1.4=CC1;J1.5=CC2")
                         self.assertEqual(result["source_sha256"], expected_source_hashes[case])
                         self.assertEqual(result["fixture_case"], case)
+                capacitance_control = results["usb-c-port-fixture/vbus-capacitance-control"]
+                self.assertEqual(capacitance_control["status"], "PASS")
+                self.assertEqual(capacitance_control["check_status"], "PASS")
+                self.assertEqual(capacitance_control["expected_check_status"], "PASS")
+                self.assertEqual(float(capacitance_control["observed_nf"]), 4700.0)
+                capacitance_fault = results["usb-c-port-fixture/vbus-capacitance-fault"]
+                self.assertEqual(capacitance_fault["status"], "PASS")
+                self.assertEqual(capacitance_fault["check_status"], "FAIL")
+                self.assertEqual(capacitance_fault["expected_check_status"], "FAIL")
+                self.assertEqual(float(capacitance_fault["observed_nf"]), 2200.0)
                 for case, result in (
                     ("connector", unmapped),
                     ("connector", mapped),
                     ("source-rp-control", results["usb-c-port-fixture/source-rp-control"]),
                     ("sink-rd-control", results["usb-c-port-fixture/sink-rd-control"]),
+                    ("vbus-capacitance-control", capacitance_control),
+                    ("vbus-capacitance-fault", capacitance_fault),
                 ):
                     self.assertEqual(result["kicad_version"], version)
                     self.assertEqual(result["image"], expected_images[project])

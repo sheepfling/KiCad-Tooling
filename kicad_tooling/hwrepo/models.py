@@ -8786,6 +8786,46 @@ class UsbCProtectionAnalysis(StrictModel):
         return self
 
 
+class UsbCVbusCapacitorRequirement(StrictModel):
+    """One exact fitted capacitor mapped across the port-side VBUS and return nets."""
+
+    reference: Identifier
+    symbol: NonEmptyText
+    footprint: NonEmptyText
+    pins: Annotated[tuple[UsbCNetPinAssignment, UsbCNetPinAssignment], Field(min_length=2)]
+
+    @model_validator(mode="after")
+    def valid_pin_map(self) -> UsbCVbusCapacitorRequirement:
+        if len({item.pin.casefold() for item in self.pins}) != 2:
+            raise ValueError("USB-C VBUS capacitor must map two unique pins")
+        if any(
+            item.pin.rsplit(".", 1)[0].casefold() != self.reference.casefold() for item in self.pins
+        ):
+            raise ValueError("USB-C VBUS capacitor pins must belong to the named component")
+        if self.pins[0].net.casefold() == self.pins[1].net.casefold():
+            raise ValueError("USB-C VBUS capacitor pins must connect to distinct nets")
+        return self
+
+
+class UsbCVbusCapacitanceRequirement(StrictModel):
+    """Project-sourced nominal total capacitance limits for one USB-C port."""
+
+    mode: Literal["required"] = "required"
+    basis: NonEmptyText
+    minimum_nf: NonNegativeMeasure
+    maximum_nf: ElectricalPositive
+    capacitors: Annotated[tuple[UsbCVbusCapacitorRequirement, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def valid_range_and_unique_components(self) -> UsbCVbusCapacitanceRequirement:
+        if self.maximum_nf < self.minimum_nf:
+            raise ValueError("USB-C VBUS capacitance maximum is below its minimum")
+        references = [item.reference.casefold() for item in self.capacitors]
+        if len(set(references)) != len(references):
+            raise ValueError("USB-C VBUS capacitor references must be unique")
+        return self
+
+
 class UsbCPortRequirement(StrictModel):
     id: Identifier
     basis: NonEmptyText
@@ -8797,6 +8837,10 @@ class UsbCPortRequirement(StrictModel):
     vbus_pins: Annotated[tuple[UsbCNetPinAssignment, ...], Field(min_length=2)]
     ground_net: NetName
     ground_pins: Annotated[tuple[Reference, ...], Field(min_length=1)]
+    vbus_capacitance: Annotated[
+        UsbCVbusCapacitanceRequirement | AnalysisNotApplicable | AnalysisPending,
+        Field(discriminator="mode"),
+    ]
     source_rail: NetName | None = None
     controller: UsbCControllerRequirement | None = None
     vbus_path: UsbCVbusPathRequirement | None = None
@@ -9382,9 +9426,10 @@ class ElectricalAnalysisReport(StrictModel):
         ),
         (
             "USB-C checks compare declared CC/VBUS/GND pin assignments, fitted Rp/Rd resistors, exact "
-            "controller/protection identity, and any authored VBUS component/net map; that map does not "
-            "prove device conduction or PCB/contact continuity, while controller behavior, PD and protection "
-            "performance need separate evidence."
+            "controller/protection identity, any authored VBUS component/net map, and an explicitly mapped "
+            "nominal port-side VBUS capacitance range; it does not verify capacitor derating, tolerance, "
+            "dynamic behavior, device conduction, or PCB/contact continuity, while controller behavior, "
+            "PD and protection performance need separate evidence."
         ),
         (
             "Direct serial voltage checks compare authored guaranteed output ranges with receiver thresholds "

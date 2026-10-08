@@ -2656,8 +2656,11 @@ Add a reviewed `usb_c` section to project-owned `tests/electrical.json` when a
 USB-C port needs a deterministic schematic regression check. Each port declares
 its role, connector CC pins/nets, resistor Rp/Rd ranges or exact controller pin
 mapping, VBUS pin-to-net assignments on the connector and board sides, ground
-pins, and whether exact protection components are required, pending, or not
-applicable. For example, a source port with discrete Rp resistors can declare:
+pins, an explicit VBUS capacitance disposition, and whether exact protection
+components are required, pending, or not applicable. The example's capacitance
+range is synthetic and is not a USB-C default; each project must cite its own
+approved source for an applicable limit. For example, a source port with
+discrete Rp resistors can declare:
 
 ```json
 {
@@ -2701,6 +2704,23 @@ applicable. For example, a source port with discrete Rp resistors can declare:
         ],
         "ground_net": "GND",
         "ground_pins": ["J1.2", "J1.3", "U1.5"],
+        "vbus_capacitance": {
+          "mode": "required",
+          "basis": "Synthetic reviewed port-side capacitance requirement",
+          "minimum_nf": 4500,
+          "maximum_nf": 5000,
+          "capacitors": [
+            {
+              "reference": "C1",
+              "symbol": "Device:C",
+              "footprint": "Capacitor_SMD:C_0603_1608Metric",
+              "pins": [
+                {"pin": "C1.1", "net": "VBUS_PORT"},
+                {"pin": "C1.2", "net": "GND"}
+              ]
+            }
+          ]
+        },
         "source_rail": "+5V",
         "protection": {
           "mode": "not_applicable",
@@ -2714,11 +2734,16 @@ applicable. For example, a source port with discrete Rp resistors can declare:
 
 The values and topology are examples, not universal USB-C requirements. The
 check compares exact pin assignments, fitted resistor references and nominal
-ranges, controller/protection identity, footprints, and declared protection
-pin nets with the current source-bound native netlist. A controller mapping
-proves only the symbol/footprint identity and that its named pins map to CC1
-and CC2; it does not inspect firmware, straps, registers, or internal Rp/Rd
-behavior. VBUS entries verify the named pins' net assignments separately on
+ranges, controller/protection identity, footprints, declared protection
+pin nets, and the required nominal VBUS capacitance inventory with the current
+source-bound native netlist. The capacitance check sums explicitly mapped
+fitted capacitor nominal values, verifies each symbol, footprint, pin inventory
+and pin-to-net assignment, and rejects additional fitted capacitor candidates
+touching the port-side VBUS net. It compares the sum to the project's inclusive
+minimum and maximum; the tooling supplies no universal threshold. A controller
+mapping proves only the symbol/footprint identity and that its named pins map
+to CC1 and CC2; it does not inspect firmware, straps, registers, or internal
+Rp/Rd behavior. VBUS entries verify the named pins' net assignments separately on
 each side; they do not prove continuity through a fuse, switch, connector
 contact, or board copper. Current capacity, orientation behavior, PD
 negotiation, remote equipment, protection performance, and compliance remain
@@ -2779,10 +2804,16 @@ does not make a power-path claim and does not change the existing endpoint pin
 assignment checks.
 
 Use `{"mode":"pending","reason":"..."}` to keep an unanswered port
-requirement visible and prevent the electrical lane from passing. Use
-`{"mode":"not_applicable","reason":"..."}` only when the project has no
-USB-C port requirement for this check. Older contracts without `usb_c` remain
-readable and make no USB-C role claim.
+capacitance disposition visible and prevent the electrical lane from passing.
+Use `{"mode":"not_applicable","reason":"..."}` only when the project has
+reviewed why this port has no applicable capacitance requirement. Each
+configured USB-C port must state one of `required`, `pending`, or
+`not_applicable`; there is no inferred value or default disposition. A
+capacitance mismatch is a source-bound contract failure, not a USB compliance
+verdict. The check does not account for capacitor tolerance, DC-bias derating,
+temperature, frequency, transients, placement, PCB copper, or dynamic source
+states. Older contracts without `usb_c` remain readable and make no USB-C role
+claim.
 
 ## Require an SPI controller and device map
 

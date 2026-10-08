@@ -5576,6 +5576,7 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     import hashlib
     import os
 
+    from .hwrepo.bus_heuristics import usb_c_vbus_capacitance_check
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
     from .hwrepo.electrical import selected_config
@@ -5591,6 +5592,8 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         UsbCcResistorAttachment,
         UsbCNetPinAssignment,
         UsbCPortRequirement,
+        UsbCVbusCapacitanceRequirement,
+        UsbCVbusCapacitorRequirement,
     )
     from .hwrepo.usb_c_ports import UsbCPortRosterContext
     from .validate import read_netlist
@@ -5608,6 +5611,10 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         "connector": fixture_root / "usb-c-port-native/connector.kicad_sch",
         "source-rp-control": fixture_root / "cohort-usb-c-roles/source-rp-control.kicad_sch",
         "sink-rd-control": fixture_root / "cohort-usb-c-roles/sink-rd-control.kicad_sch",
+        "vbus-capacitance-control": (
+            fixture_root / "usb-c-vbus-capacitance-native/control.kicad_sch"
+        ),
+        "vbus-capacitance-fault": (fixture_root / "usb-c-vbus-capacitance-native/fault.kicad_sch"),
     }
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     scratch = Path(tempfile.mkdtemp(prefix=f"usb-c-port-{project}-", dir=log.directory.resolve()))
@@ -5629,7 +5636,8 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in connector source-rp-control sink-rd-control; do\n"
+        "for case in connector source-rp-control sink-rd-control "
+        "vbus-capacitance-control vbus-capacitance-fault; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -5779,6 +5787,79 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     ):
         raise ValueError("Native USB-C sink control no longer has its synthetic 5.1 kΩ Rd paths")
 
+    capacitance_requirement = UsbCVbusCapacitanceRequirement(
+        basis="Synthetic fixture contract with an explicit nominal capacitance window",
+        minimum_nf=4500,
+        maximum_nf=5000,
+        capacitors=(
+            UsbCVbusCapacitorRequirement(
+                reference="C1",
+                symbol="Device:C",
+                footprint="Synthetic:C_0603",
+                pins=(
+                    UsbCNetPinAssignment(pin="C1.1", net="VBUS_PORT"),
+                    UsbCNetPinAssignment(pin="C1.2", net="GND"),
+                ),
+            ),
+        ),
+    )
+    expected_capacitance = {
+        "vbus-capacitance-control": ("PASS", 4700.0, "4.7uF"),
+        "vbus-capacitance-fault": ("FAIL", 2200.0, "2.2uF"),
+    }
+    for case, (expected_status, expected_nf, expected_value) in expected_capacitance.items():
+        observed_capacitance = contracts[case]["first"]
+        if (
+            set(observed_capacitance.components) != {"C1"}
+            or observed_capacitance.component_symbols != {"C1": "Device:C"}
+            or observed_capacitance.components["C1"].value != expected_value
+            or observed_capacitance.components["C1"].footprint != "Synthetic:C_0603"
+            or set(observed_capacitance.component_pin_numbers.get("C1", ())) != {"1", "2"}
+            or set(observed_capacitance.nets.get("VBUS_PORT", ())) != {"C1.1"}
+            or set(observed_capacitance.nets.get("GND", ())) != {"C1.2"}
+        ):
+            raise ValueError(
+                f"Native USB-C {case} fixture changed its exact synthetic capacitor map"
+            )
+        capacitance_check = usb_c_vbus_capacitance_check(
+            capacitance_requirement,
+            vbus_net="VBUS_PORT",
+            ground_net="GND",
+            observed=observed_capacitance,
+            check_id="usb-c/native-port/vbus-capacitance",
+        )
+        observed_nf = capacitance_check.observed
+        if (
+            capacitance_check.status != expected_status
+            or observed_nf is None
+            or observed_nf != expected_nf
+        ):
+            raise ValueError(
+                f"Native USB-C {case} capacitance result changed: "
+                f"{capacitance_check.status}/{capacitance_check.observed}"
+            )
+        log.event(
+            f"usb-c-port-fixture/{case}",
+            "PASS",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+            fixture_case=case,
+            source_sha256=source_hashes[case],
+            netlist_sha256=netlist_hashes[case]["first"],
+            repeat_netlist_sha256=netlist_hashes[case]["repeat"],
+            normalized_netlist_sha256=normalized_hashes[case]["first"],
+            repeat_normalized_netlist_sha256=normalized_hashes[case]["repeat"],
+            repeatable=str(
+                normalized_hashes[case]["first"] == normalized_hashes[case]["repeat"]
+            ).lower(),
+            check_status=capacitance_check.status,
+            observed_nf=observed_nf,
+            expected_check_status=expected_status,
+            detail=capacitance_check.detail,
+        )
+
     analysis = UsbCAnalysis(
         basis="Synthetic exact native netlist comparison for USB-C roster fault/control coverage",
         ports=(
@@ -5818,6 +5899,10 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 ),
                 ground_net="GND",
                 ground_pins=("J1.2", "U1.2"),
+                vbus_capacitance=AnalysisNotApplicable(
+                    mode="not_applicable",
+                    reason="Native roster fixture does not assess port-side capacitance.",
+                ),
                 source_rail="+5V",
                 protection=AnalysisNotApplicable(
                     mode="not_applicable",

@@ -115,6 +115,8 @@ from kicad_tooling.hwrepo.models import (
     UsbCPortRequirement,
     UsbCProtectionAnalysis,
     UsbCProtectionComponentRequirement,
+    UsbCVbusCapacitanceRequirement,
+    UsbCVbusCapacitorRequirement,
     UsbCVbusPathElement,
     UsbCVbusPathRequirement,
 )
@@ -1549,6 +1551,9 @@ def usb_c_requirement(
     protection_reference: str = "D1",
     resistor_references: tuple[str, str] = ("R1", "R2"),
     vbus_path: bool = False,
+    vbus_capacitance: bool = False,
+    vbus_capacitor_reference: str = "C1",
+    vbus_capacitor_footprint: str = "Synthetic:C_0603",
 ) -> UsbCAnalysis:
     cc1_attachment = (
         UsbCcControllerAttachment(kind="controller", controller_pin=f"{controller_reference}.5")
@@ -1598,6 +1603,33 @@ def usb_c_requirement(
                     f"{connector}.2",
                     f"{connector}.3",
                     f"{board_component}.5",
+                ),
+                vbus_capacitance=(
+                    UsbCVbusCapacitanceRequirement(
+                        basis="Synthetic port-side capacitance range",
+                        minimum_nf=4_500,
+                        maximum_nf=5_000,
+                        capacitors=(
+                            UsbCVbusCapacitorRequirement(
+                                reference=vbus_capacitor_reference,
+                                symbol="Device:C",
+                                footprint=vbus_capacitor_footprint,
+                                pins=(
+                                    UsbCNetPinAssignment(
+                                        pin=f"{vbus_capacitor_reference}.1", net="VBUS_PORT"
+                                    ),
+                                    UsbCNetPinAssignment(
+                                        pin=f"{vbus_capacitor_reference}.2", net="GND"
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+                    if vbus_capacitance
+                    else AnalysisNotApplicable(
+                        mode="not_applicable",
+                        reason="This synthetic USB-C case does not assess port-side capacitance.",
+                    )
                 ),
                 source_rail="+5V" if role == "source" and not controller else None,
                 controller=(
@@ -1687,11 +1719,13 @@ def usb_c_netlist(
         connector: ComponentContract(value="Synthetic USB-C receptacle", footprint=""),
         board_component: ComponentContract(value="Synthetic system connector", footprint=""),
         protection_reference: ComponentContract(value="Synthetic protection", footprint=footprint),
+        "C1": ComponentContract(value="4.7uF", footprint="Synthetic:C_0603"),
     }
     symbols = {
         connector: "Synthetic:UsbCReceptacle",
         board_component: "Synthetic:SystemConnector",
         protection_reference: "Synthetic:UsbProtection",
+        "C1": "Device:C",
     }
     nets: dict[str, tuple[str, ...]] = {
         "CC1": (f"{connector}.4", f"{protection_reference}.1"),
@@ -1703,8 +1737,10 @@ def usb_c_netlist(
             f"{connector}.3",
             f"{board_component}.5",
             f"{protection_reference}.2",
+            "C1.2",
         ),
     }
+    nets["VBUS_PORT"] = (*nets["VBUS_PORT"], "C1.1")
     pin_functions = {
         f"{connector}.1": "VBUS",
         f"{connector}.2": "GND",
@@ -1715,11 +1751,14 @@ def usb_c_netlist(
         f"{board_component}.5": "GND",
         f"{protection_reference}.1": "CC1",
         f"{protection_reference}.2": "GND",
+        "C1.1": "1",
+        "C1.2": "2",
     }
     pin_numbers = {
         connector: ("1", "2", "3", "4", "5"),
         board_component: ("1", "5"),
         protection_reference: ("1", "2"),
+        "C1": ("1", "2"),
     }
     if vbus_path:
         components.update(
@@ -2882,7 +2921,7 @@ class ElectricalTests(unittest.TestCase):
         baseline = usb_c_netlist()
         checks = {item.id: item for item in usb_c_checks(usb_c_requirement(), baseline)}
         self.assertTrue(checks)
-        self.assertTrue(all(item.status == "PASS" for item in checks.values()))
+        self.assertTrue(all(item.status in {"PASS", "NOT_APPLICABLE"} for item in checks.values()))
         self.assertEqual(checks["usb-c/host-port/cc1-attachment"].observed, 56_000)
 
         extra_pullup = baseline.model_copy(
@@ -2975,13 +3014,154 @@ class ElectricalTests(unittest.TestCase):
         }
         self.assertEqual(wrong_footprint["usb-c/host-port/protection/D1"].status, "FAIL")
 
+    def test_usb_c_vbus_capacitance_uses_authored_limits_and_complete_exact_inventory(self) -> None:
+        spec = usb_c_requirement(vbus_capacitance=True)
+        baseline = usb_c_netlist()
+        checks = {item.id: item for item in usb_c_checks(spec, baseline)}
+        check_id = "usb-c/host-port/vbus-capacitance"
+        self.assertEqual(checks[check_id].status, "PASS")
+        self.assertEqual(checks[check_id].observed, 4_700)
+        self.assertEqual(checks[check_id].unit, "nF")
+        self.assertIn("project-authored", checks[check_id].detail)
+
+        wrong_symbol = baseline.model_copy(
+            update={"component_symbols": {**baseline.component_symbols, "C1": "Device:R"}}
+        )
+        wrong_symbol_checks = {item.id: item for item in usb_c_checks(spec, wrong_symbol)}
+        self.assertEqual(wrong_symbol_checks[check_id].status, "FAIL")
+        self.assertIn("expected Device:C", wrong_symbol_checks[check_id].detail)
+
+        wrong_footprint = baseline.model_copy(
+            update={
+                "components": {
+                    **baseline.components,
+                    "C1": ComponentContract(value="4.7uF", footprint="Synthetic:C_WRONG"),
+                }
+            }
+        )
+        wrong_footprint_checks = {item.id: item for item in usb_c_checks(spec, wrong_footprint)}
+        self.assertEqual(wrong_footprint_checks[check_id].status, "FAIL")
+        self.assertIn("expected Synthetic:C_0603", wrong_footprint_checks[check_id].detail)
+
+        wrong_pin_inventory = baseline.model_copy(
+            update={"component_pin_numbers": {**baseline.component_pin_numbers, "C1": ("1", "3")}}
+        )
+        wrong_pin_checks = {item.id: item for item in usb_c_checks(spec, wrong_pin_inventory)}
+        self.assertEqual(wrong_pin_checks[check_id].status, "FAIL")
+        self.assertIn("expected ['1', '2']", wrong_pin_checks[check_id].detail)
+
+        unsupported_value = baseline.model_copy(
+            update={
+                "components": {
+                    **baseline.components,
+                    "C1": ComponentContract(value="unknown", footprint="Synthetic:C_0603"),
+                }
+            }
+        )
+        unsupported_checks = {item.id: item for item in usb_c_checks(spec, unsupported_value)}
+        self.assertEqual(unsupported_checks[check_id].status, "FAIL")
+        self.assertIsNone(unsupported_checks[check_id].observed)
+        self.assertIn("not a supported capacitance", unsupported_checks[check_id].detail)
+
+        under_value = baseline.model_copy(
+            update={
+                "components": {
+                    **baseline.components,
+                    "C1": ComponentContract(value="2.2uF", footprint="Synthetic:C_0603"),
+                }
+            }
+        )
+        under_checks = {item.id: item for item in usb_c_checks(spec, under_value)}
+        self.assertEqual(under_checks[check_id].status, "FAIL")
+        self.assertIn("2200 nF", under_checks[check_id].detail)
+
+        missing_capacitor = baseline.model_copy(
+            update={
+                "components": {
+                    key: value for key, value in baseline.components.items() if key != "C1"
+                },
+                "component_symbols": {
+                    key: value for key, value in baseline.component_symbols.items() if key != "C1"
+                },
+                "component_pin_numbers": {
+                    key: value
+                    for key, value in baseline.component_pin_numbers.items()
+                    if key != "C1"
+                },
+                "nets": {
+                    net: tuple(pin for pin in pins if not pin.startswith("C1."))
+                    for net, pins in baseline.nets.items()
+                },
+            }
+        )
+        missing_checks = {item.id: item for item in usb_c_checks(spec, missing_capacitor)}
+        self.assertEqual(missing_checks[check_id].status, "FAIL")
+        self.assertIn("C1 is absent", missing_checks[check_id].detail)
+
+        unlisted_capacitor = baseline.model_copy(
+            update={
+                "components": {
+                    **baseline.components,
+                    "C2": ComponentContract(value="100nF", footprint="Synthetic:C_0603"),
+                },
+                "component_symbols": {**baseline.component_symbols, "C2": "Device:C"},
+                "component_pin_numbers": {
+                    **baseline.component_pin_numbers,
+                    "C2": ("1", "2"),
+                },
+                "nets": {
+                    **baseline.nets,
+                    "VBUS_PORT": (*baseline.nets["VBUS_PORT"], "C2.1"),
+                    "GND": (*baseline.nets["GND"], "C2.2"),
+                },
+            }
+        )
+        unlisted_checks = {item.id: item for item in usb_c_checks(spec, unlisted_capacitor)}
+        self.assertEqual(unlisted_checks[check_id].status, "FAIL")
+        self.assertIn("Unmapped capacitor candidate C2", unlisted_checks[check_id].detail)
+
+        dnp_checks = {item.id: item for item in usb_c_checks(spec, usb_c_netlist(dnp=("C1",)))}
+        self.assertEqual(dnp_checks[check_id].status, "FAIL")
+        self.assertIn("DNP", dnp_checks[check_id].detail)
+
+        wrong_net = baseline.model_copy(
+            update={
+                "nets": {
+                    **{
+                        net: tuple(pin for pin in pins if pin != "C1.1")
+                        for net, pins in baseline.nets.items()
+                    },
+                    "VBUS_WRONG": ("C1.1",),
+                }
+            }
+        )
+        wrong_net_checks = {item.id: item for item in usb_c_checks(spec, wrong_net)}
+        self.assertEqual(wrong_net_checks[check_id].status, "FAIL")
+        self.assertIn("C1.1 is assigned", wrong_net_checks[check_id].detail)
+
+        pending_port = spec.ports[0].model_copy(
+            update={
+                "vbus_capacitance": AnalysisPending(
+                    mode="pending", reason="Synthetic source-specific capacitance limit is pending."
+                )
+            }
+        )
+        pending = {
+            item.id: item
+            for item in usb_c_checks(spec.model_copy(update={"ports": (pending_port,)}), baseline)
+        }
+        self.assertEqual(pending[check_id].status, "NOT_CONFIGURED")
+
+        not_applicable = {item.id: item for item in usb_c_checks(usb_c_requirement(), baseline)}
+        self.assertEqual(not_applicable[check_id].status, "NOT_APPLICABLE")
+
     def test_usb_c_dual_role_checks_exact_controller_and_marks_debug_accessory_unsupported(
         self,
     ) -> None:
         spec = usb_c_requirement(role="dual_role", controller=True)
         observed = usb_c_netlist(controller=True)
         checks = {item.id: item for item in usb_c_checks(spec, observed)}
-        self.assertTrue(all(item.status == "PASS" for item in checks.values()))
+        self.assertTrue(all(item.status in {"PASS", "NOT_APPLICABLE"} for item in checks.values()))
         self.assertEqual(checks["usb-c/host-port/controller-identity"].status, "PASS")
 
         wrong_controller_pin = observed.model_copy(
@@ -3061,7 +3241,7 @@ class ElectricalTests(unittest.TestCase):
         spec = usb_c_requirement(role="sink")
         observed = usb_c_netlist(role="sink")
         checks = {item.id: item for item in usb_c_checks(spec, observed)}
-        self.assertTrue(all(item.status == "PASS" for item in checks.values()))
+        self.assertTrue(all(item.status in {"PASS", "NOT_APPLICABLE"} for item in checks.values()))
         self.assertEqual(checks["usb-c/host-port/cc1-attachment"].observed, 5_100)
 
         miswired = observed.model_copy(
