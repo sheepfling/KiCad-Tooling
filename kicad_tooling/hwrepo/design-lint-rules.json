@@ -263,16 +263,16 @@
         "The schematic netlist does not prove copper connectivity, current flow, component behavior, footprint pin mapping, or physical population. DNP components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_passives.TwoPinPassiveLintTests.test_detects_resistor_capacitor_and_inductor_on_their_same_net"
+        "tests.test_two_pin_passives.test_detects_resistor_capacitor_and_inductor_on_their_same_net"
       ],
       "valid_control_fixtures": [
-        "tests.test_two_pin_passives.TwoPinPassiveLintTests.test_distinct_pin_nets_are_the_no_finding_control",
-        "tests.test_two_pin_passives.TwoPinPassiveLintTests.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_passives.TwoPinPassiveLintTests.test_override_exact_ignore_and_stale_fingerprint_lifecycle"
+        "tests.test_two_pin_passives.test_distinct_pin_nets_are_the_no_finding_control",
+        "tests.test_two_pin_passives.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
+        "tests.test_two_pin_passives.test_override_exact_ignore_and_stale_fingerprint_lifecycle"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_passives.TwoPinPassiveLintTests.test_same_net_passive_findings_are_order_stable_and_each_split_clears_one"
+        "tests.test_two_pin_passives.test_same_net_passive_findings_are_order_stable_and_each_split_clears_one"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_passives.py#two_pin_passives_on_same_net",
@@ -330,17 +330,17 @@
         "The schematic netlist does not prove crystal operation, frequency suitability, footprint pin mapping, physical population, or PCB copper connectivity."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_detects_exact_device_crystal_families_on_one_net"
+        "tests.test_two_pin_crystals.test_detects_exact_device_crystal_families_on_one_net"
       ],
       "valid_control_fixtures": [
-        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_native_schematic_sources_match_reviewed_hashes",
-        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_distinct_pin_nets_are_the_no_finding_control",
-        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_skips_dnp_incomplete_ambiguous_multi_pin_open_and_custom_symbols",
-        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_crystals.test_native_schematic_sources_match_reviewed_hashes",
+        "tests.test_two_pin_crystals.test_distinct_pin_nets_are_the_no_finding_control",
+        "tests.test_two_pin_crystals.test_skips_dnp_incomplete_ambiguous_multi_pin_open_and_custom_symbols",
+        "tests.test_two_pin_crystals.test_rule_policy_and_exact_ignore_are_project_configurable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_crystals.TwoPinCrystalLintTests.test_order_is_stable_and_splitting_one_crystal_clears_only_its_finding"
+        "tests.test_two_pin_crystals.test_order_is_stable_and_splitting_one_crystal_clears_only_its_finding"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_crystals.py#two_pin_crystals_on_same_net",
@@ -398,16 +398,16 @@
         "The schematic netlist does not prove component impedance, filtering effectiveness, copper connectivity, footprint pin mapping, or physical population. DNP components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_ferrites.TwoPinFerriteLintTests.test_detects_exact_device_ferrite_bead_families_on_one_net"
+        "tests.test_two_pin_ferrites.test_detects_exact_device_ferrite_bead_families_on_one_net"
       ],
       "valid_control_fixtures": [
-        "tests.test_two_pin_ferrites.TwoPinFerriteLintTests.test_distinct_pin_nets_are_the_no_finding_control",
-        "tests.test_two_pin_ferrites.TwoPinFerriteLintTests.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_ferrites.TwoPinFerriteLintTests.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_ferrites.test_distinct_pin_nets_are_the_no_finding_control",
+        "tests.test_two_pin_ferrites.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
+        "tests.test_two_pin_ferrites.test_rule_policy_and_exact_ignore_are_project_configurable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_ferrites.TwoPinFerriteLintTests.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+        "tests.test_two_pin_ferrites.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_ferrites.py#two_pin_ferrites_on_same_net",

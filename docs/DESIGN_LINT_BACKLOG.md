@@ -161,39 +161,18 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
-- **LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage.**
-  This adds project-authored exact pad paths and skew bundles, checked against
-  active native `A.fromTo()` DRC bounds and source-bound schematic/PCB endpoint
-  evidence. KiCad remains the route-length and skew measurement engine. The
-  deterministic comparison covers missing, changed, duplicate, ignored, and
-  unsupported rules, stale or misassigned endpoints, disconnected copper, and
-  wildcard expansion. Synthetic pytest coverage and policy behavior are in
-  place. Exact-version native fixtures passed locally on 2026-10-08 against
-  digest-pinned KiCad 10.0.0 and 10.0.5 images; the passing receipts retain
-  repeated control, fault, and ignored-rule DRC results under ignored
-  `build/ci/native-fixtures/`. The GitHub package workflow enables and uploads
-  these receipts. The full local package gate passed against the exact
-  CI-pinned public template commit `5ca79bedf665a9b6577d96b1d47f13ccd518c968`:
-  2,266 tests passed, 54 skipped, and 2,030 legacy subtests passed, with wheel
-  and source builds, installed-wheel external checks, and playtest. Signal-path
-  orchestration and parity tests now use a tooling-owned synthetic checkout and
-  collect without `KICAD_TEMPLATE_ROOT`. Tagged baseline acceptance passed in
-  `v0.5.0rc13` (GitHub run `37845619358`) on 2026-10-08: 2,307 tests passed,
-  26 skipped, and 2,078 legacy subtests passed; Linux, macOS, and Windows
-  preview jobs also passed. The hosted native lane retained control, fault,
-  and ignored-rule receipts for KiCad 10.0.0 and 10.0.5. This follow-up adds
-  repeatability comparison over complete canonical violation records, beyond
-  the finding types and exit codes accepted in RC13. The `v0.5.0rc14` run
-  (`37849620291`) passed its unit phase and stopped at `rumdl` on a table
-  alignment issue before the signal-path native lane. After fixing the table,
-  `v0.5.0rc15` (run `37851810081`) passed the package workflow and all three
-  platform preview jobs. Its native signal-path lane passed on digest-pinned
-  KiCad 10.0.0 and 10.0.5: each control and ignored-rule case had no target
-  violations with exit 0; each fault reported both expected violations with
-  exit 5. Canonical full-record hashes matched between repeated runs for all
-  three cases on both versions. Raw DRC report hashes differed in some repeats,
-  so the lane now confirms stable diagnostic records rather than byte-identical
-  report files.
+- **LINT-086 — Measure review value for the USB split-reference prompt.**
+  The default-REVIEW rule has synthetic direct, series-resistor, USB-C,
+  duplicated-contact, shunt, and multiport fault/control coverage. Its exact
+  native fixture lane passed in tagged `v0.5.0rc15` (GitHub run `37851810081`)
+  on digest-pinned KiCad 10.0.0 and 10.0.5. All 11 topology cases passed on
+  each version; repeated normalized netlist contracts matched for every case.
+  Three supported public common-reference examples were quiet, and temporary
+  split-reference mutations prompted review in all three. These are exploratory
+  applicability screens, not a measured precision rate. The next work is to
+  record false prompts, seeded misses, and reviewer effort on approved,
+  nonconfidential examples. Keep project defaults unchanged and keep the prompt
+  review-only while that evidence is gathered.
 
 - **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
   passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
@@ -3123,8 +3102,9 @@ is not a reason by itself to expand its scope or change its default policy.
   and now export the intended split and common assignments. Repeated local
   10.0.6 exports of the corrected USB-A and new USB-C cases produced stable
   typed netlist contracts and the expected fault/control results. This is
-  compatibility evidence only: the exact digest-pinned 10.0.0/10.0.5 lane and
-  GitHub result remain pending. All new fixture sources contain only synthetic
+  compatibility evidence only. At the time these local exports were recorded,
+  the exact hosted 10.0.0/10.0.5 lane was pending; its later acceptance is
+  recorded below. All fixture sources contain only synthetic
   connector, PHY, resistor, diode-designated branch, and net labels. A
   repeatable local KiCad 10.0.6 export of the series-resistor common-reference
   control and split-reference fault checks the expected GND assignments, one
@@ -3147,20 +3127,21 @@ is not a reason by itself to expand its scope or change its default policy.
   The focused USB, data-path, CLI/MCP parity, lint determinism, and catalog
   run passes 523 tests after this extension. Ruff check, format check, and
   `git diff --check` pass. These local checks do not replace the digest-pinned
-  KiCad 10.0.0/10.0.5 hosted acceptance lane, which has not yet run on this
-  dirty branch; no GitHub result is recorded.
+  KiCad 10.0.0/10.0.5 hosted acceptance lane. At the time, no GitHub result
+  was recorded for this dirty branch; the same fixture and heuristic sources
+  later passed in tagged `v0.5.0rc15`, as recorded below.
   The hosted test module was also rerun after adding the multiport case registry:
   43 tests ran: 22 passed and 21 native acceptance-gated tests were skipped.
-  The Docker daemon is unavailable on this host, so the digest-pinned KiCad
-  10.0.0/10.0.5 exports remain pending.
+  The Docker daemon was unavailable for that local run, so those local exports
+  were pending at the time. The hosted exact-version result is recorded below.
   On 2026-10-08 the full repository suite passed 2,184 tests with 25
   environment-gated skips. `KICAD_TEMPLATE_ROOT` pointed to the public
   KiCad-Team-Workflow-Template checkout at
   `ed89536f0dbbcb013145af2994fef41b2250143e`, and loopback access was enabled
   for its HTTP tests. The run includes the expanded multiport and isolator
   boundary controls, CLI/MCP, catalog, and determinism coverage. The exact
-  digest-pinned 10.0.0/10.0.5 native acceptance lane remains pending because
-  Docker is unavailable on this host.
+  digest-pinned 10.0.0/10.0.5 native acceptance lane was pending at the time
+  because Docker was unavailable locally; hosted acceptance is recorded below.
   Typed-netlist controls give U1 two explicit reference pins on separate nets
   and model an isolator between host and device sides; the USB rule stays quiet
   in both cases. Added coverage tests distinguish no endpoints, incomplete
@@ -3178,8 +3159,8 @@ is not a reason by itself to expand its scope or change its default policy.
   input-reordering comparison and the existing three-process hash-seed report
   probe. The focused USB module passed 11 tests, the determinism module passed
   its cross-process test, the catalog module passed 505 tests, and Ruff check
-  and format checks passed. The exact digest-pinned native lane remains
-  pending; these results cover typed-netlist evidence only.
+  and format checks passed. These typed-netlist results predate the exact
+  hosted native acceptance recorded below.
 - **Applicability screen:**
 
   The MIT-licensed public [CP2102 project](https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102)
@@ -3269,8 +3250,21 @@ is not a reason by itself to expand its scope or change its default policy.
   multiport typed-netlist and native fault/control schematics exercise two
   ports under separate and common reference nets. This broadens symbol-function
   recognition only; it does not infer that the references must be common. The
-  exact KiCad 10.0.0/10.0.5 gate is wired in GitHub CI and awaits a hosted run
-  for this revision.
+  exact KiCad 10.0.0/10.0.5 gate passed in hosted `v0.5.0rc15` acceptance.
+- **Exact native acceptance:** GitHub run `37851810081` retained the USB
+  fixture receipts in `build/ci/hosted-37851810081/`. On both KiCad 10.0.0 and
+  10.0.5, all 11 native topology cases passed, including split-reference
+  faults and common-reference controls for direct USB, USB-C duplicated
+  contacts with D-designated shunts, and two numbered hub ports. Each case
+  repeated with an equal normalized netlist contract on its version. Event
+  receipt SHA-256 values are
+  `8417b4af081cf673877b840af6e499e9a1a7b534c48df5ec93704539abdcb8ea`
+  (KiCad 10.0.0) and
+  `432f8224f7bdb6f4417ab5532284513a2067c8a82a4090aeb32f7e96c4f9798a`
+  (KiCad 10.0.5). The workflow, fixture lane, and heuristic sources match the
+  tagged sources; current uncommitted changes do not modify those files. This
+  establishes exact-version schematic-export compatibility for synthetic
+  cases, not physical continuity or product approval.
 - **Next:** Keep this review-only and measure reviewer usefulness and false
   prompts on approved nonconfidential boards. Do not make common reference a
   universal USB rule. Reviewer effort, false-positive rate, multi-pin

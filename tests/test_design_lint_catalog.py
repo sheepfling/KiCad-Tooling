@@ -213,9 +213,6 @@ from tests.test_stm32_pin_map import (
     sample_netlist as stm32_sample_netlist,
 )
 from tests.test_two_pin_crystals import (
-    TwoPinCrystalLintTests,
-)
-from tests.test_two_pin_crystals import (
     crystal_netlist as two_pin_crystal_netlist,
 )
 from tests.test_two_pin_crystals import (
@@ -229,7 +226,6 @@ from tests.test_two_pin_diodes import (
     lint_report as two_pin_diode_lint_report,
 )
 from tests.test_two_pin_ferrites import (
-    TwoPinFerriteLintTests,
     ferrite_netlist,
 )
 from tests.test_two_pin_ferrites import (
@@ -242,11 +238,10 @@ from tests.test_two_pin_fuses import (
     lint_report as two_pin_fuse_lint_report,
 )
 from tests.test_two_pin_passives import (
-    TwoPinPassiveLintTests,
-    passive_netlist,
+    lint_report as two_pin_passive_lint_report,
 )
 from tests.test_two_pin_passives import (
-    lint_report as two_pin_passive_lint_report,
+    passive_netlist,
 )
 from tests.test_two_pin_switches import switch_netlist as two_pin_switch_netlist
 from tests.test_usb_c_ports import (
@@ -448,10 +443,7 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         Stm32PinMapTests: Stm32PinMapTests(),
         SerialPeerReferenceReviewTests: SerialPeerReferenceReviewTests(),
         UsbPeerReferenceReviewTests: UsbPeerReferenceReviewTests(),
-        TwoPinPassiveLintTests: TwoPinPassiveLintTests(),
         TwoPinDiodeLintTests: TwoPinDiodeLintTests(),
-        TwoPinCrystalLintTests: TwoPinCrystalLintTests(),
-        TwoPinFerriteLintTests: TwoPinFerriteLintTests(),
         PowerPathTests: PowerPathTests(),
         PowerSequenceTests: PowerSequenceTests(),
         PowerPathFixtureLaneTests: PowerPathFixtureLaneTests(),
