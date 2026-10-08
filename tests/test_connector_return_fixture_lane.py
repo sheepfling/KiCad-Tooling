@@ -453,6 +453,48 @@ class ConnectorReturnFixtureLaneTests(unittest.TestCase):
                     for pin in range(1, 10)
                 },
             ),
+            "unconnected-generic-power-input-fault": NetlistContract(
+                components={},
+                nets={"GND": ("J1.2", "J2.2")},
+                component_symbols={
+                    "J1": "Lint:GenericPowerInputPort",
+                    "J2": "Lint:GenericPowerInputPort",
+                },
+                component_pin_numbers={"J1": ("1", "2"), "J2": ("1", "2")},
+                pin_functions={
+                    "J1.1": "1",
+                    "J1.2": "GND",
+                    "J2.1": "1",
+                    "J2.2": "GND",
+                },
+                pin_electrical_types={
+                    "J1.1": "power_in",
+                    "J1.2": "passive",
+                    "J2.1": "power_in",
+                    "J2.2": "passive",
+                },
+            ),
+            "unconnected-generic-power-input-control": NetlistContract(
+                components={},
+                nets={"+5V": ("J1.1", "J2.1"), "GND": ("J1.2", "J2.2")},
+                component_symbols={
+                    "J1": "Lint:GenericPowerInputPort",
+                    "J2": "Lint:GenericPowerInputPort",
+                },
+                component_pin_numbers={"J1": ("1", "2"), "J2": ("1", "2")},
+                pin_functions={
+                    "J1.1": "1",
+                    "J1.2": "GND",
+                    "J2.1": "1",
+                    "J2.2": "GND",
+                },
+                pin_electrical_types={
+                    "J1.1": "power_in",
+                    "J1.2": "passive",
+                    "J2.1": "power_in",
+                    "J2.2": "passive",
+                },
+            ),
         }
 
     def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(self) -> None:
@@ -732,6 +774,26 @@ class ConnectorReturnFixtureLaneTests(unittest.TestCase):
             set(neutral_control["findings"].split(",")),
             {"connector.no_connected_return"},
         )
+        generic_power_fault = results[
+            "connector-return-fixture/unconnected-generic-power-input-fault"
+        ]
+        generic_power_control = results[
+            "connector-return-fixture/unconnected-generic-power-input-control"
+        ]
+        self.assertEqual(generic_power_fault["lint_status"], "REVIEW")
+        self.assertEqual(
+            set(generic_power_fault["findings"].split(",")),
+            {"connector.unconnected_power_input"},
+        )
+        self.assertEqual(
+            set(generic_power_fault["subjects"].split(";")),
+            {
+                "J1.1: generic native power-input pin is unassigned",
+                "J2.1: generic native power-input pin is unassigned",
+            },
+        )
+        self.assertEqual(generic_power_control["lint_status"], "PASS")
+        self.assertEqual(generic_power_control["findings"], "none")
         self.assertNotEqual(fault["netlist_sha256"], fault["repeat_netlist_sha256"])
         self.assertNotEqual(control["netlist_sha256"], control["repeat_netlist_sha256"])
         self.assertEqual(

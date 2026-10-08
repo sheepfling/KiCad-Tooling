@@ -53,6 +53,7 @@ from tests.test_design_lint import (
     complementary_usb_netlist,
     connector_capacitor_only_netlist,
     control_input_pins,
+    generic_connector_power_input_netlist,
     i2c_netlist,
     i2c_netlist_with_parallel_sda,
     i2c_netlist_with_pullup_rails,
@@ -472,6 +473,7 @@ class DesignLintCatalogTests(unittest.TestCase):
         no_can_assignments = can_netlist().model_copy(update={"nets": {}})
         cases = (
             observed(),
+            generic_connector_power_input_netlist(),
             connector_capacitor_only_netlist(),
             source_path_netlist(wrong_rail=True),
             peer_connector_pin_assignments(),

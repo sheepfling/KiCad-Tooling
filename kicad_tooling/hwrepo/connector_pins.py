@@ -514,6 +514,14 @@ class UnconnectedNamedConnectorPin:
 
 
 @dataclass(frozen=True)
+class UnconnectedGenericPowerInputConnectorPin:
+    pin: str
+    symbol: str
+    function: str | None
+    electrical_type: str
+
+
+@dataclass(frozen=True)
 class ConnectorPeerPinAssignmentOutlier:
     symbol: str
     pin_number: str
@@ -808,6 +816,53 @@ def unconnected_named_connector_pins(
                 )
             )
     return tuple(sorted(results, key=lambda item: (item.category, item.pin, item.function)))
+
+
+def unconnected_generic_power_input_connector_pins(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+    *,
+    excluded_pins: frozenset[str] = frozenset(),
+) -> tuple[UnconnectedGenericPowerInputConnectorPin, ...]:
+    """Find unassigned generic connector pins with the native ``power_in`` type."""
+    connector_references = {
+        reference.casefold()
+        for reference in connector_candidate_references(observed, declared_references)
+    }
+    symbols_by_reference = {
+        reference.casefold(): (reference, symbol)
+        for reference, symbol in observed.component_symbols.items()
+    }
+    dnp = {reference.casefold() for reference in observed.dnp_components}
+    connected = {pin.casefold() for pins in observed.nets.values() for pin in pins}
+    pin_functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
+    excluded = {pin.casefold() for pin in excluded_pins}
+    results: list[UnconnectedGenericPowerInputConnectorPin] = []
+    for pin, electrical_type in observed.pin_electrical_types.items():
+        pin_key = pin.casefold()
+        reference = pin.rsplit(".", 1)[0]
+        reference_key = reference.casefold()
+        function = pin_functions.get(pin_key)
+        symbol = symbols_by_reference.get(reference_key)
+        if (
+            electrical_type.strip().casefold() != "power_in"
+            or reference_key not in connector_references
+            or reference_key in dnp
+            or pin_key in connected
+            or pin_key in excluded
+            or not _pin_function_is_generic(function)
+            or symbol is None
+        ):
+            continue
+        results.append(
+            UnconnectedGenericPowerInputConnectorPin(
+                pin=pin,
+                symbol=symbol[1],
+                function=function,
+                electrical_type="power_in",
+            )
+        )
+    return tuple(sorted(results, key=lambda item: (item.pin.casefold(), item.pin)))
 
 
 @dataclass(frozen=True)

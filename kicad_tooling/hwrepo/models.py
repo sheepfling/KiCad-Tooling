@@ -410,6 +410,7 @@ DesignLintRuleId = Literal[
     "component.two_pin_fuse_same_net",
     "component.two_pin_ferrite_same_net",
     "connector.no_connected_return",
+    "connector.unconnected_power_input",
     "connector.unconnected_supply_pin",
     "connector.unconnected_return_pin",
     "component.unconnected_supply_pin",

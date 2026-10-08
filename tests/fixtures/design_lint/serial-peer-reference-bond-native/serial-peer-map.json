@@ -13,11 +13,11 @@
         "logic_domain": "logic-3v3",
         "tx": {
           "pin": "J1.1",
-          "net": "SERIAL_A_RX"
+          "net": "SERIAL_A_TX"
         },
         "rx": {
           "pin": "J1.2",
-          "net": "SERIAL_A_TX"
+          "net": "SERIAL_A_RX"
         },
         "reference_pins": [
           {
@@ -36,11 +36,11 @@
           "logic_domain": "logic-3v3",
           "tx": {
             "pin": "J2.1",
-            "net": "SERIAL_A_TX"
+            "net": "SERIAL_A_RX"
           },
           "rx": {
             "pin": "J2.2",
-            "net": "SERIAL_A_RX"
+            "net": "SERIAL_A_TX"
           },
           "reference_pins": [
             {

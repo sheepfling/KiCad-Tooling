@@ -594,6 +594,12 @@ def connector_return_lint_fixture_lane(
             fixture_root
             / "generic-peer-pin-assignment-native/single-offboard-port-control.kicad_sch"
         ),
+        "unconnected-generic-power-input-fault": (
+            fixture_root / "unconnected-generic-power-input-connector/fault.kicad_sch"
+        ),
+        "unconnected-generic-power-input-control": (
+            fixture_root / "unconnected-generic-power-input-connector/control.kicad_sch"
+        ),
     }
     cases = tuple(fixtures)
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
@@ -624,6 +630,8 @@ def connector_return_lint_fixture_lane(
         "two-peer-no-connect-fault": "8801b0ff24e9f012e6f2df10247cdc04668db40d3233eb5d2111d279cfdf7256",
         "two-peer-common-control": "ae23ddb802c9a0f5cf30e89699a2cf6f48b3d15b6e18967387e756dcdf6fa3df",
         "single-offboard-port-control": "ceaa7038e372ec74a00f7e7c2cb5311377df01624760ab555adb413c4e02d8e9",
+        "unconnected-generic-power-input-fault": "2e16c602d6ba0068360b3f8b493351f6d7e4d7adbe94946d17db883587f0528f",
+        "unconnected-generic-power-input-control": "b05c1a3994a4f26f07e18bdfe28c8caaf4a298cbb66b6d1814b20c9a7dce2c13",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Connector-return fixture sources differ from the reviewed hashes")
@@ -774,6 +782,31 @@ def connector_return_lint_fixture_lane(
     control = reports[("control", "first")]
     if control.status != "PASS" or control.findings:
         raise ValueError("Common-return control fixture no longer passes without findings")
+
+    generic_power_fault = reports[("unconnected-generic-power-input-fault", "first")]
+    generic_power_control = reports[("unconnected-generic-power-input-control", "first")]
+    expected_generic_power_subjects = {
+        "J1.1: generic native power-input pin is unassigned",
+        "J2.1: generic native power-input pin is unassigned",
+    }
+    if (
+        generic_power_fault.status != "REVIEW"
+        or {item.rule_id for item in generic_power_fault.findings}
+        != {"connector.unconnected_power_input"}
+        or {item.subject for item in generic_power_fault.findings}
+        != expected_generic_power_subjects
+        or generic_power_control.status != "PASS"
+        or generic_power_control.findings
+        or observed_contracts[
+            ("unconnected-generic-power-input-fault", "first")
+        ].pin_electrical_types
+        != {"J1.1": "power_in", "J1.2": "passive", "J2.1": "power_in", "J2.2": "passive"}
+        or observed_contracts[("unconnected-generic-power-input-control", "first")].nets.get("+5V")
+        != ("J1.1", "J2.1")
+    ):
+        raise ValueError(
+            "Generic connector power-input fixture lost its exact native fault/control result"
+        )
 
     channel_fault = reports[("channel-power-fault", "first")]
     channel_fault_rails = next(
@@ -2023,6 +2056,12 @@ def connector_return_lint_fixture_lane(
             pin_functions=";".join(
                 f"{pin}={name}"
                 for pin, name in sorted(observed_contracts[(case, "first")].pin_functions.items())
+            ),
+            pin_electrical_types=";".join(
+                f"{pin}={name}"
+                for pin, name in sorted(
+                    observed_contracts[(case, "first")].pin_electrical_types.items()
+                )
             ),
             **(
                 {"connector_peer_pin_coverage": peer_pin_coverage_receipts[case]}

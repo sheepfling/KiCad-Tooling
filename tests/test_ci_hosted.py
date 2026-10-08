@@ -1646,6 +1646,8 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                         "connector-return-fixture/native-export",
                         "connector-return-fixture/fault",
                         "connector-return-fixture/control",
+                        "connector-return-fixture/unconnected-generic-power-input-fault",
+                        "connector-return-fixture/unconnected-generic-power-input-control",
                         "connector-return-fixture/cross-symbol-fault",
                         "connector-return-fixture/cross-symbol-control",
                         "connector-return-fixture/cross-symbol-open",
@@ -1706,6 +1708,36 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                 self.assertEqual(control["status"], "PASS")
                 self.assertEqual(control["lint_status"], "PASS")
                 self.assertEqual(control["findings"], "none")
+                generic_power_fault = results[
+                    "connector-return-fixture/unconnected-generic-power-input-fault"
+                ]
+                generic_power_control = results[
+                    "connector-return-fixture/unconnected-generic-power-input-control"
+                ]
+                self.assertEqual(generic_power_fault["status"], "PASS")
+                self.assertEqual(generic_power_fault["lint_status"], "REVIEW")
+                self.assertEqual(
+                    generic_power_fault["findings"],
+                    "connector.unconnected_power_input",
+                )
+                self.assertEqual(
+                    set(generic_power_fault["subjects"].split(";")),
+                    {
+                        "J1.1: generic native power-input pin is unassigned",
+                        "J2.1: generic native power-input pin is unassigned",
+                    },
+                )
+                self.assertEqual(
+                    generic_power_fault["pin_electrical_types"],
+                    "J1.1=power_in;J1.2=passive;J2.1=power_in;J2.2=passive",
+                )
+                self.assertEqual(generic_power_control["status"], "PASS")
+                self.assertEqual(generic_power_control["lint_status"], "PASS")
+                self.assertEqual(generic_power_control["findings"], "none")
+                self.assertEqual(
+                    generic_power_control["pin_electrical_types"],
+                    generic_power_fault["pin_electrical_types"],
+                )
                 cross_fault = results["connector-return-fixture/cross-symbol-fault"]
                 self.assertEqual(cross_fault["lint_status"], "REVIEW")
                 self.assertEqual(
@@ -2095,6 +2127,8 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                     "generic-placeholder-divergence-fault",
                     "generic-placeholder-control",
                     "peer-scope-split-return-fault",
+                    "unconnected-generic-power-input-fault",
+                    "unconnected-generic-power-input-control",
                 ):
                     result = results[f"connector-return-fixture/{case}"]
                     self.assertEqual(result["kicad_version"], version)
@@ -2124,6 +2158,8 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                         "reviewed-supply-fault",
                         "reviewed-supply-control",
                         "reviewed-supply-domain-control",
+                        "unconnected-generic-power-input-fault",
+                        "unconnected-generic-power-input-control",
                     )
                 }
         self.assertEqual(
@@ -2934,7 +2970,7 @@ class SerialPeerReferenceBondFixtureDefinitionTests(unittest.TestCase):
                 "a8a41b85d776f521df90998e55c5fc8eb55f1afc4839ab50d997b7a9e190aed2"
             ),
             "serial-peer-map.json": (
-                "0d224c8c6d59073902f21dee6ac9cdc6f7191b6659b6cff5bff437be65527c0b"
+                "db84fc9ef9ebbc019ccd5ced4ee0c8d686af201b9397375d658481caff58b6db"
             ),
         }
         for name, expected_hash in expected_hashes.items():
@@ -3036,7 +3072,7 @@ class NativeSerialPeerFixtureTests(unittest.TestCase):
             "control": "d6efb587268b8a0dcdbb90eb4401090dcbd6d254742b3e2f718d6df12591c785",
             "fault": "a8a41b85d776f521df90998e55c5fc8eb55f1afc4839ab50d997b7a9e190aed2",
         }
-        expected_bond_map_hash = "0d224c8c6d59073902f21dee6ac9cdc6f7191b6659b6cff5bff437be65527c0b"
+        expected_bond_map_hash = "db84fc9ef9ebbc019ccd5ced4ee0c8d686af201b9397375d658481caff58b6db"
         self.assertEqual(hashlib.sha256(fixture.read_bytes()).hexdigest(), expected_source_hash)
         normalized_hashes: dict[str, str] = {}
         alternate_normalized_hashes: dict[str, str] = {}
@@ -4081,10 +4117,10 @@ class NativeTwoPinComponentFixtureTests(unittest.TestCase):
             "two-pin-components/distinct-nets-diode.kicad_sch": "74d19829e8dd9379a26cb6da9dd3cf10a48abce9d724661338f73ce0086bb928",
             "two-pin-crystals/same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
             "two-pin-crystals/distinct-nets-crystal.kicad_sch": "0c000075d25bc1da32b777367079d084f96fe8be88e258146b5796db99bbe39e",
-            "two-pin-fuses/same-net-fuse.kicad_sch": "b24e66eea8f73d9796223509a4c640ee5fe9c51546e78160df5939681eb3e146",
-            "two-pin-fuses/distinct-nets-fuse.kicad_sch": "239758b4394ab8107e3d6d72ebcac426b61e219ff238c8429ea593a4ccb16fb7",
-            "two-pin-fuses/same-net-polyfuse.kicad_sch": "3ed2ea8ee4ccbc9706525ad238a03c500d508e8fe5a65953a2682ac69409b30a",
-            "two-pin-fuses/distinct-nets-polyfuse.kicad_sch": "29344dc47d3642083af2e21473d59ee31f74dab753a45005317710ac2b01f0ed",
+            "two-pin-fuses/same-net-fuse.kicad_sch": "0aef6e17919aabf2b640183e91d992df28a7cb8db92ea76514afddd31c2f0f93",
+            "two-pin-fuses/distinct-nets-fuse.kicad_sch": "34e303f1ff54b324555cba0b7fa015881edebf3a91b32391fc010d0f5f92cc89",
+            "two-pin-fuses/same-net-polyfuse.kicad_sch": "3f024223a079ab029edcb6dc9314a6beb82eb75fa5d31ca2140425ae210ad6a7",
+            "two-pin-fuses/distinct-nets-polyfuse.kicad_sch": "e243a29359c911e2d04787a8d71dc2566c1c09e287251c94bae22ac9a7cfe4e7",
             "two-pin-ferrites/same-net-ferrite.kicad_sch": "8ede05ea1d9c8afb0cec2f1c8c9bddf527eab015ab779097f4ddc528866751f7",
             "two-pin-ferrites/distinct-nets-ferrite.kicad_sch": "199c802ca290b1281622c623f4966b159144f0e95fd99ed0e21a14a0875734a7",
         }

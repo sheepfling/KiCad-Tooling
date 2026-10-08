@@ -1604,6 +1604,8 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
             '<libsource lib="Synthetic" part="GenericPeerPort"/></comp>'
             '<comp ref="J11"><value>Synthetic USB-C candidate</value>'
             '<libsource lib="Synthetic" part="UsbCPort"/></comp>'
+            '<comp ref="J12"><value>Synthetic generic power-input connector</value>'
+            '<libsource lib="Synthetic" part="GenericPowerInputPort"/></comp>'
             '<comp ref="U7"><value>Synthetic nonstandard-reference connector</value>'
             '<libsource lib="Connector_Generic" part="Conn_01x02"/></comp>'
             '<comp ref="U8"><value>Synthetic test point</value>'
@@ -1661,6 +1663,8 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
             '<libpart lib="Synthetic" part="GenericPeerPort"><pins>'
             '<pin num="1" name="1" type="passive"/>'
             '<pin num="2" name="" type="passive"/></pins></libpart>'
+            '<libpart lib="Synthetic" part="GenericPowerInputPort"><pins>'
+            '<pin num="1" name="1" type="power_in"/></pins></libpart>'
             '<libpart lib="Synthetic" part="UsbCPort"><pins>'
             '<pin num="4" name="CC1" type="passive"/>'
             '<pin num="5" name="CC2" type="passive"/></pins></libpart>'
@@ -1927,6 +1931,7 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                                 "J9",
                                 "J10",
                                 "J11",
+                                "J12",
                                 "U7",
                             )
                         ),
@@ -1944,7 +1949,7 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                 "Synthetic review covered all connector candidates in the schematic",
             )
             self.assertEqual(open_report.native_status, "FAIL")
-            self.assertEqual(len(open_report.findings), 24)
+            self.assertEqual(len(open_report.findings), 25)
             led_bridge = next(
                 item
                 for item in open_report.findings
@@ -2053,6 +2058,24 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(unconnected_supply.subject, "J4.1: +3V3")
             self.assertEqual(unconnected_supply.evidence, {"J4.1": ()})
+            generic_power_input = next(
+                item
+                for item in open_report.findings
+                if item.rule_id == "connector.unconnected_power_input"
+            )
+            self.assertEqual(
+                generic_power_input.subject,
+                "J12.1: generic native power-input pin is unassigned",
+            )
+            self.assertEqual(
+                generic_power_input.evidence,
+                {
+                    "symbol": ("Synthetic:GenericPowerInputPort",),
+                    "pin_electrical_type": ("power_in",),
+                    "J12.1": (),
+                    "native_pin_function": ("1",),
+                },
+            )
             i2c_finding = next(
                 item
                 for item in open_report.findings

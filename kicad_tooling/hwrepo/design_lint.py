@@ -44,6 +44,7 @@ from .connector_pins import (
     connectors_without_connected_return,
     power_function_key,
     similar_connector_pin_groups,
+    unconnected_generic_power_input_connector_pins,
     unconnected_named_component_pins,
     unconnected_named_connector_pins,
 )
@@ -513,6 +514,37 @@ def candidates(
         reviewed_connector_references,
         reviewed_connector_pins,
     )
+    named_open_connector_pins = frozenset(item.pin for item in unconnected_named_pins)
+    unconnected_power_input_pins = unconnected_generic_power_input_connector_pins(
+        observed,
+        reviewed_connector_references,
+        excluded_pins=named_open_connector_pins,
+    )
+    unconnected_power_input_pin_keys = frozenset(
+        item.pin.casefold() for item in unconnected_power_input_pins
+    )
+    for pin in unconnected_power_input_pins:
+        evidence = {
+            "symbol": (pin.symbol,),
+            "pin_electrical_type": (pin.electrical_type,),
+            pin.pin: (),
+        }
+        if pin.function is not None:
+            evidence["native_pin_function"] = (pin.function,)
+        found.append(
+            Candidate(
+                rule_id="connector.unconnected_power_input",
+                subject=f"{pin.pin}: generic native power-input pin is unassigned",
+                message=(
+                    "KiCad's native symbol metadata classifies this generic connector pin as "
+                    "power_in, but the exported netlist assigns it to no net. Review the approved "
+                    "pinout to determine whether the contact is intentionally open or whether a "
+                    "power or reference connection is missing. The electrical type does not "
+                    "identify the contact's specific role or require it to be connected."
+                ),
+                evidence=evidence,
+            )
+        )
     for bridge in leds_directly_between_positive_and_return_nets(observed):
         found.append(
             Candidate(
@@ -669,6 +701,10 @@ def candidates(
         reviewed_connector_peer_assignment_groups,
     )
     for group in repeated_connector_pin_groups:
+        group_pin_keys = {pin.casefold() for pin in group.pins}
+        if group_pin_keys and group_pin_keys <= unconnected_power_input_pin_keys:
+            # The native power-input type provides the more specific open-pin finding.
+            continue
         found.append(
             Candidate(
                 rule_id="connector.repeated_pin_function",
@@ -697,6 +733,9 @@ def candidates(
         reviewed_connector_references,
         reviewed_connector_peer_assignment_groups,
     ):
+        if {pin.casefold() for pin in group.outlier_pins} <= unconnected_power_input_pin_keys:
+            # The typed power-input finding already identifies every open outlier pin.
+            continue
         if any(
             set(group.assignments) <= set(specific_group.pins)
             for specific_group in repeated_connector_pin_groups

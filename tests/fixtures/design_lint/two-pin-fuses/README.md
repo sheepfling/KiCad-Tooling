@@ -10,14 +10,17 @@ design or customer source.
 | `same-net-polyfuse.kicad_sch`      | Both `Device:Polyfuse` pins share one local label.           | `component.two_pin_fuse_same_net` reports F1. |
 | `distinct-nets-polyfuse.kicad_sch` | `Device:Polyfuse` pins use separate input and output labels. | No same-net fuse finding.                     |
 
+The synthetic pins use generic `Pin_1` and `Pin_2` function names. They do not
+imply polarity or current direction.
+
 Source SHA-256 values:
 
 | Fixture                            | SHA-256                                                            |
 | ---------------------------------- | ------------------------------------------------------------------ |
-| `same-net-fuse.kicad_sch`          | `b24e66eea8f73d9796223509a4c640ee5fe9c51546e78160df5939681eb3e146` |
-| `distinct-nets-fuse.kicad_sch`     | `239758b4394ab8107e3d6d72ebcac426b61e219ff238c8429ea593a4ccb16fb7` |
-| `same-net-polyfuse.kicad_sch`      | `3ed2ea8ee4ccbc9706525ad238a03c500d508e8fe5a65953a2682ac69409b30a` |
-| `distinct-nets-polyfuse.kicad_sch` | `29344dc47d3642083af2e21473d59ee31f74dab753a45005317710ac2b01f0ed` |
+| `same-net-fuse.kicad_sch`          | `0aef6e17919aabf2b640183e91d992df28a7cb8db92ea76514afddd31c2f0f93` |
+| `distinct-nets-fuse.kicad_sch`     | `34e303f1ff54b324555cba0b7fa015881edebf3a91b32391fc010d0f5f92cc89` |
+| `same-net-polyfuse.kicad_sch`      | `3f024223a079ab029edcb6dc9314a6beb82eb75fa5d31ca2140425ae210ad6a7` |
+| `distinct-nets-polyfuse.kicad_sch` | `e243a29359c911e2d04787a8d71dc2566c1c09e287251c94bae22ac9a7cfe4e7` |
 
 The native fixture lane exports each source twice with the exact digest-pinned
 KiCad 10.0.0 and 10.0.5 toolchains selected by the public acceptance projects.

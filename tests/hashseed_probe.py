@@ -57,6 +57,7 @@ from tests.test_design_lint import (
     can_peer_netlist,
     coach,
     four_db9_return_domains,
+    generic_connector_power_input_netlist,
     header_only_spi_uart_netlist,
     peer_connector_pin_assignments,
     serial_peer_voltage_map,
@@ -694,6 +695,16 @@ def test_emit_four_port_db9_fault_and_control_reports() -> None:
         "common_control": evaluate(
             "synthetic-four-db9-hash-seed-common",
             coach(four_db9_return_domains(common=True)),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "generic_power_input_fault": evaluate(
+            "synthetic-generic-power-input-hash-seed-fault",
+            coach(generic_connector_power_input_netlist()),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "generic_power_input_control": evaluate(
+            "synthetic-generic-power-input-hash-seed-control",
+            coach(generic_connector_power_input_netlist(connected=True)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "db9_split_against_common_requirement": db9_grounding_check_result(

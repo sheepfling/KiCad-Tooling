@@ -184,6 +184,17 @@ The first rules are:
   generic, absent, or numeric-only native function as supply or return for
   these checks. DNP connector instances are excluded. Findings ask whether the
   pin is intentionally unused or a connection is missing.
+- `connector.unconnected_power_input` prompts review when a fitted connector
+  pin has native electrical type `power_in`, a generic, absent, or numeric-only
+  function, and no exported net assignment. This catches an open generic
+  contact even when every matching connector peer is also open. The native type
+  does not distinguish positive power from a reference or prove that the pin
+  must be connected, so the rule defaults to review and accepts project-level
+  `review`, `block`, `off`, or exact-fingerprint ignore decisions. Named supply
+  and return pins remain with their more specific checks; DNP connectors are
+  excluded. An open contact with an explicit no-connect marker still prompts
+  review. See the
+  [synthetic native fixture record](../tests/fixtures/design_lint/unconnected-generic-power-input-connector/README.md).
 - `component.unconnected_supply_pin` and
   `component.unconnected_return_pin` apply the same named-pin coverage to
   non-connector components, including IC power pins. They only flag pins with
@@ -766,7 +777,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 76 active rules. They
+`synthetic_validated`; the catalog currently contains 77 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow

@@ -75,6 +75,18 @@ class DesignLintDeterminismTests(unittest.TestCase):
         self.assertEqual(reports["common_control"]["status"], "PASS")
         self.assertEqual(reports["common_control"]["findings"], [])
 
+        power_input_fault = reports["generic_power_input_fault"]
+        self.assertEqual(power_input_fault["status"], "REVIEW")
+        self.assertEqual(
+            {finding["rule_id"] for finding in power_input_fault["findings"]},
+            {"connector.unconnected_power_input"},
+        )
+        self.assertEqual(
+            reports["generic_power_input_control"]["status"],
+            "PASS",
+        )
+        self.assertEqual(reports["generic_power_input_control"]["findings"], [])
+
         split_common = reports["db9_split_against_common_requirement"]
         split_isolated = reports["db9_split_against_isolated_requirement"]
         common_common = reports["db9_common_against_common_requirement"]

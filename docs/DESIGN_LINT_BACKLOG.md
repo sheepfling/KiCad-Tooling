@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 76 rules are implemented with synthetic regression coverage.
+The following 77 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -75,6 +75,7 @@ Their actual recognition limits are documented in
 - `connector.no_connected_return`
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
+- `connector.unconnected_power_input`
 - `component.unconnected_supply_pin`
 - `component.unconnected_return_pin`
 - `component.led_directly_across_supply_and_return`
@@ -554,6 +555,13 @@ and optional ecosystem adapters are `P3`.
    diode fingerprints remain stable, and a scoped D1 ignore stays applied while
    D2 remains open. This verifies ignore scope for this rule family, not across
    every lint rule.
+
+LINT-089 closes one connector gap: every matching generic connector power-input
+contact can be open together, so peer-outlier detection has no differing
+assignment to report. Native KiCad electrical type now supplies bounded
+evidence for a `REVIEW` prompt. The synthetic fault/control pair is repeated on
+the digest-pinned KiCad 10.0.0 and 10.0.5 images in the connector acceptance
+lane; it does not declare that the contacts must share a net.
 
 This execution focus is updated as evidence closes. A completed implementation
 is not a reason by itself to expand its scope or change its default policy.
@@ -1392,7 +1400,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 76 active rules; CI requires every new
+- **Status:** Baseline complete for all 77 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1401,7 +1409,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 76 covered, 0 not applicable, 0 unreviewed.
+  audit: 77 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -2794,35 +2802,37 @@ is not a reason by itself to expand its scope or change its default policy.
   checks passed 25 tests and 308 subtests. The new report stayed identical
   across three independent Python hash secrets. These results validate the
   shared typed service and adapters, not native source export.
-- **Supplemental native screen (2026-10-07):** The locally installed KiCad
-  10.0.6 CLI exported each of the four source-hashed synthetic schematics twice.
-  Raw and typed netlist hashes matched on repeats. The same-net `Device:Fuse`
-  and `Device:Polyfuse` cases each emitted one finding; both distinct-net
-  controls emitted none. Repeated typed-netlist SHA-256 values are
-  `368263f15c0627efc7a5f4b58a0b0beddda1dbe4b2d72522d6f24562a98a2a14`
-  (fuse fault), `e2172e8968c16de62855b6ef43ac4b5dd891ef753436133c864932b3e97ec72c`
-  (fuse control), `ff8e60df2a6775da8467b094f760a6b52371c809c4c6ce6d7499b9773a4932ca`
+- **Supplemental native screen (2026-10-08):** After the v0.4.1 failure,
+  generic fuse and polyfuse pins were renamed from repeated `~` placeholders to
+  distinct `Pin_1`/`Pin_2` functions without assigning direction. The locally
+  installed KiCad 10.0.6 CLI exported the revised four synthetic schematics
+  twice; raw and normalized netlist hashes matched on repeats. Same-net
+  `Device:Fuse` and `Device:Polyfuse` cases each emitted one finding, and both
+  distinct-net controls emitted none. Repeated typed-netlist SHA-256 values are
+  `02561b39eefe4b5187287a7bc95613fc8cf02d6694e9f6d0bdb18fa721ad7125`
+  (fuse fault), `afe2df29efb005812b02a320fb01af39a4d55bc7a5fdd598de568b29869ae5d7`
+  (fuse control), `6d63ab47c389442791a6e620fc0cbdc3ec6fd0f2088d5f4893afe4eb73528374`
   (polyfuse fault), and
-  `3cc9839cf451122932c229975be7fad33c7575d8cfa15f07f02823c975146061`
-  (polyfuse control). KiCad ERC reported no errors; it reported embedded
-  library/footprint warnings on all four fixtures and isolated-label warnings
-  on the distinct-net controls. None of those diagnostics identifies the
-  same-net fuse topology. The 10.0.6 compatibility screen supplements, but
-  does not replace, the digest-pinned acceptance lane.
+  `3b8af9b5b84054fc87d583f5428e7de2fd5fcc21fee014d44217d75a17b3841d`
+  (polyfuse control). The 10.0.6 compatibility screen supplements, but does
+  not replace, the digest-pinned acceptance lane.
 - **Acceptance-lane integrity (2026-10-07):** The shared native-fixture
   manifest mounts `tests/fixtures/design_lint` as its read-only root so both
   `two-pin-components/` and `two-pin-fuses/` sources resolve. An always-run
   test checks each registered source path before the optional Docker lane.
-  The locally installed KiCad 10.0.6 CLI exported all eight passive, diode,
-  fuse, and polyfuse fault/control schematics twice; normalized netlists
-  repeated identically, all four faults returned the expected `REVIEW`, and
-  all four distinct-net controls returned `PASS`. This is compatibility
-  evidence, not the pinned KiCad 10.0.0/10.0.5 result.
+  The 10.0.6 screen at that time covered the original eight passive, diode,
+  fuse, and polyfuse fault/control sources; the revised fuse sources are
+  covered by the 2026-10-08 screen above. Neither run substitutes for the
+  pinned KiCad 10.0.0/10.0.5 result.
 - **Remaining:** This host has no reachable Docker daemon, so it cannot run
   the digest-pinned KiCad 10.0.0/10.0.5 matrix locally. The exact-version cases
-  are enabled in the GitHub package acceptance job; no hosted result is
-  recorded for this dirty branch. Require that result before treating the
-  pinned native lane as verified.
+  are enabled in the GitHub package acceptance job. The v0.4.1 hosted package
+  run stopped at `same-net-fuse.kicad_sch` with `Failed to load schematic` on
+  both pinned versions before reaching the fuse controls. The local KiCad
+  10.0.6 CLI exports all four cases, which does not resolve the exact-version
+  failure. The fixture pin functions now use distinct generic names instead of
+  repeated `~` placeholders; this compatibility change still needs the pinned
+  GitHub result before the native lane can be treated as verified.
 
 #### LINT-085 — Fitted two-pin ferrite bead bypassed by one net
 
@@ -3153,7 +3163,11 @@ is not a reason by itself to expand its scope or change its default policy.
   KiCad exported both as unconnected. The synthetic control/fault sources now
   attach at the pin endpoints, their hashes are pinned, and the local fixture
   test asserts those wires. Repeated KiCad 10.0.0/10.0.5 exports remain pending
-  in the patch-tag acceptance run.
+  in the patch-tag acceptance run. The v0.4.1 hosted run also exposed reversed
+  TX/RX net declarations in the synthetic reference-bond map. The map now
+  follows the schematic's native pin functions (J1.1 TX, J1.2 RX, J2.1 TX on
+  the peer RX net, and J2.2 RX on the peer TX net); its source digest and
+  local contract test were updated. Exact pinned exports remain pending.
 
 #### LINT-088 — Fitted two-pin crystal terminals share one net
 
@@ -3190,6 +3204,42 @@ is not a reason by itself to expand its scope or change its default policy.
   fault and control; metamorphic tests preserve the unaffected peer finding
   when one crystal's pins are split. Exact native exports are wired into
   GitHub CI; the hosted receipt is pending for this revision.
+
+#### LINT-089 — Generic connector power-input pin is unassigned
+
+- **Status:** Implemented as `connector.unconnected_power_input`, defaulting
+  to `REVIEW`, with project `review`/`block`/`off` overrides and exact
+  fingerprint ignores. The shared connector candidate set and native pin-type
+  inventory drive the same typed report for CLI and MCP.
+- **Priority:** P1 connector completeness. A generic peer-pin heuristic flags
+  an open pin when one peer differs, but it is silent when every repeated
+  connector contact is open. The native `power_in` type gives the heuristic a
+  deterministic review signal without supplying the missing interface intent.
+- **Predicate:** A fitted connector pin is present in the exported native pin
+  electrical-type map as `power_in`; its function is absent, blank, numeric, or
+  a generic `Pin_N`; and no exported net assigns that pin. Named supply/return
+  checks retain precedence, and overlapping repeated-role or peer-outlier
+  prompts are suppressed for the same open pin.
+- **Boundary:** KiCad's type does not distinguish a positive supply contact
+  from a reference or establish that the contact should be connected. Explicit
+  no-connect markers remain review candidates; project owners can record a
+  justified exact ignore or disable the rule. DNP instances, non-connector
+  pins, meaningful named functions, and assigned pins are outside the
+  predicate. The finding does not claim peer pins should share a net or that
+  native schematic assignment proves PCB copper continuity.
+- **Fixtures and evidence:** The synthetic two-connector fault leaves both
+  generic `power_in` pins open while return pins stay connected; the valid
+  control assigns both contacts to `+5V`. Source hashes are
+  `2e16c602d6ba0068360b3f8b493351f6d7e4d7adbe94946d17db883587f0528f` (fault)
+  and `b05c1a3994a4f26f07e18bdfe28c8caaf4a298cbb66b6d1814b20c9a7dce2c13`
+  (control). Typed-netlist cases cover blank and absent function, assignment,
+  named supply/return deduplication, passive and `power_out` types, DNP,
+  blocking, disabling, and exact ignores. CLI/MCP parity and three-process
+  determinism include the finding. Local KiCad 10.0.6 exported both sources
+  repeatably, preserved native `power_in`, reported exactly the two fault pins,
+  and left the control clean. Digest-pinned KiCad 10.0.0 and 10.0.5 repeated
+  exports run through `NativeConnectorReturnFixtureTests` in GitHub CI; the
+  tag workflow records their exact-version result.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -5767,7 +5817,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 76 active rules. Each entry has a deterministic predicate, evidence
+contains 77 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to
