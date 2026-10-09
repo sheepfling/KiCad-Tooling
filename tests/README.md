@@ -24,6 +24,21 @@ For PowerShell, set the variable with
 `$env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"`.
 Run one module with `python -I -B -m pytest -q tests/test_product.py`.
 
+Focused runs use registered markers. `tests/conftest.py` keeps the lint-module
+group explicit and marks exact-native fixture classes separately:
+
+```sh
+python -I -B -m pytest -q -m "design_lint and not native_kicad and not slow"
+python -I -B -m pytest -q -m native_kicad
+python -I -B -m pytest -q tests/test_rc_filters.py -k disconnected-capacitor-return
+```
+
+The first command runs the portable, non-slow design-lint group. The second
+selects native KiCad fixtures and still requires each fixture's documented
+version and environment settings. `-k` selects a named test or parametrized
+case. Markers narrow local runs; the package acceptance gate continues to run
+the complete suite.
+
 `tests.support.reference_root()` copies the template's public examples, catalogs,
 and guidance into a disposable repository. It never copies reusable Python tools
 or the shared regression suite into project fixtures. CLI subprocesses load the

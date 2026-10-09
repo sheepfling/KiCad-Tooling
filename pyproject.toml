@@ -58,10 +58,16 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["--strict-markers"]
 # Prefer pytest functions, parametrization, and fixtures in new and migrated tests.
 # Avoid adding unittest.TestCase suites; migrate legacy suites in coherent slices.
 python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
+markers = [
+  "design_lint: deterministic design-lint rule, catalog, and parity behavior",
+  "native_kicad: source or board fixtures run against an exact native KiCad version",
+  "slow: cross-process, package, or broad integration checks that take longer to run",
+]
 
 [tool.ruff]
 # Ruff is pinned in the development extra so its default rule set is reproducible.
