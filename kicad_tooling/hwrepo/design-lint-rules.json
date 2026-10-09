@@ -2324,18 +2324,18 @@
         "A passing map does not establish device suitability, clamp performance, full transient interception, electrical approval, or manufacturing readiness."
       ],
       "fault_fixtures": [
-        "tests.test_pcb_protection_path.PcbProtectionPathTests.test_distance_and_via_count_faults_are_causal_and_reviewable",
-        "tests.test_pcb_protection_path.PcbProtectionPathTests.test_near_unconnected_via_does_not_satisfy_reference_via_requirement",
-        "tests.test_pcb_protection_path.PcbProtectionPathTests.test_net_identity_footprint_dnp_and_copper_disconnection_are_reported",
-        "tests.test_pcb_protection_path.PcbProtectionPathTests.test_legacy_snapshot_without_connected_via_inventory_is_incomplete"
+        "tests.test_pcb_protection_path.test_distance_and_via_count_faults_are_causal_and_reviewable",
+        "tests.test_pcb_protection_path.test_near_unconnected_via_does_not_satisfy_reference_via_requirement",
+        "tests.test_pcb_protection_path.test_net_identity_footprint_dnp_and_copper_disconnection_are_reported",
+        "tests.test_pcb_protection_path.test_legacy_snapshot_without_connected_via_inventory_is_incomplete"
       ],
       "valid_control_fixtures": [
-        "tests.test_pcb_protection_path.PcbProtectionPathTests.test_project_authored_boundaries_accept_exact_entry_and_via_limits",
-        "tests.test_pcb_protection_path.PcbProtectionPathTests.test_map_requires_exact_pad_ownership_and_paired_via_limits"
+        "tests.test_pcb_protection_path.test_project_authored_boundaries_accept_exact_entry_and_via_limits",
+        "tests.test_pcb_protection_path.test_map_requires_exact_pad_ownership_and_paired_via_limits"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_protection_path.PcbProtectionPathTests.test_pad_and_via_inventory_order_does_not_change_results"
+        "tests.test_pcb_protection_path.test_pad_and_via_inventory_order_does_not_change_results"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_protection_path.py#pcb_protection_path_entries",

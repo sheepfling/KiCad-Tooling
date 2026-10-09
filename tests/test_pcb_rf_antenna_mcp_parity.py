@@ -5,23 +5,36 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 from mcp import Client
 
+from kicad_tooling import design_lint as design_lint_cli
+from kicad_tooling.hwrepo import design_lint as design_lint_service
 from kicad_tooling.hwrepo.contracts import parse_model_text
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintReport,
     DesignLintRuleOverride,
+    PcbDecouplingCoverageReport,
+    PcbKeepoutCoverageReport,
+    PcbProtectionPathCoverageReport,
+    PcbReferencePlaneCoverageReport,
+    PcbRfModuleAntennaCoverageReport,
     PcbRfModuleAntennaMap,
+    PcbSignalPathRuleCoverageReport,
+    PcbSwitchingLoopCoverageReport,
+    PcbTrackWidthCoverageReport,
 )
+from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
     synthetic_design_lint_project,
 )
 from tests.test_pcb_rf_antenna import requirement
+from tests.test_pcb_rf_antenna import snapshot as antenna_snapshot
 
 
 def test_disabled_rf_antenna_coverage_matches_cli_and_mcp(tmp_path: Path) -> None:
@@ -64,3 +77,103 @@ def test_disabled_rf_antenna_coverage_matches_cli_and_mcp(tmp_path: Path) -> Non
         mcp_report.pcb_rf_module_antenna_coverage.map_sha256
         == hashlib.sha256(rf_map.model_dump_json().encode("utf-8")).hexdigest()
     )
+
+
+def test_incomplete_rf_antenna_fault_matches_cli_and_mcp(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    rf_map = PcbRfModuleAntennaMap(
+        basis="Synthetic RF module CLI/MCP fault parity",
+        requirements=(requirement(),),
+    )
+    policy = DesignLintPolicy(pcb_rf_module_antenna_map=rf_map)
+    root, native = synthetic_design_lint_project(tmp_path, policy)
+
+    def synthetic_geometry_scan(root, config, coach, authored, native_summary):
+        board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
+        board_path = root / board_relative
+        board_sha256 = hashlib.sha256(board_path.read_bytes()).hexdigest()
+        observed = antenna_snapshot().model_copy(
+            update={
+                "board_sha256": board_sha256,
+                "kicad_version": config.kicad_version,
+                "image": config.image,
+            }
+        )
+        assert coach.observed is not None
+        entries = pcb_rf_module_antenna_entries(
+            authored.pcb_rf_module_antenna_map,
+            coach.observed,
+            observed,
+        )
+        map_sha256 = hashlib.sha256(
+            authored.pcb_rf_module_antenna_map.model_dump_json().encode("utf-8")
+        ).hexdigest()
+        snapshot_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+        coverage = PcbRfModuleAntennaCoverageReport(
+            status="INCOMPLETE",
+            mode="review",
+            map_sha256=map_sha256,
+            board_path=board_relative,
+            board_sha256=board_sha256,
+            snapshot_path="build/design-lint/synthetic-pcb.json",
+            snapshot_sha256=snapshot_sha256,
+            probe_sha256=observed.probe_sha256,
+            kicad_version=observed.kicad_version,
+            image=observed.image,
+            netlist_sha256=coach.netlist_sha256,
+            entries=entries,
+        )
+        return (
+            PcbDecouplingCoverageReport(),
+            PcbProtectionPathCoverageReport(),
+            PcbTrackWidthCoverageReport(),
+            PcbReferencePlaneCoverageReport(),
+            PcbSwitchingLoopCoverageReport(),
+            PcbSignalPathRuleCoverageReport(),
+            PcbKeepoutCoverageReport(),
+            coverage,
+        )
+
+    monkeypatch.setattr(design_lint_service, "_scan_pcb_geometry", synthetic_geometry_scan)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "kicad-team-design-lint",
+            "--root",
+            str(root),
+            "--project",
+            "controller",
+            "--native-summary",
+            native.relative_to(root).as_posix(),
+            "--format",
+            "json",
+        ],
+    )
+    cli_returncode = design_lint_cli.main()
+    cli_report = parse_model_text(capsys.readouterr().out, DesignLintReport)
+    assert cli_returncode == 1
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp_report = asyncio.run(inspect_mcp())
+    assert cli_report == mcp_report
+    assert mcp_report.pcb_rf_module_antenna_coverage.status == "INCOMPLETE"
+    (finding,) = tuple(
+        item
+        for item in mcp_report.findings
+        if item.rule_id == "pcb.rf_module_antenna_keepout_coverage"
+    )
+    assert finding.subject == "U1: onboard_antenna antenna requirement"

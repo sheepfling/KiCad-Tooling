@@ -58,8 +58,8 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Use pytest functions, parametrization, and fixtures for new and migrated tests.
-# Keep legacy unittest.TestCase discovery enabled while those suites migrate.
+# Prefer pytest functions, parametrization, and fixtures for new and migrated tests.
+# Migrate legacy unittest.TestCase suites incrementally as their coverage is touched.
 python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
 

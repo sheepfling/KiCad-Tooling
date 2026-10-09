@@ -120,9 +120,6 @@ from tests.test_pcb_keepouts import (
     mapping_for as keepout_mapping_for,
 )
 from tests.test_pcb_protection_path import (
-    PcbProtectionPathTests,
-)
-from tests.test_pcb_protection_path import (
     coverage_report as pcb_protection_path_coverage,
 )
 from tests.test_pcb_protection_path import mapping as pcb_protection_path_map
@@ -442,7 +439,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         RegulatorFeedbackTests: RegulatorFeedbackTests(),
         RcFilterTests: RcFilterTests(),
         PcbDecouplingTests: PcbDecouplingTests(),
-        PcbProtectionPathTests: PcbProtectionPathTests(),
         PcbReferencePlaneTests: PcbReferencePlaneTests(),
         PcbSwitchingLoopTests: PcbSwitchingLoopTests(),
         Stm32PinMapTests: Stm32PinMapTests(),
