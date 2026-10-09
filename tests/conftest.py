@@ -157,6 +157,23 @@ _CORE_DESIGN_LINT_MODULES = frozenset(
     }
 )
 
+_SCHEMATIC_LINT_DESIGN_LINT_TESTS = frozenset(
+    {
+        "test_schematic_geometry_is_project_opt_in_and_uses_review_block_and_ignore_policy",
+        "test_pin_tip_on_wire_interior_has_independent_project_policy",
+        "test_wire_endpoint_near_pin_tip_has_independent_project_policy",
+        "test_label_near_wire_endpoint_has_independent_project_policy",
+        "test_unmarked_wire_crossing_has_independent_review_and_ignore_policy",
+        "test_unmarked_t_junction_has_independent_review_and_ignore_policy",
+        "test_coincident_text_anchor_rule_is_configurable_and_review_only_by_default",
+        "test_free_text_overlap_rule_is_configurable_and_review_only_by_default",
+        "test_free_text_over_wire_rule_is_configurable_and_review_only_by_default",
+        "test_wire_through_symbol_body_rule_is_configurable_and_off_by_default",
+        "test_geometry_coverage_is_scoped_to_enabled_rule_capabilities",
+        "test_free_text_over_symbol_body_rule_is_configurable_and_off_by_default",
+    }
+)
+
 _DESIGN_LINT_MODULES = _CORE_DESIGN_LINT_MODULES.union(
     *(modules for modules in _LINT_AREA_MODULES.values())
 )
@@ -189,6 +206,11 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         for marker, modules in _LINT_AREA_MODULES.items():
             if path in modules:
                 item.add_marker(getattr(pytest.mark, marker))
+        if (
+            path == "tests/test_design_lint.py"
+            and item.nodeid.rsplit("::", maxsplit=1)[-1] in _SCHEMATIC_LINT_DESIGN_LINT_TESTS
+        ):
+            item.add_marker(pytest.mark.schematic_lint)
         if path in _NATIVE_KICAD_MODULES or native_class:
             item.add_marker(pytest.mark.native_kicad)
         if path in _SLOW_MODULES or native_class:
