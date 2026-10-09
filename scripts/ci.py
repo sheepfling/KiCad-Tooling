@@ -51,6 +51,8 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
             "kicad_tooling/hwrepo/fixtures/pcb-return-zone-connected.kicad_pcb",
             "kicad_tooling/hwrepo/fixtures/pcb-return-zone-split.kicad_pcb",
             "kicad_tooling/hwrepo/fixtures/pcb-return-zone-through-hole-split.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-unstitched-planes.kicad_pcb",
+            "kicad_tooling/hwrepo/fixtures/pcb-return-stitched-planes.kicad_pcb",
             "kicad_tooling/hwrepo/fixtures/pcb-return-net-tie-connected.kicad_pcb",
             "kicad_tooling/hwrepo/fixtures/pcb-return-net-tie-dnp.kicad_pcb",
             "kicad_tooling/hwrepo/fixtures/pcb-return-isolation-open.kicad_pcb",

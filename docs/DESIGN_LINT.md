@@ -1085,7 +1085,13 @@ KiCad 10.
 
 The native fixture lane checks direct same-net routes across layers and retains
 the transition via's geometry and per-endpoint component membership in both the
-connected and open controls. It also checks a connected copper plane and
+connected and open controls. It also checks same-net front/back return planes
+with matching pad/net assignments: the unstitched fault has separate copper
+groups, and its paired control adds one plated through via. This synthetic
+topology is based on the failure class in the public
+[cohort copper-LVS issue](https://github.com/rjwalters/kicad-tools/issues/3787);
+no source board or candidate code was copied. The lane also checks a connected
+copper plane and
 same-net split planes, including a connected return plane with an additional
 filled island that has no pad anchor. That index is review evidence; the tool
 does not infer that the island is electrically isolated or defective. The lane

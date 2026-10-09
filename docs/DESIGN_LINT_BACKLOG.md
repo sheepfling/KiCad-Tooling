@@ -4564,10 +4564,13 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-025 — PCB return-reference and connector-ground path evidence
 
-- **Status:** v3 implemented and synthetic-validated in the electrical contract
-  lane; not field-validated. It covers direct pad connectivity, explicit
-  net-tie bonds, DNP state, intentional isolation, copper-zone identity, island
-  counts, and exact per-pad island indexes using source-bound KiCad 10 `pcbnew`
+- **Status:** v4 adds a synthetic same-net front/back plane fault and
+  through-via control to the electrical contract lane; existing LINT-025
+  controls were synthetic-validated, and exact-version hosted acceptance for
+  this addition is pending. It is not field-validated. It covers direct pad
+  connectivity, explicit net-tie bonds, DNP state, intentional isolation,
+  copper-zone identity, island counts, and exact per-pad island indexes using
+  source-bound KiCad 10 `pcbnew`
   evidence and synthetic regressions. Hosted
   native CI runs alternate-layer connected/open controls, connected and split
   plane controls, fitted versus DNP net-tie controls, and separate-domain
@@ -4575,23 +4578,30 @@ is not a reason by itself to expand its scope or change its default policy.
   derived via identities, net, center coordinates, layer span, drill/diameter,
   via kind, identical-geometry multiplicity, and per-pad component membership.
   It also lists each filled island with no observed pad anchor. The catalogued
-  10.0.0 and 10.0.5 images are covered by the native matrix.
+  10.0.0 and 10.0.5 images are covered by the native matrix. The new synthetic
+  same-net F.Cu/B.Cu plane pair tests a missing stitch via against a one-via
+  control; exact-version hosted acceptance for that addition is pending.
 - **Problem:** Matching schematic nets can still lack an intended physical
   copper path due to unconnected pads, plane splits, net ties, or layout
   changes.
-- **Evidence and check:** `pcb_return_paths` names each exact PCB pad, expected
-  net and footprint, direct or bonded domain, and exact net-tie footprint/pad
-  groups. A read-only native probe refills zones in memory and reports each pad's
-  connected pad set, stable via geometry and per-pad component membership,
-  connected zone UUID/layer identities, and each zone's filled-island count and
-  pad-to-island indexes from the exact digest-pinned KiCad 10 image. Via IDs hash
+- **Evidence and check:** `pcb_return_paths` names each exact PCB pad and
+  expected net and footprint, direct or bonded domain, and exact net-tie
+  footprint/pad groups. A read-only native probe refills zones in memory and
+  reports each pad's connected pad set, stable via geometry and per-pad
+  component membership, directly touched zone UUID/layer identities, and each
+  zone's filled-island count and pad-to-island indexes from the exact
+  digest-pinned KiCad 10 image.
+  KiCad's [GetConnectedItems API](https://docs.kicad.org/doxygen/classCONNECTIVITY__DATA.html)
+  returns every item in a copper cluster, so the probe filters those candidates
+  by the pad's copper layers and actual filled-island contact before recording
+  direct zone evidence. Via IDs hash
   canonical native geometry rather than KiCad object UUIDs, which can change
   between loads. Reports include via positions and layer spans but do not infer
   route order or capacity. The island mapping intersects each filled polygon,
-  preserving polygon holes, with KiCad's effective copper-pad shape. A connected
-  zone with no intersecting island makes capture fail. Island indexes without a
-  mapped pad are recorded as unanchored-to-pad review evidence; that does not
-  assert the island is electrically isolated or defective. Receipts bind board
+  preserving polygon holes, with KiCad's effective copper-pad shape. Zone
+  islands without a mapped pad are recorded as unanchored-to-pad review
+  evidence; that does not assert the island is electrically isolated or
+  defective. Receipts bind board
   bytes, tool version/image, probe bytes, pad/net/footprint/DNP data,
   copper-zone and island observations, and native net-tie groups; archive replay
   recomputes findings
@@ -4603,6 +4613,13 @@ is not a reason by itself to expand its scope or change its default policy.
   and require replay to reject the changed conclusion. A successful synthetic
   runner response that changes board bytes during capture is rejected as stale;
   this fault is injected at the runner boundary so it is deterministic.
+  The public [cohort copper-LVS issue #3787](https://github.com/rjwalters/kicad-tools/issues/3787)
+  describes same-net GND planes with physical islands where no stitching via
+  bonds the layers. That report supplied a failure-class lead only; no board or
+  candidate code was copied. The new tooling-owned pair keeps the two mapped
+  pads on one `RETURN` net and one zone on each copper layer, then compares no
+  through via with a single through-via control. Its contract result remains
+  conditional on the project explicitly requiring that endpoint path.
 - **Remaining:** No synthetic path or pad-island evidence case remains in this
   item. Native isolation controls verify two declared domains remain separate
   and catch an added fitted net-tie bridge while preserving each domain's local
@@ -4617,8 +4634,9 @@ is not a reason by itself to expand its scope or change its default policy.
   footprint identity, pad groups, and DNP state, but does not prove that copper
   inside the footprint physically bridges those pads. Isolated domains remain
   valid when declared.
-- **Fixtures:** Connected plane; missing pad connection; split plane; declared
-  net tie; disconnected island; valid isolation; DNP bond; alternate layer
+- **Fixtures:** Connected plane; missing pad connection; split plane; same-net
+  front/back return planes without and with a through-via bond; declared net
+  tie; disconnected island; valid isolation; DNP bond; alternate layer
   return. The first connected-plane and split-plane controls are now included in
   the native lane for SMD and plated through-hole pads; fitted and DNP net-tie
   controls plus valid isolation and an unintended isolation bridge are included.
@@ -8718,10 +8736,19 @@ it does not claim field validation or effectiveness against private boards.
 ### Cohort source inspection register
 
 The following source observations came from current public project
-documentation and selected source inspection on 2026-09-27 through 2026-10-01.
+documentation and selected source inspection on 2026-09-27 through 2026-10-08.
 Runtime trial evidence is recorded separately under LINT-031. No cohort tool
 has been run on a private board or imported into this repository.
 
+- **Same-net plane copper opens:** Public
+  [kicad-tools issue #3787](https://github.com/rjwalters/kicad-tools/issues/3787)
+  describes a board whose front and back ground planes share one schematic net
+  but remain separate copper islands without ground stitching vias. The issue
+  reports that schematic/net assignment and its DRC run did not establish a
+  physical bond; its copper-LVS comparison exposed the opens. This failure
+  description informed the synthetic LINT-025 unstitched-plane fault and
+  through-via control. No candidate analyzer code, board, or project fixture
+  was copied, and no head-to-head analyzer trial is claimed.
 - **Operating-state MOSFET stress:** The public
   [kicad-tools README](https://github.com/rjwalters/kicad-tools/blob/main/README.md)
   documents the base pip installation, but it does not list

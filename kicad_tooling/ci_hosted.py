@@ -10842,6 +10842,26 @@ def pcb_return_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
             None,
         ),
         (
+            "unstitched-planes",
+            "pcb-return-unstitched-planes.kicad_pcb",
+            "direct",
+            False,
+            None,
+            None,
+            None,
+            None,
+        ),
+        (
+            "stitched-planes",
+            "pcb-return-stitched-planes.kicad_pcb",
+            "direct",
+            True,
+            None,
+            None,
+            None,
+            None,
+        ),
+        (
             "zone-unanchored-island",
             "pcb-return-zone-unanchored-island.kicad_pcb",
             "direct",
@@ -11138,6 +11158,106 @@ def pcb_return_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 failures.append(
                     "Native copper pad membership does not match the fixture's declared topology"
                 )
+            if fixture_id in {"unstitched-planes", "stitched-planes"}:
+                zone_by_layer = {item.layer.casefold(): item for item in snapshot.zones}
+                if len(snapshot.zones) != 2 or set(zone_by_layer) != {"f.cu", "b.cu"}:
+                    failures.append(
+                        "Plane-stitch fixture must retain exactly one front and one back copper zone"
+                    )
+                elif any(
+                    zone.net != "RETURN"
+                    or zone.filled_island_count != 1
+                    or zone.unanchored_pad_island_indexes
+                    for zone in zone_by_layer.values()
+                ):
+                    failures.append(
+                        "Plane-stitch fixture zones must each be one RETURN island anchored to a pad"
+                    )
+                if first is None or second is None:
+                    failures.append("Plane-stitch fixture is missing one reviewed endpoint pad")
+                else:
+                    first_zone_ids = {
+                        (item.uuid.casefold(), item.layer.casefold())
+                        for item in first.connected_zones
+                    }
+                    second_zone_ids = {
+                        (item.uuid.casefold(), item.layer.casefold())
+                        for item in second.connected_zones
+                    }
+                    front_zone = zone_by_layer.get("f.cu")
+                    back_zone = zone_by_layer.get("b.cu")
+                    if (
+                        front_zone is None
+                        or back_zone is None
+                        or first_zone_ids != {(front_zone.uuid.casefold(), "f.cu")}
+                        or second_zone_ids != {(back_zone.uuid.casefold(), "b.cu")}
+                    ):
+                        failures.append(
+                            "Plane-stitch fixture endpoint pads are not assigned to their expected copper layers"
+                        )
+                expected_via_count = 1 if expected_connected else 0
+                if len(snapshot.vias) != expected_via_count:
+                    failures.append(
+                        "Plane-stitch fixture via count does not match its connected/open topology"
+                    )
+                elif expected_connected:
+                    via = snapshot.vias[0]
+                    if (
+                        via.net != "RETURN"
+                        or (via.x_nm, via.y_nm) != (10_000_000, 5_000_000)
+                        or (via.start_layer, via.end_layer) != ("F.Cu", "B.Cu")
+                        or (via.diameter_nm, via.drill_nm) != (800_000, 300_000)
+                        or via.kind != "through"
+                        or via.multiplicity != 1
+                        or first is None
+                        or second is None
+                        or via.id not in first.connected_vias
+                        or via.id not in second.connected_vias
+                    ):
+                        failures.append(
+                            "Plane-stitch control does not retain the exact through-via geometry in both copper components"
+                        )
+                    else:
+                        repeated_command, repeated_snapshot = capture_native_pcb_connectivity(
+                            root, fixture_config, scratch / "receipt-repeat"
+                        )
+                        if (
+                            repeated_command.returncode != 0
+                            or repeated_command.error is not None
+                            or not native_pcb_command_matches(repeated_command, fixture_config)
+                            or repeated_snapshot is None
+                            or snapshot.vias != repeated_snapshot.vias
+                            or snapshot.zones != repeated_snapshot.zones
+                            or tuple(
+                                (
+                                    item.pad,
+                                    item.connected_pads,
+                                    item.connected_vias,
+                                    item.connected_zones,
+                                    item.connected_islands,
+                                )
+                                for item in snapshot.pads
+                            )
+                            != tuple(
+                                (
+                                    item.pad,
+                                    item.connected_pads,
+                                    item.connected_vias,
+                                    item.connected_zones,
+                                    item.connected_islands,
+                                )
+                                for item in repeated_snapshot.pads
+                            )
+                        ):
+                            failures.append(
+                                "Plane-stitch via identity or pad/zone connectivity changed across identical native loads"
+                            )
+                        else:
+                            via_identity_repeatable = True
+                if connectivity_check is None or (
+                    expected_connected and "F.Cu to B.Cu" not in connectivity_check.detail
+                ):
+                    failures.append("Plane-stitch report omits the copper transition evidence")
             if expected_tie_dnp is not None:
                 observed_ties = {item.reference.casefold(): item for item in snapshot.net_ties}
                 tie = observed_ties.get("nt1")
@@ -11348,6 +11468,11 @@ def pcb_return_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
                 event_fields["via_identity_repeatable"] = (
                     "true" if via_identity_repeatable else "false"
                 )
+            if fixture_id == "stitched-planes":
+                event_fields["plane_stitch_repeatable"] = (
+                    "true" if via_identity_repeatable else "false"
+                )
+                event_fields["zone_layers"] = "F.Cu,B.Cu"
             log.event(
                 f"pcb-return-fixture/{fixture_id}",
                 "PASS",

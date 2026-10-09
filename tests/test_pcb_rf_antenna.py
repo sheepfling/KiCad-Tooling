@@ -128,9 +128,7 @@ def netlist(
     dnp: bool = False,
 ) -> NetlistContract:
     return NetlistContract(
-        components={
-            "U1": ComponentContract(value="Radio", footprint=footprint, part_id=part_id)
-        },
+        components={"U1": ComponentContract(value="Radio", footprint=footprint, part_id=part_id)},
         nets={} if feed_net is None else {feed_net: ("U1.1",)},
         dnp_components=("U1",) if dnp else (),
         component_symbols={"U1": symbol},
@@ -213,14 +211,17 @@ def test_footprint_local_transform_uses_board_angle_and_side(
     local: tuple[int, int],
     expected: tuple[int, int],
 ) -> None:
-    assert _transform_point(
-        local,
-        placement(
-            position_nm=position_nm,
-            orientation_microdegrees=orientation_microdegrees,
-            side=side,
-        ),
-    ) == expected
+    assert (
+        _transform_point(
+            local,
+            placement(
+                position_nm=position_nm,
+                orientation_microdegrees=orientation_microdegrees,
+                side=side,
+            ),
+        )
+        == expected
+    )
 
 
 def test_module_and_keepout_moving_together_preserves_exact_coverage() -> None:
@@ -499,7 +500,5 @@ def test_rf_antenna_lint_finding_supports_review_block_off_and_exact_ignore() ->
         source_netlist=source_netlist,
         observed_board=fault_board,
     )
-    ignored_finding = next(
-        item for item in ignored.findings if item.rule_id == finding.rule_id
-    )
+    ignored_finding = next(item for item in ignored.findings if item.rule_id == finding.rule_id)
     assert ignored_finding.disposition == "IGNORED"

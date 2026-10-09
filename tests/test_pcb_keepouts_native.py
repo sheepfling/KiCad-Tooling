@@ -119,9 +119,7 @@ def test_native_schema_12_snapshot_records_keepout_and_footprint_evidence(
         item.footprint == footprints[item.pad.split(".")[0]].footprint for item in snapshot.pads
     )
     assert all(item.dnp == footprints[item.pad.split(".")[0]].dnp for item in snapshot.pads)
-    areas: dict[str, PcbRuleAreaObservation] = {
-        item.name: item for item in snapshot.rule_areas
-    }
+    areas: dict[str, PcbRuleAreaObservation] = {item.name: item for item in snapshot.rule_areas}
     front_area = areas["SYNTHETIC_ANTENNA_KEEPOUT"]
     assert front_area.layers == ("F.Cu", "B.Cu")
     assert front_area.net is None

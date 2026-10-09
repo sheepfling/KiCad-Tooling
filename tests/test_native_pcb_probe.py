@@ -51,6 +51,50 @@ class FakeFilledPolygons:
         return self._holes[island_index][hole_index]
 
 
+class FakeCollidableIsland(FakeLineChain):
+    def __init__(self, points: tuple[tuple[int, int], ...], *, touches_pad: bool) -> None:
+        super().__init__(points)
+        self.touches_pad = touches_pad
+
+    def Collide(self, _shape: Any) -> bool:
+        return self.touches_pad
+
+    def AddHole(self, _hole: FakeLineChain, _error: int) -> None:
+        return None
+
+
+class FakePadShape:
+    def __init__(self, layers: set[int]) -> None:
+        self.layers = layers
+        self.requested_layers: list[int] = []
+
+    def GetLayerSet(self) -> FakeLayerSet:
+        return FakeLayerSet(self.layers)
+
+    def GetEffectiveShape(self, layer: int) -> object:
+        self.requested_layers.append(layer)
+        return object()
+
+
+class FakeZone:
+    def __init__(self, layer: int) -> None:
+        self.layer = layer
+
+    def GetLayer(self) -> int:
+        return self.layer
+
+
+class FakeShapePolySet:
+    def __init__(self, outline: FakeCollidableIsland) -> None:
+        self.outline = outline
+
+    def AddHole(self, hole: FakeLineChain, error: int) -> None:
+        self.outline.AddHole(hole, error)
+
+    def Collide(self, shape: object) -> bool:
+        return self.outline.Collide(shape)
+
+
 class FakeLayerSet:
     def __init__(self, layers: set[int]) -> None:
         self.layers = layers
@@ -199,6 +243,24 @@ def test_canonicalization_rejects_degenerate_native_rings() -> None:
 
     with pytest.raises(ValueError, match="fewer than three distinct points"):
         canonical_ring(FakeLineChain(((0, 0), (1, 1), (0, 0))))
+
+
+def test_zone_island_evidence_is_direct_to_pad_and_layer() -> None:
+    helpers = probe_helpers()
+    cast(Any, helpers["native_pcbnew"]).SHAPE_POLY_SET = FakeShapePolySet
+    observe = cast(Any, helpers["zone_island_indexes_touching_pad"])
+    pad = FakePadShape({0})
+    filled = FakeFilledPolygons(
+        outlines=(
+            FakeCollidableIsland(((0, 0), (2, 0), (2, 2)), touches_pad=True),
+            FakeCollidableIsland(((3, 3), (4, 3), (4, 4)), touches_pad=False),
+        ),
+        holes=((), ()),
+    )
+
+    assert observe(pad, FakeZone(0), filled) == (0,)
+    assert observe(pad, FakeZone(1), filled) == ()
+    assert pad.requested_layers == [0]
 
 
 def test_rule_area_observation_serializes_outline_holes_layers_and_restrictions() -> None:

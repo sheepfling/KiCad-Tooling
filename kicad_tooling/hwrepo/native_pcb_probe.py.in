@@ -291,6 +291,22 @@ def normalized_filled_zone_polygons(zone: Any, layer: Any) -> Any:
     return filled
 
 
+def zone_island_indexes_touching_pad(pad: Any, zone: Any, filled: Any) -> tuple[int, ...]:
+    """Return filled islands on this pad's copper layers that touch its copper shape."""
+    layer = zone.GetLayer()
+    if not pad.GetLayerSet().Contains(layer):
+        return ()
+    pad_shape = pad.GetEffectiveShape(layer)
+    indexes: list[int] = []
+    for island_index in range(filled.OutlineCount()):
+        island = native_pcbnew.SHAPE_POLY_SET(filled.COutline(island_index))
+        for hole_index in range(filled.HoleCount(island_index)):
+            island.AddHole(filled.CHole(island_index, hole_index), 0)
+        if island.Collide(pad_shape):
+            indexes.append(island_index)
+    return tuple(indexes)
+
+
 def main(board_path: Path, output_path: Path, request_path: Path | None = None) -> None:
     board = native_pcbnew.LoadBoard(str(board_path))
     if board is None:
@@ -396,6 +412,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
                 continue
             pad_geometry.append((reference, dnp, pad))
             connected: set[str] = {reference}
+            component_zones: set[tuple[str, str]] = set()
             connected_zones: set[tuple[str, str]] = set()
             connected_vias: set[str] = set()
             for item in connectivity.GetConnectedItems(pad, 0):
@@ -404,7 +421,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
                     if item_reference:
                         connected.add(item_reference)
                 elif item.GetClass() == "ZONE":
-                    connected_zones.add(
+                    component_zones.add(
                         (item.m_Uuid.AsString(), board.GetLayerName(item.GetLayer()))
                     )
                 elif item.GetClass() == "PCB_VIA":
@@ -417,7 +434,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
                     connected_vias.add(identity)
             connected_islands: list[dict[str, Any]] = []
             for uuid, layer in sorted(
-                connected_zones, key=lambda item: (item[0].casefold(), item[1].casefold())
+                component_zones, key=lambda item: (item[0].casefold(), item[1].casefold())
             ):
                 identity = (uuid.casefold(), layer.casefold())
                 zone = zone_objects.get(identity)
@@ -426,19 +443,12 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
                     raise ValueError(
                         f"Connected pad {reference} refers to an unobserved zone {uuid} on {layer}"
                     )
-                pad_shape = pad.GetEffectiveShape(zone.GetLayer())
-                island_indices: list[int] = []
-                for island_index in range(filled.OutlineCount()):
-                    island = native_pcbnew.SHAPE_POLY_SET(filled.COutline(island_index))
-                    for hole_index in range(filled.HoleCount(island_index)):
-                        island.AddHole(filled.CHole(island_index, hole_index), 0)
-                    if island.Collide(pad_shape):
-                        island_indices.append(island_index)
+                island_indices = zone_island_indexes_touching_pad(pad, zone, filled)
                 if not island_indices:
-                    raise ValueError(
-                        f"Connected pad {reference} has no copper-shape intersection with "
-                        f"filled island of zone {uuid} on {layer}"
-                    )
+                    # GetConnectedItems returns every item in the copper component. A
+                    # plane elsewhere in that component is not direct pad contact.
+                    continue
+                connected_zones.add((uuid, layer))
                 connected_islands.extend(
                     {"uuid": uuid, "layer": layer, "island_index": island_index}
                     for island_index in island_indices

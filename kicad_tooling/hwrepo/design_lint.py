@@ -3180,17 +3180,13 @@ def candidates(
                         "observed_part_id": (
                             () if entry.observed_part_id is None else (entry.observed_part_id,)
                         ),
-                        "rf_feed_pad": (
-                            () if entry.rf_feed_pad is None else (entry.rf_feed_pad,)
-                        ),
+                        "rf_feed_pad": (() if entry.rf_feed_pad is None else (entry.rf_feed_pad,)),
                         "expected_rf_feed_net": (
                             ()
                             if entry.expected_rf_feed_net is None
                             else (entry.expected_rf_feed_net,)
                         ),
-                        "observed_schematic_rf_feed_nets": (
-                            entry.observed_schematic_rf_feed_nets
-                        ),
+                        "observed_schematic_rf_feed_nets": (entry.observed_schematic_rf_feed_nets),
                         "observed_board_rf_feed_net": (
                             ()
                             if entry.observed_board_rf_feed_net is None
@@ -3718,11 +3714,7 @@ def evaluate(
         pcb_keepout_coverage = pcb_keepout_coverage.model_copy(update={"mode": keepout_mode})
     rf_antenna_map = policy.pcb_rf_module_antenna_map
     rf_antenna_override = next(
-        (
-            item
-            for item in policy.rules
-            if item.rule_id == "pcb.rf_module_antenna_keepout_coverage"
-        ),
+        (item for item in policy.rules if item.rule_id == "pcb.rf_module_antenna_keepout_coverage"),
         None,
     )
     rf_antenna_mode: Literal["review", "block", "off"] = (
@@ -4677,7 +4669,9 @@ def evaluate(
             "Review each named PCB keepout against its approved geometry, copper layers, and restriction settings.",
         )
     if pcb_rf_module_antenna_coverage.status == "BLOCKED":
-        actions += ("Repair source-bound RF module and PCB placement evidence, then rerun design lint.",)
+        actions += (
+            "Repair source-bound RF module and PCB placement evidence, then rerun design lint.",
+        )
     if pcb_rf_module_antenna_coverage.status == "INCOMPLETE":
         actions += (
             "Review each mapped RF module identity, fitted disposition, RF feed net, and placement-relative antenna keepout against its independent requirement.",
@@ -5339,9 +5333,7 @@ def _scan_pcb_geometry(
             PcbKeepoutCoverageReport(status="DISABLED", mode=keepout_mode)
             if keepout_map is not None
             else PcbKeepoutCoverageReport(),
-            PcbRfModuleAntennaCoverageReport(
-                status="DISABLED", mode=rf_antenna_mode
-            )
+            PcbRfModuleAntennaCoverageReport(status="DISABLED", mode=rf_antenna_mode)
             if rf_antenna_map is not None
             else PcbRfModuleAntennaCoverageReport(),
         )
@@ -5731,9 +5723,7 @@ def _scan_pcb_geometry(
                 issue=issue,
             )
             if rf_antenna_map is not None and not rf_antenna_disabled
-            else PcbRfModuleAntennaCoverageReport(
-                status="DISABLED", mode=rf_antenna_mode
-            )
+            else PcbRfModuleAntennaCoverageReport(status="DISABLED", mode=rf_antenna_mode)
             if rf_antenna_map is not None
             else PcbRfModuleAntennaCoverageReport()
         )

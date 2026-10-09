@@ -2401,16 +2401,10 @@ class PcbRfModuleAntennaMap(StrictModel):
     def unique_module_requirements(self) -> PcbRfModuleAntennaMap:
         if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
             raise ValueError("RF module antenna requirement IDs must be unique")
-        if len({item.reference.casefold() for item in self.requirements}) != len(
-            self.requirements
-        ):
+        if len({item.reference.casefold() for item in self.requirements}) != len(self.requirements):
             raise ValueError("An RF module reference can be mapped only once")
         if len(
-            {
-                item.keepout.name.casefold()
-                for item in self.requirements
-                if item.keepout is not None
-            }
+            {item.keepout.name.casefold() for item in self.requirements if item.keepout is not None}
         ) != sum(item.keepout is not None for item in self.requirements):
             raise ValueError("An RF antenna keepout name can be mapped only once")
         return self
@@ -2868,14 +2862,18 @@ class PcbRfModuleAntennaCoverageEntry(StrictModel):
                     or self.observed_board_rf_feed_net is not None
                     or self.expected_keepout_name is not None
                 ):
-                    raise ValueError("Complete DNP coverage cannot require a fitted feed or keepout")
+                    raise ValueError(
+                        "Complete DNP coverage cannot require a fitted feed or keepout"
+                    )
             elif (
                 self.rf_feed_pad is None
                 or self.expected_rf_feed_net is None
                 or self.observed_schematic_rf_feed_nets != (self.expected_rf_feed_net,)
                 or self.observed_board_rf_feed_net != self.expected_rf_feed_net
             ):
-                raise ValueError("Complete fitted RF module coverage must match its feed pad and net")
+                raise ValueError(
+                    "Complete fitted RF module coverage must match its feed pad and net"
+                )
             if self.disposition == "onboard_antenna":
                 expected_flags = (
                     self.expected_forbids_tracks,
@@ -7172,7 +7170,7 @@ class PcbTrackObservation(StrictModel):
 
 
 class PcbPadConnectivityObservation(StrictModel):
-    """Native KiCad observation of one pad and every pad in its copper component."""
+    """Native pad identity, copper-component members, and directly touched zone islands."""
 
     pad: Reference
     net: NetName | None

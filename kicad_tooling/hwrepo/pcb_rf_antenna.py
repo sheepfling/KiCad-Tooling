@@ -18,9 +18,7 @@ from .models import (
     PcbRuleAreaPolygonObservation,
 )
 
-_PI = Decimal(
-    "3.141592653589793238462643383279502884197169399375105820974944592307816406286"
-)
+_PI = Decimal("3.141592653589793238462643383279502884197169399375105820974944592307816406286")
 _MICRODEGREES_PER_TURN = 360_000_000
 _DECIMAL_EPSILON = Decimal("1e-68")
 
@@ -28,9 +26,7 @@ _Key = TypeVar("_Key", bound=str)
 _Value = TypeVar("_Value")
 
 
-def _casefold_matches(
-    mapping: Mapping[_Key, _Value], key: str
-) -> tuple[tuple[_Key, _Value], ...]:
+def _casefold_matches(mapping: Mapping[_Key, _Value], key: str) -> tuple[tuple[_Key, _Value], ...]:
     folded = key.casefold()
     return tuple((name, value) for name, value in mapping.items() if name.casefold() == folded)
 
@@ -127,9 +123,7 @@ def _transform_polygons(
         )
         for polygon in requirement.keepout.local_polygons
     )
-    return tuple(
-        sorted(transformed, key=lambda polygon: (polygon.outline_nm, polygon.holes_nm))
-    )
+    return tuple(sorted(transformed, key=lambda polygon: (polygon.outline_nm, polygon.holes_nm)))
 
 
 def _source_nets_for_pin(netlist: NetlistContract, pin: str) -> tuple[str, ...]:
@@ -187,7 +181,9 @@ def _append_keepout_issues(
     observed_digest = _geometry_digest(area.polygons)
     observed_layers = tuple(sorted(area.layers, key=lambda item: (item.casefold(), item)))
     if observed_digest != expected_digest:
-        issues.append("native antenna keepout geometry does not match the transformed local outline")
+        issues.append(
+            "native antenna keepout geometry does not match the transformed local outline"
+        )
     if {item.casefold() for item in area.layers} != {item.casefold() for item in keepout.layers}:
         issues.append("native antenna keepout copper layers differ from the project requirement")
     expected_flags = (
@@ -246,12 +242,17 @@ def pcb_rf_module_antenna_entries(
         ):
             issues.append("native schematic part ID differs from the project RF module identity")
         schematic_dnp = (
-            any(item.casefold() == requirement.reference.casefold() for item in netlist.dnp_components)
+            any(
+                item.casefold() == requirement.reference.casefold()
+                for item in netlist.dnp_components
+            )
             if component is not None
             else None
         )
         if schematic_dnp is not None and schematic_dnp != expected_dnp:
-            issues.append("schematic fitted/DNP state differs from the explicit antenna disposition")
+            issues.append(
+                "schematic fitted/DNP state differs from the explicit antenna disposition"
+            )
 
         footprint_matches = tuple(
             item
@@ -268,7 +269,9 @@ def pcb_rf_module_antenna_entries(
         if placement is not None and placement.footprint != requirement.expected_footprint:
             issues.append("native PCB footprint differs from the project RF module identity")
         if board_dnp is not None and board_dnp != expected_dnp:
-            issues.append("native PCB fitted/DNP state differs from the explicit antenna disposition")
+            issues.append(
+                "native PCB fitted/DNP state differs from the explicit antenna disposition"
+            )
 
         observed_schematic_rf_feed_nets: tuple[str, ...] = ()
         observed_board_rf_feed_net: str | None = None
@@ -291,7 +294,9 @@ def pcb_rf_module_antenna_entries(
                 if pad.footprint != requirement.expected_footprint:
                     issues.append("native PCB RF feed pad footprint differs from the mapped module")
                 if pad.dnp != expected_dnp:
-                    issues.append("native PCB RF feed pad fitted/DNP state differs from disposition")
+                    issues.append(
+                        "native PCB RF feed pad fitted/DNP state differs from disposition"
+                    )
 
         (
             observed_keepout_uuids,

@@ -509,7 +509,8 @@ class HostedCiTests(unittest.TestCase):
             observed_boards.append(board)
             fixture_id = Path(selected.project).stem
             is_via_fixture = fixture_id.startswith("alternate-layer-")
-            is_zone_fixture = fixture_id.startswith("zone-")
+            is_plane_fixture = fixture_id in {"unstitched-planes", "stitched-planes"}
+            is_zone_fixture = fixture_id.startswith("zone-") or is_plane_fixture
             is_unanchored_zone = fixture_id == "zone-unanchored-island"
             is_tie_fixture = fixture_id.startswith("net-tie-")
             is_isolation_fixture = fixture_id.startswith("isolation-")
@@ -517,6 +518,7 @@ class HostedCiTests(unittest.TestCase):
             tie_dnp = fixture_id == "net-tie-dnp"
             expected_connected = fixture_id in {
                 "alternate-layer-via",
+                "stitched-planes",
                 "zone-connected",
                 "zone-unanchored-island",
                 "net-tie-connected",
@@ -543,6 +545,17 @@ class HostedCiTests(unittest.TestCase):
                         self.assertIn("(island_removal_mode 1)", content)
                     else:
                         self.assertIn("(segment (start 10 -1) (end 10 11)", content)
+            if is_plane_fixture:
+                self.assertEqual(
+                    content.count('(zone (net 1) (net_name "RETURN") (layer "F.Cu")'), 1
+                )
+                self.assertEqual(
+                    content.count('(zone (net 1) (net_name "RETURN") (layer "B.Cu")'), 1
+                )
+                if fixture_id == "stitched-planes":
+                    self.assertIn("(via (at 10 5) (size 0.8) (drill 0.3)", content)
+                else:
+                    self.assertNotIn("(via ", content)
             if is_tie_fixture:
                 self.assertIn('(net_tie_pad_groups "1,2")', content)
                 if tie_dnp:
@@ -555,8 +568,12 @@ class HostedCiTests(unittest.TestCase):
             connected_pads = ("J1.1", "J2.1") if expected_connected else ("J1.1",)
             connected_j2 = ("J1.1", "J2.1") if expected_connected else ("J2.1",)
             via_id = "d" * 64
-            first_connected_vias = (via_id,) if is_via_fixture else ()
-            second_connected_vias = (via_id,) if is_via_fixture and expected_connected else ()
+            first_connected_vias = (
+                (via_id,) if is_via_fixture or (is_plane_fixture and expected_connected) else ()
+            )
+            second_connected_vias = (
+                (via_id,) if expected_connected and (is_via_fixture or is_plane_fixture) else ()
+            )
             via_inventory = (
                 (
                     PcbViaObservation(
@@ -572,7 +589,7 @@ class HostedCiTests(unittest.TestCase):
                         multiplicity=1,
                     ),
                 )
-                if is_via_fixture
+                if is_via_fixture or (is_plane_fixture and expected_connected)
                 else ()
             )
             track_inventory = (
@@ -617,14 +634,19 @@ class HostedCiTests(unittest.TestCase):
                 uuid="00000000-0000-0000-0000-000000000001",
                 layer="F.Cu",
             )
+            back_zone_identity = PcbZoneIdentity(
+                uuid="00000000-0000-0000-0000-000000000002",
+                layer="B.Cu",
+            )
+            second_zone_identity = back_zone_identity if is_plane_fixture else zone_identity
             first_island = PcbZoneIslandIdentity(
                 uuid=zone_identity.uuid,
                 layer=zone_identity.layer,
                 island_index=expected_island_indices[0],
             )
             second_island = PcbZoneIslandIdentity(
-                uuid=zone_identity.uuid,
-                layer=zone_identity.layer,
+                uuid=second_zone_identity.uuid,
+                layer=second_zone_identity.layer,
                 island_index=expected_island_indices[1],
             )
             if is_tie_fixture:
@@ -736,12 +758,44 @@ class HostedCiTests(unittest.TestCase):
                         footprint="Synthetic:TestPad",
                         dnp=False,
                         connected_pads=connected_j2,
-                        connected_zones=(zone_identity,) if is_zone_fixture else (),
+                        connected_zones=(second_zone_identity,) if is_zone_fixture else (),
                         connected_islands=(second_island,) if is_zone_fixture else (),
                         connected_vias=second_connected_vias,
                     ),
                 )
                 tie_pads = ()
+            if is_plane_fixture:
+                zone_observations = (
+                    PcbZoneObservation(
+                        uuid=zone_identity.uuid,
+                        layer=zone_identity.layer,
+                        name="",
+                        net="RETURN",
+                        filled_island_count=1,
+                        unanchored_pad_island_indexes=(),
+                    ),
+                    PcbZoneObservation(
+                        uuid=back_zone_identity.uuid,
+                        layer=back_zone_identity.layer,
+                        name="",
+                        net="RETURN",
+                        filled_island_count=1,
+                        unanchored_pad_island_indexes=(),
+                    ),
+                )
+            elif is_zone_fixture:
+                zone_observations = (
+                    PcbZoneObservation(
+                        uuid=zone_identity.uuid,
+                        layer=zone_identity.layer,
+                        name="",
+                        net="RETURN",
+                        filled_island_count=expected_islands,
+                        unanchored_pad_island_indexes=(1,) if is_unanchored_zone else (),
+                    ),
+                )
+            else:
+                zone_observations = ()
             snapshot = PcbConnectivitySnapshot(
                 board_sha256=digest(board),
                 kicad_version=selected.kicad_version,
@@ -759,18 +813,7 @@ class HostedCiTests(unittest.TestCase):
                 )
                 if is_tie_fixture or is_isolation_bridge
                 else (),
-                zones=(
-                    PcbZoneObservation(
-                        uuid=zone_identity.uuid,
-                        layer=zone_identity.layer,
-                        name="",
-                        net="RETURN",
-                        filled_island_count=expected_islands,
-                        unanchored_pad_island_indexes=(1,) if is_unanchored_zone else (),
-                    ),
-                )
-                if is_zone_fixture
-                else (),
+                zones=zone_observations,
                 vias=via_inventory,
                 tracks=track_inventory,
             )
@@ -816,8 +859,8 @@ class HostedCiTests(unittest.TestCase):
         ) as run_probe:
             pcb_return_fixture_lane(self.root, project="controller", image=config.image, log=log)
 
-        self.assertEqual(run_probe.call_count, 11)
-        self.assertEqual(len(observed_boards), 11)
+        self.assertEqual(run_probe.call_count, 14)
+        self.assertEqual(len(observed_boards), 14)
         self.assertTrue(all(board.is_file() for board in observed_boards))
         events = [json.loads(line) for line in log.events.read_text().splitlines()]
         results = {
@@ -829,6 +872,8 @@ class HostedCiTests(unittest.TestCase):
             ("alternate-layer-via", "connected"),
             ("alternate-layer-open", "open"),
             ("zone-connected", "connected"),
+            ("unstitched-planes", "open"),
+            ("stitched-planes", "connected"),
             ("zone-unanchored-island", "connected"),
             ("zone-split", "open"),
             ("zone-through-hole-split", "open"),
@@ -844,6 +889,9 @@ class HostedCiTests(unittest.TestCase):
                 self.assertEqual(result["expected_connectivity"], connectivity)
                 if fixture_id == "alternate-layer-via":
                     self.assertEqual(result["via_identity_repeatable"], "true")
+                if fixture_id == "stitched-planes":
+                    self.assertEqual(result["plane_stitch_repeatable"], "true")
+                    self.assertEqual(result["zone_layers"], "F.Cu,B.Cu")
                 if fixture_id.startswith("isolation-"):
                     self.assertEqual(
                         result["expected_isolation"],
