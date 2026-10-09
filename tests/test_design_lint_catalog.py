@@ -183,7 +183,6 @@ from tests.test_power_sequences import (
     power_sequence_netlist,
 )
 from tests.test_rc_filters import (
-    RcFilterTests,
     rc_filter_map,
     rc_filter_netlist,
 )
@@ -431,7 +430,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         SchematicGeometryTests: SchematicGeometryTests(),
         ExternalProtectionTests: ExternalProtectionTests(),
         RegulatorFeedbackTests: RegulatorFeedbackTests(),
-        RcFilterTests: RcFilterTests(),
         PcbDecouplingTests: PcbDecouplingTests(),
         PcbReferencePlaneTests: PcbReferencePlaneTests(),
         PcbSwitchingLoopTests: PcbSwitchingLoopTests(),

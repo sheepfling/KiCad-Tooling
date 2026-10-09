@@ -2417,17 +2417,17 @@
         "The nominal estimate does not model source/load impedance, component tolerance, transient behavior, anti-alias performance, PCB copper, or analog-front-end safety."
       ],
       "fault_fixtures": [
-        "tests.test_rc_filters.RcFilterTests.test_schematic_value_mutations_are_detected_with_topology_unchanged",
-        "tests.test_rc_filters.RcFilterTests.test_wrong_assignment_dnp_missing_inventory_and_extra_parts_need_review"
+        "tests.test_rc_filters.test_schematic_value_mutations_are_detected_with_topology_unchanged",
+        "tests.test_rc_filters.test_wrong_assignment_dnp_missing_inventory_and_extra_parts_need_review"
       ],
       "valid_control_fixtures": [
-        "tests.test_rc_filters.RcFilterTests.test_explicit_network_and_calculated_corner_pass",
-        "tests.test_rc_filters.RcFilterTests.test_unmapped_network_is_not_inferred_and_coverage_is_not_requested",
-        "tests.test_rc_filters.RcFilterTests.test_rule_can_be_blocked_or_disabled_and_exact_ignore_is_project_owned"
+        "tests.test_rc_filters.test_explicit_network_and_calculated_corner_pass",
+        "tests.test_rc_filters.test_unmapped_network_is_not_inferred_and_coverage_is_not_requested",
+        "tests.test_rc_filters.test_rule_can_be_blocked_or_disabled_and_exact_ignore_is_project_owned"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_rc_filters.RcFilterTests.test_corner_mismatch_is_order_stable_and_corrected_value_clears_it"
+        "tests.test_rc_filters.test_corner_mismatch_is_order_stable_and_corrected_value_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/rc_filters.py#scan_rc_filter_map",
