@@ -699,8 +699,7 @@ def parsed_netlist_pin_metadata() -> dict[str, list[tuple[str, str]]]:
     """Serialize parser maps built from a synthetic, multi-pin library symbol."""
     pin_numbers = tuple(str(number) for number in range(1, 25))
     library_pins = "".join(
-        f'<pin num="{number}" name="FUNCTION_{number}" type="passive"/>'
-        for number in pin_numbers
+        f'<pin num="{number}" name="FUNCTION_{number}" type="passive"/>' for number in pin_numbers
     )
     with TemporaryDirectory() as directory:
         path = Path(directory) / "synthetic-netlist.xml"

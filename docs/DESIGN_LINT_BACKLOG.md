@@ -1153,8 +1153,15 @@ is not a reason by itself to expand its scope or change its default policy.
   relationships, map-covered split paths, emitted candidates, and the native
   netlist plus typed USB map digests. The CLI text report explains each status
   so a zero-finding run distinguishes absent recognition, incomplete evidence,
-  unsupported topology, and a completed path review. The connector peer-pin
-  review now has a similarly bounded coverage summary: it records candidate
+  unsupported topology, and a completed path review. The report also includes
+  one deterministically ordered `path_entries` record per supported
+  connector-to-PHY path, with endpoint identity, reference-pin assignments,
+  common/split/map-covered disposition, matched D+/D− pins and nets, and any
+  accepted series resistors or two-pin shunt branches. The text and typed JSON
+  reports expose this same source-level evidence. The optional entries preserve
+  compatibility with earlier schema-2 reports; they describe exported net
+  assignments and do not establish a physical return path or copper bond. The
+  connector peer-pin review now has a similarly bounded coverage summary: it records candidate
   and fitted connector counts, exact-symbol pin groups, assignment and function
   metadata states, repeated-function groups, finding counts, and the native
   netlist digest. It distinguishes candidates that are all DNP, no exact-symbol
@@ -3173,6 +3180,16 @@ is not a reason by itself to expand its scope or change its default policy.
   its cross-process test, the catalog module passed 505 tests, and Ruff check
   and format checks passed. These typed-netlist results predate the exact
   hosted native acceptance recorded below.
+  After adding deterministic per-path coverage entries on 2026-10-08, the full
+  pytest suite passed with 2,262 tests, 54 environment-gated skips, and 1,963
+  subtests. The package acceptance driver passed Ruff, strict Pyright, Windows
+  typing, `rumdl`, `mdrepo`, wheel/sdist construction, reproducible wheel rebuild
+  from the source distribution, fresh-environment installation, and CLI/MCP
+  checks against the public reference checkout and a relocated copy. Its
+  external portable verification and playtest also passed. This proves package
+  and source-level behavior only; the exact KiCad 10.0.0/10.0.5 native fixture
+  lane still needs the hosted tag run, and physical return continuity remains
+  outside this heuristic.
 - **Applicability screen:**
 
   The MIT-licensed public [CP2102 project](https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102)

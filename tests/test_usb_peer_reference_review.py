@@ -572,8 +572,22 @@ class UsbPeerReferenceReviewTests:
         assert (split_coverage.supported_data_path_count) == (1)
         assert (split_coverage.separate_reference_path_count) == (1)
         assert (split_coverage.candidate_group_count) == (1)
+        split_path = split_coverage.path_entries[0]
+        assert (split_path.connector_reference, split_path.phy_reference) == ("J1", "U1")
+        assert (split_path.reference_disposition) == ("SEPARATE_REFERENCE_REVIEW")
+        assert (split_path.connector_reference_net, split_path.phy_reference_net) == (
+            "USB_GND",
+            "BOARD_GND",
+        )
+        assert tuple(item.pin for item in split_path.connector_reference_pins) == ("J1.3",)
+        assert tuple(item.pin for item in split_path.phy_reference_pins) == ("U1.3",)
+        assert (split_path.data_path.positive.connector_pins) == ("J1.1",)
+        assert (split_path.data_path.positive.phy_pins) == ("U1.1",)
+        assert (split_path.data_path.positive.connector_net) == "USB_DP"
+        assert (split_path.data_path.negative.connector_net) == "USB_DM"
         assert ("USB peer-reference heuristic coverage:") in (text_report(split))
         assert ("At least one supported connector-to-PHY path was checked.") in (text_report(split))
+        assert ("J1 -> U1 (unnumbered port): SEPARATE_REFERENCE_REVIEW") in (text_report(split))
 
         common = lint_report(
             usb_peer_netlist(connector_reference_net="BOARD_GND", phy_reference_net="BOARD_GND")
@@ -584,6 +598,11 @@ class UsbPeerReferenceReviewTests:
         assert (common_coverage.common_reference_path_count) == (1)
         assert (common_coverage.separate_reference_path_count) == (0)
         assert (common_coverage.candidate_group_count) == (0)
+        assert (common_coverage.path_entries[0].reference_disposition) == ("COMMON_REFERENCE")
+        assert (
+            common_coverage.path_entries[0].connector_reference_net
+            == common_coverage.path_entries[0].phy_reference_net
+        )
 
         mapped = lint_report(
             usb_peer_netlist(), path_map=usb_data_map(reference_policy="separate_nets")
@@ -594,6 +613,10 @@ class UsbPeerReferenceReviewTests:
         assert (mapped_coverage.usb_data_path_map_sha256) is not None
         assert (mapped_coverage.mapped_separate_reference_path_count) == (1)
         assert (mapped_coverage.candidate_group_count) == (0)
+        assert (
+            mapped_coverage.path_entries[0].reference_disposition
+            == "MAP_COVERED_SEPARATE_REFERENCE"
+        )
 
     def test_coverage_marks_missing_usb_endpoints_and_incomplete_groups(self) -> None:
         empty = NetlistContract(components={}, nets={})
@@ -604,6 +627,7 @@ class UsbPeerReferenceReviewTests:
         assert (empty_coverage) is not None
         assert empty_coverage is not None
         assert (empty_coverage.status) == ("NO_USB_ENDPOINTS")
+        assert (empty_coverage.path_entries) == ()
         assert ("No supported USB data-pin function groups were recognized") in (
             text_report(lint_report(empty))
         )
@@ -614,6 +638,7 @@ class UsbPeerReferenceReviewTests:
         assert incomplete_coverage is not None
         assert (incomplete_coverage.status) == ("INCOMPLETE")
         assert (incomplete_coverage.incomplete_group_count) == (1)
+        assert (incomplete_coverage.path_entries) == ()
         assert (
             tuple(
                 (item.endpoint_role, item.reference, item.port_group, item.disposition)
@@ -631,13 +656,18 @@ class UsbPeerReferenceReviewTests:
 
         legacy_payload = incomplete_coverage.model_dump()
         legacy_payload.pop("endpoint_groups")
-        assert (
-            UsbPeerReferenceCoverageReport.model_validate(legacy_payload).endpoint_groups
-        ) is None
+        legacy_payload.pop("path_entries")
+        legacy = UsbPeerReferenceCoverageReport.model_validate(legacy_payload)
+        assert (legacy.endpoint_groups) is None
+        assert (legacy.path_entries) is None
         inconsistent_payload = incomplete_coverage.model_dump()
         inconsistent_payload["incomplete_group_count"] = 0
         with pytest.raises(ValidationError, match="incomplete group count"):
             UsbPeerReferenceCoverageReport.model_validate(inconsistent_payload)
+        inconsistent_paths = incomplete_coverage.model_dump(mode="python")
+        inconsistent_paths["supported_data_path_count"] = 1
+        with pytest.raises(ValidationError, match="path coverage entries"):
+            UsbPeerReferenceCoverageReport.model_validate(inconsistent_paths)
 
     def test_coverage_distinguishes_unsupported_paths_and_dnp_endpoints(self) -> None:
         observed = usb_peer_netlist()
@@ -658,6 +688,7 @@ class UsbPeerReferenceReviewTests:
         assert (uncoupled_coverage.supported_phy_group_count) == (1)
         assert (uncoupled_coverage.incomplete_group_count) == (0)
         assert (uncoupled_coverage.supported_data_path_count) == (0)
+        assert (uncoupled_coverage.path_entries) == ()
         assert ("No direct or single-resistor USB D+/D− connector-to-PHY path matched") in (
             text_report(lint_report(uncoupled))
         )
@@ -669,6 +700,7 @@ class UsbPeerReferenceReviewTests:
         assert (dnp_coverage.dnp_group_count) == (1)
         assert (dnp_coverage.incomplete_group_count) == (0)
         assert (dnp_coverage.supported_phy_group_count) == (0)
+        assert (dnp_coverage.path_entries) == ()
         assert (
             tuple(
                 (item.endpoint_role, item.reference, item.port_group, item.disposition)
@@ -733,6 +765,25 @@ class UsbPeerReferenceReviewTests:
             )
         )
         assert (report.status) == ("REVIEW")
+        assert tuple(
+            (
+                item.connector_reference,
+                item.phy_reference,
+                item.data_path.port_group,
+                item.reference_disposition,
+                item.connector_reference_net,
+                item.phy_reference_net,
+            )
+            for item in coverage.path_entries
+        ) == (
+            (
+                ("J1", "U1", "1", "SEPARATE_REFERENCE_REVIEW", "USB1_GND", "PHY_GND"),
+                ("J2", "U1", "2", "SEPARATE_REFERENCE_REVIEW", "USB2_GND", "PHY_GND"),
+            )
+        )
+        assert tuple(
+            tuple(item.pin for item in path.phy_reference_pins) for path in coverage.path_entries
+        ) == (("U1.3", "U1.6"), ("U1.3", "U1.6"))
         assert (tuple((item.subject, item.evidence["USB_port_group"]) for item in findings)) == (
             (
                 ("J1 / U1: USB reference-domain review (port 1)", ("1",)),
@@ -757,12 +808,26 @@ class UsbPeerReferenceReviewTests:
 
         common = usb_multiport_peer_netlist(common_references=True)
         assert (usb_peer_reference_reviews(common)) == (())
-        assert (RULE_ID) not in ({item.rule_id for item in lint_report(common).findings})
+        common_report = lint_report(common)
+        assert (RULE_ID) not in ({item.rule_id for item in common_report.findings})
+        assert tuple(
+            item.reference_disposition
+            for item in common_report.usb_peer_reference_coverage.path_entries
+        ) == (
+            "COMMON_REFERENCE",
+            "COMMON_REFERENCE",
+        )
 
         exact_map = usb_multiport_data_map()
         mapped = lint_report(observed, path_map=exact_map)
         assert (RULE_ID) not in ({item.rule_id for item in mapped.findings})
         assert (PATH_RULE_ID) not in ({item.rule_id for item in mapped.findings})
+        assert tuple(
+            item.reference_disposition for item in mapped.usb_peer_reference_coverage.path_entries
+        ) == (
+            "MAP_COVERED_SEPARATE_REFERENCE",
+            "MAP_COVERED_SEPARATE_REFERENCE",
+        )
 
         stale_map = lint_report(
             observed,
@@ -771,6 +836,13 @@ class UsbPeerReferenceReviewTests:
         stale_peer_findings = tuple(item for item in stale_map.findings if item.rule_id == RULE_ID)
         assert (tuple(item.subject for item in stale_peer_findings)) == (
             ("J2 / U1: USB reference-domain review (port 2)",)
+        )
+        assert tuple(
+            item.reference_disposition
+            for item in stale_map.usb_peer_reference_coverage.path_entries
+        ) == (
+            "MAP_COVERED_SEPARATE_REFERENCE",
+            "SEPARATE_REFERENCE_REVIEW",
         )
         assert (PATH_RULE_ID) in ({item.rule_id for item in stale_map.findings})
 
@@ -837,6 +909,12 @@ class UsbPeerReferenceReviewTests:
         assert (link.positive_series_resistor.connector_pin) == ("R1.1")
         assert (link.positive_series_resistor.phy_pin) == ("R1.2")
         assert (link.negative_series_resistor.reference) == ("R2")
+
+        path = lint_report(observed).usb_peer_reference_coverage.path_entries[0]
+        assert (path.data_path.positive.series_resistor.reference) == ("R1")
+        assert (path.data_path.positive.series_resistor.connector_net) == "USB_DP"
+        assert (path.data_path.positive.series_resistor.phy_net) == "USB_DP_PHY"
+        assert (path.data_path.negative.series_resistor.reference) == "R2"
 
         report = lint_report(observed)
         finding = next(item for item in report.findings if item.rule_id == RULE_ID)

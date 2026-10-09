@@ -1036,6 +1036,15 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(fault_coverage.status, "EVALUATED")
             self.assertEqual(fault_coverage.separate_reference_path_count, 1)
             self.assertEqual(fault_coverage.candidate_group_count, 1)
+            self.assertEqual(len(fault_coverage.path_entries), 1)
+            self.assertEqual(
+                fault_coverage.path_entries[0].reference_disposition,
+                "SEPARATE_REFERENCE_REVIEW",
+            )
+            self.assertEqual(
+                fault_coverage.path_entries[0].data_path.positive.connector_pins,
+                ("J1.1",),
+            )
 
             control = await compare(fault=False)
             self.assertNotIn(
@@ -1048,6 +1057,10 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(control_coverage.common_reference_path_count, 1)
             self.assertEqual(control_coverage.separate_reference_path_count, 0)
             self.assertEqual(control_coverage.candidate_group_count, 0)
+            self.assertEqual(
+                tuple(item.reference_disposition for item in control_coverage.path_entries),
+                ("COMMON_REFERENCE",),
+            )
 
             for split_references, expected_count in ((True, 2), (False, 0)):
                 write_multiport_netlist(split_references=split_references)
@@ -1086,6 +1099,31 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(
                     coverage.common_reference_path_count,
                     2 - expected_count,
+                )
+                self.assertEqual(
+                    tuple(
+                        (
+                            item.connector_reference,
+                            item.phy_reference,
+                            item.data_path.port_group,
+                            item.reference_disposition,
+                        )
+                        for item in coverage.path_entries
+                    ),
+                    (
+                        (
+                            "J1",
+                            "U1",
+                            "1",
+                            "SEPARATE_REFERENCE_REVIEW" if split_references else "COMMON_REFERENCE",
+                        ),
+                        (
+                            "J2",
+                            "U1",
+                            "2",
+                            "SEPARATE_REFERENCE_REVIEW" if split_references else "COMMON_REFERENCE",
+                        ),
+                    ),
                 )
                 if split_references:
                     self.assertEqual(

@@ -90,10 +90,33 @@ class UsbPeerReferenceReview:
 
 
 @dataclass(frozen=True)
+class UsbPeerReferencePathCoverage:
+    """One supported connector-to-PHY path and its reference disposition."""
+
+    connector_reference: str
+    phy_reference: str
+    connector_symbol: str
+    phy_symbol: str
+    connector_footprint: str
+    phy_footprint: str
+    connector_reference_net: str
+    phy_reference_net: str
+    connector_reference_pins: tuple[UsbReferencePinAssignment, ...]
+    phy_reference_pins: tuple[UsbReferencePinAssignment, ...]
+    reference_disposition: Literal[
+        "COMMON_REFERENCE",
+        "SEPARATE_REFERENCE_REVIEW",
+        "MAP_COVERED_SEPARATE_REFERENCE",
+    ]
+    data_link: UsbPeerDataLink
+
+
+@dataclass(frozen=True)
 class UsbPeerReferenceCoverage:
     """Bounded endpoint and data-path counts for the USB reference heuristic."""
 
     endpoint_groups: tuple[UsbPeerEndpointGroupCoverage, ...]
+    path_entries: tuple[UsbPeerReferencePathCoverage, ...]
     recognized_connector_group_count: int
     supported_connector_group_count: int
     recognized_phy_group_count: int
@@ -798,20 +821,44 @@ def scan_usb_peer_reference_reviews(
     incomplete_group_count = sum(item.disposition == "INCOMPLETE" for item in endpoint_groups)
 
     findings: list[UsbPeerReferenceReview] = []
-    common_reference_path_count = 0
-    separate_reference_path_count = 0
-    mapped_separate_reference_path_count = 0
+    path_entries: list[UsbPeerReferencePathCoverage] = []
     for connector in connectors:
         for phy in phy_endpoints:
             data_link = _data_link(connector, phy, net_members, observed)
             if data_link is None:
                 continue
-            if connector.reference_net.casefold() == phy.reference_net.casefold():
-                common_reference_path_count += 1
-                continue
-            separate_reference_path_count += 1
-            if _mapped_reference_review(connector, phy, data_link, path_map):
-                mapped_separate_reference_path_count += 1
+            common_reference = connector.reference_net.casefold() == phy.reference_net.casefold()
+            mapped_separate_reference = not common_reference and _mapped_reference_review(
+                connector, phy, data_link, path_map
+            )
+            reference_disposition: Literal[
+                "COMMON_REFERENCE",
+                "SEPARATE_REFERENCE_REVIEW",
+                "MAP_COVERED_SEPARATE_REFERENCE",
+            ] = (
+                "COMMON_REFERENCE"
+                if common_reference
+                else "MAP_COVERED_SEPARATE_REFERENCE"
+                if mapped_separate_reference
+                else "SEPARATE_REFERENCE_REVIEW"
+            )
+            path_entries.append(
+                UsbPeerReferencePathCoverage(
+                    connector_reference=connector.reference,
+                    phy_reference=phy.reference,
+                    connector_symbol=connector.symbol,
+                    phy_symbol=phy.symbol,
+                    connector_footprint=connector.footprint,
+                    phy_footprint=phy.footprint,
+                    connector_reference_net=connector.reference_net,
+                    phy_reference_net=phy.reference_net,
+                    connector_reference_pins=connector.reference_pins,
+                    phy_reference_pins=phy.reference_pins,
+                    reference_disposition=reference_disposition,
+                    data_link=data_link,
+                )
+            )
+            if common_reference or mapped_separate_reference:
                 continue
             findings.append(
                 UsbPeerReferenceReview(
@@ -841,10 +888,34 @@ def scan_usb_peer_reference_reviews(
             ),
         )
     )
+    ordered_path_entries = tuple(
+        sorted(
+            path_entries,
+            key=lambda item: (
+                item.connector_reference.casefold(),
+                item.connector_reference,
+                item.phy_reference.casefold(),
+                item.phy_reference,
+                item.data_link.port_group is not None,
+                item.data_link.port_group or "",
+            ),
+        )
+    )
+    common_reference_path_count = sum(
+        item.reference_disposition == "COMMON_REFERENCE" for item in ordered_path_entries
+    )
+    separate_reference_path_count = sum(
+        item.reference_disposition != "COMMON_REFERENCE" for item in ordered_path_entries
+    )
+    mapped_separate_reference_path_count = sum(
+        item.reference_disposition == "MAP_COVERED_SEPARATE_REFERENCE"
+        for item in ordered_path_entries
+    )
     return UsbPeerReferenceScan(
         reviews=reviews,
         coverage=UsbPeerReferenceCoverage(
             endpoint_groups=endpoint_groups,
+            path_entries=ordered_path_entries,
             recognized_connector_group_count=recognized_connector_group_count,
             supported_connector_group_count=sum(
                 item.endpoint_role == "connector" and item.disposition == "SUPPORTED"
@@ -857,7 +928,7 @@ def scan_usb_peer_reference_reviews(
             ),
             dnp_group_count=dnp_group_count,
             incomplete_group_count=incomplete_group_count,
-            supported_data_path_count=(common_reference_path_count + separate_reference_path_count),
+            supported_data_path_count=len(ordered_path_entries),
             common_reference_path_count=common_reference_path_count,
             separate_reference_path_count=separate_reference_path_count,
             mapped_separate_reference_path_count=mapped_separate_reference_path_count,
