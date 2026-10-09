@@ -120,6 +120,14 @@ class DesignLintDeterminismTests:
         assert reports["peer_signal_input_control"]["status"] == "PASS"
         assert reports["peer_signal_input_control"]["findings"] == []
 
+        peer_bidirectional_fault = reports["peer_bidirectional_fault"]
+        assert peer_bidirectional_fault["status"] == "REVIEW"
+        assert {finding["rule_id"] for finding in peer_bidirectional_fault["findings"]} == {
+            "component.peer_bidirectional_pin_unconnected"
+        }
+        assert reports["peer_bidirectional_control"]["status"] == "PASS"
+        assert reports["peer_bidirectional_control"]["findings"] == []
+
         split_common = reports["db9_split_against_common_requirement"]
         split_isolated = reports["db9_split_against_isolated_requirement"]
         common_common = reports["db9_common_against_common_requirement"]

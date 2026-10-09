@@ -93,7 +93,7 @@ from tests.test_pcb_reference_plane_lint import (
 )
 from tests.test_pcb_signal_path_coverage import design_lint_report as pcb_signal_path_lint_report
 from tests.test_pcb_switching_loops import design_lint_report as pcb_switching_loop_lint_report
-from tests.test_peer_power_output import peer_signal_input_netlist
+from tests.test_peer_power_output import peer_bidirectional_netlist, peer_signal_input_netlist
 from tests.test_power_paths import (
     lint_report as power_path_lint_report,
 )
@@ -768,6 +768,16 @@ def test_emit_four_port_db9_fault_and_control_reports() -> None:
         "peer_signal_input_control": evaluate(
             "synthetic-peer-signal-input-hash-seed-control",
             coach(peer_signal_input_netlist(input_nets=("SIGNAL_A", "SIGNAL_B"))),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "peer_bidirectional_fault": evaluate(
+            "synthetic-peer-bidirectional-hash-seed-fault",
+            coach(peer_bidirectional_netlist()),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "peer_bidirectional_control": evaluate(
+            "synthetic-peer-bidirectional-hash-seed-control",
+            coach(peer_bidirectional_netlist(pin_nets=("DATA_IO_A", "DATA_IO_B"))),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "db9_split_against_common_requirement": db9_grounding_check_result(

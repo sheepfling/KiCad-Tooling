@@ -165,6 +165,7 @@ from tests.test_peer_power_output import (
     lint_report as peer_power_output_lint_report,
 )
 from tests.test_peer_power_output import (
+    peer_bidirectional_netlist,
     peer_power_output_netlist,
     peer_signal_input_netlist,
 )
@@ -886,6 +887,8 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(item.rule_id for item in peer_signal_output_result.findings)
     peer_signal_input_result = peer_power_output_lint_report(peer_signal_input_netlist())
     emitted.update(item.rule_id for item in peer_signal_input_result.findings)
+    peer_bidirectional_result = peer_power_output_lint_report(peer_bidirectional_netlist())
+    emitted.update(item.rule_id for item in peer_bidirectional_result.findings)
     ferrite_result = two_pin_ferrite_lint_report(ferrite_netlist())
     emitted.update(item.rule_id for item in ferrite_result.findings)
     emitted.update(item.rule_id for item in candidates(two_pin_switch_netlist()))

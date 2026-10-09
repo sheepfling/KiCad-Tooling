@@ -137,16 +137,29 @@ The first rules are:
   because there is no component-level unconnected-shield rule. It does not
   establish output function, component operation, current capacity, PCB copper
   continuity, off-board wiring, or physical population.
-- `component.peer_signal_output_unconnected` prompts when a fitted
-  non-connector component with an exact shared symbol has an unassigned native
-  `output` pin while the matching pin on another fitted peer has one
-  unambiguous net assignment. This asks whether the open signal output is
-  intentional or missing a connection; matching symbols do not require the
-  outputs to share a net. DNP peers, connector candidates, incomplete or
-  mismatched pin inventories, missing electrical-type metadata, ambiguous
-  assignments, and recognized named supply/return pins remain outside the
-  predicate. This does not establish output function, PCB continuity,
-  off-board wiring, or physical population.
+- `component.peer_signal_output_unconnected` prompts when a fitted non-connector component with an
+  exact shared symbol has an unassigned native `output` pin while the matching pin on another fitted
+  peer has one unambiguous net assignment. This asks whether the open signal output is intentional
+  or missing a connection; matching symbols do not require the outputs to share a net. DNP peers,
+  connector candidates, incomplete or mismatched pin inventories, missing electrical-type metadata,
+  ambiguous assignments, and recognized named supply/return pins remain outside the predicate. This
+  does not establish output function, PCB continuity, off-board wiring, or physical population.
+  Digest-pinned synthetic native fault/control fixtures and hashes are in
+  [the peer signal-output fixture notes](../tests/fixtures/design_lint/component-peer-signal-output-native/README.md).
+- `component.peer_signal_input_unconnected` prompts when a fitted non-connector component with an
+  exact shared symbol has an unassigned native `input` or `input_low` pin while a matching peer pin
+  has one unambiguous net assignment. The pin functions must be present and match. Review whether
+  the open input is intentional or missing a connection; identical inputs do not need a common net.
+  Recognized supply, return, reset, enable, and boot pins remain with their specific rules.
+  Digest-pinned synthetic native fault/control fixtures and hashes are in
+  [the peer signal-input fixture notes](../tests/fixtures/design_lint/component-peer-signal-input-native/README.md).
+- `component.peer_bidirectional_pin_unconnected` applies the same bounded review to a native
+  `bidirectional` pin, including bus functions such as SDA. It requires matching function metadata
+  and complete identical pin inventories for fitted peers. It does not establish bus membership,
+  require a common net, or prove a source, off-board path, or PCB connection. DNP peers, all-open
+  groups, connectors, ambiguous assignments, and other native electrical types are outside the
+  predicate. Digest-pinned synthetic native fault/control fixtures and hashes are in
+  [the peer bidirectional-pin fixture notes](../tests/fixtures/design_lint/component-peer-bidirectional-native/README.md).
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
   resolve to the same schematic net. The assigned net bypasses the passive in
@@ -846,7 +859,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 85 active rules. They
+`synthetic_validated`; the catalog currently contains 86 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow
@@ -1100,23 +1113,20 @@ with matching pad/net assignments: the unstitched fault has separate copper
 groups, and its paired control adds one plated through via. This synthetic
 topology is based on the failure class in the public
 [cohort copper-LVS issue](https://github.com/rjwalters/kicad-tools/issues/3787);
-no source board or candidate code was copied. The lane also checks a connected
-copper plane and
-same-net split planes, including a connected return plane with an additional
-filled island that has no pad anchor. That index is review evidence; the tool
-does not infer that the island is electrically isolated or defective. The lane
-checks a fitted net tie between two distinct return nets and the same bond marked
-DNP. The net-tie controls retain the exact footprint, pad group, population
-state, and the two separate native copper groups at its pads. KiCad reports the
-zone identity for each pad,
-while pad connectivity groups show whether the returns actually share copper.
-The zone controls include SMD and plated through-hole pads on split planes; the
-probe preserves polygon holes and maps each pad to the island indexes its
-copper shape touches. Two additional controls declare separate return domains:
-one keeps both domains disconnected, and one adds a fitted net tie that must
-make the isolation check fail.
-If KiCad says a pad connects to a zone but no filled island intersects its
-effective copper shape, evidence capture fails instead of emitting an
+no source board or candidate code was copied. The lane also checks a connected copper plane and
+same-net split planes, including a connected return plane with an additional filled island that has
+no pad anchor. That index is review evidence; the tool does not infer that the island is
+electrically isolated or defective. The lane checks a fitted net tie between two distinct return
+nets and the same bond marked DNP. The net-tie controls retain the exact footprint, pad group,
+population state, and the two separate native copper groups at its pads. KiCad reports the zone
+identity for each pad, while pad connectivity groups show whether the returns actually share copper.
+The synthetic same-net plane fault/control boards and their digests are listed in the
+[plane-stitching fixture notes](../tests/fixtures/design_lint/pcb-return-plane-stitching/README.md).
+The zone controls include SMD and plated through-hole pads on split planes; the probe preserves
+polygon holes and maps each pad to the island indexes its copper shape touches. Two additional
+controls declare separate return domains: one keeps both domains disconnected, and one adds a fitted
+net tie that must make the isolation check fail. If KiCad says a pad connects to a zone but no
+filled island intersects its effective copper shape, evidence capture fails instead of emitting an
 incomplete island map. These indexes describe KiCad's current board geometry.
 
 Older electrical contracts remain readable, but `pcb_return_paths` now starts

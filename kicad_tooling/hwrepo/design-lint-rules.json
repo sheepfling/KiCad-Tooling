@@ -319,6 +319,42 @@
       ]
     },
     {
+      "rule_id": "component.peer_bidirectional_pin_unconnected",
+      "title": "Bidirectional pin is unassigned on one fitted peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted non-connector components with the exact same native symbol and complete matching pin inventories, report a bidirectional pin with present, matching native function metadata when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "An open bidirectional pin may be intentional; matching component identity does not establish bus membership or require peer pins to share a net.",
+        "Only fitted non-connector peers with an exact shared symbol identity, complete equal pin-number inventories, matching native bidirectional types, and present matching function metadata are compared. DNP peers, all-open groups, incomplete inventories, absent or mixed functions/types, and ambiguous assignments are outside the predicate.",
+        "The schematic netlist does not establish the required interface, off-board behavior, PCB copper continuity, or physical population. Recognized named supply and return pins remain with their more specific findings."
+      ],
+      "fault_fixtures": [
+        "tests.test_peer_power_output.test_reports_an_open_native_bidirectional_pin_when_an_exact_peer_is_connected",
+        "tests.test_peer_power_output.test_peer_bidirectional_fault_and_control_on_pinned_native_versions",
+        "tests.test_mcp_parity.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_peer_power_output.test_assigned_bidirectional_peers_are_valid_same_or_separate_net_controls",
+        "tests.test_peer_power_output.test_bidirectional_prompt_skips_open_or_incomplete_peer_evidence",
+        "tests.test_peer_power_output.test_bidirectional_review_supports_project_policy_and_exact_ignore",
+        "tests.test_peer_power_output.test_peer_bidirectional_fault_and_control_on_pinned_native_versions"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_peer_power_output.test_bidirectional_finding_is_stable_under_map_order_changes"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_pins.py#component_peer_bidirectional_pin_outliers",
+        "kicad_tooling/hwrepo/design_lint.py#candidates"
+      ]
+    },
+    {
       "rule_id": "component.two_pin_passive_same_net",
       "title": "Supported two-pin passive is bypassed by one net",
       "status": "active",
@@ -677,11 +713,11 @@
         "Native function text that identifies a supply or return remains with the more specific existing pin checks.",
         "Connector candidates, including source-reviewed connector references, and DNP components are excluded."
       ],
-    "fault_fixtures": [
-      "tests.test_design_lint.DesignLintTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
-    ],
-    "valid_control_fixtures": [
-      "tests.test_design_lint.DesignLintTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
+      "fault_fixtures": [
+        "tests.test_design_lint.DesignLintTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_design_lint.DesignLintTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_generic_component_power_input_is_order_stable"

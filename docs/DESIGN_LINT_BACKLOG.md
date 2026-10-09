@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 85 rules are implemented with synthetic regression coverage.
+The following 86 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -69,6 +69,7 @@ Their actual recognition limits are documented in
 - `component.peer_power_pin_assignment_divergence`
 - `component.peer_power_output_unconnected`
 - `component.peer_signal_input_unconnected`
+- `component.peer_bidirectional_pin_unconnected`
 - `component.peer_signal_output_unconnected`
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
@@ -1478,7 +1479,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 85 active rules; CI requires every new
+- **Status:** Baseline complete for all 86 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1487,7 +1488,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 85 covered, 0 not applicable, 0 unreviewed.
+  audit: 86 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -3874,6 +3875,44 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Next:** Keep the prompt at default `review`; measure usefulness and false
   prompts on approved, nonconfidential boards before considering a default
   change.
+
+#### LINT-100 — Open native bidirectional pin on one exact-symbol peer
+
+- **Status:** Implemented as `component.peer_bidirectional_pin_unconnected`,
+  defaulting to `REVIEW`, with pytest fault/control coverage, project policy
+  and exact-ignore controls, CLI/MCP parity, and a repeated native-export lane
+  for the pinned KiCad 10.0.0 and 10.0.5 profiles. Hosted acceptance is queued
+  for the next tagged source.
+- **Priority:** P1 component-pin completeness. LINT-094, LINT-098, and
+  LINT-099 cover native power outputs, signal outputs, and input pins. This
+  adds the same bounded missing-assignment prompt for native bidirectional
+  pins, including common bus roles such as SDA.
+- **Predicate:** Compare fitted non-connector instances with one exact native
+  symbol and complete identical pin inventories. Require matching native
+  `bidirectional` types and present matching function metadata. Report only
+  when at least one peer assigns the pin to exactly one net and another peer
+  assigns it to no net. DNP peers, connectors, all-open groups, mixed functions
+  or types, incomplete inventories, and ambiguous assignments are skipped.
+- **Boundary:** The finding asks whether the open bidirectional pin is
+  intentional or missing an assignment. It does not establish bus membership,
+  require identical components to use a common net, infer off-board wiring, or
+  prove PCB copper or physical population. Use a project-authored connectivity
+  requirement to block a specific required relationship.
+- **Fixtures:** Synthetic pytest cases cover a three-peer SDA fault, shared-net
+  and separate-net controls, DNP and all-open peers, different symbols,
+  incomplete pin inventory, ambiguous assignments, missing or mismatched
+  function metadata, connector references, and non-bidirectional pin types.
+  Project `review`, `block`, `off`, and exact-fingerprint ignore behavior are
+  covered. The synthetic native fault and control schematics bind the exact
+  symbol, pin inventory, function, and electrical type; each is exported twice
+  on digest-pinned KiCad 10.0.0 and 10.0.5. CLI/MCP parity exercises the shared
+  typed service, and hash-seed tests verify stable report JSON.
+- **Incremental value:** Native input and output checks do not include
+  `bidirectional`, so an open SDA-like peer pin is otherwise outside those
+  predicates unless a separate authored interface map covers it. This is a
+  review candidate, not evidence that the component belongs on one shared bus.
+- **Next:** Keep the rule at default `review`; measure applicability and
+  reviewer value on approved, nonconfidential examples.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -6634,7 +6673,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 85 active rules. Each entry has a deterministic predicate, evidence
+contains 86 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

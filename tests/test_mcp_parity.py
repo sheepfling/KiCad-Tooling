@@ -255,6 +255,7 @@ def parity_native_evidence(root: Path, island: Path) -> Path:
         ("power_out", "OUT", "component.peer_power_output_unconnected"),
         ("output", "OUT", "component.peer_signal_output_unconnected"),
         ("input", "IN", "component.peer_signal_input_unconnected"),
+        ("bidirectional", "DATA_IO", "component.peer_bidirectional_pin_unconnected"),
     ),
 )
 def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
@@ -265,7 +266,12 @@ def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
     netlist = native.parent / "netlist.xml"
 
     def write_netlist(*, fault: bool) -> None:
-        signal_name = "INPUT" if electrical_type == "input" else "VOUT"
+        signal_name = {
+            "input": "INPUT",
+            "bidirectional": "DATA_IO",
+            "power_out": "VOUT",
+            "output": "VOUT",
+        }[electrical_type]
         output_nets = (
             f'<net name="{signal_name}"><node ref="U10" pin="2"/></net>'
             if fault

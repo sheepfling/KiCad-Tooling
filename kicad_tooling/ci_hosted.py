@@ -8073,13 +8073,26 @@ def component_peer_signal_input_fixture_lane(
     )
 
 
+def component_peer_bidirectional_fixture_lane(
+    root: Path, *, project: str, image: str, log: HostedLog
+) -> None:
+    """Verify the peer bidirectional-pin regression pair on pinned KiCad exports."""
+    _component_peer_pin_assignment_fixture_lane(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        kind="bidirectional",
+    )
+
+
 def _component_peer_pin_assignment_fixture_lane(
     root: Path,
     *,
     project: str,
     image: str,
     log: HostedLog,
-    kind: Literal["power-output", "signal-output", "signal-input"],
+    kind: Literal["power-output", "signal-output", "signal-input", "bidirectional"],
 ) -> None:
     """Verify one exact-symbol open-pin class against repeated KiCad exports."""
     import hashlib
@@ -8107,27 +8120,36 @@ def _component_peer_pin_assignment_fixture_lane(
         "power-output": "power_out",
         "signal-output": "output",
         "signal-input": "input",
+        "bidirectional": "bidirectional",
     }
     rule_ids = {
         "power-output": "component.peer_power_output_unconnected",
         "signal-output": "component.peer_signal_output_unconnected",
         "signal-input": "component.peer_signal_input_unconnected",
+        "bidirectional": "component.peer_bidirectional_pin_unconnected",
     }
     fixture_symbols = {
         "power-output": "Synthetic:PowerModule",
         "signal-output": "Synthetic:SignalModule",
         "signal-input": "Synthetic:SignalInputModule",
+        "bidirectional": "Synthetic:BidirectionalModule",
     }
     functions = {
         "power-output": "OUT",
         "signal-output": "OUT",
         "signal-input": "IN",
+        "bidirectional": "DATA_IO",
     }
     native_pin_type = native_pin_types[kind]
     rule_id = rule_ids[kind]
     fixture_symbol = fixture_symbols[kind]
     pin_function = functions[kind]
-    signal_name = "INPUT" if kind == "signal-input" else "VOUT"
+    signal_name = {
+        "signal-input": "INPUT",
+        "bidirectional": "DATA_IO",
+        "power-output": "VOUT",
+        "signal-output": "VOUT",
+    }[kind]
     lane_name = f"component-peer-{kind}-fixture"
     display_name = kind
     cases = {
@@ -13415,6 +13437,7 @@ def native_lane(
         component_peer_power_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_input_fixture_lane(root, project=project, image=image, log=log)
+        component_peer_bidirectional_fixture_lane(root, project=project, image=image, log=log)
         component_rating_fixtures_lane(root, project=project, image=image, log=log)
         power_sequence_fixture_lane(root, project=project, image=image, log=log)
         ic_rail_capacitor_fixture_lane(root, project=project, image=image, log=log)

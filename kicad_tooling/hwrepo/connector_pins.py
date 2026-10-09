@@ -1201,6 +1201,19 @@ def component_peer_signal_input_pin_outliers(
     )
 
 
+def component_peer_bidirectional_pin_outliers(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> tuple[PeerPinAssignmentOutlier, ...]:
+    """Find an open native bidirectional pin among exact-symbol fitted peers."""
+    return _component_peer_pin_assignment_outliers(
+        observed,
+        declared_references,
+        electrical_types=frozenset({"bidirectional"}),
+        require_pin_functions=True,
+    )
+
+
 def component_peer_power_pin_assignment_divergences(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),

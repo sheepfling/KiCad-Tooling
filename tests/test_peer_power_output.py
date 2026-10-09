@@ -22,6 +22,7 @@ from kicad_tooling.hwrepo.models import (
 RULE_ID = "component.peer_power_output_unconnected"
 SIGNAL_RULE_ID = "component.peer_signal_output_unconnected"
 INPUT_RULE_ID = "component.peer_signal_input_unconnected"
+BIDIRECTIONAL_RULE_ID = "component.peer_bidirectional_pin_unconnected"
 
 
 def peer_component_pin_netlist(
@@ -127,6 +128,32 @@ def peer_signal_input_netlist(
     )
 
 
+def peer_bidirectional_netlist(
+    *,
+    references: tuple[str, ...] = ("U1", "U2"),
+    pin_nets: tuple[str | None, ...] = ("DATA_A", None),
+    dnp: tuple[str, ...] = (),
+    symbols: dict[str, str] | None = None,
+    electrical_types: tuple[str, ...] | None = None,
+    pin_function: str = "DATA_IO",
+    pin_functions: tuple[str | None, ...] | None = None,
+    missing_inventory: tuple[str, ...] = (),
+    ambiguous_pins: tuple[str, ...] = (),
+) -> NetlistContract:
+    return peer_component_pin_netlist(
+        references=references,
+        pin_nets=pin_nets,
+        dnp=dnp,
+        symbols=symbols,
+        default_symbol="Synthetic:BidirectionalModule",
+        pin_electrical_types=electrical_types or tuple("bidirectional" for _ in references),
+        pin_function=pin_function,
+        pin_functions=pin_functions,
+        missing_inventory=missing_inventory,
+        ambiguous_pins=ambiguous_pins,
+    )
+
+
 def lint_report(
     observed: NetlistContract,
     policy: DesignLintPolicy | None = None,
@@ -196,6 +223,29 @@ def test_reports_an_open_native_signal_input_pin_when_an_exact_peer_is_connected
     assert "control.unconnected_control_input" not in {item.rule_id for item in report.findings}
 
 
+def test_reports_an_open_native_bidirectional_pin_when_an_exact_peer_is_connected() -> None:
+    report = lint_report(
+        peer_bidirectional_netlist(
+            references=("U1", "U2", "U3"), pin_nets=("DATA_IO", "DATA_IO", None)
+        )
+    )
+    findings = [item for item in report.findings if item.rule_id == BIDIRECTIONAL_RULE_ID]
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.mode == "review"
+    assert finding.evidence["symbol"] == ("Synthetic:BidirectionalModule",)
+    assert finding.evidence["pin_number"] == ("2",)
+    assert finding.evidence["pin_electrical_type"] == ("bidirectional",)
+    assert finding.evidence["pin_function"] == ("DATA_IO",)
+    assert finding.evidence["unassigned_pins"] == ("U3.2",)
+    assert finding.evidence["U1.2"] == ("DATA_IO",)
+    assert finding.evidence["U2.2"] == ("DATA_IO",)
+    assert finding.evidence["U3.2"] == ()
+    assert "do not require their bidirectional pins to share a net" in finding.message
+
+
 @pytest.mark.parametrize(
     "output_nets",
     (("VOUT", "VOUT"), ("VOUT_A", "VOUT_B")),
@@ -241,6 +291,19 @@ def test_assigned_signal_peer_inputs_are_valid_same_or_separate_net_controls(
 
 
 @pytest.mark.parametrize(
+    "pin_nets",
+    (("DATA_IO", "DATA_IO"), ("DATA_IO_A", "DATA_IO_B")),
+)
+def test_assigned_bidirectional_peers_are_valid_same_or_separate_net_controls(
+    pin_nets: tuple[str, str],
+) -> None:
+    report = lint_report(peer_bidirectional_netlist(pin_nets=pin_nets))
+
+    assert BIDIRECTIONAL_RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.status == "PASS"
+
+
+@pytest.mark.parametrize(
     "observed",
     (
         peer_signal_input_netlist(input_nets=(None, None)),
@@ -263,6 +326,31 @@ def test_signal_input_prompt_skips_open_or_incomplete_peer_evidence(
     observed: NetlistContract,
 ) -> None:
     assert INPUT_RULE_ID not in {item.rule_id for item in lint_report(observed).findings}
+
+
+@pytest.mark.parametrize(
+    "observed",
+    (
+        peer_bidirectional_netlist(pin_nets=(None, None)),
+        peer_bidirectional_netlist(pin_nets=("DATA_IO", None), dnp=("U2",)),
+        peer_bidirectional_netlist(
+            pin_nets=("DATA_IO", None),
+            symbols={"U1": "Synthetic:PeripheralA", "U2": "Synthetic:PeripheralB"},
+        ),
+        peer_bidirectional_netlist(pin_nets=("DATA_IO", None), missing_inventory=("U2",)),
+        peer_bidirectional_netlist(pin_nets=("DATA_IO", None), ambiguous_pins=("U1",)),
+        peer_bidirectional_netlist(electrical_types=("bidirectional", "input")),
+        peer_bidirectional_netlist(electrical_types=("tri_state", "tri_state")),
+        peer_bidirectional_netlist(pin_functions=(None, None)),
+        peer_bidirectional_netlist(pin_functions=("DATA_IO", None)),
+        peer_bidirectional_netlist(pin_functions=("DATA_IN", "DATA_OUT")),
+        peer_bidirectional_netlist(references=("J1", "J2")),
+    ),
+)
+def test_bidirectional_prompt_skips_open_or_incomplete_peer_evidence(
+    observed: NetlistContract,
+) -> None:
+    assert BIDIRECTIONAL_RULE_ID not in {item.rule_id for item in lint_report(observed).findings}
 
 
 def test_active_low_input_is_eligible_for_peer_review() -> None:
@@ -532,6 +620,57 @@ def test_signal_input_review_supports_project_policy_and_exact_ignore() -> None:
     assert ignored_finding.disposition == "IGNORED"
 
 
+def test_bidirectional_review_supports_project_policy_and_exact_ignore() -> None:
+    observed = peer_bidirectional_netlist()
+    original = lint_report(observed)
+    finding = next(item for item in original.findings if item.rule_id == BIDIRECTIONAL_RULE_ID)
+
+    blocked = lint_report(
+        observed,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=BIDIRECTIONAL_RULE_ID,
+                    mode="block",
+                    reason="Synthetic project requires review of open bidirectional peers",
+                ),
+            )
+        ),
+    )
+    assert blocked.status == "FAIL"
+
+    disabled = lint_report(
+        observed,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=BIDIRECTIONAL_RULE_ID,
+                    mode="off",
+                    reason="Synthetic project disables the peer bidirectional prompt",
+                ),
+            )
+        ),
+    )
+    assert disabled.status == "PASS"
+
+    ignored = lint_report(
+        observed,
+        DesignLintPolicy(
+            ignores=(
+                DesignLintIgnore(
+                    rule_id=BIDIRECTIONAL_RULE_ID,
+                    fingerprint=finding.fingerprint,
+                    reason="Synthetic project records this peripheral pin as unused",
+                ),
+            )
+        ),
+    )
+    ignored_finding = next(
+        item for item in ignored.findings if item.fingerprint == finding.fingerprint
+    )
+    assert ignored_finding.disposition == "IGNORED"
+
+
 def test_finding_is_stable_under_map_order_changes() -> None:
     source = peer_power_output_netlist()
     original = lint_report(source)
@@ -610,6 +749,31 @@ def test_signal_input_finding_is_stable_under_map_order_changes() -> None:
     assert get_findings(reordered) == get_findings(original)
 
 
+def test_bidirectional_finding_is_stable_under_map_order_changes() -> None:
+    source = peer_bidirectional_netlist()
+    original = lint_report(source)
+    reordered_source = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
+        }
+    )
+    reordered = lint_report(reordered_source)
+
+    def get_findings(report: DesignLintReport) -> dict[str, tuple[str, dict[str, tuple[str, ...]]]]:
+        return {
+            item.subject: (item.fingerprint, item.evidence)
+            for item in report.findings
+            if item.rule_id == BIDIRECTIONAL_RULE_ID
+        }
+
+    assert get_findings(reordered) == get_findings(original)
+
+
 def test_native_fixture_sources_match_reviewed_digests() -> None:
     fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
     expected = {
@@ -619,6 +783,8 @@ def test_native_fixture_sources_match_reviewed_digests() -> None:
         "component-peer-signal-output-native/fault.kicad_sch": "0d45eef6e2fc66da65781bb0e06d5c7601788aeb37489e60bf1302bfdad6a04a",
         "component-peer-signal-input-native/control.kicad_sch": "961527991bc45a4545bbf980a7540e81207c0012fa3fbe20772589970b507e15",
         "component-peer-signal-input-native/fault.kicad_sch": "9d3293d4c7d536549decad392096f118ad0f8cab6e62926572c9784f46f45275",
+        "component-peer-bidirectional-native/control.kicad_sch": "1ea8f0a5b92fab8fafd0170adbe6b374f8bc9c24f38b00c00a0ceaafa70e2aa0",
+        "component-peer-bidirectional-native/fault.kicad_sch": "5811d43e0298fb4bd8443bf849e8e75665e693561b4981786e768c0c895f4ea3",
     }
 
     assert {
@@ -633,6 +799,7 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
 
     from kicad_tooling.ci_hosted import (
         HostedLog,
+        component_peer_bidirectional_fixture_lane,
         component_peer_power_output_fixture_lane,
         component_peer_signal_input_fixture_lane,
         component_peer_signal_output_fixture_lane,
@@ -661,6 +828,7 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
         "power": ("power-output", component_peer_power_output_fixture_lane),
         "signal": ("signal-output", component_peer_signal_output_fixture_lane),
         "signal-input": ("signal-input", component_peer_signal_input_fixture_lane),
+        "bidirectional": ("bidirectional", component_peer_bidirectional_fixture_lane),
     }
     lane_kind, lane = lanes[kind]
     fixture_lane = f"component-peer-{lane_kind}-fixture"
@@ -676,6 +844,10 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
         "signal-input": {
             "fault": "9d3293d4c7d536549decad392096f118ad0f8cab6e62926572c9784f46f45275",
             "control": "961527991bc45a4545bbf980a7540e81207c0012fa3fbe20772589970b507e15",
+        },
+        "bidirectional": {
+            "fault": "5811d43e0298fb4bd8443bf849e8e75665e693561b4981786e768c0c895f4ea3",
+            "control": "1ea8f0a5b92fab8fafd0170adbe6b374f8bc9c24f38b00c00a0ceaafa70e2aa0",
         },
     }[kind]
     for project, version in expected_versions.items():
@@ -734,3 +906,11 @@ def test_peer_signal_output_fault_and_control_on_pinned_native_versions() -> Non
 )
 def test_peer_signal_input_fault_and_control_on_pinned_native_versions() -> None:
     _run_native_peer_pin_assignment_lane("signal-input")
+
+
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES") != "1",
+    reason="pinned native fixtures run in package acceptance",
+)
+def test_peer_bidirectional_fault_and_control_on_pinned_native_versions() -> None:
+    _run_native_peer_pin_assignment_lane("bidirectional")
