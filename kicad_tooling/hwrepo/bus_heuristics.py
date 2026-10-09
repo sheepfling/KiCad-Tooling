@@ -65,6 +65,7 @@ _COMPLEMENTARY_FUNCTIONS: dict[str, tuple[str, str]] = {
     # DP1/DM1 are single-port aliases here. The USB peer-reference review
     # keeps DPn/DMn port groups in its own typed topology model.
     "dp1": ("USB data", "positive"),
+    "ud+": ("USB data", "positive"),
     "usbd+": ("USB data", "positive"),
     "usbdp": ("USB data", "positive"),
     "usbdplus": ("USB data", "positive"),
@@ -72,6 +73,7 @@ _COMPLEMENTARY_FUNCTIONS: dict[str, tuple[str, str]] = {
     "dm": ("USB data", "negative"),
     "dminus": ("USB data", "negative"),
     "dm1": ("USB data", "negative"),
+    "ud-": ("USB data", "negative"),
     "usbd-": ("USB data", "negative"),
     "usbdm": ("USB data", "negative"),
     "usbdminus": ("USB data", "negative"),

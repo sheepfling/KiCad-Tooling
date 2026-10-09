@@ -2296,33 +2296,33 @@
         "A bonded USB map is checked separately by bus.usb_data_path_mismatch against exact native component and pin-to-net assignments; the peer-reference review itself does not establish bond conduction or PCB copper continuity."
       ],
       "fault_fixtures": [
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_split_reference_direct_usb_pair_emits_exact_review_evidence",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_usb_c_duplicate_contacts_and_two_pin_diode_shunts_emit_exact_review",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_stale_map_identity_does_not_suppress_peer_review",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_fitted_series_resistors_preserve_usb_peer_reference_review",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels"
+        "tests.test_usb_peer_reference_review.test_split_reference_direct_usb_pair_emits_exact_review_evidence",
+        "tests.test_usb_peer_reference_review.test_usb_c_duplicate_contacts_and_two_pin_diode_shunts_emit_exact_review",
+        "tests.test_usb_peer_reference_review.test_stale_map_identity_does_not_suppress_peer_review",
+        "tests.test_usb_peer_reference_review.test_fitted_series_resistors_preserve_usb_peer_reference_review",
+        "tests.test_usb_peer_reference_review.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
+        "tests.test_usb_peer_reference_review.test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels"
       ],
       "valid_control_fixtures": [
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_coverage_binds_common_split_and_mapped_peer_paths",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_coverage_marks_missing_usb_endpoints_and_incomplete_groups",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_coverage_distinguishes_unsupported_paths_and_dnp_endpoints",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_common_reference_is_a_quiet_control",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_usb_c_common_reference_with_duplicate_contacts_and_diodes_is_control",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_usb_c_does_not_accept_extra_peers_incomplete_or_non_diode_branches",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_usb_c_map_must_name_every_duplicate_contact_before_suppressing_review",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_exact_common_and_separate_usb_maps_resolve_the_review",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_series_resistor_recognition_rejects_dnp_incomplete_and_extra_peers",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_phy_with_multiple_reference_domains_is_outside_predicate",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_isolator_mediated_usb_path_is_not_traced_across_domains",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_single_port_numbered_usb_data_functions_are_recognized",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
+        "tests.test_usb_peer_reference_review.test_coverage_binds_common_split_and_mapped_peer_paths",
+        "tests.test_usb_peer_reference_review.test_coverage_marks_missing_usb_endpoints_and_incomplete_groups",
+        "tests.test_usb_peer_reference_review.test_coverage_distinguishes_unsupported_paths_and_dnp_endpoints",
+        "tests.test_usb_peer_reference_review.test_common_reference_is_a_quiet_control",
+        "tests.test_usb_peer_reference_review.test_usb_c_common_reference_with_duplicate_contacts_and_diodes_is_control",
+        "tests.test_usb_peer_reference_review.test_usb_c_does_not_accept_extra_peers_incomplete_or_non_diode_branches",
+        "tests.test_usb_peer_reference_review.test_usb_c_map_must_name_every_duplicate_contact_before_suppressing_review",
+        "tests.test_usb_peer_reference_review.test_exact_common_and_separate_usb_maps_resolve_the_review",
+        "tests.test_usb_peer_reference_review.test_series_resistor_recognition_rejects_dnp_incomplete_and_extra_peers",
+        "tests.test_usb_peer_reference_review.test_phy_with_multiple_reference_domains_is_outside_predicate",
+        "tests.test_usb_peer_reference_review.test_isolator_mediated_usb_path_is_not_traced_across_domains",
+        "tests.test_usb_peer_reference_review.test_single_port_numbered_usb_data_functions_are_recognized",
+        "tests.test_usb_peer_reference_review.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
         "tests.test_usb_data_paths.test_exact_bonded_reference_path_is_a_valid_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_input_order_is_stable_and_commoning_clears_only_this_review",
-        "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port"
+        "tests.test_usb_peer_reference_review.test_input_order_is_stable_and_commoning_clears_only_this_review",
+        "tests.test_usb_peer_reference_review.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_peer_reference_review.py#scan_usb_peer_reference_reviews",

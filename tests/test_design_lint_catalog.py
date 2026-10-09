@@ -255,7 +255,6 @@ from tests.test_usb_data_paths import (
     usb_netlist,
 )
 from tests.test_usb_peer_reference_review import (
-    UsbPeerReferenceReviewTests,
     usb_peer_netlist,
 )
 
@@ -438,7 +437,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         PcbSwitchingLoopTests: PcbSwitchingLoopTests(),
         Stm32PinMapTests: Stm32PinMapTests(),
         SerialPeerReferenceReviewTests: SerialPeerReferenceReviewTests(),
-        UsbPeerReferenceReviewTests: UsbPeerReferenceReviewTests(),
         PowerPathTests: PowerPathTests(),
         PowerSequenceTests: PowerSequenceTests(),
         PowerPathFixtureLaneTests: PowerPathFixtureLaneTests(),

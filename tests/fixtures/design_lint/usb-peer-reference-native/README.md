@@ -2,7 +2,9 @@
 
 These two tooling-owned KiCad schematics are synthetic controls for the
 `bus.usb_peer_reference_review` heuristic. Each contains a direct USB 2.0 D+/D−
-pair between one connector candidate and one synthetic U-prefixed PHY. The
+pair between one connector candidate and one synthetic U-prefixed PHY. The PHY
+pin functions use the `UD+` and `UD-` aliases found on some USB-to-serial
+symbols, so the fixtures exercise those names through native export. The
 fault assigns connector GND and PHY AGND to separate schematic nets; the
 control assigns both pins to one net. No project board or product source is
 included.
@@ -16,8 +18,8 @@ SHA-256 of the version-controlled schematic inputs:
 
 | Fixture             | SHA-256                                                            |
 | ------------------- | ------------------------------------------------------------------ |
-| `fault.kicad_sch`   | `4aa97359832c162f5476f1002970ab039b9275d2fae4539a053bec5980bb4bc1` |
-| `control.kicad_sch` | `26a52a7f4010f376b44d0fa39780c886dc4859bc9dac1ddb4206d8033ee35ec2` |
+| `fault.kicad_sch`   | `5af2a1b730701e1167b96f13ccb296c6ff4127e0454404b4e2eef47f5d92b959` |
+| `control.kicad_sch` | `0fe232d691405e8ac95ef894a2ece81a3d11ccd9b200f59ff6fcb685d591bd98` |
 
 The fixtures are included in the existing source-bound USB data-path native
 lane. That lane exports every schematic twice in the digest-pinned KiCad

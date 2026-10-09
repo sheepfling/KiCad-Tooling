@@ -3165,9 +3165,9 @@ is not a reason by itself to expand its scope or change its default policy.
   supported USB 2.0 D+ and D− pins at each endpoint, with all pins on one side
   assigned to that side's native net. Each line may be direct or cross exactly
   one fitted, complete two-pin `Device:R` between the connector-side and PHY-side
-  nets. The function aliases include direct names such as D+/D− and numbered
-  hub pairs DPn/DMn or USBnD+/USBnD-, which are grouped by matching numeric
-  port number. One
+  nets. The function aliases include direct names such as D+/D−, unnumbered
+  `UD+`/`UD−`, and numbered hub pairs DPn/DMn or USBnD+/USBnD-, which are
+  grouped by matching numeric port number. One
   unnumbered endpoint can pair with a numbered endpoint when the exact nets
   identify one path; two numbered endpoints must use the same group. Each
   endpoint's explicit reference pins
@@ -3191,7 +3191,8 @@ is not a reason by itself to expand its scope or change its default policy.
   decision all match. For `bonded`, `bus.usb_data_path_mismatch` separately
   reports a missing, DNP, identity-mismatched, or incorrectly assigned bond;
   this netlist comparison does not prove component conduction or PCB copper.
-- **Fixtures:** Synthetic split-reference fault and common-reference control;
+- **Fixtures:** Synthetic split-reference fault and common-reference control,
+  including native `UD+`/`UD−` PHY-pin aliases;
   two connectors to one numbered hub with per-port evidence, a shared-
   reference control, a crossed-channel control, an unused-port control, and
   exact `data_port_group` maps;
@@ -3210,12 +3211,12 @@ is not a reason by itself to expand its scope or change its default policy.
   bond, wrong value, symbol, footprint, DNP state, active pin type, and wrong
   side net. CLI and MCP return identical fault evidence. A source-hashed
   native 0R control is registered in the same KiCad 10.0.0/10.0.5 fixture lane;
-  it has not run on this host because `kicad-cli` and the Docker daemon are
-  unavailable, so pinned native-export evidence remains pending.
-- **Evidence status:** The predicate, tests, and native fixture sources are in
-  this branch. The pinned native lane is wired into the existing USB export
-  job but has not run on this host because the Docker daemon is unavailable;
-  no GitHub result has been recorded for this dirty branch. Before the series-path
+  it was initially unrun locally and is included in the current native run
+  recorded below.
+- **Evidence history:** The predicate, tests, and native fixture sources were
+  in this branch before the alias extension. The pinned lane was wired into the
+  existing USB export job but had not run locally at that earlier checkpoint;
+  no GitHub result had been recorded for the then-dirty branch. Before the series-path
   extension, the full Python suite passed on 2026-10-07 with the public
   `KiCAD-Test` reference checkout pinned
   at `ed89536f0dbbcb013145af2994fef41b2250143e`: 2,139 tests passed, 49
@@ -3487,10 +3488,34 @@ is not a reason by itself to expand its scope or change its default policy.
   `8417b4af081cf673877b840af6e499e9a1a7b534c48df5ec93704539abdcb8ea`
   (KiCad 10.0.0) and
   `432f8224f7bdb6f4417ab5532284513a2067c8a82a4090aeb32f7e96c4f9798a`
-  (KiCad 10.0.5). The workflow, fixture lane, and heuristic sources match the
-  tagged sources; current uncommitted changes do not modify those files. This
-  establishes exact-version schematic-export compatibility for synthetic
-  cases, not physical continuity or product approval.
+  (KiCad 10.0.5). At that time, the workflow, fixture lane, and heuristic
+  sources matched the tagged sources. This establishes exact-version
+  schematic-export compatibility for synthetic cases, not physical continuity
+  or product approval.
+- **UD alias regression (2026-10-09):** A read-only probe of the
+  [public SparkFun RFID USB-C Reader source][sparkfun-rfid-reader-source] at
+  commit `63c7a5d71cbd1df8f9b420ec320d239ea6a86d33`, file
+  `Hardware/SparkFun_USB_RFID_Reader.kicad_sch`, found CH340C pin-function
+  aliases `UD+` and `UD-`. Its schematic SHA-256 was
+  `315b868e5fa059b3766faeac430519ae6135af3ead2593d0bfff304918447deb`; the
+  pinned repository declares CC BY-SA 4.0 for hardware and MIT for code in its
+  [license file][sparkfun-rfid-reader-license].
+  The probe used only the pin-function names: no schematic, board, project, or
+  netlist was copied. That board's data lines pass through a multi-pin TVS, an
+  unsupported LINT-086 topology, so it does not count as a supported path or a
+  quiet non-finding. The alias table and tooling-owned synthetic USB fault and
+  control fixtures now cover the names. Both parametrized native pytest cases
+  passed with KiCad 10.0.0 and 10.0.5; each repeated normalized export matched,
+  the split-reference fixture emitted one review, and the common-reference
+  control stayed quiet. The full pytest suite passed 2,344 tests, skipped 87
+  environment-gated cases, and passed 1,880 subtests. The USB peer suite now
+  uses module-level pytest functions, the native gate is parametrized by
+  toolchain, and the rule catalog points to those functions. These results
+  establish deterministic alias handling and native export behavior only.
+  The package driver's pytest run with plugin auto-loading disabled also
+  passed 2,371 tests, skipped 60, and passed 1,893 subtests. Its wheel and
+  source distribution rebuilds, fresh installation, external and adapted
+  project checks, and playtest all passed.
 - **Reviewer-value measurement protocol:** Use one row per uniquely matched
   connector-to-IC path, plus a run header. Freeze the tooling commit, public or
   approved source URL and immutable revision, license/permission basis, source
@@ -3532,6 +3557,9 @@ is not a reason by itself to expand its scope or change its default policy.
   remain unmeasured. See the
   [USB-A fixture record](../tests/fixtures/design_lint/usb-peer-reference-native/README.md)
   and [USB-C fixture record](../tests/fixtures/design_lint/usb-c-peer-reference-native/README.md).
+
+[sparkfun-rfid-reader-source]: https://github.com/sparkfun/SparkFun_RFID_USB-C_Reader/tree/63c7a5d
+[sparkfun-rfid-reader-license]: https://github.com/sparkfun/SparkFun_RFID_USB-C_Reader/blob/63c7a5d/LICENSE.md
 
 #### LINT-087 — Exact serial reference-bond contract
 
