@@ -36,12 +36,18 @@ The fixture sources and expected outcomes are registered here. A local
 KiCad 10.0.6 export exposed and corrected the original ground-wire coordinates;
 the current sources place the connector and PHY reference pins on the expected
 split nets in the fault and one shared net in the control. Repeated local
-10.0.6 exports now produce stable typed netlist contracts. The pinned
-10.0.0/10.0.5 lane has not run on this host because its Docker daemon is
-unavailable; no hosted result is recorded for the current branch. These cases
-validate repeatable schematic netlist behavior, not the correct grounding
-policy for a real interface, a fitted bond, PCB copper continuity, external
-wiring, or electrical suitability.
+10.0.6 exports now produce stable typed netlist contracts.
+
+Hosted package acceptance for tag `v0.5.0rc17` passed (run `37863872527`),
+including `NativeUsbDataPathFixtureTests` on the digest-pinned
+KiCad 10.0.0 and 10.0.5 images. Both versions passed the split-reference fault
+and common-reference control, the USB-C contact fault/control, and the
+two-port fault/control; repeated normalized netlists matched. The split
+two-port case produced two per-port reference reviews, while the common
+control produced none. The package test stage reported 2,290 passed, 26 skipped,
+and 2,044 subtests passed. These cases validate repeatable schematic netlist
+behavior, not the correct grounding policy for a real interface, a fitted bond,
+PCB copper continuity, external wiring, or electrical suitability.
 
 The USB-C duplicate-contact and two-pin branch regression is recorded in the
 [USB-C fixture README](../usb-c-peer-reference-native/README.md).
@@ -69,9 +75,9 @@ including on the authored common-reference control. It therefore did not
 distinguish the split-reference fault from its common-reference control.
 
 This was a schematic-parser comparison, not a KiCad-native export or ERC run.
-The local typed rule tests distinguish the synthetic fault and control, but
-the pinned native export lane remains pending; this is not a head-to-head
-comparison on native-exported input. The candidate's generic singleton
-warnings add no unique reference-domain finding in this trial. Their
+The separate pinned native USB fixture lane passed in hosted run
+`37863872527`; this candidate comparison itself remains parser-only and is not
+a head-to-head comparison on native-exported input. The candidate's generic
+singleton warnings add no unique reference-domain finding in this trial. Their
 usefulness on field designs and reviewer effort remain unmeasured. Output JSON
 stayed under `/private/tmp/kicad-happy-usb-peer-trial-20261007/results/`.

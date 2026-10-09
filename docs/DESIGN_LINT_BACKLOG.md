@@ -3186,10 +3186,18 @@ is not a reason by itself to expand its scope or change its default policy.
   typing, `rumdl`, `mdrepo`, wheel/sdist construction, reproducible wheel rebuild
   from the source distribution, fresh-environment installation, and CLI/MCP
   checks against the public reference checkout and a relocated copy. Its
-  external portable verification and playtest also passed. This proves package
-  and source-level behavior only; the exact KiCad 10.0.0/10.0.5 native fixture
-  lane still needs the hosted tag run, and physical return continuity remains
-  outside this heuristic.
+  external portable verification and playtest also passed. This local run
+  proves package and source-level behavior; the exact-version native fixture
+  results are recorded below. It does not test physical return continuity.
+  The hosted tag run then passed as `v0.5.0rc17` (run `37863872527`). Its
+  package suite reported 2,290 passed, 26 skipped, and 2,044 subtests passed;
+  `NativeUsbDataPathFixtureTests` ran on digest-pinned KiCad 10.0.0 and 10.0.5.
+  The direct split-reference fault prompted review, its common-reference
+  control stayed quiet, the USB-C fault/control behaved as registered, and the
+  two-port fault produced two per-port reviews while its common control stayed
+  quiet. Repeated normalized netlists matched for every registered case. This
+  closes the native schematic-export check for these synthetic fixtures; it
+  still does not test PCB copper or physical continuity.
 - **Applicability screen:**
 
   The MIT-licensed public [CP2102 project](https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102)
