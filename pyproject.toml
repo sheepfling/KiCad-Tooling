@@ -65,6 +65,13 @@ python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
 markers = [
   "design_lint: deterministic design-lint rule, catalog, and parity behavior",
+  "component_lint: component ratings and component-level electrical heuristics",
+  "connector_lint: connector inventory, peer-pin, and interface connector checks",
+  "interface_lint: USB, serial, SPI, I2C, and digital interface checks",
+  "power_lint: power paths, sequencing, protection, and power component checks",
+  "pcb_lint: PCB geometry, layout, and source-bound board checks",
+  "return_path_lint: ground, return, reference-plane, and return-path checks",
+  "parity_lint: cross-surface CLI, MCP, and electrical parity checks",
   "native_kicad: source or board fixtures run against an exact native KiCad version",
   "slow: cross-process, package, or broad integration checks that take longer to run",
 ]

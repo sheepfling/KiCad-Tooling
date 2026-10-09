@@ -24,20 +24,27 @@ For PowerShell, set the variable with
 `$env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"`.
 Run one module with `python -I -B -m pytest -q tests/test_product.py`.
 
-Focused runs use registered markers. `tests/conftest.py` keeps the lint-module
-group explicit and marks exact-native fixture classes separately:
+Focused runs use registered markers. `tests/conftest.py` assigns lint areas by
+test module; areas can overlap when a fixture checks more than one concern. It
+also marks exact-native fixture classes separately:
 
 ```sh
-python -I -B -m pytest -q -m "design_lint and not native_kicad and not slow"
+python -I -B -m pytest -q -m "design_lint and not native_kicad and not slow" --durations=20
+python -I -B -m pytest -q -m "connector_lint and not native_kicad and not slow"
+python -I -B -m pytest -q -m "return_path_lint and not native_kicad and not slow"
+python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
 python -I -B -m pytest -q -m native_kicad
 python -I -B -m pytest -q tests/test_rc_filters.py -k disconnected-capacitor-return
 ```
 
-The first command runs the portable, non-slow design-lint group. The second
-selects native KiCad fixtures and still requires each fixture's documented
-version and environment settings. `-k` selects a named test or parametrized
-case. Markers narrow local runs; the package acceptance gate continues to run
-the complete suite.
+The first command runs the portable, non-slow design-lint group. The area
+markers select component, connector, interface, power, PCB, return-path, or
+parity regressions; combine them with `-k` to select a test or parametrized
+fault/control case. `native_kicad` selects exact-version fixtures and still
+requires each fixture's documented version and environment settings. Markers
+narrow local runs; the package acceptance gate continues to run the complete
+suite. Add each new lint test module to its area in `tests/conftest.py`; this
+keeps it in both its focused area and the portable `design_lint` selection.
 
 `tests.support.reference_root()` copies the template's public examples, catalogs,
 and guidance into a disposable repository. It never copies reusable Python tools
