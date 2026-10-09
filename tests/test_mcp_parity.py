@@ -250,25 +250,27 @@ def parity_native_evidence(root: Path, island: Path) -> Path:
 
 
 @pytest.mark.parametrize(
-    ("output_type", "rule_id"),
+    ("electrical_type", "pin_function", "rule_id"),
     (
-        ("power_out", "component.peer_power_output_unconnected"),
-        ("output", "component.peer_signal_output_unconnected"),
+        ("power_out", "OUT", "component.peer_power_output_unconnected"),
+        ("output", "OUT", "component.peer_signal_output_unconnected"),
+        ("input", "IN", "component.peer_signal_input_unconnected"),
     ),
 )
-def test_peer_power_output_unconnected_lint_cli_mcp_parity(
-    tmp_path: Path, output_type: str, rule_id: str
+def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
+    tmp_path: Path, electrical_type: str, pin_function: str, rule_id: str
 ) -> None:
     root, island, _ = parity_workspace(tmp_path)
     native = parity_native_evidence(root, island)
     netlist = native.parent / "netlist.xml"
 
     def write_netlist(*, fault: bool) -> None:
+        signal_name = "INPUT" if electrical_type == "input" else "VOUT"
         output_nets = (
-            '<net name="VOUT"><node ref="U10" pin="2"/></net>'
+            f'<net name="{signal_name}"><node ref="U10" pin="2"/></net>'
             if fault
-            else '<net name="VOUT_A"><node ref="U10" pin="2"/></net>'
-            '<net name="VOUT_B"><node ref="U11" pin="2"/></net>'
+            else f'<net name="{signal_name}_A"><node ref="U10" pin="2"/></net>'
+            f'<net name="{signal_name}_B"><node ref="U11" pin="2"/></net>'
         )
         text = native_fixture.NETLIST.replace(
             "</components><nets/>",
@@ -279,7 +281,7 @@ def test_peer_power_output_unconnected_lint_cli_mcp_parity(
             '</components><libparts><libpart lib="Synthetic" '
             'part="PowerOutputPeer"><pins>'
             '<pin num="1" name="IO" type="passive"/>'
-            f'<pin num="2" name="OUT" type="{output_type}"/>'
+            f'<pin num="2" name="{pin_function}" type="{electrical_type}"/>'
             "</pins></libpart></libparts><nets>"
             '<net name="DATA"><node ref="U10" pin="1"/>'
             '<node ref="U11" pin="1"/></net>'

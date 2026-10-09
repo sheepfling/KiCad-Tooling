@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 84 rules are implemented with synthetic regression coverage.
+The following 85 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -68,6 +68,7 @@ Their actual recognition limits are documented in
 - `component.repeated_supply_pin_function`
 - `component.peer_power_pin_assignment_divergence`
 - `component.peer_power_output_unconnected`
+- `component.peer_signal_input_unconnected`
 - `component.peer_signal_output_unconnected`
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
@@ -1477,7 +1478,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 84 active rules; CI requires every new
+- **Status:** Baseline complete for all 85 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1486,7 +1487,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 84 covered, 0 not applicable, 0 unreviewed.
+  audit: 85 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -3836,6 +3837,43 @@ is not a reason by itself to expand its scope or change its default policy.
   check. It does not claim a cohort analyzer finding or field precision.
 - **Next:** Keep the native lane in package acceptance. Measure the prompt on
   approved, nonconfidential designs before changing its default disposition.
+
+#### LINT-099 — Open native signal input on one exact-symbol peer
+
+- **Status:** Implemented as `component.peer_signal_input_unconnected`, with
+  pytest typed-netlist regressions, project policy and exact-ignore controls,
+  CLI/MCP parity, and a repeated native-export lane for pinned KiCad 10.0.0 and
+  10.0.5. Hosted acceptance is pending.
+- **Priority:** P1 component-pin completeness. LINT-094 and LINT-098 cover
+  native power and signal outputs. This adds a narrow review prompt for an
+  otherwise ordinary `input` or `input_low` pin left open on one exact-symbol
+  fitted peer while another peer assigns its matching pin.
+- **Predicate:** Compare fitted, non-connector instances with one exact native
+  symbol and complete identical pin-number inventories. Require matching
+  native input type and present matching function metadata. Emit a `REVIEW` candidate
+  only when at least one peer pin has exactly one net assignment and at least
+  one peer pin is unassigned. Named supply and return pins, plus recognized
+  reset, enable, and boot controls, remain with their specific checks.
+- **Boundary:** Matching symbols, pin numbers, electrical types, and function
+  metadata are clues to inspect an open input; they do not establish a required
+  source or require peer inputs to share a net. This does not infer off-board
+  wiring, a missing driver, PCB copper continuity, or physical population. A
+  project-authored connectivity requirement remains necessary to make a
+  specific required relationship a blocking regression gate.
+- **Fixtures:** Synthetic typed and native-export faults leave one peer input
+  open. Controls assign the peer inputs to the same net and to separate nets.
+  Typed boundaries cover all-open peers, DNP, different symbols, incomplete
+  inventories, ambiguous assignments, mixed functions or types, passive pins,
+  connectors, named supply/return pins, and recognized controls. Cross-process
+  hash-seed tests and input-map reordering verify stable reports. Native source
+  fixtures are exported twice on both pinned KiCad profiles.
+- **Incremental value:** This is a deterministic review hint for missing
+  assignments that ERC may not flag when the opposite pin is also typed as an
+  input. It does not claim input peers should share a net, and it does not
+  replace project-authored connectivity requirements.
+- **Next:** Keep the prompt at default `review`; measure usefulness and false
+  prompts on approved, nonconfidential boards before considering a default
+  change.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -6596,7 +6634,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 84 active rules. Each entry has a deterministic predicate, evidence
+contains 85 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to
@@ -8969,7 +9007,7 @@ candidate commit and installation inputs before any new runtime comparison.
 | DA-001 decoupling strategy adequacy                | LINT-046 prompts on selected schematic power-input rails without a fitted capacitor; LINT-020 measures project-mapped PCB capacitor placement and optional connected return-via distance.                                                | No new rule from the changelog description alone. Inspect the exact predicate and trial it against multiple supply pins, shared capacitor banks, DNP parts, remote/plane returns, and datasheet-approved alternatives. Require a distinct confirmed finding beyond the two local checks before designing a new contract.                                                                                                                                                                                             |
 | XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts; selected geometry checks also bind board and netlist hashes.                                                                                                     | Keep deferred until each XV predicate and evidence source is identified. Compare one rule at a time with existing native consistency checks; a second report of the same mismatch is review duplication unless it improves actionable localization or catches a documented gap.                                                                                                                                                                                                                                      |
 | CC-001 style ampacity-target net-class proposal    | LINT-021 accepts project-authored minimum widths and records exact native track measurements.                                                                                                                                            | Treat the public [kicad-tools ampacity-target proposal](https://github.com/rjwalters/kicad-tools/issues/4216) as an unimplemented research lead, not a cohort feature to import. Any future derivation needs a documented, licensed/available calculation basis, explicit copper and temperature assumptions, boundary tests, and comparison with an independent reference. Preserve authored widths as screens until that evidence exists.                                                                          |
-| Mapped bundle route length and inter-signal skew   | LINT-022 audits native differential-pair constraint coverage; there is no generic mapped net-length or bus skew measurement.                                                                                                             | Trial a project-authored endpoint/bundle map and explicit length/skew limits against native connected copper evidence. Include arcs, vias, branches, zones, DNP members, disconnected routes, exact boundaries, and reordered native items. Do not adopt protocol-specific cohort tolerances as defaults. Stop if the geometry cannot resolve a unique route or if native DRC already reports the same configured condition with equal or better localization.                                                       |
+| Mapped bundle route length and inter-signal skew   | LINT-095 audits project-authored exact endpoints, bundle membership, and active native DRC length/skew rules; LINT-022 covers differential-pair constraint coverage.                                                                     | Keep using native DRC for route measurement and LINT-095 for authored intent and rule coverage. Reconsider a separate geometry engine only if it adds independently confirmed coverage or materially clearer localization beyond those checks.                                                                                                                                                                                                                                                                       |
 | Thermal-via coverage for mapped dissipating parts  | LINT-071 compares exact-part dissipated power with an authored derated power limit; it does not estimate package temperature or via benefit.                                                                                             | Keep deferred until a project-authored thermal requirement identifies the exact package, heat path, layers, connected via population, copper stack, and boundary basis. Test any narrow geometry screen against pad-connected, unconnected, wrong-plane, DNP, and datasheet-supported alternatives. Stop if via count or density is presented as thermal adequacy without an independently reviewed model.                                                                                                           |
 
 No candidate code, installation workflow, project design, or example fixture

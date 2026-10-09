@@ -8038,12 +8038,12 @@ def component_peer_power_output_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify the peer power-output regression pair on pinned KiCad exports."""
-    _component_peer_output_fixture_lane(
+    _component_peer_pin_assignment_fixture_lane(
         root,
         project=project,
         image=image,
         log=log,
-        kind="power",
+        kind="power-output",
     )
 
 
@@ -8051,19 +8051,37 @@ def component_peer_signal_output_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
     """Verify the peer signal-output regression pair on pinned KiCad exports."""
-    _component_peer_output_fixture_lane(
+    _component_peer_pin_assignment_fixture_lane(
         root,
         project=project,
         image=image,
         log=log,
-        kind="signal",
+        kind="signal-output",
     )
 
 
-def _component_peer_output_fixture_lane(
-    root: Path, *, project: str, image: str, log: HostedLog, kind: Literal["power", "signal"]
+def component_peer_signal_input_fixture_lane(
+    root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
-    """Verify one unconnected peer-output class against repeated KiCad exports."""
+    """Verify the peer signal-input regression pair on pinned KiCad exports."""
+    _component_peer_pin_assignment_fixture_lane(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        kind="signal-input",
+    )
+
+
+def _component_peer_pin_assignment_fixture_lane(
+    root: Path,
+    *,
+    project: str,
+    image: str,
+    log: HostedLog,
+    kind: Literal["power-output", "signal-output", "signal-input"],
+) -> None:
+    """Verify one exact-symbol open-pin class against repeated KiCad exports."""
     import hashlib
     import os
 
@@ -8079,21 +8097,39 @@ def _component_peer_output_fixture_lane(
     if config.image != image:
         raise ValueError(f"{project}: native fixture image differs from its reviewed toolchain")
     if config.kicad_version not in {"10.0.0", "10.0.5"}:
-        raise ValueError(f"Peer {kind}-output fixtures do not cover KiCad {config.kicad_version}")
+        raise ValueError(f"Peer {kind} fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
     fixture_root = (
         Path(__file__).resolve().parents[1]
-        / f"tests/fixtures/design_lint/component-peer-{kind}-output-native"
+        / f"tests/fixtures/design_lint/component-peer-{kind}-native"
     )
-    native_pin_type = "power_out" if kind == "power" else "output"
-    rule_id = (
-        "component.peer_power_output_unconnected"
-        if kind == "power"
-        else "component.peer_signal_output_unconnected"
-    )
-    fixture_symbol = "Synthetic:PowerModule" if kind == "power" else "Synthetic:SignalModule"
-    lane_name = f"component-peer-{kind}-output-fixture"
-    display_name = f"{kind}-output"
+    native_pin_types = {
+        "power-output": "power_out",
+        "signal-output": "output",
+        "signal-input": "input",
+    }
+    rule_ids = {
+        "power-output": "component.peer_power_output_unconnected",
+        "signal-output": "component.peer_signal_output_unconnected",
+        "signal-input": "component.peer_signal_input_unconnected",
+    }
+    fixture_symbols = {
+        "power-output": "Synthetic:PowerModule",
+        "signal-output": "Synthetic:SignalModule",
+        "signal-input": "Synthetic:SignalInputModule",
+    }
+    functions = {
+        "power-output": "OUT",
+        "signal-output": "OUT",
+        "signal-input": "IN",
+    }
+    native_pin_type = native_pin_types[kind]
+    rule_id = rule_ids[kind]
+    fixture_symbol = fixture_symbols[kind]
+    pin_function = functions[kind]
+    signal_name = "INPUT" if kind == "signal-input" else "VOUT"
+    lane_name = f"component-peer-{kind}-fixture"
+    display_name = kind
     cases = {
         "fault": ("fault.kicad_sch", ("U2.2",)),
         "control": ("control.kicad_sch", ()),
@@ -8194,9 +8230,9 @@ def _component_peer_output_fixture_lane(
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
             expected_assignments = (
-                {"U1.2": ("VOUT",), "U2.2": ()}
+                {"U1.2": (signal_name,), "U2.2": ()}
                 if case == "fault"
-                else {"U1.2": ("VOUT_A",), "U2.2": ("VOUT_B",)}
+                else {"U1.2": (f"{signal_name}_A",), "U2.2": (f"{signal_name}_B",)}
             )
             actual_assignments = {
                 pin: tuple(sorted(net for net, pins in observed.nets.items() if pin in pins))
@@ -8214,10 +8250,12 @@ def _component_peer_output_fixture_lane(
                 or observed.component_pin_numbers.get("U2") != ("1", "2")
                 or observed.pin_electrical_types.get("U1.2") != native_pin_type
                 or observed.pin_electrical_types.get("U2.2") != native_pin_type
+                or observed.pin_functions.get("U1.2") != pin_function
+                or observed.pin_functions.get("U2.2") != pin_function
             ):
                 raise ValueError(
                     f"Native {case} export omitted the exact peer symbol, pin inventory, "
-                    f"or native {native_pin_type} pin types"
+                    f"or native {native_pin_type} pin types and {pin_function} functions"
                 )
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
@@ -8226,7 +8264,7 @@ def _component_peer_output_fixture_lane(
                 ensure_ascii=False,
             ).encode("utf-8")
             normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
-            project_id = f"synthetic-peer-{kind}-output-{case}"
+            project_id = f"synthetic-peer-{kind}-{case}"
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
                 project_id=project_id,
@@ -13376,6 +13414,7 @@ def native_lane(
         two_pin_component_fixture_lane(root, project=project, image=image, log=log)
         component_peer_power_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_output_fixture_lane(root, project=project, image=image, log=log)
+        component_peer_signal_input_fixture_lane(root, project=project, image=image, log=log)
         component_rating_fixtures_lane(root, project=project, image=image, log=log)
         power_sequence_fixture_lane(root, project=project, image=image, log=log)
         ic_rail_capacitor_fixture_lane(root, project=project, image=image, log=log)

@@ -112,6 +112,14 @@ class DesignLintDeterminismTests:
         assert component_power_input_control["status"] == "PASS"
         assert component_power_input_control["findings"] == []
 
+        peer_input_fault = reports["peer_signal_input_fault"]
+        assert peer_input_fault["status"] == "REVIEW"
+        assert {finding["rule_id"] for finding in peer_input_fault["findings"]} == {
+            "component.peer_signal_input_unconnected"
+        }
+        assert reports["peer_signal_input_control"]["status"] == "PASS"
+        assert reports["peer_signal_input_control"]["findings"] == []
+
         split_common = reports["db9_split_against_common_requirement"]
         split_isolated = reports["db9_split_against_isolated_requirement"]
         common_common = reports["db9_common_against_common_requirement"]

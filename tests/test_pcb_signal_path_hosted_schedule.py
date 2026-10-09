@@ -61,6 +61,7 @@ def test_native_lane_schedules_pcb_signal_path_fixture(
         "two_pin_component_fixture_lane",
         "component_peer_power_output_fixture_lane",
         "component_peer_signal_output_fixture_lane",
+        "component_peer_signal_input_fixture_lane",
         "component_rating_fixtures_lane",
         "power_sequence_fixture_lane",
         "ic_rail_capacitor_fixture_lane",

@@ -17,6 +17,8 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import DEFAULT, patch
 
+import pytest
+
 from kicad_tooling.ci_hosted import (
     TWO_PIN_COMPONENT_FIXTURE_CASES,
     HostedLog,
@@ -63,6 +65,115 @@ SERIAL_LABEL_EXPECTED_NETS = json.loads(
         "serial-label-expected-nets.json"
     ).read_text(encoding="utf-8")
 )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Hosted native orchestration uses a Unix runner"
+)
+def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) -> None:
+    root = tmp_path / "repository"
+    shutil.copytree(
+        reference_root(),
+        root,
+        ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
+    )
+    initialize_git(root)
+    subprocess.run(
+        (
+            "git",
+            "-C",
+            str(root),
+            "-c",
+            "user.name=Test fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Synthetic source",
+        ),
+        check=True,
+        capture_output=True,
+    )
+    log = HostedLog(root, "native")
+    with (
+        patch.object(log, "run") as run,
+        patch(
+            "kicad_tooling.ci_hosted.connector_return_lint_fixture_lane"
+        ) as connector_return_fixture,
+        patch("kicad_tooling.ci_hosted.usb_data_path_fixture_lane") as usb_fixture,
+        patch("kicad_tooling.ci_hosted.power_path_fixture_lane") as power_path_fixture,
+        patch("kicad_tooling.ci_hosted.stm32_pin_map_fixture_lane") as stm32_fixture,
+        patch("kicad_tooling.ci_hosted.led_rail_fixture_lane") as led_fixture,
+        patch("kicad_tooling.ci_hosted.two_pin_component_fixture_lane") as component_fixture,
+        patch(
+            "kicad_tooling.ci_hosted.component_peer_power_output_fixture_lane"
+        ) as peer_power_fixture,
+        patch("kicad_tooling.ci_hosted.component_rating_fixtures_lane") as voltage_rating_fixture,
+        patch("kicad_tooling.ci_hosted.power_sequence_fixture_lane") as sequence_fixture,
+        patch("kicad_tooling.ci_hosted.ic_rail_capacitor_fixture_lane") as rail_cap_fixture,
+        patch.multiple(
+            "kicad_tooling.ci_hosted",
+            pcb_signal_path_drc_fixture_lane=DEFAULT,
+            component_peer_signal_input_fixture_lane=DEFAULT,
+            component_peer_signal_output_fixture_lane=DEFAULT,
+        ) as other_native_fixtures,
+        patch("kicad_tooling.ci_hosted.pcb_return_fixture_lane") as pcb_fixture,
+        patch("kicad_tooling.ci_hosted.pcb_access_fixture_lane") as access_fixture,
+        patch("kicad_tooling.ci_hosted.pcb_decoupling_fixture_lane") as decoupling_fixture,
+        patch("kicad_tooling.ci_hosted.pcb_switching_loop_fixture_lane") as switching_loop_fixture,
+        patch(
+            "kicad_tooling.ci_hosted.pcb_reference_plane_via_fixture_lane"
+        ) as reference_plane_fixture,
+        patch(
+            "kicad_tooling.ci_hosted.pcb_reference_plane_narrow_void_fixture_lane"
+        ) as narrow_void_fixture,
+        patch(
+            "kicad_tooling.ci_hosted.electrical_lane",
+            side_effect=RuntimeError("Electrical measurement failed"),
+        ) as electrical,
+        pytest.raises(RuntimeError, match="Electrical measurement failed"),
+    ):
+        native_lane(
+            root,
+            project="controller",
+            image="fixture@sha256:" + "a" * 64,
+            pr_head="",
+            fault_probes=True,
+            log=log,
+        )
+    expected_kwargs = {
+        "project": "controller",
+        "image": "fixture@sha256:" + "a" * 64,
+        "log": log,
+    }
+    electrical.assert_called_once_with(
+        root, "controller", log, native_summary="build/review/controller/summary.json"
+    )
+    for fixture in (
+        connector_return_fixture,
+        usb_fixture,
+        power_path_fixture,
+        stm32_fixture,
+        led_fixture,
+        component_fixture,
+        peer_power_fixture,
+        other_native_fixtures["component_peer_signal_output_fixture_lane"],
+        other_native_fixtures["component_peer_signal_input_fixture_lane"],
+        voltage_rating_fixture,
+        sequence_fixture,
+        rail_cap_fixture,
+        pcb_fixture,
+        access_fixture,
+        decoupling_fixture,
+        switching_loop_fixture,
+        reference_plane_fixture,
+        narrow_void_fixture,
+    ):
+        fixture.assert_called_once_with(root, **expected_kwargs)
+    stages = [call.args[0] for call in run.call_args_list]
+    assert "native-check" in stages
+    assert "fault-probes" not in stages
+    assert stages[-2:] == ["source-diff", "index-diff"]
 
 
 class HostedCiTests(unittest.TestCase):
@@ -314,185 +425,6 @@ class HostedCiTests(unittest.TestCase):
         from kicad_tooling.ci_matrix import build_matrix
 
         self.assertTrue(build_matrix(self.root, ("controller",)).include[0].electrical)
-
-    @unittest.skipIf(sys.platform == "win32", "Hosted native orchestration uses a Unix runner")
-    def test_native_lane_cannot_pass_when_declared_electrical_fails(self) -> None:
-        initialize_git(self.root)
-        subprocess.run(
-            (
-                "git",
-                "-C",
-                str(self.root),
-                "-c",
-                "user.name=Test fixture",
-                "-c",
-                "user.email=fixture@example.invalid",
-                "commit",
-                "-qm",
-                "Synthetic source",
-            ),
-            check=True,
-            capture_output=True,
-        )
-        log = HostedLog(self.root, "native")
-        with (
-            patch.object(log, "run") as run,
-            patch(
-                "kicad_tooling.ci_hosted.connector_return_lint_fixture_lane"
-            ) as connector_return_fixture,
-            patch("kicad_tooling.ci_hosted.usb_data_path_fixture_lane") as usb_fixture,
-            patch("kicad_tooling.ci_hosted.power_path_fixture_lane") as power_path_fixture,
-            patch("kicad_tooling.ci_hosted.stm32_pin_map_fixture_lane") as stm32_fixture,
-            patch("kicad_tooling.ci_hosted.led_rail_fixture_lane") as led_fixture,
-            patch("kicad_tooling.ci_hosted.two_pin_component_fixture_lane") as component_fixture,
-            patch(
-                "kicad_tooling.ci_hosted.component_peer_power_output_fixture_lane"
-            ) as peer_power_fixture,
-            patch(
-                "kicad_tooling.ci_hosted.component_rating_fixtures_lane"
-            ) as voltage_rating_fixture,
-            patch("kicad_tooling.ci_hosted.power_sequence_fixture_lane") as sequence_fixture,
-            patch("kicad_tooling.ci_hosted.ic_rail_capacitor_fixture_lane") as rail_cap_fixture,
-            patch.multiple(
-                "kicad_tooling.ci_hosted",
-                pcb_signal_path_drc_fixture_lane=DEFAULT,
-                component_peer_signal_output_fixture_lane=DEFAULT,
-            ) as other_native_fixtures,
-            patch("kicad_tooling.ci_hosted.pcb_return_fixture_lane") as pcb_fixture,
-            patch("kicad_tooling.ci_hosted.pcb_access_fixture_lane") as access_fixture,
-            patch("kicad_tooling.ci_hosted.pcb_decoupling_fixture_lane") as decoupling_fixture,
-            patch(
-                "kicad_tooling.ci_hosted.pcb_switching_loop_fixture_lane"
-            ) as switching_loop_fixture,
-            patch(
-                "kicad_tooling.ci_hosted.pcb_reference_plane_via_fixture_lane"
-            ) as reference_plane_fixture,
-            patch(
-                "kicad_tooling.ci_hosted.pcb_reference_plane_narrow_void_fixture_lane"
-            ) as narrow_void_fixture,
-            patch(
-                "kicad_tooling.ci_hosted.electrical_lane",
-                side_effect=RuntimeError("Electrical measurement failed"),
-            ) as electrical,
-            self.assertRaisesRegex(RuntimeError, "Electrical measurement failed"),
-        ):
-            native_lane(
-                self.root,
-                project="controller",
-                image="fixture@sha256:" + "a" * 64,
-                pr_head="",
-                fault_probes=True,
-                log=log,
-            )
-        electrical.assert_called_once_with(
-            self.root, "controller", log, native_summary="build/review/controller/summary.json"
-        )
-        connector_return_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        usb_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        power_path_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        stm32_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        led_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        component_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        peer_power_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        other_native_fixtures["component_peer_signal_output_fixture_lane"].assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        voltage_rating_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        sequence_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        rail_cap_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        pcb_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        access_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        decoupling_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        switching_loop_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        reference_plane_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        narrow_void_fixture.assert_called_once_with(
-            self.root,
-            project="controller",
-            image="fixture@sha256:" + "a" * 64,
-            log=log,
-        )
-        stages = [call.args[0] for call in run.call_args_list]
-        self.assertIn("native-check", stages)
-        self.assertNotIn("fault-probes", stages)
-        self.assertEqual(stages[-2:], ["source-diff", "index-diff"])
 
     def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evidence(
         self,

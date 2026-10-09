@@ -38,6 +38,7 @@ from .connector_coverage import (
 from .connector_pins import (
     component_peer_power_output_pin_outliers,
     component_peer_power_pin_assignment_divergences,
+    component_peer_signal_input_pin_outliers,
     component_peer_signal_output_pin_outliers,
     component_supply_pins_on_different_nets,
     connector_peer_pin_assignment_divergences,
@@ -1105,7 +1106,38 @@ def candidates(
                 },
             )
         )
-    for pin in unconnected_control_inputs(observed):
+    unconnected_controls = unconnected_control_inputs(observed)
+    control_pin_keys = {pin.pin.casefold() for pin in unconnected_controls}
+    for group in component_peer_signal_input_pin_outliers(observed, reviewed_connector_references):
+        open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        if any(pin.casefold() in control_pin_keys for pin in open_pins):
+            # Keep recognized reset, enable, and boot inputs with their specific rule.
+            continue
+        found.append(
+            Candidate(
+                rule_id="component.peer_signal_input_unconnected",
+                subject=(
+                    f"{group.symbol} pin {group.pin_number}: fitted peer signal-input assignment "
+                    "is missing"
+                ),
+                message=(
+                    "A fitted component with this exact native symbol has an unassigned pin that "
+                    f"KiCad classifies as {group.electrical_type}, while at least one fitted "
+                    "peer's matching pin has a net assignment. Review whether the open input is "
+                    "intentionally unused or its signal connection is missing; identical symbols "
+                    "do not require their input pins to share a net."
+                ),
+                evidence={
+                    **group.assignments,
+                    "symbol": (group.symbol,),
+                    "pin_number": (group.pin_number,),
+                    "pin_electrical_type": (group.electrical_type,),
+                    "pin_function": (group.pin_function or "",),
+                    "unassigned_pins": open_pins,
+                },
+            )
+        )
+    for pin in unconnected_controls:
         found.append(
             Candidate(
                 rule_id="control.unconnected_control_input",
