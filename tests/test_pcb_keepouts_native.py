@@ -8,14 +8,21 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.models import (
+    ComponentContract,
     ComponentIdentity,
     IgnoredChecks,
+    NetlistContract,
+    PcbRfAntennaKeepout,
+    PcbRfAntennaPolygon,
+    PcbRfModuleAntennaMap,
+    PcbRfModuleAntennaRequirement,
     PcbRuleAreaObservation,
     PcbValidationContract,
     ProjectConfig,
     ProjectKind,
 )
 from kicad_tooling.hwrepo.pcb_return_paths import capture_native_pcb_connectivity
+from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_PCB_FIXTURES") != "1",
@@ -44,7 +51,7 @@ FIXTURE = Path(__file__).parent / "fixtures/design_lint/pcb-keepout-rule-area.ki
         ),
     ),
 )
-def test_native_rule_area_snapshot_records_exact_keepout_evidence(
+def test_native_schema_12_snapshot_records_keepout_and_footprint_evidence(
     tmp_path: Path, expected_version: str, image: str
 ) -> None:
     root = tmp_path / "project"
@@ -82,22 +89,190 @@ def test_native_rule_area_snapshot_records_exact_keepout_evidence(
     assert command.returncode == 0, command.stderr or command.error
     assert snapshot is not None
     assert snapshot.kicad_version == expected_version
-    assert snapshot.schema_version == "11"
+    assert snapshot.schema_version == "12"
     assert snapshot.board_sha256
-    assert len(snapshot.rule_areas) == 1
-    area: PcbRuleAreaObservation = snapshot.rule_areas[0]
-    assert area.name == "SYNTHETIC_ANTENNA_KEEPOUT"
-    assert area.layers == ("F.Cu", "B.Cu")
-    assert area.net is None
-    assert len(area.polygons) == 1
-    assert set(area.polygons[0].outline_nm) == {
+    assert len(snapshot.rule_areas) == 3
+    footprints = {item.reference: item for item in snapshot.footprints}
+    assert tuple(item.reference for item in snapshot.footprints) == ("U1", "U2", "U3")
+    assert set(footprints) == {"U1", "U2", "U3"}
+    assert footprints["U1"].footprint == "RF_Module:Probe_Module"
+    assert footprints["U1"].dnp is False
+    assert footprints["U1"].position_nm == (20_000_000, 20_000_000)
+    assert footprints["U1"].orientation_microdegrees == 90_000_000
+    assert footprints["U1"].side == "F.Cu"
+    assert footprints["U2"].footprint == "RF_Module:Probe_Module"
+    assert footprints["U2"].dnp is False
+    assert footprints["U2"].position_nm == (30_000_000, 25_000_000)
+    assert footprints["U2"].orientation_microdegrees == 270_000_000
+    assert footprints["U2"].side == "B.Cu"
+    assert footprints["U3"].footprint == "RF_Module:Probe_Module"
+    assert footprints["U3"].dnp is False
+    assert footprints["U3"].position_nm == (40_000_000, 40_000_000)
+    assert footprints["U3"].orientation_microdegrees == 30_000_000
+    assert footprints["U3"].side == "F.Cu"
+    assert {item.pad for item in snapshot.pads} == {"U1.1", "U2.1", "U3.1"}
+    pads = {item.pad: item for item in snapshot.pads}
+    assert pads["U1.1"].positions_nm == ((20_000_000, 19_000_000),)
+    assert pads["U2.1"].positions_nm == ((30_000_000, 24_000_000),)
+    assert pads["U3.1"].positions_nm == ((40_866_025, 39_500_000),)
+    assert all(
+        item.footprint == footprints[item.pad.split(".")[0]].footprint for item in snapshot.pads
+    )
+    assert all(item.dnp == footprints[item.pad.split(".")[0]].dnp for item in snapshot.pads)
+    areas: dict[str, PcbRuleAreaObservation] = {
+        item.name: item for item in snapshot.rule_areas
+    }
+    front_area = areas["SYNTHETIC_ANTENNA_KEEPOUT"]
+    assert front_area.layers == ("F.Cu", "B.Cu")
+    assert front_area.net is None
+    assert len(front_area.polygons) == 1
+    assert set(front_area.polygons[0].outline_nm) == {
         (10_000_000, 10_000_000),
         (10_000_000, 12_000_000),
         (13_000_000, 12_000_000),
         (13_000_000, 10_000_000),
     }
-    assert area.forbids_tracks
-    assert area.forbids_vias
-    assert area.forbids_pads
-    assert area.forbids_zone_fills
-    assert not area.forbids_footprints
+    angled_area = areas["SYNTHETIC_ANTENNA_KEEPOUT_ANGLED"]
+    assert set(angled_area.polygons[0].outline_nm) == {
+        (40_000_000, 40_000_000),
+        (42_598_076, 38_500_000),
+        (43_098_076, 39_366_025),
+        (40_500_000, 40_866_025),
+    }
+    for keepout in areas.values():
+        assert keepout.net is None
+        assert keepout.forbids_tracks
+        assert keepout.forbids_vias
+        assert keepout.forbids_pads
+        assert keepout.forbids_zone_fills
+        assert not keepout.forbids_footprints
+
+    module_identity = {
+        "expected_symbol": "RF_Module:Probe_Module",
+        "expected_footprint": "RF_Module:Probe_Module",
+        "expected_part_id": "RF-PROBE",
+        "rf_feed_net": "RF_FEED",
+    }
+    requirements = PcbRfModuleAntennaMap(
+        basis="Synthetic native placement-relative RF keepout fixture",
+        requirements=(
+            PcbRfModuleAntennaRequirement(
+                id="front-module",
+                basis="Synthetic front-side module-local polygon",
+                reference="U1",
+                rf_feed_pad="U1.1",
+                keepout=PcbRfAntennaKeepout(
+                    name="SYNTHETIC_ANTENNA_KEEPOUT",
+                    local_polygons=(
+                        PcbRfAntennaPolygon(
+                            outline_nm=(
+                                (10_000_000, -10_000_000),
+                                (8_000_000, -10_000_000),
+                                (8_000_000, -7_000_000),
+                                (10_000_000, -7_000_000),
+                            )
+                        ),
+                    ),
+                    layers=("F.Cu", "B.Cu"),
+                    forbids_tracks=True,
+                    forbids_vias=True,
+                    forbids_pads=True,
+                    forbids_zone_fills=True,
+                    forbids_footprints=False,
+                ),
+                **module_identity,
+                disposition="onboard_antenna",
+            ),
+            PcbRfModuleAntennaRequirement(
+                id="back-module",
+                basis="Synthetic back-side module-local polygon",
+                reference="U2",
+                rf_feed_pad="U2.1",
+                keepout=PcbRfAntennaKeepout(
+                    name="SYNTHETIC_ANTENNA_KEEPOUT_BACK",
+                    local_polygons=(
+                        PcbRfAntennaPolygon(
+                            outline_nm=(
+                                (0, 0),
+                                (3_000_000, 0),
+                                (3_000_000, 2_000_000),
+                                (0, 2_000_000),
+                            )
+                        ),
+                    ),
+                    layers=("F.Cu", "B.Cu"),
+                    forbids_tracks=True,
+                    forbids_vias=True,
+                    forbids_pads=True,
+                    forbids_zone_fills=True,
+                    forbids_footprints=False,
+                ),
+                **module_identity,
+                disposition="onboard_antenna",
+            ),
+            PcbRfModuleAntennaRequirement(
+                id="angled-module",
+                basis="Synthetic 30-degree module-local polygon",
+                reference="U3",
+                rf_feed_pad="U3.1",
+                keepout=PcbRfAntennaKeepout(
+                    name="SYNTHETIC_ANTENNA_KEEPOUT_ANGLED",
+                    local_polygons=(
+                        PcbRfAntennaPolygon(
+                            outline_nm=(
+                                (0, 0),
+                                (3_000_000, 0),
+                                (3_000_000, 1_000_000),
+                                (0, 1_000_000),
+                            )
+                        ),
+                    ),
+                    layers=("F.Cu", "B.Cu"),
+                    forbids_tracks=True,
+                    forbids_vias=True,
+                    forbids_pads=True,
+                    forbids_zone_fills=True,
+                    forbids_footprints=False,
+                ),
+                **module_identity,
+                disposition="onboard_antenna",
+            ),
+        ),
+    )
+    netlist = NetlistContract(
+        components={
+            "U1": ComponentContract(
+                value="Probe_Module",
+                footprint="RF_Module:Probe_Module",
+                part_id="RF-PROBE",
+            ),
+            "U2": ComponentContract(
+                value="Probe_Module",
+                footprint="RF_Module:Probe_Module",
+                part_id="RF-PROBE",
+            ),
+            "U3": ComponentContract(
+                value="Probe_Module",
+                footprint="RF_Module:Probe_Module",
+                part_id="RF-PROBE",
+            ),
+        },
+        nets={"RF_FEED": ("U1.1", "U2.1", "U3.1")},
+        component_symbols={
+            "U1": "RF_Module:Probe_Module",
+            "U2": "RF_Module:Probe_Module",
+            "U3": "RF_Module:Probe_Module",
+        },
+    )
+    rf_entries = pcb_rf_module_antenna_entries(requirements, netlist, snapshot)
+    assert tuple(item.id for item in rf_entries) == (
+        "angled-module",
+        "back-module",
+        "front-module",
+    )
+    assert all(item.status == "COMPLETE" for item in rf_entries)
+    assert {item.id: item.observed_keepout_uuids for item in rf_entries} == {
+        "angled-module": ("32345678-1234-5678-1234-567812345678",),
+        "back-module": ("22345678-1234-5678-1234-567812345678",),
+        "front-module": ("12345678-1234-5678-1234-567812345678",),
+    }

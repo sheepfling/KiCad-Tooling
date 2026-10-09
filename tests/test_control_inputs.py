@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import unittest
+import pytest
 
 from kicad_tooling.hwrepo.control_inputs import control_input_checks
 from kicad_tooling.hwrepo.models import (
@@ -194,51 +194,46 @@ def control_netlist(*, fault: str | None = None) -> NetlistContract:
     )
 
 
-class ControlInputChecksTests(unittest.TestCase):
-    def rows(self, *, fault: str | None = None, bias_mode: str = "local"):
-        return {
-            row.id: row
-            for row in control_input_checks(
-                control_requirement(bias_mode=bias_mode), control_netlist(fault=fault)
-            )
-        }
-
-    def test_synthetic_shared_open_drain_reset_and_pullup_pass(self) -> None:
-        rows = self.rows()
-        self.assertEqual(rows["control-inputs/main-reset/endpoints"].status, "PASS")
-        self.assertEqual(rows["control-inputs/main-reset/drivers"].status, "PASS")
-        self.assertEqual(rows["control-inputs/main-reset/bias"].status, "PASS")
-
-    def test_required_bias_resistor_faults_fail(self) -> None:
-        for fault in ("missing-resistor", "wrong-rail", "wrong-value", "resistor-dnp"):
-            with self.subTest(fault=fault):
-                self.assertEqual(
-                    self.rows(fault=fault)["control-inputs/main-reset/bias"].status, "FAIL"
-                )
-
-    def test_driver_type_inventory_and_unlisted_output_faults_fail(self) -> None:
-        for fault in ("driver-type", "extra-output"):
-            with self.subTest(fault=fault):
-                self.assertEqual(
-                    self.rows(fault=fault)["control-inputs/main-reset/drivers"].status, "FAIL"
-                )
-        missing_type = self.rows(fault="missing-pin-type")
-        self.assertEqual(missing_type["control-inputs/main-reset/endpoints"].status, "FAIL")
-
-    def test_internal_or_external_bias_is_explicitly_unverified(self) -> None:
-        for mode in ("internal", "external", "not_required"):
-            with self.subTest(mode=mode):
-                self.assertEqual(
-                    self.rows(bias_mode=mode)["control-inputs/main-reset/bias"].status,
-                    "NOT_APPLICABLE",
-                )
-
-    def test_shared_open_drain_contract_rejects_push_pull_type(self) -> None:
-        raw = control_requirement().model_dump()
-        raw["signals"][0]["endpoints"][1]["electrical_type"] = "output"
-        with self.assertRaisesRegex(ValueError, "open-collector/emitter"):
-            ControlInputsAnalysis.model_validate(raw)
+def control_rows(*, fault: str | None = None, bias_mode: str = "local"):
+    return {
+        row.id: row
+        for row in control_input_checks(
+            control_requirement(bias_mode=bias_mode), control_netlist(fault=fault)
+        )
+    }
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_synthetic_shared_open_drain_reset_and_pullup_pass() -> None:
+    rows = control_rows()
+    assert rows["control-inputs/main-reset/endpoints"].status == "PASS"
+    assert rows["control-inputs/main-reset/drivers"].status == "PASS"
+    assert rows["control-inputs/main-reset/bias"].status == "PASS"
+
+
+@pytest.mark.parametrize("fault", ("missing-resistor", "wrong-rail", "wrong-value", "resistor-dnp"))
+def test_required_bias_resistor_faults_fail(fault: str) -> None:
+    assert control_rows(fault=fault)["control-inputs/main-reset/bias"].status == "FAIL"
+
+
+@pytest.mark.parametrize(
+    ("fault", "check_id"),
+    (
+        ("driver-type", "drivers"),
+        ("extra-output", "drivers"),
+        ("missing-pin-type", "endpoints"),
+    ),
+)
+def test_driver_type_and_inventory_faults_fail(fault: str, check_id: str) -> None:
+    assert control_rows(fault=fault)[f"control-inputs/main-reset/{check_id}"].status == "FAIL"
+
+
+@pytest.mark.parametrize("mode", ("internal", "external", "not_required"))
+def test_nonlocal_bias_is_explicitly_unverified(mode: str) -> None:
+    assert control_rows(bias_mode=mode)["control-inputs/main-reset/bias"].status == "NOT_APPLICABLE"
+
+
+def test_shared_open_drain_contract_rejects_push_pull_type() -> None:
+    raw = control_requirement().model_dump()
+    raw["signals"][0]["endpoints"][1]["electrical_type"] = "output"
+    with pytest.raises(ValueError, match="open-collector/emitter"):
+        ControlInputsAnalysis.model_validate(raw)

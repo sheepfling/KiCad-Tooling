@@ -1092,18 +1092,18 @@
         "A mapped reference bond checks native schematic symbol, footprint, value, DNP state, passive pin types, and net assignments; it does not prove component conduction, board copper continuity, or off-board grounding."
       ],
       "fault_fixtures": [
-        "tests.test_usb_data_paths.UsbDataPathTests.test_missing_required_resistor_is_new_coverage_beyond_named_pair_prompt",
-        "tests.test_usb_data_paths.UsbDataPathTests.test_value_dnp_and_wrong_net_mutations_are_detected",
-        "tests.test_usb_data_paths.UsbDataPathTests.test_bonded_reference_faults_report_exact_component_and_pin_evidence"
+        "tests.test_usb_data_paths.test_missing_required_resistor_is_new_coverage_beyond_named_pair_prompt",
+        "tests.test_usb_data_paths.test_value_dnp_and_wrong_net_mutations_are_detected",
+        "tests.test_usb_data_paths.test_bonded_reference_faults_report_exact_component_and_pin_evidence"
       ],
       "valid_control_fixtures": [
-        "tests.test_usb_data_paths.UsbDataPathTests.test_documented_integrated_phy_direct_path_is_a_valid_control",
-        "tests.test_usb_data_paths.UsbDataPathTests.test_documented_external_phy_and_27r_pair_is_a_valid_control",
-        "tests.test_usb_data_paths.UsbDataPathTests.test_exact_bonded_reference_path_is_a_valid_control"
+        "tests.test_usb_data_paths.test_documented_integrated_phy_direct_path_is_a_valid_control",
+        "tests.test_usb_data_paths.test_documented_external_phy_and_27r_pair_is_a_valid_control",
+        "tests.test_usb_data_paths.test_exact_bonded_reference_path_is_a_valid_control"
       ],
       "metamorphic_fixtures": [
-        "tests.test_usb_data_paths.UsbDataPathTests.test_missing_path_evidence_is_order_stable_and_repair_clears_it",
-        "tests.test_usb_data_paths.UsbDataPathTests.test_bonded_reference_fault_evidence_is_order_stable"
+        "tests.test_usb_data_paths.test_missing_path_evidence_is_order_stable_and_repair_clears_it",
+        "tests.test_usb_data_paths.test_bonded_reference_fault_evidence_is_order_stable"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_data_paths.py#usb_data_path_mismatches",
@@ -2156,7 +2156,7 @@
         "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_isolator_mediated_usb_path_is_not_traced_across_domains",
         "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_single_port_numbered_usb_data_functions_are_recognized",
         "tests.test_usb_peer_reference_review.UsbPeerReferenceReviewTests.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
-        "tests.test_usb_data_paths.UsbDataPathTests.test_exact_bonded_reference_path_is_a_valid_control"
+        "tests.test_usb_data_paths.test_exact_bonded_reference_path_is_a_valid_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -2397,16 +2397,16 @@
         "A net with no track items may use zones or have no routed copper; report incomplete coverage rather than treating either case as a width pass or defect."
       ],
       "fault_fixtures": [
-        "tests.test_pcb_track_width.PcbTrackWidthTests.test_below_minimum_width_is_exactly_measured",
-        "tests.test_pcb_track_width.PcbTrackWidthTests.test_missing_track_inventory_remains_incomplete_review"
+        "tests.test_pcb_track_width.test_below_minimum_width_is_exactly_measured",
+        "tests.test_pcb_track_width.test_missing_track_inventory_remains_incomplete_review"
       ],
       "valid_control_fixtures": [
-        "tests.test_pcb_track_width.PcbTrackWidthTests.test_exact_boundary_passes_and_other_nets_are_excluded",
-        "tests.test_pcb_track_width.PcbTrackWidthTests.test_project_policy_can_review_block_disable_or_exactly_ignore"
+        "tests.test_pcb_track_width.test_exact_boundary_passes_and_other_nets_are_excluded",
+        "tests.test_pcb_track_width.test_project_policy_can_review_block_disable_or_exactly_ignore"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_track_width.PcbTrackWidthTests.test_track_order_preserves_measurement_and_finding_but_boundary_repair_clears_it"
+        "tests.test_pcb_track_width.test_track_order_preserves_measurement_and_finding_but_boundary_repair_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_track_width.py#pcb_track_width_entries",
@@ -2606,7 +2606,7 @@
       "evidence_adapter": "Project-authored named keepout signature compared with source-bound KiCad 10 native PCB rule-area geometry, copper layers, and restriction flags",
       "predicate": "For each mapped named copper keepout, require exactly one native rule area with the reviewed canonical outline-and-hole digest, exact copper-layer set, and exact track/via/pad/zone-fill/footprint restriction flags; missing, duplicate, renamed, reshaped, layer-changed, or restriction-changed areas remain incomplete.",
       "supported_kicad_versions": [
-        "KiCad 10 CLI profile; rule-area geometry is emitted in native PCB snapshot schema 11"
+        "KiCad 10 CLI profile; rule-area geometry is emitted in native PCB snapshot schemas 11 and 12"
       ],
       "limitations": [
         "The check verifies that a reviewed native keepout definition remains unchanged. It does not establish that the reviewed shape, layer scope, or restrictions are appropriate for an antenna, RF module, connector, thermal region, or any other engineering requirement.",
@@ -2632,6 +2632,46 @@
         "kicad_tooling/hwrepo/design_lint.py#candidates",
         "kicad_tooling/hwrepo/design_lint.py#_scan_pcb_geometry",
         "kicad_tooling/hwrepo/native_pcb_probe.py.in#rule_area_observation"
+      ]
+    },
+    {
+      "rule_id": "pcb.rf_module_antenna_keepout_coverage",
+      "title": "RF module identity, feed, and placement-relative antenna keepout differ from the project requirement",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored exact module identity, RF feed, antenna disposition, and footprint-local keepout compared with native schematic netlist and KiCad 10 PCB snapshot schema 12",
+      "predicate": "For each explicitly mapped RF module, compare symbol, footprint, optional PART_ID, fitted/DNP state, and RF feed pin/net with the native schematic and board. For onboard antennas, transform the independently authored module-local polygons through the exact native footprint position, orientation, and front/back side, then require exactly one named native rule area with matching geometry, copper layers, and restrictions.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; placement-relative evidence requires native PCB snapshot schema 12"
+      ],
+      "limitations": [
+        "The project owner must explicitly identify each RF module, exact symbol and footprint, fitted disposition, feed pin/net, and local keepout from an approved independent requirement. The check does not infer RF modules from names or decide which grounds, antenna regions, or RF paths should be common.",
+        "The geometry comparison verifies authored rule-area definitions after applying KiCad's observed footprint transform. It does not validate antenna performance, impedance, radiation pattern, data-sheet interpretation, copper not represented by the rule area, or fabricated hardware.",
+        "Only explicit onboard-antenna, external-antenna, and DNP dispositions are supported. Unsupported board snapshot versions and missing source evidence remain incomplete or blocked."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_rf_antenna.test_moving_only_the_module_leaves_keepout_coverage_incomplete",
+        "tests.test_pcb_rf_antenna.test_missing_duplicate_and_mismatched_keepouts_are_incomplete",
+        "tests.test_pcb_rf_antenna.test_source_identity_and_feed_mismatches_are_incomplete",
+        "tests.test_pcb_rf_antenna.test_schema_without_explicit_footprint_inventory_is_incomplete",
+        "tests.test_pcb_rf_antenna.test_rf_antenna_lint_finding_supports_review_block_off_and_exact_ignore"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_rf_antenna.test_exact_module_identity_feed_and_local_keepout_transform_complete",
+        "tests.test_pcb_rf_antenna.test_explicit_external_antenna_and_dnp_dispositions_are_supported",
+        "tests.test_pcb_keepouts_native.test_native_schema_12_snapshot_records_keepout_and_footprint_evidence"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_rf_antenna.test_module_and_keepout_moving_together_preserves_exact_coverage",
+        "tests.test_pcb_rf_antenna.test_moving_only_the_module_leaves_keepout_coverage_incomplete"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_rf_antenna.py#pcb_rf_module_antenna_entries",
+        "kicad_tooling/hwrepo/design_lint.py#candidates",
+        "kicad_tooling/hwrepo/design_lint.py#_scan_pcb_geometry",
+        "kicad_tooling/hwrepo/native_pcb_probe.py.in#footprint_placement_observation"
       ]
     },
     {

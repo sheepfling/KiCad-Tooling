@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-import unittest
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -98,179 +98,176 @@ def coach() -> ContractCoachReport:
     )
 
 
-class PcbTrackWidthTests(unittest.TestCase):
-    def test_below_minimum_width_is_exactly_measured(self) -> None:
-        spec = mapping(requirement(minimum_um=251))
-        observed = snapshot(track("001", "VDD", 250_000))
-        measured = coverage(spec, observed)
+def test_below_minimum_width_is_exactly_measured() -> None:
+    spec = mapping(requirement(minimum_um=251))
+    observed = snapshot(track("001", "VDD", 250_000))
+    measured = coverage(spec, observed)
 
-        self.assertEqual(measured.status, "COMPLETE")
-        entry = measured.entries[0]
-        self.assertEqual(entry.tracks[0].width_nm, 250_000)
-        self.assertEqual(entry.tracks[0].minimum_width_um, 251)
-        self.assertTrue(entry.tracks[0].below_minimum)
-        report = evaluate(
-            "synthetic-width",
-            coach(),
-            DesignLintPolicy(pcb_track_width_map=spec),
-            pcb_track_width_coverage=measured,
-        )
-        finding = next(item for item in report.findings if item.rule_id == RULE)
-        self.assertEqual(report.status, "REVIEW")
-        self.assertEqual(
-            finding.evidence["below_minimum_track_uuids"], (entry.tracks[0].track_uuid,)
-        )
-        self.assertIn("does not calculate current capacity", finding.message)
-
-    def test_exact_boundary_passes_and_other_nets_are_excluded(self) -> None:
-        spec = mapping(requirement(minimum_um=250))
-        observed = snapshot(
-            track("001", "VDD", 250_000),
-            track("002", "GND", 100_000, y_nm=1_000_000),
-        )
-
-        measured = coverage(spec, observed)
-        report = evaluate(
-            "synthetic-width",
-            coach(),
-            DesignLintPolicy(pcb_track_width_map=spec),
-            pcb_track_width_coverage=measured,
-        )
-
-        self.assertEqual(report.status, "PASS")
-        self.assertEqual(len(measured.entries[0].tracks), 1)
-        self.assertFalse(measured.entries[0].tracks[0].below_minimum)
-        self.assertFalse(any(item.rule_id == RULE for item in report.findings))
-
-    def test_track_order_preserves_measurement_and_finding_but_boundary_repair_clears_it(
-        self,
-    ) -> None:
-        spec = mapping(requirement(minimum_um=251))
-        narrow = track("001", "VDD", 250_000)
-        wide = track("002", "VDD", 260_000)
-        source = snapshot(narrow, wide)
-        reordered_source = snapshot(wide, narrow)
-        source_coverage = coverage(spec, source)
-        reordered_coverage = coverage(spec, reordered_source)
-        self.assertEqual(source_coverage.entries, reordered_coverage.entries)
-        self.assertEqual(source_coverage.map_sha256, reordered_coverage.map_sha256)
-        self.assertNotEqual(source_coverage.snapshot_sha256, reordered_coverage.snapshot_sha256)
-
-        original = evaluate(
-            "synthetic-width",
-            coach(),
-            DesignLintPolicy(pcb_track_width_map=spec),
-            pcb_track_width_coverage=source_coverage,
-        )
-        reordered = evaluate(
-            "synthetic-width",
-            coach(),
-            DesignLintPolicy(pcb_track_width_map=spec),
-            pcb_track_width_coverage=reordered_coverage,
-        )
-        original_finding = next(item for item in original.findings if item.rule_id == RULE)
-        reordered_finding = next(item for item in reordered.findings if item.rule_id == RULE)
-        self.assertEqual(
-            (original_finding.subject, original_finding.fingerprint, original_finding.evidence),
-            (reordered_finding.subject, reordered_finding.fingerprint, reordered_finding.evidence),
-        )
-
-        repaired_source = snapshot(track("001", "VDD", 251_000), wide)
-        repaired_coverage = coverage(spec, repaired_source)
-        repaired = evaluate(
-            "synthetic-width",
-            coach(),
-            DesignLintPolicy(pcb_track_width_map=spec),
-            pcb_track_width_coverage=repaired_coverage,
-        )
-        self.assertEqual(repaired_coverage.entries[0].status, "COMPLETE")
-        self.assertFalse(any(item.rule_id == RULE for item in repaired.findings))
-
-    def test_missing_track_inventory_remains_incomplete_review(self) -> None:
-        spec = mapping(requirement(net="ZONE_ONLY"))
-        measured = coverage(spec, snapshot(track("001", "VDD", 250_000)))
-        report = evaluate(
-            "synthetic-width",
-            coach(),
-            DesignLintPolicy(pcb_track_width_map=spec),
-            pcb_track_width_coverage=measured,
-        )
-
-        self.assertEqual(measured.status, "INCOMPLETE")
-        self.assertIn("zone-only", measured.entries[0].issues[0])
-        self.assertEqual(report.status, "REVIEW")
-        self.assertEqual(report.findings[0].evidence["coverage_status"], ("INCOMPLETE",))
-
-    def test_project_policy_can_review_block_disable_or_exactly_ignore(self) -> None:
-        spec = mapping(requirement(minimum_um=251))
-        measured = coverage(spec, snapshot(track("001", "VDD", 250_000)))
-        policy = DesignLintPolicy(pcb_track_width_map=spec)
-        reviewed = evaluate("synthetic-width", coach(), policy, pcb_track_width_coverage=measured)
-        finding = next(item for item in reviewed.findings if item.rule_id == RULE)
-        blocking = evaluate(
-            "synthetic-width",
-            coach(),
-            policy.model_copy(
-                update={
-                    "rules": (
-                        DesignLintRuleOverride(
-                            rule_id=RULE,
-                            mode="block",
-                            reason="Synthetic authored gate",
-                        ),
-                    )
-                }
-            ),
-            pcb_track_width_coverage=measured,
-        )
-        disabled = evaluate(
-            "synthetic-width",
-            coach(),
-            policy.model_copy(
-                update={
-                    "rules": (
-                        DesignLintRuleOverride(
-                            rule_id=RULE,
-                            mode="off",
-                            reason="Synthetic explicit disable",
-                        ),
-                    )
-                }
-            ),
-            pcb_track_width_coverage=measured,
-        )
-        ignored = evaluate(
-            "synthetic-width",
-            coach(),
-            policy.model_copy(
-                update={
-                    "ignores": (
-                        DesignLintIgnore(
-                            rule_id=RULE,
-                            fingerprint=finding.fingerprint,
-                            reason="Synthetic reviewed exception",
-                        ),
-                    )
-                }
-            ),
-            pcb_track_width_coverage=measured,
-        )
-
-        self.assertEqual(reviewed.status, "REVIEW")
-        self.assertEqual(blocking.status, "FAIL")
-        self.assertEqual(disabled.status, "PASS")
-        self.assertEqual(disabled.findings[0].disposition, "RULE_OFF")
-        self.assertEqual(ignored.status, "PASS")
-        self.assertEqual(ignored.findings[0].disposition, "IGNORED")
-
-    def test_duplicate_net_requirement_and_invalid_snapshot_contract_are_rejected(self) -> None:
-        with self.assertRaises(ValidationError):
-            mapping(requirement(id="first"), requirement(id="second"))
-        data = snapshot(track("001", "VDD", 250_000)).model_dump(mode="python")
-        del data["tracks"]
-        with self.assertRaisesRegex(ValidationError, "explicit track inventory"):
-            PcbConnectivitySnapshot.model_validate(data)
+    assert measured.status == "COMPLETE"
+    entry = measured.entries[0]
+    assert entry.tracks[0].width_nm == 250_000
+    assert entry.tracks[0].minimum_width_um == 251
+    assert entry.tracks[0].below_minimum
+    report = evaluate(
+        "synthetic-width",
+        coach(),
+        DesignLintPolicy(pcb_track_width_map=spec),
+        pcb_track_width_coverage=measured,
+    )
+    finding = next(item for item in report.findings if item.rule_id == RULE)
+    assert report.status == "REVIEW"
+    assert finding.evidence["below_minimum_track_uuids"] == (entry.tracks[0].track_uuid,)
+    assert "does not calculate current capacity" in finding.message
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_exact_boundary_passes_and_other_nets_are_excluded() -> None:
+    spec = mapping(requirement(minimum_um=250))
+    observed = snapshot(
+        track("001", "VDD", 250_000),
+        track("002", "GND", 100_000, y_nm=1_000_000),
+    )
+
+    measured = coverage(spec, observed)
+    report = evaluate(
+        "synthetic-width",
+        coach(),
+        DesignLintPolicy(pcb_track_width_map=spec),
+        pcb_track_width_coverage=measured,
+    )
+
+    assert report.status == "PASS"
+    assert len(measured.entries[0].tracks) == 1
+    assert not measured.entries[0].tracks[0].below_minimum
+    assert not any(item.rule_id == RULE for item in report.findings)
+
+
+def test_track_order_preserves_measurement_and_finding_but_boundary_repair_clears_it() -> None:
+    spec = mapping(requirement(minimum_um=251))
+    narrow = track("001", "VDD", 250_000)
+    wide = track("002", "VDD", 260_000)
+    source = snapshot(narrow, wide)
+    reordered_source = snapshot(wide, narrow)
+    source_coverage = coverage(spec, source)
+    reordered_coverage = coverage(spec, reordered_source)
+    assert source_coverage.entries == reordered_coverage.entries
+    assert source_coverage.map_sha256 == reordered_coverage.map_sha256
+    assert source_coverage.snapshot_sha256 != reordered_coverage.snapshot_sha256
+
+    original = evaluate(
+        "synthetic-width",
+        coach(),
+        DesignLintPolicy(pcb_track_width_map=spec),
+        pcb_track_width_coverage=source_coverage,
+    )
+    reordered = evaluate(
+        "synthetic-width",
+        coach(),
+        DesignLintPolicy(pcb_track_width_map=spec),
+        pcb_track_width_coverage=reordered_coverage,
+    )
+    original_finding = next(item for item in original.findings if item.rule_id == RULE)
+    reordered_finding = next(item for item in reordered.findings if item.rule_id == RULE)
+    assert (original_finding.subject, original_finding.fingerprint, original_finding.evidence) == (
+        reordered_finding.subject,
+        reordered_finding.fingerprint,
+        reordered_finding.evidence,
+    )
+
+    repaired_source = snapshot(track("001", "VDD", 251_000), wide)
+    repaired_coverage = coverage(spec, repaired_source)
+    repaired = evaluate(
+        "synthetic-width",
+        coach(),
+        DesignLintPolicy(pcb_track_width_map=spec),
+        pcb_track_width_coverage=repaired_coverage,
+    )
+    assert repaired_coverage.entries[0].status == "COMPLETE"
+    assert not any(item.rule_id == RULE for item in repaired.findings)
+
+
+def test_missing_track_inventory_remains_incomplete_review() -> None:
+    spec = mapping(requirement(net="ZONE_ONLY"))
+    measured = coverage(spec, snapshot(track("001", "VDD", 250_000)))
+    report = evaluate(
+        "synthetic-width",
+        coach(),
+        DesignLintPolicy(pcb_track_width_map=spec),
+        pcb_track_width_coverage=measured,
+    )
+
+    assert measured.status == "INCOMPLETE"
+    assert "zone-only" in measured.entries[0].issues[0]
+    assert report.status == "REVIEW"
+    assert report.findings[0].evidence["coverage_status"] == ("INCOMPLETE",)
+
+
+def test_project_policy_can_review_block_disable_or_exactly_ignore() -> None:
+    spec = mapping(requirement(minimum_um=251))
+    measured = coverage(spec, snapshot(track("001", "VDD", 250_000)))
+    policy = DesignLintPolicy(pcb_track_width_map=spec)
+    reviewed = evaluate("synthetic-width", coach(), policy, pcb_track_width_coverage=measured)
+    finding = next(item for item in reviewed.findings if item.rule_id == RULE)
+    blocking = evaluate(
+        "synthetic-width",
+        coach(),
+        policy.model_copy(
+            update={
+                "rules": (
+                    DesignLintRuleOverride(
+                        rule_id=RULE,
+                        mode="block",
+                        reason="Synthetic authored gate",
+                    ),
+                )
+            }
+        ),
+        pcb_track_width_coverage=measured,
+    )
+    disabled = evaluate(
+        "synthetic-width",
+        coach(),
+        policy.model_copy(
+            update={
+                "rules": (
+                    DesignLintRuleOverride(
+                        rule_id=RULE,
+                        mode="off",
+                        reason="Synthetic explicit disable",
+                    ),
+                )
+            }
+        ),
+        pcb_track_width_coverage=measured,
+    )
+    ignored = evaluate(
+        "synthetic-width",
+        coach(),
+        policy.model_copy(
+            update={
+                "ignores": (
+                    DesignLintIgnore(
+                        rule_id=RULE,
+                        fingerprint=finding.fingerprint,
+                        reason="Synthetic reviewed exception",
+                    ),
+                )
+            }
+        ),
+        pcb_track_width_coverage=measured,
+    )
+
+    assert reviewed.status == "REVIEW"
+    assert blocking.status == "FAIL"
+    assert disabled.status == "PASS"
+    assert disabled.findings[0].disposition == "RULE_OFF"
+    assert ignored.status == "PASS"
+    assert ignored.findings[0].disposition == "IGNORED"
+
+
+def test_duplicate_net_requirement_and_invalid_snapshot_contract_are_rejected() -> None:
+    with pytest.raises(ValidationError):
+        mapping(requirement(id="first"), requirement(id="second"))
+    data = snapshot(track("001", "VDD", 250_000)).model_dump(mode="python")
+    del data["tracks"]
+    with pytest.raises(ValidationError, match="explicit track inventory"):
+        PcbConnectivitySnapshot.model_validate(data)

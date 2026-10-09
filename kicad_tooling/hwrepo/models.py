@@ -467,6 +467,7 @@ DesignLintRuleId = Literal[
     "pcb.differential_pair_rule_coverage",
     "pcb.signal_path_rule_coverage",
     "pcb.keepout_intent_coverage",
+    "pcb.rf_module_antenna_keepout_coverage",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",
@@ -2283,6 +2284,138 @@ class PcbKeepoutMap(StrictModel):
         return self
 
 
+class PcbRfAntennaPolygon(StrictModel):
+    """Project-authored footprint-local outline and holes for an antenna keepout."""
+
+    outline_nm: Annotated[tuple[tuple[int, int], ...], Field(min_length=3)]
+    holes_nm: tuple[Annotated[tuple[tuple[int, int], ...], Field(min_length=3)], ...] = ()
+
+    @model_validator(mode="after")
+    def valid_local_contours(self) -> PcbRfAntennaPolygon:
+        for label, ring in (
+            ("outline", self.outline_nm),
+            *(("hole", hole) for hole in self.holes_nm),
+        ):
+            if len(set(ring)) != len(ring):
+                raise ValueError(f"RF antenna keepout {label} cannot repeat vertices")
+            area_twice = sum(
+                first[0] * ring[(index + 1) % len(ring)][1]
+                - ring[(index + 1) % len(ring)][0] * first[1]
+                for index, first in enumerate(ring)
+            )
+            if area_twice == 0:
+                raise ValueError(f"RF antenna keepout {label} must enclose nonzero area")
+        if len({_canonical_rf_ring(hole) for hole in self.holes_nm}) != len(self.holes_nm):
+            raise ValueError("RF antenna keepout holes must be unique")
+        return self
+
+
+def _canonical_rf_ring(ring: tuple[tuple[int, int], ...]) -> tuple[tuple[int, int], ...]:
+    forward = tuple(ring)
+    reverse = tuple(reversed(ring))
+    return min(
+        candidate[index:] + candidate[:index]
+        for candidate in (forward, reverse)
+        for index in range(len(candidate))
+    )
+
+
+def _canonical_rf_polygon(
+    polygon: PcbRfAntennaPolygon,
+) -> tuple[tuple[tuple[int, int], ...], tuple[tuple[tuple[int, int], ...], ...]]:
+    return (
+        _canonical_rf_ring(polygon.outline_nm),
+        tuple(sorted(_canonical_rf_ring(hole) for hole in polygon.holes_nm)),
+    )
+
+
+class PcbRfAntennaKeepout(StrictModel):
+    """Exact placement-relative rule-area requirement for an onboard antenna."""
+
+    name: NonEmptyText
+    local_polygons: Annotated[tuple[PcbRfAntennaPolygon, ...], Field(min_length=1)]
+    layers: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
+    forbids_tracks: bool
+    forbids_vias: bool
+    forbids_pads: bool
+    forbids_zone_fills: bool
+    forbids_footprints: bool
+
+    @model_validator(mode="after")
+    def unique_keepout_layers_and_polygons(self) -> PcbRfAntennaKeepout:
+        if len({item.casefold() for item in self.layers}) != len(self.layers):
+            raise ValueError("RF antenna keepout layers must be unique")
+        if len({_canonical_rf_polygon(item) for item in self.local_polygons}) != len(
+            self.local_polygons
+        ):
+            raise ValueError("RF antenna keepout polygons must be unique")
+        return self
+
+
+class PcbRfModuleAntennaRequirement(StrictModel):
+    """Independent identity, population, feed, and antenna disposition requirement."""
+
+    id: Identifier
+    basis: NonEmptyText
+    reference: Identifier
+    expected_symbol: NonEmptyText
+    expected_footprint: NonEmptyText
+    expected_part_id: Identifier | None = None
+    disposition: Literal["onboard_antenna", "external_antenna", "dnp"]
+    rf_feed_pad: Reference | None = None
+    rf_feed_net: NetName | None = None
+    keepout: PcbRfAntennaKeepout | None = None
+
+    @model_validator(mode="after")
+    def coherent_antenna_disposition(self) -> PcbRfModuleAntennaRequirement:
+        if (self.rf_feed_pad is None) != (self.rf_feed_net is None):
+            raise ValueError("RF feed pad and net must be authored together")
+        if self.rf_feed_pad is not None and (
+            self.rf_feed_pad.count(".") != 1
+            or self.rf_feed_pad.split(".", 1)[0].casefold() != self.reference.casefold()
+        ):
+            raise ValueError("RF feed pad must be an exact pad on the mapped module reference")
+        if self.disposition == "onboard_antenna":
+            if self.rf_feed_pad is None or self.keepout is None:
+                raise ValueError(
+                    "An onboard-antenna requirement needs its RF feed and placement keepout"
+                )
+        elif self.disposition == "external_antenna":
+            if self.rf_feed_pad is None or self.keepout is not None:
+                raise ValueError(
+                    "An external-antenna requirement needs its RF feed and no onboard keepout"
+                )
+        elif self.rf_feed_pad is not None or self.keepout is not None:
+            raise ValueError("A DNP RF module cannot require a fitted RF feed or keepout")
+        return self
+
+
+class PcbRfModuleAntennaMap(StrictModel):
+    """Reviewed RF module dispositions and footprint-relative antenna clearances."""
+
+    schema_version: Literal["1"] = "1"
+    basis: NonEmptyText
+    requirements: Annotated[tuple[PcbRfModuleAntennaRequirement, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def unique_module_requirements(self) -> PcbRfModuleAntennaMap:
+        if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
+            raise ValueError("RF module antenna requirement IDs must be unique")
+        if len({item.reference.casefold() for item in self.requirements}) != len(
+            self.requirements
+        ):
+            raise ValueError("An RF module reference can be mapped only once")
+        if len(
+            {
+                item.keepout.name.casefold()
+                for item in self.requirements
+                if item.keepout is not None
+            }
+        ) != sum(item.keepout is not None for item in self.requirements):
+            raise ValueError("An RF antenna keepout name can be mapped only once")
+        return self
+
+
 def _pcb_drc_pad_selector(pad: str) -> str:
     reference, pad_number = pad.split(".", 1)
     return f"{reference}-{pad_number}"
@@ -2665,6 +2798,167 @@ class PcbKeepoutCoverageReport(StrictModel):
                 raise ValueError("PCB keepout report status must match its mapped entries")
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked PCB keepout coverage must explain its evidence gap")
+        return self
+
+
+class PcbRfModuleAntennaCoverageEntry(StrictModel):
+    """Schematic and PCB identity, fitted state, feed, and keepout comparison."""
+
+    id: Identifier
+    basis: NonEmptyText
+    reference: Identifier
+    disposition: Literal["onboard_antenna", "external_antenna", "dnp"]
+    expected_symbol: NonEmptyText
+    observed_symbol: NonEmptyText | None = None
+    expected_footprint: NonEmptyText
+    observed_schematic_footprint: NonEmptyText | None = None
+    observed_board_footprint: NonEmptyText | None = None
+    expected_part_id: Identifier | None = None
+    observed_part_id: Identifier | None = None
+    expected_dnp: bool
+    observed_schematic_dnp: bool | None = None
+    observed_board_dnp: bool | None = None
+    rf_feed_pad: Reference | None = None
+    expected_rf_feed_net: NetName | None = None
+    observed_schematic_rf_feed_nets: tuple[NetName, ...] = ()
+    observed_board_rf_feed_net: NetName | None = None
+    expected_keepout_name: NonEmptyText | None = None
+    observed_keepout_uuids: tuple[NativePcbUuid, ...] = ()
+    expected_geometry_sha256: Digest | None = None
+    observed_geometry_sha256: Digest | None = None
+    expected_layers: tuple[NonEmptyText, ...] = ()
+    observed_layers: tuple[NonEmptyText, ...] = ()
+    expected_forbids_tracks: bool | None = None
+    expected_forbids_vias: bool | None = None
+    expected_forbids_pads: bool | None = None
+    expected_forbids_zone_fills: bool | None = None
+    expected_forbids_footprints: bool | None = None
+    observed_forbids_tracks: bool | None = None
+    observed_forbids_vias: bool | None = None
+    observed_forbids_pads: bool | None = None
+    observed_forbids_zone_fills: bool | None = None
+    observed_forbids_footprints: bool | None = None
+    status: Literal["COMPLETE", "INCOMPLETE"]
+    issues: tuple[NonEmptyText, ...] = ()
+
+    @model_validator(mode="after")
+    def complete_entry_has_no_open_evidence(self) -> PcbRfModuleAntennaCoverageEntry:
+        if self.status == "COMPLETE" and self.issues:
+            raise ValueError("Complete RF module antenna coverage cannot have issues")
+        if self.status == "INCOMPLETE" and not self.issues:
+            raise ValueError("Incomplete RF module antenna coverage must explain its gap")
+        if self.status == "COMPLETE":
+            if (
+                self.observed_symbol != self.expected_symbol
+                or self.observed_schematic_footprint != self.expected_footprint
+                or self.observed_board_footprint != self.expected_footprint
+                or self.observed_schematic_dnp != self.expected_dnp
+                or self.observed_board_dnp != self.expected_dnp
+                or (
+                    self.expected_part_id is not None
+                    and self.observed_part_id != self.expected_part_id
+                )
+            ):
+                raise ValueError("Complete RF module coverage must match exact source identities")
+            if self.expected_dnp:
+                if (
+                    self.rf_feed_pad is not None
+                    or self.expected_rf_feed_net is not None
+                    or self.observed_schematic_rf_feed_nets
+                    or self.observed_board_rf_feed_net is not None
+                    or self.expected_keepout_name is not None
+                ):
+                    raise ValueError("Complete DNP coverage cannot require a fitted feed or keepout")
+            elif (
+                self.rf_feed_pad is None
+                or self.expected_rf_feed_net is None
+                or self.observed_schematic_rf_feed_nets != (self.expected_rf_feed_net,)
+                or self.observed_board_rf_feed_net != self.expected_rf_feed_net
+            ):
+                raise ValueError("Complete fitted RF module coverage must match its feed pad and net")
+            if self.disposition == "onboard_antenna":
+                expected_flags = (
+                    self.expected_forbids_tracks,
+                    self.expected_forbids_vias,
+                    self.expected_forbids_pads,
+                    self.expected_forbids_zone_fills,
+                    self.expected_forbids_footprints,
+                )
+                observed_flags = (
+                    self.observed_forbids_tracks,
+                    self.observed_forbids_vias,
+                    self.observed_forbids_pads,
+                    self.observed_forbids_zone_fills,
+                    self.observed_forbids_footprints,
+                )
+                if (
+                    self.expected_keepout_name is None
+                    or len(self.observed_keepout_uuids) != 1
+                    or self.expected_geometry_sha256 is None
+                    or self.observed_geometry_sha256 != self.expected_geometry_sha256
+                    or {item.casefold() for item in self.expected_layers}
+                    != {item.casefold() for item in self.observed_layers}
+                    or any(item is None for item in expected_flags)
+                    or observed_flags != expected_flags
+                ):
+                    raise ValueError(
+                        "Complete onboard antenna coverage must match exact native keepout evidence"
+                    )
+        if self.disposition == "onboard_antenna" and self.expected_keepout_name is None:
+            raise ValueError("Onboard-antenna coverage needs its mapped keepout name")
+        if self.disposition == "external_antenna" and self.expected_keepout_name is not None:
+            raise ValueError("External-antenna coverage cannot require an onboard keepout")
+        if self.disposition == "dnp" and not self.expected_dnp:
+            raise ValueError("DNP disposition must expect an unpopulated module")
+        return self
+
+
+class PcbRfModuleAntennaCoverageReport(StrictModel):
+    """Source-bound audit of mapped RF modules against native PCB placement evidence."""
+
+    status: Literal["NOT_REQUESTED", "DISABLED", "COMPLETE", "INCOMPLETE", "BLOCKED"] = (
+        "NOT_REQUESTED"
+    )
+    mode: Literal["review", "block", "off"] | None = None
+    map_sha256: Digest | None = None
+    board_path: RepositoryPath | None = None
+    board_sha256: Digest | None = None
+    snapshot_path: RepositoryPath | None = None
+    snapshot_sha256: Digest | None = None
+    probe_sha256: Digest | None = None
+    kicad_version: NonEmptyText | None = None
+    image: NonEmptyText | None = None
+    netlist_sha256: Digest | None = None
+    entries: tuple[PcbRfModuleAntennaCoverageEntry, ...] = ()
+    issue: NonEmptyText | None = None
+
+    @model_validator(mode="after")
+    def source_bound_when_scanned(self) -> PcbRfModuleAntennaCoverageReport:
+        if self.status in {"COMPLETE", "INCOMPLETE"} and any(
+            item is None
+            for item in (
+                self.map_sha256,
+                self.board_path,
+                self.board_sha256,
+                self.snapshot_path,
+                self.snapshot_sha256,
+                self.probe_sha256,
+                self.kicad_version,
+                self.image,
+                self.netlist_sha256,
+            )
+        ):
+            raise ValueError("Scanned RF module coverage must bind all source and tool inputs")
+        if self.status in {"COMPLETE", "INCOMPLETE"}:
+            if not self.entries:
+                raise ValueError("Scanned RF module coverage must include every mapped module")
+            any_incomplete = any(item.status == "INCOMPLETE" for item in self.entries)
+            if (self.status == "COMPLETE" and any_incomplete) or (
+                self.status == "INCOMPLETE" and not any_incomplete
+            ):
+                raise ValueError("RF module report status must match its mapped entries")
+        if self.status == "BLOCKED" and self.issue is None:
+            raise ValueError("Blocked RF module coverage must explain its evidence gap")
         return self
 
 
@@ -3316,6 +3610,7 @@ class DesignLintPolicy(StrictModel):
     pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None
     pcb_signal_path_rule_map: PcbSignalPathRuleMap | None = None
     pcb_keepout_map: PcbKeepoutMap | None = None
+    pcb_rf_module_antenna_map: PcbRfModuleAntennaMap | None = None
 
     @model_validator(mode="after")
     def unique_decisions(self) -> DesignLintPolicy:
@@ -3409,6 +3704,7 @@ class ProjectConfig(StrictModel):
                 or self.design_lint.pcb_differential_pair_rule_map is not None
                 or self.design_lint.pcb_signal_path_rule_map is not None
                 or self.design_lint.pcb_keepout_map is not None
+                or self.design_lint.pcb_rf_module_antenna_map is not None
             )
             and self.kind is not ProjectKind.PCB
         ):
@@ -3511,6 +3807,7 @@ class ProjectTestContract(StrictModel):
                 or self.design_lint.pcb_differential_pair_rule_map is not None
                 or self.design_lint.pcb_signal_path_rule_map is not None
                 or self.design_lint.pcb_keepout_map is not None
+                or self.design_lint.pcb_rf_module_antenna_map is not None
             )
             and self.validation.kind is not ProjectKind.PCB
         ):
@@ -6000,6 +6297,9 @@ class DesignLintReport(StrictModel):
         default_factory=PcbSignalPathRuleCoverageReport
     )
     pcb_keepout_coverage: PcbKeepoutCoverageReport = Field(default_factory=PcbKeepoutCoverageReport)
+    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport = Field(
+        default_factory=PcbRfModuleAntennaCoverageReport
+    )
     stale_ignores: tuple[DesignLintIgnore, ...] = ()
     rule_overrides: tuple[DesignLintRuleOverride, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
@@ -6019,6 +6319,12 @@ class DesignLintReport(StrictModel):
             and self.netlist_sha256 != self.i2c_pullup_heuristic_coverage.netlist_sha256
         ):
             raise ValueError("I2C pull-up coverage must use this report's native netlist")
+        if (
+            self.netlist_sha256 is not None
+            and self.pcb_rf_module_antenna_coverage.netlist_sha256 is not None
+            and self.netlist_sha256 != self.pcb_rf_module_antenna_coverage.netlist_sha256
+        ):
+            raise ValueError("RF module antenna coverage must use this report's native netlist")
         run_ids = [item.rule_id for item in self.mapped_check_runs]
         if len(run_ids) != len(set(run_ids)):
             raise ValueError("Mapped-check execution entries must use unique rule IDs")
@@ -6904,6 +7210,17 @@ class PcbPadConnectivityObservation(StrictModel):
         return self
 
 
+class PcbFootprintPlacementObservation(StrictModel):
+    """Native placement transform and identity for one referenced PCB footprint."""
+
+    reference: Reference
+    footprint: NonEmptyText
+    dnp: bool
+    position_nm: tuple[int, int]
+    orientation_microdegrees: Annotated[int, Field(ge=0, lt=360_000_000)]
+    side: Literal["F.Cu", "B.Cu"]
+
+
 class PcbAccessProbeObservation(StrictModel):
     """Target aperture and nearest different-net pad for one configured probe surface."""
 
@@ -6966,7 +7283,7 @@ class PcbNetTieObservation(StrictModel):
 class PcbConnectivitySnapshot(StrictModel):
     """Retained, deterministic native connectivity evidence for an exact board."""
 
-    schema_version: Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11"] = "3"
+    schema_version: Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
     image: NonEmptyText
@@ -6981,6 +7298,7 @@ class PcbConnectivitySnapshot(StrictModel):
     tracks: tuple[PcbTrackObservation, ...] = ()
     copper_layers: tuple[NonEmptyText, ...] = ()
     rule_areas: tuple[PcbRuleAreaObservation, ...] = ()
+    footprints: tuple[PcbFootprintPlacementObservation, ...] = ()
 
     @model_validator(mode="after")
     def unique_observed_items(self) -> PcbConnectivitySnapshot:
@@ -6994,7 +7312,7 @@ class PcbConnectivitySnapshot(StrictModel):
         track_ids = [item.uuid.casefold() for item in self.tracks]
         if len(set(track_ids)) != len(track_ids):
             raise ValueError("Native PCB evidence contains duplicate track identities")
-        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11"}:
+        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}:
             if "vias" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v3 requires an explicit via inventory")
             if any("connected_vias" not in item.model_fields_set for item in self.pads):
@@ -7051,7 +7369,7 @@ class PcbConnectivitySnapshot(StrictModel):
                 mapped_islands_by_zone.setdefault(key, set()).add(island.island_index)
             if mapped_zone_keys != connected_zone_keys:
                 raise ValueError("Native PCB connected zones need exact filled-island evidence")
-        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11"}:
+        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}:
             for key, zone in zones_by_key.items():
                 expected_unanchored = set(range(zone.filled_island_count)) - (
                     mapped_islands_by_zone.get(key, set())
@@ -7061,7 +7379,7 @@ class PcbConnectivitySnapshot(StrictModel):
                         "Native PCB zone unanchored-to-pad island indexes do not match "
                         "the pad-to-island evidence"
                     )
-        if self.schema_version in {"4", "5", "6", "7", "8", "9", "10", "11"}:
+        if self.schema_version in {"4", "5", "6", "7", "8", "9", "10", "11", "12"}:
             if "access_probe_observations" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v4+ requires explicit probe observations")
             if "access_probe_requests_sha256" not in self.model_fields_set:
@@ -7070,26 +7388,26 @@ class PcbConnectivitySnapshot(StrictModel):
                 self.access_probe_requests_sha256 is not None
             ):
                 raise ValueError("Native PCB probe observations need matching request evidence")
-        if self.schema_version in {"5", "6", "7", "8", "9", "10", "11"} and any(
+        if self.schema_version in {"5", "6", "7", "8", "9", "10", "11", "12"} and any(
             "positions_nm" not in item.model_fields_set or not item.positions_nm
             for item in self.pads
         ):
             raise ValueError("Native PCB schema v5+ requires physical pad-center positions")
         if (
-            self.schema_version in {"6", "7", "8", "9", "10", "11"}
+            self.schema_version in {"6", "7", "8", "9", "10", "11", "12"}
             and "tracks" not in self.model_fields_set
         ):
             raise ValueError(
                 f"Native PCB schema v{self.schema_version} requires an explicit track inventory"
             )
-        if self.schema_version in {"7", "8", "9", "10", "11"}:
+        if self.schema_version in {"7", "8", "9", "10", "11", "12"}:
             if "copper_layers" not in self.model_fields_set or len(self.copper_layers) < 2:
                 raise ValueError(
                     f"Native PCB schema v{self.schema_version} requires the actual copper stack inventory"
                 )
             if len({item.casefold() for item in self.copper_layers}) != len(self.copper_layers):
                 raise ValueError("Native PCB copper stack contains duplicate layer names")
-        if self.schema_version in {"8", "9", "10", "11"}:
+        if self.schema_version in {"8", "9", "10", "11", "12"}:
             tracks_by_uuid = {item.uuid.casefold(): item for item in self.tracks}
             for track in self.tracks:
                 if any(
@@ -7137,7 +7455,7 @@ class PcbConnectivitySnapshot(StrictModel):
                     for contact in (*track.start_tracks, *track.end_tracks)
                 ):
                     raise ValueError("Native PCB track endpoint contact has a different net")
-        if self.schema_version in {"9", "10", "11"}:
+        if self.schema_version in {"9", "10", "11", "12"}:
             for zone in self.zones:
                 if "filled_islands" not in zone.model_fields_set:
                     raise ValueError(
@@ -7168,16 +7486,18 @@ class PcbConnectivitySnapshot(StrictModel):
                     )
                 if obstacle.net != item.obstacle_net:
                     raise ValueError("Native PCB probe obstacle net differs from its pad inventory")
-            if self.schema_version in {"10", "11"} and any(
+            if self.schema_version in {"10", "11", "12"} and any(
                 field not in item.model_fields_set
                 for field in ("target_aperture_shape", "target_aperture_diameter_nm")
             ):
                 raise ValueError(
                     "Native PCB schema v10+ requires explicit target aperture evidence"
                 )
-        if self.schema_version == "11":
+        if self.schema_version in {"11", "12"}:
             if "rule_areas" not in self.model_fields_set:
-                raise ValueError("Native PCB schema v11 requires explicit rule-area evidence")
+                raise ValueError(
+                    f"Native PCB schema v{self.schema_version} requires explicit rule-area evidence"
+                )
             rule_area_ids = [item.uuid.casefold() for item in self.rule_areas]
             if len(set(rule_area_ids)) != len(rule_area_ids):
                 raise ValueError("Native PCB evidence contains duplicate rule-area identities")
@@ -7187,6 +7507,23 @@ class PcbConnectivitySnapshot(StrictModel):
                 copper_layers = {layer.casefold() for layer in self.copper_layers}
                 if any(layer.casefold() not in copper_layers for layer in area.layers):
                     raise ValueError("Native PCB rule-area layers are outside the copper stack")
+        if self.schema_version == "12":
+            if "footprints" not in self.model_fields_set:
+                raise ValueError(
+                    "Native PCB schema v12 requires explicit footprint placement evidence"
+                )
+            footprint_rows = {item.reference.casefold(): item for item in self.footprints}
+            if len(footprint_rows) != len(self.footprints):
+                raise ValueError("Native PCB evidence contains duplicate footprint references")
+            if any(item.side not in self.copper_layers for item in self.footprints):
+                raise ValueError("Native PCB footprint side is outside the copper stack")
+            for pad in self.pads:
+                reference = pad.pad.rsplit(".", 1)[0].casefold()
+                footprint = footprint_rows.get(reference)
+                if footprint is None:
+                    raise ValueError("Native PCB pad refers to an unobserved footprint placement")
+                if footprint.footprint != pad.footprint or footprint.dnp != pad.dnp:
+                    raise ValueError("Native PCB pad identity differs from its footprint placement")
         for tie in self.net_ties:
             for member in (pad for group in tie.pad_groups for pad in group):
                 observed = pads_by_name.get(member.casefold())

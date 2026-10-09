@@ -58,8 +58,8 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Pytest is the suite runner. Prefer functions, parametrization, and fixtures as tests migrate.
-# Legacy unittest.TestCase classes remain discoverable during the gradual migration.
+# Use pytest functions, parametrization, and fixtures for new and migrated tests.
+# Keep legacy unittest.TestCase discovery enabled while those suites migrate.
 python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
 

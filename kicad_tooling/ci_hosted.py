@@ -11819,7 +11819,7 @@ def pcb_decoupling_fixture_lane(root: Path, *, project: str, image: str, log: Ho
             if snapshot is None:
                 raise ValueError("Native PCB decoupling fixture returned no connectivity snapshot")
             if (
-                snapshot.schema_version not in {"10", "11"}
+                snapshot.schema_version not in {"10", "11", "12"}
                 or snapshot.board_sha256 != source_hash
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
@@ -11846,7 +11846,7 @@ def pcb_decoupling_fixture_lane(root: Path, *, project: str, image: str, log: Ho
                 )
             if (
                 protection_snapshot is None
-                or protection_snapshot.schema_version not in {"10", "11"}
+                or protection_snapshot.schema_version not in {"10", "11", "12"}
                 or protection_snapshot.board_sha256 != protection_source_hash
                 or protection_snapshot.kicad_version != config.kicad_version
                 or protection_snapshot.image != config.image
@@ -11948,7 +11948,7 @@ def pcb_decoupling_fixture_lane(root: Path, *, project: str, image: str, log: Ho
                     )
                 if (
                     open_reference_via_snapshot is None
-                    or open_reference_via_snapshot.schema_version not in {"10", "11"}
+                    or open_reference_via_snapshot.schema_version not in {"10", "11", "12"}
                     or open_reference_via_snapshot.board_sha256 != open_reference_via_hash
                     or open_reference_via_snapshot.kicad_version != config.kicad_version
                     or open_reference_via_snapshot.image != config.image
@@ -12130,7 +12130,7 @@ def pcb_decoupling_fixture_lane(root: Path, *, project: str, image: str, log: Ho
         if (
             disconnected_snapshot is None
             or disconnected_snapshot.board_sha256 != disconnected_signal_hash
-            or disconnected_snapshot.schema_version not in {"10", "11"}
+            or disconnected_snapshot.schema_version not in {"10", "11", "12"}
             or disconnected_snapshot.kicad_version != config.kicad_version
             or disconnected_snapshot.image != config.image
             or disconnected_snapshot.probe_sha256 != expected_probe_sha256()
@@ -12436,7 +12436,7 @@ def pcb_switching_loop_fixture_lane(
                     )
                 stack = {layer.casefold() for layer in snapshot.copper_layers}
                 if (
-                    snapshot.schema_version not in {"10", "11"}
+                    snapshot.schema_version not in {"10", "11", "12"}
                     or snapshot.board_sha256 != source_hash
                     or snapshot.kicad_version != config.kicad_version
                     or snapshot.image != config.image
@@ -12843,7 +12843,7 @@ def pcb_reference_plane_via_fixture_lane(
             if snapshot is None:
                 raise ValueError("Native PCB reference-via fixture returned no snapshot")
             if (
-                snapshot.schema_version not in {"10", "11"}
+                snapshot.schema_version not in {"10", "11", "12"}
                 or snapshot.board_sha256 != source_hash
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
@@ -13029,7 +13029,7 @@ def pcb_reference_plane_narrow_void_fixture_lane(
                 if snapshot is None:
                     raise ValueError(f"Native reference-plane {case} returned no snapshot")
                 if (
-                    snapshot.schema_version not in {"10", "11"}
+                    snapshot.schema_version not in {"10", "11", "12"}
                     or snapshot.board_sha256 != source_hash
                     or snapshot.kicad_version != config.kicad_version
                     or snapshot.image != config.image

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
-from math import floor
+from math import floor, isfinite
 from pathlib import Path
 from typing import Any, cast
 
@@ -241,16 +241,10 @@ def rule_area_observation(zone: Any, board: Any) -> dict[str, Any] | None:
         )
     if not polygons:
         raise ValueError("Native PCB rule area has no authored polygon outline")
-    polygons.sort(
-        key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":"))
-    )
+    polygons.sort(key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":")))
     layer_set = zone.GetLayerSet()
     copper_layers = board.GetEnabledLayers().CuStack()
-    layers = [
-        board.GetLayerName(layer)
-        for layer in copper_layers
-        if layer_set.Contains(layer)
-    ]
+    layers = [board.GetLayerName(layer) for layer in copper_layers if layer_set.Contains(layer)]
     return {
         "uuid": zone.m_Uuid.AsString(),
         "name": zone.GetZoneName() or "",
@@ -262,6 +256,29 @@ def rule_area_observation(zone: Any, board: Any) -> dict[str, Any] | None:
         "forbids_pads": bool(zone.GetDoNotAllowPads()),
         "forbids_zone_fills": bool(zone.GetDoNotAllowZoneFills()),
         "forbids_footprints": bool(zone.GetDoNotAllowFootprints()),
+    }
+
+
+def footprint_placement_observation(footprint: Any, board: Any) -> dict[str, Any] | None:
+    """Return a canonical, source-bound transform for one referenced footprint."""
+    reference = str(footprint.GetReference()).strip()
+    if not reference:
+        return None
+    position = footprint.GetPosition()
+    angle_degrees = float(footprint.GetOrientationDegrees())
+    if not isfinite(angle_degrees):
+        raise ValueError(f"Footprint {reference} has a non-finite placement angle")
+    orientation_microdegrees = round((angle_degrees % 360.0) * 1_000_000) % 360_000_000
+    side = board.GetLayerName(footprint.GetLayer())
+    if side not in {"F.Cu", "B.Cu"}:
+        raise ValueError(f"Footprint {reference} is on unsupported board side {side!r}")
+    return {
+        "reference": reference,
+        "footprint": footprint.GetFPIDAsString(),
+        "dnp": bool(footprint.IsDNP()),
+        "position_nm": [int(position.x), int(position.y)],
+        "orientation_microdegrees": orientation_microdegrees,
+        "side": side,
     }
 
 
@@ -366,9 +383,13 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
         track_rows.append(row)
         track_objects.append((row, track))
     ties: list[dict[str, Any]] = []
+    footprint_rows: list[dict[str, Any]] = []
     for footprint in sorted(board.GetFootprints(), key=lambda item: item.GetReference()):
         footprint_id = footprint.GetFPIDAsString()
         dnp = bool(footprint.IsDNP())
+        placement = footprint_placement_observation(footprint, board)
+        if placement is not None:
+            footprint_rows.append(placement)
         for pad in footprint.Pads():
             reference = pad_reference(pad)
             if not reference:
@@ -593,7 +614,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
     access_observations = access_probe_observations(access_requests, pad_geometry)
 
     output = {
-        "schema_version": "11",
+        "schema_version": "12",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,
@@ -605,6 +626,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
             key=lambda row: (row["uuid"].casefold(), row["layer"].casefold()),
         ),
         "rule_areas": sorted(rule_areas, key=lambda row: row["uuid"].casefold()),
+        "footprints": sorted(footprint_rows, key=lambda row: row["reference"].casefold()),
         "access_probe_observations": access_observations,
         "access_probe_requests_sha256": access_requests_sha256,
         "tracks": sorted(track_rows, key=lambda row: row["uuid"].casefold()),

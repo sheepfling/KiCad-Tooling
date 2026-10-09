@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-import unittest
 from typing import Literal
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate
@@ -285,312 +285,284 @@ def lint_report(
     )
 
 
-class UsbDataPathTests(unittest.TestCase):
-    def test_documented_integrated_phy_direct_path_is_a_valid_control(self) -> None:
-        mismatches = usb_data_path_mismatches(usb_data_map("direct"), usb_netlist("direct"))
-        self.assertEqual(mismatches, ())
-        report = lint_report(usb_netlist("direct"), usb_data_map("direct"))
-        self.assertFalse(
-            any(item.rule_id == "bus.usb_data_path_mismatch" for item in report.findings)
-        )
-        run = next(
-            item
-            for item in report.mapped_check_runs
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(run.status, "EVALUATED")
-        self.assertEqual(
-            run.map_sha256,
-            hashlib.sha256(usb_data_map("direct").model_dump_json().encode("utf-8")).hexdigest(),
-        )
-        self.assertEqual(run.requirement_count, 1)
-        self.assertEqual(run.finding_count, 0)
+def test_documented_integrated_phy_direct_path_is_a_valid_control() -> None:
+    mismatches = usb_data_path_mismatches(usb_data_map("direct"), usb_netlist("direct"))
+    assert mismatches == ()
+    report = lint_report(usb_netlist("direct"), usb_data_map("direct"))
+    assert not any(item.rule_id == "bus.usb_data_path_mismatch" for item in report.findings)
+    run = next(
+        item for item in report.mapped_check_runs if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert run.status == "EVALUATED"
+    assert (
+        run.map_sha256
+        == hashlib.sha256(usb_data_map("direct").model_dump_json().encode("utf-8")).hexdigest()
+    )
+    assert run.requirement_count == 1
+    assert run.finding_count == 0
 
-    def test_documented_external_phy_and_27r_pair_is_a_valid_control(self) -> None:
-        report = lint_report(usb_netlist(), usb_data_map())
-        self.assertFalse(
-            any(item.rule_id == "bus.usb_data_path_mismatch" for item in report.findings)
-        )
 
-    def test_exact_bonded_reference_path_is_a_valid_control(self) -> None:
-        path_map = usb_bonded_reference_map()
-        report = lint_report(usb_bonded_reference_netlist(), path_map)
-        mismatches = usb_data_path_mismatches(path_map, usb_bonded_reference_netlist())
+def test_documented_external_phy_and_27r_pair_is_a_valid_control() -> None:
+    report = lint_report(usb_netlist(), usb_data_map())
+    assert not any(item.rule_id == "bus.usb_data_path_mismatch" for item in report.findings)
 
-        self.assertEqual(mismatches, ())
-        self.assertFalse(
-            any(
-                item.rule_id in {"bus.usb_data_path_mismatch", "bus.usb_peer_reference_review"}
-                for item in report.findings
+
+def test_exact_bonded_reference_path_is_a_valid_control() -> None:
+    path_map = usb_bonded_reference_map()
+    report = lint_report(usb_bonded_reference_netlist(), path_map)
+    mismatches = usb_data_path_mismatches(path_map, usb_bonded_reference_netlist())
+
+    assert mismatches == ()
+    assert not any(
+        item.rule_id in {"bus.usb_data_path_mismatch", "bus.usb_peer_reference_review"}
+        for item in report.findings
+    )
+    run = next(
+        item for item in report.mapped_check_runs if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert (run.status, run.requirement_count, run.finding_count) == ("EVALUATED", 1, 0)
+
+
+@pytest.mark.parametrize(
+    ("fault", "expected"),
+    (
+        ("missing", "R3 is absent"),
+        ("wrong-value", "R3 value is 10R"),
+        ("wrong-symbol", "R3 symbol is Synthetic:Bond"),
+        ("wrong-footprint", "R3 footprint is Synthetic:0805"),
+        ("active-pin", "R3.2 is not exported as a passive bond pin"),
+        ("DNP", "R3 is marked DNP"),
+        ("wrong-net", "R3.2 is on FLOATING_GND"),
+    ),
+    ids=("missing", "value", "symbol", "footprint", "active-pin", "dnp", "net"),
+)
+def test_bonded_reference_faults_report_exact_component_and_pin_evidence(
+    fault: str, expected: str
+) -> None:
+    report = lint_report(usb_bonded_reference_netlist(fault=fault), usb_bonded_reference_map())
+    findings = [item for item in report.findings if item.rule_id == "bus.usb_data_path_mismatch"]
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.subject == "usb-port-1: USB reference path"
+    assert any(expected in issue for issue in finding.evidence["issues"]), finding.evidence[
+        "issues"
+    ]
+    assert finding.evidence["reference_policy"] == ("bonded",)
+    assert finding.evidence["reference_bond"] == ("R3",)
+    assert finding.evidence["reference_bond_identity"] == ("Device:R; Synthetic:0603; 0R",)
+    assert finding.evidence["reference_bond_side_a"] == ("R3.1 on USB_GND",)
+    assert finding.evidence["reference_bond_side_b"] == ("R3.2 on BOARD_GND",)
+
+
+def test_bonded_reference_fault_evidence_is_order_stable() -> None:
+    observed = usb_bonded_reference_netlist(fault="wrong-net")
+    reordered = observed.model_copy(
+        update={
+            field: dict(reversed(tuple(getattr(observed, field).items())))
+            for field in (
+                "components",
+                "nets",
+                "component_symbols",
+                "component_pin_numbers",
+                "pin_functions",
+                "pin_electrical_types",
             )
-        )
-        run = next(
-            item
-            for item in report.mapped_check_runs
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(
-            (run.status, run.requirement_count, run.finding_count), ("EVALUATED", 1, 0)
-        )
+        }
+    )
+    path_map = usb_bonded_reference_map()
+    original = next(
+        item
+        for item in lint_report(observed, path_map).findings
+        if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    reversed_input = next(
+        item
+        for item in lint_report(reordered, path_map).findings
+        if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert (reversed_input.fingerprint, reversed_input.evidence) == (
+        original.fingerprint,
+        original.evidence,
+    )
 
-    def test_bonded_reference_faults_report_exact_component_and_pin_evidence(self) -> None:
-        path_map = usb_bonded_reference_map()
-        for fault, expected in (
-            ("missing", "R3 is absent"),
-            ("wrong-value", "R3 value is 10R"),
-            ("wrong-symbol", "R3 symbol is Synthetic:Bond"),
-            ("wrong-footprint", "R3 footprint is Synthetic:0805"),
-            ("active-pin", "R3.2 is not exported as a passive bond pin"),
-            ("DNP", "R3 is marked DNP"),
-            ("wrong-net", "R3.2 is on FLOATING_GND"),
-        ):
-            with self.subTest(fault=fault):
-                report = lint_report(usb_bonded_reference_netlist(fault=fault), path_map)
-                findings = [
-                    item for item in report.findings if item.rule_id == "bus.usb_data_path_mismatch"
-                ]
-                self.assertEqual(len(findings), 1)
-                finding = findings[0]
-                self.assertEqual(finding.subject, "usb-port-1: USB reference path")
-                self.assertTrue(
-                    any(expected in issue for issue in finding.evidence["issues"]),
-                    finding.evidence["issues"],
-                )
-                self.assertEqual(finding.evidence["reference_policy"], ("bonded",))
-                self.assertEqual(finding.evidence["reference_bond"], ("R3",))
-                self.assertEqual(
-                    finding.evidence["reference_bond_identity"],
-                    ("Device:R; Synthetic:0603; 0R",),
-                )
-                self.assertEqual(
-                    finding.evidence["reference_bond_side_a"],
-                    ("R3.1 on USB_GND",),
-                )
-                self.assertEqual(
-                    finding.evidence["reference_bond_side_b"],
-                    ("R3.2 on BOARD_GND",),
-                )
 
-    def test_bonded_reference_fault_evidence_is_order_stable(self) -> None:
-        observed = usb_bonded_reference_netlist(fault="wrong-net")
-        reordered = observed.model_copy(
-            update={
-                field: dict(reversed(tuple(getattr(observed, field).items())))
-                for field in (
-                    "components",
-                    "nets",
-                    "component_symbols",
-                    "component_pin_numbers",
-                    "pin_functions",
-                    "pin_electrical_types",
-                )
+def test_bonded_reference_policy_requires_two_distinct_mapped_nets_and_component() -> None:
+    interface = usb_bonded_reference_map().interfaces[0]
+
+    def rebuild(**updates: object) -> UsbDataInterfaceRequirement:
+        values = interface.model_dump(mode="python")
+        values.update(updates)
+        return UsbDataInterfaceRequirement.model_validate(values)
+
+    with pytest.raises(ValidationError, match="needs one exact bond component"):
+        rebuild(reference_bond=None)
+    with pytest.raises(ValidationError, match="needs distinct endpoint nets"):
+        rebuild(
+            phy_reference_pins=(UsbReferencePinRequirement(pin="U1.3", net="USB_GND"),),
+        )
+    with pytest.raises(ValidationError, match="must join the mapped connector and PHY nets"):
+        bond = interface.reference_bond.model_dump(mode="python")
+        bond["side_b_net"] = "UNRELATED_GND"
+        rebuild(reference_bond=bond)
+    with pytest.raises(ValidationError, match="cannot reuse a data-line series resistor"):
+        bond = interface.reference_bond.model_dump(mode="python")
+        bond.update(
+            {
+                "reference": "R1",
+                "side_a_pin": "R1.1",
+                "side_b_pin": "R1.2",
             }
         )
-        path_map = usb_bonded_reference_map()
-        original = next(
-            item
-            for item in lint_report(observed, path_map).findings
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        reversed_input = next(
-            item
-            for item in lint_report(reordered, path_map).findings
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(
-            (reversed_input.fingerprint, reversed_input.evidence),
-            (original.fingerprint, original.evidence),
-        )
-
-    def test_bonded_reference_policy_requires_two_distinct_mapped_nets_and_component(self) -> None:
-        interface = usb_bonded_reference_map().interfaces[0]
-
-        def rebuild(**updates: object) -> UsbDataInterfaceRequirement:
-            values = interface.model_dump(mode="python")
-            values.update(updates)
-            return UsbDataInterfaceRequirement.model_validate(values)
-
-        with self.assertRaisesRegex(ValidationError, "needs one exact bond component"):
-            rebuild(reference_bond=None)
-        with self.assertRaisesRegex(ValidationError, "needs distinct endpoint nets"):
-            rebuild(
-                phy_reference_pins=(UsbReferencePinRequirement(pin="U1.3", net="USB_GND"),),
-            )
-        with self.assertRaisesRegex(ValidationError, "must join the mapped connector and PHY nets"):
-            bond = interface.reference_bond.model_dump(mode="python")
-            bond["side_b_net"] = "UNRELATED_GND"
-            rebuild(reference_bond=bond)
-        with self.assertRaisesRegex(ValidationError, "cannot reuse a data-line series resistor"):
-            bond = interface.reference_bond.model_dump(mode="python")
-            bond.update(
-                {
-                    "reference": "R1",
-                    "side_a_pin": "R1.1",
-                    "side_b_pin": "R1.2",
-                }
-            )
-            rebuild(reference_bond=bond)
-
-    def test_missing_required_resistor_is_new_coverage_beyond_named_pair_prompt(self) -> None:
-        missing = usb_netlist(fault="missing-dp-resistor")
-        report = lint_report(missing, usb_data_map())
-        path_findings = [
-            item for item in report.findings if item.rule_id == "bus.usb_data_path_mismatch"
-        ]
-        self.assertEqual(len(path_findings), 1)
-        self.assertEqual(path_findings[0].subject, "usb-port-1: USB D+ path")
-        self.assertIn("R1 is absent", path_findings[0].evidence["issues"][0])
-        self.assertEqual(report.netlist_sha256, "a" * 64)
-        self.assertFalse(
-            any(
-                item.rule_id == "bus.usb_data_path_mismatch"
-                for item in lint_report(missing, None).findings
-            )
-        )
-        unconfigured = next(
-            item
-            for item in lint_report(missing, None).mapped_check_runs
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(unconfigured.status, "NOT_CONFIGURED")
-        self.assertEqual(unconfigured.requirement_count, 0)
-        fault_run = next(
-            item
-            for item in report.mapped_check_runs
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(fault_run.status, "EVALUATED")
-        self.assertEqual(fault_run.finding_count, 1)
-
-    def test_missing_path_evidence_is_order_stable_and_repair_clears_it(self) -> None:
-        path_map = usb_data_map()
-        missing = usb_netlist(fault="missing-dp-resistor")
-        reordered = missing.model_copy(
-            update={
-                "components": dict(reversed(tuple(missing.components.items()))),
-                "nets": dict(reversed(tuple(missing.nets.items()))),
-                "component_symbols": dict(reversed(tuple(missing.component_symbols.items()))),
-                "component_pin_numbers": dict(
-                    reversed(tuple(missing.component_pin_numbers.items()))
-                ),
-                "pin_functions": dict(reversed(tuple(missing.pin_functions.items()))),
-            }
-        )
-        original_report = lint_report(missing, path_map)
-        reordered_report = lint_report(reordered, path_map)
-        original_finding = next(
-            item
-            for item in original_report.findings
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        reordered_finding = next(
-            item
-            for item in reordered_report.findings
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(
-            (reordered_finding.fingerprint, reordered_finding.evidence),
-            (original_finding.fingerprint, original_finding.evidence),
-        )
-
-        repaired_report = lint_report(usb_netlist(), path_map)
-        self.assertNotIn(
-            "bus.usb_data_path_mismatch",
-            {item.rule_id for item in repaired_report.findings},
-        )
-
-    def test_value_dnp_and_wrong_net_mutations_are_detected(self) -> None:
-        for fault, expected in (
-            ("wrong-dp-resistor-value", "R1 is 22 Ω"),
-            ("dnp-dp-resistor", "R1 is marked DNP"),
-            ("wrong-dp-resistor-net", "R1 spans"),
-        ):
-            with self.subTest(fault=fault):
-                mismatches = usb_data_path_mismatches(usb_data_map(), usb_netlist(fault=fault))
-                self.assertEqual(len(mismatches), 1)
-                self.assertTrue(any(expected in item for item in mismatches[0].issues))
-
-    def test_rule_uses_project_review_block_off_and_exact_ignore_lifecycle(self) -> None:
-        fault = usb_netlist(fault="missing-dp-resistor")
-        blocked = lint_report(
-            fault,
-            usb_data_map(),
-            override=DesignLintRuleOverride(
-                rule_id="bus.usb_data_path_mismatch",
-                mode="block",
-                reason="The approved external PHY topology is a release requirement",
-            ),
-        )
-        self.assertEqual(blocked.status, "FAIL")
-
-        finding = next(
-            item
-            for item in lint_report(fault, usb_data_map()).findings
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        ignored = lint_report(
-            fault,
-            usb_data_map(),
-            ignore=DesignLintIgnore(
-                rule_id=finding.rule_id,
-                fingerprint=finding.fingerprint,
-                reason="Reviewed against the approved assembly option",
-            ),
-        )
-        ignored_finding = next(
-            item for item in ignored.findings if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(ignored_finding.disposition, "IGNORED")
-
-        disabled = lint_report(
-            fault,
-            usb_data_map(),
-            override=DesignLintRuleOverride(
-                rule_id="bus.usb_data_path_mismatch",
-                mode="off",
-                reason="The documented PHY disposition is not used in this configuration",
-            ),
-        )
-        disabled_finding = next(
-            item for item in disabled.findings if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual(disabled_finding.disposition, "RULE_OFF")
-        disabled_run = next(
-            item
-            for item in disabled.mapped_check_runs
-            if item.rule_id == "bus.usb_data_path_mismatch"
-        )
-        self.assertEqual((disabled_run.status, disabled_run.mode), ("EVALUATED", "off"))
-        self.assertEqual(disabled_run.finding_count, 1)
-
-    def test_contract_rejects_ambiguous_or_unjustified_topologies(self) -> None:
-        with self.assertRaisesRegex(ValidationError, "Direct USB data paths"):
-            UsbDataPathLineRequirement(
-                line="D+",
-                connector_pin="J1.1",
-                phy_pin="U1.1",
-                connector_net="USB_DP",
-                phy_net="USB_DP_PHY",
-                topology="direct",
-            )
-        with self.assertRaisesRegex(ValidationError, "series-resistor paths"):
-            UsbDataPathLineRequirement(
-                line="D+",
-                connector_pin="J1.1",
-                phy_pin="U1.1",
-                connector_net="USB_DP",
-                phy_net="USB_DP",
-                topology="series_resistor",
-            )
-        with self.assertRaisesRegex(ValidationError, "range is reversed"):
-            UsbDataSeriesResistorRequirement(
-                reference="R1",
-                expected_symbol="Device:R",
-                expected_footprint="Synthetic:0603",
-                minimum_ohms=28,
-                maximum_ohms=27,
-            )
+        rebuild(reference_bond=bond)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_missing_required_resistor_is_new_coverage_beyond_named_pair_prompt() -> None:
+    missing = usb_netlist(fault="missing-dp-resistor")
+    report = lint_report(missing, usb_data_map())
+    path_findings = [
+        item for item in report.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    ]
+    assert len(path_findings) == 1
+    assert path_findings[0].subject == "usb-port-1: USB D+ path"
+    assert "R1 is absent" in path_findings[0].evidence["issues"][0]
+    assert report.netlist_sha256 == "a" * 64
+    assert not any(
+        item.rule_id == "bus.usb_data_path_mismatch" for item in lint_report(missing, None).findings
+    )
+    unconfigured = next(
+        item
+        for item in lint_report(missing, None).mapped_check_runs
+        if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert unconfigured.status == "NOT_CONFIGURED"
+    assert unconfigured.requirement_count == 0
+    fault_run = next(
+        item for item in report.mapped_check_runs if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert fault_run.status == "EVALUATED"
+    assert fault_run.finding_count == 1
+
+
+def test_missing_path_evidence_is_order_stable_and_repair_clears_it() -> None:
+    path_map = usb_data_map()
+    missing = usb_netlist(fault="missing-dp-resistor")
+    reordered = missing.model_copy(
+        update={
+            "components": dict(reversed(tuple(missing.components.items()))),
+            "nets": dict(reversed(tuple(missing.nets.items()))),
+            "component_symbols": dict(reversed(tuple(missing.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(missing.component_pin_numbers.items()))),
+            "pin_functions": dict(reversed(tuple(missing.pin_functions.items()))),
+        }
+    )
+    original_report = lint_report(missing, path_map)
+    reordered_report = lint_report(reordered, path_map)
+    original_finding = next(
+        item for item in original_report.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    reordered_finding = next(
+        item for item in reordered_report.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert (reordered_finding.fingerprint, reordered_finding.evidence) == (
+        original_finding.fingerprint,
+        original_finding.evidence,
+    )
+
+    repaired_report = lint_report(usb_netlist(), path_map)
+    assert "bus.usb_data_path_mismatch" not in {item.rule_id for item in repaired_report.findings}
+
+
+@pytest.mark.parametrize(
+    ("fault", "expected"),
+    (
+        ("wrong-dp-resistor-value", "R1 is 22 Ω"),
+        ("dnp-dp-resistor", "R1 is marked DNP"),
+        ("wrong-dp-resistor-net", "R1 spans"),
+    ),
+    ids=("wrong-value", "dnp", "wrong-net"),
+)
+def test_value_dnp_and_wrong_net_mutations_are_detected(fault: str, expected: str) -> None:
+    mismatches = usb_data_path_mismatches(usb_data_map(), usb_netlist(fault=fault))
+    assert len(mismatches) == 1
+    assert any(expected in item for item in mismatches[0].issues)
+
+
+def test_rule_uses_project_review_block_off_and_exact_ignore_lifecycle() -> None:
+    fault = usb_netlist(fault="missing-dp-resistor")
+    blocked = lint_report(
+        fault,
+        usb_data_map(),
+        override=DesignLintRuleOverride(
+            rule_id="bus.usb_data_path_mismatch",
+            mode="block",
+            reason="The approved external PHY topology is a release requirement",
+        ),
+    )
+    assert blocked.status == "FAIL"
+
+    finding = next(
+        item
+        for item in lint_report(fault, usb_data_map()).findings
+        if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    ignored = lint_report(
+        fault,
+        usb_data_map(),
+        ignore=DesignLintIgnore(
+            rule_id=finding.rule_id,
+            fingerprint=finding.fingerprint,
+            reason="Reviewed against the approved assembly option",
+        ),
+    )
+    ignored_finding = next(
+        item for item in ignored.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert ignored_finding.disposition == "IGNORED"
+
+    disabled = lint_report(
+        fault,
+        usb_data_map(),
+        override=DesignLintRuleOverride(
+            rule_id="bus.usb_data_path_mismatch",
+            mode="off",
+            reason="The documented PHY disposition is not used in this configuration",
+        ),
+    )
+    disabled_finding = next(
+        item for item in disabled.findings if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert disabled_finding.disposition == "RULE_OFF"
+    disabled_run = next(
+        item for item in disabled.mapped_check_runs if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    assert (disabled_run.status, disabled_run.mode) == ("EVALUATED", "off")
+    assert disabled_run.finding_count == 1
+
+
+def test_contract_rejects_ambiguous_or_unjustified_topologies() -> None:
+    with pytest.raises(ValidationError, match="Direct USB data paths"):
+        UsbDataPathLineRequirement(
+            line="D+",
+            connector_pin="J1.1",
+            phy_pin="U1.1",
+            connector_net="USB_DP",
+            phy_net="USB_DP_PHY",
+            topology="direct",
+        )
+    with pytest.raises(ValidationError, match="series-resistor paths"):
+        UsbDataPathLineRequirement(
+            line="D+",
+            connector_pin="J1.1",
+            phy_pin="U1.1",
+            connector_net="USB_DP",
+            phy_net="USB_DP",
+            topology="series_resistor",
+        )
+    with pytest.raises(ValidationError, match="range is reversed"):
+        UsbDataSeriesResistorRequirement(
+            reference="R1",
+            expected_symbol="Device:R",
+            expected_footprint="Synthetic:0603",
+            minimum_ohms=28,
+            maximum_ohms=27,
+        )

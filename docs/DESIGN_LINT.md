@@ -836,7 +836,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 82 active rules. They
+`synthetic_validated`; the catalog currently contains 83 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow
@@ -2111,7 +2111,9 @@ The checker requires exactly one native rule area with the mapped name, exact
 geometry digest, exact copper-layer set, and exact track, via, pad, zone-fill,
 and footprint restrictions. A missing or duplicate name, changed geometry,
 changed layer, changed restriction, or native snapshot older than schema 11 is
-incomplete. The project owner must author the digest, layers, flags, and basis
+incomplete. Snapshot schema 12 retains that keepout evidence and adds source-bound
+footprint placement identity, origin, orientation, and board side. The project
+owner must author the digest, layers, flags, and basis
 from an independent approved source; do not generate the requirement by
 accepting whatever shape happens to be on the board.
 
@@ -2121,6 +2123,86 @@ regression check for the authored KiCad rule area only. It does not establish
 that the chosen region is large enough or in the correct location for an
 antenna, RF module, connector, or other engineering requirement, and it does
 not prove fabricated copper or physical assembly matches the board source.
+
+## Review mapped RF module antenna coverage
+
+Use design_lint.pcb_rf_module_antenna_map when an independently reviewed
+requirement identifies an RF module, its fitted disposition, feed pin/net, and
+an onboard antenna keepout drawn in footprint-local coordinates. This check
+binds the map to the exact schematic symbol, footprint, optional PART_ID,
+native schematic net assignment, fitted/DNP state, and native PCB footprint
+placement. For an onboard antenna it transforms each local outline and hole
+through the observed placement position, orientation, and front/back side, then
+compares the result with exactly one named native rule area. The synthetic
+example below is not a design requirement.
+
+```json
+{
+      "design_lint": {
+        "pcb_rf_module_antenna_map": {
+          "schema_version": "1",
+          "basis": "Synthetic approved module drawing, revision 1",
+          "requirements": [
+            {
+              "id": "radio-module",
+              "basis": "Synthetic module pinout and antenna drawing",
+              "reference": "U1",
+              "expected_symbol": "RF_Module:Radio",
+              "expected_footprint": "RF_Module:Radio_Module",
+              "expected_part_id": "RADIO-1",
+              "disposition": "onboard_antenna",
+              "rf_feed_pad": "U1.1",
+              "rf_feed_net": "RF_IN",
+              "keepout": {
+                "name": "radio-antenna-clearance",
+                "local_polygons": [
+                  {
+                    "outline_nm": [
+                      [0, 0],
+                      [1000000, 0],
+                      [1000000, 500000],
+                      [0, 500000]
+                    ],
+                    "holes_nm": []
+                  }
+                ],
+                "layers": ["F.Cu", "B.Cu"],
+                "forbids_tracks": true,
+                "forbids_vias": true,
+                "forbids_pads": true,
+                "forbids_zone_fills": true,
+                "forbids_footprints": false
+              }
+            }
+          ]
+        },
+        "rules": [
+          {
+            "rule_id": "pcb.rf_module_antenna_keepout_coverage",
+            "mode": "review",
+            "reason": "Review the mapped module and transformed antenna keepout"
+          }
+        ]
+      }
+}
+```
+
+Use the external_antenna disposition when the reviewed module uses an external
+antenna: the feed pin/net remain required, and the onboard keepout is omitted.
+Use dnp only when both schematic and PCB evidence identify the mapped module
+as unpopulated; a DNP requirement cannot name a fitted feed or keepout. These
+dispositions are explicit project decisions, not name-based guesses.
+
+The map is opt-in and defaults to review; project policy can select block, off,
+or an exact fingerprint ignore. An absent map is NOT_REQUESTED.
+Placement-relative coverage requires source-bound native PCB snapshot schema
+12, including explicit footprint identity, fitted state, origin, orientation,
+and board side. Missing, duplicate, mismatched, or unsupported evidence remains
+incomplete. The check verifies agreement with the authored requirement; it
+cannot validate the vendor drawing interpretation, antenna performance,
+fabricated copper, or physical assembly. Keep vendor documents and project
+expectations in the project repository; the shared tooling retains only
+synthetic fixtures.
 
 ## Review mapped PCB decoupling placement
 

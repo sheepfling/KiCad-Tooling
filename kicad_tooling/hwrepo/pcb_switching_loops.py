@@ -319,7 +319,7 @@ def _resolve_trace_edge(
     endpoint_issue = _mapped_endpoint_issue(edge, specification, pads)
     if endpoint_issue is not None:
         return _incomplete_edge(index, edge, endpoint_issue)
-    if snapshot.schema_version not in {"8", "9", "10", "11"}:
+    if snapshot.schema_version not in {"8", "9", "10", "11", "12"}:
         return _incomplete_edge(
             index, edge, "Native track endpoint-contact evidence requires PCB snapshot schema 8+"
         )
@@ -598,7 +598,7 @@ def _route_edge_coverage(
         )
     zone_uuid, island_index = next(iter(common_islands))
     contour_area_twice = None
-    if snapshot.schema_version in {"9", "10", "11"}:
+    if snapshot.schema_version in {"9", "10", "11", "12"}:
         zone = zones.get((zone_uuid, plane_layer.casefold()))
         island = (
             None

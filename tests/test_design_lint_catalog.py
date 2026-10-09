@@ -28,6 +28,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleId,
     DesignLintRuleMetadata,
     NetlistContract,
+    PcbRfModuleAntennaMap,
     Stm32PinMapCoverageReport,
 )
 from kicad_tooling.hwrepo.schematic_geometry import scan_wire_ends_on_pin_lines
@@ -134,6 +135,18 @@ from tests.test_pcb_reference_planes import report as pcb_reference_plane_report
 from tests.test_pcb_reference_planes import snapshot as pcb_reference_plane_snapshot
 from tests.test_pcb_reference_planes import track as pcb_reference_plane_track
 from tests.test_pcb_reference_planes import zone as pcb_reference_plane_zone
+from tests.test_pcb_rf_antenna import (
+    lint_report as pcb_rf_antenna_lint_report,
+)
+from tests.test_pcb_rf_antenna import (
+    netlist as pcb_rf_antenna_netlist,
+)
+from tests.test_pcb_rf_antenna import (
+    requirement as pcb_rf_antenna_requirement,
+)
+from tests.test_pcb_rf_antenna import (
+    snapshot as pcb_rf_antenna_snapshot,
+)
 from tests.test_pcb_switching_loops import (
     PcbSwitchingLoopTests,
 )
@@ -146,7 +159,6 @@ from tests.test_pcb_switching_loops import (
 from tests.test_pcb_switching_loops import (
     snapshot as pcb_switching_loop_snapshot,
 )
-from tests.test_pcb_track_width import PcbTrackWidthTests
 from tests.test_pcb_track_width import coverage as pcb_track_width_coverage
 from tests.test_pcb_track_width import mapping as pcb_track_width_map
 from tests.test_pcb_track_width import requirement as pcb_track_width_requirement
@@ -245,7 +257,6 @@ from tests.test_usb_c_ports import (
     usb_c_netlist,
 )
 from tests.test_usb_data_paths import (
-    UsbDataPathTests,
     usb_data_map,
     usb_netlist,
 )
@@ -432,10 +443,8 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         RcFilterTests: RcFilterTests(),
         PcbDecouplingTests: PcbDecouplingTests(),
         PcbProtectionPathTests: PcbProtectionPathTests(),
-        PcbTrackWidthTests: PcbTrackWidthTests(),
         PcbReferencePlaneTests: PcbReferencePlaneTests(),
         PcbSwitchingLoopTests: PcbSwitchingLoopTests(),
-        UsbDataPathTests: UsbDataPathTests(),
         Stm32PinMapTests: Stm32PinMapTests(),
         SerialPeerReferenceReviewTests: SerialPeerReferenceReviewTests(),
         UsbPeerReferenceReviewTests: UsbPeerReferenceReviewTests(),
@@ -854,6 +863,16 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         pcb_keepout_coverage=incomplete_keepout_report(keepout_map),
     )
     emitted.update(item.rule_id for item in keepout_result.findings)
+    rf_antenna_map = PcbRfModuleAntennaMap(
+        basis="Synthetic catalog reachability requirement",
+        requirements=(pcb_rf_antenna_requirement(),),
+    )
+    rf_antenna_result = pcb_rf_antenna_lint_report(
+        policy=DesignLintPolicy(pcb_rf_module_antenna_map=rf_antenna_map),
+        source_netlist=pcb_rf_antenna_netlist(symbol="RF_Module:Other"),
+        observed_board=pcb_rf_antenna_snapshot(),
+    )
+    emitted.update(item.rule_id for item in rf_antenna_result.findings)
     passive_result = two_pin_passive_lint_report(passive_netlist())
     emitted.update(item.rule_id for item in passive_result.findings)
     diode_result = two_pin_diode_lint_report(diode_netlist())

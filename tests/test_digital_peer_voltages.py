@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import unittest
-
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.digital_peer_voltages import digital_peer_voltage_checks
@@ -101,101 +100,93 @@ def observed(*, fault: str | None = None) -> NetlistContract:
     )
 
 
-class DigitalPeerVoltageTests(unittest.TestCase):
-    def checks(self, spec: DigitalPeerVoltageAnalysis | None = None, *, fault: str | None = None):
-        result = digital_peer_voltage_checks(spec or requirement(), observed(fault=fault))
-        return {item.id: item for item in result}
-
-    def test_authored_spi_limits_pass_at_exactly_supported_ranges(self) -> None:
-        checks = self.checks()
-        self.assertEqual(checks["digital-peer-voltage/spi-mosi/driver/identity"].status, "PASS")
-        self.assertEqual(checks["digital-peer-voltage/spi-mosi/receiver/pin"].status, "PASS")
-        compatibility = checks["digital-peer-voltage/spi-mosi/compatibility"]
-        self.assertEqual(compatibility.status, "PASS")
-        self.assertAlmostEqual(compatibility.observed, 0.2)
-        self.assertIn("Synthetic controller datasheet", compatibility.detail)
-        self.assertIn("VDD=3.3 V", compatibility.detail)
-
-    def test_output_low_high_and_absolute_limit_faults_fail(self) -> None:
-        cases = (
-            (requirement(output_low_maximum_v=0.9), "output-low maximum"),
-            (requirement(output_high_minimum_v=1.8), "high minimum"),
-            (requirement(output_high_maximum_v=5.0), "absolute input range"),
-        )
-        for spec, evidence in cases:
-            with self.subTest(evidence=evidence):
-                result = self.checks(spec)["digital-peer-voltage/spi-mosi/compatibility"]
-                self.assertEqual(result.status, "FAIL")
-                self.assertIn("Minimum margin=", result.detail)
-
-    def test_tolerant_receiver_and_exact_limit_boundaries_are_valid_controls(self) -> None:
-        tolerant = requirement(output_high_maximum_v=5.0)
-        link_data = tolerant.links[0].model_dump()
-        link_data["input_limits"]["absolute_maximum_v"] = 5.5
-        link_data["input_limits"]["high_minimum_v"] = 2.2
-        tolerant_link = DigitalPeerVoltageLink.model_validate(link_data)
-        tolerant_spec = DigitalPeerVoltageAnalysis(
-            basis="Synthetic receiver explicitly rated for the driver's full range",
-            links=(tolerant_link,),
-        )
-        self.assertEqual(
-            self.checks(tolerant_spec)["digital-peer-voltage/spi-mosi/compatibility"].status,
-            "PASS",
-        )
-
-        boundary_data = tolerant.links[0].model_dump()
-        boundary_data["output_limits"].update(
-            {"low_maximum_v": 0.8, "high_minimum_v": 2.0, "high_maximum_v": 5.0}
-        )
-        boundary_data["input_limits"].update(
-            {"low_maximum_v": 0.8, "high_minimum_v": 2.0, "absolute_maximum_v": 5.0}
-        )
-        boundary_spec = DigitalPeerVoltageAnalysis(
-            basis="Synthetic exact-boundary logic limits",
-            links=(DigitalPeerVoltageLink.model_validate(boundary_data),),
-        )
-        boundary = self.checks(boundary_spec)["digital-peer-voltage/spi-mosi/compatibility"]
-        self.assertEqual(boundary.status, "PASS")
-        self.assertAlmostEqual(boundary.observed or 0.0, 0.0)
-
-    def test_stale_symbol_or_dnp_pin_map_suppresses_voltage_claim(self) -> None:
-        for fault in ("wrong-symbol", "dnp"):
-            with self.subTest(fault=fault):
-                checks = self.checks(fault=fault)
-                self.assertEqual(
-                    checks["digital-peer-voltage/spi-mosi/receiver/identity"].status, "FAIL"
-                )
-                self.assertEqual(
-                    checks["digital-peer-voltage/spi-mosi/compatibility"].status, "NOT_APPLICABLE"
-                )
-
-    def test_wrong_native_net_assignment_is_localized_and_not_compared(self) -> None:
-        checks = self.checks(fault="wrong-net")
-        self.assertEqual(checks["digital-peer-voltage/spi-mosi/receiver/pin"].status, "FAIL")
-        self.assertIn(
-            "U2.3 is assigned to OTHER", checks["digital-peer-voltage/spi-mosi/receiver/pin"].detail
-        )
-        self.assertEqual(
-            checks["digital-peer-voltage/spi-mosi/compatibility"].status, "NOT_APPLICABLE"
-        )
-
-    def test_missing_limits_are_visible_as_not_configured(self) -> None:
-        checks = self.checks(requirement(include_limits=False))
-        result = checks["digital-peer-voltage/spi-mosi/compatibility"]
-        self.assertEqual(result.status, "NOT_CONFIGURED")
-        self.assertIn("VOL/VOH", result.detail)
-        self.assertIn("VIL/VIH", result.detail)
-
-    def test_contract_requires_direct_distinct_endpoints_and_unique_ids(self) -> None:
-        base = requirement().links[0]
-        mismatched_map = base.model_dump()
-        mismatched_map["receiver"]["net"] = "OTHER"
-        with self.assertRaisesRegex(ValidationError, "same net"):
-            DigitalPeerVoltageLink.model_validate(mismatched_map)
-        duplicate = base.model_copy(update={"id": "SPI-MOSI"})
-        with self.assertRaisesRegex(ValidationError, "IDs must be unique"):
-            DigitalPeerVoltageAnalysis(basis="duplicate map guard", links=(base, duplicate))
+def checks(spec: DigitalPeerVoltageAnalysis | None = None, *, fault: str | None = None):
+    result = digital_peer_voltage_checks(spec or requirement(), observed(fault=fault))
+    return {item.id: item for item in result}
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_authored_spi_limits_pass_at_exactly_supported_ranges() -> None:
+    result = checks()
+    assert result["digital-peer-voltage/spi-mosi/driver/identity"].status == "PASS"
+    assert result["digital-peer-voltage/spi-mosi/receiver/pin"].status == "PASS"
+    compatibility = result["digital-peer-voltage/spi-mosi/compatibility"]
+    assert compatibility.status == "PASS"
+    assert compatibility.observed == pytest.approx(0.2)
+    assert "Synthetic controller datasheet" in compatibility.detail
+    assert "VDD=3.3 V" in compatibility.detail
+
+
+@pytest.mark.parametrize(
+    "spec",
+    (
+        pytest.param(requirement(output_low_maximum_v=0.9), id="output-low-maximum"),
+        pytest.param(requirement(output_high_minimum_v=1.8), id="high-minimum"),
+        pytest.param(requirement(output_high_maximum_v=5.0), id="absolute-input-range"),
+    ),
+)
+def test_output_low_high_and_absolute_limit_faults_fail(spec: DigitalPeerVoltageAnalysis) -> None:
+    result = checks(spec)["digital-peer-voltage/spi-mosi/compatibility"]
+    assert result.status == "FAIL"
+    assert "Minimum margin=" in result.detail
+
+
+def test_tolerant_receiver_and_exact_limit_boundaries_are_valid_controls() -> None:
+    tolerant = requirement(output_high_maximum_v=5.0)
+    link_data = tolerant.links[0].model_dump()
+    link_data["input_limits"]["absolute_maximum_v"] = 5.5
+    link_data["input_limits"]["high_minimum_v"] = 2.2
+    tolerant_link = DigitalPeerVoltageLink.model_validate(link_data)
+    tolerant_spec = DigitalPeerVoltageAnalysis(
+        basis="Synthetic receiver explicitly rated for the driver's full range",
+        links=(tolerant_link,),
+    )
+    assert checks(tolerant_spec)["digital-peer-voltage/spi-mosi/compatibility"].status == "PASS"
+
+    boundary_data = tolerant.links[0].model_dump()
+    boundary_data["output_limits"].update(
+        {"low_maximum_v": 0.8, "high_minimum_v": 2.0, "high_maximum_v": 5.0}
+    )
+    boundary_data["input_limits"].update(
+        {"low_maximum_v": 0.8, "high_minimum_v": 2.0, "absolute_maximum_v": 5.0}
+    )
+    boundary_spec = DigitalPeerVoltageAnalysis(
+        basis="Synthetic exact-boundary logic limits",
+        links=(DigitalPeerVoltageLink.model_validate(boundary_data),),
+    )
+    boundary = checks(boundary_spec)["digital-peer-voltage/spi-mosi/compatibility"]
+    assert boundary.status == "PASS"
+    assert boundary.observed == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("fault", ("wrong-symbol", "dnp"))
+def test_stale_symbol_or_dnp_pin_map_suppresses_voltage_claim(fault: str) -> None:
+    result = checks(fault=fault)
+    assert result["digital-peer-voltage/spi-mosi/receiver/identity"].status == "FAIL"
+    assert result["digital-peer-voltage/spi-mosi/compatibility"].status == "NOT_APPLICABLE"
+
+
+def test_wrong_native_net_assignment_is_localized_and_not_compared() -> None:
+    result = checks(fault="wrong-net")
+    pin_check = result["digital-peer-voltage/spi-mosi/receiver/pin"]
+    assert pin_check.status == "FAIL"
+    assert "U2.3 is assigned to OTHER" in pin_check.detail
+    assert result["digital-peer-voltage/spi-mosi/compatibility"].status == "NOT_APPLICABLE"
+
+
+def test_missing_limits_are_visible_as_not_configured() -> None:
+    result = checks(requirement(include_limits=False))
+    compatibility = result["digital-peer-voltage/spi-mosi/compatibility"]
+    assert compatibility.status == "NOT_CONFIGURED"
+    assert "VOL/VOH" in compatibility.detail
+    assert "VIL/VIH" in compatibility.detail
+
+
+def test_contract_requires_direct_distinct_endpoints_and_unique_ids() -> None:
+    base = requirement().links[0]
+    mismatched_map = base.model_dump()
+    mismatched_map["receiver"]["net"] = "OTHER"
+    with pytest.raises(ValidationError, match="same net"):
+        DigitalPeerVoltageLink.model_validate(mismatched_map)
+    duplicate = base.model_copy(update={"id": "SPI-MOSI"})
+    with pytest.raises(ValidationError, match="IDs must be unique"):
+        DigitalPeerVoltageAnalysis(basis="duplicate map guard", links=(base, duplicate))

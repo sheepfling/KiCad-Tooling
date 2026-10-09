@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import unittest
+from pathlib import Path
 from xml.etree import ElementTree as ET
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.connector_contact_ratings import connector_contact_rating_checks
@@ -203,182 +204,176 @@ def native_netlist_xml() -> str:
     return ET.tostring(root, encoding="unicode")
 
 
-class ConnectorContactRatingTests(unittest.TestCase):
-    def test_exact_contact_at_inclusive_utilization_limit_passes(self) -> None:
-        checks = {
-            item.id.rsplit("/", maxsplit=1)[-1]: item
-            for item in connector_contact_rating_checks(
-                requirement(contacts=(contact(maximum_expected_current_a=1.6),)), netlist()
-            )
+def test_exact_contact_at_inclusive_utilization_limit_passes() -> None:
+    checks = {
+        item.id.rsplit("/", maxsplit=1)[-1]: item
+        for item in connector_contact_rating_checks(
+            requirement(contacts=(contact(maximum_expected_current_a=1.6),)), netlist()
+        )
+    }
+    assert checks["identity"].status == "PASS"
+    assert checks["assignment"].status == "PASS"
+    assert checks["utilization"].status == "PASS"
+    assert checks["utilization"].observed == pytest.approx(0.8)
+    assert checks["utilization"].unit == "fraction"
+
+
+def test_over_limit_contact_fails_with_reviewed_current_basis() -> None:
+    checks = {
+        item.id: item
+        for item in connector_contact_rating_checks(
+            requirement(contacts=(contact(maximum_expected_current_a=1.61),)), netlist()
+        )
+    }
+    utilization = checks["connector-contact-rating/host-connector/contact-vbus-contact/utilization"]
+    assert utilization.status == "FAIL"
+    assert utilization.observed == pytest.approx(0.805)
+    assert "two loaded contacts" in utilization.detail
+    assert "individual contact" in utilization.detail
+
+
+def test_contacts_sharing_a_net_keep_independent_authored_loads() -> None:
+    shared_requirement = requirement(
+        contacts=(
+            contact(id="vbus-a", pin_number="1", maximum_expected_current_a=1.0),
+            contact(
+                id="vbus-b",
+                pin_number="2",
+                expected_function="VBUS",
+                maximum_expected_current_a=1.0,
+            ),
+        )
+    )
+    shared_netlist = netlist().model_copy(
+        update={
+            "nets": {"VBUS": ("J1.1", "J1.2")},
+            "pin_functions": {"J1.1": "VBUS", "J1.2": "VBUS"},
         }
-        self.assertEqual(checks["identity"].status, "PASS")
-        self.assertEqual(checks["assignment"].status, "PASS")
-        self.assertEqual(checks["utilization"].status, "PASS")
-        self.assertAlmostEqual(checks["utilization"].observed or 0.0, 0.8)
-        self.assertEqual(checks["utilization"].unit, "fraction")
+    )
+    checks = {
+        item.id: item
+        for item in connector_contact_rating_checks(shared_requirement, shared_netlist)
+    }
+    assert (
+        checks["connector-contact-rating/host-connector/contact-vbus-a/utilization"].status
+        == "PASS"
+    )
+    assert (
+        checks["connector-contact-rating/host-connector/contact-vbus-b/utilization"].status
+        == "PASS"
+    )
 
-    def test_over_limit_contact_fails_with_reviewed_current_basis(self) -> None:
-        checks = {
-            item.id: item
-            for item in connector_contact_rating_checks(
-                requirement(contacts=(contact(maximum_expected_current_a=1.61),)), netlist()
-            )
+
+@pytest.mark.parametrize(
+    "fault",
+    (
+        "wrong-footprint",
+        "wrong-symbol",
+        "wrong-part-id",
+        "wrong-pin-inventory",
+        "wrong-function",
+        "wrong-net",
+        "unconnected",
+        "dnp",
+    ),
+)
+def test_identity_assignment_and_population_faults_block_current_comparison(fault: str) -> None:
+    checks = {
+        item.id.rsplit("/", maxsplit=1)[-1]: item
+        for item in connector_contact_rating_checks(requirement(), netlist(fault=fault))
+    }
+    assert any(item.status == "FAIL" for item in checks.values()), checks
+    assert checks["utilization"].status == "NOT_APPLICABLE"
+
+
+def test_absent_connector_fails_identity_without_current_comparison() -> None:
+    absent = netlist().model_copy(
+        update={
+            "components": {},
+            "component_symbols": {},
+            "component_pin_numbers": {},
+            "nets": {},
         }
-        utilization = checks[
-            "connector-contact-rating/host-connector/contact-vbus-contact/utilization"
-        ]
-        self.assertEqual(utilization.status, "FAIL")
-        self.assertAlmostEqual(utilization.observed or 0.0, 0.805)
-        self.assertIn("two loaded contacts", utilization.detail)
-        self.assertIn("individual contact", utilization.detail)
+    )
+    checks = {item.id: item for item in connector_contact_rating_checks(requirement(), absent)}
+    assert checks["connector-contact-rating/host-connector/identity"].status == "FAIL"
+    assert (
+        checks["connector-contact-rating/host-connector/contact-vbus-contact/utilization"].status
+        == "NOT_APPLICABLE"
+    )
 
-    def test_contacts_sharing_a_net_keep_independent_authored_loads(self) -> None:
-        shared_requirement = requirement(
-            contacts=(
-                contact(id="vbus-a", pin_number="1", maximum_expected_current_a=1.0),
-                contact(
-                    id="vbus-b",
-                    pin_number="2",
-                    expected_function="VBUS",
-                    maximum_expected_current_a=1.0,
-                ),
-            )
-        )
-        shared_netlist = netlist().model_copy(
-            update={
-                "nets": {"VBUS": ("J1.1", "J1.2")},
-                "pin_functions": {"J1.1": "VBUS", "J1.2": "VBUS"},
-            }
-        )
-        checks = {
-            item.id: item
-            for item in connector_contact_rating_checks(shared_requirement, shared_netlist)
+
+def test_requirement_rejects_invalid_contact_values_and_pin_maps() -> None:
+    raw = requirement().model_dump()
+    raw["requirements"][0]["contacts"][0]["derated_allowable_current_a"] = 3.1
+    with pytest.raises(ValidationError, match="cannot exceed"):
+        ConnectorContactRatingAnalysis.model_validate(raw)
+
+    raw = requirement().model_dump()
+    raw["requirements"][0]["contacts"][0]["pin_number"] = "3"
+    with pytest.raises(ValidationError, match="must be in the exact native pin inventory"):
+        ConnectorContactRatingAnalysis.model_validate(raw)
+
+    raw = requirement().model_dump()
+    raw["requirements"][0]["contacts"][0]["maximum_utilization_fraction"] = 1.01
+    with pytest.raises(ValidationError):
+        ConnectorContactRatingAnalysis.model_validate(raw)
+
+
+def test_native_netlist_supplies_exact_identity_function_and_pin_evidence(tmp_path: Path) -> None:
+    path = tmp_path / "netlist.xml"
+    path.write_text(native_netlist_xml(), encoding="utf-8")
+    observed = read_netlist(path)
+
+    assert observed.components["J1"].part_id == "HDR-2P-3A"
+    assert observed.component_symbols["J1"] == "Connector_Generic:Conn_01x02"
+    assert observed.component_pin_numbers["J1"] == ("1", "2")
+    assert observed.pin_functions["J1.1"] == "VBUS"
+    checks = connector_contact_rating_checks(requirement(), observed)
+    assert all(item.status == "PASS" for item in checks), checks
+
+
+def test_reordered_native_maps_keep_check_results_stable() -> None:
+    source = netlist()
+    reordered = source.model_copy(
+        update={
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "components": dict(reversed(tuple(source.components.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
         }
-        self.assertEqual(
-            checks["connector-contact-rating/host-connector/contact-vbus-a/utilization"].status,
-            "PASS",
-        )
-        self.assertEqual(
-            checks["connector-contact-rating/host-connector/contact-vbus-b/utilization"].status,
-            "PASS",
-        )
-
-    def test_identity_assignment_and_population_faults_block_current_comparison(self) -> None:
-        for fault in (
-            "wrong-footprint",
-            "wrong-symbol",
-            "wrong-part-id",
-            "wrong-pin-inventory",
-            "wrong-function",
-            "wrong-net",
-            "unconnected",
-            "dnp",
-        ):
-            with self.subTest(fault=fault):
-                checks = {
-                    item.id.rsplit("/", maxsplit=1)[-1]: item
-                    for item in connector_contact_rating_checks(requirement(), netlist(fault=fault))
-                }
-                self.assertTrue(any(item.status == "FAIL" for item in checks.values()), checks)
-                self.assertEqual(checks["utilization"].status, "NOT_APPLICABLE")
-
-    def test_absent_connector_fails_identity_without_current_comparison(self) -> None:
-        absent = netlist().model_copy(
-            update={
-                "components": {},
-                "component_symbols": {},
-                "component_pin_numbers": {},
-                "nets": {},
-            }
-        )
-        checks = {item.id: item for item in connector_contact_rating_checks(requirement(), absent)}
-        self.assertEqual(checks["connector-contact-rating/host-connector/identity"].status, "FAIL")
-        self.assertEqual(
-            checks[
-                "connector-contact-rating/host-connector/contact-vbus-contact/utilization"
-            ].status,
-            "NOT_APPLICABLE",
-        )
-
-    def test_requirement_rejects_invalid_contact_values_and_pin_maps(self) -> None:
-        raw = requirement().model_dump()
-        raw["requirements"][0]["contacts"][0]["derated_allowable_current_a"] = 3.1
-        with self.assertRaisesRegex(ValidationError, "cannot exceed"):
-            ConnectorContactRatingAnalysis.model_validate(raw)
-
-        raw = requirement().model_dump()
-        raw["requirements"][0]["contacts"][0]["pin_number"] = "3"
-        with self.assertRaisesRegex(ValidationError, "must be in the exact native pin inventory"):
-            ConnectorContactRatingAnalysis.model_validate(raw)
-
-        raw = requirement().model_dump()
-        raw["requirements"][0]["contacts"][0]["maximum_utilization_fraction"] = 1.01
-        with self.assertRaises(ValidationError):
-            ConnectorContactRatingAnalysis.model_validate(raw)
-
-    def test_native_netlist_supplies_exact_identity_function_and_pin_evidence(self) -> None:
-        from pathlib import Path
-        from tempfile import TemporaryDirectory
-
-        with TemporaryDirectory() as temporary:
-            path = Path(temporary) / "netlist.xml"
-            path.write_text(native_netlist_xml(), encoding="utf-8")
-            observed = read_netlist(path)
-
-        self.assertEqual(observed.components["J1"].part_id, "HDR-2P-3A")
-        self.assertEqual(observed.component_symbols["J1"], "Connector_Generic:Conn_01x02")
-        self.assertEqual(observed.component_pin_numbers["J1"], ("1", "2"))
-        self.assertEqual(observed.pin_functions["J1.1"], "VBUS")
-        checks = connector_contact_rating_checks(requirement(), observed)
-        self.assertTrue(all(item.status == "PASS" for item in checks), checks)
-
-    def test_reordered_native_maps_keep_check_results_stable(self) -> None:
-        source = netlist()
-        reordered = source.model_copy(
-            update={
-                "nets": dict(reversed(tuple(source.nets.items()))),
-                "components": dict(reversed(tuple(source.components.items()))),
-                "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
-            }
-        )
-        self.assertEqual(
-            connector_contact_rating_checks(requirement(), source),
-            connector_contact_rating_checks(requirement(), reordered),
-        )
-
-    def test_requirement_order_is_semantic_invariant_and_current_mutation_is_local(self) -> None:
-        observed = multi_connector_netlist()
-        authored = multi_connector_requirement()
-        reordered = multi_connector_requirement(reverse_order=True)
-        baseline_checks = {
-            item.id: (item.status, item.detail, item.observed, item.unit)
-            for item in connector_contact_rating_checks(authored, observed)
-        }
-        reordered_checks = {
-            item.id: (item.status, item.detail, item.observed, item.unit)
-            for item in connector_contact_rating_checks(reordered, observed)
-        }
-
-        self.assertNotEqual(authored.model_dump_json(), reordered.model_dump_json())
-        self.assertEqual(baseline_checks, reordered_checks)
-
-        mutated = multi_connector_requirement(peer_current_a=1.61)
-        mutated_checks = {
-            item.id: (item.status, item.detail, item.observed, item.unit)
-            for item in connector_contact_rating_checks(mutated, observed)
-        }
-        changed_rows = {
-            check_id
-            for check_id in baseline_checks
-            if baseline_checks[check_id] != mutated_checks[check_id]
-        }
-        expected_changed_row = (
-            "connector-contact-rating/peer-connector/contact-peer-vbus/utilization"
-        )
-        self.assertEqual(changed_rows, {expected_changed_row})
-        self.assertEqual(baseline_checks[expected_changed_row][0], "PASS")
-        self.assertEqual(mutated_checks[expected_changed_row][0], "FAIL")
+    )
+    assert connector_contact_rating_checks(
+        requirement(), source
+    ) == connector_contact_rating_checks(requirement(), reordered)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_requirement_order_is_semantic_invariant_and_current_mutation_is_local() -> None:
+    observed = multi_connector_netlist()
+    authored = multi_connector_requirement()
+    reordered = multi_connector_requirement(reverse_order=True)
+    baseline_checks = {
+        item.id: (item.status, item.detail, item.observed, item.unit)
+        for item in connector_contact_rating_checks(authored, observed)
+    }
+    reordered_checks = {
+        item.id: (item.status, item.detail, item.observed, item.unit)
+        for item in connector_contact_rating_checks(reordered, observed)
+    }
+
+    assert authored.model_dump_json() != reordered.model_dump_json()
+    assert baseline_checks == reordered_checks
+
+    mutated = multi_connector_requirement(peer_current_a=1.61)
+    mutated_checks = {
+        item.id: (item.status, item.detail, item.observed, item.unit)
+        for item in connector_contact_rating_checks(mutated, observed)
+    }
+    changed_rows = {
+        check_id
+        for check_id in baseline_checks
+        if baseline_checks[check_id] != mutated_checks[check_id]
+    }
+    expected_changed_row = "connector-contact-rating/peer-connector/contact-peer-vbus/utilization"
+    assert changed_rows == {expected_changed_row}
+    assert baseline_checks[expected_changed_row][0] == "PASS"
+    assert mutated_checks[expected_changed_row][0] == "FAIL"

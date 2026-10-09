@@ -118,6 +118,8 @@ from .models import (
     PcbProtectionPathMap,
     PcbReferencePlaneCoverageReport,
     PcbReferencePlaneMap,
+    PcbRfModuleAntennaCoverageReport,
+    PcbRfModuleAntennaMap,
     PcbSignalPathRuleCoverageReport,
     PcbSignalPathRuleMap,
     PcbSwitchingLoopCoverageReport,
@@ -169,6 +171,7 @@ from .pcb_return_paths import (
     expected_probe_sha256,
     native_pcb_command_matches,
 )
+from .pcb_rf_antenna import pcb_rf_module_antenna_entries
 from .pcb_switching_loops import pcb_switching_loop_entries
 from .pcb_track_width import pcb_track_width_entries
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
@@ -519,6 +522,7 @@ def candidates(
     serial_peer_reference_scan: SerialPeerReferenceScan | None = None,
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
+    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Named rules share one fingerprint and review-decision lifecycle."""
     reviewed_connector_pins = source_matched_connector_pin_evidence(
@@ -3139,6 +3143,78 @@ def candidates(
                     },
                 )
             )
+    if pcb_rf_module_antenna_coverage is not None:
+        for entry in pcb_rf_module_antenna_coverage.entries:
+            if entry.status != "INCOMPLETE":
+                continue
+            found.append(
+                Candidate(
+                    rule_id="pcb.rf_module_antenna_keepout_coverage",
+                    subject=f"{entry.reference}: {entry.disposition} antenna requirement",
+                    message=(
+                        "This RF module does not match the project-authored schematic and PCB "
+                        "identity, fitted state, feed net, or placement-relative antenna keepout. "
+                        "Review the independent module documentation and native source evidence."
+                    ),
+                    evidence={
+                        "basis": (entry.basis,),
+                        "disposition": (entry.disposition,),
+                        "expected_symbol": (entry.expected_symbol,),
+                        "observed_symbol": (
+                            () if entry.observed_symbol is None else (entry.observed_symbol,)
+                        ),
+                        "expected_footprint": (entry.expected_footprint,),
+                        "observed_schematic_footprint": (
+                            ()
+                            if entry.observed_schematic_footprint is None
+                            else (entry.observed_schematic_footprint,)
+                        ),
+                        "observed_board_footprint": (
+                            ()
+                            if entry.observed_board_footprint is None
+                            else (entry.observed_board_footprint,)
+                        ),
+                        "expected_part_id": (
+                            () if entry.expected_part_id is None else (entry.expected_part_id,)
+                        ),
+                        "observed_part_id": (
+                            () if entry.observed_part_id is None else (entry.observed_part_id,)
+                        ),
+                        "rf_feed_pad": (
+                            () if entry.rf_feed_pad is None else (entry.rf_feed_pad,)
+                        ),
+                        "expected_rf_feed_net": (
+                            ()
+                            if entry.expected_rf_feed_net is None
+                            else (entry.expected_rf_feed_net,)
+                        ),
+                        "observed_schematic_rf_feed_nets": (
+                            entry.observed_schematic_rf_feed_nets
+                        ),
+                        "observed_board_rf_feed_net": (
+                            ()
+                            if entry.observed_board_rf_feed_net is None
+                            else (entry.observed_board_rf_feed_net,)
+                        ),
+                        "expected_keepout_name": (
+                            ()
+                            if entry.expected_keepout_name is None
+                            else (entry.expected_keepout_name,)
+                        ),
+                        "expected_geometry_sha256": (
+                            ()
+                            if entry.expected_geometry_sha256 is None
+                            else (entry.expected_geometry_sha256,)
+                        ),
+                        "observed_geometry_sha256": (
+                            ()
+                            if entry.observed_geometry_sha256 is None
+                            else (entry.observed_geometry_sha256,)
+                        ),
+                        "issues": entry.issues,
+                    },
+                )
+            )
     if stm32_pin_map_coverage is not None:
         for device in stm32_pin_map_coverage.unmapped_devices:
             found.append(
@@ -3558,6 +3634,7 @@ def evaluate(
     serial_peer_roster: SerialPeerRosterContext | None = None,
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
+    pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
 ) -> DesignLintReport:
     """Apply independently authored decisions without treating findings as requirements."""
     catalog = rule_catalog()
@@ -3639,6 +3716,52 @@ def evaluate(
         )
     else:
         pcb_keepout_coverage = pcb_keepout_coverage.model_copy(update={"mode": keepout_mode})
+    rf_antenna_map = policy.pcb_rf_module_antenna_map
+    rf_antenna_override = next(
+        (
+            item
+            for item in policy.rules
+            if item.rule_id == "pcb.rf_module_antenna_keepout_coverage"
+        ),
+        None,
+    )
+    rf_antenna_mode: Literal["review", "block", "off"] = (
+        "review" if rf_antenna_override is None else rf_antenna_override.mode
+    )
+    rf_antenna_map_sha256 = (
+        hashlib.sha256(rf_antenna_map.model_dump_json().encode("utf-8")).hexdigest()
+        if rf_antenna_map is not None
+        else None
+    )
+    if rf_antenna_map is None:
+        pcb_rf_module_antenna_coverage = (
+            pcb_rf_module_antenna_coverage or PcbRfModuleAntennaCoverageReport()
+        )
+    elif rf_antenna_mode == "off":
+        pcb_rf_module_antenna_coverage = PcbRfModuleAntennaCoverageReport(
+            status="DISABLED", mode="off", map_sha256=rf_antenna_map_sha256
+        )
+    elif pcb_rf_module_antenna_coverage is None:
+        pcb_rf_module_antenna_coverage = PcbRfModuleAntennaCoverageReport(
+            status="BLOCKED",
+            mode=rf_antenna_mode,
+            map_sha256=rf_antenna_map_sha256,
+            issue="Source-bound native PCB geometry was not supplied for the RF module map",
+        )
+    elif (
+        pcb_rf_module_antenna_coverage.map_sha256 != rf_antenna_map_sha256
+        or pcb_rf_module_antenna_coverage.status in {"NOT_REQUESTED", "DISABLED"}
+    ):
+        pcb_rf_module_antenna_coverage = PcbRfModuleAntennaCoverageReport(
+            status="BLOCKED",
+            mode=rf_antenna_mode,
+            map_sha256=rf_antenna_map_sha256,
+            issue="RF module coverage does not bind the current project-authored map",
+        )
+    else:
+        pcb_rf_module_antenna_coverage = pcb_rf_module_antenna_coverage.model_copy(
+            update={"mode": rf_antenna_mode}
+        )
     if i2c_pullup_heuristic_coverage is not None:
         coverage_issue = (
             i2c_pullup_heuristic_coverage.issue
@@ -3666,6 +3789,9 @@ def evaluate(
                 i2c_pullup_heuristic_coverage=blocked_coverage,
                 pcb_signal_path_rules=pcb_signal_path_coverage,
                 pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
+                pcb_rf_module_antenna_coverage=(
+                    pcb_rf_module_antenna_coverage or PcbRfModuleAntennaCoverageReport()
+                ),
                 issues=(coverage_issue,),
                 next_actions=(
                     "Recreate I2C pull-up coverage from the current native netlist and contract.",
@@ -3890,6 +4016,9 @@ def evaluate(
             pcb_differential_pair_rules=pcb_differential_pair_coverage,
             pcb_signal_path_rules=pcb_signal_path_coverage,
             pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
+            pcb_rf_module_antenna_coverage=(
+                pcb_rf_module_antenna_coverage or PcbRfModuleAntennaCoverageReport()
+            ),
             stm32_pin_map_coverage=stm32_pin_map_coverage,
             issues=missing_evidence_issues,
             next_actions=("Repair the native evidence, then rerun design lint.",),
@@ -4166,6 +4295,7 @@ def evaluate(
         complementary_alias_resolution,
         pcb_signal_path_coverage=pcb_signal_path_coverage,
         pcb_keepout_coverage=pcb_keepout_coverage,
+        pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
         connector_coverage=connector_coverage,
         digital_peer_voltage_scan=digital_peer_voltage_scan,
         usb_peer_reference_scan=usb_peer_reference_scan,
@@ -4277,6 +4407,9 @@ def evaluate(
                 pcb_differential_pair_rules=pcb_differential_pair_coverage,
                 pcb_signal_path_rules=pcb_signal_path_coverage,
                 pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
+                pcb_rf_module_antenna_coverage=(
+                    pcb_rf_module_antenna_coverage or PcbRfModuleAntennaCoverageReport()
+                ),
                 stm32_pin_map_coverage=stm32_pin_map_coverage,
                 control_input_bias_coverage=(
                     control_input_bias_coverage or ControlInputBiasHeuristicCoverage()
@@ -4329,6 +4462,7 @@ def evaluate(
         or pcb_differential_pair_coverage.status == "BLOCKED"
         or pcb_signal_path_coverage.status == "BLOCKED"
         or pcb_keepout_coverage.status == "BLOCKED"
+        or pcb_rf_module_antenna_coverage.status == "BLOCKED"
         or stm32_pin_map_coverage.status == "BLOCKED"
         or any(item.status == "BLOCKED" for item in mapped_check_runs)
         else "FAIL"
@@ -4351,6 +4485,7 @@ def evaluate(
         or pcb_differential_pair_coverage.status == "INCOMPLETE"
         or pcb_signal_path_coverage.status == "INCOMPLETE"
         or pcb_keepout_coverage.status == "INCOMPLETE"
+        or pcb_rf_module_antenna_coverage.status == "INCOMPLETE"
         or stm32_pin_map_coverage.status == "INCOMPLETE"
         or (
             connector_peer_pin_coverage is not None
@@ -4541,6 +4676,12 @@ def evaluate(
         actions += (
             "Review each named PCB keepout against its approved geometry, copper layers, and restriction settings.",
         )
+    if pcb_rf_module_antenna_coverage.status == "BLOCKED":
+        actions += ("Repair source-bound RF module and PCB placement evidence, then rerun design lint.",)
+    if pcb_rf_module_antenna_coverage.status == "INCOMPLETE":
+        actions += (
+            "Review each mapped RF module identity, fitted disposition, RF feed net, and placement-relative antenna keepout against its independent requirement.",
+        )
     if stm32_pin_map_coverage.status == "BLOCKED":
         actions += ("Repair the CubeMX source or pin-map evidence, then rerun design lint.",)
     if stm32_pin_map_coverage.status == "INCOMPLETE":
@@ -4618,6 +4759,9 @@ def evaluate(
         pcb_differential_pair_rules=pcb_differential_pair_coverage,
         pcb_signal_path_rules=pcb_signal_path_coverage,
         pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
+        pcb_rf_module_antenna_coverage=(
+            pcb_rf_module_antenna_coverage or PcbRfModuleAntennaCoverageReport()
+        ),
         stale_ignores=stale,
         rule_overrides=policy.rules,
         issues=issues,
@@ -5101,6 +5245,7 @@ def _scan_pcb_geometry(
     PcbSwitchingLoopCoverageReport,
     PcbSignalPathRuleCoverageReport,
     PcbKeepoutCoverageReport,
+    PcbRfModuleAntennaCoverageReport,
 ]:
     """Capture one native PCB snapshot for all configured geometry review maps."""
     decoupling_map: PcbDecouplingMap | None = policy.pcb_decoupling_map
@@ -5110,6 +5255,7 @@ def _scan_pcb_geometry(
     switching_loop_map: PcbSwitchingLoopMap | None = policy.pcb_switching_loop_map
     signal_path_map: PcbSignalPathRuleMap | None = policy.pcb_signal_path_rule_map
     keepout_map: PcbKeepoutMap | None = policy.pcb_keepout_map
+    rf_antenna_map: PcbRfModuleAntennaMap | None = policy.pcb_rf_module_antenna_map
     if (
         decoupling_map is None
         and protection_path_map is None
@@ -5118,6 +5264,7 @@ def _scan_pcb_geometry(
         and switching_loop_map is None
         and signal_path_map is None
         and keepout_map is None
+        and rf_antenna_map is None
     ):
         return (
             PcbDecouplingCoverageReport(),
@@ -5127,6 +5274,7 @@ def _scan_pcb_geometry(
             PcbSwitchingLoopCoverageReport(),
             PcbSignalPathRuleCoverageReport(),
             PcbKeepoutCoverageReport(),
+            PcbRfModuleAntennaCoverageReport(),
         )
     overrides = {item.rule_id: item for item in policy.rules}
     decoupling_override = overrides.get("pcb.decoupling_proximity")
@@ -5145,6 +5293,8 @@ def _scan_pcb_geometry(
     signal_path_mode = "review" if signal_path_override is None else signal_path_override.mode
     keepout_override = overrides.get("pcb.keepout_intent_coverage")
     keepout_mode = "review" if keepout_override is None else keepout_override.mode
+    rf_antenna_override = overrides.get("pcb.rf_module_antenna_keepout_coverage")
+    rf_antenna_mode = "review" if rf_antenna_override is None else rf_antenna_override.mode
     reference_plane_override = overrides.get("pcb.reference_plane_coverage")
     reference_plane_mode = (
         "review" if reference_plane_override is None else reference_plane_override.mode
@@ -5156,6 +5306,7 @@ def _scan_pcb_geometry(
     switching_loop_disabled = switching_loop_map is None or switching_loop_mode == "off"
     signal_path_disabled = signal_path_map is None or signal_path_mode == "off"
     keepout_disabled = keepout_map is None or keepout_mode == "off"
+    rf_antenna_disabled = rf_antenna_map is None or rf_antenna_mode == "off"
     if (
         decoupling_disabled
         and protection_path_disabled
@@ -5164,6 +5315,7 @@ def _scan_pcb_geometry(
         and switching_loop_disabled
         and signal_path_disabled
         and keepout_disabled
+        and rf_antenna_disabled
     ):
         return (
             PcbDecouplingCoverageReport(status="DISABLED", mode=decoupling_mode)
@@ -5187,6 +5339,11 @@ def _scan_pcb_geometry(
             PcbKeepoutCoverageReport(status="DISABLED", mode=keepout_mode)
             if keepout_map is not None
             else PcbKeepoutCoverageReport(),
+            PcbRfModuleAntennaCoverageReport(
+                status="DISABLED", mode=rf_antenna_mode
+            )
+            if rf_antenna_map is not None
+            else PcbRfModuleAntennaCoverageReport(),
         )
     board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
     board_path = repo_path(root, board_relative)
@@ -5209,7 +5366,7 @@ def _scan_pcb_geometry(
                 f"{output.relative_to(root).as_posix()}/native.command.json"
             )
         if (
-            snapshot.schema_version not in {"10", "11"}
+            snapshot.schema_version not in {"10", "11", "12"}
             or snapshot.board_sha256 != board_hash
             or snapshot.kicad_version != config.kicad_version
             or snapshot.image != pinned_image(config.image)
@@ -5390,6 +5547,37 @@ def _scan_pcb_geometry(
                     netlist_sha256=coach.netlist_sha256,
                     entries=entries,
                 )
+        rf_antenna_report = PcbRfModuleAntennaCoverageReport()
+        if rf_antenna_map is not None:
+            rf_antenna_map_sha256 = hashlib.sha256(
+                rf_antenna_map.model_dump_json().encode("utf-8")
+            ).hexdigest()
+            if rf_antenna_mode == "off":
+                rf_antenna_report = PcbRfModuleAntennaCoverageReport(
+                    status="DISABLED", mode=rf_antenna_mode, map_sha256=rf_antenna_map_sha256
+                )
+            else:
+                if coach.observed is None:
+                    raise ValueError(
+                        "Source-bound native netlist is unavailable for mapped RF modules"
+                    )
+                entries = pcb_rf_module_antenna_entries(rf_antenna_map, coach.observed, snapshot)
+                rf_antenna_report = PcbRfModuleAntennaCoverageReport(
+                    status="COMPLETE"
+                    if all(item.status == "COMPLETE" for item in entries)
+                    else "INCOMPLETE",
+                    mode=rf_antenna_mode,
+                    map_sha256=rf_antenna_map_sha256,
+                    board_path=board_relative,
+                    board_sha256=board_hash,
+                    snapshot_path=snapshot_relative,
+                    snapshot_sha256=snapshot_hash,
+                    probe_sha256=probe_hash,
+                    kicad_version=snapshot.kicad_version,
+                    image=snapshot.image,
+                    netlist_sha256=coach.netlist_sha256,
+                    entries=entries,
+                )
         protection_path_report = PcbProtectionPathCoverageReport()
         if protection_path_map is not None:
             if protection_path_mode == "off":
@@ -5424,6 +5612,7 @@ def _scan_pcb_geometry(
             switching_loop_report,
             signal_path_report,
             keepout_report,
+            rf_antenna_report,
         )
     except (OSError, ValueError, TypeError) as exc:
         issue = f"Could not bind native PCB geometry evidence: {exc}"
@@ -5531,6 +5720,23 @@ def _scan_pcb_geometry(
             if keepout_map is not None
             else PcbKeepoutCoverageReport()
         )
+        rf_antenna_report = (
+            PcbRfModuleAntennaCoverageReport(
+                status="BLOCKED",
+                mode=rf_antenna_mode,
+                map_sha256=hashlib.sha256(
+                    rf_antenna_map.model_dump_json().encode("utf-8")
+                ).hexdigest(),
+                board_path=board_relative,
+                issue=issue,
+            )
+            if rf_antenna_map is not None and not rf_antenna_disabled
+            else PcbRfModuleAntennaCoverageReport(
+                status="DISABLED", mode=rf_antenna_mode
+            )
+            if rf_antenna_map is not None
+            else PcbRfModuleAntennaCoverageReport()
+        )
     return (
         decoupling_report,
         protection_path_report,
@@ -5539,6 +5745,7 @@ def _scan_pcb_geometry(
         switching_loop_report,
         signal_path_report,
         keepout_report,
+        rf_antenna_report,
     )
 
 
@@ -5675,6 +5882,7 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Design
             pcb_switching_loop_coverage,
             pcb_signal_path_coverage,
             pcb_keepout_coverage,
+            pcb_rf_module_antenna_coverage,
         ) = _scan_pcb_geometry(root, config, coach, policy, native_summary)
         pair_map: PcbDifferentialPairRuleMap | None = policy.pcb_differential_pair_rule_map
         pair_override = next(
@@ -5773,6 +5981,7 @@ def inspect_summary(root: Path, project_id: str, native_summary: Path) -> Design
             pcb_differential_pair_coverage=pair_rule_coverage,
             pcb_signal_path_coverage=pcb_signal_path_coverage,
             pcb_keepout_coverage=pcb_keepout_coverage,
+            pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
             stm32_pin_map_coverage=stm32_pin_map_coverage,
             spi_roster=spi_roster,
             serial_peer_roster=serial_peer_roster,
@@ -6399,6 +6608,45 @@ def text_report(report: DesignLintReport) -> str:
             lines.append(f"    Coverage issue: {issue}")
     if keepouts.issue is not None:
         lines.append(f"  Coverage issue: {keepouts.issue}")
+    rf_antennas = report.pcb_rf_module_antenna_coverage
+    lines.append(
+        f"PCB RF module antenna coverage: {rf_antennas.status} "
+        f"(mode: {rf_antennas.mode or 'not configured'})"
+    )
+    if rf_antennas.board_path is not None:
+        lines.append(
+            f"  Board: {rf_antennas.board_path} "
+            f"(SHA-256 {rf_antennas.board_sha256 or 'unavailable'})"
+        )
+    if rf_antennas.snapshot_path is not None:
+        lines.append(
+            f"  Native PCB snapshot: {rf_antennas.snapshot_path} "
+            f"(SHA-256 {rf_antennas.snapshot_sha256 or 'unavailable'})"
+        )
+    for entry in rf_antennas.entries:
+        lines.append(
+            f"  {entry.reference} ({entry.disposition}): {entry.status}; "
+            f"symbol {entry.observed_symbol or 'unknown'}; "
+            f"schematic footprint {entry.observed_schematic_footprint or 'unknown'}; "
+            f"board footprint {entry.observed_board_footprint or 'unknown'}"
+        )
+        if entry.rf_feed_pad is not None:
+            lines.append(
+                f"    RF feed: {entry.rf_feed_pad}; expected "
+                f"{entry.expected_rf_feed_net or 'none'}; schematic "
+                f"{', '.join(entry.observed_schematic_rf_feed_nets) or 'unconnected'}; "
+                f"board {entry.observed_board_rf_feed_net or 'unconnected'}"
+            )
+        if entry.expected_keepout_name is not None:
+            lines.append(
+                f"    Keepout {entry.expected_keepout_name}: expected geometry "
+                f"{entry.expected_geometry_sha256 or 'unavailable'}; observed "
+                f"{entry.observed_geometry_sha256 or 'unavailable'}"
+            )
+        for issue in entry.issues:
+            lines.append(f"    Coverage issue: {issue}")
+    if rf_antennas.issue is not None:
+        lines.append(f"  Coverage issue: {rf_antennas.issue}")
     if geometry.netlist_sha256 is not None:
         lines.append(f"  Native netlist SHA-256: {geometry.netlist_sha256}")
     if geometry.kicad_version is not None:

@@ -113,6 +113,43 @@ class FakeBoard:
         return ("F.Cu", "In1.Cu", "B.Cu")[layer]
 
 
+class FakeFootprint:
+    def __init__(
+        self,
+        *,
+        reference: str = "U1",
+        footprint: str = "RF_Module:Module_Antenna",
+        dnp: bool = False,
+        position: tuple[int, int] = (1_234_000, -5_000),
+        angle_degrees: float = 450.0,
+        layer: int = 0,
+    ) -> None:
+        self._reference = reference
+        self._footprint = footprint
+        self._dnp = dnp
+        self._position = FakePoint(*position)
+        self._angle_degrees = angle_degrees
+        self._layer = layer
+
+    def GetReference(self) -> str:
+        return self._reference
+
+    def GetFPIDAsString(self) -> str:
+        return self._footprint
+
+    def IsDNP(self) -> bool:
+        return self._dnp
+
+    def GetPosition(self) -> FakePoint:
+        return self._position
+
+    def GetOrientationDegrees(self) -> float:
+        return self._angle_degrees
+
+    def GetLayer(self) -> int:
+        return self._layer
+
+
 def probe_helpers() -> dict[str, Any]:
     resource = files("kicad_tooling.hwrepo").joinpath("native_pcb_probe.py.in")
     loader = SourceFileLoader("native_pcb_probe_test", str(resource))
@@ -192,3 +229,42 @@ def test_rule_area_observation_ignores_non_rule_zones() -> None:
     rule_area_observation = cast(Any, probe_helpers()["rule_area_observation"])
 
     assert rule_area_observation(FakeRuleArea(is_rule_area=False), FakeBoard()) is None
+
+
+def test_footprint_placement_observation_records_canonical_source_transform() -> None:
+    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+
+    result = observe(FakeFootprint(), FakeBoard())
+
+    assert result == {
+        "reference": "U1",
+        "footprint": "RF_Module:Module_Antenna",
+        "dnp": False,
+        "position_nm": [1_234_000, -5_000],
+        "orientation_microdegrees": 90_000_000,
+        "side": "F.Cu",
+    }
+
+
+def test_footprint_placement_normalizes_negative_angle_on_back_copper() -> None:
+    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+
+    result = observe(FakeFootprint(angle_degrees=-90.0, layer=2), FakeBoard())
+
+    assert result["orientation_microdegrees"] == 270_000_000
+    assert result["side"] == "B.Cu"
+
+
+def test_footprint_placement_rejects_unsupported_and_non_finite_transforms() -> None:
+    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+
+    with pytest.raises(ValueError, match="unsupported board side"):
+        observe(FakeFootprint(layer=1), FakeBoard())
+    with pytest.raises(ValueError, match="non-finite placement angle"):
+        observe(FakeFootprint(angle_degrees=float("nan")), FakeBoard())
+
+
+def test_unreferenced_footprint_is_not_addressable_placement_evidence() -> None:
+    observe = cast(Any, probe_helpers()["footprint_placement_observation"])
+
+    assert observe(FakeFootprint(reference=""), FakeBoard()) is None

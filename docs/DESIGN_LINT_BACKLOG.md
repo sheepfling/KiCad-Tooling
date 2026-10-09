@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 82 rules are implemented with synthetic regression coverage.
+The following 83 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -140,6 +140,7 @@ Their actual recognition limits are documented in
 - `pcb.switching_loop_geometry`
 - `pcb.differential_pair_rule_coverage`
 - `pcb.signal_path_rule_coverage`
+- `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `connector.return_distribution`
 - `net.return_labels_without_pin_roles`
@@ -167,17 +168,26 @@ and optional ecosystem adapters are `P3`.
   native fixture lane passed in tagged `v0.5.0rc15` (GitHub run `37851810081`)
   on digest-pinned KiCad 10.0.0 and 10.0.5. All 11 topology cases passed on
   each version; repeated normalized netlist contracts matched for every case.
-  Three supported public common-reference examples were quiet, and temporary
-  split-reference mutations prompted review in all three. These are exploratory
-  applicability screens, not a measured precision rate. The next work is to
-  apply the reviewer-value protocol under LINT-086 to approved, nonconfidential
-  examples. Record supported/common/separate/mapped path counts, independently
-  supported dispositions, baseline duplicates, seeded mutation outcomes, and
-  review time. Count a quiet result as a supported non-finding only for
-  common-reference paths in `common_reference_path_count`;
-  `NO_SUPPORTED_PEER_PATHS` contributes no non-finding, and `INCOMPLETE` remains
-  a partial screen. Keep unresolved labels visible and keep project defaults
-  and the review-only prompt unchanged while evidence is gathered.
+  The 2026-10-09 public remeasurement used the digest-pinned KiCad 10.0.5 image
+  `ghcr.io/kicad/kicad@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`.
+  CP2102 (`eecf7bb`), FUSB302/RP2040 (`7d95292`), and 16nx (`ca7de22`) each
+  had one supported common-reference path and zero baseline prompts. Each
+  source was exported twice; normalized typed-netlist hashes matched both the
+  repeated export and the earlier 10.0.6 screen. Moving every matched
+  connector reference pin to a synthetic net in the typed contract produced
+  exactly one stable review per sample. This records applicability,
+  cross-version reproducibility, and seeded-fault sensitivity; it does not
+  establish field precision or reviewer value. Independent author dispositions
+  and review times remain absent. The metadata-only receipt is retained under
+  the ignored `build/ci/lint-086-public-review-measurement-20261009/` directory;
+  the public source checkouts and exported netlists remain outside this repo.
+  The next work is a source-bound review with independent disposition and
+  observed time on approved, nonconfidential examples. Count a quiet result
+  as a supported non-finding only for common-reference paths in
+  `common_reference_path_count`; `NO_SUPPORTED_PEER_PATHS` contributes no
+  non-finding, and `INCOMPLETE` remains a partial screen. Keep unresolved labels
+  visible and keep project defaults and the review-only prompt unchanged while
+  evidence is gathered.
 
 - **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
   passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
@@ -455,10 +465,10 @@ and optional ecosystem adapters are `P3`.
    consumed only by LINT-046. Synthetic typed cases cover exact identity,
    valid and wrong-return topology, DNP, stale maps, role isolation, and
    ordering; CLI/MCP parity and pinned native fault/control fixtures are in
-   place. The next tagged GitHub acceptance result must confirm exact KiCad
-   10.0.0/10.0.5 behavior before native acceptance is recorded as verified.
-   This adds custom-symbol applicability to an existing REVIEW heuristic,
-   not a new electrical conclusion. LINT-092 extends LINT-089's native
+   place. Tagged acceptance `v0.5.0rc17` (GitHub run `37863872527`) confirmed
+   exact KiCad 10.0.0/10.0.5 behavior, with repeatable exports for the mapped
+   control and wrong-return fault. This adds custom-symbol applicability to an
+   existing REVIEW heuristic, not a new electrical conclusion. LINT-092 extends LINT-089's native
    `power_in` evidence to non-connector components whose pin functions are
    generic or absent. The synthetic lane checks open and explicit no-connect
    faults, connected and DNP controls, connector exclusion, and CLI/MCP parity.
@@ -1466,7 +1476,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 82 active rules; CI requires every new
+- **Status:** Baseline complete for all 83 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1475,7 +1485,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 82 covered, 0 not applicable, 0 unreviewed.
+  audit: 83 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -3198,6 +3208,17 @@ is not a reason by itself to expand its scope or change its default policy.
   quiet. Repeated normalized netlists matched for every registered case. This
   closes the native schematic-export check for these synthetic fixtures; it
   still does not test PCB copper or physical continuity.
+  On 2026-10-09 the three public common-reference screens were also re-exported
+  twice in digest-pinned KiCad 10.0.5. All normalized typed contracts matched
+  their earlier 10.0.6 results, and each synthetic split-reference mutation
+  produced one stable review. The container ran as `linux/amd64` on a
+  `linux/aarch64` Docker host. This adds repeatable public-source applicability
+  evidence; author dispositions and reviewer time are still unmeasured.
+  The existing `NativeUsbDataPathFixtureTests` also passed locally on the same
+  host with the public template pinned at
+  `ed89536f0dbbcb013145af2994fef41b2250143e`: 1 test, 2 exact-version
+  subtests. The focused USB analyzer, data-path, determinism, and CLI/MCP parity
+  run passed 36 tests and 10 subtests; the backlog Markdown check passed.
 - **Applicability screen:**
 
   The MIT-licensed public [CP2102 project](https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102)
@@ -3223,6 +3244,49 @@ is not a reason by itself to expand its scope or change its default policy.
   named public projects remain outside this repository. These two quiet
   baselines and two synthetic mutations are applicability checks, not a
   measured precision rate or evidence of product defects.
+
+  **Per-path remeasurement (2026-10-08):** Replayed the retained KiCad 10.0.6
+  exports against tooling commit `82cb9b4`. The CP2102 path is J1–U1, the
+  FUSB302/RP2040 path is J1–U302, and the 16nx path is J3–U5. All three reports
+  were `EVALUATED`, each with one supported connector group, one supported PHY
+  group, one `COMMON_REFERENCE` path, and zero separate-reference paths or
+  prompts. Each in-memory mutation moved all matched connector reference pins
+  to a new synthetic net and produced one separate-reference review for that
+  path; source schematics and exports were unchanged. The repeated FUSB302 and
+  16nx exports had equal normalized netlist contracts. A second CP2102 export
+  was generated with app-bundled KiCad 10.0.6 on 2026-10-09. Its raw XML differs
+  from the retained export because timestamped metadata changed; the normalized
+  netlist and USB coverage hashes match, and both scans show one common-reference
+  path with no prompt. Reapplying the in-memory connector-return split mutation
+  to the repeated typed netlist produced one review and the same mutated-netlist
+  hash as the original trial. The focused repeat receipt is
+  `build/ci/lint-086-public-review-measurement-20261009/cp2102-repeat.json`
+  (SHA-256
+  `0b9fb78d2241d2c274ef50f73e19dd27409343a96a857ea340f368ef0a708470`).
+  Per-path pins, series parts, shunts, source and license hashes, export hashes,
+  normalized hashes, and mutation results are in the ignored
+  receipt `build/ci/lint-086-public-review-measurement-20261008/receipt.json`
+  (SHA-256
+  `a4bb641402ffb39dfa6463467117a5782d648ab490ce120964009666282b5663`). These
+  earlier 10.0.6 exports establish applicability and fixture sensitivity; at
+  that time no digest-pinned execution image was recorded, and no independent
+  author disposition or review-time measurement was available.
+
+  **Pinned native remeasurement (2026-10-09):** Re-exported the three pinned
+  public sources twice with
+  `ghcr.io/kicad/kicad@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`
+  (KiCad 10.0.5, `linux/amd64`). The source checkouts matched their pinned
+  commits and had no tracked changes; schematic and license hashes are retained
+  in the metadata-only receipt. Every repeated normalized typed-netlist hash
+  matched its prior 10.0.6 result. Each baseline had one supported
+  common-reference path and zero findings; each in-memory connector-reference
+  split produced one repeat-stable review. The receipt is
+  `build/ci/lint-086-public-review-measurement-20261009/native-10.0.5.json`
+  (SHA-256
+  `97f2001af8d2dc3574c79269d1060aca84b4c7beabe4b8b09ae95cff76a775b2`). The
+  container ran on a `linux/aarch64` Docker host. This confirms reproducibility,
+  applicability, and seeded-fault sensitivity; independent author dispositions
+  and reviewer time remain unmeasured.
 
   **Coverage-boundary screen (2026-10-08):** Re-evaluated two retained public
   [Cynthion hardware exports][cynthion-hardware] under the current USB
@@ -3515,8 +3579,9 @@ is not a reason by itself to expand its scope or change its default policy.
   capacitor by reference, symbol, footprint, pin inventory, and exact VBUS/return
   net assignments, then compares the nominal total to project-authored
   inclusive limits. `pending` remains `NOT_CONFIGURED`; `not_applicable`
-  requires a reason. The current native fault/control fixtures are tooling-owned
-  and synthetic; their digest-pinned KiCad 10.0.0/10.0.5 GitHub run is pending.
+  requires a reason. Tooling-owned synthetic native fault/control fixtures and
+  full package acceptance passed in tagged `v0.5.0rc17` (GitHub run
+  `37863872527`).
 - **Inspiration:** The kicad-happy USB checks include UC-004 for undersized
   VBUS capacitance ([candidate releases][happy-uc-releases]). The local
   baseline had USB-C CC, VBUS path, and protection checks but no port-side VBUS
@@ -3548,17 +3613,20 @@ is not a reason by itself to expand its scope or change its default policy.
   netlists before running the same check; source hashes are pinned in
   `NativeUsbCPortFixtureTests`. The synthetic sources and evidence boundary are
   documented in the [fixture README][usb-cap-fixture-readme].
-- **Remaining:** The exact-version native result and full package acceptance
-  are recorded by GitHub Actions. Project adoption still requires the owner to
-  cite and approve the actual limit and port applicability. No private project
-  source or requirement was used.
+- **Acceptance:** In GitHub run `37863872527`, digest-pinned KiCad 10.0.0 and
+  10.0.5 each exported the fault and control twice with matching normalized
+  netlist contracts. The 4700 nF control passed the authored 4500–5000 nF
+  window; the 2200 nF fault produced the expected check failure. Project
+  adoption still requires the owner to cite and approve the actual limit and
+  port applicability. No private project source or requirement was used.
 
 #### LINT-091 — Exact custom-capacitor role for decoupling review
 
 - **Status:** Implemented as an applicability extension to LINT-069 and
   `power.ic_rail_without_fitted_capacitor`. It does not add a new lint rule or
   declare that every IC rail requires a capacitor. Digest-pinned KiCad 10.0.0
-  and 10.0.5 native acceptance is pending in GitHub Actions.
+  and 10.0.5 native acceptance passed in tagged `v0.5.0rc17` (GitHub run
+  `37863872527`).
 - **Cohort input:** The kicad-happy source-backed trial under LINT-031 reported
   decoupling-symbol coverage and missing-decoupling observations. That trial
   identified symbol presence as a candidate review signal, while also
@@ -3591,8 +3659,11 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Incremental value:** This improves applicability for explicitly reviewed
   custom symbols. It adds no independent electrical defect detection beyond
   LINT-046 and does not measure false-positive rate or reviewer effort.
-- **Remaining:** Await hosted exact-version acceptance and the package gate.
-  No proprietary board source or project expectation is used or stored.
+- **Acceptance:** In GitHub run `37863872527`, the custom-symbol fault and
+  control exported twice on digest-pinned KiCad 10.0.0 and 10.0.5 with matching
+  normalized netlist and ERC evidence. The mapped valid control cleared the
+  LINT-046 prompt; the wrong-return fault retained `REVIEW`. No proprietary
+  board source or project expectation is used or stored.
 
 #### LINT-092 — Generic non-connector power-input pin is unassigned
 
@@ -3793,7 +3864,7 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Status:** Implemented as the opt-in `pcb.keepout_intent_coverage` rule.
   The native probe records rule-area names, canonical outlines and holes,
   copper-layer membership, and track/via/pad/zone-fill/footprint restrictions
-  in snapshot schema 11. Synthetic extraction was run with the exact
+  in snapshot schemas 11 and 12. Synthetic extraction was run with the exact
   digest-pinned KiCad 10.0.0 and 10.0.5 images. Synthetic pytest cases cover
   exact matches, changed geometry/layers/restrictions, missing and duplicate
   names, unsupported snapshot schema, digest order stability, and review,
@@ -3805,6 +3876,14 @@ is not a reason by itself to expand its scope or change its default policy.
   synthetic checkout without the public template. Tagged GitHub acceptance
   passed in `v0.5.0rc13` (run `37845619358`) and was revalidated in
   `v0.5.0rc15` (run `37851810081`).
+  Schema 12 now retains footprint identity, fitted state, board origin,
+  canonical microdegree orientation, and board side for the next RF keepout
+  gate. Its typed and serializer tests pass. On 2026-10-09 the new
+  `tests/test_pcb_keepouts_native.py` schema-12 extraction test passed on both
+  digest-pinned KiCad 10.0.0 and 10.0.5 images (2 cases). It verifies exact
+  front/back footprint identity, DNP state, board coordinates, canonical
+  orientation, exact transformed pad centers, and pad-to-footprint binding
+  alongside the synthetic rule area.
 - **Problem:** A project can retain a named keepout while its outline, copper
   layers, or restrictions drift. Generic ERC/DRC does not know that the
   project intended a particular rule-area definition to remain unchanged.
@@ -3831,10 +3910,17 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-097 — Source-mapped RF module antenna keepout coverage
 
-- **Status:** Proposed from the LINT-031 antenna-coverage source audit; not
-  implemented, and no candidate runtime trial is claimed. LINT-095/096 hosted
-  acceptance is complete in `v0.5.0rc15`; keep this behind the review-value
-  work in the suggested delivery order.
+- **Status:** Implemented as the active opt-in
+  pcb.rf_module_antenna_keepout_coverage rule. The project-owned typed map,
+  source-bound schematic/board identity checks, explicit onboard/external/DNP
+  dispositions, deterministic footprint-local polygon transform, policy modes,
+  report and text output are in place; the configured disabled report has
+  CLI/MCP parity. Synthetic fault,
+  control, metamorphic, and review/block/off/ignore cases pass. The
+  tooling-owned native fixture verifies front-side 90-degree and 30-degree,
+  plus back-side 270-degree footprint transforms against actual named rule
+  areas. Both exact digest-pinned KiCad 10.0.0 and 10.0.5 acceptance runs
+  passed. No cohort runtime installation or proprietary board trial is claimed.
 - **Cohort input:** The pinned `kicad-happy` `KO-001` source checks component
   and via centers against the bounding box of an existing keepout. That can
   prompt review of nearby objects, but cannot detect a missing keepout, check
@@ -3844,12 +3930,12 @@ is not a reason by itself to expand its scope or change its default policy.
   signature, but does not establish which RF module or feed the area protects.
   A named area can still become detached from the antenna region when the
   module moves or changes.
-- **Candidate contract:** A project-authored map names the exact module
+- **Implemented contract:** A project-authored map names the exact module
   reference and footprint identity, RF feed pad and native net, keepout name,
   vendor-document basis, local-coordinate polygon and holes, copper layers,
   and all rule-area restriction flags. It must also explicitly disposition a
   DNP module or an external-antenna design; neither is inferred from names.
-- **Predicate:** The native PCB evidence must bind the fitted footprint and RF
+- **Predicate:** The native PCB evidence binds the fitted footprint and RF
   pad/net to the schematic source, capture footprint position, orientation and
   board side, and return exactly one named rule area. Transform the reviewed
   local polygon through the observed footprint placement and compare its exact
@@ -3857,20 +3943,23 @@ is not a reason by itself to expand its scope or change its default policy.
   unsupported, identity-changed or mismatched evidence remains incomplete.
   Default disposition is `REVIEW`; project policy may select `block`, `off`,
   or an exact fingerprint ignore.
-- **Fault/control cases:** Missing, undersized, offset, wrong-side and duplicate
-  areas; changed footprint identity or RF pad/net; module moved without its
-  area; module and area moved together; explicit DNP disposition; and explicit
-  external-antenna disposition. Include input-order stability and stale native
-  source/snapshot checks. Exercise CLI/MCP parity through the shared typed
-  service and repeat native exports on the exact supported KiCad versions.
+- **Fault/control cases:** Synthetic cases cover missing, offset, duplicate,
+  geometry, layer, and restriction mismatches; changed symbol, footprint,
+  PART_ID, feed pin/net, and DNP state; and unsupported snapshot schema. A
+  module moved without its area fails, while moving the module and area
+  together passes. Explicit external-antenna and DNP controls pass. Review,
+  block, off, and exact-ignore behavior is tested, as is CLI/MCP parity for a
+  configured disabled report. The native synthetic board has mapped pads on
+  front-side 90-degree and 30-degree, and back-side 270-degree footprints;
+  each transformed local keepout matches a native rule-area outline on KiCad
+  10.0.0 and 10.0.5.
 - **Evidence boundary:** The check compares project-reviewed placement intent
   with native PCB geometry. It cannot validate that the vendor drawing was
   interpreted correctly, establish antenna performance, or prove copper
   exclusion on a fabricated board. Native DRC remains a separate check.
-- **Stop condition:** Defer implementation if the native probe cannot provide
-  stable footprint transforms and bind the mapped RF pad and area to the same
-  source-bound board, or if an exact vendor basis and valid external-antenna
-  disposition cannot be represented without name-based guessing.
+- **Acceptance limits:** Enabled CLI/MCP fault-case parity and a candidate
+  runtime trial remain future evidence. The tool accepts only requirements
+  authored in the project repository and uses synthetic fixtures here.
 - **Privacy:** Develop with tooling-owned synthetic boards and maps only. Do
   not retain customer or proprietary module layouts or contracts.
 
@@ -6449,7 +6538,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 82 active rules. Each entry has a deterministic predicate, evidence
+contains 83 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to
@@ -8851,20 +8940,15 @@ or bind the area to an RF pad and module identity. The implementation reports
 those findings with error severity, so its disposition is not a suitable local
 default.
 
-The local candidate is tracked as proposed LINT-097: an opt-in, project-authored
-map of an exact module footprint, RF pad and net, vendor-basis text,
-module-local keepout polygon, required copper layers, and required rule-area
-restrictions. The native PCB probe must capture footprint transforms so the
-module-local polygon can be compared with the observed board-space rule area;
-native DRC remains responsible for copper-rule violations. Default
-disposition would be `REVIEW`, with project policy able to select `block` or
-`off` and an exact fingerprint ignore. Synthetic controls must include missing
-and undersized areas, incomplete layer coverage, wrong restrictions, a moved
-or changed module, a DNP module, and an explicitly mapped external antenna.
-LINT-096 implements a narrower project-authored native rule-area signature
-regression; it does not establish vendor antenna coverage or validate
-RF-module placement. No candidate code or dependency was copied, and no
-kicad-happy runtime trial is claimed here.
+LINT-097 is now implemented as an opt-in, project-authored map of exact module
+identity, RF feed pad/net, antenna disposition, and module-local keepout
+polygons. The shared native PCB probe supplies footprint transforms; the
+analyzer compares transformed geometry and restrictions with the source-bound
+rule area. Default disposition is `REVIEW`, with project policy able to select
+`block` or `off` and an exact fingerprint ignore. LINT-096 continues to cover
+global named rule-area signature regression. No cohort code, dependency,
+project source, or proprietary fixture was copied; no kicad-happy runtime trial
+is claimed here.
 
 These candidates were transcribed from public domain-detector descriptions
 reviewed on 2026-10-01. They need exact cohort revision pins and isolated
