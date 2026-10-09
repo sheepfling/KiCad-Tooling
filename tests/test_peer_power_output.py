@@ -168,6 +168,10 @@ def lint_report(
     return evaluate(coach.project_id, coach, policy or DesignLintPolicy())
 
 
+def component_peer_coverage(report: DesignLintReport, rule_id: str):
+    return next(item for item in report.component_peer_pin_coverage if item.rule_id == rule_id)
+
+
 def test_reports_an_open_native_power_output_pin_when_an_exact_peer_is_connected() -> None:
     report = lint_report(peer_power_output_netlist())
     findings = [item for item in report.findings if item.rule_id == RULE_ID]
@@ -184,6 +188,17 @@ def test_reports_an_open_native_power_output_pin_when_an_exact_peer_is_connected
     assert finding.evidence["U2.2"] == ()
     assert "do not require their outputs to share a net" in finding.message
     assert "component.unconnected_power_input" not in {item.rule_id for item in report.findings}
+    coverage = component_peer_coverage(report, RULE_ID)
+    assert coverage.status == "EVALUATED"
+    assert coverage.netlist_sha256 == report.netlist_sha256
+    assert coverage.exact_symbol_peer_group_count == 1
+    assert coverage.complete_pin_inventory_group_count == 1
+    assert coverage.comparable_pin_group_count == 2
+    assert coverage.matching_electrical_type_pin_group_count == 1
+    assert coverage.compatible_function_pin_group_count == 1
+    assert coverage.unambiguous_assignment_pin_group_count == 1
+    assert coverage.candidate_group_count == coverage.finding_count == 1
+    assert coverage.suppressed_candidate_count == 0
 
 
 def test_reports_an_open_native_signal_output_pin_when_an_exact_peer_is_connected() -> None:
@@ -351,6 +366,92 @@ def test_bidirectional_prompt_skips_open_or_incomplete_peer_evidence(
     observed: NetlistContract,
 ) -> None:
     assert BIDIRECTIONAL_RULE_ID not in {item.rule_id for item in lint_report(observed).findings}
+
+
+@pytest.mark.parametrize(
+    ("observed", "rule_id", "expected_status"),
+    (
+        pytest.param(
+            peer_component_pin_netlist(symbols={"U1": "Synthetic:A", "U2": "Synthetic:B"}),
+            RULE_ID,
+            "NO_EXACT_SYMBOL_PEERS",
+            id="different-symbols",
+        ),
+        pytest.param(
+            peer_component_pin_netlist(missing_inventory=("U2",)),
+            RULE_ID,
+            "INCOMPLETE_PIN_INVENTORY",
+            id="missing-inventory",
+        ),
+        pytest.param(
+            peer_component_pin_netlist(pin_electrical_types=("input", "output")),
+            RULE_ID,
+            "NO_MATCHING_PIN_TYPES",
+            id="nonmatching-native-types",
+        ),
+        pytest.param(
+            peer_component_pin_netlist(
+                pin_electrical_types=("input", "input"),
+                pin_functions=(None, "IN"),
+            ),
+            INPUT_RULE_ID,
+            "NO_COMPATIBLE_PIN_FUNCTIONS",
+            id="missing-required-functions",
+        ),
+        pytest.param(
+            peer_component_pin_netlist(ambiguous_pins=("U1",)),
+            RULE_ID,
+            "NO_UNAMBIGUOUS_ASSIGNMENTS",
+            id="ambiguous-assignment",
+        ),
+        pytest.param(
+            peer_component_pin_netlist(
+                references=("U1", "U2", "U3", "U4"),
+                pin_nets=("VOUT", None, "VOUT", None),
+                symbols={
+                    "U1": "Synthetic:Complete",
+                    "U2": "Synthetic:Complete",
+                    "U3": "Synthetic:Incomplete",
+                    "U4": "Synthetic:Incomplete",
+                },
+                missing_inventory=("U4",),
+            ),
+            RULE_ID,
+            "PARTIALLY_EVALUATED",
+            id="mixed-complete-and-incomplete-groups",
+        ),
+    ),
+)
+def test_component_peer_coverage_explains_applicability_and_skips(
+    observed: NetlistContract, rule_id: str, expected_status: str
+) -> None:
+    report = lint_report(observed)
+    coverage = component_peer_coverage(report, rule_id)
+
+    assert coverage.status == expected_status
+    assert coverage.netlist_sha256 == report.netlist_sha256
+    assert coverage.finding_count == sum(item.rule_id == rule_id for item in report.findings)
+    if expected_status == "PARTIALLY_EVALUATED":
+        assert coverage.exact_symbol_peer_group_count == 2
+        assert coverage.complete_pin_inventory_group_count == 1
+        assert coverage.incomplete_pin_inventory_group_count == 1
+        assert coverage.incomplete_pin_inventory_references == ("U3", "U4")
+        assert coverage.candidate_group_count == coverage.finding_count == 1
+
+
+def test_component_peer_coverage_records_control_input_suppression() -> None:
+    report = lint_report(
+        peer_component_pin_netlist(
+            pin_electrical_types=("input", "input"),
+            pin_function="RESET_B",
+        )
+    )
+    coverage = component_peer_coverage(report, INPUT_RULE_ID)
+
+    assert coverage.status == "EVALUATED"
+    assert coverage.candidate_group_count == 1
+    assert coverage.finding_count == 0
+    assert coverage.suppressed_candidate_count == 1
 
 
 def test_active_low_input_is_eligible_for_peer_review() -> None:
@@ -882,6 +983,12 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
             assert result["unassigned_pins"] == expected_pins
             assert result["repeatable"] == "true"
             assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+            assert result["peer_coverage_status"] == "EVALUATED"
+            assert result["peer_coverage_netlist_sha256"] == result["netlist_sha256"]
+            expected_count = int(case == "fault")
+            assert result["peer_coverage_candidate_count"] == expected_count
+            assert result["peer_coverage_finding_count"] == expected_count
+            assert result["peer_coverage_suppressed_count"] == 0
 
 
 @pytest.mark.skipif(

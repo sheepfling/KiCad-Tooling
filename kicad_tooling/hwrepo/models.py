@@ -5617,6 +5617,94 @@ class DigitalPeerVoltageRuleCoverage(StrictModel):
         return self
 
 
+class ComponentPeerPinRuleCoverage(StrictModel):
+    """Source-bound applicability counts for one typed component-peer pin rule."""
+
+    rule_id: Literal[
+        "component.peer_power_output_unconnected",
+        "component.peer_signal_output_unconnected",
+        "component.peer_signal_input_unconnected",
+        "component.peer_bidirectional_pin_unconnected",
+    ]
+    status: Literal[
+        "NO_EXACT_SYMBOL_PEERS",
+        "INCOMPLETE_PIN_INVENTORY",
+        "NO_MATCHING_PIN_TYPES",
+        "NO_COMPATIBLE_PIN_FUNCTIONS",
+        "NO_UNAMBIGUOUS_ASSIGNMENTS",
+        "PARTIALLY_EVALUATED",
+        "EVALUATED",
+    ]
+    mode: Literal["review", "block", "off"]
+    netlist_sha256: Digest
+    exact_symbol_peer_group_count: NonNegativeCount
+    incomplete_pin_inventory_group_count: NonNegativeCount
+    incomplete_pin_inventory_references: tuple[Reference, ...] = ()
+    complete_pin_inventory_group_count: NonNegativeCount
+    comparable_pin_group_count: NonNegativeCount
+    matching_electrical_type_pin_group_count: NonNegativeCount
+    compatible_function_pin_group_count: NonNegativeCount
+    ambiguous_assignment_pin_group_count: NonNegativeCount
+    unambiguous_assignment_pin_group_count: NonNegativeCount
+    candidate_group_count: NonNegativeCount
+    finding_count: NonNegativeCount
+    suppressed_candidate_count: NonNegativeCount
+
+    @model_validator(mode="after")
+    def coverage_counts_match_scope(self) -> ComponentPeerPinRuleCoverage:
+        if len(set(self.incomplete_pin_inventory_references)) != len(
+            self.incomplete_pin_inventory_references
+        ):
+            raise ValueError("Incomplete component peer inventory references must be unique")
+        if self.incomplete_pin_inventory_group_count > self.exact_symbol_peer_group_count:
+            raise ValueError("Incomplete peer inventories cannot exceed exact-symbol groups")
+        if self.complete_pin_inventory_group_count > self.exact_symbol_peer_group_count:
+            raise ValueError("Complete peer inventories cannot exceed exact-symbol groups")
+        if self.incomplete_pin_inventory_group_count + self.complete_pin_inventory_group_count != (
+            self.exact_symbol_peer_group_count
+        ):
+            raise ValueError("Peer component groups must have complete or incomplete inventories")
+        if (self.incomplete_pin_inventory_group_count == 0) != (
+            len(self.incomplete_pin_inventory_references) == 0
+        ):
+            raise ValueError("Incomplete peer inventory counts must match their references")
+        if self.matching_electrical_type_pin_group_count > self.comparable_pin_group_count:
+            raise ValueError("Matching peer pin types cannot exceed comparable pin groups")
+        if self.compatible_function_pin_group_count > (
+            self.matching_electrical_type_pin_group_count
+        ):
+            raise ValueError("Compatible peer pin functions require matching native pin types")
+        if (
+            self.ambiguous_assignment_pin_group_count
+            + (self.unambiguous_assignment_pin_group_count)
+            != self.compatible_function_pin_group_count
+        ):
+            raise ValueError("Compatible peer pin groups must have unambiguous or ambiguous nets")
+        if self.candidate_group_count > self.unambiguous_assignment_pin_group_count:
+            raise ValueError("Peer-pin candidates require unambiguous assignments")
+        if self.finding_count + self.suppressed_candidate_count != self.candidate_group_count:
+            raise ValueError("Peer-pin findings and suppressed candidates must balance")
+
+        expected_status = (
+            "NO_EXACT_SYMBOL_PEERS"
+            if self.exact_symbol_peer_group_count == 0
+            else "INCOMPLETE_PIN_INVENTORY"
+            if self.complete_pin_inventory_group_count == 0
+            else "NO_MATCHING_PIN_TYPES"
+            if self.matching_electrical_type_pin_group_count == 0
+            else "NO_COMPATIBLE_PIN_FUNCTIONS"
+            if self.compatible_function_pin_group_count == 0
+            else "NO_UNAMBIGUOUS_ASSIGNMENTS"
+            if self.unambiguous_assignment_pin_group_count == 0
+            else "PARTIALLY_EVALUATED"
+            if self.incomplete_pin_inventory_group_count > 0
+            else "EVALUATED"
+        )
+        if self.status != expected_status:
+            raise ValueError("Component peer-pin coverage status does not match its counts")
+        return self
+
+
 class UsbPeerEndpointGroupCoverage(StrictModel):
     """Identity and bounded disposition for one recognized USB endpoint group."""
 
@@ -6250,6 +6338,7 @@ class DesignLintReport(StrictModel):
     findings: tuple[DesignLintFinding, ...] = ()
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...] = ()
     digital_peer_voltage_coverage: tuple[DigitalPeerVoltageRuleCoverage, ...] = ()
+    component_peer_pin_coverage: tuple[ComponentPeerPinRuleCoverage, ...] = ()
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None = None
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None = None
     connector_peer_pin_coverage: ConnectorPeerPinHeuristicCoverage | None = None
@@ -6352,6 +6441,25 @@ class DesignLintReport(StrictModel):
             expected_groups = sum(finding.rule_id == item.rule_id for finding in self.findings)
             if item.candidate_group_count != expected_groups:
                 raise ValueError("Digital-peer voltage candidate counts must match report findings")
+        component_peer_pin_rule_ids = [item.rule_id for item in self.component_peer_pin_coverage]
+        if len(component_peer_pin_rule_ids) != len(set(component_peer_pin_rule_ids)):
+            raise ValueError("Component peer-pin coverage entries must use unique rule IDs")
+        expected_component_peer_pin_rule_ids = {
+            "component.peer_power_output_unconnected",
+            "component.peer_signal_output_unconnected",
+            "component.peer_signal_input_unconnected",
+            "component.peer_bidirectional_pin_unconnected",
+        }
+        if component_peer_pin_rule_ids and set(component_peer_pin_rule_ids) != (
+            expected_component_peer_pin_rule_ids
+        ):
+            raise ValueError("Component peer-pin coverage must include every supported rule")
+        for item in self.component_peer_pin_coverage:
+            if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:
+                raise ValueError("Component peer-pin coverage must use this report's netlist")
+            expected_findings = sum(finding.rule_id == item.rule_id for finding in self.findings)
+            if item.finding_count != expected_findings:
+                raise ValueError("Component peer-pin findings must match report findings")
         if self.usb_peer_reference_coverage is not None:
             item = self.usb_peer_reference_coverage
             if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:

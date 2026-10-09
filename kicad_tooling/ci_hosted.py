@@ -5555,7 +5555,17 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
                 else "signal.open_collector_input_without_visible_bias"
             )
         )
-        expected_status = "REVIEW" if is_fault else "PASS"
+        independent_peer_input = tuple(
+            item
+            for item in report.findings
+            if item.rule_id == "component.peer_signal_input_unconnected"
+        )
+        peer_input_coverage = next(
+            item
+            for item in report.component_peer_pin_coverage
+            if item.rule_id == "component.peer_signal_input_unconnected"
+        )
+        expected_bias_status = "REVIEW" if is_fault else "PASS"
         expected_evidence = {
             "net": ("ALERT_N",),
             "expected_bias": (bias_description,),
@@ -5563,12 +5573,26 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
             "input_pins": ("U1.2",),
             "visible_resistors_on_signal_net": (),
         }
+        expected_rule_ids = {"component.peer_signal_input_unconnected"}
+        if is_fault:
+            expected_rule_ids.add(
+                "signal.open_emitter_input_without_visible_bias"
+                if is_emitter
+                else "signal.open_collector_input_without_visible_bias"
+            )
         if (
-            report.status != expected_status
-            or len(report.findings) != len(matching)
+            report.status != "REVIEW"
+            or {item.rule_id for item in report.findings} != expected_rule_ids
             or len(matching) != (1 if is_fault else 0)
             or (is_fault and matching[0].mode != "review")
             or (is_fault and dict(matching[0].evidence) != expected_evidence)
+            or len(independent_peer_input) != 1
+            or independent_peer_input[0].evidence.get("unassigned_pins") != ("U2.2",)
+            or peer_input_coverage.status != "EVALUATED"
+            or peer_input_coverage.netlist_sha256 != report.netlist_sha256
+            or peer_input_coverage.candidate_group_count != 1
+            or peer_input_coverage.finding_count != 1
+            or peer_input_coverage.suppressed_candidate_count != 0
         ):
             raise ValueError(f"Native open-output {case} no longer matches its lint control/fault")
         repeated = evaluate(
@@ -5595,12 +5619,19 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
             kicad_version=config.kicad_version,
             image=pinned,
             source_sha256=source_hashes[case],
+            netlist_sha256=digest(output / f"{case}.first.netlist.xml"),
             normalized_netlist_sha256=normalized_netlist_hashes["first"],
             repeat_normalized_netlist_sha256=normalized_netlist_hashes["repeat"],
             normalized_erc_sha256=normalized_erc_hashes["first"],
             repeat_normalized_erc_sha256=normalized_erc_hashes["repeat"],
             lint_status=report.status,
-            findings=";".join(item.rule_id for item in matching) or "none",
+            findings=";".join(item.rule_id for item in report.findings) or "none",
+            bias_rule_status=expected_bias_status,
+            bias_findings=";".join(item.rule_id for item in matching) or "none",
+            peer_input_coverage_status=peer_input_coverage.status,
+            peer_input_coverage_netlist_sha256=peer_input_coverage.netlist_sha256,
+            peer_input_coverage_candidate_count=peer_input_coverage.candidate_group_count,
+            peer_input_coverage_finding_count=peer_input_coverage.finding_count,
             expected_bias=bias_description,
             bias_rail=rail,
             open_output_type=output_type,
@@ -8310,6 +8341,23 @@ def _component_peer_pin_assignment_fixture_lane(
                     f"Native {case} expected lint status {expected_status}, "
                     f"observed {reports[(case, run)].status}"
                 )
+            coverage = next(
+                item
+                for item in reports[(case, run)].component_peer_pin_coverage
+                if item.rule_id == rule_id
+            )
+            if (
+                coverage.status != "EVALUATED"
+                or coverage.mode != "review"
+                or coverage.netlist_sha256 != raw_hashes[(case, run)]
+                or coverage.candidate_group_count != expected_finding_count
+                or coverage.finding_count != expected_finding_count
+                or coverage.suppressed_candidate_count != 0
+            ):
+                raise ValueError(
+                    f"Native {case} component peer-pin coverage did not match the "
+                    f"source-bound {rule_id} fault/control expectation"
+                )
 
     if any(
         normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")] for case in cases
@@ -8320,6 +8368,9 @@ def _component_peer_pin_assignment_fixture_lane(
     for case, (filename, expected_unassigned) in cases.items():
         report = reports[(case, "first")]
         findings = tuple(item for item in report.findings if item.rule_id == rule_id)
+        coverage = next(
+            item for item in report.component_peer_pin_coverage if item.rule_id == rule_id
+        )
         log.event(
             f"{lane_name}/{case}",
             "PASS",
@@ -8334,6 +8385,11 @@ def _component_peer_pin_assignment_fixture_lane(
             lint_status=report.status,
             unassigned_pins=",".join(expected_unassigned) or "none",
             finding_count=len(findings),
+            peer_coverage_status=coverage.status,
+            peer_coverage_netlist_sha256=coverage.netlist_sha256,
+            peer_coverage_candidate_count=coverage.candidate_group_count,
+            peer_coverage_finding_count=coverage.finding_count,
+            peer_coverage_suppressed_count=coverage.suppressed_candidate_count,
             repeatable="true",
             repeatability_basis="normalized_netlist_contract",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),

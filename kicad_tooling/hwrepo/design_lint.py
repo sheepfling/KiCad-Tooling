@@ -36,11 +36,10 @@ from .connector_coverage import (
     source_matched_connector_pin_evidence,
 )
 from .connector_pins import (
-    component_peer_bidirectional_pin_outliers,
-    component_peer_power_output_pin_outliers,
+    ComponentPeerPinAssignmentScans,
+    PeerPinAssignmentScan,
+    component_peer_pin_assignment_scans,
     component_peer_power_pin_assignment_divergences,
-    component_peer_signal_input_pin_outliers,
-    component_peer_signal_output_pin_outliers,
     component_supply_pins_on_different_nets,
     connector_peer_pin_assignment_divergences,
     connector_peer_pin_assignment_outliers,
@@ -82,6 +81,7 @@ from .led_heuristics import (
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
+    ComponentPeerPinRuleCoverage,
     ComponentRoleMap,
     ConnectorCoverageReport,
     ConnectorMappedPinEvidence,
@@ -526,6 +526,7 @@ def candidates(
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
+    peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None = None,
 ) -> tuple[Candidate, ...]:
     """Named rules share one fingerprint and review-decision lifecycle."""
     reviewed_connector_pins = source_matched_connector_pin_evidence(
@@ -537,6 +538,10 @@ def candidates(
         connector_coverage,
     )
     found: list[Candidate] = []
+    peer_pin_scans = peer_pin_assignment_scans or component_peer_pin_assignment_scans(
+        observed,
+        reviewed_connector_references,
+    )
     unconnected_named_pins = unconnected_named_connector_pins(
         observed,
         reviewed_connector_references,
@@ -1057,7 +1062,7 @@ def candidates(
                 evidence={pin.pin: ()},
             )
         )
-    for group in component_peer_power_output_pin_outliers(observed, reviewed_connector_references):
+    for group in peer_pin_scans.power_output.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
         found.append(
             Candidate(
@@ -1082,7 +1087,7 @@ def candidates(
                 },
             )
         )
-    for group in component_peer_signal_output_pin_outliers(observed, reviewed_connector_references):
+    for group in peer_pin_scans.signal_output.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
         found.append(
             Candidate(
@@ -1109,7 +1114,7 @@ def candidates(
         )
     unconnected_controls = unconnected_control_inputs(observed)
     control_pin_keys = {pin.pin.casefold() for pin in unconnected_controls}
-    for group in component_peer_signal_input_pin_outliers(observed, reviewed_connector_references):
+    for group in peer_pin_scans.signal_input.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
         if any(pin.casefold() in control_pin_keys for pin in open_pins):
             # Keep recognized reset, enable, and boot inputs with their specific rule.
@@ -1138,7 +1143,7 @@ def candidates(
                 },
             )
         )
-    for group in component_peer_bidirectional_pin_outliers(observed, reviewed_connector_references):
+    for group in peer_pin_scans.bidirectional.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
         found.append(
             Candidate(
@@ -3476,6 +3481,66 @@ def _digital_peer_voltage_coverage(
     return tuple(result)
 
 
+def _component_peer_pin_rule_coverage(
+    scans: ComponentPeerPinAssignmentScans,
+    default_modes: Mapping[DesignLintRuleId, Literal["review", "block", "off"]],
+    overrides: Mapping[str, DesignLintRuleOverride],
+    candidate_items: Sequence[Candidate],
+    netlist_sha256: str,
+) -> tuple[ComponentPeerPinRuleCoverage, ...]:
+    """Bind component-peer pin applicability and findings to one native netlist."""
+    rule_scans: tuple[tuple[DesignLintRuleId, PeerPinAssignmentScan], ...] = (
+        ("component.peer_power_output_unconnected", scans.power_output),
+        ("component.peer_signal_output_unconnected", scans.signal_output),
+        ("component.peer_signal_input_unconnected", scans.signal_input),
+        ("component.peer_bidirectional_pin_unconnected", scans.bidirectional),
+    )
+    result: list[ComponentPeerPinRuleCoverage] = []
+    for rule_id, scan in rule_scans:
+        if scan.exact_symbol_peer_group_count == 0:
+            status = "NO_EXACT_SYMBOL_PEERS"
+        elif scan.complete_pin_inventory_group_count == 0:
+            status = "INCOMPLETE_PIN_INVENTORY"
+        elif scan.matching_electrical_type_pin_group_count == 0:
+            status = "NO_MATCHING_PIN_TYPES"
+        elif scan.compatible_function_pin_group_count == 0:
+            status = "NO_COMPATIBLE_PIN_FUNCTIONS"
+        elif scan.unambiguous_assignment_pin_group_count == 0:
+            status = "NO_UNAMBIGUOUS_ASSIGNMENTS"
+        elif scan.incomplete_pin_inventory_group_count > 0:
+            status = "PARTIALLY_EVALUATED"
+        else:
+            status = "EVALUATED"
+        override = overrides.get(rule_id)
+        finding_count = sum(item.rule_id == rule_id for item in candidate_items)
+        candidate_count = len(scan.outliers)
+        result.append(
+            ComponentPeerPinRuleCoverage(
+                rule_id=rule_id,
+                status=status,
+                mode=default_modes[rule_id] if override is None else override.mode,
+                netlist_sha256=netlist_sha256,
+                exact_symbol_peer_group_count=scan.exact_symbol_peer_group_count,
+                incomplete_pin_inventory_group_count=scan.incomplete_pin_inventory_group_count,
+                incomplete_pin_inventory_references=scan.incomplete_pin_inventory_references,
+                complete_pin_inventory_group_count=scan.complete_pin_inventory_group_count,
+                comparable_pin_group_count=scan.comparable_pin_group_count,
+                matching_electrical_type_pin_group_count=(
+                    scan.matching_electrical_type_pin_group_count
+                ),
+                compatible_function_pin_group_count=scan.compatible_function_pin_group_count,
+                ambiguous_assignment_pin_group_count=scan.ambiguous_assignment_pin_group_count,
+                unambiguous_assignment_pin_group_count=(
+                    scan.unambiguous_assignment_pin_group_count
+                ),
+                candidate_group_count=candidate_count,
+                finding_count=finding_count,
+                suppressed_candidate_count=candidate_count - finding_count,
+            )
+        )
+    return tuple(result)
+
+
 def _usb_peer_reference_path_entry(
     item: UsbPeerReferencePathCoverage,
 ) -> UsbPeerReferencePathCoverageEntry:
@@ -4306,6 +4371,10 @@ def evaluate(
         if connector_coverage is not None
         else ()
     )
+    peer_pin_assignment_scans = component_peer_pin_assignment_scans(
+        coach.observed,
+        reviewed_connector_references,
+    )
     usb_peer_reference_scan = scan_usb_peer_reference_reviews(
         coach.observed,
         policy.usb_data_path_map,
@@ -4377,6 +4446,7 @@ def evaluate(
         digital_peer_voltage_scan=digital_peer_voltage_scan,
         usb_peer_reference_scan=usb_peer_reference_scan,
         serial_peer_reference_scan=serial_peer_reference_scan,
+        peer_pin_assignment_scans=peer_pin_assignment_scans,
     )
     connector_peer_pin_coverage = (
         None
@@ -4397,6 +4467,17 @@ def evaluate(
                 item.rule_id == "connector.peer_pin_assignment_divergence"
                 for item in candidate_items
             ),
+        )
+    )
+    component_peer_pin_coverage = (
+        ()
+        if coach.netlist_sha256 is None
+        else _component_peer_pin_rule_coverage(
+            peer_pin_assignment_scans,
+            default_modes,
+            overrides,
+            candidate_items,
+            coach.netlist_sha256,
         )
     )
     usb_rule_id: Literal["bus.usb_data_path_mismatch"] = "bus.usb_data_path_mismatch"
@@ -4495,6 +4576,7 @@ def evaluate(
                     i2c_pullup_heuristic_coverage or I2cPullupHeuristicCoverage()
                 ),
                 connector_peer_pin_coverage=connector_peer_pin_coverage,
+                component_peer_pin_coverage=component_peer_pin_coverage,
                 issues=(f"Ignore {key} names the wrong rule",),
             )
         disposition: Literal["OPEN", "IGNORED", "RULE_OFF"] = (
@@ -4821,6 +4903,7 @@ def evaluate(
         usb_peer_reference_coverage=usb_peer_reference_coverage,
         serial_peer_reference_coverage=serial_peer_reference_coverage,
         connector_peer_pin_coverage=connector_peer_pin_coverage,
+        component_peer_pin_coverage=component_peer_pin_coverage,
         connector_coverage=connector_coverage,
         stm32_pin_map_coverage=stm32_pin_map_coverage,
         schematic_geometry=geometry_coverage,
@@ -7073,6 +7156,28 @@ def text_report(report: DesignLintReport) -> str:
         lines.append(f"  Scope: {peer_coverage.scope}")
         for reference in peer_coverage.incomplete_pin_inventory_references:
             lines.append(f"  Incomplete exact-symbol pin inventory: {reference}")
+    if report.component_peer_pin_coverage:
+        lines.append("Component peer-pin assignment heuristic coverage:")
+        for coverage in report.component_peer_pin_coverage:
+            lines.append(
+                f"  {coverage.rule_id}: {coverage.status} (mode: {coverage.mode}; "
+                f"exact-symbol peer groups: {coverage.exact_symbol_peer_group_count}; "
+                f"complete/incomplete inventories: "
+                f"{coverage.complete_pin_inventory_group_count}/"
+                f"{coverage.incomplete_pin_inventory_group_count}; "
+                f"comparable/type-matched/function-compatible pin groups: "
+                f"{coverage.comparable_pin_group_count}/"
+                f"{coverage.matching_electrical_type_pin_group_count}/"
+                f"{coverage.compatible_function_pin_group_count}; "
+                f"ambiguous/unambiguous assignments: "
+                f"{coverage.ambiguous_assignment_pin_group_count}/"
+                f"{coverage.unambiguous_assignment_pin_group_count}; "
+                f"candidates/findings/suppressed: {coverage.candidate_group_count}/"
+                f"{coverage.finding_count}/{coverage.suppressed_candidate_count})"
+            )
+            lines.append(f"    Native netlist SHA-256: {coverage.netlist_sha256}")
+            for reference in coverage.incomplete_pin_inventory_references:
+                lines.append(f"    Incomplete peer inventory group includes: {reference}")
     for finding in report.findings:
         lines.append(
             f"{finding.disposition} [{finding.rule_id}] {finding.subject} ({finding.fingerprint})"

@@ -160,6 +160,11 @@ The first rules are:
   groups, connectors, ambiguous assignments, and other native electrical types are outside the
   predicate. Digest-pinned synthetic native fault/control fixtures and hashes are in
   [the peer bidirectional-pin fixture notes](../tests/fixtures/design_lint/component-peer-bidirectional-native/README.md).
+  The report also gives each of these four rules a bounded `component_peer_pin_coverage` entry
+  tied to the native netlist digest. It counts exact-symbol groups, inventory completeness,
+  comparable and type/function-compatible pins, ambiguous assignments, candidates, findings, and
+  suppressed candidates. Status explains why a rule could not evaluate a group; it does not claim
+  that every component or interface was recognized, or that matching peer pins must share a net.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
   resolve to the same schematic net. The assigned net bypasses the passive in

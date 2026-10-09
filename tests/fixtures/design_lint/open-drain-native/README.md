@@ -6,26 +6,33 @@ separate digital input on U1 share `ALERT_N`; each device's unused pin has an
 explicit no-connect marker. R1 directly joins the signal to the expected rail
 in the control and remains on the source schematic with DNP set in the fault.
 
-| Fixture                       | Pin type         | Bias path              | Expected design-lint result                                |
-| ----------------------------- | ---------------- | ---------------------- | ---------------------------------------------------------- |
-| `collector-control.kicad_sch` | `open_collector` | Fitted 10 kΩ to `+3V3` | PASS; no missing-bias finding                              |
-| `collector-fault.kicad_sch`   | `open_collector` | 10 kΩ to `+3V3`, DNP   | REVIEW; `signal.open_collector_input_without_visible_bias` |
-| `emitter-control.kicad_sch`   | `open_emitter`   | Fitted 10 kΩ to `GND`  | PASS; no missing-bias finding                              |
-| `emitter-fault.kicad_sch`     | `open_emitter`   | 10 kΩ to `GND`, DNP    | REVIEW; `signal.open_emitter_input_without_visible_bias`   |
+| Fixture                       | Pin type         | Bias path              | Expected design-lint result                           |
+| ----------------------------- | ---------------- | ---------------------- | ----------------------------------------------------- |
+| `collector-control.kicad_sch` | `open_collector` | Fitted 10 kΩ to `+3V3` | REVIEW; no bias finding, peer-input review for `U2.2` |
+| `collector-fault.kicad_sch`   | `open_collector` | 10 kΩ to `+3V3`, DNP   | REVIEW; missing-bias and peer-input findings          |
+| `emitter-control.kicad_sch`   | `open_emitter`   | Fitted 10 kΩ to `GND`  | REVIEW; no bias finding, peer-input review for `U2.2` |
+| `emitter-fault.kicad_sch`     | `open_emitter`   | 10 kΩ to `GND`, DNP    | REVIEW; missing-bias and peer-input findings          |
+
+All four reports include the independent
+`component.peer_signal_input_unconnected` prompt for `U2.2`: the native input
+on U1 is assigned to `ALERT_N`, while the corresponding input on the exact-symbol
+U2 peer is explicitly left open. The fixture tests the bias rule separately
+through `bias_rule_status`; its overall lint status is `REVIEW` because of this
+second, valid heuristic prompt. The peer-input coverage entry is tied to the
+native netlist digest. This is a useful review prompt, not proof that U2.2 must
+be connected; a project can record an exact ignore when that open pin is
+reviewed and intentional.
 
 The fixture lane is opt-in for package acceptance CI and uses the exact
 project-selected KiCad 10.0.0 and 10.0.5 digest-pinned images. It exports each
 case's netlist and ERC report twice. The lane checks native electrical pin
-types, exact net membership, DNP state, the lint control/fault result, zero
-ERC errors, and repeatable normalized reports. The workflow is configured to
-run the lane. The 2026-10-01 local rerun passed on both pinned versions. In each
-version, fitted pull-up and pull-down controls stayed quiet, their otherwise
-identical DNP faults produced the missing-bias `REVIEW`, native pin types and
-net assignments matched, ERC reported zero errors, and repeated exports
-normalized identically. Expected warnings include missing synthetic library
-and footprint links plus the standalone bias-rail label; the lane records
-warning types and does not treat them as errors. The local result does not
-stand in for a hosted workflow run.
+types, exact net membership, DNP state, independent rule findings, zero ERC
+errors, and repeatable normalized reports. The workflow is configured to run
+the lane. The previous tagged acceptance surfaced the peer-input review on
+these exact-symbol controls; the lane now records both the bias-specific result
+and the independent source-bound peer coverage. Expected ERC warnings include
+missing synthetic library and footprint links plus the standalone bias-rail
+label; the lane records warning types and does not treat them as errors.
 
 | KiCad version | Digest-pinned image                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------- |

@@ -127,6 +127,21 @@ class DesignLintDeterminismTests:
         }
         assert reports["peer_bidirectional_control"]["status"] == "PASS"
         assert reports["peer_bidirectional_control"]["findings"] == []
+        for name, expected_count in (
+            ("peer_bidirectional_fault", 1),
+            ("peer_bidirectional_control", 0),
+        ):
+            report = reports[name]
+            coverage = next(
+                item
+                for item in report["component_peer_pin_coverage"]
+                if item["rule_id"] == "component.peer_bidirectional_pin_unconnected"
+            )
+            assert coverage["status"] == "EVALUATED"
+            assert coverage["netlist_sha256"] == report["netlist_sha256"]
+            assert coverage["candidate_group_count"] == expected_count
+            assert coverage["finding_count"] == expected_count
+            assert coverage["suppressed_candidate_count"] == 0
 
         split_common = reports["db9_split_against_common_requirement"]
         split_isolated = reports["db9_split_against_isolated_requirement"]

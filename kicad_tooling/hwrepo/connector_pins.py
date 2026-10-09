@@ -1042,14 +1042,36 @@ class PeerPinAssignmentOutlier:
     pin_function: str | None = None
 
 
-def _component_peer_pin_assignment_outliers(
+@dataclass(frozen=True)
+class PeerPinAssignmentScan:
+    exact_symbol_peer_group_count: int
+    incomplete_pin_inventory_group_count: int
+    incomplete_pin_inventory_references: tuple[str, ...]
+    complete_pin_inventory_group_count: int
+    comparable_pin_group_count: int
+    matching_electrical_type_pin_group_count: int
+    compatible_function_pin_group_count: int
+    ambiguous_assignment_pin_group_count: int
+    unambiguous_assignment_pin_group_count: int
+    outliers: tuple[PeerPinAssignmentOutlier, ...]
+
+
+@dataclass(frozen=True)
+class ComponentPeerPinAssignmentScans:
+    power_output: PeerPinAssignmentScan
+    signal_output: PeerPinAssignmentScan
+    signal_input: PeerPinAssignmentScan
+    bidirectional: PeerPinAssignmentScan
+
+
+def _component_peer_pin_assignment_scan(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     *,
     electrical_types: frozenset[str],
     require_pin_functions: bool = False,
-) -> tuple[PeerPinAssignmentOutlier, ...]:
-    """Find an open typed pin among fitted peers of one exact symbol.
+) -> PeerPinAssignmentScan:
+    """Scan assignment coverage and open typed pins among exact-symbol peers.
 
     A same-symbol, same-pin assignment is a review clue only. The other
     instances may intentionally use that pin differently or leave it open.
@@ -1090,10 +1112,20 @@ def _component_peer_pin_assignment_outliers(
             pin_nets.setdefault(pin.casefold(), set()).add(net)
 
     results: list[PeerPinAssignmentOutlier] = []
+    exact_symbol_peer_group_count = 0
+    incomplete_pin_inventory_group_count = 0
+    incomplete_pin_inventory_references: set[str] = set()
+    complete_pin_inventory_group_count = 0
+    comparable_pin_group_count = 0
+    matching_electrical_type_pin_group_count = 0
+    compatible_function_pin_group_count = 0
+    ambiguous_assignment_pin_group_count = 0
+    unambiguous_assignment_pin_group_count = 0
     for symbol_key, references in sorted(references_by_symbol.items()):
         peers = tuple(sorted(references, key=str.casefold))
         if len(peers) < 2:
             continue
+        exact_symbol_peer_group_count += 1
         peer_inventories = tuple(inventories.get(reference.casefold(), ()) for reference in peers)
         if (
             not peer_inventories[0]
@@ -1106,9 +1138,13 @@ def _component_peer_pin_assignment_outliers(
             or len({number.casefold() for number in peer_inventories[0]})
             != len(peer_inventories[0])
         ):
+            incomplete_pin_inventory_group_count += 1
+            incomplete_pin_inventory_references.update(peers)
             continue
+        complete_pin_inventory_group_count += 1
 
         for pin_number in peer_inventories[0]:
+            comparable_pin_group_count += 1
             pins = tuple(f"{reference}.{pin_number}" for reference in peers)
             peer_types = tuple(pin_electrical_types.get(pin.casefold()) for pin in pins)
             if (
@@ -1116,6 +1152,7 @@ def _component_peer_pin_assignment_outliers(
                 or len(set(peer_types)) != 1
             ):
                 continue
+            matching_electrical_type_pin_group_count += 1
             peer_functions = tuple(functions.get(pin.casefold()) for pin in pins)
             if (
                 require_pin_functions
@@ -1127,12 +1164,15 @@ def _component_peer_pin_assignment_outliers(
                 }
             ) > 1:
                 continue
+            compatible_function_pin_group_count += 1
             assignments = {
                 pin: tuple(sorted(pin_nets.get(pin.casefold(), ()), key=str.casefold))
                 for pin in pins
             }
             if any(len(nets) > 1 for nets in assignments.values()):
+                ambiguous_assignment_pin_group_count += 1
                 continue
+            unambiguous_assignment_pin_group_count += 1
             open_pins = tuple(pin for pin, nets in assignments.items() if not nets)
             assigned_pins = tuple(pin for pin, nets in assignments.items() if nets)
             if not open_pins or not assigned_pins:
@@ -1156,12 +1196,70 @@ def _component_peer_pin_assignment_outliers(
                     pin_function=peer_functions[0],
                 )
             )
-    return tuple(
-        sorted(
-            results,
-            key=lambda item: (item.symbol.casefold(), item.pin_number.casefold()),
-        )
+    outliers = tuple(
+        sorted(results, key=lambda item: (item.symbol.casefold(), item.pin_number.casefold()))
     )
+    return PeerPinAssignmentScan(
+        exact_symbol_peer_group_count=exact_symbol_peer_group_count,
+        incomplete_pin_inventory_group_count=incomplete_pin_inventory_group_count,
+        incomplete_pin_inventory_references=tuple(
+            sorted(incomplete_pin_inventory_references, key=str.casefold)
+        ),
+        complete_pin_inventory_group_count=complete_pin_inventory_group_count,
+        comparable_pin_group_count=comparable_pin_group_count,
+        matching_electrical_type_pin_group_count=matching_electrical_type_pin_group_count,
+        compatible_function_pin_group_count=compatible_function_pin_group_count,
+        ambiguous_assignment_pin_group_count=ambiguous_assignment_pin_group_count,
+        unambiguous_assignment_pin_group_count=unambiguous_assignment_pin_group_count,
+        outliers=outliers,
+    )
+
+
+def component_peer_pin_assignment_scans(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> ComponentPeerPinAssignmentScans:
+    """Return bounded applicability scans for all native peer-pin checks."""
+    return ComponentPeerPinAssignmentScans(
+        power_output=_component_peer_pin_assignment_scan(
+            observed,
+            declared_references,
+            electrical_types=frozenset({"power_out"}),
+        ),
+        signal_output=_component_peer_pin_assignment_scan(
+            observed,
+            declared_references,
+            electrical_types=frozenset({"output"}),
+        ),
+        signal_input=_component_peer_pin_assignment_scan(
+            observed,
+            declared_references,
+            electrical_types=frozenset({"input", "input_low"}),
+            require_pin_functions=True,
+        ),
+        bidirectional=_component_peer_pin_assignment_scan(
+            observed,
+            declared_references,
+            electrical_types=frozenset({"bidirectional"}),
+            require_pin_functions=True,
+        ),
+    )
+
+
+def _component_peer_pin_assignment_outliers(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+    *,
+    electrical_types: frozenset[str],
+    require_pin_functions: bool = False,
+) -> tuple[PeerPinAssignmentOutlier, ...]:
+    """Return only findings from the shared source-bound peer-pin scan."""
+    return _component_peer_pin_assignment_scan(
+        observed,
+        declared_references,
+        electrical_types=electrical_types,
+        require_pin_functions=require_pin_functions,
+    ).outliers
 
 
 def component_peer_power_output_pin_outliers(

@@ -1180,7 +1180,18 @@ is not a reason by itself to expand its scope or change its default policy.
   netlist digest. It distinguishes candidates that are all DNP, no exact-symbol
   peers, no comparable pins, incomplete native pin inventories, and evaluated
   groups. A missing, empty, or inconsistent same-symbol inventory raises
-  `REVIEW` and identifies its references.
+  `REVIEW` and identifies its references. The four non-connector exact-symbol
+  component peer-pin rules now report `component_peer_pin_coverage` entries with
+  source-bound counts for complete and incomplete inventories, comparable and
+  native-type/function-compatible groups, ambiguous assignments, candidates,
+  findings, and suppressed candidates. The output distinguishes no exact-symbol
+  peers, missing inventory, unsupported pin types/functions, ambiguous
+  assignment, partial evaluation, and a completed comparison. These counts
+  expose why the bounded scan did not emit a prompt; they do not prove full
+  symbol discovery or require peer pins to share a net. Synthetic pytest fault,
+  control, applicability-state, input-rule suppression, CLI/MCP parity,
+  deterministic-hash-seed, and pinned native fault/control checks exercise this
+  coverage.
 - **Cohort input:** The public
   [kicad-happy v2.2.1 changelog](https://github.com/aklofas/kicad-happy/blob/v2.2.1/CHANGELOG.md)
   describes a `checks_run` manifest with run/skip reasons and examined counts,
@@ -9256,9 +9267,9 @@ maintenance cost open wherever they were not measured.
 7. LINT-076 now covers mapped-check execution plus bounded applicability
    counts for LINT-066's direct-peer voltage heuristics, LINT-086's USB
    peer-reference heuristic, LINT-074's direct serial reference review, and
-   the existing connector peer-pin comparisons. The connector coverage summary
-   makes exact-symbol pin groups and open/different assignments visible even
-   when the checker has no finding to emit.
+   connector and component peer-pin comparisons. The peer coverage summaries
+   make exact-symbol groups, pin metadata eligibility, and assignment states
+   visible even when a checker has no finding to emit.
    Continue it only when an audit identifies another enabled check that can
    silently skip without a matching coverage report or finding; do not add a
    global status registry that only restates the catalog.

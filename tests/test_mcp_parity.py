@@ -340,6 +340,16 @@ def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
                 assert cli_report == mcp_report
                 assert mcp_report.status == ("REVIEW" if fault else "PASS")
                 findings = tuple(item for item in mcp_report.findings if item.rule_id == rule_id)
+                coverage = next(
+                    item
+                    for item in mcp_report.component_peer_pin_coverage
+                    if item.rule_id == rule_id
+                )
+                assert coverage.status == "EVALUATED"
+                assert coverage.netlist_sha256 == mcp_report.netlist_sha256
+                assert coverage.candidate_group_count == int(fault)
+                assert coverage.finding_count == len(findings) == int(fault)
+                assert coverage.suppressed_candidate_count == 0
                 if fault:
                     assert len(findings) == 1
                     assert findings[0].evidence["unassigned_pins"] == ("U11.2",)
