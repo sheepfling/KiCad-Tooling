@@ -30,6 +30,7 @@ also marks exact-native fixture classes separately:
 
 ```sh
 python -I -B -m pytest -q -m "design_lint and not native_kicad and not slow" --durations=20
+python -I -B -m pytest -q -m "schematic_lint and not native_kicad and not slow"
 python -I -B -m pytest -q -m "connector_lint and not native_kicad and not slow"
 python -I -B -m pytest -q -m "return_path_lint and not native_kicad and not slow"
 python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
@@ -38,9 +39,9 @@ python -I -B -m pytest -q tests/test_rc_filters.py -k disconnected-capacitor-ret
 ```
 
 The first command runs the portable, non-slow design-lint group. The area
-markers select component, connector, interface, power, PCB, return-path, or
-parity regressions; combine them with `-k` to select a test or parametrized
-fault/control case. `native_kicad` selects exact-version fixtures and still
+markers select schematic, component, connector, interface, power, PCB,
+return-path, or parity regressions; combine them with `-k` to select a test or
+parametrized fault/control case. `native_kicad` selects exact-version fixtures and still
 requires each fixture's documented version and environment settings. Markers
 narrow local runs; the package acceptance gate continues to run the complete
 suite. Add each new lint test module to its area in `tests/conftest.py`; this

@@ -15,6 +15,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from kicad_tooling.check_all import check_all
 from kicad_tooling.check_toolchain import cli_executable
 from kicad_tooling.ci import project_static_pipeline
@@ -338,6 +340,7 @@ class VerifyTests(unittest.TestCase):
         self.assertIn("NATIVE_ERC", {item.code for item in result.diagnosis.findings})
         self.assertTrue((Path(result.run_directory) / "diagnosis.json").is_file())
 
+    @pytest.mark.design_lint
     def test_default_design_lint_blocks_native_verify_and_ci_until_reviewed(self) -> None:
         contract_path = self.root / "examples/projects/controller/tests/contract.json"
         contract = read_model(contract_path, ProjectTestContract)

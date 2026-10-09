@@ -65,6 +65,7 @@ python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
 markers = [
   "design_lint: deterministic design-lint rule, catalog, and parity behavior",
+  "schematic_lint: schematic connectivity, geometry, and readability heuristics",
   "component_lint: component ratings and component-level electrical heuristics",
   "connector_lint: connector inventory, peer-pin, and interface connector checks",
   "interface_lint: USB, serial, SPI, I2C, and digital interface checks",

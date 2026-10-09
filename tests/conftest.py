@@ -11,6 +11,11 @@ _ROOT = Path(__file__).resolve().parents[1]
 # Keep the area catalog explicit. Adding a lint test module here also includes
 # it in the portable design_lint selection derived below.
 _LINT_AREA_MODULES = {
+    "schematic_lint": frozenset(
+        {
+            "tests/test_schematic_geometry.py",
+        }
+    ),
     "component_lint": frozenset(
         {
             "tests/test_component_power_ratings.py",
