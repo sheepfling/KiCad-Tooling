@@ -29,10 +29,10 @@
         "tests.test_design_lint.DesignLintTests.test_four_db9_return_domains_surface_review_and_keep_common_control",
         "tests.test_design_lint.DesignLintTests.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
         "tests.test_design_lint.DesignLintTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_return_roles_refine_connector_net_heuristics",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
+        "tests.test_connector_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
+        "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_common_return_across_symbols_passes_and_shield_stays_separate",
@@ -42,17 +42,17 @@
         "tests.test_design_lint.DesignLintTests.test_connector_population_heuristics_ignore_dnp_instances",
         "tests.test_design_lint.DesignLintTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_design_lint.DesignLintTests.test_generic_pin_function_placeholders_use_peer_assignment_rules",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_return_roles_refine_connector_net_heuristics",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
+        "tests.test_connector_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
+        "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
         "tests.test_design_lint.DesignLintTests.test_repeated_db9_pin_review_survives_neutral_net_renaming",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_scope_reports_are_stable_under_input_reordering"
+        "tests.test_connector_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
+        "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
+        "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#similar_connector_pin_groups",
@@ -61,13 +61,13 @@
     },
     {
       "rule_id": "connector.peer_pin_assignment_outlier",
-      "title": "Repeated connector symbol pin has an outlier assignment",
+      "title": "Comparable connector peer pin has an outlier assignment",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances using the exact same library symbol, the same pin number is unconnected on an outlier peer or differs from a unique most-common schematic net assignment shared by at least two instances; at least one peer pin lacks a meaningful function because its metadata is absent or a generic Pin_N placeholder. When every participating connector has current source-matched peer_assignment_group evidence, comparisons are partitioned within each group; incomplete or stale group coverage retains the unscoped comparison.",
+      "predicate": "Among fitted connector instances using the exact same library symbol, or distinct symbols sharing one nonempty native PART_ID with matching nonempty value and footprint, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata, the same pin number is unconnected on an outlier peer or differs from a unique most-common schematic net assignment shared by at least two instances; at least one compared function is absent or a generic Pin_N placeholder. When every participating connector has current source-matched peer_assignment_group evidence, comparisons are partitioned within each group; incomplete or stale group coverage retains the unscoped comparison.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -75,6 +75,7 @@
         "Identical symbol and pin number identify comparable contacts but do not establish a required common net; per-port isolation, optional contacts, and unused pins can be intentional.",
         "A tied most-common assignment does not identify an outlier and is delegated to connector.peer_pin_assignment_divergence.",
         "A peer_assignment_group identifies comparison scope only; it does not establish a required common net. Distinct groups are excluded from comparison only while all participating connector group reviews are current and complete.",
+        "Cross-symbol comparisons require a shared native PART_ID plus matching nonempty value, footprint, complete pin inventory, and matching nonempty function and electrical-type metadata for every pin. Missing or inconsistent metadata leaves that alias group ineligible; matching identity still does not establish a common-net requirement.",
         "Automatic candidates are numeric J/P/X/CN references and symbols in standard Connector libraries except Connector:TestPoint; an exact project-reviewed interface reference can additionally classify a custom symbol. Other aliases and library families can evade candidate discovery. Missing symbol identity or pin-number inventory can evade comparison.",
         "The check is limited to cases where at least one peer has absent or generic Pin_N function metadata and does not establish PCB copper connectivity or off-board wiring.",
         "DNP connector instances are excluded, and the result remains a review hint subject to project rule overrides or an exact ignore."
@@ -84,17 +85,24 @@
         "tests.test_design_lint.DesignLintTests.test_two_peer_open_generic_contact_prompts_and_supports_exact_ignore",
         "tests.test_design_lint.DesignLintTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_design_lint.DesignLintTests.test_generic_pin_function_placeholders_use_peer_assignment_rules",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_connector_part_id_peers.test_shared_part_id_symbol_aliases_surface_open_generic_pin_with_coverage",
+        "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp",
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_exact_symbol_peer_pin_controls_exclude_consistent_independent_and_dnp_cases",
         "tests.test_design_lint.DesignLintTests.test_two_peer_open_generic_contact_prompts_and_supports_exact_ignore",
         "tests.test_design_lint.DesignLintTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_connector_part_id_peers.test_common_part_id_aliases_are_a_quiet_control_and_split_groups_allow_isolation",
+        "tests.test_connector_part_id_peers.test_dnp_and_ambiguous_pin_assignments_do_not_trigger_alias_findings",
+        "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_generic_connector_outlier_order_is_stable_and_completion_clears_it",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_scope_reports_are_stable_under_input_reordering"
+        "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering",
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_are_stable_under_mapping_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#connector_peer_pin_assignment_outliers",
@@ -103,13 +111,13 @@
     },
     {
       "rule_id": "connector.peer_pin_assignment_divergence",
-      "title": "Generic peer connector pin assignments differ",
+      "title": "Generic comparable connector peer pin assignments differ",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances using the exact same library symbol, the same pin number is assigned to different schematic nets, all compared contacts are assigned, fewer than two peers have meaningful pin-function metadata (absent or generic Pin_N labels are unknown), and no unique most-common assignment exists. This lower-confidence prompt covers two-peer or tied groups while leaving uniquely-majoritized outliers to the outlier rule. When every participating connector has current source-matched peer_assignment_group evidence, comparisons are partitioned within each group; incomplete or stale group coverage retains the unscoped comparison.",
+      "predicate": "Among fitted connector instances using the exact same library symbol, or distinct symbols sharing one nonempty native PART_ID with matching nonempty value and footprint, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata, the same pin number is assigned to different schematic nets, all compared contacts are assigned, fewer than two peers have meaningful pin-function metadata (absent or generic Pin_N labels are unknown), and no unique most-common assignment exists. This lower-confidence prompt covers two-peer or tied groups while leaving uniquely-majoritized outliers to the outlier rule. When every participating connector has current source-matched peer_assignment_group evidence, comparisons are partitioned within each group; incomplete or stale group coverage retains the unscoped comparison.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -117,6 +125,7 @@
         "Identical symbol and pin number do not establish that contacts should share a net; separate ports, isolated domains, and intentional per-port assignments can all be valid.",
         "A unique most-common assignment is handled by connector.peer_pin_assignment_outlier; a lower-confidence divergence prompt is retained only when the assignments have no unique mode.",
         "A peer_assignment_group identifies comparison scope only; it does not establish a required common net. Distinct groups are excluded from comparison only while all participating connector group reviews are current and complete.",
+        "Cross-symbol comparisons require a shared native PART_ID plus matching nonempty value, footprint, complete pin inventory, and matching nonempty function and electrical-type metadata for every pin. Missing or inconsistent metadata leaves that alias group ineligible; matching identity still does not establish a common-net requirement.",
         "Automatic candidates are numeric J/P/X/CN references and symbols in standard Connector libraries except Connector:TestPoint; an exact project-reviewed interface reference can additionally classify a custom symbol. Other aliases and library families can evade candidate discovery. Unknown pin roles must be reviewed against an approved interface pinout before any contract is authored.",
         "Unassigned contacts are left to the existing peer-outlier and named-pin rules; groups with complete meaningful pin-function roles remain with connector.repeated_pin_function.",
         "DNP connector instances are excluded, and the result does not establish PCB copper connectivity or off-board wiring."
@@ -125,19 +134,23 @@
         "tests.test_design_lint.DesignLintTests.test_exact_symbol_peer_pin_divergence_reviews_conflicting_generic_assignments",
         "tests.test_design_lint.DesignLintTests.test_peer_pin_tie_uses_divergence_without_arbitrary_outlier",
         "tests.test_design_lint.DesignLintTests.test_generic_pin_function_placeholders_use_peer_assignment_rules",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_connector_part_id_peers.test_common_part_id_aliases_are_a_quiet_control_and_split_groups_allow_isolation",
+        "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp",
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_peer_pin_divergence_requires_conflict_and_missing_function_metadata",
         "tests.test_design_lint.DesignLintTests.test_generic_pin_function_placeholders_use_peer_assignment_rules",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_peer_pin_divergence_order_is_stable_and_agreement_clears_it",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_peer_assignment_scope_reports_are_stable_under_input_reordering"
+        "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
+        "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering",
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_are_stable_under_mapping_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#connector_peer_pin_assignment_divergences",
@@ -186,24 +199,35 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted non-connector components with the exact same native symbol, compare the same pin number and recognized matching return or supply function; prompt when all peers are assigned but use different net sets.",
+      "predicate": "Among fitted non-connector components with the exact same native symbol, compare the same pin number and recognized matching return or supply function. Also compare distinct symbols only when they share a native PART_ID, matching nonempty value and footprint, complete identical pin inventories, and identical per-pin function and electrical-type metadata. Prompt only when every peer assigns the recognized pin to exactly one net and those net names differ.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "Shared symbol and pin identity are review evidence only; separate grounds or supplies can be intentional.",
-        "Only non-connector components with exact shared symbol identity, complete shared pin numbers, and recognized matching return or supply functions are compared. Missing function metadata, uncommon roles, and explicitly DNP peers are outside the predicate.",
+        "Shared symbol, PART_ID, and pin metadata are review evidence only; separate grounds or supplies can be intentional.",
+        "Exact-symbol comparisons require a shared pin number and recognized matching return or supply function. Cross-symbol PART_ID comparisons additionally require matching nonempty value and footprint, a complete identical pin inventory, and identical per-pin function and electrical-type metadata. Missing or ambiguous assignments, uncommon roles, and explicitly DNP peers are outside the predicate.",
         "Open power pins remain with the existing unconnected component pin rules. Different schematic assignments do not establish PCB copper continuity, current capacity, off-board connection, or part interchangeability."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint.DesignLintTests.test_peer_component_power_pin_splits_surface_review_and_controls"
+        "tests.test_peer_power_pin_assignment.test_exact_symbol_power_assignment_fault_and_valid_controls",
+        "tests.test_peer_power_pin_assignment.test_shared_part_id_symbol_aliases_prompt_for_split_power_and_return_assignments",
+        "tests.test_peer_power_pin_assignment.test_shared_part_id_power_assignment_matches_between_cli_and_mcp",
+        "tests.test_peer_power_pin_assignment.test_part_id_peer_power_assignment_fault_and_control_on_pinned_native_versions"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint.DesignLintTests.test_peer_component_power_pin_splits_surface_review_and_controls",
-        "tests.test_design_lint.DesignLintTests.test_peer_component_power_pin_splits_follow_rule_policy_and_ignore"
+        "tests.test_peer_power_pin_assignment.test_exact_symbol_power_assignment_fault_and_valid_controls",
+        "tests.test_peer_power_pin_assignment.test_exact_symbol_power_assignment_obeys_policy_and_ignore_lifecycle",
+        "tests.test_peer_power_pin_assignment.test_common_power_and_return_assignments_clear_part_id_peer_prompts",
+        "tests.test_peer_power_pin_assignment.test_part_id_alias_comparison_requires_complete_matching_peer_identity",
+        "tests.test_peer_power_pin_assignment.test_shared_part_id_power_assignment_matches_between_cli_and_mcp",
+        "tests.test_peer_power_pin_assignment.test_part_id_peer_power_assignment_fault_and_control_on_pinned_native_versions"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint.DesignLintTests.test_peer_component_power_pin_order_is_stable_and_commoning_clears_findings"
+        "tests.test_peer_power_pin_assignment.test_exact_symbol_power_assignment_is_stable_under_mapping_order",
+        "tests.test_peer_power_pin_assignment.test_shared_part_id_group_covers_exact_symbol_subgroups_once",
+        "tests.test_peer_power_pin_assignment.test_part_id_peer_findings_are_stable_under_input_mapping_order",
+        "tests.test_peer_power_pin_assignment.test_native_fixture_sources_match_reviewed_digests",
+        "tests.test_design_lint_determinism.test_high_risk_reports_ignore_python_hash_seed"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#component_peer_power_pin_assignment_divergences",
@@ -217,29 +241,40 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted non-connector components with the exact same native symbol and complete matching pin inventories, report a pin classified by native KiCad metadata as power_out when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
+      "predicate": "Among fitted non-connector components comparable by exact native symbol, or by the same native PART_ID across distinct symbols with matching value and footprint, require complete matching pin inventories and matching native pin types. Exact-symbol pin functions may be absent but must not conflict; cross-symbol PART_ID groups require present, identical per-pin function text, including identical generic placeholders as structural evidence only. Report a power_out pin when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "An open power-output pin may be intentional; matching component identity does not require peer outputs to share a net or prove that an output is used.",
-        "Only fitted non-connector peers with an exact shared symbol identity, complete equal pin-number inventories, and a matching native power_out pin type are compared. DNP peers, incomplete inventories, absent type metadata, and ambiguous assignments are outside the predicate.",
+        "Exact-symbol peers need complete equal pin-number inventories and a matching native power_out type. Cross-symbol peers additionally need the same nonempty native PART_ID, matching component values and footprints, and present identical per-pin function text; identical generic placeholders are structural evidence only and do not identify a role. PART_ID is a schematic property and can be wrong; the result remains review-only. DNP peers, incomplete inventories, absent type metadata, mismatched identity data, and ambiguous assignments are outside the predicate.",
         "The schematic netlist does not prove output function, component operation, current capacity, PCB copper continuity, off-board connections, or physical population. Recognized named supply and return functions remain with their more specific existing findings; shield-labelled power outputs remain eligible because there is no corresponding component-level unconnected-shield rule."
       ],
       "fault_fixtures": [
         "tests.test_peer_power_output.test_reports_an_open_native_power_output_pin_when_an_exact_peer_is_connected",
+        "tests.test_peer_power_output.test_reports_open_pin_across_native_symbol_aliases_with_the_same_part_id",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_cover_each_typed_peer_rule",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_accept_identical_generic_pin_metadata",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_shield_named_power_output_remains_eligible_without_a_component_shield_rule",
         "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions"
       ],
       "valid_control_fixtures": [
         "tests.test_peer_power_output.test_assigned_peer_outputs_are_valid_same_or_separate_net_controls",
         "tests.test_peer_power_output.test_skips_open_all_dnp_different_symbol_incomplete_ambiguous_and_non_output_cases",
+        "tests.test_peer_power_output.test_part_id_peer_scan_requires_consistent_fitted_component_identity",
+        "tests.test_peer_power_output.test_part_id_peer_scan_requires_matching_native_pin_functions",
+        "tests.test_peer_power_output.test_part_id_peer_scan_skips_missing_pin_function_metadata",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_skip_mismatched_pin_functions",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
+        "tests.test_peer_power_output.test_part_id_peer_scan_deduplicates_same_pin_candidate_from_exact_symbol_group",
         "tests.test_peer_power_output.test_named_supply_and_return_outputs_keep_their_specific_findings",
         "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_peer_power_output.test_finding_is_stable_under_map_order_changes"
+        "tests.test_peer_power_output.test_finding_is_stable_under_map_order_changes",
+        "tests.test_design_lint_determinism.test_high_risk_reports_ignore_python_hash_seed"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#component_peer_power_output_pin_outliers",
@@ -253,28 +288,34 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted non-connector components with the exact same native symbol and complete matching pin inventories, report a pin classified by native KiCad metadata as output when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
+      "predicate": "Among fitted non-connector components comparable by exact native symbol, or by the same native PART_ID across distinct symbols with matching value and footprint, require complete matching pin inventories and matching native pin types. Exact-symbol pin functions may be absent but must not conflict; cross-symbol PART_ID groups require present, identical per-pin function text, including identical generic placeholders as structural evidence only. Report an output pin when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "An open signal-output pin may be intentional; matching component identity does not require peer outputs to share a net or prove that an output is used.",
-        "Only fitted non-connector peers with an exact shared symbol identity, complete equal pin-number inventories, and a matching native output pin type are compared. DNP peers, incomplete inventories, absent type metadata, and ambiguous assignments are outside the predicate.",
+        "Exact-symbol peers need complete equal pin-number inventories and a matching native output type. Cross-symbol peers additionally need the same nonempty native PART_ID, matching component values and footprints, and present identical per-pin function text; identical generic placeholders are structural evidence only and do not identify a role. PART_ID is a schematic property and can be wrong; the result remains review-only. DNP peers, incomplete inventories, absent type metadata, mismatched identity data, and ambiguous assignments are outside the predicate.",
         "The schematic netlist does not prove output function, component operation, PCB copper continuity, off-board connections, or physical population. Recognized named supply and return pins remain with their more specific findings."
       ],
       "fault_fixtures": [
         "tests.test_peer_power_output.test_reports_an_open_native_signal_output_pin_when_an_exact_peer_is_connected",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_cover_each_typed_peer_rule",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_accept_identical_generic_pin_metadata",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions"
       ],
       "valid_control_fixtures": [
         "tests.test_peer_power_output.test_assigned_signal_peer_outputs_are_valid_same_or_separate_net_controls",
         "tests.test_peer_power_output.test_signal_output_prompt_skips_incomplete_or_non_signal_peer_evidence",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_skip_mismatched_pin_functions",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_signal_output_review_supports_project_policy_and_exact_ignore",
         "tests.test_peer_power_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_peer_power_output.test_signal_output_finding_is_stable_under_map_order_changes"
+        "tests.test_peer_power_output.test_signal_output_finding_is_stable_under_map_order_changes",
+        "tests.test_design_lint_determinism.test_high_risk_reports_ignore_python_hash_seed"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#component_peer_signal_output_pin_outliers",
@@ -288,30 +329,36 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted non-connector components with the exact same native symbol and complete matching pin inventories, report an input or input_low pin with present, matching native function metadata when at least one peer assigns it to exactly one net and at least one peer assigns it to no net. Recognized named supply/return pins and reset, enable, and boot inputs remain with their more specific rules.",
+      "predicate": "Among fitted non-connector components comparable by exact native symbol, or by the same native PART_ID across distinct symbols with matching value and footprint, require complete matching pin inventories, matching native input/input_low type, and present, identical per-pin function text. Identical generic placeholders are structural evidence only. Report a pin when at least one peer assigns it to exactly one net and at least one peer assigns it to no net. Recognized named supply/return pins and reset, enable, and boot inputs remain with their more specific rules.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "An open signal-input pin may be intentional; matching component identity does not require peer inputs to share a net or prove an input source is missing.",
-        "Only fitted non-connector peers with an exact shared symbol identity, complete equal pin-number inventories, matching native input/input_low types, and present matching function metadata are compared. DNP peers, all-open groups, incomplete inventories, absent or mixed functions/types, and ambiguous assignments are outside the predicate.",
+        "Exact-symbol peers need complete equal pin-number inventories, matching native input/input_low types, and present matching function metadata. Cross-symbol peers additionally need the same nonempty native PART_ID, matching component values and footprints, and identical per-pin function text; identical generic placeholders are structural evidence only and do not identify a role. PART_ID is a schematic property and can be wrong; the result remains review-only. DNP peers, all-open groups, incomplete inventories, absent or mixed functions/types, mismatched identity data, and ambiguous assignments are outside the predicate.",
         "The schematic netlist does not establish the required signal source, off-board behavior, PCB copper continuity, or physical population. Recognized supply, return, reset, enable, and boot inputs remain with their specific findings."
       ],
       "fault_fixtures": [
         "tests.test_peer_power_output.test_reports_an_open_native_signal_input_pin_when_an_exact_peer_is_connected",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_cover_each_typed_peer_rule",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_accept_identical_generic_pin_metadata",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_active_low_input_is_eligible_for_peer_review",
         "tests.test_peer_power_output.test_peer_signal_input_fault_and_control_on_pinned_native_versions"
       ],
       "valid_control_fixtures": [
         "tests.test_peer_power_output.test_assigned_signal_peer_inputs_are_valid_same_or_separate_net_controls",
         "tests.test_peer_power_output.test_signal_input_prompt_skips_open_or_incomplete_peer_evidence",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_skip_mismatched_pin_functions",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_specific_supply_return_and_control_inputs_keep_their_own_findings",
         "tests.test_peer_power_output.test_signal_input_review_supports_project_policy_and_exact_ignore",
         "tests.test_peer_power_output.test_peer_signal_input_fault_and_control_on_pinned_native_versions"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_peer_power_output.test_signal_input_finding_is_stable_under_map_order_changes"
+        "tests.test_peer_power_output.test_signal_input_finding_is_stable_under_map_order_changes",
+        "tests.test_design_lint_determinism.test_high_risk_reports_ignore_python_hash_seed"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#component_peer_signal_input_pin_outliers",
@@ -325,29 +372,35 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted non-connector components with the exact same native symbol and complete matching pin inventories, report a bidirectional pin with present, matching native function metadata when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
+      "predicate": "Among fitted non-connector components comparable by exact native symbol, or by the same native PART_ID across distinct symbols with matching value and footprint, require complete matching pin inventories, matching native bidirectional type, and present, identical per-pin function text. Identical generic placeholders are structural evidence only. Report a pin when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
       ],
       "limitations": [
         "An open bidirectional pin may be intentional; matching component identity does not establish bus membership or require peer pins to share a net.",
-        "Only fitted non-connector peers with an exact shared symbol identity, complete equal pin-number inventories, matching native bidirectional types, and present matching function metadata are compared. DNP peers, all-open groups, incomplete inventories, absent or mixed functions/types, and ambiguous assignments are outside the predicate.",
+        "Exact-symbol peers need complete equal pin-number inventories, matching native bidirectional types, and present matching function metadata. Cross-symbol peers additionally need the same nonempty native PART_ID, matching component values and footprints, and identical per-pin function text; identical generic placeholders are structural evidence only and do not identify a role. PART_ID is a schematic property and can be wrong; the result remains review-only. DNP peers, all-open groups, incomplete inventories, absent or mixed functions/types, mismatched identity data, and ambiguous assignments are outside the predicate.",
         "The schematic netlist does not establish the required interface, off-board behavior, PCB copper continuity, or physical population. Recognized named supply and return pins remain with their more specific findings."
       ],
       "fault_fixtures": [
         "tests.test_peer_power_output.test_reports_an_open_native_bidirectional_pin_when_an_exact_peer_is_connected",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_cover_each_typed_peer_rule",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_accept_identical_generic_pin_metadata",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_peer_bidirectional_fault_and_control_on_pinned_native_versions",
         "tests.test_mcp_parity.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_peer_power_output.test_assigned_bidirectional_peers_are_valid_same_or_separate_net_controls",
         "tests.test_peer_power_output.test_bidirectional_prompt_skips_open_or_incomplete_peer_evidence",
+        "tests.test_peer_power_output.test_shared_part_id_aliases_skip_mismatched_pin_functions",
+        "tests.test_peer_power_output.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_bidirectional_review_supports_project_policy_and_exact_ignore",
         "tests.test_peer_power_output.test_peer_bidirectional_fault_and_control_on_pinned_native_versions"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_peer_power_output.test_bidirectional_finding_is_stable_under_map_order_changes"
+        "tests.test_peer_power_output.test_bidirectional_finding_is_stable_under_map_order_changes",
+        "tests.test_design_lint_determinism.test_high_risk_reports_ignore_python_hash_seed"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_pins.py#component_peer_bidirectional_pin_outliers",
@@ -578,13 +631,13 @@
         "tests.test_design_lint.DesignLintTests.test_multiconductor_connector_without_connected_return_needs_review",
         "tests.test_design_lint.DesignLintTests.test_return_named_net_is_context_not_proof_of_connector_pin_role",
         "tests.test_design_lint.DesignLintTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_return_coverage_excludes_shields_and_small_connectors",
         "tests.test_design_lint.DesignLintTests.test_connector_population_heuristics_ignore_dnp_instances",
         "tests.test_design_lint.DesignLintTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -615,7 +668,7 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_common_supply_aliases_pass_and_distinct_rails_stay_separate",
@@ -649,7 +702,7 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
-        "tests.test_connector_coverage.ConnectorCoverageTests.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_common_return_across_symbols_passes_and_shield_stays_separate",
@@ -953,7 +1006,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A component with distinct assigned SDA and SCL nets has either line without a visible 1 kΩ through 100 kΩ path to a named positive rail. A path is one conventional fitted resistor or an unbranched series chain of fitted conventional resistors, with each resistor and the total nominal resistance in range; every intermediate net must contain exactly the two recognized resistor pins.",
+      "predicate": "A component with distinct assigned SDA and SCL nets has either line without a visible 1 k\u03a9 through 100 k\u03a9 path to a named positive rail. A path is one conventional fitted resistor or an unbranched series chain of fitted conventional resistors, with each resistor and the total nominal resistance in range; every intermediate net must contain exactly the two recognized resistor pins.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -993,12 +1046,12 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a recognized assigned SDA/SCL bus, fitted conventional R-reference resistors from 1 kΩ through 100 kΩ are grouped into direct or unbranched series paths with total nominal resistance in the same range. Paths to one named positive rail are combined in parallel; a line is reported when its nominal equivalent resistance is below 1 kΩ.",
+      "predicate": "For a recognized assigned SDA/SCL bus, fitted conventional R-reference resistors from 1 k\u03a9 through 100 k\u03a9 are grouped into direct or unbranched series paths with total nominal resistance in the same range. Paths to one named positive rail are combined in parallel; a line is reported when its nominal equivalent resistance is below 1 k\u03a9.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "The 1 kΩ boundary is a broad review threshold, not a universal electrical requirement; project-specific requirements and rule modes remain authoritative.",
+        "The 1 k\u03a9 boundary is a broad review threshold, not a universal electrical requirement; project-specific requirements and rule modes remain authoritative.",
         "Only directly connected or unbranched series paths of discrete resistors are recognized; arrays, branched paths, multiple pull-up rails, internal pull-ups, and remote pull-ups are not calculated.",
         "This heuristic uses nominal resistance only and does not establish resistor tolerance, sink-current margin, bus voltage compatibility, capacitance, rise time, or timing. A separate project-authored electrical-window check can optionally apply a maximum per-resistor tolerance bound, but does not verify its cited source or scope."
       ],
@@ -1026,14 +1079,14 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For an assigned SDA/SCL pair recognized from one fitted component's native pin functions, collect fitted conventional direct or unbranched resistor paths between 1 kΩ and 100 kΩ to recognized positive rails. Emit one review candidate when the combined SDA/SCL paths use more than one distinct normalized positive-rail family.",
+      "predicate": "For an assigned SDA/SCL pair recognized from one fitted component's native pin functions, collect fitted conventional direct or unbranched resistor paths between 1 k\u03a9 and 100 k\u03a9 to recognized positive rails. Emit one review candidate when the combined SDA/SCL paths use more than one distinct normalized positive-rail family.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Rail families come from a narrow net-name or pin-function allowlist. Custom positive rail names without a recognized power-pin function are not included.",
         "Different families are a review cue, not proof of incompatible voltages. The check does not resolve rail values, device input limits, level shifting, rail sequencing, external pull-ups, resistor arrays, or active pull-up circuits.",
-        "Only fitted conventional resistor paths with each resistor and total path in the 1 kΩ–100 kΩ detection range are followed; this is not a universal I2C resistor requirement."
+        "Only fitted conventional resistor paths with each resistor and total path in the 1 k\u03a9\u2013100 k\u03a9 detection range are followed; this is not a universal I2C resistor requirement."
       ],
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_i2c_pullups_to_distinct_rail_families_request_review"
@@ -1087,7 +1140,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A non-DNP pin with an explicitly active-low chip-select function and native input/input_low electrical type has one assigned non-return net, while no fitted conventional resistor path from that net to a recognized positive rail has a per-resistor and total nominal value between 1 kΩ and 100 kΩ. Direct and unbranched two-terminal resistor chains are recognized.",
+      "predicate": "A non-DNP pin with an explicitly active-low chip-select function and native input/input_low electrical type has one assigned non-return net, while no fitted conventional resistor path from that net to a recognized positive rail has a per-resistor and total nominal value between 1 k\u03a9 and 100 k\u03a9. Direct and unbranched two-terminal resistor chains are recognized.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -1095,7 +1148,7 @@
         "The rule recognizes only the bounded active-low function aliases documented in DESIGN_LINT.md and exported native input/input_low pin types.",
         "A missing visible path can be valid when the device has an internal bias, the controller guarantees the idle state, or bias is supplied off-board; no firmware or runtime state is inspected.",
         "Only recognized positive rail names or pin functions count, and only direct or unbranched conventional two-terminal resistor chains are traced. Resistor arrays, jumpers, active bias circuits, and uncommon rail labels are outside the predicate.",
-        "The 1 kΩ–100 kΩ interval is a broad review-detection window, not a recommended value or proof of valid logic thresholds, reset sequencing, device selection, or signal integrity."
+        "The 1 k\u03a9\u2013100 k\u03a9 interval is a broad review-detection window, not a recommended value or proof of valid logic thresholds, reset sequencing, device selection, or signal integrity."
       ],
       "fault_fixtures": [
         "tests.test_design_lint.DesignLintTests.test_spi_active_low_select_bias_hint_is_review_only_and_configurable",
@@ -1162,19 +1215,19 @@
         "Schematic pin assignments do not establish controller configuration, component conduction, PCB copper continuity, off-board behavior, or physical connector wiring."
       ],
       "fault_fixtures": [
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_unmapped_usb_c_port_without_role_map_is_review_candidate",
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_unlisted_usb_c_port_is_found_when_electrical_contract_maps_another_port",
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_standard_or_project_reviewed_connector_identity_extends_usb_c_candidates"
+        "tests.test_usb_c_ports.test_unmapped_usb_c_port_without_role_map_is_review_candidate",
+        "tests.test_usb_c_ports.test_unlisted_usb_c_port_is_found_when_electrical_contract_maps_another_port",
+        "tests.test_usb_c_ports.test_standard_or_project_reviewed_connector_identity_extends_usb_c_candidates"
       ],
       "valid_control_fixtures": [
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_mapped_usb_c_port_is_suppressed",
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_candidate_excludes_dnp_nonconnector_and_incomplete_pin_function_controls",
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_candidate_obeys_review_block_off_and_exact_ignore_decisions",
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_standard_or_project_reviewed_connector_identity_extends_usb_c_candidates"
+        "tests.test_usb_c_ports.test_mapped_usb_c_port_is_suppressed",
+        "tests.test_usb_c_ports.test_candidate_excludes_dnp_nonconnector_and_incomplete_pin_function_controls",
+        "tests.test_usb_c_ports.test_candidate_obeys_review_block_off_and_exact_ignore_decisions",
+        "tests.test_usb_c_ports.test_standard_or_project_reviewed_connector_identity_extends_usb_c_candidates"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_usb_c_ports.UsbCPortLintTests.test_unreviewed_port_prompt_is_order_stable_and_complete_map_clears_it"
+        "tests.test_usb_c_ports.test_unreviewed_port_prompt_is_order_stable_and_complete_map_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_c_ports.py#unmapped_usb_c_ports",
@@ -1255,7 +1308,7 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A component exposing distinct assigned CANH and CANL nets has no fitted direct two-terminal resistor from 108 Ω through 132 Ω across those nets.",
+      "predicate": "A component exposing distinct assigned CANH and CANL nets has no fitted direct two-terminal resistor from 108 \u03a9 through 132 \u03a9 across those nets.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -2230,14 +2283,14 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, supported USB 2.0 D+/D− pin functions, direct or one-fitted-Device:R-per-line paths, explicit passive or power-input reference pins, and unique net assignments",
-      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, require one or more supported USB 2.0 D+ and D− pins at each endpoint, with each endpoint's pins for one side assigned to one shared native net within a port group. Pair DPn/DMn groups by matching numeric suffix; an unnumbered D+/D− endpoint can pair with one numbered group when exact nets resolve one path. Each line may be direct or bridge connector-side and PHY-side nets through exactly one complete fitted two-pin Device:R. Each data net may also contain complete fitted two-pin passive D-designated branches whose other terminal is on either endpoint's explicit reference net. Report a REVIEW prompt when each endpoint's explicit reference pins share one unique native net, but the connector and PHY reference nets differ. Suppress only an exact USB data-path map that names every supported data pin, uses a matching optional data_port_group where the PHY exposes numbered ports, and has common_net, separate_nets, or bonded policy with complete current reference-pin assignments. The exact component for a bonded policy is independently checked by bus.usb_data_path_mismatch.",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, supported USB 2.0 D+/D\u2212 pin functions, direct or one-fitted-Device:R-per-line paths, explicit passive or power-input reference pins, and unique net assignments",
+      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, require one or more supported USB 2.0 D+ and D\u2212 pins at each endpoint, with each endpoint's pins for one side assigned to one shared native net within a port group. Pair DPn/DMn groups by matching numeric suffix; an unnumbered D+/D\u2212 endpoint can pair with one numbered group when exact nets resolve one path. Each line may be direct or bridge connector-side and PHY-side nets through exactly one complete fitted two-pin Device:R. Each data net may also contain complete fitted two-pin passive D-designated branches whose other terminal is on either endpoint's explicit reference net. Report a REVIEW prompt when each endpoint's explicit reference pins share one unique native net, but the connector and PHY reference nets differ. Suppress only an exact USB data-path map that names every supported data pin, uses a matching optional data_port_group where the PHY exposes numbered ports, and has common_net, separate_nets, or bonded policy with complete current reference-pin assignments. The exact component for a bonded policy is independently checked by bus.usb_data_path_mismatch.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Separate reference nets can be intentional, joined elsewhere, or linked by a designed bond; the finding asks for review and does not declare that they must be common.",
-        "Only direct USB 2.0 D+/D− paths or paths through exactly one complete fitted two-pin Device:R per line are considered. Same-net duplicate contacts and complete fitted two-pin passive D-designated shunts to an endpoint reference are supported. Numbered DPn/DMn functions are grouped by exact numeric suffix; unnumbered connector aliases pair through exact native connectivity. Multiple series components, arbitrary extra data peers, multi-pin protection arrays, USB 3.x lanes, other multi-hop paths, incomplete or ambiguous pin metadata, mixed reference domains, and DNP endpoints or shunts are skipped.",
+        "Only direct USB 2.0 D+/D\u2212 paths or paths through exactly one complete fitted two-pin Device:R per line are considered. Same-net duplicate contacts and complete fitted two-pin passive D-designated shunts to an endpoint reference are supported. Numbered DPn/DMn functions are grouped by exact numeric suffix; unnumbered connector aliases pair through exact native connectivity. Multiple series components, arbitrary extra data peers, multi-pin protection arrays, USB 3.x lanes, other multi-hop paths, incomplete or ambiguous pin metadata, mixed reference domains, and DNP endpoints or shunts are skipped.",
         "Reference pins use bounded return-like function tokens such as GND, AGND, DGND, PGND, VSS, 0V, RTN, RETURN, or GROUND, including numeric suffixes and GND_A/GND_D/GND_P or VSSA/VSSD/VSSP forms; they must be passive or power_in type. Shield, chassis, frame, and protective-earth functions are excluded.",
         "An exact USB data map records source-reviewed schematic intent and compares the named reference pins and nets, but does not prove a fitted bond, PCB copper continuity, external grounding, connector wiring, or electrical suitability.",
         "A bonded USB map is checked separately by bus.usb_data_path_mismatch against exact native component and pin-to-net assignments; the peer-reference review itself does not establish bond conduction or PCB copper continuity."
@@ -2293,18 +2346,18 @@
         "The calculation uses nominal capacitor values and the project-authored stray-capacitance range; it does not model capacitor tolerances or prove startup, frequency accuracy, drive level, ESR margin, parasitics, layout quality, or environmental performance."
       ],
       "fault_fixtures": [
-        "tests.test_crystal_networks.CrystalNetworkTests.test_wrong_node_assignment_is_reported",
-        "tests.test_crystal_networks.CrystalNetworkTests.test_nominal_load_outside_target_is_reported_and_can_block",
-        "tests.test_crystal_networks.CrystalNetworkTests.test_unmapped_load_capacitor_is_reported_for_review"
+        "tests.test_crystal_networks.test_wrong_node_assignment_is_reported",
+        "tests.test_crystal_networks.test_nominal_load_outside_target_is_reported_and_can_block",
+        "tests.test_crystal_networks.test_unmapped_load_capacitor_is_reported_for_review"
       ],
       "valid_control_fixtures": [
-        "tests.test_crystal_networks.CrystalNetworkTests.test_exact_network_and_inclusive_target_boundaries_pass",
-        "tests.test_crystal_networks.CrystalNetworkTests.test_reversed_resonator_pins_are_valid_when_explicitly_mapped",
-        "tests.test_crystal_networks.CrystalNetworkTests.test_unmapped_internal_oscillator_is_not_inferred"
+        "tests.test_crystal_networks.test_exact_network_and_inclusive_target_boundaries_pass",
+        "tests.test_crystal_networks.test_reversed_resonator_pins_are_valid_when_explicitly_mapped",
+        "tests.test_crystal_networks.test_unmapped_internal_oscillator_is_not_inferred"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_crystal_networks.CrystalNetworkTests.test_load_mismatch_is_order_stable_and_corrected_values_clear_it"
+        "tests.test_crystal_networks.test_load_mismatch_is_order_stable_and_corrected_values_clear_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/crystal_networks.py#scan_crystal_network_map",

@@ -37,6 +37,7 @@ from .connector_coverage import (
 )
 from .connector_pins import (
     ComponentPeerPinAssignmentScans,
+    PeerPinAssignmentOutlier,
     PeerPinAssignmentScan,
     component_peer_pin_assignment_scans,
     component_peer_power_pin_assignment_divergences,
@@ -488,6 +489,30 @@ def _i2c_address_evidence(
     return evidence
 
 
+def _component_peer_identity_context(
+    group: PeerPinAssignmentOutlier,
+) -> tuple[str, str, str, dict[str, tuple[str, ...]]]:
+    """Describe the exact source identity that made two components comparable."""
+    if group.peer_identity_basis == "part_id":
+        subject_identity = f"PART_ID {group.peer_identity}"
+        identity_text = (
+            f"the same native PART_ID {group.peer_identity!r} across distinct native symbols"
+        )
+        independent_net_text = "a shared PART_ID does not require peer pins to share a net"
+    else:
+        subject_identity = group.peer_identity
+        identity_text = f"the exact native symbol {group.peer_identity!r}"
+        independent_net_text = "identical symbols do not require peer pins to share a net"
+    evidence: dict[str, tuple[str, ...]] = {
+        "peer_group_basis": (group.peer_identity_basis,),
+        "peer_group_identity": (group.peer_identity,),
+        "peer_group_symbols": group.peer_symbols,
+    }
+    if group.peer_identity_basis == "exact_symbol":
+        evidence["symbol"] = (group.peer_identity,)
+    return subject_identity, identity_text, independent_net_text, evidence
+
+
 def candidates(
     observed: NetlistContract,
     catalog: DesignLintRuleCatalog | None = None,
@@ -786,22 +811,42 @@ def candidates(
             # per-pin net assignments and a more useful classification.
             continue
         evidence = dict(group.assignments)
-        evidence["symbol"] = (group.symbol,)
+        evidence["symbol"] = (
+            group.peer_symbols if group.peer_identity_basis == "part_id" else (group.symbol,)
+        )
         evidence["pin_number"] = (group.pin_number,)
         evidence["outlier_pins"] = group.outlier_pins
+        if group.peer_identity_basis == "part_id":
+            evidence["peer_identity_basis"] = ("part_id",)
+            evidence["peer_identity"] = (group.peer_identity,)
+            evidence["peer_symbols"] = group.peer_symbols
         if group.peer_assignment_group is not None:
             evidence["peer_assignment_group"] = (group.peer_assignment_group,)
             evidence["peer_assignment_basis"] = group.peer_assignment_basis
+        if group.peer_identity_basis == "part_id":
+            subject = f"PART_ID {group.peer_identity} pin {group.pin_number}"
+            message = (
+                "Fitted connector symbol aliases with this native PART_ID have an unconnected "
+                "or minority assignment on the same generic pin, and their value, footprint, "
+                "pin inventory, function, and electrical-type metadata match. Review the approved "
+                "pinout and intentional per-port isolation; matching part identity does not prove "
+                "the nets must be common."
+            )
+        else:
+            subject = f"{group.symbol} pin {group.pin_number}"
+            message = (
+                "The same pin number on fitted instances of this exact connector symbol has "
+                "an unconnected or minority assignment, and at least one peer has no "
+                "meaningful native pin-function role. Review the approved pinout and any "
+                "intentional per-port isolation; matching symbol contacts do not prove that "
+                "their nets must be common."
+            )
         found.append(
             Candidate(
                 rule_id="connector.peer_pin_assignment_outlier",
-                subject=f"{group.symbol} pin {group.pin_number}",
+                subject=subject,
                 message=(
-                    "The same pin number on fitted instances of this exact connector symbol has "
-                    "an unconnected or minority assignment, and at least one peer has no "
-                    "meaningful native pin-function role. Review the approved pinout and any "
-                    "intentional per-port isolation; matching symbol contacts do not prove that "
-                    "their nets must be common."
+                    message
                     + (
                         " The comparison is scoped by a source-reviewed peer-assignment group."
                         if group.peer_assignment_group is not None
@@ -823,17 +868,47 @@ def candidates(
             # Keep one finding when the higher-confidence role comparison
             # already covers every contact in this generic peer group.
             continue
+        if group.peer_identity_basis == "part_id":
+            subject = f"PART_ID {group.peer_identity} pin {group.pin_number}"
+            message = (
+                "Fitted connector symbol aliases with this native PART_ID assign a generic pin "
+                "to different nets, and their value, footprint, pin inventory, function, and "
+                "electrical-type metadata match. Review the approved pinout to decide whether "
+                "these assignments should match or are intentionally independent; matching part "
+                "identity does not establish a required connection."
+            )
+            symbols = group.peer_symbols
+            identity_evidence = {
+                "peer_identity_basis": ("part_id",),
+                "peer_identity": (group.peer_identity,),
+                "peer_symbols": group.peer_symbols,
+            }
+        else:
+            subject = f"{group.symbol} pin {group.pin_number}"
+            message = (
+                "Fitted instances of this exact connector symbol assign the same pin number "
+                "to different nets, and at least one instance has no meaningful native "
+                "pin-function role. KiCad's generic Pin_N placeholder is treated as unknown. "
+                "Review the approved pinout to decide whether these assignments should match "
+                "or are intentionally independent; symbol identity alone does not establish "
+                "a required connection."
+            )
+            symbols = (group.symbol,)
+            identity_evidence = {}
+        scoped_evidence = (
+            {}
+            if group.peer_assignment_group is None
+            else {
+                "peer_assignment_group": (group.peer_assignment_group,),
+                "peer_assignment_basis": group.peer_assignment_basis,
+            }
+        )
         found.append(
             Candidate(
                 rule_id="connector.peer_pin_assignment_divergence",
-                subject=f"{group.symbol} pin {group.pin_number}",
+                subject=subject,
                 message=(
-                    "Fitted instances of this exact connector symbol assign the same pin number "
-                    "to different nets, and at least one instance has no meaningful native "
-                    "pin-function role. KiCad's generic Pin_N placeholder is treated as unknown. "
-                    "Review the approved pinout to decide whether these assignments should match "
-                    "or are intentionally independent; symbol identity alone does not establish "
-                    "a required connection."
+                    message
                     + (
                         " The comparison is scoped by a source-reviewed peer-assignment group."
                         if group.peer_assignment_group is not None
@@ -842,17 +917,11 @@ def candidates(
                 ),
                 evidence={
                     **group.assignments,
-                    "symbol": (group.symbol,),
+                    "symbol": symbols,
                     "pin_number": (group.pin_number,),
                     "missing_pin_function_pins": group.missing_function_pins,
-                    **(
-                        {}
-                        if group.peer_assignment_group is None
-                        else {
-                            "peer_assignment_group": (group.peer_assignment_group,),
-                            "peer_assignment_basis": group.peer_assignment_basis,
-                        }
-                    ),
+                    **identity_evidence,
+                    **scoped_evidence,
                 },
             )
         )
@@ -872,7 +941,21 @@ def candidates(
     for group in component_peer_power_pin_assignment_divergences(
         observed, reviewed_connector_references
     ):
-        if group.role == "ground/return":
+        if group.peer_identity_basis == "part_id" and group.role == "ground/return":
+            message = (
+                "The same recognized return pin on fitted non-connector components sharing this "
+                "native PART_ID across distinct symbols is assigned to different nets. Review "
+                "whether the domains are intentionally separate or a return connection is missing; "
+                "matching part identity and pin metadata do not prove the nets should be common."
+            )
+        elif group.peer_identity_basis == "part_id":
+            message = (
+                "The same recognized supply pin on fitted non-connector components sharing this "
+                "native PART_ID across distinct symbols is assigned to different nets. Review "
+                "whether the separate rails are intentional or a supply connection is missing; "
+                "matching part identity and pin metadata do not prove the nets should be common."
+            )
+        elif group.role == "ground/return":
             message = (
                 "The same recognized return pin on fitted non-connector components with this exact "
                 "symbol is assigned to different nets. Review whether the domains are intentionally "
@@ -886,16 +969,29 @@ def candidates(
                 "intentional or a supply connection is missing; matching symbol pins do not prove "
                 "the nets should be common."
             )
+        identity_evidence = (
+            {
+                "peer_identity_basis": (group.peer_identity_basis,),
+                "peer_identity": (group.peer_identity,),
+                "peer_symbols": group.peer_symbols,
+            }
+            if group.peer_identity_basis == "part_id"
+            else {}
+        )
+        subject_identity = (
+            group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
+        )
         found.append(
             Candidate(
                 rule_id="component.peer_power_pin_assignment_divergence",
                 subject=(
-                    f"{group.symbol} pin {group.pin_number} ({group.function}): "
+                    f"{subject_identity} pin {group.pin_number} ({group.function}): "
                     "peer power assignments differ"
                 ),
                 message=message,
                 evidence={
                     **group.assignments,
+                    **identity_evidence,
                     "symbol": (group.symbol,),
                     "pin_number": (group.pin_number,),
                     "pin_function": (group.function,),
@@ -1064,50 +1160,62 @@ def candidates(
         )
     for group in peer_pin_scans.power_output.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        (
+            subject_identity,
+            identity_text,
+            independent_net_text,
+            identity_evidence,
+        ) = _component_peer_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_power_output_unconnected",
                 subject=(
-                    f"{group.symbol} pin {group.pin_number}: fitted peer power-output assignment "
+                    f"{subject_identity} pin {group.pin_number}: fitted peer power-output assignment "
                     "is missing"
                 ),
                 message=(
-                    "A fitted component with this exact native symbol has an unassigned pin that "
+                    f"Fitted components with {identity_text} have an unassigned pin that "
                     "KiCad classifies as power_out, while at least one fitted peer's matching pin "
                     "has a net assignment. Review whether the open output is intentionally unused "
-                    "or its connection is missing; identical symbols do not require their outputs "
-                    "to share a net."
+                    f"or its connection is missing; {independent_net_text}."
                 ),
                 evidence={
                     **group.assignments,
-                    "symbol": (group.symbol,),
+                    **identity_evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": ("power_out",),
+                    "pin_function": (group.pin_function or "",),
                     "unassigned_pins": open_pins,
                 },
             )
         )
     for group in peer_pin_scans.signal_output.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        (
+            subject_identity,
+            identity_text,
+            independent_net_text,
+            identity_evidence,
+        ) = _component_peer_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_signal_output_unconnected",
                 subject=(
-                    f"{group.symbol} pin {group.pin_number}: fitted peer signal-output assignment "
+                    f"{subject_identity} pin {group.pin_number}: fitted peer signal-output assignment "
                     "is missing"
                 ),
                 message=(
-                    "A fitted component with this exact native symbol has an unassigned pin that "
+                    f"Fitted components with {identity_text} have an unassigned pin that "
                     "KiCad classifies as output, while at least one fitted peer's matching pin "
                     "has a net assignment. Review whether the open output is intentionally unused "
-                    "or its connection is missing; identical symbols do not require their outputs "
-                    "to share a net."
+                    f"or its connection is missing; {independent_net_text}."
                 ),
                 evidence={
                     **group.assignments,
-                    "symbol": (group.symbol,),
+                    **identity_evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": (group.electrical_type,),
+                    "pin_function": (group.pin_function or "",),
                     "unassigned_pins": open_pins,
                 },
             )
@@ -1119,23 +1227,29 @@ def candidates(
         if any(pin.casefold() in control_pin_keys for pin in open_pins):
             # Keep recognized reset, enable, and boot inputs with their specific rule.
             continue
+        (
+            subject_identity,
+            identity_text,
+            independent_net_text,
+            identity_evidence,
+        ) = _component_peer_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_signal_input_unconnected",
                 subject=(
-                    f"{group.symbol} pin {group.pin_number}: fitted peer signal-input assignment "
+                    f"{subject_identity} pin {group.pin_number}: fitted peer signal-input assignment "
                     "is missing"
                 ),
                 message=(
-                    "A fitted component with this exact native symbol has an unassigned pin that "
+                    f"Fitted components with {identity_text} have an unassigned pin that "
                     f"KiCad classifies as {group.electrical_type}, while at least one fitted "
                     "peer's matching pin has a net assignment. Review whether the open input is "
-                    "intentionally unused or its signal connection is missing; identical symbols "
-                    "do not require their input pins to share a net."
+                    f"intentionally unused or its signal connection is missing; "
+                    f"{independent_net_text}."
                 ),
                 evidence={
                     **group.assignments,
-                    "symbol": (group.symbol,),
+                    **identity_evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": (group.electrical_type,),
                     "pin_function": (group.pin_function or "",),
@@ -1145,23 +1259,28 @@ def candidates(
         )
     for group in peer_pin_scans.bidirectional.outliers:
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        (
+            subject_identity,
+            identity_text,
+            independent_net_text,
+            identity_evidence,
+        ) = _component_peer_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_bidirectional_pin_unconnected",
                 subject=(
-                    f"{group.symbol} pin {group.pin_number}: fitted peer bidirectional-pin "
+                    f"{subject_identity} pin {group.pin_number}: fitted peer bidirectional-pin "
                     "assignment is missing"
                 ),
                 message=(
-                    "A fitted component with this exact native symbol has an unassigned pin that "
+                    f"Fitted components with {identity_text} have an unassigned pin that "
                     "KiCad classifies as bidirectional, while at least one fitted peer's matching "
                     "pin has a net assignment. Review whether the open pin is intentionally "
-                    "unused or its connection is missing; identical symbols do not require their "
-                    "bidirectional pins to share a net."
+                    f"unused or its connection is missing; {independent_net_text}."
                 ),
                 evidence={
                     **group.assignments,
-                    "symbol": (group.symbol,),
+                    **identity_evidence,
                     "pin_number": (group.pin_number,),
                     "pin_electrical_type": (group.electrical_type,),
                     "pin_function": (group.pin_function or "",),
@@ -3497,8 +3616,13 @@ def _component_peer_pin_rule_coverage(
     )
     result: list[ComponentPeerPinRuleCoverage] = []
     for rule_id, scan in rule_scans:
-        if scan.exact_symbol_peer_group_count == 0:
-            status = "NO_EXACT_SYMBOL_PEERS"
+        peer_group_count = scan.exact_symbol_peer_group_count + scan.part_id_peer_group_count
+        if peer_group_count == 0:
+            status = (
+                "INCOMPLETE_COMPONENT_IDENTITY"
+                if scan.part_id_candidate_group_count > 0
+                else "NO_COMPARABLE_PEERS"
+            )
         elif scan.complete_pin_inventory_group_count == 0:
             status = "INCOMPLETE_PIN_INVENTORY"
         elif scan.matching_electrical_type_pin_group_count == 0:
@@ -3507,7 +3631,10 @@ def _component_peer_pin_rule_coverage(
             status = "NO_COMPATIBLE_PIN_FUNCTIONS"
         elif scan.unambiguous_assignment_pin_group_count == 0:
             status = "NO_UNAMBIGUOUS_ASSIGNMENTS"
-        elif scan.incomplete_pin_inventory_group_count > 0:
+        elif (
+            scan.incomplete_pin_inventory_group_count > 0
+            or scan.part_id_incomplete_component_identity_group_count > 0
+        ):
             status = "PARTIALLY_EVALUATED"
         else:
             status = "EVALUATED"
@@ -3521,6 +3648,14 @@ def _component_peer_pin_rule_coverage(
                 mode=default_modes[rule_id] if override is None else override.mode,
                 netlist_sha256=netlist_sha256,
                 exact_symbol_peer_group_count=scan.exact_symbol_peer_group_count,
+                part_id_peer_group_count=scan.part_id_peer_group_count,
+                part_id_candidate_group_count=scan.part_id_candidate_group_count,
+                part_id_incomplete_component_identity_group_count=(
+                    scan.part_id_incomplete_component_identity_group_count
+                ),
+                part_id_incomplete_component_identity_references=(
+                    scan.part_id_incomplete_component_identity_references
+                ),
                 incomplete_pin_inventory_group_count=scan.incomplete_pin_inventory_group_count,
                 incomplete_pin_inventory_references=scan.incomplete_pin_inventory_references,
                 complete_pin_inventory_group_count=scan.complete_pin_inventory_group_count,
@@ -3534,6 +3669,7 @@ def _component_peer_pin_rule_coverage(
                     scan.unambiguous_assignment_pin_group_count
                 ),
                 candidate_group_count=candidate_count,
+                deduplicated_candidate_group_count=scan.deduplicated_candidate_group_count,
                 finding_count=finding_count,
                 suppressed_candidate_count=candidate_count - finding_count,
             )
@@ -4465,6 +4601,16 @@ def evaluate(
             ),
             peer_pin_divergence_finding_count=sum(
                 item.rule_id == "connector.peer_pin_assignment_divergence"
+                for item in candidate_items
+            ),
+            part_id_peer_pin_outlier_finding_count=sum(
+                item.rule_id == "connector.peer_pin_assignment_outlier"
+                and item.evidence.get("peer_identity_basis") == ("part_id",)
+                for item in candidate_items
+            ),
+            part_id_peer_pin_divergence_finding_count=sum(
+                item.rule_id == "connector.peer_pin_assignment_divergence"
+                and item.evidence.get("peer_identity_basis") == ("part_id",)
                 for item in candidate_items
             ),
         )
@@ -7137,6 +7283,19 @@ def text_report(report: DesignLintReport) -> str:
             f"with an open assignment: "
             f"{peer_coverage.exact_symbol_pin_groups_with_open_assignment_count}"
         )
+        part_id_coverage = peer_coverage.part_id_alias_coverage
+        lines.append(
+            f"  Cross-symbol PART_ID aliases: {part_id_coverage.status}; candidate/eligible "
+            f"groups: {part_id_coverage.candidate_group_count}/"
+            f"{part_id_coverage.eligible_peer_group_count}; compared pin groups: "
+            f"{part_id_coverage.compared_pin_group_count}; incomplete identity/inventory/"
+            f"metadata groups: {part_id_coverage.incomplete_component_identity_group_count}/"
+            f"{part_id_coverage.incomplete_pin_inventory_group_count}/"
+            f"{part_id_coverage.incomplete_pin_metadata_group_count}; ambiguous assignments: "
+            f"{part_id_coverage.ambiguous_assignment_pin_group_count}; outlier/divergence "
+            f"findings: {part_id_coverage.outlier_finding_count}/"
+            f"{part_id_coverage.divergence_finding_count}"
+        )
         lines.append(
             f"  Repeated function groups: {peer_coverage.repeated_function_group_count}; "
             f"common assignments: "
@@ -7161,7 +7320,12 @@ def text_report(report: DesignLintReport) -> str:
         for coverage in report.component_peer_pin_coverage:
             lines.append(
                 f"  {coverage.rule_id}: {coverage.status} (mode: {coverage.mode}; "
-                f"exact-symbol peer groups: {coverage.exact_symbol_peer_group_count}; "
+                f"exact-symbol/PART_ID peer groups: "
+                f"{coverage.exact_symbol_peer_group_count}/"
+                f"{coverage.part_id_peer_group_count}; "
+                f"PART_ID candidate/ineligible-identity groups: "
+                f"{coverage.part_id_candidate_group_count}/"
+                f"{coverage.part_id_incomplete_component_identity_group_count}; "
                 f"complete/incomplete inventories: "
                 f"{coverage.complete_pin_inventory_group_count}/"
                 f"{coverage.incomplete_pin_inventory_group_count}; "
@@ -7172,10 +7336,15 @@ def text_report(report: DesignLintReport) -> str:
                 f"ambiguous/unambiguous assignments: "
                 f"{coverage.ambiguous_assignment_pin_group_count}/"
                 f"{coverage.unambiguous_assignment_pin_group_count}; "
-                f"candidates/findings/suppressed: {coverage.candidate_group_count}/"
+                f"candidates/deduplicated/findings/suppressed: "
+                f"{coverage.candidate_group_count}/"
+                f"{coverage.deduplicated_candidate_group_count}/"
                 f"{coverage.finding_count}/{coverage.suppressed_candidate_count})"
             )
             lines.append(f"    Native netlist SHA-256: {coverage.netlist_sha256}")
+            if coverage.part_id_incomplete_component_identity_references:
+                references = ", ".join(coverage.part_id_incomplete_component_identity_references)
+                lines.append(f"    PART_ID identity mismatch references: {references}")
             for reference in coverage.incomplete_pin_inventory_references:
                 lines.append(f"    Incomplete peer inventory group includes: {reference}")
     for finding in report.findings:

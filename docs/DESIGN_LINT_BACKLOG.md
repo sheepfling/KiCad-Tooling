@@ -184,21 +184,29 @@ and optional ecosystem adapters are `P3`.
   and review times remain absent. The metadata-only receipt is retained under
   the ignored `build/ci/lint-086-public-review-measurement-20261009/` directory;
   the public source checkouts and exported netlists remain outside this repo.
-  The next work is a source-bound review with independent disposition and
-  observed time on approved, nonconfidential examples. Count a quiet result
+  A reviewer usefulness/time card is prepared at
+  `build/ci/lint-086-public-review-measurement-20261009/review-card.md`; results
+  remain pending. Continue with an independent, source-bound review on approved,
+  nonconfidential examples. Count a quiet result
   as a supported non-finding only for common-reference paths in
   `common_reference_path_count`; `NO_SUPPORTED_PEER_PATHS` contributes no
   non-finding, and `INCOMPLETE` remains a partial screen. Keep unresolved labels
   visible and keep project defaults and the review-only prompt unchanged while
   evidence is gathered.
 
-- **LINT-094 — Open native power outputs on exact-symbol peers.** This gate
-  passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
+- **LINT-094 — Open native power output on comparable peers.** The original
+  exact-symbol gate passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
   including repeatable synthetic exports on digest-pinned KiCad 10.0.0 and
   10.0.5, the CLI/MCP parity test, and the installed-wheel external-template
   check. Its review prompt covers an open `power_out` pin when a matching
   fitted peer has one assigned net, without claiming that peers should share
-  nets. No project source or candidate code was imported.
+  nets. This extension also reviews different symbols carrying one matching
+  native `PART_ID` when value, footprint, complete pin inventory, native pin
+  type, and per-pin function text match. Identical generic placeholders count
+  only as structural metadata, not an electrical role. The expanded fault and
+  control passed repeated exports on both pinned KiCad versions locally on
+  2026-10-09; retain it for hosted acceptance on the next tagged source. No
+  project source or candidate code was imported.
 
 1. **Fail closed on empty native netlists.** LINT-078 now blocks source-bound
    lint when KiCad returns a successful export with zero component records. The
@@ -214,7 +222,9 @@ and optional ecosystem adapters are `P3`.
    controls with synthetic source-bound native exports. The
    `NativeConnectorReturnFixtureTests` lane passed both pinned KiCad versions
    on 2026-10-03 and was rerun locally on 2026-10-08 against the current
-   checkout: 2 tests and 4 subtests passed. It includes an explicit
+   checkout: 2 tests and 4 subtests passed. A targeted rerun on 2026-10-09
+   passed one native lane test with two exact-version subtests. It includes an
+   explicit
    no-connect-marker peer fault;
    J2.1 remains a REVIEW candidate on both versions, while the common-net
    control passes. LINT-079 extends that lane with a current interface role map
@@ -764,9 +774,10 @@ is not a reason by itself to expand its scope or change its default policy.
   population-dependent pin hints ignore DNP peers while preserving findings on
   fitted connectors. These check the project-authored relationship contract.
 - **Related heuristic regressions:** A four-connector synthetic case uses
-  numeric DB9 pins 7/9 on separately numbered `0V PWM` returns and exercises
-  both repeated-function and numbered-return review candidates, the common-net
-  control, and an explicit rule-off decision for intentional isolation. A
+  DB9 pins 7/9 on separately named `RETURN_PORT_1` through `RETURN_PORT_4`
+  and exercises both repeated-function and numbered-return review candidates,
+  the `COMMON_RETURN` control, and an explicit rule-off decision for
+  intentional isolation. A
   three-port case leaves one generic power contact unassigned while sibling
   contacts use separately numbered positive rails; both the pin-function
   mismatch and rail-name candidates identify it. No project board source is
@@ -781,9 +792,9 @@ is not a reason by itself to expand its scope or change its default policy.
   board source is used.
 - **Native regression:** Hosted package acceptance exports split-return and
   common-return controls twice with each selected, digest-pinned KiCad 10.0.0
-  and 10.0.5 image. This includes the exact synthetic four-port DB9 pins 7/9
-  pattern on separately numbered `0V PWM` nets, with exact native evidence for
-  all eight pins and a common-net control. A three-port generic-pin fixture
+  and 10.0.5 image. This includes the synthetic four-port DB9 pins 7/9 pattern
+  on separately named `RETURN_PORT_1` through `RETURN_PORT_4` nets, with exact
+  native evidence for all eight pins and a common-net control. A three-port generic-pin fixture
   leaves J3.1 unassigned while J1.1 and J2.1 use separately numbered positive
   rails; the native fault and common-rail control check peer-assignment and
   rail-name findings. It preserves raw export hashes and requires equality
@@ -808,8 +819,8 @@ is not a reason by itself to expand its scope or change its default policy.
   dataclass-only cross-symbol tests and native KiCad parsing without adding a
   rule or inferring that the domains must be common.
   The four-port DB9 netlists are also checked against two explicit synthetic
-  grounding requirements: all eight pins on one `0V PWM` domain, or four
-  per-connector `0V PWM n` domains. The matrix expects the split fault
+  grounding requirements: all eight pins on one `COMMON_RETURN` domain, or four
+  per-connector `RETURN_PORT_n` domains. The matrix expects the split fault
   to fail the common-domain requirement and pass the isolated-domain
   requirement, with the common-net control producing the inverse. Each
   acceptance receipt records the source, native netlist, and grounding
@@ -912,6 +923,11 @@ is not a reason by itself to expand its scope or change its default policy.
   cross-symbol controls, and normalized repeated exports also passed. Receipts
   remain under ignored `build/ci/native-connector-return-project-*/`; hosted
   acceptance for the current branch is not recorded.
+- **Targeted exact-version rerun (2026-10-09):** The DB9 connector-return
+  fault/control lane passed on digest-pinned KiCad 10.0.0 and 10.0.5: one
+  pytest item and two version subtests. The test revalidated repeated native
+  exports and the expected split-return review and common-return control.
+  Hosted acceptance for the current branch is not recorded.
 - **Supplemental local native screen (2026-10-07):** The KiCad 10.0.6 CLI
   bundled with the installed application exported the DB9 split-return fault,
   common-return control, and both numeric-function/neutral-label variants
@@ -1182,16 +1198,41 @@ is not a reason by itself to expand its scope or change its default policy.
   groups. A missing, empty, or inconsistent same-symbol inventory raises
   `REVIEW` and identifies its references. The four non-connector exact-symbol
   component peer-pin rules now report `component_peer_pin_coverage` entries with
-  source-bound counts for complete and incomplete inventories, comparable and
-  native-type/function-compatible groups, ambiguous assignments, candidates,
-  findings, and suppressed candidates. The output distinguishes no exact-symbol
-  peers, missing inventory, unsupported pin types/functions, ambiguous
-  assignment, partial evaluation, and a completed comparison. These counts
-  expose why the bounded scan did not emit a prompt; they do not prove full
-  symbol discovery or require peer pins to share a net. Synthetic pytest fault,
+  source-bound counts for exact-symbol groups and cross-symbol shared-`PART_ID`
+  candidates, including aliases excluded because their values or footprints do
+  not agree. The report names references in those identity-incomplete groups,
+  and counts eligible aliases, complete and incomplete inventories, comparable
+  and native-type/function-compatible groups, ambiguous assignments,
+  deduplicated candidates, findings, and suppressed candidates. It distinguishes
+  an ineligible `PART_ID` identity from no peer candidates, missing inventory,
+  unsupported pin types/functions, ambiguous assignment, partial evaluation,
+  and a completed comparison. These counts expose why the bounded scan did not
+  emit a prompt; they do not prove full symbol discovery or require peer pins to
+  share a net. Synthetic pytest fault,
   control, applicability-state, input-rule suppression, CLI/MCP parity,
   deterministic-hash-seed, and pinned native fault/control checks exercise this
-  coverage.
+  coverage. A synthetic CLI/MCP case confirms a mismatched shared-`PART_ID`
+  value is reported as incomplete identity coverage without creating an
+  electrical finding or changing `PASS` status.
+- **Current working-tree verification (2026-10-09):** The full pytest stage
+  passed on the dirty checkout: 2,372 tests passed, 86 environment-gated tests
+  skipped, and 1,880 subtests passed. Ruff formatting and lint, host and Windows
+  Pyright, Markdown checks, wheel/source builds, and source-archive wheel
+  equality passed. A fresh environment installed wheel version
+  `0.5.0rc25.dev0+g4e13ff7bf.d20261009`; installed origin and version checks,
+  inventory and surface checks against public `KiCAD-Test` commit
+  `ed89536f0dbbcb013145af2994fef41b2250143e`, portable verification against a
+  writable copy of that checkout, adapted-layout checks, and the onboarding
+  playtest passed. The package script itself did not produce one all-stage
+  `PASS`: its first wheel install hit sandbox DNS denial, and the direct
+  verification command could not write receipts into the read-only external
+  checkout. Those stages were resumed with dependency-network access and a
+  writable copy; the failed combined receipt remains under ignored
+  `build/ci/run-ur6jcsbc/`. Separately, six targeted exact-version native
+  connector/component peer-pin pytest items passed on the digest-pinned KiCad
+  10.0.0 and 10.0.5 images, including the connector alias and cross-symbol
+  component fault/control cases. These local results do not replace hosted
+  acceptance for a tagged source.
 - **Cohort input:** The public
   [kicad-happy v2.2.1 changelog](https://github.com/aklofas/kicad-happy/blob/v2.2.1/CHANGELOG.md)
   describes a `checks_run` manifest with run/skip reasons and examined counts,
@@ -1665,11 +1706,13 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v32. Fault/control and applicability reports cover
+- **Status:** Implemented v37. Fault/control and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
   control, generic peer-pin outliers, project-mapped connector returns, series
   power paths, power sequences, UART-label discovery, STM32 CubeMX pin maps,
+  split and common supply/return assignments across distinct symbols with one
+  matching component `PART_ID`,
   the multi-UART split-reference heuristic, SPI/UART voltage-domain review
   with exact-map controls, CAN peer asymmetry, a connector-only SPI/UART
   boundary control, coverage-sensitive connector peer finding suppression,
@@ -1867,6 +1910,41 @@ is not a reason by itself to expand its scope or change its default policy.
   pin-function and electrical-type entries have their expected values and are
   serialized in key order. `read_netlist` now sorts pin numbers before
   building these maps; the change adds no lint rule or native KiCad result.
+  The v33 extension adds complete fault/control reports for an open
+  `power_out` pin across distinct native symbol identities that share a
+  `PART_ID`, plus the connected control. It compares the emitted finding,
+  peer-group coverage counts, source digest, and full JSON report across three
+  independently randomized Python processes. This protects deterministic
+  reporting for LINT-094's `PART_ID` comparison extension; it adds no new lint
+  rule or native KiCad result. The focused isolated Python 3.11 pytest run
+  passed 92 tests; four pinned-native fixture cases were skipped because they
+  run in package acceptance. The v34 extension adds a split supply-and-return
+  fault across distinct synthetic symbols with one shared `PART_ID`, plus a
+  common-assignment control for LINT-070. It compares both complete typed
+  reports, including role findings and peer identity evidence, byte-for-byte
+  across the same three isolated processes. The focused
+  `tests/test_design_lint_determinism.py` pytest run passed; no native export or
+  electrical-intent claim is added. The v35 extension adds an exact-symbol
+  ordinary signal-output open-pin fault and a fully assigned control. The
+  three-process probe compares their complete reports and source-bound peer
+  coverage; the fault retains one `component.peer_signal_output_unconnected`
+  candidate and the control stays `PASS` with no findings. The focused
+  determinism pytest passed; exact-version export remains covered by the
+  separate native fixture lane. The v36 extension adds fault/control reports
+  for cross-symbol, shared-`PART_ID` peer signal outputs, inputs, and
+  bidirectional pins. Each fault has one open pin; each control assigns the
+  pin to a separate net. The process probe checks complete reports and confirms
+  that the source-bound coverage reports one `PART_ID` peer group, zero exact-
+  symbol groups, and the expected candidate/finding counts across all three
+  hash seeds. These cross-symbol cases are synthetic typed-netlist evidence;
+  they do not add native-export or electrical-intent claims. The v37 extension
+  adds LINT-094's three-peer duplicate-candidate case: two peers share an exact
+  symbol, while a third alias shares their case-insensitive `PART_ID`. The open
+  pin appears in both the exact-symbol and broader identity groups, yet the
+  report keeps one finding and records one deduplicated candidate. A complete
+  assignment control clears the finding. Full source-bound reports and group
+  counts match across the three hash seeds; this adds no lint rule or native
+  export result. The focused determinism pytest passed on 2026-10-09.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
@@ -2170,23 +2248,26 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-070 — Repeated component power-pin assignment divergence
 
-- **Status:** Implemented v1 as the default-review rule
-  `component.peer_power_pin_assignment_divergence`. The predicate is limited
-  to fitted non-connector peers with an exact shared symbol, pin number, and
-  recognized return or supply role; the project can use the standard rule
-  override and fingerprinted-ignore lifecycle.
+- **Status:** Implemented v2 as the default-review rule
+  `component.peer_power_pin_assignment_divergence`. It preserves exact-symbol
+  comparison and adds a guarded comparison for distinct symbols with the same
+  native `PART_ID`. The project can use the standard rule override and
+  fingerprinted-ignore lifecycle.
 - **Problem:** Two repeated IC or module symbols can have every pin connected
   while corresponding ground/return or supply pins use different nets. A
   connector-only peer heuristic and the same-component repeated-supply check
   do not cover that pattern. A project-authored connectivity requirement can
   test a known relationship, but this prompt can reveal an unreviewed split.
-- **Predicate:** Group fitted non-connector components by exact native symbol.
-  For each pin number present on all peers, require a recognized matching
-  return function or matching supply category and an unambiguous assignment
-  on every peer. Emit a review finding when the exact assigned net sets differ.
-  DNP instances, incomplete role metadata, unknown functions, and open pins do
-  not enter this comparison; open power pins remain with the more specific
-  unconnected component checks.
+- **Predicate:** Group fitted non-connector components by exact native symbol,
+  or by a shared nonempty `PART_ID` when the symbols differ. Cross-symbol
+  groups also require the same nonempty value and footprint, complete identical
+  pin inventories, and identical function and electrical-type metadata for
+  every pin. For each comparable pin, require a recognized matching return
+  function or matching supply category and exactly one net assignment on every
+  peer. Emit a review finding when the assigned nets differ. DNP instances,
+  incomplete role metadata, unknown functions, ambiguous assignments, and
+  open pins do not enter this comparison; open power pins remain with the more
+  specific unconnected component checks.
 - **Boundary:** Identical symbol identity and pin number identify a review
   candidate, not a required common domain or interchangeable part. Separate
   analog, digital, chassis, isolated-interface, or voltage rails may be
@@ -2196,23 +2277,28 @@ is not a reason by itself to expand its scope or change its default policy.
   continuity. Keep the default `review`; use a project-authored contract for
   a required relationship.
 - **Fixtures:** Split ground and supply assignments; shared-domain controls;
-  different-symbol and DNP controls; an open return handled only by the
-  specific component open-pin rule; rule `review`/`block`/`off`, exact-ignore,
-  and stale-ignore behavior; input-map reorder stability and commoning clears
-  the finding; CLI/MCP parity over synthetic KiCad XML. A source-hashed native
-  schematic pair also exercises identical synthetic module symbols with both
-  common-domain and split-domain assignments through repeated pinned KiCad
-  10.0.0/10.0.5 exports. No board source is used.
-- **Done:** Cataloged rule, exact peer pin/net evidence, synthetic
-  fault/control and metamorphic regressions, configurable disposition, and
-  shared-service CLI/MCP parity are in place. The native export acceptance
-  lane passed on the digest-pinned KiCad 10.0.0 and 10.0.5 images. ERC reports
-  two `power_pin_not_driven` errors for the common-domain control and four for
-  the split-domain fault, so ERC reports a generic power-source problem in
-  both cases while the heuristic localizes the differing peer pins. Field
-  false-positive rates remain unmeasured.
-- **Fixture inputs:** The
-  [synthetic native fixtures](../tests/fixtures/design_lint/component-peer-power-native/README.md)
+  missing or differing `PART_ID`, value, or footprint; incomplete or
+  mismatched pin inventories and metadata; DNP, open, and ambiguous peers;
+  rule `review`/`block`/`off`, exact-ignore, and stale-ignore behavior;
+  input-map reorder stability and commoning clears the finding; CLI/MCP parity
+  over synthetic KiCad XML. Source-hashed synthetic native schematic pairs
+  exercise exact-symbol behavior and distinct-symbol shared-`PART_ID` behavior
+  through repeated pinned KiCad 10.0.0/10.0.5 exports. No board source is used.
+- **Done:** The rule catalog and review evidence cover exact-symbol and guarded
+  shared-`PART_ID` comparisons. The exact-symbol legacy `unittest` regressions
+  have been migrated to pytest functions alongside the synthetic fault/control,
+  boundary, determinism, and CLI/MCP parity coverage. The distinct-symbol native
+  export lane passed on the digest-pinned KiCad 10.0.0 and 10.0.5 images during
+  the 2026-10-09 work session. LINT-070 is quiet on the common-assignment
+  control; its overall report remains `REVIEW` because the independent LINT-046
+  decoupling prompt also applies. The existing exact-symbol native lane passed
+  on the same pinned versions. ERC reports `power_pin_not_driven` errors for
+  both its shared-domain and split-domain fixture, while the heuristic
+  localizes differing peer pins. Field false-positive rates remain unmeasured.
+- **Fixture inputs:** The existing
+  [synthetic exact-symbol fixtures](../tests/fixtures/design_lint/component-peer-power-native/README.md)
+  and new
+  [synthetic shared-`PART_ID` fixtures](../tests/fixtures/design_lint/component-peer-power-assignment-native/README.md)
   record source hashes, assignments, and native-lane scope.
 
 #### LINT-051 — Two-pin passive assigned to one schematic net
@@ -3764,7 +3850,7 @@ is not a reason by itself to expand its scope or change its default policy.
   synthetic native-export checks; they do not establish physical switch state,
   footprint mapping, assembly population, or PCB continuity.
 
-#### LINT-094 — Open native power output on one exact-symbol peer
+#### LINT-094 — Open native power output on a comparable peer
 
 - **Status:** Implemented as `component.peer_power_output_unconnected`,
   defaulting to `REVIEW`. Projects can use the existing rule policy to keep
@@ -3775,60 +3861,103 @@ is not a reason by itself to expand its scope or change its default policy.
   could remain unnoticed when another identical copy has that pin assigned.
 - **Cohort context:** Similar-part and pin-comparison analyzers establish a
   useful review prompt, not a universal connectivity rule. The local check
-  uses native symbol identity, complete pin inventory, and native electrical
-  type; it imports no cohort implementation or project data.
+  compares native symbol identities or components with the same native
+  `PART_ID`, plus complete pin inventory and native electrical metadata; it
+  imports no cohort implementation or project data.
 - **Predicate:** Group fitted, non-connector instances with an exact matching
-  native symbol. Require complete, identical, unambiguous pin-number
-  inventories and matching `power_out` types for that pin. Emit one review
-  finding when at least one peer pin has no net assignment and at least one
-  has exactly one. Recognized supply and return functions remain with their
-  more specific checks; shield-labelled native power outputs remain eligible
-  because no component-level unconnected-shield finding exists. All-open,
-  all-assigned, DNP, incomplete/mismatched, missing-type, and multi-net
-  assignments do not trigger this rule.
+  native symbol, or with one shared nonempty `PART_ID` across different
+  symbols when values and footprints also match. The cross-symbol path also
+  requires present, identical per-pin function text; identical generic
+  placeholders are structural evidence only. Require complete, identical,
+  unambiguous pin-number inventories and matching `power_out` types for the
+  target pin. Emit one review finding when at least one peer pin has no net
+  assignment and at least one has exactly one. Recognized supply and return
+  functions remain with their more specific checks; shield-labelled native
+  power outputs remain eligible because no component-level unconnected-shield
+  finding exists. All-open, all-assigned, DNP, incomplete/mismatched,
+  missing-type, and multi-net assignments do not trigger this rule.
 - **Boundary:** The finding asks whether the open output is intentional or
   needs a connection. It does not require common nets across identical
   outputs, identify what a component output does, prove it is used, validate
   current capacity, or establish PCB copper, off-board wiring, or physical
-  population. Native `power_out` is only a candidate-selection clue.
+  population. Native `power_out`, symbol identity, and `PART_ID` are only
+  candidate-selection clues; the `PART_ID` may itself be incorrect.
 - **Fixtures and evidence:** The typed pytest fault/control matrix covers
   connected versus open peers, same-net and distinct-net output controls,
-  DNP, all-open, different symbols, incomplete inventory, ambiguous
-  assignment, non-`power_out` types, named supply/return exclusions, a
-  shield-labelled output fault, stable ordering, and review/block/off/exact-ignore
-  policy. The synthetic
+  DNP, all-open, cross-symbol shared-`PART_ID` fault and control, identical and
+  mismatched generic pin-function labels, different part IDs, mismatched values
+  or footprints, missing pin functions, incomplete inventory, ambiguous
+  assignment, non-`power_out` types, named supply/return
+  exclusions, a shield-labelled output fault, stable ordering, duplicate
+  suppression, and review/block/off/exact-ignore policy. The synthetic
   native source pair is
   [documented and source-hashed](../tests/fixtures/design_lint/component-peer-power-output-native/README.md);
   the fault leaves U2.2 open while U1.2 is assigned, and the control assigns
-  outputs to separate nets. A repeated-export lane is configured for the
-  digest-pinned KiCad 10.0.0 and 10.0.5 versions. CLI/MCP parity exercises the
-  shared design-lint service. Tagged acceptance passed in CI run 37796753272
-  (`v0.5.0rc12`): the fault and control fixtures were each exported twice on
-  digest-pinned KiCad 10.0.0 and 10.0.5, with repeatable parsed contracts and
-  the expected REVIEW on U2.2 versus PASS for control. The complete unit gate,
+  outputs to separate nets. The native pair also exercises identical generic
+  `Pin_2` metadata across the symbol aliases. The native lane creates its
+  project manifests and toolchain catalog from a synthetic helper, without a
+  separate project-template checkout. It exports both fixtures twice on
+  digest-pinned KiCad 10.0.0 and 10.0.5 and verifies the exact `PART_ID`, pin
+  inventory, functions, electrical types, assignments, normalized netlist
+  repeatability, and expected lint result. On 2026-10-09, all four peer-pin
+  native lanes passed on both pinned versions: power output, signal output,
+  signal input, and bidirectional. The cross-symbol `PART_ID` fault/control
+  exports each repeated identically and produced the expected LINT-094 result.
+  A source-bound synthetic CLI/MCP parity test exercises shared-`PART_ID`
+  open-pin faults and separate-net controls for all four peer pin types. It
+  compares complete reports and source-bound peer coverage from the CLI
+  subprocess and in-memory MCP service without using an external project
+  checkout. The
+  earlier tagged acceptance passed in CI run 37796753272 (`v0.5.0rc12`) for
+  the then-current exact-symbol fixtures. The earlier complete unit gate,
   source-distribution wheel rebuild and installed-wheel checks against the
   separate template checkout, and Linux/macOS/Windows preview jobs also passed.
+  Local verification of the expanded implementation on 2026-10-09 passed the
+  full pytest suite (2,351 passed, 85 skipped, 1,912 subtests), the focused
+  catalog/determinism/CLI-MCP parity suite (567 passed, 4 skipped, 271
+  subtests), Ruff, host and Windows Pyright, and Markdown checks. The source
+  distribution reproduced the same wheel, and the installed wheel passed the
+  external public-template inventory, CLI/MCP surface, portable verification,
+  relocated-layout, and playtest checks from a writable copy of the separate
+  checkout. The expanded pinned native fixtures passed on both supported
+  versions; this local run used the Docker daemon and did not use a local
+  `kicad-cli` installation.
+  On 2026-10-09, the current checkout passed the complete package gate against
+  the clean public KiCad-Team-Workflow-Template checkout at commit
+  `5ca79bedf665a9b6577d96b1d47f13ccd518c968`. The pytest suite reported 2,407
+  passed, 59 skipped, and 1,911 subtests passed. Ruff formatting and checks,
+  strict host and Windows Pyright, `rumdl`, and `mdrepo` passed. The wheel and
+  source distribution built successfully; rebuilding a wheel from the source
+  distribution reproduced the package metadata and payload. The fresh installed
+  wheel passed external inventory, CLI/MCP surface, portable verification,
+  relocated-layout, and playtest checks. The first sandbox run exposed two
+  unit-test schedule mocks that omitted the newly added peer-power-assignment
+  native lane. Both tests now mock that lane explicitly; the complete gate
+  passes with Docker access. This package gate did not run the opt-in exact-
+  version native export lanes, which remain separate evidence above.
   This verifies schematic/netlist recognition only; it does not establish PCB
   connectivity or electrical correctness.
 
-#### LINT-098 — Open native signal output on one exact-symbol peer
+#### LINT-098 — Open native signal output on a comparable peer
 
 - **Status:** Implemented as `component.peer_signal_output_unconnected`, with
   pytest typed-netlist regressions, rule-catalog coverage, project policy and
   exact-ignore controls, CLI/MCP parity, and a repeated native-export lane for
-  the pinned KiCad 10.0.0 and 10.0.5 profiles. Hosted acceptance is pending.
+  the pinned KiCad 10.0.0 and 10.0.5 profiles. The local native lane passed on
+  both profiles on 2026-10-09; hosted acceptance remains pending.
 - **Priority:** P1 component-pin completeness. LINT-094 recognizes native
   `power_out` pins, while this rule covers otherwise comparable pins classified
   as ordinary `output`. A missing assignment on one exact-symbol peer can be
   hard to spot in a repeated component group.
 - **Predicate:** Compare fitted, non-connector instances with one exact native
-  symbol and complete identical pin-number inventories. For each pin number,
-  require native electrical type `output` on every peer, matching pin-function
-  metadata, and one unambiguous net assignment on at least one peer. Emit a
-  `REVIEW` candidate when at least one peer pin has no assignment. Named supply
-  and return pins remain with their specific checks. All-open groups, DNP
-  peers, different symbols, incomplete inventories, mixed pin types, and
-  ambiguous assignments are outside the predicate.
+  symbol, or one shared native `PART_ID` across distinct symbols with matching
+  value and footprint. Require complete identical pin-number inventories,
+  native electrical type `output`, matching pin-function metadata, and one
+  unambiguous net assignment on at least one peer. Emit a `REVIEW` candidate
+  when at least one peer pin has no assignment. Named supply and return pins
+  remain with their specific checks. All-open groups, DNP peers, incomplete
+  inventories, mixed pin types, and ambiguous assignments are outside the
+  predicate.
 - **Boundary:** Matching symbols and pin numbers are clues to inspect an open
   output, not requirements to use it or connect peer outputs together. Native
   `output` type does not identify the signal function or expected load. This
@@ -3838,9 +3967,12 @@ is not a reason by itself to expand its scope or change its default policy.
   regression gate.
 - **Fixtures:** Synthetic typed and native-export faults leave one peer's
   output pin open; controls assign the peer pins to the same net and to
-  different nets. Typed controls also cover all-open, DNP, different-symbol,
+  different nets. Typed controls also cover all-open, DNP,
+  different-symbol/different-ID, inconsistent value or footprint,
   incomplete-inventory, ambiguous, wrong-electrical-type, and named supply or
-  return cases. Input-map reordering preserves the finding fingerprint.
+  return cases. Input-map reordering preserves the finding fingerprint. The
+  native lane exercises the exact-symbol path; cross-symbol `PART_ID` groups
+  use typed synthetic coverage.
   Synthetic schematics bind the exact symbol, pin inventory, native output
   type, and expected pin assignments; each source is exported twice on the
   digest-pinned KiCad 10.0.0 and 10.0.5 images.
@@ -3850,22 +3982,25 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Next:** Keep the native lane in package acceptance. Measure the prompt on
   approved, nonconfidential designs before changing its default disposition.
 
-#### LINT-099 — Open native signal input on one exact-symbol peer
+#### LINT-099 — Open native signal input on a comparable peer
 
 - **Status:** Implemented as `component.peer_signal_input_unconnected`, with
   pytest typed-netlist regressions, project policy and exact-ignore controls,
   CLI/MCP parity, and a repeated native-export lane for pinned KiCad 10.0.0 and
-  10.0.5. Hosted acceptance is pending.
+  10.0.5. The local native lane passed on both profiles on 2026-10-09; hosted
+  acceptance remains pending.
 - **Priority:** P1 component-pin completeness. LINT-094 and LINT-098 cover
   native power and signal outputs. This adds a narrow review prompt for an
-  otherwise ordinary `input` or `input_low` pin left open on one exact-symbol
+  otherwise ordinary `input` or `input_low` pin left open on one comparable
   fitted peer while another peer assigns its matching pin.
 - **Predicate:** Compare fitted, non-connector instances with one exact native
-  symbol and complete identical pin-number inventories. Require matching
-  native input type and present matching function metadata. Emit a `REVIEW` candidate
-  only when at least one peer pin has exactly one net assignment and at least
-  one peer pin is unassigned. Named supply and return pins, plus recognized
-  reset, enable, and boot controls, remain with their specific checks.
+  symbol, or one shared native `PART_ID` across distinct symbols with matching
+  value and footprint. Require complete identical pin-number inventories,
+  matching native input type, and present matching function metadata. Emit a
+  `REVIEW` candidate only when at least one peer pin has exactly one net
+  assignment and at least one peer pin is unassigned. Named supply and return
+  pins, plus recognized reset, enable, and boot controls, remain with their
+  specific checks.
 - **Boundary:** Matching symbols, pin numbers, electrical types, and function
   metadata are clues to inspect an open input; they do not establish a required
   source or require peer inputs to share a net. This does not infer off-board
@@ -3873,7 +4008,8 @@ is not a reason by itself to expand its scope or change its default policy.
   project-authored connectivity requirement remains necessary to make a
   specific required relationship a blocking regression gate.
 - **Fixtures:** Synthetic typed and native-export faults leave one peer input
-  open. Controls assign the peer inputs to the same net and to separate nets.
+  open. Controls assign the peer inputs to the same net and to separate nets;
+  typed tests also cover cross-symbol peers with a shared `PART_ID`.
   Typed boundaries cover all-open peers, DNP, different symbols, incomplete
   inventories, ambiguous assignments, mixed functions or types, passive pins,
   connectors, named supply/return pins, and recognized controls. Cross-process
@@ -3887,30 +4023,34 @@ is not a reason by itself to expand its scope or change its default policy.
   prompts on approved, nonconfidential boards before considering a default
   change.
 
-#### LINT-100 — Open native bidirectional pin on one exact-symbol peer
+#### LINT-100 — Open native bidirectional pin on a comparable peer
 
 - **Status:** Implemented as `component.peer_bidirectional_pin_unconnected`,
   defaulting to `REVIEW`, with pytest fault/control coverage, project policy
   and exact-ignore controls, CLI/MCP parity, and a repeated native-export lane
-  for the pinned KiCad 10.0.0 and 10.0.5 profiles. Hosted acceptance is queued
-  for the next tagged source.
+  for the pinned KiCad 10.0.0 and 10.0.5 profiles. The local native lane passed
+  on both profiles on 2026-10-09; hosted acceptance is queued for the next
+  tagged source.
 - **Priority:** P1 component-pin completeness. LINT-094, LINT-098, and
   LINT-099 cover native power outputs, signal outputs, and input pins. This
   adds the same bounded missing-assignment prompt for native bidirectional
   pins, including common bus roles such as SDA.
 - **Predicate:** Compare fitted non-connector instances with one exact native
-  symbol and complete identical pin inventories. Require matching native
-  `bidirectional` types and present matching function metadata. Report only
-  when at least one peer assigns the pin to exactly one net and another peer
-  assigns it to no net. DNP peers, connectors, all-open groups, mixed functions
-  or types, incomplete inventories, and ambiguous assignments are skipped.
+  symbol, or one shared native `PART_ID` across distinct symbols with matching
+  value and footprint. Require complete identical pin inventories, matching
+  native `bidirectional` types, and present matching function metadata. Report
+  only when at least one peer assigns the pin to exactly one net and another
+  peer assigns it to no net. DNP peers, connectors, all-open groups, mixed
+  functions or types, incomplete inventories, and ambiguous assignments are
+  skipped.
 - **Boundary:** The finding asks whether the open bidirectional pin is
   intentional or missing an assignment. It does not establish bus membership,
   require identical components to use a common net, infer off-board wiring, or
   prove PCB copper or physical population. Use a project-authored connectivity
   requirement to block a specific required relationship.
 - **Fixtures:** Synthetic pytest cases cover a three-peer SDA fault, shared-net
-  and separate-net controls, DNP and all-open peers, different symbols,
+  and separate-net controls, DNP and all-open peers, different symbols and
+  cross-symbol peers with a shared `PART_ID`,
   incomplete pin inventory, ambiguous assignments, missing or mismatched
   function metadata, connector references, and non-bidirectional pin types.
   Project `review`, `block`, `off`, and exact-fingerprint ignore behavior are
@@ -3924,6 +4064,91 @@ is not a reason by itself to expand its scope or change its default policy.
   review candidate, not evidence that the component belongs on one shared bus.
 - **Next:** Keep the rule at default `review`; measure applicability and
   reviewer value on approved, nonconfidential examples.
+
+#### LINT-101 — Connector peer-pin review across native PART_ID aliases
+
+- **Status:** Implemented as a conservative extension of
+  `connector.peer_pin_assignment_outlier` and
+  `connector.peer_pin_assignment_divergence`. Both remain default-`REVIEW`
+  hints. Pytest covers guarded alias eligibility, valid common and isolated
+  controls, project policy and ignore lifecycle, mapping-order stability, and
+  CLI/MCP parity. Tooling-owned native fault/control schematics are registered
+  in the pinned KiCad 10.0.0/10.0.5 connector-return lane. On 2026-10-09 the
+  local native lane passed on both pinned versions: 2 tests and 4 subtests,
+  including repeated exports and matching normalized typed-netlist hashes
+  across versions. The latest complete local package acceptance passed from
+  source version `0.5.0rc25.dev0+g4e13ff7bf.d20261009` against the public
+  template at commit `ed89536f0dbbcb013145af2994fef41b2250143e`: 2,398 tests
+  passed, 59 were environment-gated skips, and 1,893 subtests passed. Ruff,
+  host and Windows Pyright, Markdown and link checks, wheel and
+  source-distribution builds, source-archive wheel equality, fresh
+  installed-wheel origin/version checks, external inventory/surface/portable
+  verification, relocated-layout checks, and playtest all passed. The ignored
+  receipts are under `build/ci/run-c060t4wl/`. Hosted tagged-source acceptance
+  remains pending.
+- **Priority:** P1 connector peer-pin completeness. Existing peer comparisons
+  grouped only exact native symbol IDs, so equivalent connector parts drawn
+  with distinct symbol aliases could be skipped.
+- **Predicate:** Compare distinct fitted connector symbols only when every
+  member shares one nonempty native `PART_ID`, matching nonempty value and
+  footprint, a complete identical pin-number inventory, and matching nonempty
+  native function and electrical-type metadata for every pin. Apply the
+  existing generic-function outlier/divergence predicates per pin. Skip DNP
+  instances, incomplete identity/inventory/metadata, ambiguous multi-net
+  assignments, and groups reduced below two peers by reviewed peer scope.
+- **Boundary:** A shared `PART_ID` and matching metadata identify a comparison
+  candidate. They do not prove the contacts have the same system role or must
+  share a net. Keep project-authored connector and connectivity contracts as
+  the authority for required bonds, common supplies, and intentional isolation.
+- **Fixtures:** The pytest fault leaves J2.2 unassigned while J1.2 is assigned;
+  its control assigns both peer pins to one synthetic return. Typed tests and
+  the exact-version native lane also cover two assigned contacts on distinct
+  nets, which must produce the generic divergence prompt. Additional tests
+  cover separate assignments, policy `review`/`block`/`off`, exact fingerprint
+  ignores and stale-ignore detection, DNP state, ambiguous nets, value or
+  footprint mismatch, incomplete pin inventory, missing or mismatched native
+  metadata, project peer-scope isolation, deterministic output, and CLI/MCP
+  equality. The three native fixtures are
+  [`connector-peer-part-id-native`](../tests/fixtures/design_lint/connector-peer-part-id-native/README.md)
+  and contain only synthetic source. Their source hashes are control
+  `b8b85aa1fdc8c62547eab58788b120fa6028a8ba65051126f954432f4dd07d2c` and fault
+  `db6f556278611edb21a66f8445f7dfc3a2e456a63783dc3d1e8a79a56a69d478`; the
+  split-assignment fault is
+  `8530bab2ac3537a821be48321e9bb713aa8b2933d714902cc5a30fb4168fa192`.
+- **Incremental value:** Adds comparison across symbol aliases that exact-symbol
+  grouping cannot see. It does not expand broad similarity matching: identity
+  and all-pin metadata must agree, and each result remains subject to the
+  existing per-project rule override and exact-ignore controls.
+- **Public applicability probe (2026-10-09):** A read-only screen of the
+  [public CM4 baseboard sample][antmicro-cm4] at commit
+  `d248c2921e8e7f4c9b30c96ea5f376d9b2780f1e` used the root schematic with
+  SHA-256 `e56bfc07b813d5f4d6b3e7c713c2096806a800c1877a3f9ef80fed27d8d41551`.
+  Its `LICENSE` is Apache-2.0 (SHA-256
+  `c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c`). The
+  source checkout and netlist exports stayed outside this repository. Two
+  exports with digest-pinned KiCad 10.0.5
+  (`sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`)
+  normalized to the same typed contract: 506 components, 393 nets, and
+  netlist SHA-256
+  `7a4f7e98895b32a7c7f96bcb719676ace53fad2af21e40300515a91c921a921c`.
+  Coverage found 15 connector candidates and three exact-symbol peer groups,
+  but `PART_ID` alias coverage was `NO_CANDIDATES` (zero groups). The report
+  contained 86 exact-symbol divergence prompts and eight outlier prompts; 105
+  of 122 exact-symbol pin groups had unknown/generic function metadata. No
+  external pinout disposition was collected, so these counts describe review
+  load only and cannot be called false positives. This is a reproducible
+  compatibility and non-applicability sample, not evidence of LINT-101
+  detection gain or defect precision. Separate source-only screens of the
+  [Cynthion hardware][cynthion-hardware] and
+  [Calcumaker hardware][calcumaker-hardware] examples found no `PART_ID`
+  property in their KiCad schematic or board files, so those revisions cannot
+  exercise this alias predicate. They were not natively exported for this
+  check; these absences are not precision measurements.
+- **Next:** Find another approved, nonconfidential public example whose fitted
+  connector aliases have distinct native symbols and a shared `PART_ID` to
+  exercise the added predicate. Collect an independent pinout disposition
+  and reviewer time before claiming review value. Keep the predicate and
+  default `REVIEW` unchanged while that evidence is absent.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -4693,9 +4918,9 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-025 — PCB return-reference and connector-ground path evidence
 
 - **Status:** v4 adds a synthetic same-net front/back plane fault and
-  through-via control to the electrical contract lane; existing LINT-025
-  controls were synthetic-validated, and exact-version hosted acceptance for
-  this addition is pending. It is not field-validated. It covers direct pad
+  through-via control to the electrical contract lane; exact-version hosted
+  acceptance for this addition passed in tagged `v0.5.0rc24` (GitHub run
+  `37890194399`). It is not field-validated. It covers direct pad
   connectivity, explicit net-tie bonds, DNP state, intentional isolation,
   copper-zone identity, island counts, and exact per-pad island indexes using
   source-bound KiCad 10 `pcbnew`
@@ -4708,7 +4933,19 @@ is not a reason by itself to expand its scope or change its default policy.
   It also lists each filled island with no observed pad anchor. The catalogued
   10.0.0 and 10.0.5 images are covered by the native matrix. The new synthetic
   same-net F.Cu/B.Cu plane pair tests a missing stitch via against a one-via
-  control; exact-version hosted acceptance for that addition is pending.
+  control; that addition passed exact-version hosted acceptance in
+  `v0.5.0rc24`.
+- **Hosted exact-version rerun (2026-10-09):** Tagged package acceptance
+  `v0.5.0rc24` passed GitHub run `37890194399`, including the full pytest suite
+  and installed-wheel check against a separate project checkout. The run set
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`; the native PCB regression exercised
+  `pcb_return_fixture_lane` for the configured KiCad 10.0.0 and 10.0.5 projects.
+  Its unstitched-plane fault keeps one same-net `RETURN` zone on each of
+  `F.Cu` and `B.Cu` without a through via and expects disconnected endpoint
+  copper components. The paired control adds the exact through via and checks
+  connected endpoint membership plus repeatable native geometry. This proves
+  the synthetic fixture and pinned adapter behavior, not a production board's
+  return path or manufactured continuity.
 - **Problem:** Matching schematic nets can still lack an intended physical
   copper path due to unconnected pads, plane splits, net ties, or layout
   changes.
@@ -4798,7 +5035,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v16; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v17; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below. The UART peer heuristic now
@@ -9034,6 +9271,37 @@ materially better localization or a useful case native ERC misses. Keep any
 future result at `REVIEW`; multiple labels alone do not establish a wiring
 fault. No cohort code or project data was imported.
 
+### Recorded source review: kicad-happy thermal analyzer (v2.3.1)
+
+- **Source boundary:** Read-only review of the public
+  [kicad-happy v2.3.1 release][happy-thermal-v231], tagged at commit
+  `06840467ad0f5d76af45f64449b1f5ecb10f052f`; the repository declares MIT.
+  The [thermal analyzer source][happy-thermal-source] and release notes include
+  rotated-QFN thermal-via counting and a clearer reason when thermal assessment
+  is skipped. No analyzer was installed or run, and no cohort code, corpus, or
+  board data was copied.
+- **Observed checks:** `analyze_thermal.py` estimates junction temperature
+  from dissipation, package thermal resistance, ambient conditions, and a PCB
+  correction. Its thermal-via warning uses a fixed dissipation threshold of
+  0.5 W and a near-unity PCB correction; its recommendation gives a generic
+  minimum of five vias for QFN. Its capacitor proximity warnings use a 10 mm
+  radius and classify capacitor types from value text. These are deterministic
+  predicates over estimated or inferred inputs, not a part-specific thermal
+  proof.
+- **Local overlap and disposition:** LINT-071 compares exact-part dissipated
+  power against an authored derated limit. Native PCB services report geometry
+  and connectivity, but this repository has no thermal solver or reviewed
+  package-to-board heat model. Defer importing the estimator and its thresholds.
+  A future local check needs a project-authored thermal limit and source,
+  exact component identity, ambient and power basis, package/board assumptions,
+  and explicit thermal-pad/via connectivity evidence. Via-count-only or
+  10 mm-only rules do not meet that bar.
+- **Next synthetic evidence:** If an authored thermal contract is added, pair
+  a no-via fault with pad-connected vias, unrelated vias, wrong-plane vias,
+  and DNP controls; include package-specific alternative constructions and
+  threshold boundaries. Until the contract and expected outcomes are reviewed,
+  do not count the candidate as detection or review gain.
+
 ### Cohort cross-analysis rule audit
 
 The public [kicad-happy v2.2.1 changelog][happy-changelog] and
@@ -9267,9 +9535,10 @@ maintenance cost open wherever they were not measured.
 7. LINT-076 now covers mapped-check execution plus bounded applicability
    counts for LINT-066's direct-peer voltage heuristics, LINT-086's USB
    peer-reference heuristic, LINT-074's direct serial reference review, and
-   connector and component peer-pin comparisons. The peer coverage summaries
-   make exact-symbol groups, pin metadata eligibility, and assignment states
-   visible even when a checker has no finding to emit.
+   connector and component peer-pin comparisons. The component peer coverage
+   summaries make exact-symbol and shared-`PART_ID` groups, pin metadata
+   eligibility, and assignment states visible even when a checker has no
+   finding to emit.
    Continue it only when an audit identifies another enabled check that can
    silently skip without a matching coverage report or finding; do not add a
    global status registry that only restates the catalog.
@@ -9318,6 +9587,8 @@ quality, or first-article continuity.
 [happy-datasheets]: <https://github.com/aklofas/kicad-happy#-datasheets--sync-and-extract>
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
+[happy-thermal-v231]: <https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1>
+[happy-thermal-source]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/analyze_thermal.py>
 [happy-uc-releases]: https://github.com/aklofas/kicad-happy/releases
 [usb-c-spec-release]: https://www.usb.org/document-library/usb-type-cr-cable-and-connector-specification-release-25
 [usb-cap-fixture-readme]: ../tests/fixtures/design_lint/usb-c-vbus-capacitance-native/README.md

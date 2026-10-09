@@ -3,30 +3,31 @@
 This fixture pair uses four embedded, synthetic nine-pin connector symbols. Pins 7
 and 9 are explicitly named `GND` in the fixture symbol metadata and receive
 local return labels. The fault assigns each connector's two contacts to one of
-four separately numbered `0V PWM` nets; the control assigns all eight contacts
-to one `0V PWM` net.
+four separately named `RETURN_PORT_n` nets; the control assigns all eight
+contacts to one `COMMON_RETURN` net.
 
 The other seven contacts are wired to matching `SIGNAL<n>` nets across all four
 connectors. This keeps the regression focused on the return contacts and avoids
 warnings caused by unrelated unassigned synthetic pins.
 
-| Fixture             | Assignment                                       | Expected lint result                                            |
-| ------------------- | ------------------------------------------------ | --------------------------------------------------------------- |
-| `fault.kicad_sch`   | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4` | `REVIEW` for repeated return functions and numbered return nets |
-| `control.kicad_sch` | All J1–J4 pins 7/9 use `0V PWM`                  | `PASS`                                                          |
+| Fixture             | Assignment                             | Expected lint result                                            |
+| ------------------- | -------------------------------------- | --------------------------------------------------------------- |
+| `fault.kicad_sch`   | J1–J4 pins 7/9 use `RETURN_PORT_n`     | `REVIEW` for repeated return functions and numbered return nets |
+| `control.kicad_sch` | All J1–J4 pins 7/9 use `COMMON_RETURN` | `PASS`                                                          |
 
 The fixture deliberately tests detection of a suspicious pattern. It does not
 assert that every DB9 return must be bonded. A real project's connector pinout
 and grounding contract must state whether returns are common, bonded through a
 specified path, or isolated. The fixture contains no proprietary project source or
-board reconstruction.
+board reconstruction. All fixture labels and component attributes are generated
+synthetic values.
 
 ## Explicit grounding-contract checks
 
 The pinned native connector lane also evaluates these same exported netlists
 against two synthetic `GroundingAnalysis` requirements. One
-requires J1–J4 pins 7/9 to share `0V PWM`; the other requires each connector's
-pin pair to use its own `0V PWM n` domain. The split fault must fail the common
+requires J1–J4 pins 7/9 to share `COMMON_RETURN`; the other requires each connector's
+pin pair to use its own `RETURN_PORT_n` domain. The split fault must fail the common
 contract and pass the isolated contract. The common-net control must pass the
 common contract and fail the isolated contract. This verifies that the
 requirement—not the heuristic—decides which topology is acceptable. Each

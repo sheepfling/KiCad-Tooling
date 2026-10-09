@@ -563,6 +563,15 @@ def connector_return_lint_fixture_lane(
         "peer-pin-outlier-control": (
             fixture_root / "generic-peer-pin-assignment-native/control.kicad_sch"
         ),
+        "peer-pin-part-id-open-fault": (
+            fixture_root / "connector-peer-part-id-native/fault.kicad_sch"
+        ),
+        "peer-pin-part-id-common-control": (
+            fixture_root / "connector-peer-part-id-native/control.kicad_sch"
+        ),
+        "peer-pin-part-id-split-fault": (
+            fixture_root / "connector-peer-part-id-native/split-assignment-fault.kicad_sch"
+        ),
         "peer-pin-minority-fault": (
             fixture_root / "generic-peer-pin-assignment-native/minority-fault.kicad_sch"
         ),
@@ -625,14 +634,17 @@ def connector_return_lint_fixture_lane(
         "mapped-supply-control": "c45d390f138ebb9e440a1c6b0fea822f858ce9e31bfa229b28aaddc248adca3b",
         "channel-power-fault": "d6a52dd120801e0bf5776e82421ceb64670b26a9ace28afafd89b608a61aabb3",
         "channel-power-control": "37c7c28963b530a679cd3dc2087a4fa3b5d97dda52250332556406c66b9e1fc7",
-        "four-db9-fault": "c4a842c1685d5fbf21985aa22bd0b6436e163025f4381a8ac2544621c264e546",
-        "four-db9-control": "3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc",
+        "four-db9-fault": "1baabede29ea7a33cf85ec85f35c3affb2937e31db981e8f5d68f3b769d43791",
+        "four-db9-control": "ed2096c8aedbf263290c19c3a067cdf959fac92512aa3ab02fabbd7e10db4171",
         "four-db9-neutral-fault": "8b54babacd735da898cbd477b641a57085ff03b74bf0d9aa665fc8625a36f65f",
         "four-db9-neutral-control": "49e3bca48e79e4b46ce4eba8298026b5c730fca56b119a3ec407dfaafbcf54cd",
         "peer-power-fault": "4e2382aede1643770a466a9c902b1e960f8a8ab0d1bc676a03db33dfe6e582a8",
         "peer-power-control": "e50d57b2739dc49d3b164e0ea141f48835967fdc1982d3cfdd702f671dc7d197",
         "peer-pin-outlier-fault": "e9945c83c351ece43064a6c09c770fd8f3ab5fadd550ac58ee5d001f5d8842e2",
         "peer-pin-outlier-control": "94a9897ea50645a4232abf005477e620a4cd9b12330dfc2d6f32734e8157b8be",
+        "peer-pin-part-id-open-fault": "db6f556278611edb21a66f8445f7dfc3a2e456a63783dc3d1e8a79a56a69d478",
+        "peer-pin-part-id-common-control": "b8b85aa1fdc8c62547eab58788b120fa6028a8ba65051126f954432f4dd07d2c",
+        "peer-pin-part-id-split-fault": "8530bab2ac3537a821be48321e9bb713aa8b2933d714902cc5a30fb4168fa192",
         "peer-pin-minority-fault": "a071543178ad7668d20a3653fea5196cf556c3b96338b81dbeac97a6360ede2c",
         "peer-pin-divergence-fault": "c278b2ff86c869a6dba7c19ee08f064a863d282d251be44fd47c1e8a71254e57",
         "generic-placeholder-divergence-fault": "f6f4c9b419ab590366ca329b1ac0749706b29536017f2f24145de7ef6bdfaf30",
@@ -903,7 +915,7 @@ def connector_return_lint_fixture_lane(
         None,
     )
     expected_db9_pins = {
-        f"J{reference}.{pin}": (f"0V PWM {reference}",)
+        f"J{reference}.{pin}": (f"RETURN_PORT_{reference}",)
         for reference in range(1, 5)
         for pin in (7, 9)
     }
@@ -920,7 +932,7 @@ def connector_return_lint_fixture_lane(
         or db9_numbered is None
         or dict(db9_numbered.evidence)
         != {
-            f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9")
+            f"RETURN_PORT_{reference}": (f"J{reference}.7", f"J{reference}.9")
             for reference in range(1, 5)
         }
     ):
@@ -940,7 +952,7 @@ def connector_return_lint_fixture_lane(
     if db9_control.status != "PASS" or db9_control.findings:
         raise ValueError("Common four-port DB9 return control no longer passes cleanly")
     db9_control_nets = observed_contracts[("four-db9-control", "first")].nets
-    if db9_control_nets.get("0V PWM") != tuple(
+    if db9_control_nets.get("COMMON_RETURN") != tuple(
         f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
     ):
         raise ValueError("Common four-port DB9 control lost its eight native pin assignments")
@@ -948,13 +960,13 @@ def connector_return_lint_fixture_lane(
     db9_return_pins = tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))
     common_grounding = GroundingAnalysis(
         basis="Synthetic approved DB9 pinout requires all return contacts on one domain",
-        domains=(GroundDomain(net="0V PWM", pins=db9_return_pins),),
+        domains=(GroundDomain(net="COMMON_RETURN", pins=db9_return_pins),),
     )
     isolated_grounding = GroundingAnalysis(
         basis="Synthetic approved DB9 pinout requires one isolated return domain per connector",
         domains=tuple(
             GroundDomain(
-                net=f"0V PWM {reference}",
+                net=f"RETURN_PORT_{reference}",
                 pins=(f"J{reference}.7", f"J{reference}.9"),
             )
             for reference in range(1, 5)
@@ -962,21 +974,21 @@ def connector_return_lint_fixture_lane(
     )
     expected_grounding_results = {
         "common-fault": {
-            "grounding/0V PWM": "FAIL",
+            "grounding/COMMON_RETURN": "FAIL",
             "grounding/component-coverage": "PASS",
             "grounding/return-net-review": "FAIL",
         },
         "common-control": {
-            "grounding/0V PWM": "PASS",
+            "grounding/COMMON_RETURN": "PASS",
             "grounding/component-coverage": "PASS",
         },
         "isolated-fault": {
-            **{f"grounding/0V PWM {reference}": "PASS" for reference in range(1, 5)},
+            **{f"grounding/RETURN_PORT_{reference}": "PASS" for reference in range(1, 5)},
             "grounding/component-coverage": "PASS",
             "grounding/return-net-review": "PASS",
         },
         "isolated-control": {
-            **{f"grounding/0V PWM {reference}": "FAIL" for reference in range(1, 5)},
+            **{f"grounding/RETURN_PORT_{reference}": "FAIL" for reference in range(1, 5)},
             "grounding/component-coverage": "PASS",
         },
     }
@@ -1035,7 +1047,7 @@ def connector_return_lint_fixture_lane(
                 basis="All DB9 return contacts share the approved return net",
                 topology="common_net",
                 pins=db9_return_pins,
-                net="0V PWM",
+                net="COMMON_RETURN",
             ),
         ),
     )
@@ -1047,7 +1059,7 @@ def connector_return_lint_fixture_lane(
                 basis=f"Connector J{reference} return contacts share its isolated return net",
                 topology="common_net",
                 pins=(f"J{reference}.7", f"J{reference}.9"),
-                net=f"0V PWM {reference}",
+                net=f"RETURN_PORT_{reference}",
             )
             for reference in range(1, 5)
         ),
@@ -1335,6 +1347,103 @@ def connector_return_lint_fixture_lane(
             or coverage.peer_pin_outlier_finding_count != expected_outlier_findings
         ):
             raise ValueError(f"Native {case} lost source-bound connector peer-pin coverage")
+        peer_pin_coverage_receipts[case] = json.dumps(
+            coverage.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+
+    part_id_fault = reports[("peer-pin-part-id-open-fault", "first")]
+    part_id_fault_findings = {item.rule_id: item for item in part_id_fault.findings}
+    if (
+        part_id_fault.status != "REVIEW"
+        or set(part_id_fault_findings) != {"connector.peer_pin_assignment_outlier"}
+        or part_id_fault_findings["connector.peer_pin_assignment_outlier"].subject
+        != "PART_ID SYNTHETIC-CONNECTOR-2PIN-001 pin 2"
+        or part_id_fault_findings["connector.peer_pin_assignment_outlier"].evidence.get(
+            "peer_identity_basis"
+        )
+        != ("part_id",)
+        or part_id_fault_findings["connector.peer_pin_assignment_outlier"].evidence.get(
+            "outlier_pins"
+        )
+        != ("J2.2",)
+        or observed_contracts[("peer-pin-part-id-open-fault", "first")].nets
+        != {"SYNTHETIC_DATA": ("J1.1", "J2.1"), "SYNTHETIC_RETURN": ("J1.2",)}
+    ):
+        raise ValueError("Native PART_ID connector alias fault lost its exact open-pin evidence")
+    part_id_control = reports[("peer-pin-part-id-common-control", "first")]
+    if part_id_control.status != "PASS" or part_id_control.findings:
+        raise ValueError("Native PART_ID connector alias control no longer passes cleanly")
+    part_id_split_fault = reports[("peer-pin-part-id-split-fault", "first")]
+    part_id_split_findings = {item.rule_id: item for item in part_id_split_fault.findings}
+    part_id_split_observed = observed_contracts[("peer-pin-part-id-split-fault", "first")]
+    if (
+        part_id_split_fault.status != "REVIEW"
+        or set(part_id_split_findings) != {"connector.peer_pin_assignment_divergence"}
+        or part_id_split_findings["connector.peer_pin_assignment_divergence"].subject
+        != "PART_ID SYNTHETIC-CONNECTOR-2PIN-001 pin 2"
+        or dict(part_id_split_findings["connector.peer_pin_assignment_divergence"].evidence)
+        != {
+            "J1.2": ("SYNTHETIC_NET_2",),
+            "J2.2": ("SYNTHETIC_NET_3",),
+            "symbol": ("Synthetic:GenericPort", "Synthetic:GenericPortAlias"),
+            "pin_number": ("2",),
+            "missing_pin_function_pins": ("J1.2", "J2.2"),
+            "peer_identity_basis": ("part_id",),
+            "peer_identity": ("SYNTHETIC-CONNECTOR-2PIN-001",),
+            "peer_symbols": ("Synthetic:GenericPort", "Synthetic:GenericPortAlias"),
+        }
+        or part_id_split_observed.nets
+        != {
+            "SYNTHETIC_NET_1": ("J1.1", "J2.1"),
+            "SYNTHETIC_NET_2": ("J1.2",),
+            "SYNTHETIC_NET_3": ("J2.2",),
+        }
+    ):
+        raise ValueError(
+            "Native PART_ID connector alias split fault lost exact divergence evidence: "
+            f"status={part_id_split_fault.status}, findings={[(item.rule_id, item.subject, dict(item.evidence)) for item in part_id_split_fault.findings]!r}, "
+            f"nets={part_id_split_observed.nets!r}"
+        )
+    for (
+        case,
+        expected_open,
+        expected_different,
+        expected_common,
+        expected_outliers,
+        expected_divergences,
+    ) in (
+        ("peer-pin-part-id-open-fault", 1, 1, 1, 1, 0),
+        ("peer-pin-part-id-common-control", 0, 0, 2, 0, 0),
+        ("peer-pin-part-id-split-fault", 0, 1, 1, 0, 1),
+    ):
+        report = reports[(case, "first")]
+        coverage = report.connector_peer_pin_coverage
+        alias_coverage = None if coverage is None else coverage.part_id_alias_coverage
+        if (
+            coverage is None
+            or alias_coverage is None
+            or coverage.netlist_sha256 != netlist_hashes[(case, "first")]
+            or coverage.exact_symbol_peer_group_count != 0
+            or alias_coverage.status != "EVALUATED"
+            or alias_coverage.candidate_group_count != 1
+            or alias_coverage.eligible_peer_group_count != 1
+            or alias_coverage.compared_pin_group_count != 2
+            or alias_coverage.common_assignment_pin_group_count != expected_common
+            or alias_coverage.different_assignment_pin_group_count != expected_different
+            or alias_coverage.open_assignment_pin_group_count != expected_open
+            or alias_coverage.outlier_finding_count != expected_outliers
+            or alias_coverage.divergence_finding_count != expected_divergences
+        ):
+            raise ValueError(
+                f"Native {case} lost source-bound PART_ID connector coverage: "
+                f"coverage={None if coverage is None else coverage.model_dump(mode='json')!r}; "
+                f"expected_open={expected_open}, expected_different={expected_different}, "
+                f"expected_outliers={expected_outliers}, expected_divergences={expected_divergences}, "
+                f"netlist_sha256={netlist_hashes[(case, 'first')]}"
+            )
         peer_pin_coverage_receipts[case] = json.dumps(
             coverage.model_dump(mode="json"),
             sort_keys=True,
@@ -8078,6 +8187,287 @@ def component_peer_power_output_fixture_lane(
     )
 
 
+def component_peer_power_assignment_fixture_lane(
+    root: Path, *, project: str, image: str, log: HostedLog
+) -> None:
+    """Verify shared-PART_ID power and return assignment review on pinned exports."""
+    import hashlib
+    import json
+    import os
+    import tempfile
+
+    from .hwrepo.contract_coach import pinned_image, run_command
+    from .hwrepo.design_lint import evaluate
+    from .hwrepo.electrical import selected_config
+    from .hwrepo.evidence import digest
+    from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintReport
+    from .validate import read_netlist
+
+    root = root.resolve()
+    config = selected_config(root, project)
+    if config.image != image:
+        raise ValueError(f"{project}: native fixture image differs from its reviewed toolchain")
+    if config.kicad_version not in {"10.0.0", "10.0.5"}:
+        raise ValueError(
+            f"Peer power-assignment fixtures do not cover KiCad {config.kicad_version}"
+        )
+    pinned = pinned_image(config.image)
+    fixture_root = (
+        Path(__file__).resolve().parents[1]
+        / "tests/fixtures/design_lint/component-peer-power-assignment-native"
+    )
+    cases = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
+    source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}
+    expected_source_hashes = {
+        "fault": "2e4bc0c9f883e948660b1982a7ccae888c18c3b52b9ae285b878666a7353c4c6",
+        "control": "23fec400e1e0a0581abc650a7d108512948d5d0b14744a276ebabc75a94be67d",
+    }
+    if source_hashes != expected_source_hashes:
+        raise ValueError("Synthetic peer power-assignment fixture source digest changed")
+    scratch = Path(
+        tempfile.mkdtemp(prefix=f"peer-power-assignment-{project}-", dir=log.directory.resolve())
+    )
+    output = scratch / "output"
+    output.mkdir()
+    user: tuple[str, ...] = ()
+    if sys.platform != "win32":
+        user = ("--user", f"{os.getuid()}:{os.getgid()}")
+    commands = [
+        'mkdir -p "$HOME"\n',
+        'actual="$(kicad-cli version)"\n',
+        'printf "kicad_version=%s\\n" "$actual"\n',
+        f'test "$actual" = "{config.kicad_version}"\n',
+    ]
+    for case, filename in cases.items():
+        commands.extend(
+            (
+                f'printf "exporting_fixture=%s\\n" "{filename}"\n',
+                (
+                    f"for run in first repeat; do kicad-cli sch export netlist "
+                    f'--format kicadxml --output "/output/{case}.${{run}}.netlist.xml" '
+                    f'"/fixtures/{filename}"; done\n'
+                ),
+            )
+        )
+    command = (
+        "docker",
+        "run",
+        "--rm",
+        "--platform",
+        "linux/amd64",
+        "--network",
+        "none",
+        "--read-only",
+        "--tmpfs",
+        "/tmp:rw,nosuid,nodev,size=64m",
+        *user,
+        "-e",
+        f"HOME=/tmp/kicad-peer-power-assignment-{project}",
+        "-v",
+        f"{fixture_root.resolve()}:/fixtures:ro",
+        "-v",
+        f"{output}:/output:rw",
+        "-w",
+        "/fixtures",
+        "--entrypoint",
+        "/bin/sh",
+        pinned,
+        "-ec",
+        "".join(commands),
+    )
+    lane = "component-peer-power-assignment-fixture"
+    log.event(
+        f"{lane}/native-export",
+        "START",
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+    )
+    result = run_command(root, command, timeout=600)
+    write_model(scratch / "native.command.json", result)
+    if result.returncode != 0 or result.error is not None:
+        log.event(
+            f"{lane}/native-export",
+            "FAIL",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+            error=result.stderr or result.error or f"exit {result.returncode}",
+        )
+        raise ValueError(
+            f"Native peer power-assignment fixture command failed: {result.stderr or result.error}"
+        )
+    log.event(
+        f"{lane}/native-export",
+        "PASS",
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+        source_hashes=",".join(f"{case}:{source_hashes[case]}" for case in cases),
+        command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+    )
+
+    normalized_hashes: dict[tuple[str, str], str] = {}
+    raw_hashes: dict[tuple[str, str], str] = {}
+    reports: dict[tuple[str, str], DesignLintReport] = {}
+    expected_assignments = {
+        "fault": {
+            "U1.1": ("SYNTHETIC_NET_A",),
+            "U2.1": ("SYNTHETIC_NET_B",),
+            "U1.2": ("SYNTHETIC_NET_C",),
+            "U2.2": ("SYNTHETIC_NET_D",),
+        },
+        "control": {
+            "U1.1": ("SYNTHETIC_NET_1",),
+            "U2.1": ("SYNTHETIC_NET_1",),
+            "U1.2": ("SYNTHETIC_NET_2",),
+            "U2.2": ("SYNTHETIC_NET_2",),
+        },
+    }
+    for case in cases:
+        for run in ("first", "repeat"):
+            netlist_path = output / f"{case}.{run}.netlist.xml"
+            if not netlist_path.is_file():
+                raise ValueError(f"Native peer power-assignment export omitted {netlist_path.name}")
+            raw_hashes[(case, run)] = digest(netlist_path)
+            observed = read_netlist(netlist_path)
+            actual_assignments = {
+                pin: tuple(sorted(net for net, pins in observed.nets.items() if pin in pins))
+                for pin in expected_assignments[case]
+            }
+            if actual_assignments != expected_assignments[case]:
+                raise ValueError(
+                    f"Native {case} expected pin assignments {expected_assignments[case]}, "
+                    f"observed {actual_assignments}"
+                )
+            expected_components = {
+                "U1": ("Synthetic:PowerModule", "SYNTHETIC-POWER-MODULE-001"),
+                "U2": ("Synthetic:PowerModuleAlias", "SYNTHETIC-POWER-MODULE-001"),
+            }
+            if set(observed.components) != set(expected_components):
+                raise ValueError(f"Native {case} export omitted the fitted peer components")
+            for reference, (symbol, part_id) in expected_components.items():
+                component = observed.components[reference]
+                if (
+                    observed.component_symbols.get(reference) != symbol
+                    or component.part_id != part_id
+                    or component.value != "Synthetic power module"
+                    or component.footprint != "Synthetic:Module"
+                    or observed.component_pin_numbers.get(reference) != ("1", "2")
+                ):
+                    raise ValueError(
+                        f"Native {case} export omitted the exact shared-PART_ID identity "
+                        f"for {reference}"
+                    )
+                if any(
+                    observed.pin_functions.get(f"{reference}.{number}") != function
+                    or observed.pin_electrical_types.get(f"{reference}.{number}") != "power_in"
+                    for number, function in (("1", "VDD"), ("2", "GND"))
+                ):
+                    raise ValueError(
+                        f"Native {case} export omitted matching power/return pin metadata "
+                        f"for {reference}"
+                    )
+            serialized = json.dumps(
+                observed.model_dump(mode="json"),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode("utf-8")
+            normalized_hashes[(case, run)] = hashlib.sha256(serialized).hexdigest()
+            project_id = f"synthetic-peer-power-assignment-{case}"
+            coach = ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id=project_id,
+                observed=observed,
+                netlist_sha256=raw_hashes[(case, run)],
+            )
+            reports[(case, run)] = evaluate(project_id, coach, DesignLintPolicy())
+            findings = tuple(
+                item
+                for item in reports[(case, run)].findings
+                if item.rule_id == "component.peer_power_pin_assignment_divergence"
+            )
+            decoupling_findings = tuple(
+                item
+                for item in reports[(case, run)].findings
+                if item.rule_id == "power.ic_rail_without_fitted_capacitor"
+            )
+            expected_roles: set[str] = {"ground/return", "supply"} if case == "fault" else set()
+            actual_roles = {item.evidence["peer_role"][0] for item in findings}
+            expected_decoupling_nets = (
+                {"SYNTHETIC_NET_A", "SYNTHETIC_NET_B"} if case == "fault" else {"SYNTHETIC_NET_1"}
+            )
+            actual_decoupling_nets = {item.evidence["net"][0] for item in decoupling_findings}
+            expected_rules = {"power.ic_rail_without_fitted_capacitor"}
+            if case == "fault":
+                expected_rules.add("component.peer_power_pin_assignment_divergence")
+            actual_rules = {item.rule_id for item in reports[(case, run)].findings}
+            expected_status = "REVIEW"
+            if (
+                actual_roles != expected_roles
+                or actual_decoupling_nets != expected_decoupling_nets
+                or actual_rules != expected_rules
+                or reports[(case, run)].status != expected_status
+            ):
+                raise ValueError(
+                    f"Native {case} expected peer power roles {sorted(expected_roles)} and "
+                    f"decoupling nets {sorted(expected_decoupling_nets)}, rules "
+                    f"{sorted(expected_rules)}, status {expected_status}; observed "
+                    f"roles {sorted(actual_roles)}, decoupling nets "
+                    f"{sorted(actual_decoupling_nets)}, rules {sorted(actual_rules)}, "
+                    f"status {reports[(case, run)].status}"
+                )
+            if case == "fault" and any(
+                item.evidence.get("peer_identity_basis") != ("part_id",)
+                or item.evidence.get("peer_identity") != ("SYNTHETIC-POWER-MODULE-001",)
+                for item in findings
+            ):
+                raise ValueError("Native fault omitted its shared PART_ID identity evidence")
+    if any(
+        normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")] for case in cases
+    ):
+        raise ValueError("Native peer power-assignment exports differ after normalization")
+
+    for case, filename in cases.items():
+        findings = tuple(
+            item
+            for item in reports[(case, "first")].findings
+            if item.rule_id == "component.peer_power_pin_assignment_divergence"
+        )
+        log.event(
+            f"{lane}/{case}",
+            "PASS",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            source_sha256=source_hashes[case],
+            netlist_sha256=raw_hashes[(case, "first")],
+            repeat_netlist_sha256=raw_hashes[(case, "repeat")],
+            normalized_netlist_sha256=normalized_hashes[(case, "first")],
+            repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
+            lint_status=reports[(case, "first")].status,
+            peer_power_findings=";".join(sorted(item.evidence["peer_role"][0] for item in findings))
+            or "none",
+            independent_decoupling_findings=";".join(
+                sorted(
+                    item.evidence["net"][0]
+                    for item in reports[(case, "first")].findings
+                    if item.rule_id == "power.ic_rail_without_fitted_capacitor"
+                )
+            )
+            or "none",
+            repeatable="true",
+            repeatability_basis="normalized_netlist_contract",
+            command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+        )
+    if any(
+        digest(fixture_root / filename) != source_hashes[case] for case, filename in cases.items()
+    ):
+        raise ValueError("Synthetic peer power-assignment fixture changed during native export")
+
+
 def component_peer_signal_output_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
@@ -8125,7 +8515,7 @@ def _component_peer_pin_assignment_fixture_lane(
     log: HostedLog,
     kind: Literal["power-output", "signal-output", "signal-input", "bidirectional"],
 ) -> None:
-    """Verify one exact-symbol open-pin class against repeated KiCad exports."""
+    """Verify one comparable-peer open-pin class against repeated KiCad exports."""
     import hashlib
     import os
 
@@ -8166,7 +8556,7 @@ def _component_peer_pin_assignment_fixture_lane(
         "bidirectional": "Synthetic:BidirectionalModule",
     }
     functions = {
-        "power-output": "OUT",
+        "power-output": "Pin_2",
         "signal-output": "OUT",
         "signal-input": "IN",
         "bidirectional": "DATA_IO",
@@ -8296,9 +8686,13 @@ def _component_peer_pin_assignment_fixture_lane(
                     f"Native {case} expected schematic output assignments "
                     f"{expected_assignments}, observed {actual_assignments}"
                 )
+            expected_symbols = (
+                {"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"}
+                if kind == "power-output"
+                else {"U1": fixture_symbol, "U2": fixture_symbol}
+            )
             if (
-                observed.component_symbols.get("U1") != fixture_symbol
-                or observed.component_symbols.get("U2") != fixture_symbol
+                observed.component_symbols != expected_symbols
                 or observed.component_pin_numbers.get("U1") != ("1", "2")
                 or observed.component_pin_numbers.get("U2") != ("1", "2")
                 or observed.pin_electrical_types.get("U1.2") != native_pin_type
@@ -8310,6 +8704,13 @@ def _component_peer_pin_assignment_fixture_lane(
                     f"Native {case} export omitted the exact peer symbol, pin inventory, "
                     f"or native {native_pin_type} pin types and {pin_function} functions"
                 )
+            if kind == "power-output" and {
+                reference: component.part_id for reference, component in observed.components.items()
+            } != {
+                "U1": "SYNTHETIC-POWER-MODULE-001",
+                "U2": "SYNTHETIC-POWER-MODULE-001",
+            }:
+                raise ValueError(f"Native {case} export omitted the matching PART_ID fields")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -8346,11 +8747,16 @@ def _component_peer_pin_assignment_fixture_lane(
                 for item in reports[(case, run)].component_peer_pin_coverage
                 if item.rule_id == rule_id
             )
+            expected_symbol_groups = 0 if kind == "power-output" else 1
+            expected_part_id_groups = 1 if kind == "power-output" else 0
             if (
                 coverage.status != "EVALUATED"
                 or coverage.mode != "review"
                 or coverage.netlist_sha256 != raw_hashes[(case, run)]
+                or coverage.exact_symbol_peer_group_count != expected_symbol_groups
+                or coverage.part_id_peer_group_count != expected_part_id_groups
                 or coverage.candidate_group_count != expected_finding_count
+                or coverage.deduplicated_candidate_group_count != 0
                 or coverage.finding_count != expected_finding_count
                 or coverage.suppressed_candidate_count != 0
             ):
@@ -8387,7 +8793,12 @@ def _component_peer_pin_assignment_fixture_lane(
             finding_count=len(findings),
             peer_coverage_status=coverage.status,
             peer_coverage_netlist_sha256=coverage.netlist_sha256,
+            peer_coverage_exact_symbol_group_count=coverage.exact_symbol_peer_group_count,
+            peer_coverage_part_id_group_count=coverage.part_id_peer_group_count,
             peer_coverage_candidate_count=coverage.candidate_group_count,
+            peer_coverage_deduplicated_candidate_count=(
+                coverage.deduplicated_candidate_group_count
+            ),
             peer_coverage_finding_count=coverage.finding_count,
             peer_coverage_suppressed_count=coverage.suppressed_candidate_count,
             repeatable="true",
@@ -13491,6 +13902,7 @@ def native_lane(
         led_rail_fixture_lane(root, project=project, image=image, log=log)
         two_pin_component_fixture_lane(root, project=project, image=image, log=log)
         component_peer_power_output_fixture_lane(root, project=project, image=image, log=log)
+        component_peer_power_assignment_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_input_fixture_lane(root, project=project, image=image, log=log)
         component_peer_bidirectional_fixture_lane(root, project=project, image=image, log=log)

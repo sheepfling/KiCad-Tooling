@@ -66,32 +66,41 @@ The first rules are:
 - `connector.peer_pin_assignment_outlier` compares the same pin number across
   fitted instances of an exact shared library symbol when at least one peer
   has no meaningful native pin-function metadata because the role is absent
-  or a generic `Pin_N` placeholder. It asks for review when a peer is
-  unconnected while another peer is assigned, including a group of only two
-  connector instances, or differs from the unique most-common net assignment
-  shared by at least two instances. Tied assigned-net patterns do not nominate
-  an arbitrary outlier and are left to
-  `connector.peer_pin_assignment_divergence`. This can localize an open generic
-  contact that named-function checks cannot identify.
+  or a generic `Pin_N` placeholder. It also compares distinct connector
+  symbols when they share a nonempty native `PART_ID` and have matching
+  nonempty value and footprint, complete identical pin inventories, and
+  matching nonempty function and electrical-type metadata for every pin. This
+  guarded alias path asks for review when a peer is unconnected while another
+  peer is assigned, including a group of only two connector instances, or
+  differs from the unique most-common net assignment shared by at least two
+  instances. Tied assigned-net patterns do not nominate an arbitrary outlier
+  and are left to `connector.peer_pin_assignment_divergence`. This can
+  localize an open generic contact that named-function checks cannot identify.
   Digest-pinned native fixtures verify the minimum two-connector open-contact
   case, an explicit no-connect-marker fault, and the common-net control on
   KiCad 10.0.0 and 10.0.5. The marked-open pin still receives a REVIEW prompt:
   an accidental marker can hide a missing contact from ERC. The finding does
   not say that matching pins must share a net.
-  Matching symbol contacts do not prove that the pins must share a net;
-  isolated ports and intentionally unused contacts remain valid. DNP
-  connector instances are excluded. Fully specified meaningful pin groups stay
-  with `connector.repeated_pin_function` to avoid duplicate findings. Fully
+  The PART_ID alias fault and common-assignment control also passed repeated
+  exports on both pinned versions; the normalized typed netlists match across
+  versions.
+  Matching symbol or `PART_ID` identity does not prove that the pins must share
+  a net; isolated ports and intentionally unused contacts remain valid. Alias
+  groups with missing or inconsistent identity, inventory, or pin metadata are
+  skipped and included in the coverage summary. DNP connector instances are
+  excluded. Fully specified meaningful pin groups stay with
+  `connector.repeated_pin_function` to avoid duplicate findings. Fully
   reviewed connector sets may use distinct `peer_assignment_group` values to
   keep independent interfaces, such as separate UART channels, out of one
   another's generic pin-number comparisons. A missing or stale group on any
   participating connector keeps the broad comparison active.
 - `connector.peer_pin_assignment_divergence` adds a lower-confidence prompt
   when fitted instances of the same exact connector symbol assign the same pin
-  number to different nets, all compared contacts are assigned, at least one
-  peer has unknown pin-function metadata (absent or generic `Pin_N`), fewer
-  than two peers have meaningful role metadata, and no unique most-common
-  assignment exists. It covers two-peer, tied, or
+  number to different nets, or when guarded `PART_ID` aliases with matching
+  identity, pin inventories, and per-pin metadata do so. All compared contacts
+  must be assigned, at least one peer must have unknown pin-function metadata
+  (absent or generic `Pin_N`), fewer than two peers may have meaningful role
+  metadata, and no unique most-common assignment may exist. It covers two-peer, tied, or
   all-distinct assignments that the outlier rule cannot localize to one unique
   most-common net. Review the external pinout to
   decide whether those contacts have a common role; the checker does not assume
@@ -101,15 +110,16 @@ The first rules are:
   fully reviewed connectors; partial group coverage does not silence the prompt.
 - `connector_peer_pin_coverage` is an observability summary for these existing
   connector heuristics. It binds candidate and fitted connector counts,
-  exact-symbol pin comparison counts, common/different/open assignments,
-  native function-metadata availability, repeated-function group outcomes,
-  emitted finding counts, and the native netlist digest. Its status distinguishes
-  no candidate connectors, candidates that are all DNP, no exact-symbol peers,
-  no comparable pin groups, incomplete pin inventories, and evaluated groups.
-  An incomplete or inconsistent exact-symbol pin inventory leaves lint at
-  `REVIEW` and names the affected references. A quiet evaluated result shows
-  which bounded peer comparisons ran; it does not prove that matching pins
-  must share a net or that every physical connector was identified.
+  exact-symbol and guarded `PART_ID` alias comparison counts,
+  common/different/open assignments, native function-metadata availability,
+  repeated-function group outcomes, emitted finding counts, and the native
+  netlist digest. Alias coverage records candidate identities, skip reasons,
+  eligible groups, and compared pin groups. Its status distinguishes no
+  candidate connectors, candidates that are all DNP, no comparable peers, no
+  comparable pin groups, incomplete pin inventories, and evaluated groups. A
+  quiet evaluated result shows which bounded peer comparisons ran; it does not
+  prove that matching pins must share a net or that every physical connector
+  was identified.
 - `component.repeated_supply_pin_function` flags recognized matching supply
   functions on one fitted non-connector component when assigned pins use
   different or ambiguous schematic nets. It asks whether the split is
@@ -118,53 +128,73 @@ The first rules are:
   finding instead.
 - `component.peer_power_pin_assignment_divergence` compares a shared pin
   number and recognized supply or return function across fitted non-connector
-  instances of the exact same symbol. It prompts when every peer pin is
-  assigned but the net assignments differ. The matching symbol and pin are
-  only a review clue: separate rails or isolated return domains can be
-  intentional, and the rule never joins nets. DNP peers, incomplete pin
-  inventories, unknown functions, and open power pins are excluded; open pins
-  stay with the component unconnected-pin checks.
+  instances of the exact same symbol. It also compares distinct symbols that
+  carry the same native `PART_ID`, but only when value, footprint, complete pin
+  inventory, and each pin's function and electrical type match. It prompts
+  only when each compared pin has exactly one net assignment and those nets
+  differ. The matching symbol or part identity is a review clue: separate
+  rails or isolated return domains can be intentional, and the rule never
+  joins nets. DNP peers, incomplete metadata, unknown functions, ambiguous
+  assignments, and open power pins are excluded; open pins stay with the
+  component unconnected-pin checks.
 - `component.peer_power_output_unconnected` prompts when one fitted
-  non-connector with an exact shared symbol has an unassigned native
-  `power_out` pin while a matching pin on another fitted peer has one
-  unambiguous net assignment. It covers the open-output case left outside the
-  assigned-pin divergence rule. Review whether the output is intentionally
-  unused or its assignment is missing; identical components do not require
+  non-connector has an unassigned native `power_out` pin while a comparable
+  fitted peer has one unambiguous net assignment. Peers may share an exact
+  native symbol, or carry the same native `PART_ID` across distinct symbols
+  with matching values and footprints. The cross-symbol case also requires
+  identical per-pin function text, including identical generic placeholders
+  such as `Pin_2`; a generic placeholder is structural evidence only and does
+  not identify the electrical role. It covers the open-output case left outside
+  the assigned-pin divergence rule. Review whether the output is intentionally
+  unused or its assignment is missing; comparable components do not require
   their outputs to share a net. DNP peers, connector candidates, incomplete or
   mismatched pin inventories, missing electrical-type metadata, ambiguous
   assignments, and recognized named supply/return pins are outside this
-  prompt. Shield-labelled native power outputs remain eligible for review
-  because there is no component-level unconnected-shield rule. It does not
-  establish output function, component operation, current capacity, PCB copper
-  continuity, off-board wiring, or physical population.
+  prompt. `PART_ID` and symbol identity are review evidence, not proof of the
+  intended pin connection. Shield-labelled native power outputs remain
+  eligible for review because there is no component-level unconnected-shield
+  rule. It does not establish output function, component operation, current
+  capacity, PCB copper continuity, off-board wiring, or physical population.
 - `component.peer_signal_output_unconnected` prompts when a fitted non-connector component with an
-  exact shared symbol has an unassigned native `output` pin while the matching pin on another fitted
-  peer has one unambiguous net assignment. This asks whether the open signal output is intentional
-  or missing a connection; matching symbols do not require the outputs to share a net. DNP peers,
-  connector candidates, incomplete or mismatched pin inventories, missing electrical-type metadata,
-  ambiguous assignments, and recognized named supply/return pins remain outside the predicate. This
-  does not establish output function, PCB continuity, off-board wiring, or physical population.
+  comparable peer has an unassigned native `output` pin while the matching pin on another fitted
+  peer has one unambiguous net assignment. Comparability uses an exact shared symbol, or the same
+  native `PART_ID` across distinct symbols when values, footprints, complete pin inventories, native
+  types, and per-pin function text matches. Identical generic placeholders such as `Pin_2` provide
+  only structural evidence, not an electrical role. This asks whether the open
+  signal output is intentional or missing a connection; matching identities do
+  not require the outputs to share a net. DNP peers, connector
+  candidates, incomplete or mismatched pin inventories, missing electrical-type metadata, ambiguous
+  assignments, and recognized named supply/return pins remain outside the predicate. This does not
+  establish output function, PCB continuity, off-board wiring, or physical population.
   Digest-pinned synthetic native fault/control fixtures and hashes are in
   [the peer signal-output fixture notes](../tests/fixtures/design_lint/component-peer-signal-output-native/README.md).
-- `component.peer_signal_input_unconnected` prompts when a fitted non-connector component with an
-  exact shared symbol has an unassigned native `input` or `input_low` pin while a matching peer pin
-  has one unambiguous net assignment. The pin functions must be present and match. Review whether
-  the open input is intentional or missing a connection; identical inputs do not need a common net.
+- `component.peer_signal_input_unconnected` prompts when a fitted non-connector component with a
+  comparable peer has an unassigned native `input` or `input_low` pin while a matching peer pin has
+  one unambiguous net assignment. Comparability uses an exact shared symbol, or the same native
+  `PART_ID` across distinct symbols when values, footprints, complete pin inventories, native types,
+  and per-pin function text match. Identical generic placeholders provide structural evidence only.
+  Review whether the open
+  input is intentional or missing a connection; identical inputs do not need a common net.
   Recognized supply, return, reset, enable, and boot pins remain with their specific rules.
   Digest-pinned synthetic native fault/control fixtures and hashes are in
   [the peer signal-input fixture notes](../tests/fixtures/design_lint/component-peer-signal-input-native/README.md).
 - `component.peer_bidirectional_pin_unconnected` applies the same bounded review to a native
-  `bidirectional` pin, including bus functions such as SDA. It requires matching function metadata
-  and complete identical pin inventories for fitted peers. It does not establish bus membership,
-  require a common net, or prove a source, off-board path, or PCB connection. DNP peers, all-open
-  groups, connectors, ambiguous assignments, and other native electrical types are outside the
-  predicate. Digest-pinned synthetic native fault/control fixtures and hashes are in
+  `bidirectional` pin, including bus functions such as SDA. Comparability uses an exact shared
+  symbol, or the same native `PART_ID` across distinct symbols when values, footprints, complete pin
+  inventories, native types, and per-pin function text match. Identical generic placeholders provide
+  structural evidence only. It does not establish bus membership, require
+  a common net, or prove a source, off-board path, or PCB connection. DNP peers, all-open groups,
+  connectors, ambiguous assignments, and other native electrical types are outside the predicate.
+  Digest-pinned synthetic native fault/control fixtures and hashes are in
   [the peer bidirectional-pin fixture notes](../tests/fixtures/design_lint/component-peer-bidirectional-native/README.md).
   The report also gives each of these four rules a bounded `component_peer_pin_coverage` entry
-  tied to the native netlist digest. It counts exact-symbol groups, inventory completeness,
-  comparable and type/function-compatible pins, ambiguous assignments, candidates, findings, and
-  suppressed candidates. Status explains why a rule could not evaluate a group; it does not claim
-  that every component or interface was recognized, or that matching peer pins must share a net.
+  tied to the native netlist digest. It counts exact-symbol groups, cross-symbol shared-`PART_ID`
+  candidates and eligible groups, shared-identity groups excluded by value or footprint mismatch,
+  inventory completeness, comparable and type/function-compatible pins, ambiguous assignments,
+  deduplicated candidates, findings, and suppressed candidates. The report names references in
+  identity-incomplete groups and distinguishes that state from having no comparable peers. Status
+  explains why a rule could not evaluate a group; it does not claim that every component or
+  interface was recognized, or that matching peer pins must share a net.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
   resolve to the same schematic net. The assigned net bypasses the passive in

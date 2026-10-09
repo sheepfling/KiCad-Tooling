@@ -5,9 +5,11 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Literal
 
 from .models import (
     ConnectorMappedPinEvidence,
+    ConnectorPartIdPeerPinCoverage,
     ConnectorPeerPinHeuristicCoverage,
     NetlistContract,
     SimilarConnectorPinGroup,
@@ -285,8 +287,10 @@ def connector_peer_pin_heuristic_coverage(
     repeated_function_finding_count: int,
     peer_pin_outlier_finding_count: int,
     peer_pin_divergence_finding_count: int,
+    part_id_peer_pin_outlier_finding_count: int = 0,
+    part_id_peer_pin_divergence_finding_count: int = 0,
 ) -> ConnectorPeerPinHeuristicCoverage:
-    """Summarize exact-symbol pin and named-function comparisons over this netlist."""
+    """Summarize exact-symbol and guarded PART_ID connector comparisons."""
     candidate_references = connector_candidate_references(observed, declared_references)
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
     fitted_references = tuple(
@@ -439,6 +443,75 @@ def connector_peer_pin_heuristic_coverage(
         else:
             repeated_function_groups_with_common_assignment_count += 1
 
+    part_id_scan = _connector_part_id_peer_pin_scan(
+        observed,
+        declared_references,
+        peer_assignment_groups,
+    )
+    part_id_unknown_function_count = 0
+    part_id_meaningful_function_count = 0
+    part_id_ambiguous_assignment_count = 0
+    part_id_common_assignment_count = 0
+    part_id_different_assignment_count = 0
+    part_id_all_unassigned_count = 0
+    part_id_open_assignment_count = 0
+    for group in part_id_scan.pin_groups:
+        if _has_meaningful_pin_function(group.pin_function):
+            part_id_meaningful_function_count += 1
+        else:
+            part_id_unknown_function_count += 1
+        assignments = tuple(group.assignments.values())
+        if any(len(nets) > 1 for nets in assignments):
+            part_id_ambiguous_assignment_count += 1
+            continue
+        if any(not nets for nets in assignments):
+            part_id_open_assignment_count += 1
+        if all(not nets for nets in assignments):
+            part_id_all_unassigned_count += 1
+        elif len(set(assignments)) > 1:
+            part_id_different_assignment_count += 1
+        else:
+            part_id_common_assignment_count += 1
+
+    incomplete_part_id_evidence_count = (
+        part_id_scan.incomplete_component_identity_group_count
+        + part_id_scan.incomplete_pin_inventory_group_count
+        + part_id_scan.incomplete_pin_metadata_group_count
+    )
+    part_id_coverage_status = (
+        "NO_CANDIDATES"
+        if part_id_scan.candidate_group_count == 0
+        else "INCOMPLETE_EVIDENCE"
+        if part_id_scan.eligible_peer_group_count == 0
+        else "NO_COMPARABLE_PIN_GROUPS"
+        if not part_id_scan.pin_groups
+        else "PARTIALLY_EVALUATED"
+        if incomplete_part_id_evidence_count > 0
+        else "EVALUATED"
+    )
+    part_id_alias_coverage = ConnectorPartIdPeerPinCoverage(
+        status=part_id_coverage_status,
+        netlist_sha256=netlist_sha256,
+        candidate_group_count=part_id_scan.candidate_group_count,
+        incomplete_component_identity_group_count=(
+            part_id_scan.incomplete_component_identity_group_count
+        ),
+        incomplete_pin_inventory_group_count=part_id_scan.incomplete_pin_inventory_group_count,
+        incomplete_pin_metadata_group_count=part_id_scan.incomplete_pin_metadata_group_count,
+        eligible_peer_group_count=part_id_scan.eligible_peer_group_count,
+        incomplete_pin_inventory_references=part_id_scan.incomplete_pin_inventory_references,
+        compared_pin_group_count=len(part_id_scan.pin_groups),
+        unknown_function_pin_group_count=part_id_unknown_function_count,
+        meaningful_function_pin_group_count=part_id_meaningful_function_count,
+        ambiguous_assignment_pin_group_count=part_id_ambiguous_assignment_count,
+        common_assignment_pin_group_count=part_id_common_assignment_count,
+        different_assignment_pin_group_count=part_id_different_assignment_count,
+        all_unassigned_pin_group_count=part_id_all_unassigned_count,
+        open_assignment_pin_group_count=part_id_open_assignment_count,
+        outlier_finding_count=part_id_peer_pin_outlier_finding_count,
+        divergence_finding_count=part_id_peer_pin_divergence_finding_count,
+    )
+
     if not candidate_references:
         status = "NO_CONNECTOR_CANDIDATES"
     elif not fitted_references:
@@ -456,7 +529,9 @@ def connector_peer_pin_heuristic_coverage(
         netlist_sha256=netlist_sha256,
         scope=(
             "Named connector functions are compared only by the existing bounded role or exact "
-            "symbol/function rules. Generic peer assignments compare exact symbol and pin number. "
+            "symbol/function rules. Generic peer assignments compare exact symbol and pin number; "
+            "cross-symbol comparisons require a shared PART_ID plus matching component, inventory, "
+            "function, and electrical-type evidence. "
             "Coverage records evaluated evidence; it does not assert that peer nets must match."
         ),
         connector_candidate_count=len(candidate_references),
@@ -479,6 +554,7 @@ def connector_peer_pin_heuristic_coverage(
         exact_symbol_pin_groups_with_open_assignment_count=(
             peer_pin_groups_with_open_assignment_count
         ),
+        part_id_alias_coverage=part_id_alias_coverage,
         incomplete_pin_inventory_references=incomplete_inventory_references,
         repeated_function_group_count=len(repeated_function_groups),
         repeated_function_groups_with_common_assignment_count=(
@@ -529,6 +605,44 @@ class ConnectorPeerPinAssignmentOutlier:
     outlier_pins: tuple[str, ...]
     peer_assignment_group: str | None = None
     peer_assignment_basis: tuple[str, ...] = ()
+    peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
+    peer_identity: str = ""
+    peer_symbols: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ConnectorPeerPinAssignmentDivergence:
+    symbol: str
+    pin_number: str
+    assignments: dict[str, tuple[str, ...]]
+    missing_function_pins: tuple[str, ...]
+    peer_assignment_group: str | None = None
+    peer_assignment_basis: tuple[str, ...] = ()
+    peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
+    peer_identity: str = ""
+    peer_symbols: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class _ConnectorPartIdPeerPinGroup:
+    part_id: str
+    pin_number: str
+    pin_function: str
+    assignments: dict[str, tuple[str, ...]]
+    symbols: tuple[str, ...]
+    peer_assignment_group: str | None = None
+    peer_assignment_basis: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class _ConnectorPartIdPeerPinScan:
+    candidate_group_count: int
+    incomplete_component_identity_group_count: int
+    incomplete_pin_inventory_group_count: int
+    incomplete_pin_metadata_group_count: int
+    eligible_peer_group_count: int
+    incomplete_pin_inventory_references: tuple[str, ...]
+    pin_groups: tuple[_ConnectorPartIdPeerPinGroup, ...]
 
 
 def _unique_peer_pin_majority(
@@ -586,18 +700,229 @@ def _peer_assignment_partitions(
     )
 
 
+def _connector_part_id_peer_pin_scan(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+) -> _ConnectorPartIdPeerPinScan:
+    """Compare connector aliases only after exact source identity and pin metadata match."""
+    unpopulated = {reference.casefold() for reference in observed.dnp_components}
+    connector_references = {
+        reference.casefold()
+        for reference in connector_candidate_references(observed, declared_references)
+    }
+    components = {
+        reference.casefold(): component for reference, component in observed.components.items()
+    }
+    symbols = {
+        reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
+    }
+    references_by_part_id: dict[str, list[str]] = {}
+    part_ids: dict[str, set[str]] = {}
+    for reference, component in observed.components.items():
+        reference_key = reference.casefold()
+        if (
+            reference_key not in connector_references
+            or reference_key in unpopulated
+            or reference_key not in symbols
+            or component.part_id is None
+            or not component.part_id.strip()
+        ):
+            continue
+        part_id = component.part_id.strip()
+        part_key = part_id.casefold()
+        references_by_part_id.setdefault(part_key, []).append(reference)
+        part_ids.setdefault(part_key, set()).add(part_id)
+
+    candidate_groups: list[tuple[str, str, tuple[str, ...]]] = []
+    for part_key, references in sorted(references_by_part_id.items()):
+        peers = tuple(sorted(references, key=lambda item: (item.casefold(), item)))
+        peer_symbols = {symbols[reference.casefold()].casefold() for reference in peers}
+        if len(peers) < 2 or len(peer_symbols) < 2:
+            continue
+        display_id = min(part_ids[part_key], key=lambda item: (item.casefold(), item))
+        candidate_groups.append((part_key, display_id, peers))
+
+    pin_functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
+    pin_types = {
+        pin.casefold(): electrical_type
+        for pin, electrical_type in observed.pin_electrical_types.items()
+    }
+    pin_nets: dict[str, set[str]] = {}
+    for net, pins in observed.nets.items():
+        for pin in pins:
+            pin_nets.setdefault(pin.casefold(), set()).add(net)
+
+    observed_pin_numbers: dict[str, set[str]] = {}
+    for pin in observed.pin_functions:
+        reference, pin_number = pin.rsplit(".", 1)
+        observed_pin_numbers.setdefault(reference.casefold(), set()).add(pin_number.casefold())
+    for assignments in (*observed.nets.values(), *observed.unconnected_nets.values()):
+        for pin in assignments:
+            reference, pin_number = pin.rsplit(".", 1)
+            observed_pin_numbers.setdefault(reference.casefold(), set()).add(pin_number.casefold())
+
+    incomplete_identity_count = 0
+    incomplete_inventory_count = 0
+    incomplete_metadata_count = 0
+    eligible_peer_group_count = 0
+    incomplete_inventory_references: set[str] = set()
+    pin_groups: list[_ConnectorPartIdPeerPinGroup] = []
+    for part_key, display_id, peers in candidate_groups:
+        peer_components = tuple(components[reference.casefold()] for reference in peers)
+        values = {component.value.strip().casefold() for component in peer_components}
+        footprints = {component.footprint.strip().casefold() for component in peer_components}
+        if len(values) != 1 or "" in values or len(footprints) != 1 or "" in footprints:
+            incomplete_identity_count += 1
+            continue
+
+        raw_inventories = {
+            reference.casefold(): tuple(
+                number
+                for candidate, numbers in observed.component_pin_numbers.items()
+                if candidate.casefold() == reference.casefold()
+                for number in numbers
+            )
+            for reference in peers
+        }
+        folded_inventories = {
+            reference: tuple(number.casefold() for number in numbers)
+            for reference, numbers in raw_inventories.items()
+        }
+        inventory_sets = {frozenset(numbers) for numbers in folded_inventories.values()}
+        invalid_inventory = (
+            any(not numbers for numbers in folded_inventories.values())
+            or any(len(set(numbers)) != len(numbers) for numbers in folded_inventories.values())
+            or len(inventory_sets) != 1
+            or any(
+                not observed_pin_numbers.get(reference.casefold(), set()).issubset(
+                    set(folded_inventories[reference.casefold()])
+                )
+                for reference in peers
+            )
+        )
+        if invalid_inventory:
+            incomplete_inventory_count += 1
+            incomplete_inventory_references.update(peers)
+            continue
+
+        pin_numbers = tuple(
+            sorted(next(iter(inventory_sets)), key=lambda item: (item.casefold(), item))
+        )
+        displayed_numbers = {
+            reference.casefold(): {
+                number.casefold(): number for number in raw_inventories[reference.casefold()]
+            }
+            for reference in peers
+        }
+        pin_metadata: dict[str, tuple[str, str]] = {}
+        metadata_invalid = False
+        for pin_number in pin_numbers:
+            functions: list[str] = []
+            electrical_types: list[str] = []
+            for reference in peers:
+                pin = f"{reference}.{displayed_numbers[reference.casefold()][pin_number]}"
+                function = pin_functions.get(pin.casefold())
+                electrical_type = pin_types.get(pin.casefold())
+                if (
+                    function is None
+                    or not function.strip()
+                    or electrical_type is None
+                    or not electrical_type.strip()
+                ):
+                    metadata_invalid = True
+                    continue
+                functions.append(function)
+                electrical_types.append(electrical_type)
+            if (
+                len({function.strip().casefold() for function in functions}) != 1
+                or len({electrical_type.strip().casefold() for electrical_type in electrical_types})
+                != 1
+            ):
+                metadata_invalid = True
+            if functions and electrical_types:
+                pin_metadata[pin_number] = (functions[0], electrical_types[0])
+        if metadata_invalid:
+            incomplete_metadata_count += 1
+            continue
+
+        eligible_peer_group_count += 1
+        peer_symbols = tuple(
+            sorted(
+                {symbols[reference.casefold()] for reference in peers},
+                key=lambda item: (item.casefold(), item),
+            )
+        )
+        for pin_number in pin_numbers:
+            assignments = {
+                f"{reference}.{displayed_numbers[reference.casefold()][pin_number]}": tuple(
+                    sorted(
+                        pin_nets.get(
+                            f"{reference}.{displayed_numbers[reference.casefold()][pin_number]}".casefold(),
+                            (),
+                        ),
+                        key=lambda item: (item.casefold(), item),
+                    )
+                )
+                for reference in peers
+            }
+            for peer_group, scoped_assignments, peer_review in _peer_assignment_partitions(
+                assignments,
+                peer_assignment_groups,
+            ):
+                if len(scoped_assignments) < 2:
+                    continue
+                pin_groups.append(
+                    _ConnectorPartIdPeerPinGroup(
+                        part_id=display_id,
+                        pin_number=pin_number,
+                        pin_function=pin_metadata[pin_number][0],
+                        assignments=dict(
+                            sorted(
+                                scoped_assignments.items(),
+                                key=lambda item: (item[0].casefold(), item[0]),
+                            )
+                        ),
+                        symbols=peer_symbols,
+                        peer_assignment_group=peer_group,
+                        peer_assignment_basis=peer_review,
+                    )
+                )
+    return _ConnectorPartIdPeerPinScan(
+        candidate_group_count=len(candidate_groups),
+        incomplete_component_identity_group_count=incomplete_identity_count,
+        incomplete_pin_inventory_group_count=incomplete_inventory_count,
+        incomplete_pin_metadata_group_count=incomplete_metadata_count,
+        eligible_peer_group_count=eligible_peer_group_count,
+        incomplete_pin_inventory_references=tuple(
+            sorted(incomplete_inventory_references, key=lambda item: (item.casefold(), item))
+        ),
+        pin_groups=tuple(
+            sorted(
+                pin_groups,
+                key=lambda item: (
+                    item.part_id.casefold(),
+                    item.pin_number.casefold(),
+                    tuple(sorted(pin.casefold() for pin in item.assignments)),
+                ),
+            )
+        ),
+    )
+
+
 def connector_peer_pin_assignment_outliers(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
 ) -> tuple[ConnectorPeerPinAssignmentOutlier, ...]:
-    """Find exact-symbol peer pins with incomplete or minority net assignments.
+    """Find comparable connector peer pins with incomplete or minority assignments.
 
     This rule is reserved for pins whose function metadata is absent or only
     contains a generic Pin_N placeholder, since the named-function comparison
-    already covers pins with meaningful roles. A matching library symbol and
-    pin number identify comparable contacts, but do not establish that their
-    nets must be common.
+    already covers pins with meaningful roles. Cross-symbol peers must share a
+    native PART_ID and match value, footprint, complete pin inventory, pin
+    functions, and electrical types. These identities identify review
+    candidates; they do not establish that their nets must be common.
     """
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
     connector_references = {
@@ -628,7 +953,7 @@ def connector_peer_pin_assignment_outliers(
             )
             symbols[symbol.casefold()] = symbol
 
-    results: list[ConnectorPeerPinAssignmentOutlier] = []
+    exact_results: list[ConnectorPeerPinAssignmentOutlier] = []
     for (symbol_key, pin_number), assignments in sorted(grouped.items()):
         for peer_group, scoped_assignments, peer_review in _peer_assignment_partitions(
             assignments,
@@ -661,7 +986,7 @@ def connector_peer_pin_assignment_outliers(
                 )
             if not outlier_pins:
                 continue
-            results.append(
+            exact_results.append(
                 ConnectorPeerPinAssignmentOutlier(
                     symbol=symbols[symbol_key],
                     pin_number=pin_number,
@@ -671,17 +996,95 @@ def connector_peer_pin_assignment_outliers(
                     peer_assignment_basis=peer_review,
                 )
             )
-    return tuple(results)
 
+    part_id_results: list[ConnectorPeerPinAssignmentOutlier] = []
+    part_id_scan = _connector_part_id_peer_pin_scan(
+        observed,
+        declared_references,
+        peer_assignment_groups,
+    )
+    for group in part_id_scan.pin_groups:
+        if any(len(nets) > 1 for nets in group.assignments.values()):
+            continue
+        if _has_meaningful_pin_function(group.pin_function):
+            continue
+        signatures = tuple(group.assignments.values())
+        if len(set(signatures)) == 1:
+            continue
+        if any(not signature for signature in signatures):
+            if not any(signatures):
+                continue
+            outlier_pins = tuple(
+                sorted(
+                    (pin for pin, nets in group.assignments.items() if not nets),
+                    key=lambda item: (item.casefold(), item),
+                )
+            )
+        else:
+            majority = _unique_peer_pin_majority(group.assignments)
+            if majority is None:
+                continue
+            outlier_pins = tuple(
+                sorted(
+                    (pin for pin, nets in group.assignments.items() if nets != majority),
+                    key=lambda item: (item.casefold(), item),
+                )
+            )
+        if not outlier_pins:
+            continue
+        part_id_results.append(
+            ConnectorPeerPinAssignmentOutlier(
+                symbol="multiple connector symbols",
+                pin_number=group.pin_number,
+                assignments=group.assignments,
+                outlier_pins=outlier_pins,
+                peer_assignment_group=group.peer_assignment_group,
+                peer_assignment_basis=group.peer_assignment_basis,
+                peer_identity_basis="part_id",
+                peer_identity=group.part_id,
+                peer_symbols=group.symbols,
+            )
+        )
 
-@dataclass(frozen=True)
-class ConnectorPeerPinAssignmentDivergence:
-    symbol: str
-    pin_number: str
-    assignments: dict[str, tuple[str, ...]]
-    missing_function_pins: tuple[str, ...]
-    peer_assignment_group: str | None = None
-    peer_assignment_basis: tuple[str, ...] = ()
+    def is_subsumed_by_part_id(
+        exact: ConnectorPeerPinAssignmentOutlier,
+        aliases: tuple[ConnectorPeerPinAssignmentOutlier, ...],
+    ) -> bool:
+        exact_assignments = {pin.casefold(): nets for pin, nets in exact.assignments.items()}
+        exact_outliers = {pin.casefold() for pin in exact.outlier_pins}
+        for alias in aliases:
+            if exact.pin_number.casefold() != alias.pin_number.casefold():
+                continue
+            alias_assignments = {pin.casefold(): nets for pin, nets in alias.assignments.items()}
+            alias_outliers = {pin.casefold() for pin in alias.outlier_pins}
+            if (
+                exact_assignments.keys() <= alias_assignments.keys()
+                and all(alias_assignments[pin] == nets for pin, nets in exact_assignments.items())
+                and exact_outliers <= alias_outliers
+            ):
+                return True
+        return False
+
+    results = [
+        *part_id_results,
+        *(
+            item
+            for item in exact_results
+            if not is_subsumed_by_part_id(item, tuple(part_id_results))
+        ),
+    ]
+    return tuple(
+        sorted(
+            results,
+            key=lambda item: (
+                0 if item.peer_identity_basis == "part_id" else 1,
+                item.peer_identity.casefold(),
+                item.symbol.casefold(),
+                item.pin_number.casefold(),
+                tuple(pin.casefold() for pin in item.outlier_pins),
+            ),
+        )
+    )
 
 
 def connector_peer_pin_assignment_divergences(
@@ -689,12 +1092,13 @@ def connector_peer_pin_assignment_divergences(
     declared_references: tuple[str, ...] = (),
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
 ) -> tuple[ConnectorPeerPinAssignmentDivergence, ...]:
-    """Review assigned peer contacts that differ when at least one role is unknown.
+    """Review comparable assigned peer contacts that differ with unknown roles.
 
     The outlier rule above needs a majority assignment to identify a minority
-    peer. This lower-confidence check retains the exact-symbol/pin-number
-    boundary, but only reports fully assigned groups with conflicting nets and
-    absent or generic pin-function metadata. It does not infer a required
+    peer. This lower-confidence check reports fully assigned groups with
+    conflicting nets and absent or generic pin-function metadata. Cross-symbol
+    peers must pass the same native PART_ID, component identity, inventory, and
+    pin-metadata checks as the outlier rule. It does not infer a required
     connection.
     """
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
@@ -765,7 +1169,75 @@ def connector_peer_pin_assignment_divergences(
                     peer_assignment_basis=peer_review,
                 )
             )
-    return tuple(results)
+    exact_results = tuple(results)
+    part_id_results: list[ConnectorPeerPinAssignmentDivergence] = []
+    part_id_scan = _connector_part_id_peer_pin_scan(
+        observed,
+        declared_references,
+        peer_assignment_groups,
+    )
+    for group in part_id_scan.pin_groups:
+        assignments = group.assignments
+        if any(len(nets) != 1 for nets in assignments.values()):
+            continue
+        if len(set(assignments.values())) < 2 or _unique_peer_pin_majority(assignments) is not None:
+            continue
+        if _has_meaningful_pin_function(group.pin_function):
+            continue
+        missing_function_pins = tuple(sorted(assignments, key=lambda item: (item.casefold(), item)))
+        part_id_results.append(
+            ConnectorPeerPinAssignmentDivergence(
+                symbol="multiple connector symbols",
+                pin_number=group.pin_number,
+                assignments=assignments,
+                missing_function_pins=missing_function_pins,
+                peer_assignment_group=group.peer_assignment_group,
+                peer_assignment_basis=group.peer_assignment_basis,
+                peer_identity_basis="part_id",
+                peer_identity=group.part_id,
+                peer_symbols=group.symbols,
+            )
+        )
+
+    def is_subsumed_by_part_id(
+        exact: ConnectorPeerPinAssignmentDivergence,
+        aliases: tuple[ConnectorPeerPinAssignmentDivergence, ...],
+    ) -> bool:
+        exact_assignments = {pin.casefold(): nets for pin, nets in exact.assignments.items()}
+        exact_missing_functions = {pin.casefold() for pin in exact.missing_function_pins}
+        for alias in aliases:
+            if exact.pin_number.casefold() != alias.pin_number.casefold():
+                continue
+            alias_assignments = {pin.casefold(): nets for pin, nets in alias.assignments.items()}
+            alias_missing_functions = {pin.casefold() for pin in alias.missing_function_pins}
+            if (
+                exact_assignments.keys() <= alias_assignments.keys()
+                and all(alias_assignments[pin] == nets for pin, nets in exact_assignments.items())
+                and exact_missing_functions <= alias_missing_functions
+            ):
+                return True
+        return False
+
+    combined = [
+        *part_id_results,
+        *(
+            item
+            for item in exact_results
+            if not is_subsumed_by_part_id(item, tuple(part_id_results))
+        ),
+    ]
+    return tuple(
+        sorted(
+            combined,
+            key=lambda item: (
+                0 if item.peer_identity_basis == "part_id" else 1,
+                item.peer_identity.casefold(),
+                item.symbol.casefold(),
+                item.pin_number.casefold(),
+                tuple(pin.casefold() for pin in item.missing_function_pins),
+            ),
+        )
+    )
 
 
 def unconnected_named_connector_pins(
@@ -1031,6 +1503,9 @@ class PeerPowerPinAssignmentDivergence:
     function: str
     role: str
     assignments: dict[str, tuple[str, ...]]
+    peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
+    peer_identity: str = ""
+    peer_symbols: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1040,11 +1515,18 @@ class PeerPinAssignmentOutlier:
     electrical_type: str
     assignments: dict[str, tuple[str, ...]]
     pin_function: str | None = None
+    peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
+    peer_identity: str = ""
+    peer_symbols: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class PeerPinAssignmentScan:
     exact_symbol_peer_group_count: int
+    part_id_peer_group_count: int
+    part_id_candidate_group_count: int
+    part_id_incomplete_component_identity_group_count: int
+    part_id_incomplete_component_identity_references: tuple[str, ...]
     incomplete_pin_inventory_group_count: int
     incomplete_pin_inventory_references: tuple[str, ...]
     complete_pin_inventory_group_count: int
@@ -1053,6 +1535,7 @@ class PeerPinAssignmentScan:
     compatible_function_pin_group_count: int
     ambiguous_assignment_pin_group_count: int
     unambiguous_assignment_pin_group_count: int
+    deduplicated_candidate_group_count: int
     outliers: tuple[PeerPinAssignmentOutlier, ...]
 
 
@@ -1071,10 +1554,14 @@ def _component_peer_pin_assignment_scan(
     electrical_types: frozenset[str],
     require_pin_functions: bool = False,
 ) -> PeerPinAssignmentScan:
-    """Scan assignment coverage and open typed pins among exact-symbol peers.
+    """Scan assignment coverage among exact-symbol and exact-part peers.
 
-    A same-symbol, same-pin assignment is a review clue only. The other
-    instances may intentionally use that pin differently or leave it open.
+    Same-symbol and same-PART_ID, same-pin assignments are review clues only.
+    The other instances may intentionally use that pin differently or leave it
+    open. Cross-symbol PART_ID groups require matching component value,
+    footprint, complete pin inventories, native types, and present, identical
+    per-pin function metadata. Identical generic placeholders are accepted as
+    a structural match only; they do not identify the pin's electrical role.
     """
     accepted_types = {value.strip().casefold() for value in electrical_types}
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
@@ -1085,6 +1572,10 @@ def _component_peer_pin_assignment_scan(
     known_components = {reference.casefold() for reference in observed.components}
     references_by_symbol: dict[str, list[str]] = {}
     symbols_by_key: dict[str, str] = {}
+    components_by_key = {
+        reference.casefold(): component for reference, component in observed.components.items()
+    }
+    eligible_references: list[str] = []
     for reference, symbol in observed.component_symbols.items():
         reference_key = reference.casefold()
         if (
@@ -1093,9 +1584,50 @@ def _component_peer_pin_assignment_scan(
             or reference_key in connector_references
         ):
             continue
+        eligible_references.append(reference)
         symbol_key = symbol.casefold()
         references_by_symbol.setdefault(symbol_key, []).append(reference)
         symbols_by_key[symbol_key] = symbol
+
+    peer_groups: list[tuple[Literal["exact_symbol", "part_id"], str, tuple[str, ...]]] = []
+    for symbol_key, references in sorted(references_by_symbol.items()):
+        peers = tuple(sorted(references, key=str.casefold))
+        if len(peers) >= 2:
+            peer_groups.append(("exact_symbol", symbols_by_key[symbol_key], peers))
+
+    references_by_part_id: dict[str, list[str]] = {}
+    part_ids_by_key: dict[str, str] = {}
+    for reference in eligible_references:
+        component = components_by_key.get(reference.casefold())
+        part_id = None if component is None else component.part_id
+        if part_id is None or not part_id.strip():
+            continue
+        part_id = part_id.strip()
+        part_key = part_id.casefold()
+        references_by_part_id.setdefault(part_key, []).append(reference)
+        previous = part_ids_by_key.get(part_key)
+        if previous is None or (part_id.casefold(), part_id) < (
+            previous.casefold(),
+            previous,
+        ):
+            part_ids_by_key[part_key] = part_id
+    part_id_candidate_group_count = 0
+    part_id_incomplete_component_identity_group_count = 0
+    part_id_incomplete_component_identity_references: set[str] = set()
+    for part_key, references in sorted(references_by_part_id.items()):
+        peers = tuple(sorted(references, key=str.casefold))
+        peer_symbols = {observed.component_symbols[reference].casefold() for reference in peers}
+        if len(peers) < 2 or len(peer_symbols) < 2:
+            continue
+        part_id_candidate_group_count += 1
+        peer_components = tuple(components_by_key[reference.casefold()] for reference in peers)
+        values = {component.value.strip().casefold() for component in peer_components}
+        footprints = {component.footprint.strip().casefold() for component in peer_components}
+        if len(values) != 1 or "" in values or len(footprints) != 1 or "" in footprints:
+            part_id_incomplete_component_identity_group_count += 1
+            part_id_incomplete_component_identity_references.update(peers)
+            continue
+        peer_groups.append(("part_id", part_ids_by_key[part_key], peers))
 
     inventories = {
         reference.casefold(): tuple(sorted(numbers, key=str.casefold))
@@ -1113,6 +1645,7 @@ def _component_peer_pin_assignment_scan(
 
     results: list[PeerPinAssignmentOutlier] = []
     exact_symbol_peer_group_count = 0
+    part_id_peer_group_count = 0
     incomplete_pin_inventory_group_count = 0
     incomplete_pin_inventory_references: set[str] = set()
     complete_pin_inventory_group_count = 0
@@ -1121,11 +1654,14 @@ def _component_peer_pin_assignment_scan(
     compatible_function_pin_group_count = 0
     ambiguous_assignment_pin_group_count = 0
     unambiguous_assignment_pin_group_count = 0
-    for symbol_key, references in sorted(references_by_symbol.items()):
-        peers = tuple(sorted(references, key=str.casefold))
-        if len(peers) < 2:
-            continue
-        exact_symbol_peer_group_count += 1
+    deduplicated_candidate_group_count = 0
+    candidate_keys: set[tuple[str, tuple[str, ...]]] = set()
+    peer_groups.sort(key=lambda item: (item[0], item[1].casefold(), item[1]))
+    for peer_identity_basis, peer_identity, peers in peer_groups:
+        if peer_identity_basis == "exact_symbol":
+            exact_symbol_peer_group_count += 1
+        else:
+            part_id_peer_group_count += 1
         peer_inventories = tuple(inventories.get(reference.casefold(), ()) for reference in peers)
         if (
             not peer_inventories[0]
@@ -1155,7 +1691,7 @@ def _component_peer_pin_assignment_scan(
             matching_electrical_type_pin_group_count += 1
             peer_functions = tuple(functions.get(pin.casefold()) for pin in pins)
             if (
-                require_pin_functions
+                (require_pin_functions or peer_identity_basis == "part_id")
                 and any(function is None or not function.strip() for function in peer_functions)
             ) or len(
                 {
@@ -1185,22 +1721,56 @@ def _component_peer_pin_assignment_scan(
             ):
                 # Preserve the more specific existing named supply/return prompt.
                 continue
+            candidate_key = (
+                pin_number.casefold(),
+                tuple(sorted(open_pins, key=lambda pin: (pin.casefold(), pin))),
+            )
+            if candidate_key in candidate_keys:
+                deduplicated_candidate_group_count += 1
+                continue
+            candidate_keys.add(candidate_key)
+            peer_symbols = tuple(
+                sorted(
+                    {observed.component_symbols[reference] for reference in peers},
+                    key=lambda item: (item.casefold(), item),
+                )
+            )
             results.append(
                 PeerPinAssignmentOutlier(
-                    symbol=symbols_by_key[symbol_key],
+                    symbol=(
+                        peer_identity if peer_identity_basis == "exact_symbol" else peer_symbols[0]
+                    ),
                     pin_number=pin_number,
                     electrical_type=peer_types[0] or "",
                     assignments=dict(
                         sorted(assignments.items(), key=lambda item: item[0].casefold())
                     ),
                     pin_function=peer_functions[0],
+                    peer_identity_basis=peer_identity_basis,
+                    peer_identity=peer_identity,
+                    peer_symbols=peer_symbols,
                 )
             )
     outliers = tuple(
-        sorted(results, key=lambda item: (item.symbol.casefold(), item.pin_number.casefold()))
+        sorted(
+            results,
+            key=lambda item: (
+                item.peer_identity_basis,
+                item.peer_identity.casefold(),
+                item.pin_number.casefold(),
+            ),
+        )
     )
     return PeerPinAssignmentScan(
         exact_symbol_peer_group_count=exact_symbol_peer_group_count,
+        part_id_peer_group_count=part_id_peer_group_count,
+        part_id_candidate_group_count=part_id_candidate_group_count,
+        part_id_incomplete_component_identity_group_count=(
+            part_id_incomplete_component_identity_group_count
+        ),
+        part_id_incomplete_component_identity_references=tuple(
+            sorted(part_id_incomplete_component_identity_references, key=str.casefold)
+        ),
         incomplete_pin_inventory_group_count=incomplete_pin_inventory_group_count,
         incomplete_pin_inventory_references=tuple(
             sorted(incomplete_pin_inventory_references, key=str.casefold)
@@ -1211,6 +1781,7 @@ def _component_peer_pin_assignment_scan(
         compatible_function_pin_group_count=compatible_function_pin_group_count,
         ambiguous_assignment_pin_group_count=ambiguous_assignment_pin_group_count,
         unambiguous_assignment_pin_group_count=unambiguous_assignment_pin_group_count,
+        deduplicated_candidate_group_count=deduplicated_candidate_group_count,
         outliers=outliers,
     )
 
@@ -1316,12 +1887,13 @@ def component_peer_power_pin_assignment_divergences(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
 ) -> tuple[PeerPowerPinAssignmentDivergence, ...]:
-    """Find split recognized power pins across fitted peers with one exact symbol.
+    """Find split recognized power pins across comparable fitted peers.
 
-    Exact symbol, pin number, and named power function make a review candidate;
-    they do not establish that the peers must use a common electrical domain.
-    Incomplete pin inventories, unrecognized functions, open pins, and DNP parts
-    are left to other checks or explicit project review.
+    Exact symbol peers use the legacy pin-number and recognized-function
+    comparison. Cross-symbol peers require a shared PART_ID, matching value and
+    footprint, complete identical pin inventories, and identical native pin
+    function and electrical-type metadata for every pin. Neither identity basis
+    establishes that the peers must use a common electrical domain.
     """
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
     connector_references = {
@@ -1346,6 +1918,7 @@ def component_peer_power_pin_assignment_divergences(
         reference, pin_number = pin.rsplit(".", 1)
         pin_numbers_by_reference.setdefault(reference.casefold(), set()).add(pin_number)
 
+    exact_symbol_groups: list[tuple[str, tuple[str, ...]]] = []
     references_by_symbol: dict[str, list[str]] = {}
     symbol_names: dict[str, str] = {}
     known_components = {reference.casefold() for reference in observed.components}
@@ -1359,19 +1932,120 @@ def component_peer_power_pin_assignment_divergences(
         references_by_symbol.setdefault(symbol.casefold(), []).append(reference)
         symbol_names[symbol.casefold()] = symbol
 
-    results: list[PeerPowerPinAssignmentDivergence] = []
     for symbol_key, references in sorted(references_by_symbol.items()):
-        peer_references = tuple(sorted(references, key=str.casefold))
-        if len(peer_references) < 2:
-            continue
-        shared_pin_numbers: set[str] = set(
-            pin_numbers_by_reference.get(peer_references[0].casefold(), set())
-        )
-        for reference in peer_references[1:]:
-            shared_pin_numbers.intersection_update(
-                pin_numbers_by_reference.get(reference.casefold(), set())
+        peers = tuple(sorted(references, key=lambda item: (item.casefold(), item)))
+        if len(peers) >= 2:
+            exact_symbol_groups.append((symbol_names[symbol_key], peers))
+
+    components_by_reference = {
+        reference.casefold(): component for reference, component in observed.components.items()
+    }
+    references_by_part_id: dict[str, list[str]] = {}
+    part_ids_by_key: dict[str, list[str]] = {}
+    for references in references_by_symbol.values():
+        for reference in references:
+            component = components_by_reference.get(reference.casefold())
+            part_id = None if component is None else component.part_id
+            if part_id is None or not part_id.strip():
+                continue
+            normalized_part_id = part_id.strip()
+            part_key = normalized_part_id.casefold()
+            references_by_part_id.setdefault(part_key, []).append(reference)
+            part_ids_by_key.setdefault(part_key, []).append(normalized_part_id)
+
+    pin_types_by_pin = {
+        pin.casefold(): electrical_type.strip().casefold()
+        for pin, electrical_type in observed.pin_electrical_types.items()
+    }
+    normalized_functions_by_pin = {
+        pin.casefold(): function.strip().casefold()
+        for pin, function in observed.pin_functions.items()
+    }
+    inventories_by_reference = {
+        reference.casefold(): tuple(numbers)
+        for reference, numbers in observed.component_pin_numbers.items()
+    }
+    part_id_groups: list[tuple[str, tuple[str, ...], tuple[str, ...]]] = []
+    for part_key, references in sorted(references_by_part_id.items()):
+        peers = tuple(sorted(set(references), key=lambda item: (item.casefold(), item)))
+        peer_symbols = tuple(
+            sorted(
+                {observed.component_symbols[reference] for reference in peers},
+                key=lambda item: (item.casefold(), item),
             )
-        for pin_number in sorted(shared_pin_numbers, key=str.casefold):
+        )
+        if len(peers) < 2 or len({symbol.casefold() for symbol in peer_symbols}) < 2:
+            continue
+        peer_components = tuple(
+            components_by_reference[reference.casefold()] for reference in peers
+        )
+        values = {component.value.strip().casefold() for component in peer_components}
+        footprints = {component.footprint.strip().casefold() for component in peer_components}
+        if len(values) != 1 or "" in values or len(footprints) != 1 or "" in footprints:
+            continue
+
+        inventories = tuple(
+            inventories_by_reference.get(reference.casefold(), ()) for reference in peers
+        )
+        if (
+            not inventories[0]
+            or any(not inventory for inventory in inventories)
+            or any(
+                {number.casefold() for number in inventory}
+                != {number.casefold() for number in inventories[0]}
+                for inventory in inventories[1:]
+            )
+            or len({number.casefold() for number in inventories[0]}) != len(inventories[0])
+        ):
+            continue
+        pin_numbers = tuple(sorted(inventories[0], key=lambda item: (item.casefold(), item)))
+        complete_metadata = True
+        for pin_number in pin_numbers:
+            pins = tuple(f"{reference}.{pin_number}".casefold() for reference in peers)
+            peer_functions = tuple(normalized_functions_by_pin.get(pin) for pin in pins)
+            peer_types = tuple(pin_types_by_pin.get(pin) for pin in pins)
+            if (
+                any(function is None or not function for function in peer_functions)
+                or len(set(peer_functions)) != 1
+                or any(
+                    electrical_type is None or not electrical_type for electrical_type in peer_types
+                )
+                or len(set(peer_types)) != 1
+            ):
+                complete_metadata = False
+                break
+        if not complete_metadata:
+            continue
+        representative_part_id = min(
+            part_ids_by_key[part_key], key=lambda item: (item.casefold(), item)
+        )
+        part_id_groups.append((representative_part_id, peers, peer_symbols))
+
+    # A valid PART_ID group contains the same identity proof plus every matching
+    # symbol alias, so avoid emitting subset findings for its exact-symbol peers.
+    covered_exact_groups = tuple(set(peers) for _, peers, _ in part_id_groups)
+    comparable_groups: list[
+        tuple[Literal["exact_symbol", "part_id"], str, tuple[str, ...], tuple[str, ...]]
+    ] = [("part_id", part_id, peers, symbols) for part_id, peers, symbols in part_id_groups]
+    comparable_groups.extend(
+        ("exact_symbol", symbol, peers, (symbol,))
+        for symbol, peers in exact_symbol_groups
+        if not any(set(peers) <= covered for covered in covered_exact_groups)
+    )
+
+    results: list[PeerPowerPinAssignmentDivergence] = []
+    for identity_basis, identity, peer_references, peer_symbols in comparable_groups:
+        if identity_basis == "part_id":
+            shared_pin_numbers = set(inventories_by_reference[peer_references[0].casefold()])
+        else:
+            shared_pin_numbers = set(
+                pin_numbers_by_reference.get(peer_references[0].casefold(), set())
+            )
+            for reference in peer_references[1:]:
+                shared_pin_numbers.intersection_update(
+                    pin_numbers_by_reference.get(reference.casefold(), set())
+                )
+        for pin_number in sorted(shared_pin_numbers, key=lambda item: (item.casefold(), item)):
             pins = tuple(f"{reference}.{pin_number}" for reference in peer_references)
             functions: tuple[str | None, ...] = tuple(
                 functions_by_pin.get(pin.casefold()) for pin in pins
@@ -1393,25 +2067,33 @@ def component_peer_power_pin_assignment_divergences(
             assignments: dict[str, tuple[str, ...]] = {
                 pin: tuple(sorted(pin_nets.get(pin.casefold(), ()))) for pin in pins
             }
-            if any(not nets for nets in assignments.values()):
+            if any(len(nets) != 1 for nets in assignments.values()):
                 continue
             if len(set(assignments.values())) < 2:
                 continue
             results.append(
                 PeerPowerPinAssignmentDivergence(
-                    symbol=symbol_names[symbol_key],
+                    symbol=peer_symbols[0],
                     pin_number=pin_number,
                     function=typed_functions[0],
                     role=role,
                     assignments=dict(
                         sorted(assignments.items(), key=lambda item: item[0].casefold())
                     ),
+                    peer_identity_basis=identity_basis,
+                    peer_identity=identity,
+                    peer_symbols=peer_symbols,
                 )
             )
     return tuple(
         sorted(
             results,
-            key=lambda item: (item.symbol.casefold(), item.pin_number.casefold(), item.role),
+            key=lambda item: (
+                item.peer_identity_basis,
+                item.peer_identity.casefold(),
+                item.pin_number.casefold(),
+                item.role,
+            ),
         )
     )
 

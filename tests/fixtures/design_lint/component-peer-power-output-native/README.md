@@ -1,9 +1,12 @@
 # Synthetic peer power-output assignment fixtures
 
-These schematics use two fitted instances of the same embedded synthetic
-component. Pin 1 is a shared passive signal. Pin 2 is named `OUT` and uses
-native electrical type `power_out`; that function is intentionally not a
-recognized named supply alias.
+These schematics use two fitted embedded synthetic symbols with identical
+pin numbers, value, and footprint. Both carry the same `PART_ID`. Pin 1 is a
+shared passive signal. Pin 2 is labeled with the generic native function
+`Pin_2` and uses electrical type `power_out`. This pair verifies that the
+native netlist preserves `PART_ID` and identical generic pin metadata, and
+that the review can compare equivalent components represented by different
+symbol IDs.
 
 | Fixture             | U1.2     | U2.2       | Expected lint result                                   |
 | ------------------- | -------- | ---------- | ------------------------------------------------------ |
@@ -17,11 +20,13 @@ inventories, ambiguous assignments, named supply/return exclusions, and a
 shield-labelled output that remains eligible for review.
 
 The fixture is synthetic and is not a project design. Native netlists must
-retain exact symbol identity, pin inventory, and `power_out` type for the
-heuristic to apply. The rule asks for review and does not prove that the output
-is used or that peer outputs should be common.
+retain `PART_ID`, complete pin inventories, identical pin-function text, and
+`power_out` type for the cross-symbol heuristic to apply. Identical generic
+function labels establish only a structural match, not the pin's electrical
+role. The rule asks for review and does not prove that the output is used or
+that peer outputs should be common.
 
 SHA-256 source digests:
 
-- `control.kicad_sch`: `1b1d4bb236864087fe619819a3776ad5ef7f4d7d2e462ebb0fc8eaa2c6bf2399`
-- `fault.kicad_sch`: `960e1030966e72c7ce197a971cf71418a8274e9e224ae60ef4d3d540af82790b`
+- `control.kicad_sch`: `3b41f81891115ae3e324694f46e41fbe44fb737c86555aa873333aa225b6f34b`
+- `fault.kicad_sch`: `76cd57afa2e87980e9914a6508066e7197812bacd68241fe9e29ffd618bb9ff4`

@@ -114,6 +114,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         patch.multiple(
             "kicad_tooling.ci_hosted",
             pcb_signal_path_drc_fixture_lane=DEFAULT,
+            component_peer_power_assignment_fixture_lane=DEFAULT,
             component_peer_signal_input_fixture_lane=DEFAULT,
             component_peer_signal_output_fixture_lane=DEFAULT,
             component_peer_bidirectional_fixture_lane=DEFAULT,
@@ -158,6 +159,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         led_fixture,
         component_fixture,
         peer_power_fixture,
+        other_native_fixtures["component_peer_power_assignment_fixture_lane"],
         other_native_fixtures["component_peer_signal_output_fixture_lane"],
         other_native_fixtures["component_peer_signal_input_fixture_lane"],
         other_native_fixtures["component_peer_bidirectional_fixture_lane"],
@@ -1665,6 +1667,9 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                         "connector-return-fixture/peer-power-control",
                         "connector-return-fixture/peer-pin-outlier-fault",
                         "connector-return-fixture/peer-pin-outlier-control",
+                        "connector-return-fixture/peer-pin-part-id-open-fault",
+                        "connector-return-fixture/peer-pin-part-id-common-control",
+                        "connector-return-fixture/peer-pin-part-id-split-fault",
                         "connector-return-fixture/two-peer-open-fault",
                         "connector-return-fixture/two-peer-no-connect-fault",
                         "connector-return-fixture/two-peer-common-control",
@@ -1812,6 +1817,62 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                 self.assertEqual(peer_pin_control["status"], "PASS")
                 self.assertEqual(peer_pin_control["lint_status"], "PASS")
                 self.assertEqual(peer_pin_control["findings"], "none")
+                part_id_fault = results["connector-return-fixture/peer-pin-part-id-open-fault"]
+                part_id_control = results[
+                    "connector-return-fixture/peer-pin-part-id-common-control"
+                ]
+                self.assertEqual(part_id_fault["status"], "PASS")
+                self.assertEqual(part_id_fault["lint_status"], "REVIEW")
+                self.assertEqual(part_id_fault["findings"], "connector.peer_pin_assignment_outlier")
+                self.assertEqual(
+                    part_id_fault["subjects"],
+                    "PART_ID SYNTHETIC-CONNECTOR-2PIN-001 pin 2",
+                )
+                self.assertEqual(part_id_control["status"], "PASS")
+                self.assertEqual(part_id_control["lint_status"], "PASS")
+                self.assertEqual(part_id_control["findings"], "none")
+                part_id_split = results["connector-return-fixture/peer-pin-part-id-split-fault"]
+                self.assertEqual(part_id_split["status"], "PASS")
+                self.assertEqual(part_id_split["lint_status"], "REVIEW")
+                self.assertEqual(
+                    part_id_split["findings"], "connector.peer_pin_assignment_divergence"
+                )
+                self.assertEqual(
+                    part_id_split["subjects"],
+                    "PART_ID SYNTHETIC-CONNECTOR-2PIN-001 pin 2",
+                )
+                for (
+                    case,
+                    expected_open,
+                    expected_different,
+                    expected_common,
+                    expected_outliers,
+                    expected_divergences,
+                ) in (
+                    ("peer-pin-part-id-open-fault", 1, 1, 1, 1, 0),
+                    ("peer-pin-part-id-common-control", 0, 0, 2, 0, 0),
+                    ("peer-pin-part-id-split-fault", 0, 1, 1, 0, 1),
+                ):
+                    result = results[f"connector-return-fixture/{case}"]
+                    coverage = json.loads(result["connector_peer_pin_coverage"])
+                    aliases = coverage["part_id_alias_coverage"]
+                    self.assertEqual(coverage["status"], "NO_EXACT_SYMBOL_PEERS")
+                    self.assertEqual(coverage["netlist_sha256"], result["netlist_sha256"])
+                    self.assertEqual(coverage["connector_candidate_count"], 2)
+                    self.assertEqual(coverage["fitted_connector_count"], 2)
+                    self.assertEqual(coverage["exact_symbol_peer_group_count"], 0)
+                    self.assertEqual(aliases["status"], "EVALUATED")
+                    self.assertEqual(aliases["candidate_group_count"], 1)
+                    self.assertEqual(aliases["eligible_peer_group_count"], 1)
+                    self.assertEqual(aliases["compared_pin_group_count"], 2)
+                    self.assertEqual(aliases["common_assignment_pin_group_count"], expected_common)
+                    self.assertEqual(
+                        aliases["different_assignment_pin_group_count"], expected_different
+                    )
+                    self.assertEqual(aliases["open_assignment_pin_group_count"], expected_open)
+                    self.assertEqual(aliases["outlier_finding_count"], expected_outliers)
+                    self.assertEqual(aliases["divergence_finding_count"], expected_divergences)
+                    self.assertEqual(result["repeatable"], "true")
                 for (
                     case,
                     expected_connectors,
@@ -1962,12 +2023,12 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                     self.assertRegex(result["grounding_contract_sha256"], r"^[0-9a-f]{64}$")
                 self.assertEqual(
                     results["connector-return-fixture/ground-contract-common-fault"]["checks"],
-                    "grounding/0V PWM=FAIL;grounding/component-coverage=PASS;"
+                    "grounding/COMMON_RETURN=FAIL;grounding/component-coverage=PASS;"
                     "grounding/return-net-review=FAIL",
                 )
                 self.assertEqual(
                     results["connector-return-fixture/ground-contract-common-control"]["checks"],
-                    "grounding/0V PWM=PASS;grounding/component-coverage=PASS",
+                    "grounding/COMMON_RETURN=PASS;grounding/component-coverage=PASS",
                 )
                 pin_connectivity_expectations = {
                     "common-fault": "FAIL",
@@ -2140,6 +2201,9 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                     "peer-power-control",
                     "peer-pin-outlier-fault",
                     "peer-pin-outlier-control",
+                    "peer-pin-part-id-open-fault",
+                    "peer-pin-part-id-common-control",
+                    "peer-pin-part-id-split-fault",
                     "two-peer-open-fault",
                     "two-peer-no-connect-fault",
                     "two-peer-common-control",
@@ -2166,6 +2230,9 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
                         "peer-power-control",
                         "peer-pin-outlier-fault",
                         "peer-pin-outlier-control",
+                        "peer-pin-part-id-open-fault",
+                        "peer-pin-part-id-common-control",
+                        "peer-pin-part-id-split-fault",
                         "two-peer-open-fault",
                         "two-peer-no-connect-fault",
                         "two-peer-common-control",

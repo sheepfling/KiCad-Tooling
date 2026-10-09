@@ -60,6 +60,7 @@ def test_native_lane_schedules_pcb_signal_path_fixture(
         "led_rail_fixture_lane",
         "two_pin_component_fixture_lane",
         "component_peer_power_output_fixture_lane",
+        "component_peer_power_assignment_fixture_lane",
         "component_peer_signal_output_fixture_lane",
         "component_peer_signal_input_fixture_lane",
         "component_peer_bidirectional_fixture_lane",

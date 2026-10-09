@@ -35,9 +35,6 @@ from kicad_tooling.hwrepo.schematic_geometry import scan_wire_ends_on_pin_lines
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
-from tests.test_connector_coverage import (
-    ConnectorCoverageTests,
-)
 from tests.test_connector_return_distribution import (
     distribution_map as connector_distribution_map,
 )
@@ -45,7 +42,6 @@ from tests.test_connector_return_distribution import (
     lint_report as connector_distribution_report,
 )
 from tests.test_crystal_networks import (
-    CrystalNetworkTests,
     crystal_map,
     crystal_netlist,
 )
@@ -252,7 +248,6 @@ from tests.test_two_pin_passives import (
 )
 from tests.test_two_pin_switches import switch_netlist as two_pin_switch_netlist
 from tests.test_usb_c_ports import (
-    UsbCPortLintTests,
     usb_c_netlist,
 )
 from tests.test_usb_data_paths import (
@@ -433,11 +428,9 @@ def test_metamorphic_coverage_inventory_matches_the_backlog() -> None:
 def test_active_rules_reference_existing_regression_fixtures() -> None:
     instances = {
         DesignLintTests: DesignLintTests(),
-        ConnectorCoverageTests: ConnectorCoverageTests(),
         I2cAddressingTests: I2cAddressingTests(),
         SchematicGeometryTests: SchematicGeometryTests(),
         ExternalProtectionTests: ExternalProtectionTests(),
-        CrystalNetworkTests: CrystalNetworkTests(),
         RegulatorFeedbackTests: RegulatorFeedbackTests(),
         RcFilterTests: RcFilterTests(),
         PcbDecouplingTests: PcbDecouplingTests(),
@@ -450,7 +443,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         PowerSequenceTests: PowerSequenceTests(),
         PowerPathFixtureLaneTests: PowerPathFixtureLaneTests(),
         PowerSourcePathLintTests: PowerSourcePathLintTests(),
-        UsbCPortLintTests: UsbCPortLintTests(),
     }
     fixtures: set[tuple[type, str]] = set()
     pytest_fixtures: set[str] = set()

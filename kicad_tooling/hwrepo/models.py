@@ -5064,6 +5064,91 @@ class ConnectorCoverageReport(StrictModel):
         return self
 
 
+class ConnectorPartIdPeerPinCoverage(StrictModel):
+    """Applicability evidence for cross-symbol connector PART_ID comparisons."""
+
+    status: Literal[
+        "NO_CANDIDATES",
+        "INCOMPLETE_EVIDENCE",
+        "NO_COMPARABLE_PIN_GROUPS",
+        "PARTIALLY_EVALUATED",
+        "EVALUATED",
+    ]
+    netlist_sha256: Digest
+    candidate_group_count: NonNegativeCount
+    incomplete_component_identity_group_count: NonNegativeCount
+    incomplete_pin_inventory_group_count: NonNegativeCount
+    incomplete_pin_metadata_group_count: NonNegativeCount
+    eligible_peer_group_count: NonNegativeCount
+    incomplete_pin_inventory_references: tuple[Reference, ...] = ()
+    compared_pin_group_count: NonNegativeCount
+    unknown_function_pin_group_count: NonNegativeCount
+    meaningful_function_pin_group_count: NonNegativeCount
+    ambiguous_assignment_pin_group_count: NonNegativeCount
+    common_assignment_pin_group_count: NonNegativeCount
+    different_assignment_pin_group_count: NonNegativeCount
+    all_unassigned_pin_group_count: NonNegativeCount
+    open_assignment_pin_group_count: NonNegativeCount
+    outlier_finding_count: NonNegativeCount
+    divergence_finding_count: NonNegativeCount
+
+    @model_validator(mode="after")
+    def coverage_counts_match_scope(self) -> ConnectorPartIdPeerPinCoverage:
+        if self.incomplete_component_identity_group_count + (
+            self.incomplete_pin_inventory_group_count
+        ) + self.incomplete_pin_metadata_group_count + self.eligible_peer_group_count != (
+            self.candidate_group_count
+        ):
+            raise ValueError("Connector PART_ID peer groups must have one identity outcome")
+        if self.compared_pin_group_count != (
+            self.ambiguous_assignment_pin_group_count
+            + self.common_assignment_pin_group_count
+            + self.different_assignment_pin_group_count
+            + self.all_unassigned_pin_group_count
+        ):
+            raise ValueError("Connector PART_ID pin states must account for every compared group")
+        if self.compared_pin_group_count != (
+            self.unknown_function_pin_group_count + self.meaningful_function_pin_group_count
+        ):
+            raise ValueError("Connector PART_ID function states must account for every pin group")
+        if self.open_assignment_pin_group_count > (
+            self.different_assignment_pin_group_count + self.all_unassigned_pin_group_count
+        ):
+            raise ValueError("Open connector PART_ID assignments must be classified as different")
+        if self.outlier_finding_count + self.divergence_finding_count > (
+            self.compared_pin_group_count
+        ):
+            raise ValueError("Connector PART_ID findings cannot exceed compared pin groups")
+        if len(set(self.incomplete_pin_inventory_references)) != len(
+            self.incomplete_pin_inventory_references
+        ):
+            raise ValueError("Incomplete PART_ID peer inventory references must be unique")
+        if (self.incomplete_pin_inventory_group_count == 0) != (
+            len(self.incomplete_pin_inventory_references) == 0
+        ):
+            raise ValueError("Incomplete PART_ID inventory counts must match their references")
+
+        incomplete_count = (
+            self.incomplete_component_identity_group_count
+            + self.incomplete_pin_inventory_group_count
+            + self.incomplete_pin_metadata_group_count
+        )
+        expected_status = (
+            "NO_CANDIDATES"
+            if self.candidate_group_count == 0
+            else "INCOMPLETE_EVIDENCE"
+            if self.eligible_peer_group_count == 0
+            else "NO_COMPARABLE_PIN_GROUPS"
+            if self.compared_pin_group_count == 0
+            else "PARTIALLY_EVALUATED"
+            if incomplete_count > 0
+            else "EVALUATED"
+        )
+        if self.status != expected_status:
+            raise ValueError("Connector PART_ID peer status does not match its counts")
+        return self
+
+
 class ConnectorPeerPinHeuristicCoverage(StrictModel):
     """Source-bound applicability counts for connector pin peer heuristics."""
 
@@ -5087,6 +5172,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
     exact_symbol_pin_groups_with_different_assignments_count: NonNegativeCount
     exact_symbol_pin_groups_all_unassigned_count: NonNegativeCount
     exact_symbol_pin_groups_with_open_assignment_count: NonNegativeCount
+    part_id_alias_coverage: ConnectorPartIdPeerPinCoverage
     incomplete_pin_inventory_references: tuple[Reference, ...] = ()
     repeated_function_group_count: NonNegativeCount
     repeated_function_groups_with_common_assignment_count: NonNegativeCount
@@ -5105,6 +5191,10 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             raise ValueError("Exact-symbol peer groups cannot exceed fitted connector count")
         if self.exact_symbol_peer_group_count > self.fitted_connector_count // 2:
             raise ValueError("Each exact-symbol peer group requires at least two fitted connectors")
+        if self.part_id_alias_coverage.netlist_sha256 != self.netlist_sha256:
+            raise ValueError(
+                "Connector PART_ID alias coverage must use this report's native netlist"
+            )
         if self.exact_symbol_pin_group_count != (
             self.exact_symbol_pin_groups_with_common_assignment_count
             + self.exact_symbol_pin_groups_with_different_assignments_count
@@ -5141,8 +5231,9 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
         if (
             self.peer_pin_outlier_finding_count + self.peer_pin_divergence_finding_count
             > self.exact_symbol_pin_group_count
+            + self.part_id_alias_coverage.compared_pin_group_count
         ):
-            raise ValueError("Peer-pin findings cannot exceed exact-symbol pin groups")
+            raise ValueError("Peer-pin findings cannot exceed compared connector pin groups")
         if self.status == "NO_CONNECTOR_CANDIDATES" and self.connector_candidate_count:
             raise ValueError("No-connector coverage cannot contain connector candidates")
         if self.status == "NO_FITTED_CONNECTORS" and (
@@ -5627,7 +5718,8 @@ class ComponentPeerPinRuleCoverage(StrictModel):
         "component.peer_bidirectional_pin_unconnected",
     ]
     status: Literal[
-        "NO_EXACT_SYMBOL_PEERS",
+        "NO_COMPARABLE_PEERS",
+        "INCOMPLETE_COMPONENT_IDENTITY",
         "INCOMPLETE_PIN_INVENTORY",
         "NO_MATCHING_PIN_TYPES",
         "NO_COMPATIBLE_PIN_FUNCTIONS",
@@ -5638,6 +5730,10 @@ class ComponentPeerPinRuleCoverage(StrictModel):
     mode: Literal["review", "block", "off"]
     netlist_sha256: Digest
     exact_symbol_peer_group_count: NonNegativeCount
+    part_id_peer_group_count: NonNegativeCount
+    part_id_candidate_group_count: NonNegativeCount = 0
+    part_id_incomplete_component_identity_group_count: NonNegativeCount = 0
+    part_id_incomplete_component_identity_references: tuple[Reference, ...] = ()
     incomplete_pin_inventory_group_count: NonNegativeCount
     incomplete_pin_inventory_references: tuple[Reference, ...] = ()
     complete_pin_inventory_group_count: NonNegativeCount
@@ -5647,21 +5743,48 @@ class ComponentPeerPinRuleCoverage(StrictModel):
     ambiguous_assignment_pin_group_count: NonNegativeCount
     unambiguous_assignment_pin_group_count: NonNegativeCount
     candidate_group_count: NonNegativeCount
+    deduplicated_candidate_group_count: NonNegativeCount
     finding_count: NonNegativeCount
     suppressed_candidate_count: NonNegativeCount
 
     @model_validator(mode="after")
     def coverage_counts_match_scope(self) -> ComponentPeerPinRuleCoverage:
+        if len(set(self.part_id_incomplete_component_identity_references)) != len(
+            self.part_id_incomplete_component_identity_references
+        ):
+            raise ValueError("Incomplete component identity references must be unique")
+        if (
+            any(
+                (
+                    self.part_id_candidate_group_count,
+                    self.part_id_incomplete_component_identity_group_count,
+                    self.part_id_incomplete_component_identity_references,
+                )
+            )
+            and self.part_id_peer_group_count
+            + (self.part_id_incomplete_component_identity_group_count)
+            != self.part_id_candidate_group_count
+        ):
+            raise ValueError("Component PART_ID candidates must have one identity outcome")
+        if self.part_id_incomplete_component_identity_group_count > (
+            self.part_id_candidate_group_count
+        ):
+            raise ValueError("Incomplete component identities cannot exceed PART_ID candidates")
+        if (self.part_id_incomplete_component_identity_group_count == 0) != (
+            len(self.part_id_incomplete_component_identity_references) == 0
+        ):
+            raise ValueError("Incomplete component identity counts must match their references")
         if len(set(self.incomplete_pin_inventory_references)) != len(
             self.incomplete_pin_inventory_references
         ):
             raise ValueError("Incomplete component peer inventory references must be unique")
-        if self.incomplete_pin_inventory_group_count > self.exact_symbol_peer_group_count:
-            raise ValueError("Incomplete peer inventories cannot exceed exact-symbol groups")
-        if self.complete_pin_inventory_group_count > self.exact_symbol_peer_group_count:
-            raise ValueError("Complete peer inventories cannot exceed exact-symbol groups")
+        peer_group_count = self.exact_symbol_peer_group_count + self.part_id_peer_group_count
+        if self.incomplete_pin_inventory_group_count > peer_group_count:
+            raise ValueError("Incomplete peer inventories cannot exceed comparable peer groups")
+        if self.complete_pin_inventory_group_count > peer_group_count:
+            raise ValueError("Complete peer inventories cannot exceed comparable peer groups")
         if self.incomplete_pin_inventory_group_count + self.complete_pin_inventory_group_count != (
-            self.exact_symbol_peer_group_count
+            peer_group_count
         ):
             raise ValueError("Peer component groups must have complete or incomplete inventories")
         if (self.incomplete_pin_inventory_group_count == 0) != (
@@ -5682,12 +5805,16 @@ class ComponentPeerPinRuleCoverage(StrictModel):
             raise ValueError("Compatible peer pin groups must have unambiguous or ambiguous nets")
         if self.candidate_group_count > self.unambiguous_assignment_pin_group_count:
             raise ValueError("Peer-pin candidates require unambiguous assignments")
+        if self.deduplicated_candidate_group_count > self.unambiguous_assignment_pin_group_count:
+            raise ValueError("Deduplicated peer-pin candidates require unambiguous assignments")
         if self.finding_count + self.suppressed_candidate_count != self.candidate_group_count:
             raise ValueError("Peer-pin findings and suppressed candidates must balance")
 
         expected_status = (
-            "NO_EXACT_SYMBOL_PEERS"
-            if self.exact_symbol_peer_group_count == 0
+            "INCOMPLETE_COMPONENT_IDENTITY"
+            if peer_group_count == 0 and self.part_id_candidate_group_count > 0
+            else "NO_COMPARABLE_PEERS"
+            if peer_group_count == 0
             else "INCOMPLETE_PIN_INVENTORY"
             if self.complete_pin_inventory_group_count == 0
             else "NO_MATCHING_PIN_TYPES"
@@ -5697,7 +5824,10 @@ class ComponentPeerPinRuleCoverage(StrictModel):
             else "NO_UNAMBIGUOUS_ASSIGNMENTS"
             if self.unambiguous_assignment_pin_group_count == 0
             else "PARTIALLY_EVALUATED"
-            if self.incomplete_pin_inventory_group_count > 0
+            if (
+                self.incomplete_pin_inventory_group_count > 0
+                or self.part_id_incomplete_component_identity_group_count > 0
+            )
             else "EVALUATED"
         )
         if self.status != expected_status:
@@ -6501,6 +6631,26 @@ class DesignLintReport(StrictModel):
                 if actual_count != expected_count:
                     raise ValueError(
                         f"Connector peer-pin coverage count must match {rule_id} findings"
+                    )
+            part_id_expected_counts = (
+                (
+                    "connector.peer_pin_assignment_outlier",
+                    item.part_id_alias_coverage.outlier_finding_count,
+                ),
+                (
+                    "connector.peer_pin_assignment_divergence",
+                    item.part_id_alias_coverage.divergence_finding_count,
+                ),
+            )
+            for rule_id, expected_count in part_id_expected_counts:
+                actual_count = sum(
+                    finding.rule_id == rule_id
+                    and finding.evidence.get("peer_identity_basis") == ("part_id",)
+                    for finding in self.findings
+                )
+                if actual_count != expected_count:
+                    raise ValueError(
+                        f"Connector PART_ID peer coverage count must match {rule_id} findings"
                     )
         if self.rule_catalog is None:
             return self

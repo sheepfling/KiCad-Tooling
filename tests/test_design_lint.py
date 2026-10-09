@@ -136,10 +136,10 @@ def four_db9_return_domains(common: bool = False) -> NetlistContract:
     """Create a synthetic four-port DB9 return pattern with numeric pin functions."""
     return_pins = tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))
     if common:
-        nets = {"0V PWM": return_pins}
+        nets = {"COMMON_RETURN": return_pins}
     else:
         nets = {
-            f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9")
+            f"RETURN_PORT_{reference}": (f"J{reference}.7", f"J{reference}.9")
             for reference in range(1, 5)
         }
     return NetlistContract(
@@ -3557,173 +3557,6 @@ class DesignLintTests(unittest.TestCase):
             if item.rule_id == "component.repeated_supply_pin_function"
         )
         self.assertEqual(finding.evidence["U1.1"], ("+1V8", "+3V3"))
-
-    def test_peer_component_power_pin_splits_surface_review_and_controls(self) -> None:
-        report = evaluate(
-            "synthetic-peer-component-power-pins",
-            coach(peer_component_power_pins()),
-            DesignLintPolicy(),
-        )
-        findings = [
-            item
-            for item in report.findings
-            if item.rule_id == "component.peer_power_pin_assignment_divergence"
-        ]
-        self.assertEqual(len(findings), 2)
-        self.assertEqual(
-            {item.evidence["peer_role"][0] for item in findings},
-            {"ground/return", "supply"},
-        )
-        return_finding = next(
-            item for item in findings if item.evidence["peer_role"] == ("ground/return",)
-        )
-        self.assertEqual(return_finding.evidence["U1.2"], ("GND",))
-        self.assertEqual(return_finding.evidence["U2.2"], ("AGND",))
-        self.assertIn("intentionally separate", return_finding.message)
-
-        shared_power = evaluate(
-            "synthetic-peer-component-power-pins",
-            coach(peer_component_power_pins(split_return=False, split_supply=False)),
-            DesignLintPolicy(),
-        )
-        dnp_peer = evaluate(
-            "synthetic-peer-component-power-pins",
-            coach(peer_component_power_pins(dnp=("U2",))),
-            DesignLintPolicy(),
-        )
-        different_symbols = peer_component_power_pins().model_copy(
-            update={
-                "component_symbols": {
-                    "U1": "Synthetic:PowerPeer",
-                    "U2": "Synthetic:OtherPowerPeer",
-                }
-            }
-        )
-        different_symbol_report = evaluate(
-            "synthetic-peer-component-power-pins",
-            coach(different_symbols),
-            DesignLintPolicy(),
-        )
-        for control in (shared_power, dnp_peer, different_symbol_report):
-            self.assertNotIn(
-                "component.peer_power_pin_assignment_divergence",
-                {item.rule_id for item in control.findings},
-            )
-
-        open_return = peer_component_power_pins(split_return=False, split_supply=False).model_copy(
-            update={"nets": {"+3V3": ("U1.1", "U2.1"), "GND": ("U1.2",)}}
-        )
-        open_report = evaluate(
-            "synthetic-peer-component-power-pins",
-            coach(open_return),
-            DesignLintPolicy(),
-        )
-        open_rule_ids = {item.rule_id for item in open_report.findings}
-        self.assertNotIn("component.peer_power_pin_assignment_divergence", open_rule_ids)
-        self.assertIn("component.unconnected_return_pin", open_rule_ids)
-
-    def test_peer_component_power_pin_splits_follow_rule_policy_and_ignore(self) -> None:
-        source = peer_component_power_pins(split_supply=False)
-        initial = evaluate(
-            "synthetic-peer-component-return-split", coach(source), DesignLintPolicy()
-        )
-        finding = next(
-            item
-            for item in initial.findings
-            if item.rule_id == "component.peer_power_pin_assignment_divergence"
-        )
-        blocking_policy = DesignLintPolicy(
-            rules=(
-                DesignLintRuleOverride(
-                    rule_id="component.peer_power_pin_assignment_divergence",
-                    mode="block",
-                    reason="Synthetic project requires reviewed peer return domains",
-                ),
-            )
-        )
-        blocked = evaluate("synthetic-peer-component-return-split", coach(source), blocking_policy)
-        self.assertEqual(blocked.status, "FAIL")
-        self.assertEqual(blocked.findings[0].mode, "block")
-
-        off_policy = DesignLintPolicy(
-            rules=(
-                DesignLintRuleOverride(
-                    rule_id="component.peer_power_pin_assignment_divergence",
-                    mode="off",
-                    reason="Synthetic isolation control is explicitly reviewed",
-                ),
-            )
-        )
-        off = evaluate("synthetic-peer-component-return-split", coach(source), off_policy)
-        self.assertEqual(off.status, "PASS")
-        self.assertEqual(off.findings[0].disposition, "RULE_OFF")
-
-        ignored_policy = DesignLintPolicy(
-            ignores=(
-                DesignLintIgnore(
-                    rule_id="component.peer_power_pin_assignment_divergence",
-                    fingerprint=finding.fingerprint,
-                    reason="Synthetic return-domain isolation is intentional",
-                ),
-            )
-        )
-        ignored = evaluate("synthetic-peer-component-return-split", coach(source), ignored_policy)
-        self.assertEqual(ignored.status, "PASS")
-        self.assertEqual(ignored.findings[0].disposition, "IGNORED")
-
-        changed_source = source.model_copy(
-            update={"nets": {"+3V3": ("U1.1", "U2.1"), "GND": ("U1.2",), "CHASSIS": ("U2.2",)}}
-        )
-        stale = evaluate(
-            "synthetic-peer-component-return-split", coach(changed_source), ignored_policy
-        )
-        self.assertEqual(stale.status, "REVIEW")
-        self.assertEqual(stale.stale_ignores, ignored_policy.ignores)
-
-    def test_peer_component_power_pin_order_is_stable_and_commoning_clears_findings(self) -> None:
-        source = peer_component_power_pins()
-        original = evaluate(
-            "synthetic-peer-component-power-pins", coach(source), DesignLintPolicy()
-        )
-        reordered_source = source.model_copy(
-            update={
-                "components": dict(reversed(tuple(source.components.items()))),
-                "nets": dict(reversed(tuple(source.nets.items()))),
-                "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
-                "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
-                "component_pin_numbers": dict(
-                    reversed(tuple(source.component_pin_numbers.items()))
-                ),
-            }
-        )
-        reordered = evaluate(
-            "synthetic-peer-component-power-pins",
-            coach(reordered_source),
-            DesignLintPolicy(),
-        )
-        original_findings = [
-            item
-            for item in original.findings
-            if item.rule_id == "component.peer_power_pin_assignment_divergence"
-        ]
-        reordered_findings = [
-            item
-            for item in reordered.findings
-            if item.rule_id == "component.peer_power_pin_assignment_divergence"
-        ]
-        self.assertEqual(
-            [(item.evidence, item.fingerprint) for item in reordered_findings],
-            [(item.evidence, item.fingerprint) for item in original_findings],
-        )
-
-        commoned = peer_component_power_pins(split_return=False, split_supply=False)
-        corrected = evaluate(
-            "synthetic-peer-component-power-pins", coach(commoned), DesignLintPolicy()
-        )
-        self.assertNotIn(
-            "component.peer_power_pin_assignment_divergence",
-            {item.rule_id for item in corrected.findings},
-        )
 
     def test_open_findings_include_missing_power_and_separate_returns(self) -> None:
         report = evaluate("synthetic-ports", coach(observed()), DesignLintPolicy())
@@ -7690,7 +7523,7 @@ class DesignLintTests(unittest.TestCase):
 
         numbered = NetlistContract(
             components={},
-            nets={"0V PWM 1": ("J1.7",), "0V PWM 2": ("J2.7",)},
+            nets={"RETURN_PORT_1": ("J1.7",), "RETURN_PORT_2": ("J2.7",)},
             component_symbols={"J1": "Synthetic:DB9-A", "J2": "Synthetic:DB9-B"},
             pin_functions={"J1.7": "7", "J2.7": "7"},
         )
@@ -7813,7 +7646,7 @@ class DesignLintTests(unittest.TestCase):
         self.assertEqual(
             return_finding.evidence,
             {
-                f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9")
+                f"RETURN_PORT_{reference}": (f"J{reference}.7", f"J{reference}.9")
                 for reference in range(1, 5)
             },
         )

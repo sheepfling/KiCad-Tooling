@@ -1,4 +1,4 @@
-"""Synthetic regressions for missing assignments on exact-symbol peer pins."""
+"""Synthetic regressions for peer-pin assignment completeness."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint import evaluate, text_report
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -37,6 +37,9 @@ def peer_component_pin_netlist(
     pin_functions: tuple[str | None, ...] | None = None,
     missing_inventory: tuple[str, ...] = (),
     ambiguous_pins: tuple[str, ...] = (),
+    part_ids: dict[str, str] | None = None,
+    values: dict[str, str] | None = None,
+    footprints: dict[str, str] | None = None,
 ) -> NetlistContract:
     if len(references) != len(pin_nets):
         raise ValueError("Each peer needs one pin-net case")
@@ -45,8 +48,15 @@ def peer_component_pin_netlist(
     pin_functions = pin_functions or tuple(pin_function for _ in references)
     if len(pin_electrical_types) != len(references) or len(pin_functions) != len(references):
         raise ValueError("Each peer needs one pin type and function case")
+    part_ids = part_ids or {}
+    values = values or {}
+    footprints = footprints or {}
     components = {
-        reference: ComponentContract(value="Synthetic module", footprint="Synthetic:Module")
+        reference: ComponentContract(
+            value=values.get(reference, "Synthetic module"),
+            footprint=footprints.get(reference, "Synthetic:Module"),
+            part_id=part_ids.get(reference),
+        )
         for reference in references
     }
     nets: dict[str, tuple[str, ...]] = {"DATA": tuple(f"{reference}.1" for reference in references)}
@@ -89,6 +99,9 @@ def peer_power_output_netlist(
     output_function: str = "OUT",
     missing_inventory: tuple[str, ...] = (),
     ambiguous_outputs: tuple[str, ...] = (),
+    part_ids: dict[str, str] | None = None,
+    values: dict[str, str] | None = None,
+    footprints: dict[str, str] | None = None,
 ) -> NetlistContract:
     return peer_component_pin_netlist(
         references=references,
@@ -99,6 +112,9 @@ def peer_power_output_netlist(
         pin_function=output_function,
         missing_inventory=missing_inventory,
         ambiguous_pins=ambiguous_outputs,
+        part_ids=part_ids,
+        values=values,
+        footprints=footprints,
     )
 
 
@@ -186,7 +202,7 @@ def test_reports_an_open_native_power_output_pin_when_an_exact_peer_is_connected
     assert finding.evidence["unassigned_pins"] == ("U2.2",)
     assert finding.evidence["U1.2"] == ("VOUT",)
     assert finding.evidence["U2.2"] == ()
-    assert "do not require their outputs to share a net" in finding.message
+    assert "do not require peer pins to share a net" in finding.message
     assert "component.unconnected_power_input" not in {item.rule_id for item in report.findings}
     coverage = component_peer_coverage(report, RULE_ID)
     assert coverage.status == "EVALUATED"
@@ -199,6 +215,420 @@ def test_reports_an_open_native_power_output_pin_when_an_exact_peer_is_connected
     assert coverage.unambiguous_assignment_pin_group_count == 1
     assert coverage.candidate_group_count == coverage.finding_count == 1
     assert coverage.suppressed_candidate_count == 0
+
+
+def test_reports_open_pin_across_native_symbol_aliases_with_the_same_part_id() -> None:
+    observed = peer_power_output_netlist(
+        symbols={"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"},
+        part_ids={"U1": "synthetic-power-module-001", "U2": "SYNTHETIC-POWER-MODULE-001"},
+    )
+    report = lint_report(observed)
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.evidence["peer_group_basis"] == ("part_id",)
+    assert finding.evidence["peer_group_identity"] == ("SYNTHETIC-POWER-MODULE-001",)
+    assert finding.evidence["peer_group_symbols"] == (
+        "Synthetic:PowerModule",
+        "Synthetic:PowerModuleAlias",
+    )
+    assert finding.evidence["unassigned_pins"] == ("U2.2",)
+    assert "same native PART_ID" in finding.message
+    coverage = component_peer_coverage(report, RULE_ID)
+    assert coverage.status == "EVALUATED"
+    assert coverage.exact_symbol_peer_group_count == 0
+    assert coverage.part_id_peer_group_count == 1
+    assert coverage.candidate_group_count == coverage.finding_count == 1
+    assert coverage.deduplicated_candidate_group_count == 0
+    reordered = lint_report(
+        observed.model_copy(
+            update={
+                "components": dict(reversed(tuple(observed.components.items()))),
+                "nets": dict(reversed(tuple(observed.nets.items()))),
+                "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+                "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
+                "pin_electrical_types": dict(
+                    reversed(tuple(observed.pin_electrical_types.items()))
+                ),
+                "component_pin_numbers": dict(
+                    reversed(tuple(observed.component_pin_numbers.items()))
+                ),
+            }
+        )
+    )
+    reordered_finding = next(item for item in reordered.findings if item.rule_id == RULE_ID)
+    assert (reordered_finding.fingerprint, reordered_finding.evidence) == (
+        finding.fingerprint,
+        finding.evidence,
+    )
+
+
+@pytest.mark.parametrize(
+    ("electrical_type", "function", "rule_id"),
+    (
+        ("power_out", "OUT", RULE_ID),
+        ("output", "OUT", SIGNAL_RULE_ID),
+        ("input", "IN", INPUT_RULE_ID),
+        ("bidirectional", "DATA_IO", BIDIRECTIONAL_RULE_ID),
+    ),
+)
+def test_shared_part_id_aliases_cover_each_typed_peer_rule(
+    electrical_type: str, function: str, rule_id: str
+) -> None:
+    observed = peer_component_pin_netlist(
+        symbols={"U1": "Synthetic:ModuleA", "U2": "Synthetic:ModuleB"},
+        pin_electrical_types=(electrical_type, electrical_type),
+        pin_function=function,
+        part_ids={"U1": "SYNTHETIC-PEER-MODULE", "U2": "SYNTHETIC-PEER-MODULE"},
+    )
+    report = lint_report(observed)
+
+    finding = next(item for item in report.findings if item.rule_id == rule_id)
+    assert finding.evidence["peer_group_basis"] == ("part_id",)
+    assert finding.evidence["peer_group_identity"] == ("SYNTHETIC-PEER-MODULE",)
+    assert finding.evidence["unassigned_pins"] == ("U2.2",)
+    coverage = component_peer_coverage(report, rule_id)
+    assert coverage.part_id_peer_group_count == 1
+    assert coverage.exact_symbol_peer_group_count == 0
+
+
+@pytest.mark.parametrize(
+    ("electrical_type", "pin_function", "pin_net", "rule_id"),
+    (
+        ("power_out", "OUT", "VOUT", RULE_ID),
+        ("output", "OUT", "SIGNAL", SIGNAL_RULE_ID),
+        ("input", "IN", "SIGNAL", INPUT_RULE_ID),
+        ("bidirectional", "DATA_IO", "DATA", BIDIRECTIONAL_RULE_ID),
+    ),
+    ids=("power-output", "signal-output", "signal-input", "bidirectional"),
+)
+def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
+    tmp_path: Path, electrical_type: str, pin_function: str, pin_net: str, rule_id: str
+) -> None:
+    import asyncio
+    import json
+
+    from mcp import Client
+
+    from kicad_tooling.hwrepo.contracts import read_model, write_model
+    from kicad_tooling.hwrepo.evidence import digest
+    from kicad_tooling.hwrepo.mcp_server import create_server
+    from kicad_tooling.hwrepo.models import (
+        ConnectorInventoryReview,
+        ProjectManifest,
+        ValidationSummary,
+    )
+    from tests.synthetic_design_lint_project import (
+        run_design_lint_cli,
+        synthetic_design_lint_project,
+    )
+    from tests.test_peer_power_pin_assignment import peer_pin_netlist_xml
+
+    root, summary_path = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
+    netlist_path = summary_path.parent / "netlist.xml"
+    summary = read_model(summary_path, ValidationSummary)
+    manifest_path = root / "projects/controller/project.json"
+    manifest = read_model(manifest_path, ProjectManifest)
+    write_model(
+        manifest_path,
+        manifest.model_copy(
+            update={
+                "connector_inventory_review": ConnectorInventoryReview(
+                    basis=(
+                        "Synthetic parity fixture reviewed its complete schematic inventory; "
+                        "no connector candidates are present"
+                    )
+                )
+            }
+        ),
+    )
+    symbols = {"U1": "Synthetic:ModuleA", "U2": "Synthetic:ModuleB"}
+    part_ids = {"U1": "SYNTHETIC-PEER-MODULE", "U2": "synthetic-peer-module"}
+
+    async def exercise() -> None:
+        async with Client(create_server(root), mode="legacy") as client:
+            for fault in (True, False):
+                observed = peer_component_pin_netlist(
+                    pin_nets=(pin_net, None if fault else f"{pin_net}_PEER"),
+                    symbols=symbols,
+                    pin_electrical_types=(electrical_type, electrical_type),
+                    pin_function=pin_function,
+                    part_ids=part_ids,
+                )
+                netlist_path.write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
+                write_model(
+                    summary_path,
+                    summary.model_copy(
+                        update={
+                            "artifacts_sha256": {
+                                **summary.artifacts_sha256,
+                                "netlist.xml": digest(netlist_path),
+                            }
+                        }
+                    ),
+                )
+
+                process = run_design_lint_cli(tmp_path, root, summary_path)
+                assert process.returncode == int(fault), process.stderr + process.stdout
+                cli_report = DesignLintReport.model_validate_json(process.stdout)
+
+                result = await client.call_tool(
+                    "inspect_design_lint",
+                    {
+                        "project_id": "controller",
+                        "native_summary": summary_path.relative_to(root).as_posix(),
+                    },
+                )
+                assert not result.is_error, result.content
+                assert result.structured_content is not None
+                mcp_report = DesignLintReport.model_validate_json(
+                    json.dumps(result.structured_content)
+                )
+
+                assert cli_report == mcp_report
+                assert mcp_report.status == ("REVIEW" if fault else "PASS")
+                findings = tuple(item for item in mcp_report.findings if item.rule_id == rule_id)
+                coverage = component_peer_coverage(mcp_report, rule_id)
+                assert coverage.status == "EVALUATED"
+                assert coverage.netlist_sha256 == mcp_report.netlist_sha256
+                assert coverage.exact_symbol_peer_group_count == 0
+                assert coverage.part_id_peer_group_count == 1
+                assert coverage.candidate_group_count == int(fault)
+                assert coverage.finding_count == len(findings) == int(fault)
+                assert coverage.suppressed_candidate_count == 0
+                if fault:
+                    assert findings[0].evidence["peer_group_basis"] == ("part_id",)
+                    assert findings[0].evidence["peer_group_identity"] == ("SYNTHETIC-PEER-MODULE",)
+                    assert findings[0].evidence["unassigned_pins"] == ("U2.2",)
+
+            ineligible_aliases = peer_component_pin_netlist(
+                symbols={"U1": "Synthetic:ModuleA", "U2": "Synthetic:ModuleB"},
+                pin_electrical_types=(electrical_type, electrical_type),
+                pin_function=pin_function,
+                part_ids={"U1": "SYNTHETIC-PEER-MODULE", "U2": "synthetic-peer-module"},
+                values={"U1": "Synthetic module", "U2": "Other module"},
+            )
+            netlist_path.write_text(peer_pin_netlist_xml(ineligible_aliases), encoding="utf-8")
+            write_model(
+                summary_path,
+                summary.model_copy(
+                    update={
+                        "artifacts_sha256": {
+                            **summary.artifacts_sha256,
+                            "netlist.xml": digest(netlist_path),
+                        }
+                    }
+                ),
+            )
+            process = run_design_lint_cli(tmp_path, root, summary_path)
+            assert process.returncode == 0, process.stderr + process.stdout
+            cli_report = DesignLintReport.model_validate_json(process.stdout)
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": summary_path.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            mcp_report = DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+            assert cli_report == mcp_report
+            assert mcp_report.status == "PASS"
+            assert not any(item.rule_id == rule_id for item in mcp_report.findings)
+            coverage = component_peer_coverage(mcp_report, rule_id)
+            assert coverage.status == "INCOMPLETE_COMPONENT_IDENTITY"
+            assert coverage.netlist_sha256 == mcp_report.netlist_sha256
+            assert coverage.part_id_candidate_group_count == 1
+            assert coverage.part_id_peer_group_count == 0
+            assert coverage.part_id_incomplete_component_identity_group_count == 1
+            assert coverage.part_id_incomplete_component_identity_references == ("U1", "U2")
+            assert "PART_ID identity mismatch references: U1, U2" in text_report(mcp_report)
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize(
+    ("electrical_type", "rule_id"),
+    (
+        ("power_out", RULE_ID),
+        ("output", SIGNAL_RULE_ID),
+        ("input", INPUT_RULE_ID),
+        ("bidirectional", BIDIRECTIONAL_RULE_ID),
+    ),
+)
+def test_shared_part_id_aliases_accept_identical_generic_pin_metadata(
+    electrical_type: str, rule_id: str
+) -> None:
+    observed = peer_component_pin_netlist(
+        symbols={"U1": "Synthetic:ModuleA", "U2": "Synthetic:ModuleB"},
+        pin_electrical_types=(electrical_type, electrical_type),
+        pin_function="Pin_2",
+        part_ids={"U1": "SYNTHETIC-PEER-MODULE", "U2": "SYNTHETIC-PEER-MODULE"},
+    )
+    report = lint_report(observed)
+
+    finding = next(item for item in report.findings if item.rule_id == rule_id)
+    assert finding.evidence["peer_group_basis"] == ("part_id",)
+    assert finding.evidence["pin_function"] == ("Pin_2",)
+    assert finding.evidence["unassigned_pins"] == ("U2.2",)
+    coverage = component_peer_coverage(report, rule_id)
+    assert coverage.part_id_peer_group_count == 1
+    assert coverage.compatible_function_pin_group_count == 1
+
+
+@pytest.mark.parametrize(
+    ("electrical_type", "function", "rule_id"),
+    (
+        ("power_out", "OUT", RULE_ID),
+        ("output", "OUT", SIGNAL_RULE_ID),
+        ("input", "IN", INPUT_RULE_ID),
+        ("bidirectional", "DATA_IO", BIDIRECTIONAL_RULE_ID),
+    ),
+)
+def test_shared_part_id_aliases_skip_mismatched_pin_functions(
+    electrical_type: str, function: str, rule_id: str
+) -> None:
+    observed = peer_component_pin_netlist(
+        symbols={"U1": "Synthetic:ModuleA", "U2": "Synthetic:ModuleB"},
+        pin_electrical_types=(electrical_type, electrical_type),
+        pin_functions=(function, f"OTHER_{function}"),
+        part_ids={"U1": "SYNTHETIC-PEER-MODULE", "U2": "SYNTHETIC-PEER-MODULE"},
+    )
+    report = lint_report(observed)
+
+    assert rule_id not in {item.rule_id for item in report.findings}
+    assert component_peer_coverage(report, rule_id).status == "NO_COMPATIBLE_PIN_FUNCTIONS"
+
+
+@pytest.mark.parametrize(
+    ("observed", "expected_status"),
+    (
+        pytest.param(
+            peer_power_output_netlist(
+                symbols={"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"},
+                part_ids={"U1": "SYNTHETIC-A", "U2": "SYNTHETIC-B"},
+            ),
+            "NO_COMPARABLE_PEERS",
+            id="different-part-ids",
+        ),
+        pytest.param(
+            peer_power_output_netlist(
+                symbols={"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"},
+                part_ids={"U1": "SYNTHETIC-A", "U2": "SYNTHETIC-A"},
+                values={"U1": "Synthetic module", "U2": "Other module"},
+            ),
+            "INCOMPLETE_COMPONENT_IDENTITY",
+            id="different-values",
+        ),
+        pytest.param(
+            peer_power_output_netlist(
+                symbols={"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"},
+                part_ids={"U1": "SYNTHETIC-A", "U2": "SYNTHETIC-A"},
+                footprints={"U1": "Synthetic:Module", "U2": "Synthetic:OtherModule"},
+            ),
+            "INCOMPLETE_COMPONENT_IDENTITY",
+            id="different-footprints",
+        ),
+        pytest.param(
+            peer_power_output_netlist(
+                symbols={"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"},
+                part_ids={"U1": "SYNTHETIC-A", "U2": "SYNTHETIC-A"},
+                missing_inventory=("U2",),
+            ),
+            "INCOMPLETE_PIN_INVENTORY",
+            id="incomplete-inventory",
+        ),
+        pytest.param(
+            peer_power_output_netlist(
+                symbols={"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"},
+                part_ids={"U1": "SYNTHETIC-A", "U2": "SYNTHETIC-A"},
+                dnp=("U2",),
+            ),
+            "NO_COMPARABLE_PEERS",
+            id="dnp-peer",
+        ),
+    ),
+)
+def test_part_id_peer_scan_requires_consistent_fitted_component_identity(
+    observed: NetlistContract, expected_status: str
+) -> None:
+    report = lint_report(observed)
+    coverage = component_peer_coverage(report, RULE_ID)
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert coverage.status == expected_status
+    if expected_status == "INCOMPLETE_COMPONENT_IDENTITY":
+        assert coverage.part_id_candidate_group_count == 1
+        assert coverage.part_id_peer_group_count == 0
+        assert coverage.part_id_incomplete_component_identity_group_count == 1
+        assert coverage.part_id_incomplete_component_identity_references == ("U1", "U2")
+
+
+@pytest.mark.parametrize(
+    "pin_functions",
+    (("OUT_A", "OUT_B"), ("Pin_1", "Pin_2")),
+    ids=("different-meaningful-functions", "different-generic-placeholders"),
+)
+def test_part_id_peer_scan_requires_matching_native_pin_functions(
+    pin_functions: tuple[str, str],
+) -> None:
+    observed = peer_component_pin_netlist(
+        symbols={"U1": "Synthetic:ModuleA", "U2": "Synthetic:ModuleB"},
+        pin_electrical_types=("output", "output"),
+        pin_functions=pin_functions,
+        part_ids={"U1": "SYNTHETIC-A", "U2": "SYNTHETIC-A"},
+    )
+    report = lint_report(observed)
+
+    assert SIGNAL_RULE_ID not in {item.rule_id for item in report.findings}
+    assert component_peer_coverage(report, SIGNAL_RULE_ID).status == "NO_COMPATIBLE_PIN_FUNCTIONS"
+
+
+def test_part_id_peer_scan_skips_missing_pin_function_metadata() -> None:
+    observed = peer_power_output_netlist(
+        symbols={"U1": "Synthetic:ModuleA", "U2": "Synthetic:ModuleB"},
+        output_function="OUT",
+        part_ids={"U1": "SYNTHETIC-A", "U2": "SYNTHETIC-A"},
+    )
+    observed = observed.model_copy(
+        update={
+            "pin_functions": {
+                key: value for key, value in observed.pin_functions.items() if key != "U2.2"
+            }
+        }
+    )
+    report = lint_report(observed)
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert component_peer_coverage(report, RULE_ID).status == "NO_COMPATIBLE_PIN_FUNCTIONS"
+
+
+def test_part_id_peer_scan_deduplicates_same_pin_candidate_from_exact_symbol_group() -> None:
+    observed = peer_power_output_netlist(
+        references=("U1", "U2", "U3"),
+        output_nets=("VOUT", None, "VOUT"),
+        symbols={
+            "U1": "Synthetic:PowerModule",
+            "U2": "Synthetic:PowerModule",
+            "U3": "Synthetic:PowerModuleAlias",
+        },
+        part_ids={
+            "U1": "SYNTHETIC-POWER-MODULE-001",
+            "U2": "SYNTHETIC-POWER-MODULE-001",
+            "U3": "SYNTHETIC-POWER-MODULE-001",
+        },
+    )
+    report = lint_report(observed)
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+    coverage = component_peer_coverage(report, RULE_ID)
+
+    assert len(findings) == 1
+    assert findings[0].evidence["peer_group_basis"] == ("exact_symbol",)
+    assert coverage.exact_symbol_peer_group_count == 1
+    assert coverage.part_id_peer_group_count == 1
+    assert coverage.deduplicated_candidate_group_count == 1
 
 
 def test_reports_an_open_native_signal_output_pin_when_an_exact_peer_is_connected() -> None:
@@ -215,7 +645,7 @@ def test_reports_an_open_native_signal_output_pin_when_an_exact_peer_is_connecte
     assert finding.evidence["unassigned_pins"] == ("U2.2",)
     assert finding.evidence["U1.2"] == ("VOUT",)
     assert finding.evidence["U2.2"] == ()
-    assert "do not require their outputs to share a net" in finding.message
+    assert "do not require peer pins to share a net" in finding.message
     assert RULE_ID not in {item.rule_id for item in report.findings}
 
 
@@ -234,7 +664,7 @@ def test_reports_an_open_native_signal_input_pin_when_an_exact_peer_is_connected
     assert finding.evidence["unassigned_pins"] == ("U2.2",)
     assert finding.evidence["U1.2"] == ("SIGNAL_A",)
     assert finding.evidence["U2.2"] == ()
-    assert "do not require their input pins to share a net" in finding.message
+    assert "do not require peer pins to share a net" in finding.message
     assert "control.unconnected_control_input" not in {item.rule_id for item in report.findings}
 
 
@@ -258,7 +688,7 @@ def test_reports_an_open_native_bidirectional_pin_when_an_exact_peer_is_connecte
     assert finding.evidence["U1.2"] == ("DATA_IO",)
     assert finding.evidence["U2.2"] == ("DATA_IO",)
     assert finding.evidence["U3.2"] == ()
-    assert "do not require their bidirectional pins to share a net" in finding.message
+    assert "do not require peer pins to share a net" in finding.message
 
 
 @pytest.mark.parametrize(
@@ -374,7 +804,7 @@ def test_bidirectional_prompt_skips_open_or_incomplete_peer_evidence(
         pytest.param(
             peer_component_pin_netlist(symbols={"U1": "Synthetic:A", "U2": "Synthetic:B"}),
             RULE_ID,
-            "NO_EXACT_SYMBOL_PEERS",
+            "NO_COMPARABLE_PEERS",
             id="different-symbols",
         ),
         pytest.param(
@@ -420,6 +850,23 @@ def test_bidirectional_prompt_skips_open_or_incomplete_peer_evidence(
             "PARTIALLY_EVALUATED",
             id="mixed-complete-and-incomplete-groups",
         ),
+        pytest.param(
+            peer_component_pin_netlist(
+                references=("U1", "U2", "U3", "U4"),
+                pin_nets=("VOUT", None, "VOUT", None),
+                symbols={
+                    "U1": "Synthetic:Complete",
+                    "U2": "Synthetic:Complete",
+                    "U3": "Synthetic:AliasA",
+                    "U4": "Synthetic:AliasB",
+                },
+                part_ids={"U3": "SYNTHETIC-PART", "U4": "synthetic-part"},
+                footprints={"U3": "Synthetic:Module", "U4": "Synthetic:OtherModule"},
+            ),
+            RULE_ID,
+            "PARTIALLY_EVALUATED",
+            id="valid-exact-peer-group-with-ineligible-part-id-alias-group",
+        ),
     ),
 )
 def test_component_peer_coverage_explains_applicability_and_skips(
@@ -432,10 +879,16 @@ def test_component_peer_coverage_explains_applicability_and_skips(
     assert coverage.netlist_sha256 == report.netlist_sha256
     assert coverage.finding_count == sum(item.rule_id == rule_id for item in report.findings)
     if expected_status == "PARTIALLY_EVALUATED":
-        assert coverage.exact_symbol_peer_group_count == 2
-        assert coverage.complete_pin_inventory_group_count == 1
-        assert coverage.incomplete_pin_inventory_group_count == 1
-        assert coverage.incomplete_pin_inventory_references == ("U3", "U4")
+        if coverage.part_id_candidate_group_count:
+            assert coverage.exact_symbol_peer_group_count == 1
+            assert coverage.complete_pin_inventory_group_count == 1
+            assert coverage.incomplete_pin_inventory_group_count == 0
+            assert coverage.part_id_incomplete_component_identity_references == ("U3", "U4")
+        else:
+            assert coverage.exact_symbol_peer_group_count == 2
+            assert coverage.complete_pin_inventory_group_count == 1
+            assert coverage.incomplete_pin_inventory_group_count == 1
+            assert coverage.incomplete_pin_inventory_references == ("U3", "U4")
         assert coverage.candidate_group_count == coverage.finding_count == 1
 
 
@@ -878,8 +1331,8 @@ def test_bidirectional_finding_is_stable_under_map_order_changes() -> None:
 def test_native_fixture_sources_match_reviewed_digests() -> None:
     fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
     expected = {
-        "component-peer-power-output-native/control.kicad_sch": "1b1d4bb236864087fe619819a3776ad5ef7f4d7d2e462ebb0fc8eaa2c6bf2399",
-        "component-peer-power-output-native/fault.kicad_sch": "960e1030966e72c7ce197a971cf71418a8274e9e224ae60ef4d3d540af82790b",
+        "component-peer-power-output-native/control.kicad_sch": "3b41f81891115ae3e324694f46e41fbe44fb737c86555aa873333aa225b6f34b",
+        "component-peer-power-output-native/fault.kicad_sch": "76cd57afa2e87980e9914a6508066e7197812bacd68241fe9e29ffd618bb9ff4",
         "component-peer-signal-output-native/control.kicad_sch": "bc5d93308322cd66b404bf058afde73b7b538e5590d84160d26b65af2e53f355",
         "component-peer-signal-output-native/fault.kicad_sch": "0d45eef6e2fc66da65781bb0e06d5c7601788aeb37489e60bf1302bfdad6a04a",
         "component-peer-signal-input-native/control.kicad_sch": "961527991bc45a4545bbf980a7540e81207c0012fa3fbe20772589970b507e15",
@@ -893,10 +1346,18 @@ def test_native_fixture_sources_match_reviewed_digests() -> None:
     } == expected
 
 
-def _run_native_peer_pin_assignment_lane(kind: str) -> None:
+def test_power_output_native_fixture_readme_hashes_match_sources() -> None:
+    fixture_dir = (
+        Path(__file__).resolve().parent / "fixtures/design_lint/component-peer-power-output-native"
+    )
+    readme = (fixture_dir / "README.md").read_text(encoding="utf-8")
+    for name in ("control.kicad_sch", "fault.kicad_sch"):
+        digest = hashlib.sha256((fixture_dir / name).read_bytes()).hexdigest()
+        assert f"- `{name}`: `{digest}`" in readme
+
+
+def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
     import json
-    import shutil
-    import tempfile
 
     from kicad_tooling.ci_hosted import (
         HostedLog,
@@ -906,24 +1367,16 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
         component_peer_signal_output_fixture_lane,
     )
     from kicad_tooling.hwrepo.electrical import selected_config
-    from tests.support import reference_root
-
-    repository = Path(__file__).resolve().parents[1]
-    acceptance = repository / "build/ci"
-    acceptance.mkdir(parents=True, exist_ok=True)
-    root = Path(tempfile.mkdtemp(prefix=f"native-peer-{kind}-project-", dir=acceptance))
-    shutil.copytree(
-        reference_root(),
-        root,
-        dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
+    from kicad_tooling.hwrepo.models import DesignLintPolicy
+    from tests.synthetic_design_lint_project import (
+        PINNED_NATIVE_KICAD_IMAGES,
+        synthetic_design_lint_project,
     )
+
     expected_versions = {"controller": "10.0.0", "raspberry-pi-status-led": "10.0.5"}
     expected_images = {
-        "controller": "ghcr.io/kicad/kicad:10.0.0@sha256:"
-        "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3",
-        "raspberry-pi-status-led": "ghcr.io/kicad/kicad:10.0.5@sha256:"
-        "fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c",
+        project: PINNED_NATIVE_KICAD_IMAGES[version]
+        for project, version in expected_versions.items()
     }
     lanes = {
         "power": ("power-output", component_peer_power_output_fixture_lane),
@@ -932,11 +1385,12 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
         "bidirectional": ("bidirectional", component_peer_bidirectional_fixture_lane),
     }
     lane_kind, lane = lanes[kind]
+    expected_peer_basis_counts = (0, 1) if kind == "power" else (1, 0)
     fixture_lane = f"component-peer-{lane_kind}-fixture"
     source_hashes = {
         "power": {
-            "fault": "960e1030966e72c7ce197a971cf71418a8274e9e224ae60ef4d3d540af82790b",
-            "control": "1b1d4bb236864087fe619819a3776ad5ef7f4d7d2e462ebb0fc8eaa2c6bf2399",
+            "fault": "76cd57afa2e87980e9914a6508066e7197812bacd68241fe9e29ffd618bb9ff4",
+            "control": "3b41f81891115ae3e324694f46e41fbe44fb737c86555aa873333aa225b6f34b",
         },
         "signal": {
             "fault": "0d45eef6e2fc66da65781bb0e06d5c7601788aeb37489e60bf1302bfdad6a04a",
@@ -952,6 +1406,13 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
         },
     }[kind]
     for project, version in expected_versions.items():
+        root, _ = synthetic_design_lint_project(
+            base / project,
+            DesignLintPolicy(),
+            project_id=project,
+            kicad_version=version,
+            image=expected_images[project],
+        )
         config = selected_config(root, project)
         assert config.kicad_version == version
         assert config.image == expected_images[project]
@@ -985,8 +1446,11 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
             assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
             assert result["peer_coverage_status"] == "EVALUATED"
             assert result["peer_coverage_netlist_sha256"] == result["netlist_sha256"]
+            assert result["peer_coverage_exact_symbol_group_count"] == expected_peer_basis_counts[0]
+            assert result["peer_coverage_part_id_group_count"] == expected_peer_basis_counts[1]
             expected_count = int(case == "fault")
             assert result["peer_coverage_candidate_count"] == expected_count
+            assert result["peer_coverage_deduplicated_candidate_count"] == 0
             assert result["peer_coverage_finding_count"] == expected_count
             assert result["peer_coverage_suppressed_count"] == 0
 
@@ -995,29 +1459,29 @@ def _run_native_peer_pin_assignment_lane(kind: str) -> None:
     os.environ.get("KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES") != "1",
     reason="pinned native fixtures run in package acceptance",
 )
-def test_peer_power_output_fault_and_control_on_pinned_native_versions() -> None:
-    _run_native_peer_pin_assignment_lane("power")
+def test_peer_power_output_fault_and_control_on_pinned_native_versions(tmp_path: Path) -> None:
+    _run_native_peer_pin_assignment_lane("power", tmp_path)
 
 
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES") != "1",
     reason="pinned native fixtures run in package acceptance",
 )
-def test_peer_signal_output_fault_and_control_on_pinned_native_versions() -> None:
-    _run_native_peer_pin_assignment_lane("signal")
+def test_peer_signal_output_fault_and_control_on_pinned_native_versions(tmp_path: Path) -> None:
+    _run_native_peer_pin_assignment_lane("signal", tmp_path)
 
 
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES") != "1",
     reason="pinned native fixtures run in package acceptance",
 )
-def test_peer_signal_input_fault_and_control_on_pinned_native_versions() -> None:
-    _run_native_peer_pin_assignment_lane("signal-input")
+def test_peer_signal_input_fault_and_control_on_pinned_native_versions(tmp_path: Path) -> None:
+    _run_native_peer_pin_assignment_lane("signal-input", tmp_path)
 
 
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES") != "1",
     reason="pinned native fixtures run in package acceptance",
 )
-def test_peer_bidirectional_fault_and_control_on_pinned_native_versions() -> None:
-    _run_native_peer_pin_assignment_lane("bidirectional")
+def test_peer_bidirectional_fault_and_control_on_pinned_native_versions(tmp_path: Path) -> None:
+    _run_native_peer_pin_assignment_lane("bidirectional", tmp_path)

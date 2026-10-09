@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import unittest
+from pathlib import Path
 from xml.etree import ElementTree as ET
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.component_power_ratings import component_power_rating_checks
@@ -109,120 +110,115 @@ def native_netlist_xml() -> str:
     return ET.tostring(root, encoding="unicode")
 
 
-class ComponentPowerRatingTests(unittest.TestCase):
-    def test_exact_part_with_power_below_project_limit_passes(self) -> None:
-        checks = {
-            item.id.rsplit("/", maxsplit=1)[-1]: item
-            for item in component_power_rating_checks(requirement(), netlist())
+def test_exact_part_with_power_below_project_limit_passes() -> None:
+    checks = {
+        item.id.rsplit("/", maxsplit=1)[-1]: item
+        for item in component_power_rating_checks(requirement(), netlist())
+    }
+    assert checks["identity"].status == "PASS"
+    assert checks["pin-1"].status == "PASS"
+    assert checks["pin-2"].status == "PASS"
+    assert checks["utilization"].status == "PASS"
+    assert checks["utilization"].observed == pytest.approx(0.4)
+    assert checks["utilization"].unit == "fraction"
+
+
+def test_inclusive_limit_passes_and_excess_dissipation_fails() -> None:
+    at_limit = {
+        item.id: item
+        for item in component_power_rating_checks(
+            requirement(maximum_expected_power_w=0.2), netlist()
+        )
+    }
+    assert at_limit["component-power-rating/sense-resistor/utilization"].status == "PASS"
+
+    over_limit = {
+        item.id: item
+        for item in component_power_rating_checks(
+            requirement(maximum_expected_power_w=0.21), netlist()
+        )
+    }
+    utilization = over_limit["component-power-rating/sense-resistor/utilization"]
+    assert utilization.status == "FAIL"
+    assert "thermal derating curve" in utilization.detail
+    assert utilization.observed == pytest.approx(0.84)
+
+
+@pytest.mark.parametrize(
+    "fault",
+    (
+        "wrong-footprint",
+        "wrong-symbol",
+        "wrong-part-id",
+        "wrong-pin-inventory",
+        "wrong-net",
+        "unconnected",
+        "dnp",
+    ),
+)
+def test_exact_identity_pin_and_population_faults_leave_margin_not_applicable(
+    fault: str,
+) -> None:
+    checks = {
+        item.id.rsplit("/", maxsplit=1)[-1]: item
+        for item in component_power_rating_checks(requirement(), netlist(fault=fault))
+    }
+    assert any(check.status == "FAIL" for check in checks.values()), checks
+    assert checks["utilization"].status == "NOT_APPLICABLE"
+
+
+def test_missing_component_fails_identity_without_comparing_power() -> None:
+    observed = netlist().model_copy(
+        update={
+            "components": {},
+            "component_symbols": {},
+            "component_pin_numbers": {},
+            "nets": {},
         }
-        self.assertEqual(checks["identity"].status, "PASS")
-        self.assertEqual(checks["pin-1"].status, "PASS")
-        self.assertEqual(checks["pin-2"].status, "PASS")
-        self.assertEqual(checks["utilization"].status, "PASS")
-        self.assertAlmostEqual(checks["utilization"].observed or 0.0, 0.4)
-        self.assertEqual(checks["utilization"].unit, "fraction")
+    )
+    checks = {item.id: item for item in component_power_rating_checks(requirement(), observed)}
+    assert checks["component-power-rating/sense-resistor/identity"].status == "FAIL"
+    assert checks["component-power-rating/sense-resistor/utilization"].status == "NOT_APPLICABLE"
 
-    def test_inclusive_limit_passes_and_excess_dissipation_fails(self) -> None:
-        at_limit = {
-            item.id: item
-            for item in component_power_rating_checks(
-                requirement(maximum_expected_power_w=0.2), netlist()
-            )
+
+def test_requirement_rejects_invalid_margin_and_derating_inputs() -> None:
+    raw = requirement().model_dump()
+    raw["requirements"][0]["pins"] = ["R1.1", "C1.2"]
+    with pytest.raises(ValidationError):
+        ComponentPowerRatingAnalysis.model_validate(raw)
+
+    raw = requirement().model_dump()
+    raw["requirements"][0]["derated_allowable_power_w"] = 0.6
+    with pytest.raises(ValidationError, match="cannot exceed"):
+        ComponentPowerRatingAnalysis.model_validate(raw)
+
+    raw = requirement().model_dump()
+    raw["requirements"][0]["maximum_utilization_fraction"] = 1.01
+    with pytest.raises(ValidationError):
+        ComponentPowerRatingAnalysis.model_validate(raw)
+
+
+def test_reordered_native_maps_keep_check_results_stable() -> None:
+    source = netlist()
+    reordered = source.model_copy(
+        update={
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "components": dict(reversed(tuple(source.components.items()))),
         }
-        self.assertEqual(
-            at_limit["component-power-rating/sense-resistor/utilization"].status, "PASS"
-        )
-
-        over_limit = {
-            item.id: item
-            for item in component_power_rating_checks(
-                requirement(maximum_expected_power_w=0.21), netlist()
-            )
-        }
-        utilization = over_limit["component-power-rating/sense-resistor/utilization"]
-        self.assertEqual(utilization.status, "FAIL")
-        self.assertIn("thermal derating curve", utilization.detail)
-        self.assertAlmostEqual(utilization.observed or 0.0, 0.84)
-
-    def test_exact_identity_pin_and_population_faults_leave_margin_not_applicable(self) -> None:
-        for fault in (
-            "wrong-footprint",
-            "wrong-symbol",
-            "wrong-part-id",
-            "wrong-pin-inventory",
-            "wrong-net",
-            "unconnected",
-            "dnp",
-        ):
-            with self.subTest(fault=fault):
-                checks = {
-                    item.id.rsplit("/", maxsplit=1)[-1]: item
-                    for item in component_power_rating_checks(requirement(), netlist(fault=fault))
-                }
-                self.assertTrue(any(check.status == "FAIL" for check in checks.values()), checks)
-                self.assertEqual(checks["utilization"].status, "NOT_APPLICABLE")
-
-    def test_missing_component_fails_identity_without_comparing_power(self) -> None:
-        observed = netlist().model_copy(
-            update={
-                "components": {},
-                "component_symbols": {},
-                "component_pin_numbers": {},
-                "nets": {},
-            }
-        )
-        checks = {item.id: item for item in component_power_rating_checks(requirement(), observed)}
-        self.assertEqual(checks["component-power-rating/sense-resistor/identity"].status, "FAIL")
-        self.assertEqual(
-            checks["component-power-rating/sense-resistor/utilization"].status,
-            "NOT_APPLICABLE",
-        )
-
-    def test_requirement_rejects_invalid_margin_and_derating_inputs(self) -> None:
-        raw = requirement().model_dump()
-        raw["requirements"][0]["pins"] = ["R1.1", "C1.2"]
-        with self.assertRaises(ValidationError):
-            ComponentPowerRatingAnalysis.model_validate(raw)
-
-        raw = requirement().model_dump()
-        raw["requirements"][0]["derated_allowable_power_w"] = 0.6
-        with self.assertRaisesRegex(ValidationError, "cannot exceed"):
-            ComponentPowerRatingAnalysis.model_validate(raw)
-
-        raw = requirement().model_dump()
-        raw["requirements"][0]["maximum_utilization_fraction"] = 1.01
-        with self.assertRaises(ValidationError):
-            ComponentPowerRatingAnalysis.model_validate(raw)
-
-    def test_reordered_native_maps_keep_check_results_stable(self) -> None:
-        source = netlist()
-        reordered = source.model_copy(
-            update={
-                "nets": dict(reversed(tuple(source.nets.items()))),
-                "components": dict(reversed(tuple(source.components.items()))),
-            }
-        )
-        self.assertEqual(
-            component_power_rating_checks(requirement(), source),
-            component_power_rating_checks(requirement(), reordered),
-        )
-
-    def test_native_netlist_fields_supply_exact_rating_identity(self) -> None:
-        from pathlib import Path
-        from tempfile import TemporaryDirectory
-
-        with TemporaryDirectory() as temporary:
-            path = Path(temporary) / "netlist.xml"
-            path.write_text(native_netlist_xml(), encoding="utf-8")
-            observed = read_netlist(path)
-
-        component = observed.components["R1"]
-        self.assertEqual(component.part_id, "RES-10K-0P5W")
-        self.assertEqual(observed.component_symbols["R1"], "Device:R")
-        self.assertEqual(observed.component_pin_numbers["R1"], ("1", "2"))
-        checks = {item.id: item for item in component_power_rating_checks(requirement(), observed)}
-        self.assertTrue(all(item.status == "PASS" for item in checks.values()), checks)
+    )
+    assert component_power_rating_checks(requirement(), source) == component_power_rating_checks(
+        requirement(), reordered
+    )
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_native_netlist_fields_supply_exact_rating_identity(tmp_path: Path) -> None:
+    path = tmp_path / "netlist.xml"
+    path.write_text(native_netlist_xml(), encoding="utf-8")
+    observed = read_netlist(path)
+
+    component = observed.components["R1"]
+    assert component.part_id == "RES-10K-0P5W"
+    assert observed.component_symbols["R1"] == "Device:R"
+    assert observed.component_pin_numbers["R1"] == ("1", "2")
+    checks = {item.id: item for item in component_power_rating_checks(requirement(), observed)}
+    assert all(item.status == "PASS" for item in checks.values()), checks

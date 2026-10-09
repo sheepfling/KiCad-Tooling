@@ -175,9 +175,9 @@ def four_port_db9_netlist(*, isolated_returns: bool) -> NetlistContract:
     """Build synthetic DB9 netlist evidence for common or isolated returns."""
     references = tuple(f"J{index}" for index in range(1, 5))
     return_nets = (
-        {f"0V PWM {index}": (f"J{index}.7", f"J{index}.9") for index in range(1, 5)}
+        {f"RETURN_PORT_{index}": (f"J{index}.7", f"J{index}.9") for index in range(1, 5)}
         if isolated_returns
-        else {"0V PWM": tuple(f"J{index}.{pin}" for index in range(1, 5) for pin in (7, 9))}
+        else {"COMMON_RETURN": tuple(f"J{index}.{pin}" for index in range(1, 5) for pin in (7, 9))}
     )
     return NetlistContract(
         components={
@@ -1368,12 +1368,12 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
         requirements = {
             "common": GroundingAnalysis(
                 basis="Synthetic approved DB9 pinout requires all return contacts on one domain",
-                domains=(GroundDomain(net="0V PWM", pins=all_returns),),
+                domains=(GroundDomain(net="COMMON_RETURN", pins=all_returns),),
             ),
             "isolated": GroundingAnalysis(
                 basis="Synthetic approved DB9 pinout requires one isolated domain per connector",
                 domains=tuple(
-                    GroundDomain(net=f"0V PWM {index}", pins=(f"J{index}.7", f"J{index}.9"))
+                    GroundDomain(net=f"RETURN_PORT_{index}", pins=(f"J{index}.7", f"J{index}.9"))
                     for index in range(1, 5)
                 ),
             ),
@@ -1448,11 +1448,11 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
                 checks = {item.id: item for item in report.checks}
                 self.assertEqual(checks["grounding/component-coverage"].status, "PASS")
                 if requirement_id == "common":
-                    self.assertEqual(checks["grounding/0V PWM"].status, expected_status)
+                    self.assertEqual(checks["grounding/COMMON_RETURN"].status, expected_status)
                 else:
                     for index in range(1, 5):
                         self.assertEqual(
-                            checks[f"grounding/0V PWM {index}"].status, expected_status
+                            checks[f"grounding/RETURN_PORT_{index}"].status, expected_status
                         )
                 if isolated_returns:
                     self.assertEqual(

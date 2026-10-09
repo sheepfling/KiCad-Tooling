@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-import unittest
 from decimal import localcontext
+
+import pytest
 
 from kicad_tooling.hwrepo.crystal_networks import parse_capacitance_pf
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
@@ -158,191 +159,179 @@ def report(
     return evaluate("synthetic-crystal", coach, policy)
 
 
-class CrystalNetworkTests(unittest.TestCase):
-    def test_exact_network_and_inclusive_target_boundaries_pass(self) -> None:
-        with localcontext() as context:
-            context.prec = 3
-            result = report(crystal_netlist(), crystal_map())
-        self.assertEqual(result.status, "PASS", result.issues)
-        coverage = result.crystal_network_coverage
-        self.assertEqual(coverage.status, "COMPLETE")
-        self.assertEqual(coverage.netlist_sha256, "c" * 64)
-        entry = coverage.entries[0]
-        self.assertEqual(entry.status, "COMPLETE")
-        self.assertEqual(entry.formula, "C1*C2/(C1+C2) + Cstray")
-        self.assertAlmostEqual(entry.calculated_minimum_load_pf or 0, 10.0)
-        self.assertAlmostEqual(entry.calculated_maximum_load_pf or 0, 12.0)
-        self.assertFalse(
-            any(
-                item.rule_id == "oscillator.crystal_load_network_mismatch"
-                for item in result.findings
-            )
-        )
-        rendered = text_report(result)
-        self.assertIn("Crystal load-network coverage: COMPLETE", rendered)
-        self.assertIn("Formula: C1*C2/(C1+C2) + Cstray", rendered)
-        self.assertIn("Calculated nominal load: 10–12 pF; target 10–12 pF", rendered)
+def test_exact_network_and_inclusive_target_boundaries_pass() -> None:
+    with localcontext() as context:
+        context.prec = 3
+        result = report(crystal_netlist(), crystal_map())
+    assert result.status == "PASS", result.issues
+    coverage = result.crystal_network_coverage
+    assert coverage.status == "COMPLETE"
+    assert coverage.netlist_sha256 == "c" * 64
+    entry = coverage.entries[0]
+    assert entry.status == "COMPLETE"
+    assert entry.formula == "C1*C2/(C1+C2) + Cstray"
+    assert entry.calculated_minimum_load_pf == pytest.approx(10.0)
+    assert entry.calculated_maximum_load_pf == pytest.approx(12.0)
+    assert not any(
+        item.rule_id == "oscillator.crystal_load_network_mismatch" for item in result.findings
+    )
+    rendered = text_report(result)
+    assert "Crystal load-network coverage: COMPLETE" in rendered
+    assert "Formula: C1*C2/(C1+C2) + Cstray" in rendered
+    assert "Calculated nominal load: 10–12 pF; target 10–12 pF" in rendered
 
-    def test_wrong_node_assignment_is_reported(self) -> None:
-        result = report(crystal_netlist(fault="wrong-capacitor-node"), crystal_map())
-        self.assertEqual(result.status, "REVIEW")
-        entry = result.crystal_network_coverage.entries[0]
-        self.assertEqual(entry.status, "INCOMPLETE")
-        self.assertTrue(any("do not span" in issue for issue in entry.issues))
-        finding = next(
-            item
-            for item in result.findings
-            if item.rule_id == "oscillator.crystal_load_network_mismatch"
-        )
-        self.assertTrue(any("C2.1" in item for item in finding.evidence["pin_nets"]))
 
-    def test_nominal_load_outside_target_is_reported_and_can_block(self) -> None:
-        result = report(
-            crystal_netlist(c1_value="47pF", c2_value="47pF"),
+def test_wrong_node_assignment_is_reported() -> None:
+    result = report(crystal_netlist(fault="wrong-capacitor-node"), crystal_map())
+    assert result.status == "REVIEW"
+    entry = result.crystal_network_coverage.entries[0]
+    assert entry.status == "INCOMPLETE"
+    assert any("do not span" in issue for issue in entry.issues)
+    finding = next(
+        item
+        for item in result.findings
+        if item.rule_id == "oscillator.crystal_load_network_mismatch"
+    )
+    assert any("C2.1" in item for item in finding.evidence["pin_nets"])
+
+
+def test_nominal_load_outside_target_is_reported_and_can_block() -> None:
+    result = report(
+        crystal_netlist(c1_value="47pF", c2_value="47pF"),
+        crystal_map(),
+        override=DesignLintRuleOverride(
+            rule_id="oscillator.crystal_load_network_mismatch",
+            mode="block",
+            reason="Synthetic release policy requires mapped oscillator review to pass",
+        ),
+    )
+    assert result.status == "FAIL"
+    entry = result.crystal_network_coverage.entries[0]
+    assert entry.status == "OUT_OF_RANGE"
+    assert entry.calculated_minimum_load_pf == pytest.approx(24.5)
+    assert entry.calculated_maximum_load_pf == pytest.approx(26.5)
+    finding = next(
+        item
+        for item in result.findings
+        if item.rule_id == "oscillator.crystal_load_network_mismatch"
+    )
+    assert finding.mode == "block"
+    assert "24.5–26.5 pF" in finding.evidence["calculated_nominal_load_pf"][0]
+
+
+def test_load_mismatch_is_order_stable_and_corrected_values_clear_it() -> None:
+    rule_id = "oscillator.crystal_load_network_mismatch"
+    source = crystal_netlist(c1_value="47pF", c2_value="47pF")
+
+    def lint(netlist: NetlistContract):
+        source_hash = hashlib.sha256(netlist.model_dump_json().encode("utf-8")).hexdigest()
+        return source_hash, report(
+            netlist,
             crystal_map(),
-            override=DesignLintRuleOverride(
-                rule_id="oscillator.crystal_load_network_mismatch",
-                mode="block",
-                reason="Synthetic release policy requires mapped oscillator review to pass",
-            ),
+            netlist_sha256=source_hash,
         )
-        self.assertEqual(result.status, "FAIL")
-        entry = result.crystal_network_coverage.entries[0]
-        self.assertEqual(entry.status, "OUT_OF_RANGE")
-        self.assertAlmostEqual(entry.calculated_minimum_load_pf or 0, 24.5)
-        self.assertAlmostEqual(entry.calculated_maximum_load_pf or 0, 26.5)
-        finding = next(
-            item
-            for item in result.findings
-            if item.rule_id == "oscillator.crystal_load_network_mismatch"
-        )
-        self.assertEqual(finding.mode, "block")
-        self.assertIn("24.5–26.5 pF", finding.evidence["calculated_nominal_load_pf"][0])
 
-    def test_load_mismatch_is_order_stable_and_corrected_values_clear_it(self) -> None:
-        rule_id = "oscillator.crystal_load_network_mismatch"
-        source = crystal_netlist(c1_value="47pF", c2_value="47pF")
+    source_hash, original = lint(source)
+    assert original.crystal_network_coverage.netlist_sha256 == source_hash
+    original_findings = {
+        item.subject: (item.fingerprint, item.evidence)
+        for item in original.findings
+        if item.rule_id == rule_id
+    }
+    assert len(original_findings) == 1
 
-        def lint(netlist: NetlistContract):
-            source_hash = hashlib.sha256(netlist.model_dump_json().encode("utf-8")).hexdigest()
-            return source_hash, report(
-                netlist,
-                crystal_map(),
-                netlist_sha256=source_hash,
-            )
-
-        source_hash, original = lint(source)
-        self.assertEqual(original.crystal_network_coverage.netlist_sha256, source_hash)
-        original_findings = {
-            item.subject: (item.fingerprint, item.evidence)
-            for item in original.findings
-            if item.rule_id == rule_id
+    reordered_source = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
         }
-        self.assertEqual(len(original_findings), 1)
+    )
+    reordered_hash, reordered = lint(reordered_source)
+    assert source_hash != reordered_hash
+    assert reordered.crystal_network_coverage.netlist_sha256 == reordered_hash
+    reordered_findings = {
+        item.subject: (item.fingerprint, item.evidence)
+        for item in reordered.findings
+        if item.rule_id == rule_id
+    }
+    assert reordered_findings == original_findings
 
-        reordered_source = source.model_copy(
-            update={
-                "components": dict(reversed(tuple(source.components.items()))),
-                "nets": dict(reversed(tuple(source.nets.items()))),
-                "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
-                "component_pin_numbers": dict(
-                    reversed(tuple(source.component_pin_numbers.items()))
-                ),
-            }
-        )
-        reordered_hash, reordered = lint(reordered_source)
-        self.assertNotEqual(source_hash, reordered_hash)
-        self.assertEqual(reordered.crystal_network_coverage.netlist_sha256, reordered_hash)
-        reordered_findings = {
-            item.subject: (item.fingerprint, item.evidence)
-            for item in reordered.findings
-            if item.rule_id == rule_id
-        }
-        self.assertEqual(reordered_findings, original_findings)
+    repaired_hash, repaired = lint(crystal_netlist())
+    assert source_hash != repaired_hash
+    assert rule_id not in {item.rule_id for item in repaired.findings}
 
-        repaired_hash, repaired = lint(crystal_netlist())
-        self.assertNotEqual(source_hash, repaired_hash)
-        self.assertNotIn(rule_id, {item.rule_id for item in repaired.findings})
 
-    def test_unmapped_load_capacitor_is_reported_for_review(self) -> None:
-        result = report(crystal_netlist(fault="extra-load-capacitor"), crystal_map())
-        entry = result.crystal_network_coverage.entries[0]
-        self.assertEqual(entry.status, "INCOMPLETE")
-        self.assertEqual(entry.extra_capacitor_references, ("C3",))
-        self.assertEqual(
-            entry.extra_capacitor_pin_nets["C3"],
-            ("C3.1 -> OSC_IN", "C3.2 -> GND"),
-        )
-        finding = next(
-            item
-            for item in result.findings
-            if item.rule_id == "oscillator.crystal_load_network_mismatch"
-        )
-        self.assertEqual(finding.evidence["potential_extra_load_capacitors"], ("C3",))
-        self.assertEqual(
-            finding.evidence["potential_extra_load_capacitor_pin_nets"],
-            ("C3: C3.1 -> OSC_IN, C3.2 -> GND",),
-        )
-        self.assertEqual(result.status, "REVIEW")
+def test_unmapped_load_capacitor_is_reported_for_review() -> None:
+    result = report(crystal_netlist(fault="extra-load-capacitor"), crystal_map())
+    entry = result.crystal_network_coverage.entries[0]
+    assert entry.status == "INCOMPLETE"
+    assert entry.extra_capacitor_references == ("C3",)
+    assert entry.extra_capacitor_pin_nets["C3"] == ("C3.1 -> OSC_IN", "C3.2 -> GND")
+    finding = next(
+        item
+        for item in result.findings
+        if item.rule_id == "oscillator.crystal_load_network_mismatch"
+    )
+    assert finding.evidence["potential_extra_load_capacitors"] == ("C3",)
+    assert finding.evidence["potential_extra_load_capacitor_pin_nets"] == (
+        "C3: C3.1 -> OSC_IN, C3.2 -> GND",
+    )
+    assert result.status == "REVIEW"
 
-    def test_reversed_resonator_pins_are_valid_when_explicitly_mapped(self) -> None:
-        result = report(
-            crystal_netlist(reverse_resonator_pins=True),
-            crystal_map(reverse_resonator_pins=True),
-        )
-        self.assertEqual(result.crystal_network_coverage.entries[0].status, "COMPLETE")
-        self.assertEqual(result.status, "PASS", result.issues)
 
-    def test_missing_dnp_identity_and_unsupported_values_need_review(self) -> None:
-        for fault in (
-            "open-capacitor",
-            "missing-resonator",
-            "dnp-capacitor",
-            "wrong-symbol",
-            "wrong-value",
-            "unknown-capacitance",
-            "cap-value-outside-authored-range",
-        ):
-            with self.subTest(fault=fault):
-                result = report(crystal_netlist(fault=fault), crystal_map())
-                self.assertEqual(result.status, "REVIEW")
-                self.assertEqual(result.crystal_network_coverage.entries[0].status, "INCOMPLETE")
-                self.assertTrue(
-                    any(
-                        finding.rule_id == "oscillator.crystal_load_network_mismatch"
-                        for finding in result.findings
-                    )
-                )
-                if fault == "cap-value-outside-authored-range":
-                    self.assertTrue(
-                        any(
-                            "reviewed range" in issue
-                            for issue in result.crystal_network_coverage.entries[0].issues
-                        )
-                    )
+def test_reversed_resonator_pins_are_valid_when_explicitly_mapped() -> None:
+    result = report(
+        crystal_netlist(reverse_resonator_pins=True),
+        crystal_map(reverse_resonator_pins=True),
+    )
+    assert result.crystal_network_coverage.entries[0].status == "COMPLETE"
+    assert result.status == "PASS", result.issues
 
-    def test_unmapped_internal_oscillator_is_not_inferred(self) -> None:
-        unlisted = NetlistContract(
-            components={
-                "U1": ComponentContract(value="MCU with internal oscillator", footprint="")
-            },
-            nets={"CLOCK": ("U1.1",)},
-            component_symbols={"U1": "Synthetic:MCU"},
-        )
-        result = report(unlisted)
-        self.assertEqual(result.crystal_network_coverage.status, "NOT_REQUESTED")
-        self.assertFalse(
-            any(
-                item.rule_id == "oscillator.crystal_load_network_mismatch"
-                for item in result.findings
-            )
-        )
 
-    def test_capacitance_parser_accepts_explicit_units_only(self) -> None:
-        self.assertEqual(parse_capacitance_pf("18 pF"), 18)
-        self.assertEqual(parse_capacitance_pf("0.018 nF"), 18)
-        self.assertEqual(parse_capacitance_pf("0.000018 uF"), 18)
-        self.assertEqual(parse_capacitance_pf("18p"), 18)
-        self.assertIsNone(parse_capacitance_pf("18"))
-        self.assertIsNone(parse_capacitance_pf("Cload"))
-        self.assertIsNone(parse_capacitance_pf(f"{'9' * 129}pF"))
+@pytest.mark.parametrize(
+    "fault",
+    (
+        "open-capacitor",
+        "missing-resonator",
+        "dnp-capacitor",
+        "wrong-symbol",
+        "wrong-value",
+        "unknown-capacitance",
+        "cap-value-outside-authored-range",
+    ),
+)
+def test_missing_dnp_identity_and_unsupported_values_need_review(fault: str) -> None:
+    result = report(crystal_netlist(fault=fault), crystal_map())
+    assert result.status == "REVIEW"
+    entry = result.crystal_network_coverage.entries[0]
+    assert entry.status == "INCOMPLETE"
+    assert any(
+        finding.rule_id == "oscillator.crystal_load_network_mismatch" for finding in result.findings
+    )
+    if fault == "cap-value-outside-authored-range":
+        assert any("reviewed range" in issue for issue in entry.issues)
+
+
+def test_unmapped_internal_oscillator_is_not_inferred() -> None:
+    unlisted = NetlistContract(
+        components={"U1": ComponentContract(value="MCU with internal oscillator", footprint="")},
+        nets={"CLOCK": ("U1.1",)},
+        component_symbols={"U1": "Synthetic:MCU"},
+    )
+    result = report(unlisted)
+    assert result.crystal_network_coverage.status == "NOT_REQUESTED"
+    assert not any(
+        item.rule_id == "oscillator.crystal_load_network_mismatch" for item in result.findings
+    )
+
+
+def test_capacitance_parser_accepts_explicit_units_only() -> None:
+    assert parse_capacitance_pf("18 pF") == 18
+    assert parse_capacitance_pf("0.018 nF") == 18
+    assert parse_capacitance_pf("0.000018 uF") == 18
+    assert parse_capacitance_pf("18p") == 18
+    assert parse_capacitance_pf("18") is None
+    assert parse_capacitance_pf("Cload") is None
+    assert parse_capacitance_pf(f"{'9' * 129}pF") is None
