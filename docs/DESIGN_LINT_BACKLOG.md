@@ -58,7 +58,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 83 rules are implemented with synthetic regression coverage.
+The following 84 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -68,6 +68,7 @@ Their actual recognition limits are documented in
 - `component.repeated_supply_pin_function`
 - `component.peer_power_pin_assignment_divergence`
 - `component.peer_power_output_unconnected`
+- `component.peer_signal_output_unconnected`
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
 - `component.two_pin_crystal_same_net`
@@ -1476,7 +1477,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 83 active rules; CI requires every new
+- **Status:** Baseline complete for all 84 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1485,7 +1486,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 83 covered, 0 not applicable, 0 unreviewed.
+  audit: 84 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -3796,6 +3797,45 @@ is not a reason by itself to expand its scope or change its default policy.
   separate template checkout, and Linux/macOS/Windows preview jobs also passed.
   This verifies schematic/netlist recognition only; it does not establish PCB
   connectivity or electrical correctness.
+
+#### LINT-098 — Open native signal output on one exact-symbol peer
+
+- **Status:** Implemented as `component.peer_signal_output_unconnected`, with
+  pytest typed-netlist regressions, rule-catalog coverage, project policy and
+  exact-ignore controls, CLI/MCP parity, and a repeated native-export lane for
+  the pinned KiCad 10.0.0 and 10.0.5 profiles. Hosted acceptance is pending.
+- **Priority:** P1 component-pin completeness. LINT-094 recognizes native
+  `power_out` pins, while this rule covers otherwise comparable pins classified
+  as ordinary `output`. A missing assignment on one exact-symbol peer can be
+  hard to spot in a repeated component group.
+- **Predicate:** Compare fitted, non-connector instances with one exact native
+  symbol and complete identical pin-number inventories. For each pin number,
+  require native electrical type `output` on every peer, matching pin-function
+  metadata, and one unambiguous net assignment on at least one peer. Emit a
+  `REVIEW` candidate when at least one peer pin has no assignment. Named supply
+  and return pins remain with their specific checks. All-open groups, DNP
+  peers, different symbols, incomplete inventories, mixed pin types, and
+  ambiguous assignments are outside the predicate.
+- **Boundary:** Matching symbols and pin numbers are clues to inspect an open
+  output, not requirements to use it or connect peer outputs together. Native
+  `output` type does not identify the signal function or expected load. This
+  does not infer PWM channel assignments, LED topology, off-board wiring, PCB
+  continuity, or physical population. A project-authored `pin_connectivity`
+  requirement remains the way to make a specific required relationship a
+  regression gate.
+- **Fixtures:** Synthetic typed and native-export faults leave one peer's
+  output pin open; controls assign the peer pins to the same net and to
+  different nets. Typed controls also cover all-open, DNP, different-symbol,
+  incomplete-inventory, ambiguous, wrong-electrical-type, and named supply or
+  return cases. Input-map reordering preserves the finding fingerprint.
+  Synthetic schematics bind the exact symbol, pin inventory, native output
+  type, and expected pin assignments; each source is exported twice on the
+  digest-pinned KiCad 10.0.0 and 10.0.5 images.
+- **Incremental value:** The extension fills the explicit gap between the
+  existing generic unconnected `power_in` check and LINT-094's peer `power_out`
+  check. It does not claim a cohort analyzer finding or field precision.
+- **Next:** Keep the native lane in package acceptance. Measure the prompt on
+  approved, nonconfidential designs before changing its default disposition.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -6556,7 +6596,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 83 active rules. Each entry has a deterministic predicate, evidence
+contains 84 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

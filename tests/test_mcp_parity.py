@@ -21,6 +21,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from mcp import Client
 from pydantic import BaseModel
 
@@ -248,6 +249,98 @@ def parity_native_evidence(root: Path, island: Path) -> Path:
     return directory / "summary.json"
 
 
+@pytest.mark.parametrize(
+    ("output_type", "rule_id"),
+    (
+        ("power_out", "component.peer_power_output_unconnected"),
+        ("output", "component.peer_signal_output_unconnected"),
+    ),
+)
+def test_peer_power_output_unconnected_lint_cli_mcp_parity(
+    tmp_path: Path, output_type: str, rule_id: str
+) -> None:
+    root, island, _ = parity_workspace(tmp_path)
+    native = parity_native_evidence(root, island)
+    netlist = native.parent / "netlist.xml"
+
+    def write_netlist(*, fault: bool) -> None:
+        output_nets = (
+            '<net name="VOUT"><node ref="U10" pin="2"/></net>'
+            if fault
+            else '<net name="VOUT_A"><node ref="U10" pin="2"/></net>'
+            '<net name="VOUT_B"><node ref="U11" pin="2"/></net>'
+        )
+        text = native_fixture.NETLIST.replace(
+            "</components><nets/>",
+            '<comp ref="U10"><value>Synthetic output peer</value>'
+            '<libsource lib="Synthetic" part="PowerOutputPeer"/></comp>'
+            '<comp ref="U11"><value>Synthetic output peer</value>'
+            '<libsource lib="Synthetic" part="PowerOutputPeer"/></comp>'
+            '</components><libparts><libpart lib="Synthetic" '
+            'part="PowerOutputPeer"><pins>'
+            '<pin num="1" name="IO" type="passive"/>'
+            f'<pin num="2" name="OUT" type="{output_type}"/>'
+            "</pins></libpart></libparts><nets>"
+            '<net name="DATA"><node ref="U10" pin="1"/>'
+            '<node ref="U11" pin="1"/></net>'
+            f"{output_nets}</nets>",
+        )
+        netlist.write_text(text, encoding="utf-8")
+        summary = read_model(native, ValidationSummary)
+        write_model(
+            native,
+            summary.model_copy(
+                update={
+                    "artifacts_sha256": {
+                        **summary.artifacts_sha256,
+                        "netlist.xml": digest(netlist),
+                    }
+                }
+            ),
+        )
+
+    async def exercise() -> None:
+        async with Client(create_server(root), mode="legacy") as client:
+            for fault in (True, False):
+                write_netlist(fault=fault)
+                expected_exit = 1 if fault else 0
+                process = await parity_cli_process(
+                    tmp_path,
+                    root,
+                    "kicad_tooling.design_lint",
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                )
+                assert process.returncode == expected_exit, process.stderr + process.stdout
+                cli_report = parse_model_text(process.stdout, DesignLintReport)
+
+                result = await client.call_tool(
+                    "inspect_design_lint",
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(root).as_posix(),
+                    },
+                )
+                assert not result.is_error, result.content
+                assert result.structured_content is not None
+                mcp_report = DesignLintReport.model_validate_json(
+                    json.dumps(result.structured_content)
+                )
+
+                assert cli_report == mcp_report
+                assert mcp_report.status == ("REVIEW" if fault else "PASS")
+                findings = tuple(item for item in mcp_report.findings if item.rule_id == rule_id)
+                if fault:
+                    assert len(findings) == 1
+                    assert findings[0].evidence["unassigned_pins"] == ("U11.2",)
+                else:
+                    assert findings == ()
+
+    asyncio.run(exercise())
+
+
 class McpParityTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         temporary = tempfile.TemporaryDirectory(prefix="mcp-semantic-parity-")
@@ -408,87 +501,6 @@ class McpParityTests(unittest.IsolatedAsyncioTestCase):
                         if item.rule_id == "component.peer_power_pin_assignment_divergence"
                     ]
                     self.assertEqual(len(peer_findings), 2 if split_domains else 0)
-
-    async def test_peer_power_output_unconnected_lint_cli_mcp_parity(self) -> None:
-        native = self.native_evidence()
-        netlist = native.parent / "netlist.xml"
-
-        def write_netlist(*, fault: bool) -> None:
-            output_nets = (
-                '<net name="VOUT"><node ref="U10" pin="2"/></net>'
-                if fault
-                else '<net name="VOUT_A"><node ref="U10" pin="2"/></net>'
-                '<net name="VOUT_B"><node ref="U11" pin="2"/></net>'
-            )
-            text = native_fixture.NETLIST.replace(
-                "</components><nets/>",
-                '<comp ref="U10"><value>Synthetic output peer</value>'
-                '<libsource lib="Synthetic" part="PowerOutputPeer"/></comp>'
-                '<comp ref="U11"><value>Synthetic output peer</value>'
-                '<libsource lib="Synthetic" part="PowerOutputPeer"/></comp>'
-                '</components><libparts><libpart lib="Synthetic" '
-                'part="PowerOutputPeer"><pins>'
-                '<pin num="1" name="IO" type="passive"/>'
-                '<pin num="2" name="OUT" type="power_out"/>'
-                "</pins></libpart></libparts><nets>"
-                '<net name="DATA"><node ref="U10" pin="1"/>'
-                '<node ref="U11" pin="1"/></net>'
-                f"{output_nets}</nets>",
-            )
-            netlist.write_text(text, encoding="utf-8")
-            summary = read_model(native, ValidationSummary)
-            write_model(
-                native,
-                summary.model_copy(
-                    update={
-                        "artifacts_sha256": {
-                            **summary.artifacts_sha256,
-                            "netlist.xml": digest(netlist),
-                        }
-                    }
-                ),
-            )
-
-        async with Client(create_server(self.root), mode="legacy") as client:
-
-            async def compare(*, fault: bool) -> DesignLintReport:
-                expected_status = "REVIEW" if fault else "PASS"
-                cli = await self.cli(
-                    "kicad_tooling.design_lint",
-                    DesignLintReport,
-                    "--project",
-                    "controller",
-                    "--native-summary",
-                    str(native),
-                    expected_exit=1 if fault else 0,
-                )
-                mcp = await self.call(
-                    client,
-                    "inspect_design_lint",
-                    DesignLintReport,
-                    {
-                        "project_id": "controller",
-                        "native_summary": native.relative_to(self.root).as_posix(),
-                    },
-                )
-                self.assertEqual(cli, mcp)
-                self.assertEqual(mcp.status, expected_status)
-                findings = tuple(
-                    item
-                    for item in mcp.findings
-                    if item.rule_id == "component.peer_power_output_unconnected"
-                )
-                if fault:
-                    self.assertEqual(len(findings), 1)
-                    self.assertEqual(findings[0].evidence["unassigned_pins"], ("U11.2",))
-                else:
-                    self.assertEqual(findings, ())
-                return mcp
-
-            write_netlist(fault=True)
-            await compare(fault=True)
-            write_netlist(fault=False)
-            await compare(fault=False)
 
     async def test_spi_peer_voltage_lint_cli_mcp_parity(self) -> None:
         native = self.native_evidence()

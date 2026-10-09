@@ -137,6 +137,16 @@ The first rules are:
   because there is no component-level unconnected-shield rule. It does not
   establish output function, component operation, current capacity, PCB copper
   continuity, off-board wiring, or physical population.
+- `component.peer_signal_output_unconnected` prompts when a fitted
+  non-connector component with an exact shared symbol has an unassigned native
+  `output` pin while the matching pin on another fitted peer has one
+  unambiguous net assignment. This asks whether the open signal output is
+  intentional or missing a connection; matching symbols do not require the
+  outputs to share a net. DNP peers, connector candidates, incomplete or
+  mismatched pin inventories, missing electrical-type metadata, ambiguous
+  assignments, and recognized named supply/return pins remain outside the
+  predicate. This does not establish output function, PCB continuity,
+  off-board wiring, or physical population.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
   resolve to the same schematic net. The assigned net bypasses the passive in
@@ -836,7 +846,7 @@ evidence boundary, limitations, implementation references, fault/control
 regression tests, and each rule's metamorphic review status, registered cases,
 or reasoned not-applicable basis. Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 83 active rules. They
+`synthetic_validated`; the catalog currently contains 84 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow

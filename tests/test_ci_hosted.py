@@ -15,7 +15,7 @@ import unittest
 from contextlib import redirect_stderr
 from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 
 from kicad_tooling.ci_hosted import (
     TWO_PIN_COMPONENT_FIXTURE_CASES,
@@ -353,7 +353,11 @@ class HostedCiTests(unittest.TestCase):
             ) as voltage_rating_fixture,
             patch("kicad_tooling.ci_hosted.power_sequence_fixture_lane") as sequence_fixture,
             patch("kicad_tooling.ci_hosted.ic_rail_capacitor_fixture_lane") as rail_cap_fixture,
-            patch("kicad_tooling.ci_hosted.pcb_signal_path_drc_fixture_lane"),
+            patch.multiple(
+                "kicad_tooling.ci_hosted",
+                pcb_signal_path_drc_fixture_lane=DEFAULT,
+                component_peer_signal_output_fixture_lane=DEFAULT,
+            ) as other_native_fixtures,
             patch("kicad_tooling.ci_hosted.pcb_return_fixture_lane") as pcb_fixture,
             patch("kicad_tooling.ci_hosted.pcb_access_fixture_lane") as access_fixture,
             patch("kicad_tooling.ci_hosted.pcb_decoupling_fixture_lane") as decoupling_fixture,
@@ -420,6 +424,12 @@ class HostedCiTests(unittest.TestCase):
             log=log,
         )
         peer_power_fixture.assert_called_once_with(
+            self.root,
+            project="controller",
+            image="fixture@sha256:" + "a" * 64,
+            log=log,
+        )
+        other_native_fixtures["component_peer_signal_output_fixture_lane"].assert_called_once_with(
             self.root,
             project="controller",
             image="fixture@sha256:" + "a" * 64,

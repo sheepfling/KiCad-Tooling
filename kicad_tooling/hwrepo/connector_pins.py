@@ -1034,17 +1034,20 @@ class PeerPowerPinAssignmentDivergence:
 
 
 @dataclass(frozen=True)
-class PeerPowerOutputPinOutlier:
+class PeerOutputPinOutlier:
     symbol: str
     pin_number: str
+    electrical_type: str
     assignments: dict[str, tuple[str, ...]]
 
 
-def component_peer_power_output_pin_outliers(
+def _component_peer_output_pin_outliers(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
-) -> tuple[PeerPowerOutputPinOutlier, ...]:
-    """Find an open native power-output pin among fitted peers of one exact symbol.
+    *,
+    electrical_type: str,
+) -> tuple[PeerOutputPinOutlier, ...]:
+    """Find an open native output pin among fitted peers of one exact symbol.
 
     A same-symbol, same-pin output assignment is a review clue only. The other
     instances may intentionally use the output differently or leave it open.
@@ -1083,7 +1086,7 @@ def component_peer_power_output_pin_outliers(
         for pin in pins:
             pin_nets.setdefault(pin.casefold(), set()).add(net)
 
-    results: list[PeerPowerOutputPinOutlier] = []
+    results: list[PeerOutputPinOutlier] = []
     for symbol_key, references in sorted(references_by_symbol.items()):
         peers = tuple(sorted(references, key=str.casefold))
         if len(peers) < 2:
@@ -1104,7 +1107,7 @@ def component_peer_power_output_pin_outliers(
 
         for pin_number in peer_inventories[0]:
             pins = tuple(f"{reference}.{pin_number}" for reference in peers)
-            if any(electrical_types.get(pin.casefold()) != "power_out" for pin in pins):
+            if any(electrical_types.get(pin.casefold()) != electrical_type for pin in pins):
                 continue
             peer_functions = tuple(functions.get(pin.casefold()) for pin in pins)
             if (
@@ -1136,9 +1139,10 @@ def component_peer_power_output_pin_outliers(
                 # Preserve the more specific existing named supply/return prompt.
                 continue
             results.append(
-                PeerPowerOutputPinOutlier(
+                PeerOutputPinOutlier(
                     symbol=symbols_by_key[symbol_key],
                     pin_number=pin_number,
+                    electrical_type=electrical_type,
                     assignments=dict(
                         sorted(assignments.items(), key=lambda item: item[0].casefold())
                     ),
@@ -1149,6 +1153,30 @@ def component_peer_power_output_pin_outliers(
             results,
             key=lambda item: (item.symbol.casefold(), item.pin_number.casefold()),
         )
+    )
+
+
+def component_peer_power_output_pin_outliers(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> tuple[PeerOutputPinOutlier, ...]:
+    """Find an open native power-output pin among exact-symbol fitted peers."""
+    return _component_peer_output_pin_outliers(
+        observed,
+        declared_references,
+        electrical_type="power_out",
+    )
+
+
+def component_peer_signal_output_pin_outliers(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> tuple[PeerOutputPinOutlier, ...]:
+    """Find an open native signal-output pin among exact-symbol fitted peers."""
+    return _component_peer_output_pin_outliers(
+        observed,
+        declared_references,
+        electrical_type="output",
     )
 
 

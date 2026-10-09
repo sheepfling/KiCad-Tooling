@@ -247,6 +247,41 @@
       ]
     },
     {
+      "rule_id": "component.peer_signal_output_unconnected",
+      "title": "Signal-output pin is unassigned on one fitted peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted non-connector components with the exact same native symbol and complete matching pin inventories, report a pin classified by native KiCad metadata as output when at least one peer assigns it to exactly one net and at least one peer assigns it to no net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "An open signal-output pin may be intentional; matching component identity does not require peer outputs to share a net or prove that an output is used.",
+        "Only fitted non-connector peers with an exact shared symbol identity, complete equal pin-number inventories, and a matching native output pin type are compared. DNP peers, incomplete inventories, absent type metadata, and ambiguous assignments are outside the predicate.",
+        "The schematic netlist does not prove output function, component operation, PCB copper continuity, off-board connections, or physical population. Recognized named supply and return pins remain with their more specific findings."
+      ],
+      "fault_fixtures": [
+        "tests.test_peer_power_output.test_reports_an_open_native_signal_output_pin_when_an_exact_peer_is_connected",
+        "tests.test_peer_power_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_peer_power_output.test_assigned_signal_peer_outputs_are_valid_same_or_separate_net_controls",
+        "tests.test_peer_power_output.test_signal_output_prompt_skips_incomplete_or_non_signal_peer_evidence",
+        "tests.test_peer_power_output.test_signal_output_review_supports_project_policy_and_exact_ignore",
+        "tests.test_peer_power_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_peer_power_output.test_signal_output_finding_is_stable_under_map_order_changes"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_pins.py#component_peer_signal_output_pin_outliers",
+        "kicad_tooling/hwrepo/design_lint.py#candidates"
+      ]
+    },
+    {
       "rule_id": "component.two_pin_passive_same_net",
       "title": "Supported two-pin passive is bypassed by one net",
       "status": "active",

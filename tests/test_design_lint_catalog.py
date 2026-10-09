@@ -879,6 +879,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(item.rule_id for item in fuse_result.findings)
     peer_power_output_result = peer_power_output_lint_report(peer_power_output_netlist())
     emitted.update(item.rule_id for item in peer_power_output_result.findings)
+    peer_signal_output_result = peer_power_output_lint_report(
+        peer_power_output_netlist(output_electrical_types=("output", "output"))
+    )
+    emitted.update(item.rule_id for item in peer_signal_output_result.findings)
     ferrite_result = two_pin_ferrite_lint_report(ferrite_netlist())
     emitted.update(item.rule_id for item in ferrite_result.findings)
     emitted.update(item.rule_id for item in candidates(two_pin_switch_netlist()))
