@@ -6,12 +6,15 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from .can_termination_contract import (
-    can_termination_checks,
-)
+from .can_termination_contract import can_termination_checks
 from .can_termination_models import CanTerminationAnalysis
 from .component_power_ratings import component_power_rating_checks
+from .component_rating_models import (
+    ComponentPowerRatingAnalysis,
+    ComponentVoltageRatingAnalysis,
+)
 from .component_voltage_ratings import component_voltage_rating_checks
+from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contract_coach import (
     AutoNetlistRunner,
@@ -34,23 +37,17 @@ from .electrical import (
     simulation_cases,
 )
 from .evidence import digest, source_state
-from .i2c_pullup_contract import (
-    i2c_pullup_checks,
-)
+from .i2c_pullup_contract import i2c_pullup_checks
 from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
     CommandEvidence,
-    ComponentPowerRatingAnalysis,
-    ComponentVoltageRatingAnalysis,
-    ConnectorContactRatingAnalysis,
     ControlInputsAnalysis,
     ElectricalAnalysisReport,
     ElectricalCheck,
     ElectricalSuiteReport,
     GroundingAnalysis,
-    MosfetStressAnalysis,
     PcbAccessAnalysis,
     PcbReturnPathsAnalysis,
     PinConnectivityAnalysis,
@@ -60,6 +57,7 @@ from .models import (
     UsbCAnalysis,
 )
 from .mosfet_stress import mosfet_stress_checks
+from .mosfet_stress_models import MosfetStressAnalysis
 from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
 from .pcb_return_path_checks import pcb_return_path_checks
 from .power_connectivity import power_connectivity_checks
@@ -68,9 +66,7 @@ from .rs485_models import Rs485Analysis
 from .selection import ProjectSelector, resolve_project_ids
 from .serial_heuristics import serial_peer_checks
 from .serial_peer_models import SerialPeerAnalysis
-from .spi_contract import (
-    spi_checks,
-)
+from .spi_contract import spi_checks
 from .spi_models import SpiAnalysis
 from .spice import executable_path, run_case, simulator_version
 from .test_access import (
@@ -79,9 +75,7 @@ from .test_access import (
     pcb_accessibility_checks,
     pcb_probe_envelope_checks,
 )
-from .usb_c_contract import (
-    usb_c_checks,
-)
+from .usb_c_contract import usb_c_checks
 
 
 def analyze(

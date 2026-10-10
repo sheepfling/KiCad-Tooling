@@ -21,12 +21,15 @@ from pydantic import (
 
 from . import can_termination_models as _can_termination_models
 from . import component_peer_pin_models as _component_peer_pin_models
+from . import component_rating_models as _component_rating_models
+from . import connector_contact_rating_models as _connector_contact_rating_models
 from . import connector_peer_pin_models as _connector_peer_pin_models
 from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
 from . import digital_peer_voltage_models as _digital_peer_voltage_models
 from . import i2c_address_models as _i2c_address_models
 from . import i2c_pullup_models as _i2c_pullup_models
+from . import mosfet_stress_models as _mosfet_stress_models
 from . import pcb_connectivity_observations as _pcb_connectivity_observations
 from . import pcb_connectivity_snapshot as _pcb_connectivity_snapshot
 from . import pcb_decoupling_models as _pcb_decoupling_models
@@ -68,6 +71,21 @@ from .model_primitives import (
 )
 from .netlist_pins import is_native_unconnected_net_name
 
+ComponentVoltageRatingRequirement = _component_rating_models.ComponentVoltageRatingRequirement
+ComponentVoltageRatingAnalysis = _component_rating_models.ComponentVoltageRatingAnalysis
+ComponentPowerRatingRequirement = _component_rating_models.ComponentPowerRatingRequirement
+ComponentPowerRatingAnalysis = _component_rating_models.ComponentPowerRatingAnalysis
+ConnectorContactCurrentRequirement = (
+    _connector_contact_rating_models.ConnectorContactCurrentRequirement
+)
+ConnectorContactRatingRequirement = (
+    _connector_contact_rating_models.ConnectorContactRatingRequirement
+)
+ConnectorContactRatingAnalysis = _connector_contact_rating_models.ConnectorContactRatingAnalysis
+MosfetVoltageInterval = _mosfet_stress_models.MosfetVoltageInterval
+MosfetOperatingState = _mosfet_stress_models.MosfetOperatingState
+MosfetStressRequirement = _mosfet_stress_models.MosfetStressRequirement
+MosfetStressAnalysis = _mosfet_stress_models.MosfetStressAnalysis
 ComponentPeerPinRuleCoverage = _component_peer_pin_models.ComponentPeerPinRuleCoverage
 ConnectorPartIdPeerPinCoverage = _connector_peer_pin_models.ConnectorPartIdPeerPinCoverage
 ConnectorPeerPinHeuristicCoverage = _connector_peer_pin_models.ConnectorPeerPinHeuristicCoverage
@@ -4809,265 +4827,6 @@ class PinConnectivityAnalysis(StrictModel):
         identifiers = [rule.id for rule in self.rules]
         if len(set(identifiers)) != len(identifiers):
             raise ValueError("Pin relationship IDs must be unique")
-        return self
-
-
-class ComponentVoltageRatingRequirement(StrictModel):
-    """Reviewed voltage rating and operating-stress envelope for one exact part."""
-
-    id: Identifier
-    reference: Identifier
-    expected_symbol: NonEmptyText
-    expected_footprint: NonEmptyText
-    expected_part_id: Identifier
-    pins: Annotated[tuple[Reference, Reference], Field(min_length=2, max_length=2)]
-    nets: Annotated[tuple[NetName, NetName], Field(min_length=2, max_length=2)]
-    rated_working_voltage_v: ElectricalPositive
-    maximum_expected_voltage_v: NonNegativeMeasure
-    maximum_utilization_fraction: Annotated[float, Field(gt=0, le=1, allow_inf_nan=False)]
-    rating_source: NonEmptyText
-    rating_conditions: NonEmptyText
-    stress_basis: NonEmptyText
-
-    @model_validator(mode="after")
-    def exact_component_pin_pair(self) -> ComponentVoltageRatingRequirement:
-        if any(pin.rsplit(".", 1)[0].casefold() != self.reference.casefold() for pin in self.pins):
-            raise ValueError("Component voltage-rating pins must belong to the declared reference")
-        if len({pin.casefold() for pin in self.pins}) != 2:
-            raise ValueError("Component voltage-rating pins must be unique")
-        return self
-
-
-class ComponentVoltageRatingAnalysis(StrictModel):
-    """Project-owned exact-part voltage-rating and stress comparisons."""
-
-    mode: Literal["required"] = "required"
-    basis: NonEmptyText
-    requirements: Annotated[tuple[ComponentVoltageRatingRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_parts(self) -> ComponentVoltageRatingAnalysis:
-        if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("Component voltage-rating requirement IDs must be unique")
-        if len({item.reference.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("Each component may have one voltage-rating requirement")
-        return self
-
-
-class ComponentPowerRatingRequirement(StrictModel):
-    """Reviewed power rating and dissipation envelope for one exact two-pin part."""
-
-    id: Identifier
-    reference: Identifier
-    expected_symbol: NonEmptyText
-    expected_footprint: NonEmptyText
-    expected_part_id: Identifier
-    pins: Annotated[tuple[Reference, Reference], Field(min_length=2, max_length=2)]
-    nets: Annotated[tuple[NetName, NetName], Field(min_length=2, max_length=2)]
-    rated_power_w: ElectricalPositive
-    derated_allowable_power_w: ElectricalPositive
-    maximum_expected_power_w: NonNegativeMeasure
-    maximum_utilization_fraction: Annotated[float, Field(gt=0, le=1, allow_inf_nan=False)]
-    rating_source: NonEmptyText
-    rating_conditions: NonEmptyText
-    derating_basis: NonEmptyText
-    stress_basis: NonEmptyText
-
-    @model_validator(mode="after")
-    def exact_component_pin_pair(self) -> ComponentPowerRatingRequirement:
-        if any(pin.rsplit(".", 1)[0].casefold() != self.reference.casefold() for pin in self.pins):
-            raise ValueError("Component power-rating pins must belong to the declared reference")
-        if len({pin.casefold() for pin in self.pins}) != 2:
-            raise ValueError("Component power-rating pins must be unique")
-        if self.derated_allowable_power_w > self.rated_power_w:
-            raise ValueError("Derated allowable power cannot exceed the source-rated power")
-        return self
-
-
-class ComponentPowerRatingAnalysis(StrictModel):
-    """Project-owned exact-part power-rating and dissipation comparisons."""
-
-    mode: Literal["required"] = "required"
-    basis: NonEmptyText
-    requirements: Annotated[tuple[ComponentPowerRatingRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_parts(self) -> ComponentPowerRatingAnalysis:
-        if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("Component power-rating requirement IDs must be unique")
-        if len({item.reference.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("Each component may have one power-rating requirement")
-        return self
-
-
-class ConnectorContactCurrentRequirement(StrictModel):
-    """One exact connector contact's sourced rating and authored current load."""
-
-    id: Identifier
-    pin_number: NonEmptyText
-    expected_function: NonEmptyText
-    expected_net: NetName
-    rated_current_a: ElectricalPositive
-    derated_allowable_current_a: ElectricalPositive
-    maximum_expected_current_a: NonNegativeMeasure
-    maximum_utilization_fraction: Annotated[float, Field(gt=0, le=1, allow_inf_nan=False)]
-    rating_source: NonEmptyText
-    rating_conditions: NonEmptyText
-    derating_basis: NonEmptyText
-    load_basis: NonEmptyText
-
-    @model_validator(mode="after")
-    def allowable_contact_current_within_rating(self) -> ConnectorContactCurrentRequirement:
-        if self.derated_allowable_current_a > self.rated_current_a:
-            raise ValueError(
-                "Derated allowable current cannot exceed the source-rated contact current"
-            )
-        return self
-
-
-class ConnectorContactRatingRequirement(StrictModel):
-    """Exact native connector identity and one or more authored contact limits."""
-
-    id: Identifier
-    reference: Identifier
-    expected_symbol: NonEmptyText
-    expected_footprint: NonEmptyText
-    expected_part_id: Identifier
-    native_pin_numbers: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
-    contacts: Annotated[tuple[ConnectorContactCurrentRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def exact_connector_pin_inventory(self) -> ConnectorContactRatingRequirement:
-        if len({pin.casefold() for pin in self.native_pin_numbers}) != len(self.native_pin_numbers):
-            raise ValueError("Connector contact rating pin inventory must be unique")
-        if len({contact.id.casefold() for contact in self.contacts}) != len(self.contacts):
-            raise ValueError("Connector contact rating IDs must be unique per connector")
-        contact_pins = [contact.pin_number.casefold() for contact in self.contacts]
-        if len(set(contact_pins)) != len(contact_pins):
-            raise ValueError("A connector pin may have only one contact current requirement")
-        inventory = {pin.casefold() for pin in self.native_pin_numbers}
-        if any(pin not in inventory for pin in contact_pins):
-            raise ValueError("Rated connector contacts must be in the exact native pin inventory")
-        return self
-
-
-class ConnectorContactRatingAnalysis(StrictModel):
-    """Project-owned comparison of per-contact current to reviewed connector ratings."""
-
-    mode: Literal["required"] = "required"
-    basis: NonEmptyText
-    requirements: Annotated[tuple[ConnectorContactRatingRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_connectors(self) -> ConnectorContactRatingAnalysis:
-        if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("Connector contact rating requirement IDs must be unique")
-        if len({item.reference.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("Each connector may have one contact rating requirement")
-        return self
-
-
-class MosfetVoltageInterval(StrictModel):
-    """Authored lower and upper net-potential bounds for one operating state."""
-
-    minimum_v: FiniteMeasure
-    maximum_v: FiniteMeasure
-
-    @model_validator(mode="after")
-    def ordered_bounds(self) -> MosfetVoltageInterval:
-        if self.minimum_v > self.maximum_v:
-            raise ValueError("MOSFET state-potential minimum cannot exceed its maximum")
-        return self
-
-
-class MosfetOperatingState(StrictModel):
-    """One reviewed state and the net potentials supplied for that state."""
-
-    id: Identifier
-    net_potentials: Mapping[NetName, MosfetVoltageInterval] = Field(default_factory=dict)
-
-
-class MosfetStressRequirement(StrictModel):
-    """Exact three-pin MOSFET identity and sourced VDS/VGS limits."""
-
-    id: Identifier
-    reference: Identifier
-    expected_symbol: NonEmptyText
-    expected_footprint: NonEmptyText
-    expected_part_id: Identifier
-    drain_pin: Reference
-    drain_function: NonEmptyText
-    drain_net: NetName
-    gate_pin: Reference
-    gate_function: NonEmptyText
-    gate_net: NetName
-    source_pin: Reference
-    source_function: NonEmptyText
-    source_net: NetName
-    rated_maximum_vds_v: ElectricalPositive
-    rated_maximum_vgs_v: ElectricalPositive
-    maximum_utilization_fraction: Annotated[float, Field(gt=0, le=1, allow_inf_nan=False)]
-    rating_source: NonEmptyText
-    rating_conditions: NonEmptyText
-    stress_basis: NonEmptyText
-
-    @model_validator(mode="after")
-    def exact_three_pin_terminals(self) -> MosfetStressRequirement:
-        terminals = (
-            ("drain", self.drain_pin, self.drain_function, self.drain_net),
-            ("gate", self.gate_pin, self.gate_function, self.gate_net),
-            ("source", self.source_pin, self.source_function, self.source_net),
-        )
-        expected_functions = (
-            ("drain", {"d", "drain"}),
-            ("gate", {"g", "gate"}),
-            ("source", {"s", "source"}),
-        )
-        for (terminal_role, pin, function, _), (role, accepted) in zip(
-            terminals, expected_functions, strict=True
-        ):
-            if function.casefold() not in accepted:
-                raise ValueError(
-                    f"MOSFET {role} function must be D/DRAIN, G/GATE, or S/SOURCE as appropriate"
-                )
-            if pin.count(".") != 1:
-                raise ValueError("MOSFET terminal pins must use an exact reference.pin number")
-            if pin.rsplit(".", maxsplit=1)[0].casefold() != self.reference.casefold():
-                raise ValueError(
-                    f"MOSFET {terminal_role} pin must belong to the declared reference"
-                )
-        if len({terminal[1].casefold() for terminal in terminals}) != 3:
-            raise ValueError("MOSFET terminal pins must be distinct")
-        if len({terminal[3].casefold() for terminal in terminals}) != 3:
-            raise ValueError("MOSFET drain, gate, and source nets must be distinct")
-        return self
-
-
-class MosfetStressAnalysis(StrictModel):
-    """Project-authored, state-aware stress bounds for exact three-pin MOSFETs."""
-
-    mode: Literal["required"] = "required"
-    basis: NonEmptyText
-    required_states: Annotated[tuple[Identifier, ...], Field(min_length=1)]
-    states: tuple[MosfetOperatingState, ...] = ()
-    requirements: Annotated[tuple[MosfetStressRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_states_and_parts(self) -> MosfetStressAnalysis:
-        required = {state.casefold() for state in self.required_states}
-        state_ids = {state.id.casefold() for state in self.states}
-        requirement_ids = {item.id.casefold() for item in self.requirements}
-        references = {item.reference.casefold() for item in self.requirements}
-        if len(required) != len(self.required_states):
-            raise ValueError("Required MOSFET operating-state IDs must be unique")
-        if len(state_ids) != len(self.states):
-            raise ValueError("MOSFET operating-state IDs must be unique")
-        if not state_ids <= required:
-            raise ValueError("MOSFET states may only define declared required states")
-        if len(requirement_ids) != len(self.requirements):
-            raise ValueError("MOSFET stress requirement IDs must be unique")
-        if len(references) != len(self.requirements):
-            raise ValueError("Each MOSFET reference may have one stress requirement")
         return self
 
 

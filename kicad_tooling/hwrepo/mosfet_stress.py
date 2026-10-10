@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from .models import (
     ElectricalCheck,
+    NetlistContract,
+)
+from .mosfet_stress_models import (
     MosfetOperatingState,
     MosfetStressAnalysis,
     MosfetStressRequirement,
     MosfetVoltageInterval,
-    NetlistContract,
 )
 
 

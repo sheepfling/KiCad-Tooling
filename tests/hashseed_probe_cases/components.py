@@ -7,9 +7,9 @@ import hashlib
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
-    MosfetVoltageInterval,
 )
 from kicad_tooling.hwrepo.mosfet_stress import mosfet_stress_checks
+from kicad_tooling.hwrepo.mosfet_stress_models import MosfetVoltageInterval
 from tests.design_lint_fixtures import (
     coach,
 )

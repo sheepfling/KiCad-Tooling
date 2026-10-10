@@ -105,6 +105,12 @@ intended requirement.
   keeps identity-compatible exports. The protocol architecture suite checks
   ownership, aliases, internal imports, and owner sizes. This extraction
   reduces `hwrepo/models.py` from 7,308 to 6,584 lines.
+  Component voltage/power contracts, connector contact-current contracts, and
+  MOSFET operating-state stress contracts now live in three focused rating
+  owners. Electrical and hosted-fixture services import those owners directly;
+  architecture tests check their size, import boundaries, and compatibility
+  identities. This extraction reduced `hwrepo/models.py` from 6,584 to 6,343
+  lines without changing the contract schemas.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

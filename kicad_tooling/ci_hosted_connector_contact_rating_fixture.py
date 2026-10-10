@@ -15,11 +15,13 @@ if TYPE_CHECKING:
     from .ci_hosted import HostedLog
 
 
-from .hwrepo.connector_contact_ratings import connector_contact_rating_checks
-from .hwrepo.models import (
+from .hwrepo.connector_contact_rating_models import (
     ConnectorContactCurrentRequirement,
     ConnectorContactRatingAnalysis,
     ConnectorContactRatingRequirement,
+)
+from .hwrepo.connector_contact_ratings import connector_contact_rating_checks
+from .hwrepo.models import (
     NetlistContract,
 )
 

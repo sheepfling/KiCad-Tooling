@@ -9,7 +9,12 @@ from .can_termination_contract import (
 )
 from .can_termination_models import CanTerminationAnalysis
 from .component_power_ratings import component_power_rating_checks
+from .component_rating_models import (
+    ComponentPowerRatingAnalysis,
+    ComponentVoltageRatingAnalysis,
+)
 from .component_voltage_ratings import component_voltage_rating_checks
+from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contracts import read_model, repo_path
 from .control_input_checks import control_input_checks
@@ -33,16 +38,12 @@ from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     AnalysisNotApplicable,
     CommandEvidence,
-    ComponentPowerRatingAnalysis,
-    ComponentVoltageRatingAnalysis,
-    ConnectorContactRatingAnalysis,
     ControlInputsAnalysis,
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     ElectricalCheck,
     EvidenceFile,
     GroundingAnalysis,
-    MosfetStressAnalysis,
     PcbAccessAnalysis,
     PcbAccessProbeRequestSet,
     PcbReturnPathsAnalysis,
@@ -56,6 +57,7 @@ from .models import (
     UsbCAnalysis,
 )
 from .mosfet_stress import mosfet_stress_checks
+from .mosfet_stress_models import MosfetStressAnalysis
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_return_path_capture import expected_probe_sha256, native_pcb_command_matches
 from .pcb_return_path_checks import pcb_return_path_checks

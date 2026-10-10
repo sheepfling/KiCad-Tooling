@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from .models import ConnectorContactRatingAnalysis, ElectricalCheck, NetlistContract
+from .connector_contact_rating_models import ConnectorContactRatingAnalysis
+from .models import ElectricalCheck, NetlistContract
 
 
 def connector_contact_rating_checks(

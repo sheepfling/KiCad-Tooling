@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from .models import ComponentPowerRatingAnalysis, ElectricalCheck, NetlistContract
+from .component_rating_models import ComponentPowerRatingAnalysis
+from .models import ElectricalCheck, NetlistContract
 
 
 def component_power_rating_checks(

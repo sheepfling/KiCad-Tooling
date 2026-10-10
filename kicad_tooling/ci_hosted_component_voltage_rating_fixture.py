@@ -15,10 +15,12 @@ if TYPE_CHECKING:
     from .ci_hosted import HostedLog
 
 
-from .hwrepo.component_voltage_ratings import component_voltage_rating_checks
-from .hwrepo.models import (
+from .hwrepo.component_rating_models import (
     ComponentVoltageRatingAnalysis,
     ComponentVoltageRatingRequirement,
+)
+from .hwrepo.component_voltage_ratings import component_voltage_rating_checks
+from .hwrepo.models import (
     NetlistContract,
 )
 

@@ -16,13 +16,15 @@ if TYPE_CHECKING:
 
 
 from .hwrepo.models import (
+    NetlistContract,
+)
+from .hwrepo.mosfet_stress import mosfet_stress_checks
+from .hwrepo.mosfet_stress_models import (
     MosfetOperatingState,
     MosfetStressAnalysis,
     MosfetStressRequirement,
     MosfetVoltageInterval,
-    NetlistContract,
 )
-from .hwrepo.mosfet_stress import mosfet_stress_checks
 
 
 def verify_mosfet_stress_fixture(context: ComponentRatingFixtureContext, log: HostedLog) -> None:

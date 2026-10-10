@@ -16,9 +16,11 @@ if TYPE_CHECKING:
 
 
 from .hwrepo.component_power_ratings import component_power_rating_checks
-from .hwrepo.models import (
+from .hwrepo.component_rating_models import (
     ComponentPowerRatingAnalysis,
     ComponentPowerRatingRequirement,
+)
+from .hwrepo.models import (
     NetlistContract,
 )
 
