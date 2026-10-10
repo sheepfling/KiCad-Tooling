@@ -17,12 +17,12 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         PcbAccessAnalysis,
-        PcbAccessProbeObservation,
         RequiredTestAccess,
         TestAccessAnalysis,
         TestAccessEndpointRequirement,
         TestAccessProbeEnvelope,
     )
+    from .hwrepo.pcb_connectivity_observations import PcbAccessProbeObservation
     from .hwrepo.pcb_return_path_capture import (
         capture_native_pcb_connectivity,
         expected_probe_sha256,

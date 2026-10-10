@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections import deque
 from math import isqrt
 
-from .models import (
-    PcbConnectivitySnapshot,
+from .pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
     PcbTrackObservation,
 )
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopEdge,
     PcbSwitchingLoopRequirement,

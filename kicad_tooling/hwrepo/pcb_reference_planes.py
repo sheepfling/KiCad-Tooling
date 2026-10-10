@@ -6,11 +6,11 @@ from fractions import Fraction
 from itertools import pairwise
 from math import isqrt
 
-from .models import (
-    PcbConnectivitySnapshot,
+from .pcb_connectivity_observations import (
     PcbViaObservation,
     PcbZoneFilledIslandObservation,
 )
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_reference_plane_models import (
     PcbReferencePlaneCoverageEntry,
     PcbReferencePlaneMap,

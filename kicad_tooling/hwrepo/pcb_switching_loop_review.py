@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from .models import (
-    PcbConnectivitySnapshot,
-)
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_switching_loop_geometry import loop_area_twice_nm2
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageEntry,

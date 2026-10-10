@@ -126,7 +126,7 @@ SHARED_MODEL_PRIMITIVE_NAMES = (
     "NonNegativeCapacitancePf",
 )
 # Lower this baseline alongside each registry extraction; never raise it.
-SHARED_MODEL_REGISTRY_MAX_LINES = 8_732
+SHARED_MODEL_REGISTRY_MAX_LINES = 8_195
 
 
 def _top_level_definitions(path: Path) -> set[str]:

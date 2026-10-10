@@ -107,6 +107,13 @@ intended requirement.
   import from that owner; the architecture suite checks its size, compatibility
   exports, and import boundary. Together these reference-plane and switching-
   loop extractions reduced `models.py` from 9,225 to 8,732 lines.
+  Native PCB observation records and their versioned connectivity snapshot now
+  live in `pcb_connectivity_observations.py` and
+  `pcb_connectivity_snapshot.py`. PCB and hosted-evidence services import those
+  owners directly; `models.py` keeps identity-preserving compatibility exports.
+  A dedicated architecture suite checks owner size, internal imports, and
+  compatibility identity. The extraction reduces the shared registry from
+  8,732 to 8,195 lines while keeping each owner below 500 lines.
   Synthetic RF antenna test builders live in `tests/pcb_rf_antenna_support.py`;
   the focused regression suite is below 500 lines and no longer needs a legacy
   size ceiling.

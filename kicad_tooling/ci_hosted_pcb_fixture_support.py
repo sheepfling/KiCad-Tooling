@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .hwrepo.models import PcbConnectivitySnapshot, ProjectConfig
+from .hwrepo.models import ProjectConfig
+from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 if TYPE_CHECKING:
     from .ci_hosted import HostedLog

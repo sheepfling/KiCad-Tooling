@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from typing import Literal
 
-from .models import (
-    PcbConnectivitySnapshot,
-    PcbPadConnectivityObservation,
-)
+from .pcb_connectivity_observations import PcbPadConnectivityObservation
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_switching_loop_geometry import filled_island_area_twice_nm2
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopEdge,

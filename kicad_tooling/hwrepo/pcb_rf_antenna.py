@@ -8,12 +8,12 @@ from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from typing import TypeVar
 
-from .models import (
-    NetlistContract,
-    PcbConnectivitySnapshot,
+from .models import NetlistContract
+from .pcb_connectivity_observations import (
     PcbFootprintPlacementObservation,
     PcbRuleAreaPolygonObservation,
 )
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_rf_antenna_models import (
     PcbRfModuleAntennaCoverageEntry,
     PcbRfModuleAntennaMap,

@@ -10,12 +10,8 @@ from pathlib import Path
 from .contract_coach import pinned_image, run_command
 from .contracts import repo_path, write_model
 from .evidence import digest
-from .models import (
-    CommandEvidence,
-    PcbAccessProbeRequestSet,
-    PcbConnectivitySnapshot,
-    ProjectConfig,
-)
+from .models import CommandEvidence, PcbAccessProbeRequestSet, ProjectConfig
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 NATIVE_PROBE_SOURCE_PARTS = (
     "native_pcb_probe.py.in",

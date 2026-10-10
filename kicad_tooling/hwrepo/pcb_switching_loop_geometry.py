@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import (
+from .pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
     PcbZoneFilledIslandObservation,
 )

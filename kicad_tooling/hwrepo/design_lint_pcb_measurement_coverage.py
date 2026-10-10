@@ -15,11 +15,11 @@ from .design_lint_pcb_coverage_common import (
 )
 from .models import (
     Digest,
-    PcbConnectivitySnapshot,
     PcbDecouplingMap,
     PcbProtectionPathCoverageReport,
     PcbProtectionPathMap,
 )
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_decoupling import pcb_decoupling_entries
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_protection_path import pcb_protection_path_entries

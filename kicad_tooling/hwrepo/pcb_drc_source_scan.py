@@ -7,12 +7,8 @@ from pathlib import Path
 from typing import Literal
 
 from .evidence import digest
-from .models import (
-    CommandEvidence,
-    NetlistContract,
-    PcbConnectivitySnapshot,
-    ProjectConfig,
-)
+from .models import CommandEvidence, NetlistContract, ProjectConfig
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageEntry,
     PcbDifferentialPairRuleCoverageReport,

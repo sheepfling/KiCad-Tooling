@@ -45,7 +45,6 @@ from .models import (
     MosfetStressAnalysis,
     PcbAccessAnalysis,
     PcbAccessProbeRequestSet,
-    PcbConnectivitySnapshot,
     PcbReturnPathsAnalysis,
     PinConnectivityAnalysis,
     PowerConnectivityAnalysis,
@@ -60,6 +59,7 @@ from .models import (
     UsbCAnalysis,
 )
 from .mosfet_stress import mosfet_stress_checks
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_return_path_capture import expected_probe_sha256, native_pcb_command_matches
 from .pcb_return_path_checks import pcb_return_path_checks
 from .power_connectivity import power_connectivity_checks

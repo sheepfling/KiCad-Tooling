@@ -200,9 +200,7 @@ def pcb_reference_plane_narrow_void_fixture_lane(
     """Ensure exact native centerline geometry catches a void between coarse samples."""
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        PcbConnectivitySnapshot,
-    )
+    from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
     from .hwrepo.pcb_reference_plane_models import (
         PcbReferencePlaneMap,
         PcbReferencePlaneRequirement,

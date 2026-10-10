@@ -15,14 +15,14 @@ from .models import (
     ElectricalCheck,
     NetlistContract,
     PcbAccessAnalysis,
-    PcbAccessProbeObservation,
     PcbAccessProbeRequest,
     PcbAccessProbeRequestSet,
-    PcbConnectivitySnapshot,
     RequiredTestAccess,
     TestAccessAnalysis,
     TestAccessEndpointRequirement,
 )
+from .pcb_connectivity_observations import PcbAccessProbeObservation
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 
 @dataclass(frozen=True)

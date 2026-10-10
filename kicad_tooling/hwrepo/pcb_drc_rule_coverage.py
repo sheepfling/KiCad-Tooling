@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from fnmatch import fnmatchcase
 
-from .models import (
-    NetlistContract,
-    PcbConnectivitySnapshot,
-)
+from .models import NetlistContract
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageEntry,
     PcbDifferentialPairRuleMap,

@@ -6,12 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, TypeAlias
 
-from .hwrepo.models import (
-    ElectricalCheck,
-    PcbConnectivitySnapshot,
-    PcbPadConnectivityObservation,
-    ProjectConfig,
-)
+from .hwrepo.models import ElectricalCheck, ProjectConfig
+from .hwrepo.pcb_connectivity_observations import PcbPadConnectivityObservation
+from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 
 class PcbReturnLog(Protocol):

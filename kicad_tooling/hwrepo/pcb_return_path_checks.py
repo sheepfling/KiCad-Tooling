@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 from .contract_coach import pinned_image
-from .models import (
-    ElectricalCheck,
-    PcbConnectivitySnapshot,
+from .models import ElectricalCheck, PcbReturnPathsAnalysis
+from .pcb_connectivity_observations import (
     PcbNetTieObservation,
     PcbPadConnectivityObservation,
-    PcbReturnPathsAnalysis,
     PcbViaObservation,
 )
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 
 def _canonical_groups(groups: tuple[tuple[str, ...], ...]) -> tuple[tuple[str, ...], ...]:
