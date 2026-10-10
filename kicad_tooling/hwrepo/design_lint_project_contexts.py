@@ -13,14 +13,16 @@ from .evidence import digest
 from .i2c_pullup_heuristics import (
     i2c_pullup_heuristic_coverage as resolve_i2c_pullup_heuristic_coverage,
 )
+from .i2c_pullup_models import (
+    I2cPullupAnalysis,
+    I2cPullupHeuristicCoverage,
+)
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
     ControlInputBiasHeuristicCoverage,
     ControlInputsAnalysis,
     DigitalPeerVoltageAnalysis,
-    I2cPullupAnalysis,
-    I2cPullupHeuristicCoverage,
     NetlistContract,
     SerialPeerAnalysis,
     SpiAnalysis,

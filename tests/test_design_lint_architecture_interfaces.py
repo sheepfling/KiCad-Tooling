@@ -12,6 +12,9 @@ from kicad_tooling.hwrepo import (
     design_lint_peer_candidates,
     digital_peer_voltage_models,
     digital_peer_voltage_types,
+    i2c_address_models,
+    i2c_pullup_models,
+    model_primitives,
     serial_peer_reference_models,
     usb_peer_reference_models,
 )
@@ -47,6 +50,32 @@ INTERFACE_COVERAGE_MODEL_OWNERS = {
         "UsbPeerDataPathCoverage",
         "UsbPeerReferencePathCoverageEntry",
         "UsbPeerReferenceCoverageReport",
+    ),
+}
+
+I2C_MODEL_OWNERS = {
+    "i2c_address_models.py": (
+        "I2cAddressBitRequirement",
+        "I2cResponderAddressRequirement",
+        "I2cAddressSegmentRequirement",
+        "I2cAddressMap",
+        "I2cAddressBitEvidence",
+        "I2cResponderAddressCoverageEntry",
+        "I2cAddressCoverageReport",
+    ),
+    "i2c_pullup_models.py": (
+        "I2cPullupArrayChannelRequirement",
+        "I2cPullupArrayRequirement",
+        "I2cPullupInputVoltageLimit",
+        "I2cPullupVoltageCompatibilityRequirement",
+        "I2cPullupElectricalWindow",
+        "I2cPullupLineRequirement",
+        "I2cPullupSeriesResistorRequirement",
+        "I2cPullupSeriesPathRequirement",
+        "I2cPullupBusRequirement",
+        "I2cPullupAnalysis",
+        "I2cPullupHeuristicEntry",
+        "I2cPullupHeuristicCoverage",
     ),
 }
 
@@ -130,6 +159,55 @@ def test_interface_coverage_models_live_in_theme_owners() -> None:
         owner_module = owners[filename]
         for name in model_names:
             assert getattr(shared_models, name) is getattr(owner_module, name)
+
+
+@pytest.mark.interface_lint
+def test_i2c_models_live_in_theme_owners_and_services_import_them_directly() -> None:
+    owners = {
+        "i2c_address_models.py": i2c_address_models,
+        "i2c_pullup_models.py": i2c_pullup_models,
+    }
+    model_names = {name for names in I2C_MODEL_OWNERS.values() for name in names}
+    registry = HWREPO / "models.py"
+    registry_tree = ast.parse(registry.read_text(encoding="utf-8"), filename=registry.name)
+    registry_definitions = {
+        node.name for node in registry_tree.body if isinstance(node, ast.ClassDef)
+    }
+    legacy_imports: list[str] = []
+
+    for filename, names in I2C_MODEL_OWNERS.items():
+        owner = HWREPO / filename
+        assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+        owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=filename)
+        owner_definitions = {
+            node.name for node in owner_tree.body if isinstance(node, ast.ClassDef)
+        }
+        assert set(names) <= owner_definitions
+        assert not (set(names) & registry_definitions)
+        owner_module = owners[filename]
+        for name in names:
+            assert getattr(shared_models, name) is getattr(owner_module, name)
+
+    for source in sorted(HWREPO.glob("*.py")):
+        if source.name == "models.py":
+            continue
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=source.name)
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module is not None
+                and (node.module == "models" or node.module.endswith(".models"))
+            ):
+                legacy_imports.extend(
+                    f"{source.name}:{alias.name}"
+                    for alias in node.names
+                    if alias.name in model_names
+                )
+
+    assert not legacy_imports, f"I2C services should use theme-owned models: {legacy_imports}"
+    assert shared_models.ElectricalPositive is model_primitives.ElectricalPositive
+    assert shared_models.FiniteMeasure is model_primitives.FiniteMeasure
+    assert shared_models.NonNegativeMeasure is model_primitives.NonNegativeMeasure
 
 
 def test_internal_interface_coverage_services_import_theme_owners() -> None:

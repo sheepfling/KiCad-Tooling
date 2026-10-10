@@ -27,6 +27,7 @@ from .evidence import digest, evidence_path, verify_source
 from .i2c_pullup_contract import (
     i2c_pullup_checks,
 )
+from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     AnalysisNotApplicable,
     CanTerminationAnalysis,
@@ -41,7 +42,6 @@ from .models import (
     ElectricalCheck,
     EvidenceFile,
     GroundingAnalysis,
-    I2cPullupAnalysis,
     MosfetStressAnalysis,
     PcbAccessAnalysis,
     PcbAccessProbeRequestSet,

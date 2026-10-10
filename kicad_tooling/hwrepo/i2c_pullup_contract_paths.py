@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from .i2c_pullup_models import (
+    I2cPullupArrayRequirement,
+    I2cPullupSeriesPathRequirement,
+)
 from .models import (
     ComponentContract,
     ElectricalCheck,
-    I2cPullupArrayRequirement,
-    I2cPullupSeriesPathRequirement,
     NetlistContract,
 )
 from .resistor_paths import DirectResistor

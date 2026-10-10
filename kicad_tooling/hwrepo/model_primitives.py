@@ -6,6 +6,10 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+FiniteMeasure = Annotated[float, Field(allow_inf_nan=False)]
+NonNegativeMeasure = Annotated[float, Field(ge=0, allow_inf_nan=False)]
+ElectricalPositive = Annotated[float, Field(gt=0, allow_inf_nan=False)]
+
 Identifier = Annotated[
     str,
     StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*$", min_length=1),

@@ -12,6 +12,8 @@ from .design_lint_evaluation_report_inputs import (
 from .design_lint_evaluation_types import DesignLintEvaluationRequest
 from .design_lint_finding_disposition import resolve_finding_dispositions
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
+from .i2c_address_models import I2cAddressCoverageReport
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
@@ -21,8 +23,6 @@ from .models import (
     DesignLintPolicy,
     DesignLintReport,
     ExternalProtectionCoverageReport,
-    I2cAddressCoverageReport,
-    I2cPullupHeuristicCoverage,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
     RcFilterCoverageReport,

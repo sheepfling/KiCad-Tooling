@@ -31,10 +31,10 @@ from .design_lint_schematic_coverage import (
     schematic_geometry_coverage,
 )
 from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     DesignLintReport,
     ExternalProtectionCoverageReport,
-    I2cPullupHeuristicCoverage,
     SchematicGeometryCoverage,
     SchematicGeometryRuleId,
 )

@@ -10,11 +10,13 @@ from .i2c_pullup_contract_paths import (
     i2c_array_component_issues,
     i2c_series_path_check,
 )
-from .models import (
-    ElectricalCheck,
+from .i2c_pullup_models import (
     I2cPullupAnalysis,
     I2cPullupLineRequirement,
     I2cPullupVoltageCompatibilityRequirement,
+)
+from .models import (
+    ElectricalCheck,
     NetlistContract,
 )
 from .resistor_paths import direct_resistors

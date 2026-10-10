@@ -30,6 +30,11 @@ from .design_lint_stm32_candidates import stm32_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_peer_candidates import usb_data_path_map_sha256
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
+from .i2c_address_models import (
+    I2cAddressCoverageReport,
+    I2cAddressMap,
+)
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ComponentRoleMap,
     ConnectorCoverageReport,
@@ -37,9 +42,6 @@ from .models import (
     ControlInputBiasHeuristicCoverage,
     CrystalNetworkCoverageReport,
     ExternalProtectionCoverageReport,
-    I2cAddressCoverageReport,
-    I2cAddressMap,
-    I2cPullupHeuristicCoverage,
     NetlistContract,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,

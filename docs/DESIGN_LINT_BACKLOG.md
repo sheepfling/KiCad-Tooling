@@ -77,6 +77,13 @@ intended requirement.
   established output order without building findings. Architecture tests keep
   both coordinators small and verify that they delegate rather than construct
   `Candidate` records.
+  I2C address requirements and coverage now live in
+  `i2c_address_models.py`; pull-up requirements and coverage live in
+  `i2c_pullup_models.py`. Internal services import these owners directly, and
+  the shared registry retains identity-compatible re-exports. Architecture
+  tests guard owner size, import boundaries, and export identity. This reduces
+  `hwrepo/models.py` from 8,195 to 7,758 lines; shared finite/electrical measure
+  aliases now have their canonical owner in `model_primitives.py`.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

@@ -5,14 +5,14 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .models import (
+from .i2c_address_models import (
     I2cAddressBitEvidence,
     I2cAddressCoverageReport,
     I2cAddressMap,
     I2cResponderAddressCoverageEntry,
     I2cResponderAddressRequirement,
-    NetlistContract,
 )
+from .models import NetlistContract
 
 _I2C_ADDRESS_DEVICE_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
 _I2C_ADDRESS_PIN_ROLES = {

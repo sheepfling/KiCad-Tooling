@@ -16,12 +16,12 @@ from .design_lint_signal_pair_candidates import (
 from .design_lint_spi_candidates import spi_bias_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
-from .models import (
+from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
-    I2cPullupHeuristicCoverage,
-    NetlistContract,
 )
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
+from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 
 

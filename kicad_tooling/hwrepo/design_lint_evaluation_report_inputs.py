@@ -8,10 +8,10 @@ from .design_lint_evaluation_types import (
     DesignLintEvaluationReportInput,
     DesignLintFindingDisposition,
 )
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ControlInputBiasHeuristicCoverage,
     DesignLintReport,
-    I2cPullupHeuristicCoverage,
 )
 
 

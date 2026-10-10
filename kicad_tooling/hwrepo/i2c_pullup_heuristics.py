@@ -7,13 +7,13 @@ from typing import Literal
 
 from .bus_signal_roles import i2c_signal_role
 from .i2c_pullup_contract import i2c_pullup_checks
-from .models import (
+from .i2c_pullup_models import (
     I2cPullupAnalysis,
     I2cPullupHeuristicCoverage,
     I2cPullupHeuristicEntry,
     I2cPullupLineRequirement,
-    NetlistContract,
 )
+from .models import NetlistContract
 from .resistor_paths import (
     positive_power_net_families,
     visible_resistor_pullups,

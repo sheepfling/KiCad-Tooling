@@ -5,19 +5,19 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from .design_lint_types import Candidate
+from .i2c_address_models import (
+    I2cAddressCoverageReport,
+    I2cAddressMap,
+    I2cResponderAddressCoverageEntry,
+)
 from .i2c_addressing import format_i2c_address, unmapped_i2c_responders
 from .i2c_pullup_heuristics import (
     i2c_buses_with_low_equivalent_pullup_resistance,
     i2c_buses_with_multiple_pullup_rail_families,
     i2c_buses_without_local_pullups,
 )
-from .models import (
-    I2cAddressCoverageReport,
-    I2cAddressMap,
-    I2cPullupHeuristicCoverage,
-    I2cResponderAddressCoverageEntry,
-    NetlistContract,
-)
+from .i2c_pullup_models import I2cPullupHeuristicCoverage
+from .models import NetlistContract
 
 
 def _i2c_address_evidence(

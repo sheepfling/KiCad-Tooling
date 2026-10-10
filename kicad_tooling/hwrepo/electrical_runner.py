@@ -35,6 +35,7 @@ from .evidence import digest, source_state
 from .i2c_pullup_contract import (
     i2c_pullup_checks,
 )
+from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
@@ -49,7 +50,6 @@ from .models import (
     ElectricalCheck,
     ElectricalSuiteReport,
     GroundingAnalysis,
-    I2cPullupAnalysis,
     MosfetStressAnalysis,
     PcbAccessAnalysis,
     PcbReturnPathsAnalysis,

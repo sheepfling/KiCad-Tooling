@@ -297,11 +297,11 @@ def verify_native(
         from .i2c_pullup_contract import (
             i2c_pullup_checks,
         )
+        from .i2c_pullup_models import I2cPullupAnalysis
         from .models import (
             AnalysisPending,
             CanTerminationAnalysis,
             ControlInputsAnalysis,
-            I2cPullupAnalysis,
             PcbAccessAnalysis,
             PowerConnectivityAnalysis,
             Rs485Analysis,
