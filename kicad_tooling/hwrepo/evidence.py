@@ -292,6 +292,7 @@ def verify_native(
         from .can_termination_contract import (
             can_termination_checks,
         )
+        from .can_termination_models import CanTerminationAnalysis
         from .control_input_checks import control_input_checks
         from .electrical import grounding_checks, load_analysis
         from .i2c_pullup_contract import (
@@ -300,7 +301,6 @@ def verify_native(
         from .i2c_pullup_models import I2cPullupAnalysis
         from .models import (
             AnalysisPending,
-            CanTerminationAnalysis,
             ControlInputsAnalysis,
             PcbAccessAnalysis,
             PowerConnectivityAnalysis,

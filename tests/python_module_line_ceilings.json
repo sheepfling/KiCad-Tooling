@@ -15,7 +15,7 @@
     "kicad_tooling/hwrepo/mcp_workflow.py": 608,
     "kicad_tooling/hwrepo/model_inventory.py": 513,
     "kicad_tooling/hwrepo/model_population.py": 620,
-    "kicad_tooling/hwrepo/models.py": 7758,
+    "kicad_tooling/hwrepo/models.py": 7583,
     "kicad_tooling/hwrepo/part_cad.py": 660,
     "kicad_tooling/hwrepo/part_picker.py": 623,
     "kicad_tooling/hwrepo/parts_assistant.py": 974,

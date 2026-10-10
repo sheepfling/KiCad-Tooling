@@ -7,6 +7,7 @@ from pathlib import Path
 from .can_termination_contract import (
     can_termination_checks,
 )
+from .can_termination_models import CanTerminationAnalysis
 from .component_power_ratings import component_power_rating_checks
 from .component_voltage_ratings import component_voltage_rating_checks
 from .connector_contact_ratings import connector_contact_rating_checks
@@ -30,7 +31,6 @@ from .i2c_pullup_contract import (
 from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     AnalysisNotApplicable,
-    CanTerminationAnalysis,
     CommandEvidence,
     ComponentPowerRatingAnalysis,
     ComponentVoltageRatingAnalysis,

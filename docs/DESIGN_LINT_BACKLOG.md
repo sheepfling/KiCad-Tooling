@@ -84,6 +84,12 @@ intended requirement.
   tests guard owner size, import boundaries, and export identity. This reduces
   `hwrepo/models.py` from 8,195 to 7,758 lines; shared finite/electrical measure
   aliases now have their canonical owner in `model_primitives.py`.
+  CAN termination requirements now live in `can_termination_models.py`; the
+  contract, evidence, and execution services import that owner directly while
+  the shared registry retains identity-compatible exports. The protocol-model
+  architecture suite covers CAN and I2C ownership without growing the
+  interface-boundary suite past its review limit. This extraction reduces
+  `hwrepo/models.py` from 7,758 to 7,583 lines.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from .crystal_networks import parse_capacitance_pf
-from .models import (
+from .can_termination_models import (
     CanTerminationAnalysis,
     CanTerminationMidpointCapacitorRequirement,
-    ElectricalCheck,
-    NetlistContract,
 )
+from .crystal_networks import parse_capacitance_pf
+from .models import ElectricalCheck, NetlistContract
 from .resistor_paths import (
     RESISTOR_REFERENCE_PATTERN,
     direct_resistors,
