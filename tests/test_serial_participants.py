@@ -8,198 +8,32 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.design_lint import _serial_peer_roster_context, evaluate
+from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_project_contexts import serial_peer_roster_context
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     AnalysisPending,
-    ComponentContract,
     ComponentIdentity,
-    ContractCoachReport,
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
     ElectricalAnalysisContract,
     IgnoredChecks,
-    NetlistContract,
     ProjectConfig,
     ProjectKind,
     SchematicValidationContract,
-    SerialDirectPeerRequirement,
-    SerialEndpointRequirement,
     SerialPeerAnalysis,
-    SerialPeerLinkRequirement,
-    SerialPinNetRequirement,
 )
 from kicad_tooling.hwrepo.serial_participants import (
     SerialPeerRosterContext,
     unmapped_serial_peers,
 )
+from tests.serial_participant_support import coach, serial_netlist, serial_peers
 
-_NETLIST_SHA256 = "a" * 64
-
-
-def serial_netlist(*, dnp: tuple[str, ...] = ()) -> NetlistContract:
-    components = {
-        reference: ComponentContract(value=f"Synthetic {reference}", footprint="Synthetic:Header")
-        for reference in ("J1", "J2", "J3", "J4", "U1")
-    }
-    functions = {
-        "J1.1": "TX",
-        "J1.2": "RX",
-        "J2.1": "TXD",
-        "J2.2": "RXD",
-        "J3.1": "UART_TXD",
-        "J3.2": "UART_RXD",
-        "J4.1": "TX",
-        "J4.2": "RX",
-        "U1.1": "USART1_TX",
-        "U1.2": "USART1_RX",
-        "U1.3": "UART2_TXD",
-        "U1.4": "UART2_RXD",
-        "U1.5": "TX+",
-        "U1.6": "RX-",
-    }
-    nets = {
-        "SERIAL_A_TX": ("J1.1", "J2.2"),
-        "SERIAL_A_RX": ("J1.2", "J2.1"),
-        "SERIAL_B_TX": ("J3.1",),
-        "SERIAL_B_RX": ("J3.2",),
-        "J4_TX": ("J4.1",),
-        "J4_RX": ("J4.2",),
-        "UART1_TX": ("U1.1",),
-        "UART1_RX": ("U1.2",),
-        "UART2_TX": ("U1.3",),
-        "UART2_RX": ("U1.4",),
-        "DIFF_TX_P": ("U1.5",),
-        "DIFF_RX_N": ("U1.6",),
-    }
-    return NetlistContract(
-        components=components,
-        nets=nets,
-        dnp_components=dnp,
-        component_symbols={reference: f"Synthetic:{reference}" for reference in components},
-        pin_functions=functions,
-        component_pin_numbers={
-            reference: tuple(
-                pin.rsplit(".", 1)[1] for pin in functions if pin.startswith(f"{reference}.")
-            )
-            for reference in components
-        },
-    )
-
-
-def alternate_function_serial_netlist(*, dnp: tuple[str, ...] = ()) -> NetlistContract:
-    """Use explicit UART net labels with MCU package-pin functions and generic connector pins."""
-    components = {
-        "U1": ComponentContract(value="Synthetic MCU", footprint="Synthetic:MCU"),
-        "J5": ComponentContract(value="Synthetic serial header", footprint="Synthetic:Header"),
-    }
-    return NetlistContract(
-        components=components,
-        nets={
-            "UART_TX": ("J5.1", "U1.1"),
-            "UART_RX": ("J5.2", "U1.2"),
-            "GND": ("J5.3", "U1.3"),
-        },
-        dnp_components=dnp,
-        component_symbols={"U1": "Synthetic:GPIO_MCU", "J5": "Synthetic:GenericHeader"},
-        pin_functions={
-            "U1.1": "PA2",
-            "U1.2": "PA3",
-            "U1.3": "VSS",
-            "J5.1": "Pin_1",
-            "J5.2": "Pin_2",
-            "J5.3": "Pin_3",
-        },
-        pin_electrical_types={
-            "U1.1": "bidirectional",
-            "U1.2": "bidirectional",
-            "U1.3": "power_in",
-            "J5.1": "passive",
-            "J5.2": "passive",
-            "J5.3": "passive",
-        },
-        component_pin_numbers={"U1": ("1", "2", "3"), "J5": ("1", "2", "3")},
-    )
-
-
-def endpoint(
-    reference: str,
-    *,
-    tx_pin: str,
-    tx_net: str,
-    rx_pin: str,
-    rx_net: str,
-) -> SerialEndpointRequirement:
-    return SerialEndpointRequirement(
-        id=reference,
-        reference=reference,
-        symbol=f"Synthetic:{reference}",
-        footprint="Synthetic:Header",
-        logic_domain="3V3",
-        tx=SerialPinNetRequirement(pin=tx_pin, net=tx_net),
-        rx=SerialPinNetRequirement(pin=rx_pin, net=rx_net),
-    )
-
-
-def serial_peers() -> SerialPeerAnalysis:
-    left = endpoint("J1", tx_pin="J1.1", tx_net="SERIAL_A_TX", rx_pin="J1.2", rx_net="SERIAL_A_RX")
-    right = endpoint("J2", tx_pin="J2.1", tx_net="SERIAL_A_RX", rx_pin="J2.2", rx_net="SERIAL_A_TX")
-    return SerialPeerAnalysis(
-        basis="Synthetic reviewed logic-level UART peer map",
-        links=(
-            SerialPeerLinkRequirement(
-                id="main-console",
-                basis="Synthetic paired connector endpoints",
-                endpoint=left,
-                peer=SerialDirectPeerRequirement(mode="direct", endpoint=right),
-                reference_policy="not_applicable",
-            ),
-        ),
-    )
-
-
-def alternate_function_serial_peer_analysis() -> SerialPeerAnalysis:
-    """Return the exact synthetic MCU-to-header UART map for label discovery tests."""
-    mapped_endpoint = SerialEndpointRequirement(
-        id="U1",
-        reference="U1",
-        symbol="Synthetic:GPIO_MCU",
-        footprint="Synthetic:MCU",
-        logic_domain="3V3",
-        tx=SerialPinNetRequirement(pin="U1.1", net="UART_TX"),
-        rx=SerialPinNetRequirement(pin="U1.2", net="UART_RX"),
-    )
-    mapped_connector = SerialEndpointRequirement(
-        id="J5",
-        reference="J5",
-        symbol="Synthetic:GenericHeader",
-        footprint="Synthetic:Header",
-        logic_domain="3V3",
-        tx=SerialPinNetRequirement(pin="J5.2", net="UART_RX"),
-        rx=SerialPinNetRequirement(pin="J5.1", net="UART_TX"),
-    )
-    return SerialPeerAnalysis(
-        basis="Synthetic project-authored net-label endpoint map",
-        links=(
-            SerialPeerLinkRequirement(
-                id="mcu-header",
-                basis="Synthetic exact endpoint map",
-                endpoint=mapped_endpoint,
-                peer=SerialDirectPeerRequirement(mode="direct", endpoint=mapped_connector),
-                reference_policy="not_applicable",
-            ),
-        ),
-    )
-
-
-def coach(observed: NetlistContract, netlist_sha256: str = _NETLIST_SHA256) -> ContractCoachReport:
-    return ContractCoachReport(
-        status="READY_FOR_REVIEW",
-        project_id="synthetic-serial-roster",
-        observed=observed,
-        netlist_sha256=netlist_sha256,
-    )
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+]
 
 
 def test_unmapped_endpoints_are_deterministic_and_exact_mapped_pairs_clear() -> None:
@@ -306,109 +140,6 @@ def test_authored_external_peers_clear_singleton_uart_coverage_prompts() -> None
     }
 
 
-def test_explicit_uart_net_labels_discover_alternate_function_mcu_pins() -> None:
-    source = alternate_function_serial_netlist()
-    candidates = unmapped_serial_peers(source, SerialPeerRosterContext(state="not_configured"))
-
-    assert len(candidates) == 1
-    assert candidates[0].reference == "U1"
-    assert candidates[0].channel == "UART"
-    assert candidates[0].tx_pins == ("U1.1",)
-    assert candidates[0].rx_pins == ("U1.2",)
-    assert candidates[0].discovery_basis == "net_label"
-    assert candidates[0].signal_assignments == ("U1.1=UART_TX", "U1.2=UART_RX")
-
-    report = evaluate("synthetic-serial-roster", coach(source), DesignLintPolicy())
-    finding = next(item for item in report.findings if item.rule_id == "bus.serial_unmapped_peer")
-    assert finding.mode == "review"
-    assert finding.evidence["discovery_basis"] == ("net_label",)
-    assert "explicitly UART/USART-labeled TX/RX nets" in finding.message
-    assert "does not assert that a peer or connection is required" in finding.message
-
-    analysis = alternate_function_serial_peer_analysis()
-    mapped = unmapped_serial_peers(
-        source,
-        SerialPeerRosterContext(state="required", analysis=analysis),
-    )
-    assert mapped == ()
-
-
-def test_net_label_serial_discovery_rejects_ambiguous_or_incomplete_controls() -> None:
-    source = alternate_function_serial_netlist()
-    cases = {
-        "connector-is-off-board-absent": source.model_copy(
-            update={"nets": {"UART_TX": ("U1.1",), "UART_RX": ("U1.2",), "GND": ("U1.3",)}}
-        ),
-        "channel-mismatch": source.model_copy(
-            update={
-                "nets": {
-                    "UART1_TX": ("J5.1", "U1.1"),
-                    "UART2_RX": ("J5.2", "U1.2"),
-                    "GND": ("J5.3", "U1.3"),
-                }
-            }
-        ),
-        "dnp-connector": alternate_function_serial_netlist(dnp=("J5",)),
-        "ambiguous-mcu-pin": source.model_copy(
-            update={
-                "nets": {
-                    **source.nets,
-                    "UART_TX": ("J5.1", "U1.1", "U1.4"),
-                },
-                "pin_functions": {**source.pin_functions, "U1.4": "PA4"},
-                "component_pin_numbers": {
-                    **source.component_pin_numbers,
-                    "U1": ("1", "2", "3", "4"),
-                },
-            }
-        ),
-        "bare-signal-labels": source.model_copy(
-            update={
-                "nets": {
-                    "TX": ("J5.1", "U1.1"),
-                    "RX": ("J5.2", "U1.2"),
-                    "GND": ("J5.3", "U1.3"),
-                }
-            }
-        ),
-    }
-    for name, candidate in cases.items():
-        assert (
-            unmapped_serial_peers(candidate, SerialPeerRosterContext(state="not_configured")) == ()
-        ), name
-
-
-def test_net_label_discovery_is_order_stable_and_does_not_duplicate_pin_function_findings() -> None:
-    source = alternate_function_serial_netlist()
-    baseline = unmapped_serial_peers(source, SerialPeerRosterContext(state="not_configured"))
-    reordered = source.model_copy(
-        update={
-            "components": dict(reversed(tuple(source.components.items()))),
-            "nets": dict(reversed(tuple(source.nets.items()))),
-            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
-            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
-            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
-        }
-    )
-    assert (
-        unmapped_serial_peers(reordered, SerialPeerRosterContext(state="not_configured"))
-        == baseline
-    )
-
-    native_roles = source.model_copy(
-        update={
-            "pin_functions": {
-                **source.pin_functions,
-                "U1.1": "UART_TX",
-                "U1.2": "UART_RX",
-            }
-        }
-    )
-    findings = unmapped_serial_peers(native_roles, SerialPeerRosterContext(state="not_configured"))
-    assert len(findings) == 1
-    assert findings[0].discovery_basis == "pin_function"
-
-
 def test_rule_mode_and_exact_ignore_remain_project_configurable() -> None:
     source = serial_netlist(dnp=("J4",))
     review = evaluate("synthetic-serial-roster", coach(source), DesignLintPolicy())
@@ -484,7 +215,7 @@ def test_contract_loader_hash_binds_serial_peer_roster(tmp_path: Path) -> None:
         ),
         electrical="projects/synthetic-serial-roster/electrical.json",
     )
-    context = _serial_peer_roster_context(root, config)
+    context = serial_peer_roster_context(root, config)
 
     assert context.state == "required"
     assert context.analysis == contract.serial_peers

@@ -22,6 +22,12 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 
+pytestmark = [
+    pytest.mark.connector_lint,
+    pytest.mark.design_lint,
+    pytest.mark.return_path_lint,
+]
+
 
 def distribution_map(
     *, minimum_signal_pin_count: int = 4, maximum_signal_to_return_ratio: float = 3.0

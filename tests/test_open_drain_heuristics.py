@@ -13,7 +13,12 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from kicad_tooling.hwrepo.open_drain_heuristics import open_output_bias_gaps
-from tests.test_design_lint import coach
+from tests.design_lint_fixtures import coach
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.power_lint,
+]
 
 
 def signal_netlist(

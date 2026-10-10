@@ -23,6 +23,11 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.pcb_keepouts import pcb_keepout_entries, pcb_rule_area_geometry_sha256
 
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+]
+
 
 def area(
     *,
@@ -309,7 +314,7 @@ def test_digest_helper_returns_sha256_format() -> None:
 
 
 def test_keepout_lint_finding_supports_review_block_off_and_exact_ignore() -> None:
-    from tests.test_design_lint import coach
+    from tests.design_lint_fixtures import coach
 
     mapping = mapping_for()
     coverage = incomplete_report(mapping)

@@ -49,9 +49,10 @@ path. This demonstrates two candidate false negatives, not proof that every
 Tooling's existing `bus.spi_active_low_chip_select_without_pullup` rule produces the missing-bias
 prompt for the first fixture, remains quiet for the fitted 10k control, and still prompts for the
 DNP and 0R cases. The synthetic baseline is covered by
-`tests.test_design_lint.DesignLintTests.test_spi_active_low_select_bias_hint_is_review_only_and_configurable`
-and
-`tests.test_design_lint.DesignLintTests.test_spi_select_bias_hint_checks_recognized_paths_and_valid_controls`.
+`tests.test_design_lint_spi.test_spi_active_low_select_bias_hint_is_review_only_and_configurable`,
+`tests.test_design_lint_spi.test_spi_select_bias_reports_unusable_pullup_paths`,
+`tests.test_design_lint_spi.test_spi_select_bias_recognizes_pullup_paths`, and
+`tests.test_design_lint_spi.test_spi_select_bias_ignores_valid_controls`.
 The candidate adds no detection on these cases and misses two invalid paths that the local rule
 excludes.
 

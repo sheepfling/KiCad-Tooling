@@ -12,10 +12,12 @@ from .models import (
     NetlistContract,
     PcbConnectivitySnapshot,
     PcbFootprintPlacementObservation,
+    PcbRuleAreaPolygonObservation,
+)
+from .pcb_rf_antenna_models import (
     PcbRfModuleAntennaCoverageEntry,
     PcbRfModuleAntennaMap,
     PcbRfModuleAntennaRequirement,
-    PcbRuleAreaPolygonObservation,
 )
 
 _PI = Decimal("3.141592653589793238462643383279502884197169399375105820974944592307816406286")

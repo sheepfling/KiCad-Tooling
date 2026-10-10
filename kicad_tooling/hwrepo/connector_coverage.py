@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Literal
 
-from .connector_pins import connector_candidate_references
+from .connector_identity import connector_candidate_references
 from .models import (
     ConnectorCoverageEntry,
     ConnectorCoverageReport,

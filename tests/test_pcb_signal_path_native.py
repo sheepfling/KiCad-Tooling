@@ -19,10 +19,15 @@ from tests.synthetic_design_lint_project import (
 
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get("KICAD_RUN_NATIVE_PCB_FIXTURES") != "1",
-    reason="native PCB fixtures run in the digest-pinned package acceptance lane",
-)
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.native_kicad,
+    pytest.mark.pcb_lint,
+    pytest.mark.skipif(
+        os.environ.get("KICAD_RUN_NATIVE_PCB_FIXTURES") != "1",
+        reason="native PCB fixtures run in the digest-pinned package acceptance lane",
+    ),
+]
 
 
 def _retain_native_receipt(project_root: Path, log: HostedLog, project: str) -> Path:

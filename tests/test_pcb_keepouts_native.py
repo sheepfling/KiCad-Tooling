@@ -21,13 +21,21 @@ from kicad_tooling.hwrepo.models import (
     ProjectConfig,
     ProjectKind,
 )
-from kicad_tooling.hwrepo.pcb_return_paths import capture_native_pcb_connectivity
+from kicad_tooling.hwrepo.pcb_return_path_capture import (
+    capture_native_pcb_connectivity,
+    expected_probe_sha256,
+)
 from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get("KICAD_RUN_NATIVE_PCB_FIXTURES") != "1",
-    reason="native PCB fixtures run in the digest-pinned package acceptance lane",
-)
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.native_kicad,
+    pytest.mark.pcb_lint,
+    pytest.mark.skipif(
+        os.environ.get("KICAD_RUN_NATIVE_PCB_FIXTURES") != "1",
+        reason="native PCB fixtures run in the digest-pinned package acceptance lane",
+    ),
+]
 
 FIXTURE = Path(__file__).parent / "fixtures/design_lint/pcb-keepout-rule-area.kicad_pcb"
 
@@ -91,6 +99,7 @@ def test_native_schema_12_snapshot_records_keepout_and_footprint_evidence(
     assert snapshot.kicad_version == expected_version
     assert snapshot.schema_version == "12"
     assert snapshot.board_sha256
+    assert snapshot.probe_sha256 == expected_probe_sha256()
     assert len(snapshot.rule_areas) == 3
     footprints = {item.reference: item for item in snapshot.footprints}
     assert tuple(item.reference for item in snapshot.footprints) == ("U1", "U2", "U3")

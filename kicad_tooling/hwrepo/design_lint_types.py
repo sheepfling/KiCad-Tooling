@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import DesignLintRuleId
+from .design_lint_rule_types import DesignLintRuleId
 
 
 @dataclass(frozen=True)

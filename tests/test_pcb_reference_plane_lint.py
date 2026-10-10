@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import pytest
+
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintReport
-from tests.test_pcb_reference_planes import (
+from tests.design_lint_fixtures.pcb_reference_planes import (
     ZONE_GND,
     coach,
     mapping,
@@ -13,6 +15,13 @@ from tests.test_pcb_reference_planes import (
     track,
     zone,
 )
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+    pytest.mark.return_path_lint,
+]
+
 
 RULE = "pcb.reference_plane_coverage"
 

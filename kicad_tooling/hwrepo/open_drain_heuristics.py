@@ -5,15 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from .bus_heuristics import (
-    DirectResistor,
-    direct_resistors,
+from .bus_signal_roles import (
     i2c_signal_role,
     is_active_low_chip_select_function,
 )
-from .connector_pins import power_function_key
-from .control_inputs import control_input_family
+from .connector_identity import power_function_key
+from .control_input_inventory import control_input_family
 from .models import NetlistContract
+from .resistor_paths import (
+    DirectResistor,
+    direct_resistors,
+)
 from .return_nets import is_return_like_net_name
 
 _OPEN_OUTPUT_TYPES = frozenset({"open_collector", "open_emitter"})

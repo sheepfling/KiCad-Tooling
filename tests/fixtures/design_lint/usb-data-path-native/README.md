@@ -37,7 +37,7 @@ reviewed toolchain profiles:
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1 \
-.venv/bin/python -B -m pytest -q tests/test_ci_hosted.py::NativeUsbDataPathFixtureTests
+.venv/bin/python -I -m pytest -q tests/test_usb_data_path_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad'
 ```
 
 The lane checks KiCad's reported version, exports each read-only fixture twice,

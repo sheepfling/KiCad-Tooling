@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
-from importlib.machinery import SourceFileLoader
-from importlib.resources import files
-from importlib.util import module_from_spec, spec_from_loader
+import runpy
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import ModuleType
 from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
+
+from kicad_tooling.hwrepo.pcb_return_path_capture import native_probe_source
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+]
 
 
 class FakePoint:
@@ -195,15 +202,11 @@ class FakeFootprint:
 
 
 def probe_helpers() -> dict[str, Any]:
-    resource = files("kicad_tooling.hwrepo").joinpath("native_pcb_probe.py.in")
-    loader = SourceFileLoader("native_pcb_probe_test", str(resource))
-    spec = spec_from_loader(loader.name, loader)
-    if spec is None:
-        raise RuntimeError("Could not create the isolated native probe test module")
-    module = module_from_spec(spec)
-    with patch.dict("sys.modules", {"pcbnew": ModuleType("pcbnew")}):
-        loader.exec_module(module)
-    return vars(module)
+    with TemporaryDirectory() as temporary_directory:
+        probe_path = Path(temporary_directory) / "native_pcb_probe.py"
+        probe_path.write_text(native_probe_source(), encoding="utf-8")
+        with patch.dict("sys.modules", {"pcbnew": ModuleType("pcbnew")}):
+            return runpy.run_path(str(probe_path), run_name="native_pcb_probe_test")
 
 
 def test_ring_canonicalization_ignores_rotation_direction_and_duplicate_points() -> None:

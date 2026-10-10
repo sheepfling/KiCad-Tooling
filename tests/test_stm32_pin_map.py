@@ -7,12 +7,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import (
     evaluate,
-    scan_stm32_pin_maps,
 )
+from kicad_tooling.hwrepo.design_lint_stm32_coverage import scan_stm32_pin_maps
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -29,6 +30,11 @@ from kicad_tooling.hwrepo.stm32_pin_map import (
     parse_cubemx_ioc,
     stm32_pin_map_mismatches,
 )
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+]
 
 _ROOT = Path(__file__).resolve().parents[1]
 _IOC_FIXTURE = _ROOT / "tests/fixtures/design_lint/stm32-pin-map/valid.ioc"

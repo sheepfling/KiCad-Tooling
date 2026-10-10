@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 
+import pytest
+
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
@@ -11,6 +13,12 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     NetlistContract,
 )
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.return_path_lint,
+]
+
 
 NUMBERED_RULE = "net.numbered_returns"
 UNINDEXED_RULE = "net.return_labels_without_pin_roles"

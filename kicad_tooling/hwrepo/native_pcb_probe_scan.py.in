@@ -1,0 +1,356 @@
+# Full-board scan: collect native connectivity and serialize a deterministic snapshot.
+
+def main(board_path: Path, output_path: Path, request_path: Path | None = None) -> None:
+    board = native_pcbnew.LoadBoard(str(board_path))
+    if board is None:
+        raise ValueError("KiCad could not load the board")
+
+    zones = board.Zones()
+    zones_refilled = True
+    if zones:
+        zones_refilled = bool(native_pcbnew.ZONE_FILLER(board).Fill(zones))
+    if not zones_refilled:
+        raise ValueError("KiCad could not refill PCB zones in memory")
+    if not board.BuildConnectivity():
+        raise ValueError("KiCad could not build PCB connectivity")
+
+    connectivity = board.GetConnectivity()
+    zone_rows: dict[tuple[str, str], dict[str, Any]] = {}
+    zone_objects: dict[tuple[str, str], Any] = {}
+    filled_polygons: dict[tuple[str, str], Any] = {}
+    rule_areas: list[dict[str, Any]] = []
+    for zone in zones:
+        if zone.GetIsRuleArea():
+            observation = rule_area_observation(zone, board)
+            if observation is None:
+                raise ValueError("Native rule-area classification changed during extraction")
+            rule_areas.append(observation)
+            continue
+        uuid = zone.m_Uuid.AsString()
+        layer = board.GetLayerName(zone.GetLayer())
+        identity = (uuid.casefold(), layer.casefold())
+        filled = normalized_filled_zone_polygons(zone, zone.GetLayer())
+        if identity in zone_rows:
+            raise ValueError(f"Duplicate native PCB zone identity {uuid} on {layer}")
+        zone_rows[identity] = {
+            "uuid": uuid,
+            "layer": layer,
+            "name": zone.GetZoneName() or "",
+            "net": zone.GetNetname() or None,
+            "filled_island_count": filled.OutlineCount(),
+            "filled_islands": filled_zone_islands(filled),
+        }
+        zone_objects[identity] = zone
+        filled_polygons[identity] = filled
+
+    pad_rows: dict[str, dict[str, Any]] = {}
+    pad_geometry: list[tuple[str, bool, Any]] = []
+    via_rows: dict[str, dict[str, Any]] = {}
+    via_identity_by_native_uuid: dict[str, str] = {}
+    via_objects: list[tuple[str, Any]] = []
+    track_rows: list[dict[str, Any]] = []
+    track_objects: list[tuple[dict[str, Any], Any]] = []
+    track_identity_by_native_uuid: dict[str, str] = {}
+    for track in board.GetTracks():
+        if isinstance(track, native_pcbnew.PCB_VIA):
+            via = via_observation(track, board)
+            identity = via["id"]
+            native_uuid = track.m_Uuid.AsString().casefold()
+            if native_uuid in via_identity_by_native_uuid:
+                raise ValueError(f"Duplicate native PCB via identity {native_uuid}")
+            via_identity_by_native_uuid[native_uuid] = identity
+            if identity in via_rows:
+                via_rows[identity]["multiplicity"] += 1
+            else:
+                via_rows[identity] = {**via, "multiplicity": 1}
+            via_objects.append((identity, track))
+            continue
+        if not all(hasattr(track, name) for name in ("GetStart", "GetEnd", "GetWidth", "GetLayer")):
+            raise ValueError(f"Unsupported native copper track item {track.GetClass()}")
+        item_class = track.GetClass()
+        if item_class == "PCB_TRACK":
+            geometry_kind = "segment"
+        elif item_class == "PCB_ARC":
+            geometry_kind = "arc"
+        else:
+            raise ValueError(f"Unsupported native copper track geometry {item_class}")
+        start = track.GetStart()
+        end = track.GetEnd()
+        row = {
+            "uuid": track.m_Uuid.AsString(),
+            "net": track.GetNetname() or None,
+            "layer": board.GetLayerName(track.GetLayer()),
+            "width_nm": int(track.GetWidth()),
+            "start_nm": [int(start.x), int(start.y)],
+            "end_nm": [int(end.x), int(end.y)],
+            "geometry_kind": geometry_kind,
+        }
+        native_uuid = track.m_Uuid.AsString().casefold()
+        if native_uuid in track_identity_by_native_uuid:
+            raise ValueError(f"Duplicate native PCB track identity {native_uuid}")
+        track_identity_by_native_uuid[native_uuid] = row["uuid"]
+        track_rows.append(row)
+        track_objects.append((row, track))
+    ties: list[dict[str, Any]] = []
+    footprint_rows: list[dict[str, Any]] = []
+    for footprint in sorted(board.GetFootprints(), key=lambda item: item.GetReference()):
+        footprint_id = footprint.GetFPIDAsString()
+        dnp = bool(footprint.IsDNP())
+        placement = footprint_placement_observation(footprint, board)
+        if placement is not None:
+            footprint_rows.append(placement)
+        for pad in footprint.Pads():
+            reference = pad_reference(pad)
+            if not reference:
+                continue
+            pad_geometry.append((reference, dnp, pad))
+            connected: set[str] = {reference}
+            component_zones: set[tuple[str, str]] = set()
+            connected_zones: set[tuple[str, str]] = set()
+            connected_vias: set[str] = set()
+            for item in connectivity.GetConnectedItems(pad, 0):
+                if item.GetClass() == "PAD":
+                    item_reference = pad_reference(item)
+                    if item_reference:
+                        connected.add(item_reference)
+                elif item.GetClass() == "ZONE":
+                    component_zones.add(
+                        (item.m_Uuid.AsString(), board.GetLayerName(item.GetLayer()))
+                    )
+                elif item.GetClass() == "PCB_VIA":
+                    native_uuid = item.m_Uuid.AsString().casefold()
+                    identity = via_identity_by_native_uuid.get(native_uuid)
+                    if identity is None:
+                        raise ValueError(
+                            f"Connected pad {reference} refers to an unobserved via {native_uuid}"
+                        )
+                    connected_vias.add(identity)
+            connected_islands: list[dict[str, Any]] = []
+            for uuid, layer in sorted(
+                component_zones, key=lambda item: (item[0].casefold(), item[1].casefold())
+            ):
+                identity = (uuid.casefold(), layer.casefold())
+                zone = zone_objects.get(identity)
+                filled = filled_polygons.get(identity)
+                if zone is None or filled is None:
+                    raise ValueError(
+                        f"Connected pad {reference} refers to an unobserved zone {uuid} on {layer}"
+                    )
+                island_indices = zone_island_indexes_touching_pad(pad, zone, filled)
+                if not island_indices:
+                    # GetConnectedItems returns every item in the copper component. A
+                    # plane elsewhere in that component is not direct pad contact.
+                    continue
+                connected_zones.add((uuid, layer))
+                connected_islands.extend(
+                    {"uuid": uuid, "layer": layer, "island_index": island_index}
+                    for island_index in island_indices
+                )
+            row: dict[str, Any] = {
+                "pad": reference,
+                "net": pad.GetNetname() or None,
+                "footprint": footprint_id,
+                "dnp": dnp,
+                "positions_nm": [[int(pad.GetPosition().x), int(pad.GetPosition().y)]],
+                "connected_pads": sorted(connected, key=str.casefold),
+                "connected_vias": sorted(connected_vias),
+                "connected_zones": [
+                    {"uuid": uuid, "layer": layer}
+                    for uuid, layer in sorted(
+                        connected_zones, key=lambda item: (item[0].casefold(), item[1].casefold())
+                    )
+                ],
+                "connected_islands": sorted(
+                    connected_islands,
+                    key=lambda item: (
+                        item["uuid"].casefold(),
+                        item["layer"].casefold(),
+                        item["island_index"],
+                    ),
+                ),
+            }
+            key = reference.casefold()
+            existing = pad_rows.get(key)
+            if existing is not None:
+                if any(existing[name] != row[name] for name in ("net", "footprint", "dnp")):
+                    raise ValueError(f"Stacked pad {reference} has conflicting native identities")
+                existing["connected_pads"] = sorted(
+                    set(existing["connected_pads"]) | set(row["connected_pads"]),
+                    key=str.casefold,
+                )
+                existing["positions_nm"] = sorted(
+                    {
+                        (int(position[0]), int(position[1]))
+                        for position in existing["positions_nm"] + row["positions_nm"]
+                    }
+                )
+                existing["connected_vias"] = sorted(
+                    set(existing["connected_vias"]) | set(row["connected_vias"])
+                )
+                existing_zones = {
+                    (item["uuid"], item["layer"]) for item in existing["connected_zones"]
+                }
+                existing_zones.update(connected_zones)
+                existing["connected_zones"] = [
+                    {"uuid": uuid, "layer": layer}
+                    for uuid, layer in sorted(
+                        existing_zones,
+                        key=lambda item: (item[0].casefold(), item[1].casefold()),
+                    )
+                ]
+                existing_islands = {
+                    (item["uuid"], item["layer"], item["island_index"])
+                    for item in existing["connected_islands"]
+                }
+                existing_islands.update(
+                    (item["uuid"], item["layer"], item["island_index"])
+                    for item in connected_islands
+                )
+                existing["connected_islands"] = [
+                    {"uuid": uuid, "layer": layer, "island_index": island_index}
+                    for uuid, layer, island_index in sorted(
+                        existing_islands,
+                        key=lambda item: (
+                            item[0].casefold(),
+                            item[1].casefold(),
+                            item[2],
+                        ),
+                    )
+                ]
+            else:
+                pad_rows[key] = row
+
+        if footprint.IsNetTie():
+            groups: set[tuple[str, ...]] = set()
+            for pad in footprint.Pads():
+                if not pad_reference(pad):
+                    continue
+                members = footprint.GetNetTiePads(pad)
+                if members:
+                    group = tuple(
+                        sorted(
+                            {
+                                reference
+                                for member in members
+                                if (reference := pad_reference(member))
+                            },
+                            key=str.casefold,
+                        )
+                    )
+                    if len(group) > 1:
+                        groups.add(group)
+            ties.append(
+                {
+                    "reference": footprint.GetReference(),
+                    "footprint": footprint_id,
+                    "dnp": dnp,
+                    "pad_groups": [list(group) for group in sorted(groups)],
+                }
+            )
+
+    def endpoint_contacts(track: Any, point: Any) -> tuple[list[str], list[str], list[str]]:
+        layer = track.GetLayer()
+        track_net = track.GetNetname() or None
+        pads: set[str] = set()
+        for reference, _dnp, pad in pad_geometry:
+            if pad.GetNetname() != track_net or not pad.GetLayerSet().Contains(layer):
+                continue
+            shape = pad.GetEffectiveShape(layer)
+            if shape is not None and shape.Collide(point, 0):
+                pads.add(reference)
+        vias: set[str] = set()
+        for identity, via in via_objects:
+            if via.GetNetname() != track_net or not via.GetLayerSet().Contains(layer):
+                continue
+            shape = via.GetEffectiveShape(layer)
+            if shape is not None and shape.Collide(point, 0):
+                vias.add(identity)
+        connected_tracks: set[str] = set()
+        source_uuid = track.m_Uuid.AsString().casefold()
+        for item in connectivity.GetConnectedTracks(track):
+            if item.GetClass() not in {"PCB_TRACK", "PCB_ARC"}:
+                continue
+            identity = item.m_Uuid.AsString().casefold()
+            if identity == source_uuid:
+                continue
+            if item.GetNetname() != track_net or item.GetLayer() != layer:
+                continue
+            shape = item.GetEffectiveShape(layer)
+            if shape is None or not shape.Collide(point, 0):
+                continue
+            contact = track_identity_by_native_uuid.get(identity)
+            if contact is None:
+                raise ValueError(f"Track endpoint refers to an unobserved native track {identity}")
+            connected_tracks.add(contact)
+        return (
+            sorted(pads, key=str.casefold),
+            sorted(vias),
+            sorted(connected_tracks, key=str.casefold),
+        )
+
+    for row, track in track_objects:
+        start_pads, start_vias, start_tracks = endpoint_contacts(track, track.GetStart())
+        end_pads, end_vias, end_tracks = endpoint_contacts(track, track.GetEnd())
+        row.update(
+            {
+                "start_pads": start_pads,
+                "end_pads": end_pads,
+                "start_vias": start_vias,
+                "end_vias": end_vias,
+                "start_tracks": start_tracks,
+                "end_tracks": end_tracks,
+            }
+        )
+
+    for identity, zone in zone_rows.items():
+        mapped_islands = {
+            island["island_index"]
+            for pad in pad_rows.values()
+            for island in pad["connected_islands"]
+            if (island["uuid"].casefold(), island["layer"].casefold()) == identity
+        }
+        zone["unanchored_pad_island_indexes"] = sorted(
+            set(range(zone["filled_island_count"])) - mapped_islands
+        )
+
+    access_requests, access_requests_sha256 = read_access_requests(request_path)
+    access_observations = access_probe_observations(access_requests, pad_geometry)
+
+    output = {
+        "schema_version": "12",
+        "board_sha256": sha256(board_path),
+        "kicad_version": native_pcbnew.GetBuildVersion(),
+        "zones_refilled": zones_refilled,
+        "pads": sorted(pad_rows.values(), key=lambda row: row["pad"].casefold()),
+        "vias": sorted(via_rows.values(), key=lambda row: row["id"]),
+        "net_ties": sorted(ties, key=lambda row: row["reference"].casefold()),
+        "zones": sorted(
+            zone_rows.values(),
+            key=lambda row: (row["uuid"].casefold(), row["layer"].casefold()),
+        ),
+        "rule_areas": sorted(rule_areas, key=lambda row: row["uuid"].casefold()),
+        "footprints": sorted(footprint_rows, key=lambda row: row["reference"].casefold()),
+        "access_probe_observations": access_observations,
+        "access_probe_requests_sha256": access_requests_sha256,
+        "tracks": sorted(track_rows, key=lambda row: row["uuid"].casefold()),
+        "copper_layers": [
+            board.GetLayerName(layer) for layer in board.GetEnabledLayers().CuStack()
+        ],
+    }
+    output_path.write_text(json.dumps(output, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+
+
+if __name__ == "__main__":
+    try:
+        if len(sys.argv) not in {3, 4}:
+            raise ValueError(
+                "usage: native_pcb_probe.py BOARD.kicad_pcb OUTPUT.json [ACCESS_REQUESTS.json]"
+            )
+        main(
+            Path(sys.argv[1]),
+            Path(sys.argv[2]),
+            Path(sys.argv[3]) if len(sys.argv) == 4 else None,
+        )
+    except Exception as exc:
+        print(f"native PCB probe failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        raise SystemExit(2) from exc

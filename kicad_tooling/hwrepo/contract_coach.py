@@ -16,7 +16,7 @@ from typing import Literal, Protocol, TypeVar
 
 from ..check_toolchain import cli_executable
 from ..validate import hashes, read_netlist
-from .connector_pins import similar_connector_pin_groups
+from .connector_identity import similar_connector_pin_groups
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_config, load_registry
 from .evidence import digest

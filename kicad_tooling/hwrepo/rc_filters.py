@@ -8,7 +8,6 @@ from collections.abc import Mapping
 from decimal import Decimal, DecimalException, localcontext
 from typing import TypeVar
 
-from .bus_heuristics import direct_resistors, resistance_ohms
 from .crystal_networks import parse_capacitance_pf
 from .models import (
     ComponentContract,
@@ -17,6 +16,10 @@ from .models import (
     RcFilterCoverageReport,
     RcFilterMap,
     RcFilterRequirement,
+)
+from .resistor_paths import (
+    direct_resistors,
+    resistance_ohms,
 )
 
 _Value = TypeVar("_Value")

@@ -10,6 +10,15 @@ digest-pinned native fixture lane exports the schematic twice with KiCad 10.0.0
 and 10.0.5, verifies the complete pin-function and net-assignment maps, and
 compares unrostered, partial-map, and complete-map lint reports.
 
+Run this lane from the tooling checkout after installing its development
+environment and setting `KICAD_TEMPLATE_ROOT` to a public template checkout:
+
+```sh
+KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
+  -m "design_lint and interface_lint and native_kicad" \
+  tests/test_serial_peer_native_fixture_lane.py
+```
+
 Pinned fixture digests:
 
 - `endpoints.kicad_sch`: `7f3e44ba24ba70b382939fa6504ff635b6bb56292b5bcbc36dee307166378060`

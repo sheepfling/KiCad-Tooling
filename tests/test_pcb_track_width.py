@@ -16,11 +16,19 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     PcbConnectivitySnapshot,
     PcbTrackObservation,
+)
+from kicad_tooling.hwrepo.pcb_track_width import pcb_track_width_entries
+from kicad_tooling.hwrepo.pcb_track_width_models import (
     PcbTrackWidthCoverageReport,
     PcbTrackWidthMap,
     PcbTrackWidthRequirement,
 )
-from kicad_tooling.hwrepo.pcb_track_width import pcb_track_width_entries
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+]
+
 
 RULE = "pcb.minimum_track_width"
 IMAGE = "ghcr.io/example/kicad:10.0.5@sha256:" + "b" * 64

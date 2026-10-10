@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .connector_pins import connector_candidate_references
+from .connector_identity import connector_candidate_references
 from .models import NetlistContract
 from .return_nets import is_return_like_net_name
 

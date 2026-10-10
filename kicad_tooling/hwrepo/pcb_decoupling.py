@@ -6,11 +6,13 @@ from math import isqrt
 
 from .models import (
     PcbConnectivitySnapshot,
-    PcbDecouplingCandidateObservation,
-    PcbDecouplingCoverageEntry,
     PcbDecouplingMap,
     PcbPadConnectivityObservation,
     PcbViaObservation,
+)
+from .pcb_decoupling_models import (
+    PcbDecouplingCandidateObservation,
+    PcbDecouplingCoverageEntry,
 )
 
 

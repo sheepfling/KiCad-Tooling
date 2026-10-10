@@ -23,12 +23,17 @@ from kicad_tooling.hwrepo.models import (
     InterfaceRecord,
     NetlistContract,
 )
-from tests.test_connector_coverage import (
+from tests.design_lint_fixtures.connector_coverage import (
     inventory_review,
     uart_header_coverage,
     uart_header_interface,
     uart_peer_netlist,
 )
+
+pytestmark = [
+    pytest.mark.connector_lint,
+    pytest.mark.design_lint,
+]
 
 
 @pytest.mark.parametrize(

@@ -35,7 +35,7 @@ Run it with:
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES=1 \
-.venv/bin/python -I -m pytest -q tests/test_ci_hosted.py -k NativeTwoPinComponentFixtureTests
+.venv/bin/python -I -m pytest -q tests/test_two_pin_component_native_fixture_lane.py -m 'design_lint and component_lint and native_kicad'
 ```
 
 The check recognizes only exact `Device:Fuse` and `Device:Polyfuse` symbol

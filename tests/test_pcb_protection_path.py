@@ -21,6 +21,13 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.pcb_protection_path import pcb_protection_path_entries
 
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+    pytest.mark.return_path_lint,
+]
+
+
 CONNECTOR = "Synthetic:Conn_2"
 PROTECTION = "Synthetic:TVS_2"
 RULE = "pcb.protection_entry_path"

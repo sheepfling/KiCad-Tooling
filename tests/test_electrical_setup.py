@@ -34,7 +34,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.template import main as template_main
 from kicad_tooling.verify import verify
 from tests import test_verify
-from tests.support import SOURCE_ROOT, TEMPLATE_ROOT, reference_root
+from tests.support import SOURCE_ROOT, reference_root, template_root
 from tests.test_electrical import ISLAND, NA, PROJECT, install_fixture
 
 
@@ -375,17 +375,16 @@ class ElectricalSetupTests(unittest.TestCase):
         self.assertIn("measure-6", stream.getvalue())
 
     def test_standalone_example_is_valid_schema_but_has_no_approved_binding(self) -> None:
+        template = template_root()
         contract = read_model(
-            TEMPLATE_ROOT / "templates/electrical/contract.example.json", ElectricalAnalysisContract
+            template / "templates/electrical/contract.example.json", ElectricalAnalysisContract
         )
         self.assertEqual(contract.project_id, "example-board")
         self.assertEqual(len(simulation_cases(contract)), 4)
         for case in simulation_cases(contract):
             self.assertEqual(set(case.source_sha256.values()), {"0" * 64})
             self.assertEqual(set(case.model_sha256.values()), {"0" * 64})
-            self.assertTrue(
-                (TEMPLATE_ROOT / "templates/electrical" / Path(case.deck).name).is_file()
-            )
+            self.assertTrue((template / "templates/electrical" / Path(case.deck).name).is_file())
 
     def test_hosted_electrical_workflow_retains_failure_artifacts(self) -> None:
         workflow = (SOURCE_ROOT / ".github/workflows/electrical-analysis.yml").read_text()

@@ -26,6 +26,7 @@ from . import mcp_parts_extensions as part_tools
 from . import mcp_planning as planning
 from . import mcp_workflow as workflow
 from .contracts import read_model, repo_path
+from .design_lint_rule_models import DesignLintRuleCatalog
 from .doctor import NativeRunner
 from .doctor import doctor as inspect_environment
 from .import_inventory import scan_imports as scan_designs
@@ -39,7 +40,6 @@ from .models import (
     CadStepReport,
     ContractCoachReport,
     DesignLintReport,
-    DesignLintRuleCatalog,
     DiagnosticReport,
     ElectricalAnalysisReport,
     ElectricalChartsReport,
@@ -519,7 +519,7 @@ def create_server(
     server.tool(annotations=READ_ONLY)(inspect_design_lint)
 
     def list_design_lint_rules() -> DesignLintRuleCatalog:
-        """List each deterministic design-lint rule, evidence boundary and default mode."""
+        """List each lint theme, source owner, evidence boundary and default mode."""
         with service_operation(operation):
             return workflow.list_design_lint_rules()
 

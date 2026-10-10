@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-from collections.abc import Mapping
 from dataclasses import dataclass
 
-from .bus_heuristics import direct_resistors
-from .connector_pins import power_function_key
+from .component_roles import (
+    component_role_binding_digest,
+    resolve_component_role_map,
+)
+from .connector_identity import power_function_key
 from .models import ComponentRoleBinding, ComponentRoleMap, NetlistContract
+from .resistor_paths import (
+    direct_resistors,
+)
 from .return_nets import is_return_like_net_name
 
 _SUPPORTED_LED_SYMBOLS = frozenset({"device:led"})
@@ -44,115 +47,6 @@ class LedOutputWithoutVisibleSeriesResistor:
     opposite_net_role: str
     role_binding: ComponentRoleBinding | None = None
     role_binding_sha256: str | None = None
-
-
-@dataclass(frozen=True)
-class ComponentRoleResolution:
-    """Exact mapped component identities and any stale project declarations."""
-
-    by_reference: Mapping[str, ComponentRoleBinding]
-    issues: tuple[str, ...]
-
-
-def _role_binding_digest(binding: ComponentRoleBinding) -> str:
-    payload = binding.model_dump(mode="json")
-    payload["pins"] = sorted(
-        payload["pins"], key=lambda item: (item["number"].casefold(), item["number"])
-    )
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def resolve_component_role_map(
-    observed: NetlistContract, role_map: ComponentRoleMap | None
-) -> ComponentRoleResolution:
-    """Resolve only exact project-authored part, symbol, footprint and pin identities."""
-    if role_map is None:
-        return ComponentRoleResolution(by_reference={}, issues=())
-
-    components = {reference.casefold(): item for reference, item in observed.components.items()}
-    references_by_part_id: dict[str, list[str]] = {}
-    for reference, component in observed.components.items():
-        if component.part_id is not None:
-            references_by_part_id.setdefault(component.part_id, []).append(reference)
-    symbols = {
-        reference.casefold(): value for reference, value in observed.component_symbols.items()
-    }
-    inventories = {
-        reference.casefold(): tuple(numbers)
-        for reference, numbers in observed.component_pin_numbers.items()
-    }
-    pin_functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
-    pin_types = {pin.casefold(): value for pin, value in observed.pin_electrical_types.items()}
-
-    resolved: dict[str, ComponentRoleBinding] = {}
-    issues: list[str] = []
-    for binding in sorted(
-        role_map.entries, key=lambda item: (item.part_id.casefold(), item.part_id)
-    ):
-        references = tuple(
-            sorted(
-                references_by_part_id.get(binding.part_id, ()),
-                key=lambda item: (item.casefold(), item),
-            )
-        )
-        if not references:
-            issues.append(
-                f"Component role map for PART_ID {binding.part_id!r} is stale: "
-                "no native component uses this exact PART_ID."
-            )
-            continue
-
-        expected_pins = tuple(
-            sorted(binding.pins, key=lambda item: (item.number.casefold(), item.number))
-        )
-        for reference in references:
-            key = reference.casefold()
-            component = components[key]
-            actual_symbol = symbols.get(key)
-            if actual_symbol != binding.symbol:
-                issues.append(
-                    f"Component role map for PART_ID {binding.part_id!r} is stale at {reference}: "
-                    f"native symbol is {actual_symbol or '<missing>'!r}, "
-                    f"expected {binding.symbol!r}."
-                )
-                continue
-            if component.footprint != binding.footprint:
-                issues.append(
-                    f"Component role map for PART_ID {binding.part_id!r} is stale at {reference}: "
-                    f"native footprint is {component.footprint or '<missing>'!r}, "
-                    f"expected {binding.footprint!r}."
-                )
-                continue
-
-            actual_numbers = inventories.get(key, ())
-            actual_pins = tuple(
-                (
-                    number,
-                    pin_functions.get(f"{reference}.{number}".casefold()),
-                    pin_types.get(f"{reference}.{number}".casefold()),
-                )
-                for number in actual_numbers
-            )
-            expected_signature = tuple(
-                (item.number, item.function, item.electrical_type.casefold())
-                for item in expected_pins
-            )
-            actual_signature = tuple(
-                (number, function, electrical_type.casefold() if electrical_type else None)
-                for number, function, electrical_type in sorted(
-                    actual_pins, key=lambda item: (item[0].casefold(), item[0])
-                )
-            )
-            if actual_signature != expected_signature:
-                issues.append(
-                    f"Component role map for PART_ID {binding.part_id!r} is stale at {reference}: "
-                    "the complete native pin number, function, and electrical-type inventory "
-                    "does not match."
-                )
-                continue
-            resolved[key] = binding
-    return ComponentRoleResolution(by_reference=resolved, issues=tuple(issues))
 
 
 def _net_assignments(
@@ -341,7 +235,9 @@ def leds_directly_driven_without_visible_series_resistor(
                     opposite_net_role=opposite_role,
                     role_binding=role_binding,
                     role_binding_sha256=(
-                        None if role_binding is None else _role_binding_digest(role_binding)
+                        None
+                        if role_binding is None
+                        else component_role_binding_digest(role_binding)
                     ),
                 )
             )

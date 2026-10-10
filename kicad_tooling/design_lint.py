@@ -5,8 +5,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .hwrepo.design_lint import inspect_summary, rule_catalog, text_report
-from .hwrepo.models import DesignLintRuleCatalog
+from .hwrepo.design_lint import inspect_summary, rule_catalog
+from .hwrepo.design_lint_rule_models import DesignLintRuleCatalog
+from .hwrepo.design_lint_text_report import text_report
 
 
 def catalog_text(catalog: DesignLintRuleCatalog) -> str:
@@ -20,7 +21,11 @@ def catalog_text(catalog: DesignLintRuleCatalog) -> str:
         lines.extend(
             (
                 "",
-                f"{item.rule_id} — {item.title} [{item.status}; default {item.default_mode}]",
+                (
+                    f"{item.rule_id} — {item.title} [{item.status}; theme {item.theme}; "
+                    f"default {item.default_mode}]"
+                ),
+                f"  Owner: {item.implementation_owner}",
                 f"  Predicate: {item.predicate}",
                 f"  Evidence: {item.evidence_adapter}",
                 f"  KiCad: {'; '.join(item.supported_kicad_versions)}",

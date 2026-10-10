@@ -16,11 +16,11 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     DesignLintRuleOverride,
 )
+from tests.design_lint_fixtures.pcb_signal_path import path_map
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
     synthetic_design_lint_project,
 )
-from tests.test_pcb_signal_path_coverage import path_map
 
 
 def test_disabled_signal_path_coverage_matches_cli_and_mcp(tmp_path: Path) -> None:

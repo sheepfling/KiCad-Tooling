@@ -1,0 +1,360 @@
+<export>
+  <components>
+    <comp ref="J1">
+      <value>Synthetic port</value>
+      <libsource lib="Synthetic" part="Port" />
+    </comp>
+    <comp ref="J2">
+      <value>Synthetic port</value>
+      <libsource lib="Synthetic" part="SerialPort" />
+    </comp>
+    <comp ref="J3">
+      <value>Synthetic port</value>
+      <libsource lib="Synthetic" part="Port" />
+    </comp>
+    <comp ref="J4">
+      <value>Synthetic aux port</value>
+      <libsource lib="Synthetic" part="AuxPort" />
+    </comp>
+    <comp ref="J5">
+      <value>Synthetic USB data port</value>
+      <libsource lib="Synthetic" part="UsbDataPort" />
+    </comp>
+    <comp ref="J6">
+      <value>Synthetic serial return port</value>
+      <libsource lib="Synthetic" part="SerialReturnPort" />
+    </comp>
+    <comp ref="J9">
+      <value>Synthetic generic peer port</value>
+      <libsource lib="Synthetic" part="GenericPeerPort" />
+    </comp>
+    <comp ref="J10">
+      <value>Synthetic generic peer port</value>
+      <libsource lib="Synthetic" part="GenericPeerPort" />
+    </comp>
+    <comp ref="J11">
+      <value>Synthetic USB-C candidate</value>
+      <libsource lib="Synthetic" part="UsbCPort" />
+    </comp>
+    <comp ref="J12">
+      <value>Synthetic generic power-input connector</value>
+      <libsource lib="Synthetic" part="GenericPowerInputPort" />
+    </comp>
+    <comp ref="U7">
+      <value>Synthetic nonstandard-reference connector</value>
+      <libsource lib="Connector_Generic" part="Conn_01x02" />
+    </comp>
+    <comp ref="U8">
+      <value>Synthetic test point</value>
+      <libsource lib="Connector" part="TestPoint_Alt" />
+    </comp>
+    <comp ref="J7">
+      <value>Synthetic USB supply</value>
+      <libsource lib="Synthetic" part="PowerInput" />
+    </comp>
+    <comp ref="J8">
+      <value>Synthetic serial supply</value>
+      <libsource lib="Synthetic" part="PowerOutput" />
+    </comp>
+    <comp ref="U4">
+      <value>Synthetic pair naming candidate</value>
+      <libsource lib="Synthetic" part="PairEndpoint" />
+    </comp>
+    <comp ref="U1">
+      <value>Synthetic two-wire target</value>
+      <libsource lib="Synthetic" part="I2cTarget" />
+    </comp>
+    <comp ref="U2">
+      <value>Synthetic multi-supply logic</value>
+      <libsource lib="Synthetic" part="MultiSupplyLogic" />
+    </comp>
+    <comp ref="U3">
+      <value>Synthetic reset input</value>
+      <libsource lib="Synthetic" part="ResetInput" />
+    </comp>
+    <comp ref="U5">
+      <value>Synthetic SPI peripheral</value>
+      <libsource lib="Synthetic" part="SpiPeripheral" />
+    </comp>
+    <comp ref="U12">
+      <value>Synthetic open-collector alert</value>
+      <libsource lib="Synthetic" part="OpenCollector" />
+    </comp>
+    <comp ref="U13">
+      <value>Synthetic alert receiver</value>
+      <libsource lib="Synthetic" part="AlertReceiver" />
+    </comp>
+    <comp ref="U14">
+      <value>Synthetic open-emitter ready output</value>
+      <libsource lib="Synthetic" part="OpenEmitter" />
+    </comp>
+    <comp ref="U15">
+      <value>Synthetic ready receiver</value>
+      <libsource lib="Synthetic" part="AlertReceiver" />
+    </comp>
+    <comp ref="U16">
+      <value>Synthetic SuperSpeed endpoint</value>
+      <libsource lib="Synthetic" part="UsbSuperSpeedEndpoint" />
+    </comp>
+    <comp ref="U17">
+      <value>Synthetic vendor differential device</value>
+      <libsource lib="Synthetic" part="VendorDifferentialDevice" />
+    </comp>
+    <comp ref="R1">
+      <value>1k</value>
+      <libsource lib="Device" part="R" />
+    </comp>
+    <comp ref="R2">
+      <value>1k</value>
+      <libsource lib="Device" part="R" />
+    </comp>
+    <comp ref="R3">
+      <value>1k</value>
+      <libsource lib="Device" part="R" />
+    </comp>
+    <comp ref="C1">
+      <value>100n</value>
+      <libsource lib="Device" part="C" />
+    </comp>
+    <comp ref="D1">
+      <value>LED</value>
+      <libsource lib="Device" part="LED" />
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Synthetic" part="Port">
+      <pins>
+        <pin num="1" name="PWR" type="passive" />
+        <pin num="7" name="GND" type="passive" />
+        <pin num="8" name="" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="SerialPort">
+      <pins>
+        <pin num="1" name="PWR" type="passive" />
+        <pin num="7" name="RTN" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="AuxPort">
+      <pins>
+        <pin num="1" name="+3V3" type="passive" />
+        <pin num="2" name="2" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="UsbDataPort">
+      <pins>
+        <pin num="1" name="D+" type="passive" />
+        <pin num="2" name="D−" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="PairEndpoint">
+      <pins>
+        <pin num="1" name="1" type="passive" />
+        <pin num="2" name="2" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="SerialReturnPort">
+      <pins>
+        <pin num="9" name="9" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="GenericPeerPort">
+      <pins>
+        <pin num="1" name="1" type="passive" />
+        <pin num="2" name="" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="GenericPowerInputPort">
+      <pins>
+        <pin num="1" name="1" type="power_in" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="UsbCPort">
+      <pins>
+        <pin num="4" name="CC1" type="passive" />
+        <pin num="5" name="CC2" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="PowerInput">
+      <pins>
+        <pin num="1" name="1" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="PowerOutput">
+      <pins>
+        <pin num="1" name="1" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="I2cTarget">
+      <pins>
+        <pin num="1" name="SDA" type="passive" />
+        <pin num="2" name="SCL" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="MultiSupplyLogic">
+      <pins>
+        <pin num="1" name="VDD" type="power_in" />
+        <pin num="2" name="VDD" type="power_in" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="ResetInput">
+      <pins>
+        <pin num="1" name="~{RESET}" type="input" />
+        <pin num="2" name="POR_B" type="input" />
+        <pin num="3" name="PORN" type="input" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="SpiPeripheral">
+      <pins>
+        <pin num="1" name="CS_N" type="input" />
+        <pin num="2" name="SCK" type="input" />
+        <pin num="3" name="MOSI" type="input" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="OpenCollector">
+      <pins>
+        <pin num="1" name="ALERT_N" type="open_collector" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="OpenEmitter">
+      <pins>
+        <pin num="1" name="READY_N" type="open_emitter" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="UsbSuperSpeedEndpoint">
+      <pins>
+        <pin num="1" name="StdB_SSTX+" type="passive" />
+        <pin num="2" name="StdB_SSTX-" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="VendorDifferentialDevice">
+      <pins>
+        <pin num="1" name="OUTP" type="output" />
+        <pin num="2" name="OUTN" type="output" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="AlertReceiver">
+      <pins>
+        <pin num="1" name="ALERT_N" type="input" />
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <pins>
+        <pin num="1" name="1" type="passive" />
+        <pin num="2" name="2" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C">
+      <pins>
+        <pin num="1" name="1" type="passive" />
+        <pin num="2" name="2" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="LED">
+      <pins>
+        <pin num="1" name="A" type="passive" />
+        <pin num="2" name="K" type="passive" />
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net name="GND1">
+      <node ref="J1" pin="7" />
+      <node ref="J3" pin="7" />
+    </net>
+    <net name="GND2">
+      <node ref="J2" pin="7" />
+    </net>
+    <net name="+5V">
+      <node ref="J1" pin="1" />
+    </net>
+    <net name="PERIPHERAL_SIGNAL">
+      <node ref="J1" pin="8" />
+    </net>
+    <net name="CH2_VDD">
+      <node ref="J7" pin="1" />
+    </net>
+    <net name="CH3_VDD">
+      <node ref="J8" pin="1" />
+    </net>
+    <net name="USB_DATA">
+      <node ref="J5" pin="1" />
+      <node ref="J5" pin="2" />
+    </net>
+    <net name="USB_GND">
+      <node ref="J4" pin="2" />
+    </net>
+    <net name="SERIAL_RETURN">
+      <node ref="J6" pin="9" />
+    </net>
+    <net name="PEER_SHARED">
+      <node ref="J9" pin="1" />
+      <node ref="J10" pin="1" />
+    </net>
+    <net name="PEER_A">
+      <node ref="J9" pin="2" />
+    </net>
+    <net name="PEER_B">
+      <node ref="J10" pin="2" />
+    </net>
+    <net name="TYPEC_CC1">
+      <node ref="J11" pin="4" />
+    </net>
+    <net name="TYPEC_CC2">
+      <node ref="J11" pin="5" />
+    </net>
+    <net name="USB_A_DP">
+      <node ref="U4" pin="1" />
+    </net>
+    <net name="USB_A_DM">
+      <node ref="U4" pin="2" />
+    </net>
+    <net name="+3V3">
+      <node ref="R1" pin="2" />
+      <node ref="R2" pin="2" />
+      <node ref="R3" pin="2" />
+      <node ref="U2" pin="1" />
+      <node ref="C1" pin="1" />
+      <node ref="D1" pin="1" />
+    </net>
+    <net name="GND">
+      <node ref="C1" pin="2" />
+      <node ref="D1" pin="2" />
+    </net>
+    <net name="+1V8">
+      <node ref="U2" pin="2" />
+    </net>
+    <net name="SPI_CS_N">
+      <node ref="U5" pin="1" />
+    </net>
+    <net name="SPI_SCK">
+      <node ref="U5" pin="2" />
+    </net>
+    <net name="SPI_MOSI">
+      <node ref="U5" pin="3" />
+    </net>
+    <net name="I2C_SDA">
+      <node ref="U1" pin="1" />
+      <node ref="R1" pin="1" />
+      <node ref="R2" pin="1" />
+    </net>
+    <net name="I2C_SCL">
+      <node ref="U1" pin="2" />
+      <node ref="R3" pin="1" />
+    </net>
+    <net name="ALERT_N">
+      <node ref="U12" pin="1" />
+      <node ref="U13" pin="1" />
+    </net>
+    <net name="READY_N">
+      <node ref="U14" pin="1" />
+      <node ref="U15" pin="1" />
+    </net>
+    <net name="SUPER_TX_POS">
+      <node ref="U16" pin="1" />
+    </net>
+    <net name="VENDOR_LANE0_P">
+      <node ref="U17" pin="1" />
+    </net>
+  </nets>
+</export>

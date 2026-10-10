@@ -197,11 +197,14 @@ The first rules are:
   interface was recognized, or that matching peer pins must share a net.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
-  resolve to the same schematic net. The assigned net bypasses the passive in
-  the schematic topology. Custom symbols, incomplete pin inventories,
-  multi-pin devices, DNP parts, unassigned pins, and ambiguous assignments are
-  outside the predicate. Same-net parts can be intentional; project policy can
-  review, block, disable, or exactly ignore the source-bound candidate.
+  resolve to the same schematic net. A custom symbol is included only when an
+  exact project-authored `component_role_map` capacitor entry matches its
+  `PART_ID`, symbol, footprint, and complete native pin inventory. The
+  assigned net bypasses the passive in the schematic topology. Other custom
+  symbols, incomplete pin inventories, multi-pin devices, DNP parts,
+  unassigned pins, and ambiguous assignments are outside the predicate.
+  Same-net parts can be intentional; project policy can review, block,
+  disable, or exactly ignore the source-bound candidate.
 - `component.two_pin_diode_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:D` family symbol resolve to the same
   schematic net. The diode is bypassed in that schematic topology. `Device:LED`,
@@ -889,10 +892,17 @@ and the [native fixture record](../tests/fixtures/design_lint/connector-inventor
 for the source and report digests.
 
 Every report also carries the versioned rule catalog and its package-byte
-digest. The catalog names each deterministic predicate, supported KiCad
-evidence boundary, limitations, implementation references, fault/control
-regression tests, and each rule's metamorphic review status, registered cases,
-or reasoned not-applicable basis. Its source is
+digest. Catalog schema 3 gives every rule one implementation theme: connectors,
+interfaces, components, power, returns, schematic, or PCB, and one source owner
+function for its predicate. The owner must appear in the rule's implementation
+references, belong to the matching theme module family, and remain outside
+shared dispatchers. The theme supports focused review; it does not state that
+a design requirement exists or that the rule proves electrical intent. The
+catalog also names each deterministic predicate, supported KiCad evidence
+boundary, limitations, implementation references, fault/control regression
+tests, and each rule's
+metamorphic review status, registered cases, or reasoned not-applicable basis.
+Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
 `synthetic_validated`; the catalog currently contains 86 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
@@ -989,8 +999,9 @@ native regression lanes do not run ERC or DRC. See the
 
 ## Explore the rule catalog
 
-List all packaged rules, their default mode, predicate, supported evidence,
-and limitations without selecting a project or native run:
+List all packaged rules, their implementation theme and source owner, default
+mode, predicate, supported evidence, and limitations without selecting a
+project or native run:
 
 ```sh
 kicad-team design-lint --catalog --format text

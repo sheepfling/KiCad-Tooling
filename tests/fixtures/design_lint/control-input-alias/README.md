@@ -34,7 +34,7 @@ configured:
 ```sh
 KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES=1 \
-  .venv/bin/python -I -m pytest -q tests/test_ci_hosted.py::NativeControlInputDemoTests
+  .venv/bin/python -I -m pytest -q tests/test_ci_hosted_control_inputs.py::NativeControlInputDemoTests
 ```
 
 Receipts remain under ignored `build/ci/` directories. The source fixture is

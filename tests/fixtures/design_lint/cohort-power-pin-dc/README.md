@@ -207,7 +207,7 @@ lane):
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES=1 \
-.venv/bin/python -B -m pytest -q tests/test_ci_hosted.py::NativeIcRailCapacitorFixtureTests
+.venv/bin/python -I -m pytest -q tests/test_ic_rail_capacitor_native_fixture_lane.py -m 'design_lint and power_lint and native_kicad'
 ```
 
 The container runs with networking disabled, a read-only root filesystem, a

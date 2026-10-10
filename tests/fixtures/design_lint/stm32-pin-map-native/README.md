@@ -23,7 +23,7 @@ dependencies:
 KICAD_RUN_NATIVE_STM32_PIN_MAP_FIXTURES=1 \
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 python -I -B -m pytest -q \
-  tests/test_ci_hosted.py::NativeStm32PinMapFixtureTests::test_cube_mx_and_schematic_pin_map_faults_export_repeatably
+  tests/test_ci_hosted_stm32.py::NativeStm32PinMapFixtureTests::test_cube_mx_and_schematic_pin_map_faults_export_repeatably
 ```
 
 Native command receipts are retained below ignored `build/`. This lane does not

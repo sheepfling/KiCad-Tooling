@@ -934,7 +934,7 @@
       "gaps": [],
       "constraints": [],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_inventory_parity"
+        "tests.test_mcp_parity_inventory_parts.test_inventory_parity"
       ]
     },
     {
@@ -967,7 +967,7 @@
         "CLI --cli/--ngspice selects an executable; MCP uses the startup environment and fixed command."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_doctor_failure_parity",
+        "tests.test_mcp_parity_inventory_parts.test_doctor_failure_parity",
         "tests.test_electrical_parity.ElectricalParityTests.test_doctor_and_verification_electrical_preflight_match_cli"
       ]
     },
@@ -985,7 +985,7 @@
       "gaps": [],
       "constraints": [],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_new_project_parity"
+        "tests.test_mcp_parity_projects.test_new_project_parity"
       ]
     },
     {
@@ -1006,8 +1006,8 @@
         "CLI uses --dry-run; MCP separates preview from creation and gates creation with allow-writes."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_import_preview_parity",
-        "tests.test_mcp_parity.McpParityTests.test_import_write_parity"
+        "tests.test_mcp_parity_imports.test_import_preview_parity",
+        "tests.test_mcp_parity_imports.test_import_write_parity"
       ]
     },
     {
@@ -1026,7 +1026,7 @@
         "MCP source directories are restricted to the checkout or configured import roots."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_import_scan_parity"
+        "tests.test_mcp_parity_imports.test_import_scan_parity"
       ]
     },
     {
@@ -1047,9 +1047,9 @@
         "MCP splits source import diagnosis from project diagnosis; project checks require allow-checks and artifact inputs stay inside allowed repository build paths."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_import_diagnosis_parity",
-        "tests.test_mcp_parity.McpParityTests.test_project_diagnosis_parity",
-        "tests.test_mcp_parity.McpParityTests.test_missing_electrical_requirements_are_visible_without_claiming_failure"
+        "tests.test_mcp_parity_imports.test_import_diagnosis_parity",
+        "tests.test_mcp_parity_projects.test_project_diagnosis_parity",
+        "tests.test_mcp_parity_projects.test_missing_electrical_requirements_are_visible_without_claiming_failure"
       ]
     },
     {
@@ -1068,7 +1068,7 @@
         "CLI can choose --log-dir; MCP retains fresh receipts only under build/diagnostics."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_rescue_parity"
+        "tests.test_mcp_parity_projects.test_rescue_parity"
       ]
     },
     {
@@ -1105,7 +1105,7 @@
         "CLI accepts --cli, --output and detailed text presentation; MCP uses the fixed executable and fresh diagnostic receipts."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_selected_verification_parity",
+        "tests.test_mcp_parity_projects.test_selected_verification_parity",
         "tests.test_electrical_parity.ElectricalParityTests.test_doctor_and_verification_electrical_preflight_match_cli"
       ]
     },
@@ -1126,7 +1126,7 @@
         "A shard is a partial focused lane, never full acceptance or release evidence."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_scope_check_parity"
+        "tests.test_mcp_parity_projects.test_scope_check_parity"
       ]
     },
     {
@@ -1147,7 +1147,7 @@
         "A hash-valid native netlist without component records is blocked, even when the export command returned success."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_contract_inspection_parity",
+        "tests.test_mcp_parity_projects.test_contract_inspection_parity",
         "tests.test_source_parity.SourceParityTests.test_contract_capture_parity"
       ]
     },
@@ -1183,49 +1183,51 @@
         "component.unconnected_power_input uses native power_in electrical type only to prompt review for an unassigned generic non-connector pin; named pins, DNP components, and connector candidates use their existing specific handling.",
         "Mapped path endpoints must match the source netlist and share a native PCB copper component; bundle selectors must resolve to exactly the project-mapped endpoint pads. Native DRC remains the route length and skew measurement source.",
         "pcb.keepout_intent_coverage compares exact project-mapped named rule-area geometry, copper layers, and track/via/pad/zone-fill/footprint restrictions against source-bound native snapshot schema 11 or 12; the signature must come from an independent approved requirement.",
-        "pcb.rf_module_antenna_keepout_coverage compares exact schematic/PCB module identity, fitted disposition, authored feed assignment, and placement-transformed local keepout geometry against native snapshot schema 12; onboard, external, and DNP dispositions are explicit."
+        "pcb.rf_module_antenna_keepout_coverage compares exact schematic/PCB module identity, fitted disposition, authored feed assignment, and placement-transformed local keepout geometry against native snapshot schema 12; onboard, external, and DNP dispositions are explicit.",
+        "Every active rule declares a typed implementation theme and source owner in the shared CLI and MCP catalog."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_design_lint_parity",
-        "tests.test_mcp_parity.McpParityTests.test_standard_and_reviewed_custom_connector_identity_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_empty_native_netlist_blocks_design_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_serial_peer_voltage_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_serial_connector_reference_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_peer_component_power_pin_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_report.test_design_lint_parity",
+        "tests.test_design_lint_mcp_parity_connector_identity.test_standard_and_reviewed_custom_connector_identity_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_catalog.test_empty_native_netlist_blocks_design_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_serial.test_serial_peer_voltage_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_serial.test_serial_connector_reference_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_power_pin_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity",
         "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp",
-        "tests.test_mcp_parity.McpParityTests.test_unconnected_generic_component_power_input_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_i2c_mapped_array_hint_resolution_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_components.test_unconnected_generic_component_power_input_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_i2c.test_i2c_mapped_array_hint_resolution_cli_mcp_parity",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
-        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_bonded_uart_reference_map_suppresses_only_valid_bond_on_cli_and_mcp",
-        "tests.test_mcp_parity.McpParityTests.test_design_lint_rule_catalog_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_passive_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_diode_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_fuse_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_same_net_two_pin_ferrite_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_schematic_geometry_opt_in_parity",
-        "tests.test_mcp_parity.McpParityTests.test_reused_child_sheet_geometry_source_binding_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_schematic_pin_tip_on_wire_interior_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_schematic_label_near_wire_endpoint_cli_mcp_parity",
-        "tests.test_mcp_parity.McpParityTests.test_i2c_address_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_external_protection_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_crystal_network_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_regulator_feedback_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_rc_filter_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_usb_data_path_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_usb_peer_reference_lint_cli_mcp_parity",
-        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_dual_uart_split_reference_localizes_one_header_on_cli_and_mcp",
-        "tests.test_mcp_parity.McpParityTests.test_power_path_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_power_sequence_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_mapped_output_to_enable_cycle_parity",
-        "tests.test_mcp_parity.McpParityTests.test_connector_return_distribution_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_pcb_decoupling_track_width_and_switching_loop_map_parity",
-        "tests.test_mcp_parity.McpParityTests.test_pcb_differential_pair_rule_coverage_parity",
-        "tests.test_mcp_parity.McpParityTests.test_stm32_cube_mx_pin_map_parity",
+        "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_bonded_uart_reference_map_suppresses_only_valid_bond_on_cli_and_mcp",
+        "tests.test_design_lint_mcp_parity_catalog.test_design_lint_rule_catalog_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_two_pin_passives.test_same_net_two_pin_passive_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_two_pin_passives.test_same_net_two_pin_diode_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_two_pin_crystal_fuse.test_same_net_two_pin_fuse_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_two_pin_passives.test_same_net_two_pin_ferrite_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_connector_returns.test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_schematic_geometry.test_schematic_geometry_opt_in_parity",
+        "tests.test_design_lint_mcp_parity_schematic_hierarchy.test_reused_child_sheet_geometry_source_binding_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_schematic_connectivity.test_schematic_pin_tip_on_wire_interior_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_schematic_connectivity.test_schematic_label_near_wire_endpoint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_i2c.test_i2c_address_map_parity",
+        "tests.test_design_lint_mcp_parity_protection.test_external_protection_map_parity",
+        "tests.test_design_lint_mcp_parity_analog.test_crystal_network_map_parity",
+        "tests.test_design_lint_mcp_parity_analog.test_regulator_feedback_map_parity",
+        "tests.test_design_lint_mcp_parity_analog.test_rc_filter_map_parity",
+        "tests.test_design_lint_mcp_parity_usb_data.test_usb_data_path_map_parity",
+        "tests.test_design_lint_mcp_parity_usb_can.test_usb_peer_reference_lint_cli_mcp_parity",
+        "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_dual_uart_split_reference_localizes_one_header_on_cli_and_mcp",
+        "tests.test_design_lint_mcp_parity_power_paths.test_power_path_map_parity",
+        "tests.test_design_lint_mcp_parity_power_paths.test_power_sequence_map_parity",
+        "tests.test_design_lint_mcp_parity_power_paths.test_mapped_output_to_enable_cycle_parity",
+        "tests.test_design_lint_mcp_parity_connector_returns.test_connector_return_distribution_map_parity",
+        "tests.test_design_lint_mcp_parity_pcb_layout.test_pcb_decoupling_track_width_and_switching_loop_map_parity",
+        "tests.test_design_lint_mcp_parity_pcb_pairs.test_pcb_differential_pair_rule_coverage_parity",
+        "tests.test_design_lint_mcp_parity_stm32.test_stm32_cube_mx_pin_map_parity",
         "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp",
         "tests.test_pcb_keepouts_mcp_parity.test_disabled_keepout_coverage_matches_cli_and_mcp",
-        "tests.test_pcb_rf_antenna_mcp_parity.test_disabled_rf_antenna_coverage_matches_cli_and_mcp"
+        "tests.test_pcb_rf_antenna_mcp_parity.test_disabled_rf_antenna_coverage_matches_cli_and_mcp",
+        "tests.test_pcb_rf_antenna_mcp_parity.test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp"
       ]
     },
     {
@@ -1242,7 +1244,7 @@
       "gaps": [],
       "constraints": [],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_model_coverage_parity"
+        "tests.test_mcp_parity_inventory_parts.test_model_coverage_parity"
       ]
     },
     {
@@ -1307,8 +1309,8 @@
         "MCP requires allow-exports; fresh native capture additionally requires allow-checks, while retained native evidence can be reused without executing checks."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_parts_quantities_and_native_failure_parity",
-        "tests.test_mcp_parity.McpParityTests.test_parts_stale_evidence_parity"
+        "tests.test_mcp_parity_inventory_parts.test_parts_quantities_and_native_failure_parity",
+        "tests.test_mcp_parity_inventory_parts.test_parts_stale_evidence_parity"
       ]
     },
     {
@@ -1327,7 +1329,7 @@
         "MCP requires allow-edits and receives a typed object; CLI --save-preferences reads --preferences plus quantity overrides. Both require the current digest for updates."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_parts_preferences_parity"
+        "tests.test_mcp_parity_inventory_parts.test_parts_preferences_parity"
       ]
     },
     {
@@ -1630,7 +1632,7 @@
         "This grouped lane uses fixed local kicad-cli, like kicad_tooling.ci --kicad. check_project additionally supports auto/container selection."
       ],
       "parity_tests": [
-        "tests.test_mcp_parity.McpParityTests.test_native_scope_failure_parity"
+        "tests.test_mcp_parity_projects.test_native_scope_failure_parity"
       ]
     },
     {
@@ -1974,13 +1976,13 @@
       "constraints": [],
       "exception": "MCP does not schedule GitHub jobs, pull Docker images or run the release rehearsal. Its shared planning and check services expose the project, tag and shard decisions.",
       "parity_tests": [
-        "tests.test_ci_hosted.HostedCiTests.test_native_lane_cannot_pass_when_declared_electrical_fails",
-        "tests.test_ci_hosted.HostedCiTests.test_pcb_access_fixture_checks_native_probe_faults_controls_and_repeatability",
-        "tests.test_ci_hosted.HostedCiTests.test_pcb_access_fixture_rejects_an_untested_kicad_minor_before_native_execution",
-        "tests.test_ci_hosted.NativePcbAccessFixtureTests.test_native_probe_envelope_fixtures_on_supported_images",
-        "tests.test_ci_hosted.NativePcbAccessFixtureTests.test_pcb_geometry_probe_controls_on_supported_images",
-        "tests.test_ci_hosted.HostedCiTests.test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evidence",
-        "tests.test_ci_hosted.HostedCiTests.test_pcb_return_fixture_rejects_an_untested_kicad_minor_before_native_execution"
+        "tests.test_ci_hosted_native_orchestration.test_native_lane_cannot_pass_when_declared_electrical_fails",
+        "tests.test_ci_hosted_pcb_fixture_schedule.HostedPcbFixtureScheduleTests.test_pcb_access_fixture_checks_native_probe_faults_controls_and_repeatability",
+        "tests.test_ci_hosted_pcb_fixture_schedule.HostedPcbFixtureScheduleTests.test_pcb_access_fixture_rejects_an_untested_kicad_minor_before_native_execution",
+        "tests.test_pcb_access_native_fixture_lane.test_native_probe_envelope_fixtures_on_supported_images",
+        "tests.test_ci_hosted_pcb_access.NativePcbAccessFixtureTests.test_pcb_geometry_probe_controls_on_supported_images",
+        "tests.test_ci_hosted_pcb_return_paths.test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evidence",
+        "tests.test_ci_hosted_pcb_fixture_schedule.HostedPcbFixtureScheduleTests.test_pcb_return_fixture_rejects_an_untested_kicad_minor_before_native_execution"
       ]
     }
   ]

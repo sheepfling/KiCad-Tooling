@@ -25,7 +25,7 @@ case says that similarly named rails must be joined.
 
 ## Exact native export lane
 
-`tests.test_ci_hosted.NativeConnectorReturnFixtureTests` exports these
+`tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests` exports these
 schematics twice through the digest-pinned KiCad 10.0.0 and 10.0.5 images.
 It checks source hashes, normalized typed netlist repeatability, exact
 `J1.3`/`J2.3` evidence, the fault finding, and the common-net control. Receipts
@@ -37,6 +37,6 @@ checkout configured:
 ```sh
 KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 \
-  .venv/bin/python -m pytest -v \
-  tests/test_ci_hosted.py::NativeConnectorReturnFixtureTests::test_native_netlist_split_return_fault_and_common_return_control
+  .venv/bin/python -I -m pytest -q tests/test_ci_hosted_connector_returns.py \
+  -m 'design_lint and connector_lint and power_lint and native_kicad'
 ```

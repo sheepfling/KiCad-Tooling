@@ -6,7 +6,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
-from .bus_heuristics import direct_resistors, usb_data_function_identity
+from .bus_signal_pairs import (
+    usb_data_function_identity,
+)
 from .models import (
     ComponentContract,
     NetlistContract,
@@ -15,7 +17,10 @@ from .models import (
     UsbDataPathMap,
 )
 from .reference_bonds import reference_bond_issues
-from .usb_peer_reference_review import usb_endpoint_reference_pins
+from .resistor_paths import (
+    direct_resistors,
+)
+from .usb_peer_endpoint_analysis import usb_endpoint_reference_pins
 
 _Value = TypeVar("_Value")
 

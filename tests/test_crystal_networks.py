@@ -20,6 +20,11 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 
+pytestmark = [
+    pytest.mark.component_lint,
+    pytest.mark.design_lint,
+]
+
 
 def crystal_map(*, reverse_resonator_pins: bool = False) -> CrystalNetworkMap:
     return CrystalNetworkMap(

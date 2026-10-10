@@ -5,7 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from .models import NetName, PcbDifferentialPairRuleMap, Reference
+from .models import (
+    NetName,
+    Reference,
+)
+from .pcb_drc_models import PcbDifferentialPairRuleMap
 
 
 @dataclass(frozen=True)

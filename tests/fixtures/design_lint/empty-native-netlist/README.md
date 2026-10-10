@@ -16,6 +16,23 @@ netlists across repeats and versions, because KiCad XML includes changing
 export metadata. The empty fixture must have zero component records and zero
 nets; the control must retain a nonempty component inventory.
 
+Run the portable evidence-integrity checks with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  tests/test_design_lint_mcp_parity_catalog.py \
+  tests/test_design_lint_catalog.py -k empty_native_netlist
+```
+
+Run the native fixture lane in the digest-pinned package acceptance environment
+with:
+
+```sh
+KICAD_RUN_NATIVE_EMPTY_NETLIST_FIXTURES=1 .venv/bin/python -I -m pytest -q \
+  -m "evidence_lint and native_kicad" \
+  tests/test_empty_netlist_evidence_native_fixture_lane.py
+```
+
 The unit and CLI/MCP parity tests separately verify that a hash-correct,
 successful empty export is rejected by the shared source-bound evidence
 reader. Together, these tests prove the native trigger and the typed-service

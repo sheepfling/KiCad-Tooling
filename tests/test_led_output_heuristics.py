@@ -20,6 +20,13 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 
+pytestmark = [
+    pytest.mark.component_lint,
+    pytest.mark.design_lint,
+    pytest.mark.power_lint,
+]
+
+
 RULE_ID = "component.led_directly_driven_from_output"
 
 

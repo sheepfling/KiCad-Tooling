@@ -36,8 +36,9 @@ the expected review/no-review results:
 
 The temporary exports and repeatability check remained under `/private/tmp`.
 The digest-pinned KiCad 10.0.0/10.0.5 fixture job is wired through
-`tests.test_ci_hosted.NativeUsbDataPathFixtureTests`; the exact-version job has
-not run locally because Docker is unavailable. Hosted package acceptance for
+`test_native_usb_data_path_fixture_lane_is_repeatable` in
+`tests.test_usb_data_path_native_fixture_lane`; the exact-version job has not
+run locally because Docker is unavailable. Hosted package acceptance for
 tag `v0.5.0rc17` passed this fixture lane on both pinned versions in run
 `37863872527`; the fault emitted one peer-reference review and the common
 control stayed quiet. A local 10.0.6 export remains compatibility evidence for

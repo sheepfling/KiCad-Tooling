@@ -6,8 +6,11 @@ import hashlib
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pytest
+
 from kicad_tooling.hwrepo.contracts import write_model
-from kicad_tooling.hwrepo.design_lint import _spi_roster_context, evaluate
+from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_project_contexts import spi_roster_context
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     AnalysisPending,
@@ -32,6 +35,11 @@ from kicad_tooling.hwrepo.models import (
     SpiPinNetRequirement,
 )
 from kicad_tooling.hwrepo.spi_participants import SpiRosterContext, unmapped_spi_participants
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+]
 
 _NETLIST_SHA256 = "a" * 64
 _CONTRACT_SHA256 = "b" * 64
@@ -298,7 +306,7 @@ def test_inspection_context_loads_and_hashes_the_project_electrical_contract() -
             electrical="projects/synthetic-spi-roster/electrical.json",
         )
 
-        context = _spi_roster_context(root, config)
+        context = spi_roster_context(root, config)
 
     assert context.state == "required"
     assert context.analysis == contract.spi

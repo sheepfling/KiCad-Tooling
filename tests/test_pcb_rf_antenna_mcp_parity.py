@@ -8,17 +8,18 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 from mcp import Client
 
 from kicad_tooling import design_lint as design_lint_cli
-from kicad_tooling.hwrepo import design_lint as design_lint_service
-from kicad_tooling.hwrepo.contracts import parse_model_text
+from kicad_tooling.hwrepo import design_lint_project_inspection
+from kicad_tooling.hwrepo.contracts import parse_model_text, read_model, write_model
+from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintReport,
     DesignLintRuleOverride,
-    PcbDecouplingCoverageReport,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
     PcbReferencePlaneCoverageReport,
@@ -26,15 +27,41 @@ from kicad_tooling.hwrepo.models import (
     PcbRfModuleAntennaMap,
     PcbSignalPathRuleCoverageReport,
     PcbSwitchingLoopCoverageReport,
-    PcbTrackWidthCoverageReport,
+    ValidationSummary,
 )
+from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
 from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
+from kicad_tooling.hwrepo.pcb_track_width_models import PcbTrackWidthCoverageReport
+from tests.pcb_rf_antenna_support import FOOTPRINT, SYMBOL, requirement
+from tests.pcb_rf_antenna_support import snapshot as antenna_snapshot
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
     synthetic_design_lint_project,
 )
-from tests.test_pcb_rf_antenna import requirement
-from tests.test_pcb_rf_antenna import snapshot as antenna_snapshot
+
+
+def _install_source_matched_rf_netlist(summary_path: Path) -> None:
+    """Bind a tooling-owned synthetic module export into the fixture receipt."""
+    library, part = SYMBOL.split(":", 1)
+    netlist_path = summary_path.parent / "netlist.xml"
+    netlist_path.write_text(
+        "<export><components>"
+        '<comp ref="U1"><value>Synthetic radio</value>'
+        f"<footprint>{FOOTPRINT}</footprint>"
+        '<fields><field name="PART_ID">RADIO-1</field></fields>'
+        f'<libsource lib="{library}" part="{part}"/>'
+        '<units><unit name="A"><pins><pin num="1"/></pins></unit></units>'
+        "</comp></components><libparts>"
+        f'<libpart lib="{library}" part="{part}"><pins>'
+        '<pin num="1" name="RF_FEED" type="passive"/></pins></libpart>'
+        '</libparts><nets><net name="RF_IN"><node ref="U1" pin="1"/></net>'
+        "</nets></export>",
+        encoding="utf-8",
+    )
+    summary = read_model(summary_path, ValidationSummary)
+    artifacts = dict(summary.artifacts_sha256)
+    artifacts["netlist.xml"] = digest(netlist_path)
+    write_model(summary_path, summary.model_copy(update={"artifacts_sha256": artifacts}))
 
 
 def test_disabled_rf_antenna_coverage_matches_cli_and_mcp(tmp_path: Path) -> None:
@@ -79,8 +106,16 @@ def test_disabled_rf_antenna_coverage_matches_cli_and_mcp(tmp_path: Path) -> Non
     )
 
 
-def test_incomplete_rf_antenna_fault_matches_cli_and_mcp(
-    tmp_path: Path, monkeypatch, capsys
+@pytest.mark.parametrize(
+    ("board_feed_net", "expected_coverage_status"),
+    (("RF_OUT", "INCOMPLETE"), ("RF_IN", "COMPLETE")),
+)
+def test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+    board_feed_net: str,
+    expected_coverage_status: str,
 ) -> None:
     rf_map = PcbRfModuleAntennaMap(
         basis="Synthetic RF module CLI/MCP fault parity",
@@ -88,12 +123,13 @@ def test_incomplete_rf_antenna_fault_matches_cli_and_mcp(
     )
     policy = DesignLintPolicy(pcb_rf_module_antenna_map=rf_map)
     root, native = synthetic_design_lint_project(tmp_path, policy)
+    _install_source_matched_rf_netlist(native)
 
     def synthetic_geometry_scan(root, config, coach, authored, native_summary):
         board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
         board_path = root / board_relative
         board_sha256 = hashlib.sha256(board_path.read_bytes()).hexdigest()
-        observed = antenna_snapshot().model_copy(
+        observed = antenna_snapshot(pad_net=board_feed_net).model_copy(
             update={
                 "board_sha256": board_sha256,
                 "kicad_version": config.kicad_version,
@@ -111,7 +147,7 @@ def test_incomplete_rf_antenna_fault_matches_cli_and_mcp(
         ).hexdigest()
         snapshot_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
         coverage = PcbRfModuleAntennaCoverageReport(
-            status="INCOMPLETE",
+            status=expected_coverage_status,
             mode="review",
             map_sha256=map_sha256,
             board_path=board_relative,
@@ -135,7 +171,11 @@ def test_incomplete_rf_antenna_fault_matches_cli_and_mcp(
             coverage,
         )
 
-    monkeypatch.setattr(design_lint_service, "_scan_pcb_geometry", synthetic_geometry_scan)
+    monkeypatch.setattr(
+        design_lint_project_inspection,
+        "scan_pcb_geometry",
+        synthetic_geometry_scan,
+    )
     monkeypatch.setattr(
         sys,
         "argv",
@@ -170,10 +210,15 @@ def test_incomplete_rf_antenna_fault_matches_cli_and_mcp(
 
     mcp_report = asyncio.run(inspect_mcp())
     assert cli_report == mcp_report
-    assert mcp_report.pcb_rf_module_antenna_coverage.status == "INCOMPLETE"
-    (finding,) = tuple(
+    assert mcp_report.pcb_rf_module_antenna_coverage.status == expected_coverage_status
+    findings = tuple(
         item
         for item in mcp_report.findings
         if item.rule_id == "pcb.rf_module_antenna_keepout_coverage"
     )
-    assert finding.subject == "U1: onboard_antenna antenna requirement"
+    if expected_coverage_status == "INCOMPLETE":
+        (finding,) = findings
+        assert finding.subject == "U1: onboard_antenna antenna requirement"
+        assert cli_returncode == 1
+    else:
+        assert findings == ()

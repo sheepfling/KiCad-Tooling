@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from .models import (
     PcbConnectivitySnapshot,
+)
+from .pcb_track_width_models import (
     PcbTrackWidthCoverageEntry,
     PcbTrackWidthMap,
     PcbTrackWidthMeasurement,

@@ -78,7 +78,7 @@ supply is physically present.
 
 ## Exact native export lane
 
-`tests.test_ci_hosted.NativeConnectorReturnFixtureTests` exports the
+`tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests` exports the
 schematics twice with digest-pinned KiCad 10.0.0 and 10.0.5. The lane checks
 fixture hashes, normalized netlist repeatability, exact J1.1/J2.1/J3.1
 assignments, open-contact and minority-net outliers, no-majority divergence,
@@ -99,5 +99,6 @@ checkout configured:
 ```sh
 KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 \
-  .venv/bin/python -I -m pytest -q tests/test_ci_hosted.py::NativeConnectorReturnFixtureTests
+  .venv/bin/python -I -m pytest -q tests/test_ci_hosted_connector_returns.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad'
 ```

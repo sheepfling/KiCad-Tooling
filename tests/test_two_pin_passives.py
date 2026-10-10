@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 
+import pytest
+
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -14,6 +16,15 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from kicad_tooling.hwrepo.two_pin_passives import two_pin_passives_on_same_net
+from tests.design_lint_fixtures import (
+    custom_decoupling_capacitor_role_map,
+    custom_ic_decoupling_capacitor_fixture,
+)
+
+pytestmark = [
+    pytest.mark.component_lint,
+    pytest.mark.design_lint,
+]
 
 
 def passive_netlist(
@@ -73,6 +84,19 @@ def lint_report(
     return evaluate(coach.project_id, coach, policy or DesignLintPolicy())
 
 
+def custom_capacitor_same_net_fixture(*, dnp: bool = False) -> NetlistContract:
+    """Place the exact mapped custom capacitor pins on one synthetic net."""
+    source = custom_ic_decoupling_capacitor_fixture(dnp_capacitor=dnp)
+    capacitor_pins = {"c1.1", "c1.2"}
+    nets = {
+        name: remaining
+        for name, pins in source.nets.items()
+        if (remaining := tuple(pin for pin in pins if pin.casefold() not in capacitor_pins))
+    }
+    nets["BYPASSED_CAP"] = ("C1.1", "C1.2")
+    return source.model_copy(update={"nets": nets})
+
+
 def test_detects_resistor_capacitor_and_inductor_on_their_same_net() -> None:
     observed = passive_netlist()
     candidates = two_pin_passives_on_same_net(observed)
@@ -99,6 +123,48 @@ def test_distinct_pin_nets_are_the_no_finding_control() -> None:
     report = lint_report(passive_netlist(same_net=False))
     assert "component.two_pin_passive_same_net" not in {item.rule_id for item in report.findings}
     assert report.status == "PASS"
+
+
+def test_custom_capacitor_requires_exact_role_map_for_same_net_review() -> None:
+    observed = custom_capacitor_same_net_fixture()
+    rule_id = "component.two_pin_passive_same_net"
+    unclassified = lint_report(observed)
+    assert rule_id not in {item.rule_id for item in unclassified.findings}
+
+    role_map = custom_decoupling_capacitor_role_map()
+    mapped = lint_report(observed, DesignLintPolicy(component_role_map=role_map))
+    finding = next(item for item in mapped.findings if item.rule_id == rule_id)
+    assert mapped.status == "REVIEW"
+    assert finding.evidence["symbol"] == ("Vendor:CAP123",)
+    assert finding.evidence["net"] == ("BYPASSED_CAP",)
+    assert finding.evidence["pin_assignments"] == (
+        "C1.1 -> BYPASSED_CAP",
+        "C1.2 -> BYPASSED_CAP",
+    )
+    assert finding.evidence["classified_role"] == ("capacitor",)
+    assert finding.evidence["role_part_id"] == ("synthetic-decoupling-capacitor",)
+    assert finding.evidence["role_basis"] == (role_map.entries[0].basis,)
+    assert len(finding.evidence["role_binding_sha256"][0]) == 64
+
+    candidates = two_pin_passives_on_same_net(observed, role_map)
+    assert [(item.reference, item.kind, item.role_binding) for item in candidates] == [
+        ("C1", "capacitor", role_map.entries[0])
+    ]
+
+
+def test_mapped_custom_capacitor_distinct_net_and_dnp_controls_stay_quiet() -> None:
+    role_map = custom_decoupling_capacitor_role_map()
+    rule_id = "component.two_pin_passive_same_net"
+    control = lint_report(
+        custom_ic_decoupling_capacitor_fixture(),
+        DesignLintPolicy(component_role_map=role_map),
+    )
+    dnp = lint_report(
+        custom_capacitor_same_net_fixture(dnp=True),
+        DesignLintPolicy(component_role_map=role_map),
+    )
+    assert rule_id not in {item.rule_id for item in control.findings}
+    assert rule_id not in {item.rule_id for item in dnp.findings}
 
 
 def test_same_net_passive_findings_are_order_stable_and_each_split_clears_one() -> None:

@@ -8,9 +8,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
-from .bus_heuristics import resistance_ohms
-from .connector_pins import connector_candidate_references, power_function_key
+from .connector_identity import connector_candidate_references, power_function_key
 from .models import NetlistContract
+from .resistor_paths import (
+    resistance_ohms,
+)
 from .return_nets import is_return_like_net_name
 
 _CAPACITOR_SYMBOL = re.compile(

@@ -15,9 +15,10 @@ JSON_ADAPTERS = {
     "kicad_tooling/validate.py",
     "kicad_tooling/fault_probe.py",
     # Native PCB probe output is validated as a strict snapshot before models are built.
-    "kicad_tooling/hwrepo/pcb_return_paths.py",
-    # KiCad DRC JSON is decoded only to its small ignored-check evidence surface.
-    "kicad_tooling/hwrepo/pcb_drc_coverage.py",
+    "kicad_tooling/hwrepo/pcb_return_path_capture.py",
+    # Native DRC JSON is decoded into typed report and source-bound evidence models.
+    "kicad_tooling/hwrepo/pcb_drc_rule_parser.py",
+    "kicad_tooling/hwrepo/pcb_drc_source_evidence.py",
 }
 # Discover services automatically so a new module cannot evade architecture checks.
 CORE_MODULES = tuple(
@@ -55,10 +56,11 @@ class ScriptArchitectureTests(unittest.TestCase):
                 calls_json_loads = "json.loads(" in self.source(relative)
                 self.assertEqual(calls_json_loads, relative in JSON_ADAPTERS)
 
-    def test_models_define_closed_inputs_and_typed_ci_outputs(self) -> None:
+    def test_model_primitives_define_closed_inputs_and_ci_outputs_remain_typed(self) -> None:
+        primitive_source = self.source("kicad_tooling/hwrepo/model_primitives.py")
         source = self.source("kicad_tooling/hwrepo/models.py")
-        self.assertIn('extra="forbid"', source)
-        self.assertIn("frozen=True", source)
+        self.assertIn('extra="forbid"', primitive_source)
+        self.assertIn("frozen=True", primitive_source)
         self.assertIn("class ValidationSummary", source)
         self.assertIn("class CheckAllSummary", source)
         self.assertIn("class ToolchainAssessment", source)

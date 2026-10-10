@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from .connector_pins import connector_candidate_references
+from .connector_identity import connector_candidate_references
 from .models import NetlistContract, UsbCAnalysis
 
 UsbCPortRosterState = Literal["not_configured", "pending", "not_applicable", "required"]

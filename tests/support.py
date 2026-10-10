@@ -15,18 +15,25 @@ from kicad_tooling.hwrepo.repository import ephemeral, generated_artifact
 
 SOURCE_ROOT = Path(kicad_tooling.__file__).resolve().parents[1]
 TEST_ROOT = Path(__file__).resolve().parent
-configured_template = os.environ.get("KICAD_TEMPLATE_ROOT")
-if not configured_template:
-    raise RuntimeError(
-        "Shared regression tests require KICAD_TEMPLATE_ROOT pointing to a separate "
-        "public KiCad template checkout; project data is not bundled with the tooling."
-    )
-TEMPLATE_ROOT = Path(configured_template).expanduser().resolve()
-if not (TEMPLATE_ROOT / "examples/catalog/projects.json").is_file():
-    raise RuntimeError(f"KICAD_TEMPLATE_ROOT has no public reference catalog: {TEMPLATE_ROOT}")
+
+
+@lru_cache(maxsize=1)
+def template_root() -> Path:
+    """Resolve the separate public template checkout only for tests that need it."""
+    configured_template = os.environ.get("KICAD_TEMPLATE_ROOT")
+    if not configured_template:
+        raise RuntimeError(
+            "Shared regression tests require KICAD_TEMPLATE_ROOT pointing to a separate "
+            "public KiCad template checkout; project data is not bundled with the tooling."
+        )
+    root = Path(configured_template).expanduser().resolve()
+    if not (root / "examples/catalog/projects.json").is_file():
+        raise RuntimeError(f"KICAD_TEMPLATE_ROOT has no public reference catalog: {root}")
+    return root
 
 
 def ignore_local(directory: str, names: list[str]) -> set[str]:
+    root = template_root()
     return {
         name
         for name in names
@@ -34,14 +41,14 @@ def ignore_local(directory: str, names: list[str]) -> set[str]:
         or ephemeral(name)
         or (
             Path(directory, name).is_file()
-            and generated_artifact(Path(directory, name).relative_to(TEMPLATE_ROOT).as_posix())
+            and generated_artifact(Path(directory, name).relative_to(root).as_posix())
         )
     }
 
 
 def ignore_example_catalog_readme(directory: str, names: list[str]) -> set[str]:
     """Keep the live catalog guide when example catalog data is copied into place."""
-    if Path(directory) == TEMPLATE_ROOT / "examples/catalog" and "README.md" in names:
+    if Path(directory) == template_root() / "examples/catalog" and "README.md" in names:
         return {"README.md"}
     return set()
 
@@ -62,12 +69,13 @@ def initialize_git(root: Path) -> None:
 @lru_cache(maxsize=1)
 def reference_root() -> Path:
     """Keep example contracts stable while live catalog projects grow or change."""
+    source_template = template_root()
     temporary = tempfile.TemporaryDirectory(prefix="kicad-test-reference-")
     atexit.register(temporary.cleanup)
     destination = Path(temporary.name).resolve() / "repository"
     destination.mkdir()
     for directory in ("docs", "templates", "examples", ".github"):
-        shutil.copytree(TEMPLATE_ROOT / directory, destination / directory, ignore=ignore_local)
+        shutil.copytree(source_template / directory, destination / directory, ignore=ignore_local)
     for name in (
         "README.md",
         "AGENTS.md",
@@ -78,23 +86,23 @@ def reference_root() -> Path:
         "pyproject.toml",
         "requirements-tooling.txt",
     ):
-        shutil.copy2(TEMPLATE_ROOT / name, destination / name)
+        shutil.copy2(source_template / name, destination / name)
     # Adopters may have their own root license or none yet; shared-tool tests
     # always exercise the original template notice in a disposable checkout.
     shutil.copy2(TEST_ROOT / "fixtures/scaffold-license.txt", destination / "LICENSE")
     for directory in ("catalog", "projects", "products", "libraries", "generated", "schemas"):
         (destination / directory).mkdir()
-        readme = TEMPLATE_ROOT / directory / "README.md"
+        readme = source_template / directory / "README.md"
         if readme.exists():
             shutil.copy2(readme, destination / directory / "README.md")
     shutil.copytree(
-        TEMPLATE_ROOT / "examples/catalog",
+        source_template / "examples/catalog",
         destination / "catalog",
         dirs_exist_ok=True,
         ignore=ignore_example_catalog_readme,
     )
     shutil.copy2(
-        TEMPLATE_ROOT / "catalog/documentation-policy.json",
+        source_template / "catalog/documentation-policy.json",
         destination / "catalog/documentation-policy.json",
     )
     initialize_git(destination)

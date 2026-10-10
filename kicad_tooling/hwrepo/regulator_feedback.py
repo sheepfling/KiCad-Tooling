@@ -6,13 +6,16 @@ import math
 from collections.abc import Mapping
 from typing import TypeVar
 
-from .bus_heuristics import direct_resistors, resistance_ohms
 from .models import (
     NetlistContract,
     RegulatorFeedbackCoverageEntry,
     RegulatorFeedbackCoverageReport,
     RegulatorFeedbackMap,
     RegulatorFeedbackRequirement,
+)
+from .resistor_paths import (
+    direct_resistors,
+    resistance_ohms,
 )
 
 _Value = TypeVar("_Value")

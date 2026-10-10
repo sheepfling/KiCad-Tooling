@@ -5,6 +5,16 @@ direct UART link. It is composed from synthetic symbols, labels, connector
 instances, and a resistor. No product schematic, board, project expectation,
 or proprietary design source was used.
 
+Run its exact-version native fault/control lane from the tooling checkout after
+installing the development environment and setting `KICAD_TEMPLATE_ROOT` to a
+public template checkout:
+
+```sh
+KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
+  -m "design_lint and interface_lint and return_path_lint and native_kicad" \
+  tests/test_serial_reference_bond_native_fixture_lane.py
+```
+
 The reviewed map names J1.3 on `GND_A`, J2.3 on `GND_B`, and one fitted
 `Device:R` R3 with value `0R`, footprint `Synthetic:0603`, and passive pins
 R3.1/R3.2. The control assigns the resistor pins to the corresponding endpoint

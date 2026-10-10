@@ -19,6 +19,11 @@ from kicad_tooling.hwrepo.models import (
     RcFilterRequirement,
 )
 
+pytestmark = [
+    pytest.mark.component_lint,
+    pytest.mark.design_lint,
+]
+
 
 def rc_filter_map() -> RcFilterMap:
     return RcFilterMap(

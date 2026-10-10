@@ -289,9 +289,14 @@ def verify_native(
 
     if config.electrical is not None:
         from ..validate import read_netlist
-        from .bus_heuristics import can_termination_checks, i2c_pullup_checks
-        from .control_inputs import control_input_checks
+        from .can_termination_contract import (
+            can_termination_checks,
+        )
+        from .control_input_checks import control_input_checks
         from .electrical import grounding_checks, load_analysis
+        from .i2c_pullup_contract import (
+            i2c_pullup_checks,
+        )
         from .models import (
             AnalysisPending,
             CanTerminationAnalysis,

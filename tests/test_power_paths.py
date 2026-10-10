@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import unittest
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
@@ -21,6 +22,12 @@ from kicad_tooling.hwrepo.models import (
     PowerPathRequirement,
 )
 from kicad_tooling.hwrepo.power_paths import power_path_mismatches
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.power_lint,
+]
+
 
 RULE_ID = "power.mapped_series_path_mismatch"
 

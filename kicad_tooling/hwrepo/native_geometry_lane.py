@@ -20,7 +20,7 @@ class NativeGeometryReceipt(TypedDict):
     network: str
     root_filesystem: str
     writable_mount: str
-    test_file: str
+    test_files: list[str]
     test_scope: str
 
 
@@ -50,6 +50,10 @@ def run(root: Path, output: Path, stage: Callable[..., CompletedProcess[str]]) -
     temporary_base = fixture_area / "tmp"
     temporary_base.mkdir(parents=True, exist_ok=True)
     receipts: list[NativeGeometryReceipt] = []
+    test_files = tuple(sorted(root.glob("tests/test_schematic_geometry_*.py")))
+    if not test_files:
+        raise FileNotFoundError("No focused schematic-geometry pytest suites were found")
+    test_paths = tuple(path.relative_to(root).as_posix() for path in test_files)
 
     for version, image in KICAD_GEOMETRY_IMAGES:
         version_slug = version.replace(".", "-")
@@ -107,8 +111,8 @@ def run(root: Path, output: Path, stage: Callable[..., CompletedProcess[str]]) -
                 "network": "none",
                 "root_filesystem": "read-only",
                 "writable_mount": f"{temporary_root.resolve()}:/fixtures:rw",
-                "test_file": "tests/test_schematic_geometry.py",
-                "test_scope": f"all unit and native KiCad {version} tests",
+                "test_files": list(test_paths),
+                "test_scope": f"all focused pytest and native KiCad {version} geometry tests",
             }
             receipts.append(receipt)
             (fixture_area / f"lane-{version}.json").write_text(
@@ -155,13 +159,9 @@ def run(root: Path, output: Path, stage: Callable[..., CompletedProcess[str]]) -
                 "-I",
                 "-B",
                 "-m",
-                "unittest",
-                "discover",
-                "-s",
-                str(root / "tests"),
-                "-p",
-                "test_schematic_geometry.py",
-                "-v",
+                "pytest",
+                "-q",
+                *(str(root / path) for path in test_paths),
             )
             stage(
                 f"native-schematic-geometry-tests-{version_slug}",

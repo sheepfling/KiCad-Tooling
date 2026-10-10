@@ -61,7 +61,7 @@ Reproduce the native fixture lane against the public tooling acceptance
 checkout:
 
 ```sh
-KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_LED_RAIL_FIXTURES=1 .venv/bin/python -B -m pytest -q tests/test_ci_hosted.py::NativeLedRailFixtureTests
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_LED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest -q tests/test_led_rail_native_fixture_lane.py -m 'design_lint and component_lint and native_kicad'
 ```
 
 CI enables this test in the digest-pinned package acceptance step. The
@@ -116,7 +116,7 @@ Reproduce the pinned native checks:
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_LED_RAIL_FIXTURES=1 \
-.venv/bin/python -B -m pytest -q tests/test_ci_hosted.py::NativeLedRailFixtureTests
+.venv/bin/python -I -m pytest -q tests/test_led_rail_native_fixture_lane.py -m 'design_lint and component_lint and native_kicad'
 ```
 
 These checks establish the bounded schematic-netlist heuristic only. They do

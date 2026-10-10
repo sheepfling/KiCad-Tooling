@@ -18,6 +18,14 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.validate import read_netlist
 
+pytestmark = [
+    pytest.mark.connector_lint,
+    pytest.mark.design_lint,
+    pytest.mark.native_kicad,
+    pytest.mark.return_path_lint,
+    pytest.mark.slow,
+]
+
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/fixtures/design_lint/cohort-connector-ground-domains"
 RECEIPTS = ROOT / "build/tests"

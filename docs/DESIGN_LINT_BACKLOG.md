@@ -56,6 +56,165 @@ electrical convention. Promotion requires project-authored policy and a
 contract comparison whose positive and negative controls demonstrate the
 intended requirement.
 
+## Lint module boundaries and test selection
+
+- Keep `design_lint.py` as the small public service facade and
+  `design_lint_evaluator.py` as a staged coordinator. Put each rule's predicate
+  and evidence assembly in the module that owns its source and electrical
+  theme; share parsing and common evidence through focused helpers.
+  - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
+  are split incrementally. Put new lint-specific requirements, findings, and
+  coverage reports in theme-owned model modules, import those owners directly
+  from internal services, and preserve compatibility re-exports only where
+  existing callers need them. Each extraction needs an owner-size check, an
+  import-boundary check, and a compatibility test. The PCB RF antenna contract
+  and coverage models now live in `hwrepo/pcb_rf_antenna_models.py`, backed by
+  shared `model_primitives.py`; internal services import the theme owner, and
+  the shared registry carries a shrink-only line ceiling.
+  Component and connector peer-pin coverage models now live in
+  `component_peer_pin_models.py` and `connector_peer_pin_models.py`;
+  peer-analysis services import those owners directly, while `models.py`
+  preserves compatibility exports. The interface architecture tests guard the
+  owners' size, import boundary, and export identity. This extraction removes
+  321 lines from the working registry without changing report schemas.
+  Digital peer-voltage, USB peer-reference, and serial peer-reference report
+  models now live in their corresponding `*_models.py` modules. Peer coverage,
+  evidence, and evaluation services import these owners directly; the
+  architecture suite checks all internal imports and compatibility exports.
+  This second extraction removes another 446 lines from the registry.
+  PCB DRC bounds, signal-path and differential-pair maps, and their coverage
+  reports now live in `pcb_drc_models.py`. Internal PCB and lint services use
+  that owner; the PCB architecture suite checks its size, import boundary, and
+  compatibility exports. This extraction removes another 399 lines.
+  PCB decoupling candidate observations and source-bound coverage reports now
+  live in `pcb_decoupling_models.py`. PCB and lint services import that owner;
+  `models.py` preserves identity-compatible exports for existing callers. The
+  PCB architecture suite checks the owner size, import boundary, and exports,
+  and the shared-registry ceiling dropped by 98 lines with this extraction.
+  PCB track-width requirements, maps, and source-bound measurement reports now
+  live in `pcb_track_width_models.py`; the PCB checks and lint evaluation
+  services import that owner. Architecture tests enforce its size, import
+  boundary, and compatibility exports. This extraction reduced the shared
+  registry by a further 107 lines.
+  PCB reference-plane requirements, native measurements, and coverage reports
+  now live in `pcb_reference_plane_models.py`; internal PCB and lint services
+  import from that owner while `models.py` retains compatibility exports. The
+  PCB architecture tests guard model identity, module size, and the import
+  boundary. This extraction reduced the shared registry from 9,225 to 9,050
+  lines.
+  PCB switching-loop pad and route contracts, maps, and source-bound reports
+  now live in `pcb_switching_loop_models.py`. Internal PCB and lint services
+  import from that owner; the architecture suite checks its size, compatibility
+  exports, and import boundary. Together these reference-plane and switching-
+  loop extractions reduced `models.py` from 9,225 to 8,732 lines.
+  Synthetic RF antenna test builders live in `tests/pcb_rf_antenna_support.py`;
+  the focused regression suite is below 500 lines and no longer needs a legacy
+  size ceiling.
+  The one-command verification lint gate is isolated in
+  `tests/test_verify_design_lint.py`; runner failure tests stay in
+  `tests/test_verify.py`, and shared synthetic setup lives in bounded
+  `tests/verify_support.py` and `tests/verify_design_lint_support.py` modules.
+- Keep `pcb_return_paths.py` as a compatibility facade. Pure checks against
+  reviewed return requirements live in `pcb_return_path_checks.py`; native
+  source-bound snapshot capture and probe provenance live in
+  `pcb_return_path_capture.py`. The PCB architecture suite guards this split.
+- Keep the KiCad-isolated native PCB snapshot adapter as a deterministic
+  assembly of bounded bootstrap, access, geometry, and scan source fragments.
+  Hash the exact assembled executable source in `probe_sha256`; the probe stays
+  read-only and runs only in the project's digest-pinned KiCad image.
+- Keep active rule predicate modules under `kicad_tooling/hwrepo/`, new
+  theme-specific pytest suites, and their support modules below the 500-line
+  review threshold. Split a larger module by responsibility, then update
+  catalog implementation references, pytest area registration, and the
+  architecture size guard. Existing oversized lint-marked test suites are
+  recorded in `tests/lint_suite_line_ceilings.json`; they may shrink but must
+  not grow. Remove each ceiling as its suite is split. The two PCB
+  reference-plane fixture lanes now live in their own 389-line module. USB
+  and power-path native fixture orchestration, evidence assertions, and authored
+  maps live in bounded theme-specific modules. The power-path lane tests are
+  split into focused synthetic and digest-pinned pytest modules, with
+  `power_lint`, `native_kicad`, and `slow` selection. Other native fixture-lane
+  adapters now live in dedicated theme modules. The native test-point probe
+  lane has a dedicated PCB adapter and a focused pytest
+  module with `pcb_lint`, `native_kicad`, and `slow` selection. Component
+  voltage, resistor power, connector contact-current, and MOSFET stress native
+  controls now share one export setup and use dedicated theme modules.
+  Decoupling placement, protection-entry paths, and track-width native fixtures
+  also have independent theme modules, coordinated by a small lane runner and
+  shared source-bound probe setup. Their digest-pinned acceptance is split into
+  pytest modules with `pcb_lint`, `native_kicad`, and `slow` markers. The
+  connector-return fixture lane has been split into a source-bound context, a
+  small coordinator, and separate return, power, grounding, peer-pin, off-board,
+  mapped-interface, and receipt modules. The digital-peer fixture lane is split
+  across SPI participant and roster checks, SPI voltage cases, serial voltage
+  and reference checks, and component power-pin cases. Its hosted-lane
+  regressions use separate pytest modules for SPI voltage, serial voltage,
+  serial reference, and component power; a session-scoped synthetic runner
+  shares the mocked export across those result checks, with netlist builders in
+  bounded theme modules. Switching-loop fixture
+  setup and native geometry checks now live in separate modules with a small
+  coordinator. PCB return-path fixtures separate setup, per-case evaluation,
+  and specialized via, copper-plane, net-tie, isolation, and zone-island
+  evidence checks. Hosted fixture implementation modules are below 500 lines.
+  Several older lint-marked test suites remain in
+  `tests/lint_suite_line_ceilings.json`; each is capped at its current size and
+  must shrink as it is split. The architecture test caps each hosted theme
+  module and function below 500 lines. The mocked hosted PCB return fixture
+  test now lives in the 442-line pytest module
+  `tests/test_ci_hosted_pcb_return_paths.py`, with a shared disposable-project
+  checkout helper in `tests/hosted_ci_support.py`. It is selectable by PCB and
+  return-path markers and requires the public template checkout. The USB
+  native data-path fixture acceptance now lives in the 160-line pytest
+  module `tests/test_usb_data_path_native_fixture_lane.py`, selectable by
+  design-lint, interface, native, and slow markers. LED rail/output-path
+  native acceptance now lives in the 127-line
+  `tests/test_led_rail_native_fixture_lane.py`, parameterized by exact native
+  project/version and selectable by component, native, and slow markers. The
+  USB SuperSpeed pair acceptance now lives in the 79-line
+  `tests/test_complementary_pair_native_fixture_lane.py`, retaining
+  cross-version normalized-hash comparison. Connector/capacitor-only
+  DC-reference native fault/control acceptance now lives in the 111-line
+  `tests/test_net_dc_reference_native_fixture_lane.py`. IC rail-capacitor
+  native acceptance now lives in the 146-line
+  `tests/test_ic_rail_capacitor_native_fixture_lane.py`, retaining missing-cap,
+  fitted-capacitor, DNP, custom-role, and native ERC controls. The legacy
+  The former `tests/test_ci_hosted.py` was retired after its remaining native
+  connector-return, connector-inventory, and PCB-access checks moved into
+  theme-specific suites. Hosted planning, release checks, and mocked fixture
+  scheduling already live in bounded suites. Keep each future native fixture
+  in its lint-theme module.
+  The connector-return pytest lane now keeps its synthetic return, peer-pin,
+  and power case builders in bounded support modules, leaving a 427-line
+  integration suite selectable with `connector_lint` and `return_path_lint`.
+  The power-input source-path regression is split by source topology,
+  source-anchor/connector scope, and policy/determinism; synthetic netlist
+  builders live in `tests/design_lint_fixtures/power_input_paths.py`. Its
+  topology and metadata variants are parametrized so pytest reports and selects
+  individual cases.
+  The USB-C port, IC rail capacitor, power-sequence, and open-drain bias lanes
+  also have independent theme modules. `ci_hosted.py` now contains CI
+  orchestration and small compatibility imports/adapters; its architecture
+  test caps it below 1,000 lines and keeps local fixture adapters below 100 lines.
+  The architecture assertions are also split into core, interface, schematic,
+  PCB, and hosted-lane suites; shared review limits live in
+  `tests/lint_architecture_support.py`, and the suite-size guard covers these
+  architecture test modules themselves.
+- Use pytest area markers for broad runs and module names for focused runs.
+  Keep synthetic fault/control coverage beside the rule theme, with common
+  fixture builders in bounded support modules. The catalog architecture test
+  resolves active fault, control, and metamorphic fixture references and
+  requires each owning test module to carry `design_lint`, so focused runs do
+  not silently omit catalogued evidence. Avoid a generic checker that
+  accumulates unrelated predicates or duplicate copies of shared utilities.
+- The I2C address-map suite follows this layout: coverage, address collisions,
+  strap decoding, and contract validation have separate test modules, with
+  shared synthetic builders in `tests/design_lint_fixtures/i2c_addresses.py`.
+  Each module is registered for focused `interface_lint` selection.
+- The serial peer-reference regressions follow the same theme boundary:
+  coverage, review candidates, authored maps, and ambiguity/configuration
+  cases are separate pytest suites with shared synthetic builders in
+  `tests/serial_peer_reference_support.py`.
+
 ## Existing baseline
 
 The following 86 rules are implemented with synthetic regression coverage.
@@ -165,6 +324,53 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
+- **Test architecture — Keep native fixture acceptance selectable by theme.**
+  The exact-version empty-netlist fault and nonempty control now live in the
+  pytest module `tests/test_empty_netlist_evidence_native_fixture_lane.py`,
+  tagged `design_lint`, `evidence_lint`, `native_kicad`, and `slow`. This keeps
+  the native evidence boundary selectable without importing another lint
+  theme into the broad hosted acceptance module. The legacy
+  The former `tests/test_ci_hosted.py` has been retired. Serial roster,
+  net-label fallback, and reference-bond fixtures live in the focused pytest
+  modules `tests/test_serial_peer_native_fixture_lane.py` and
+  `tests/test_serial_reference_bond_native_fixture_lane.py`. Native
+  digital-peer, USB-C, STM32, connector-return, connector-inventory, and PCB
+  access lanes have module-level theme selection and retain native/slow markers.
+  Hosted planning/release checks and mocked PCB fixture scheduling also have
+  separate selectors; the latter stays synthetic and is excluded from native
+  KiCad and slow markers.
+  The hosted USB data-path, LED rail, SuperSpeed-pair, DC-reference, and IC
+  rail-capacitor native acceptance, plus PCB return-path orchestration, now have focused pytest
+  modules and marker selection. More legacy
+  extraction remains. This is test organization and selection progress, not a
+  new native run; local exact KiCad images remain necessary to revalidate the
+  fixture lane. Synthetic serial endpoint-roster tests now keep UART net-label
+  discovery in `tests/test_serial_participant_net_labels.py`, with shared
+  source builders in `tests/serial_participant_support.py`; both suites are
+  selectable with `interface_lint`. Power-sequence dependency checks and
+  observed output-to-enable cycle regressions now have separate suites, with
+  shared synthetic contract builders in `tests/power_sequence_support.py`.
+  External-protection contract comparisons and review-policy candidates now
+  have separate pytest suites using `tests/external_protection_support.py`.
+
+- **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
+  The native resistor-array fault/control now lives in
+  `tests/test_i2c_pullup_native_fixture_lane.py` with pytest markers for design
+  lint, interfaces, native KiCad, and slow execution. The move preserves exact
+  KiCad 10.0.0/10.0.5 image checks, repeated normalized exports, and the
+  channel-specific SDA fault/SCL control assertions. It shrinks the legacy
+  hosted test module; exact native execution still requires the digest-pinned
+  Docker lane.
+
+- **LINT-011/067 — Keep native CAN fixture acceptance in the interface theme.**
+  Split-midpoint termination and peer-assignment fault/control cases now have
+  dedicated pytest tests in `tests/test_can_native_fixture_lanes.py`. The
+  module pins both supported KiCad images, checks exact synthetic source and
+  normalized-netlist digests, and retains CAN termination contract outcomes,
+  REVIEW status for the asymmetric peer fixture, and read-only fixture mounts.
+  The legacy hosted test module is smaller; native execution still belongs to
+  the digest-pinned package acceptance environment.
+
 - **LINT-086 — Measure review value for the USB split-reference prompt.**
   The default-REVIEW rule has synthetic direct, series-resistor, USB-C,
   duplicated-contact, shunt, and multiport fault/control coverage. Its exact
@@ -193,6 +399,22 @@ and optional ecosystem adapters are `P3`.
   non-finding, and `INCOMPLETE` remains a partial screen. Keep unresolved labels
   visible and keep project defaults and the review-only prompt unchanged while
   evidence is gathered.
+
+  A public topology lead is the DStat Mainboard rev 1.2.3 PCB at pinned commit
+  `b6b2bbfdb7f8b2997d3035b083edbab2348333dc`. Its board source declares CERN
+  OHL v1.2, maps USB1 pin 5 and U6 (TPD2S017) ground to `/USB_GND`, and maps
+  FB2's two pads between `/USB_GND` and `GND` ([pinned board source][dstat-pcb]).
+  The D+/D− path runs through multi-pin U6, outside the current direct/one-
+  resistor path scope, and FB2 is not yet represented by a validated supported
+  bond class. Keep this as an applicability lead only: it is excluded from
+  supported-path, precision, and reviewer-value counts until an exact native
+  export and a scoped topology adapter can evaluate it. No project files or
+  netlists were copied into Tooling. A topology-shaped synthetic boundary
+  control now confirms that a multi-pin protection array plus a two-pin
+  reference ferrite remains `NO_SUPPORTED_PEER_PATHS`: it contributes zero
+  supported or common-reference paths, produces no review candidate, and is
+  not counted as a quiet non-finding. This validates the exclusion behavior
+  only; it does not evaluate DStat or establish support for that adapter path.
 
 - **LINT-094 — Open native power output on comparable peers.** The original
   exact-symbol gate passed tagged GitHub package acceptance in `v0.5.0rc12` (run 37796753272),
@@ -265,7 +487,7 @@ and optional ecosystem adapters are `P3`.
    project adopts a contact-rating requirement, its electrical owner must
    review exact ratings, derating conditions, and per-contact load from
    approved sources.
-   Saved local `NativeComponentRatingFixtureTests` receipts cover the
+   Saved local `test_component_and_connector_rating_controls_export_repeatably` receipts cover the
    digest-pinned KiCad 10.0.0 and 10.0.5 images. They record repeatable native
    exports and synthetic fault/control outcomes for component-voltage,
    component-power, connector-contact-current, and MOSFET-stress contracts.
@@ -693,7 +915,7 @@ is not a reason by itself to expand its scope or change its default policy.
   project-authored checks for those relationships. A not-applicable decision
   covers only its named schematic component and does not validate the physical
   assembly.
-- **Fixtures:** `tests/test_connector_coverage.py` covers an undeclared
+- **Fixtures:** `tests/test_connector_inventory_coverage.py` covers an undeclared
   candidate, complete interface and symbol-pin accounting, missing and unknown
   catalog/symbol pins, an explicit not-applicable decision, a reviewed
   reference outside candidate prefixes, standard connector symbols under
@@ -705,8 +927,9 @@ is not a reason by itself to expand its scope or change its default policy.
   parity confirm that an omitted peer remains `UNDECLARED`; this new discovery
   case is stable under mapping-order changes, and an explicit
   `not_applicable` disposition closes the sibling coverage gap. It does not
-  claim a native KiCad export. The reviewed-return regression also permutes
-  project interface IDs, catalog-record and pin order, review rows, and pin-map
+  claim a native KiCad export. The reviewed-return regression in
+  `tests/test_connector_return_role_coverage.py` also permutes project interface
+  IDs, catalog-record and pin order, review rows, and pin-map
   keys; the coverage and full lint reports stay equal for fixed source digests.
   Parity also confirms the
   nonstandard-reference candidate and suppresses the test-point control. A
@@ -728,7 +951,7 @@ is not a reason by itself to expand its scope or change its default policy.
   path and USB-C tests cover the same identity boundary. A CLI/MCP parity case
   checks nonstandard-reference findings. Native fixture orchestration is tested by
   `tests.test_connector_inventory_fixture_lane`; the exact pinned exports run
-  in `tests.test_ci_hosted.NativeConnectorReturnFixtureTests`. Native verify
+  in `tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests`. Native verify
   and CLI/MCP regressions assert that incomplete or undeclared coverage stays
   visible.
 - **Remaining:** Physical connector inventory and symbols with custom library
@@ -1044,7 +1267,7 @@ is not a reason by itself to expand its scope or change its default policy.
   runs had identical filtered output. A separate Tooling comparison on equivalent synthetic
   `NetlistContract` objects emitted the broader named-pair review finding for both cases. This is
   now regression-tested by
-  `tests.test_design_lint.DesignLintTests.test_named_complementary_nets_prompt_for_reviewed_pair_requirements`.
+  `tests.test_design_lint_named_pairs.test_named_complementary_nets_prompt_for_reviewed_pair_requirements`.
   The fixtures and reproduction commands are in
   [the USB cohort trial](../tests/fixtures/design_lint/cohort-usb-series/README.md).
 - **Problem and evidence:** The expected topology depends on the selected PHY.
@@ -1257,7 +1480,8 @@ is not a reason by itself to expand its scope or change its default policy.
   optional-map state, not a requirement gap. Counts do not claim coverage of
   off-board circuitry. The current slice does not claim a global execution
   ledger for every active rule.
-- **Fixtures:** `tests/test_usb_data_paths.py`,
+- **Fixtures:** `tests/test_usb_data_paths.py` and
+  `tests/test_usb_data_path_reference_bonds.py`,
   `tests/test_power_paths.py`, and `tests/test_power_sequences.py` cover missing
   maps, matching controls, mapped faults, off-mode findings, exact map and
   netlist hashes, and a configured power map without a netlist digest.
@@ -1368,8 +1592,8 @@ is not a reason by itself to expand its scope or change its default policy.
   exact-version fixture source and run procedure are in
   `tests/fixtures/design_lint/component-voltage-ratings/README.md`.
 - **Native evidence (2026-10-03):**
-  `NativeComponentRatingFixtureTests.test_component_and_connector_rating_controls_export_repeatably`
-  passed with digest-pinned images: KiCad 10.0.0
+  `test_component_and_connector_rating_controls_export_repeatably` passed with
+  digest-pinned images: KiCad 10.0.0
   `sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3`
   and KiCad 10.0.5
   `sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`.
@@ -1491,14 +1715,15 @@ is not a reason by itself to expand its scope or change its default policy.
   `pin_connectivity` and `grounding` requirements remain the only authority for
   those decisions. Findings default to `REVIEW` and follow existing
   per-project mode and exact-ignore behavior.
-- **Fixtures:** `tests/test_connector_coverage.py` contrasts mapped generic
+- **Fixtures:** `tests/test_connector_return_role_coverage.py` contrasts mapped generic
   return roles across USB and serial symbols, a common-net control, open mapped
   return/supply contacts, digestless coverage, and stale net assignments. The
   new synthetic pair uses generic `Pin_1`/`Pin_9` supply contacts on different
   custom connector symbols and neutral split-net names. Native-only lint is
   quiet; a complete map adds one review finding for a shared authored domain.
   A common-net control and a distinct-domain split control stay clear. The
-  same two-connector fixture now leaves the mapped J2 supply contact open:
+  `tests/test_connector_supply_peer_coverage.py` also covers mapped generic
+  supply peers. The same two-connector fixture now leaves the mapped J2 supply contact open:
   coverage stays `COMPLETE`, one REVIEW finding carries the empty assignment,
   and no duplicate unconnected-pin warning is emitted. The common-net control
   passes; the open-pin prompt still does not require a shared rail. The
@@ -1509,7 +1734,7 @@ is not a reason by itself to expand its scope or change its default policy.
   case is synthetic typed-netlist evidence, not another native export.
   The report names each native function, project catalog role, and voltage domain;
   it states that this classification does not require commonality.
-  `tests/test_mcp_parity.py` now exercises three custom connector peers with
+  `tests/test_design_lint_mcp_parity_peer_pins.py` now exercises three custom connector peers with
   generic returns and supplies through CLI and MCP: two agree on each net and
   one differs, while the all-common control clears both prompts. Removing the
   reviewed maps suppresses these custom-role candidates. The full typed reports
@@ -1706,7 +1931,9 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v37. Fault/control and applicability reports cover
+- **Status:** Implemented v54. The cross-process probe supports themed report
+  selectors and retains the complete 140-report inventory gate. Fault/control
+  and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
   control, generic peer-pin outliers, project-mapped connector returns, series
@@ -1721,7 +1948,16 @@ is not a reason by itself to expand its scope or change its default policy.
   checks, DB9 grounding and pin-connectivity requirements, multi-device
   MOSFET stress checks, source-mapped USB data-path fault and topology
   controls, synthetic PCB signal-path rule coverage, synthetic keepout
-  restriction coverage, and switching-loop route ambiguity reports. The test
+  restriction coverage, switching-loop route ambiguity reports, and
+  source-mapped crystal, regulator-feedback, and RC-filter fault/control pairs,
+  plus mapped PCB protection-path, track-width, RF antenna keepout, and
+  differential-pair DRC rule-coverage pairs, plus synthetic open-control-input
+  and source-bound schematic wire-crossing fault/control reports, plus
+  source-bound synthetic PCB return-copper disconnect/control checks, a
+  same-net split-plane fault/control pair, and a DNP net-tie fault against a
+  fitted, explicitly bonded-return control, plus an unstitched front/back
+  return-plane fault and through-via control.
+  The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
   design-lint reports plus typed contact-rating and grounding check results
@@ -1845,7 +2081,8 @@ is not a reason by itself to expand its scope or change its default policy.
   The connector-only header report retains both SPI and UART coverage entries
   as `NO_SUPPORTED_ENDPOINTS`, with zero recognized endpoints, direct links,
   voltage comparisons, or candidate groups; neither direct-peer voltage rule
-  appears in its findings. A separate `tests.test_mcp_parity` case loads the
+  appears in its findings. A separate
+  `tests.test_design_lint_mcp_parity_spi` case loads the
   same header-only shape from retained synthetic native-netlist XML and asserts
   complete CLI/MCP report equality, preserving the same applicability counts
   and absence of peer-voltage findings.
@@ -1945,6 +2182,179 @@ is not a reason by itself to expand its scope or change its default policy.
   assignment control clears the finding. Full source-bound reports and group
   counts match across the three hash seeds; this adds no lint rule or native
   export result. The focused determinism pytest passed on 2026-10-09.
+  The v38 extension adds source-bound reports for a mapped I2C resistor-array
+  control and a single SDA-channel net-assignment fault. The control resolves
+  the exact array coverage and suppresses only `bus.i2c_missing_pullup`; the
+  fault leaves that prompt `OPEN`, while both reports preserve the independent
+  `bus.i2c_unmapped_responder` coverage prompt. Each complete report binds the
+  synthetic requirement and typed-netlist digests and is compared byte-for-byte
+  across three independently randomized Python processes. The requirement
+  builders now live in the shared I2C fixture module used by both focused and
+  process-level tests. This is typed-netlist determinism evidence, not a new
+  native export or an electrical-intent claim. The v39 extension also
+  serializes `i2c_pullup_checks` for the same mapped-array pair, comparing
+  source-bound typed check records and requirement/netlist digests across the
+  three processes. The single SDA channel assignment fault fails only the SDA
+  path check while SCL passes; both lines pass in the control. This exercises
+  the exact authored contract layer as well as heuristic coverage, without
+  changing the project requirement or adding a lint rule. The focused I2C,
+  architecture, and cross-process pytest selection passed 45 tests and 7
+  subtests on 2026-10-09; the full reports and typed checks matched across
+  three distinct hash secrets. The v40 extension adds an authored I2C address-
+  map fault where a strap change produces both an address mismatch and a
+  same-segment collision, plus the distinct-address control. Each serialized
+  case includes the full source-bound report, netlist digest, and the same
+  address-map digest. The focused hash-seed interface and inventory tests
+  passed on 2026-10-09; full fault and control reports matched across three
+  distinct hash secrets. This extends deterministic coverage without adding a
+  lint rule or native-export result. The v41 extension adds a mapped external-
+  protection fault and repaired control. Both carry the same authored map
+  digest; the fault has incomplete protection coverage and a mapped-device
+  mismatch, while the repaired control has complete coverage and retains an
+  independent named-pair review. Complete reports matched across three distinct
+  hash secrets. The focused interface and inventory pytest run passed on
+  2026-10-09; this adds no rule or native-export result.
+  The v42 extension adds a mapped crystal load-network node fault and valid
+  control. Both serialize the same authored crystal-map digest and distinct
+  typed-netlist digests with the complete design-lint report. The fault remains
+  `REVIEW` with incomplete mapped coverage and the crystal-network mismatch;
+  the control has complete coverage and no findings. The full reports matched
+  across three distinct hash secrets. The focused analog determinism and
+  inventory pytest run passed two tests, and the crystal contract plus
+  architecture suites passed 40 tests on 2026-10-09. This adds no lint rule,
+  native-export result, or electrical-intent claim.
+  The v43 extension adds mapped regulator-feedback divider-value and RC-filter
+  cutoff fault/control pairs. Each pair carries one shared authored-map digest
+  and distinct typed-netlist digests alongside complete design-lint reports.
+  Both numeric faults remain `REVIEW` and identify their exact mapped rule;
+  their topologies remain `COMPLETE` while the affected entries are
+  `OUT_OF_RANGE`. The corrected controls are `PASS` with complete coverage and
+  no findings. All reports matched across three distinct hash secrets. The
+  focused determinism and crystal, regulator-feedback, and RC contract pytest
+  run passed 49 tests and 9 subtests. `component_lint` selected the crystal/RC
+  pair tests (2 passed); `power_lint` selected the regulator test (1 passed).
+  The architecture and suite-size checks passed 25 tests on 2026-10-09. This
+  adds no lint rule, native-export result, or electrical-intent claim.
+  The v44 extension adds mapped PCB protection-entry distance and minimum
+  track-width fault/control pairs. Each pair binds one authored-map digest and
+  distinct synthetic board and snapshot digests in a complete typed report.
+  The protection fault is one nanometer beyond its 100 µm limit and emits
+  `pcb.protection_entry_path`; the exact-boundary control passes. The track
+  fault is 250 µm against the authored 251 µm minimum and emits
+  `pcb.minimum_track_width`; the 251 µm control passes. Track-width coverage
+  remains `COMPLETE` while its measured track is below the requirement. Full
+  reports matched across three distinct hash secrets. The focused PCB path,
+  width, and report-inventory run passed 17 tests; `pcb_lint` selected both
+  determinism cases (2 passed), and `return_path_lint` selected protection
+  review (1 passed, 1 deselected). Architecture and suite-size checks passed
+  25 tests on 2026-10-09. These synthetic measurements add no lint rule,
+  native-export result, or electrical-intent claim.
+  The v45 extension adds a mapped RF-module antenna-placement fault and exact
+  keepout control. Each case carries the same authored-map and netlist digests,
+  distinct synthetic board and snapshot digests, and the complete design-lint
+  report. Moving the footprint by 100 nm on each coordinate while leaving its
+  keepout in place yields `REVIEW`, incomplete antenna coverage, and
+  `pcb.rf_module_antenna_keepout_coverage`; the aligned control has complete
+  coverage and no findings. Full reports matched across three distinct hash
+  secrets. The focused report-inventory, antenna, and determinism selection
+  passed 24 tests; `pcb_lint` selected the new case (1 passed). Architecture
+  and suite-size checks passed 25 tests on 2026-10-09. This adds no lint rule,
+  native-export result, or electrical-intent claim.
+  The v46 extension adds a mapped differential-pair native-rule coverage
+  mismatch and exact control. The fault changes the native rule's gap maximum from
+  0.50 mm to 0.45 mm; it reports `MISMATCH`, incomplete coverage, and
+  `pcb.differential_pair_rule_coverage`. The exact-rule control has complete
+  coverage and no findings. Both complete reports bind source, project, rules,
+  board, netlist, and synthetic DRC-metadata hashes. Map, project, board, and
+  netlist hashes match between cases; the rules and source-inventory hashes
+  differ. Full reports matched across three distinct hash secrets. The focused
+  DRC, determinism, and report inventory selection passed 16 tests; `pcb_lint` selected the new case
+  (1 passed). Architecture and suite-size checks passed 25 tests on
+  2026-10-09. DRC metadata is synthetic; this adds no native KiCad run, new
+  lint rule, or electrical-intent claim. The v47 extension adds complete
+  reports for the LINT-101 cross-symbol connector `PART_ID` alias open-contact
+  fault, split-assignment fault, and fully assigned common-net control. The
+  faults retain one localized outlier or divergence finding with eligible-
+  group coverage; the control has complete pin assignments and no findings.
+  All three reports are included in the three-process byte-for-byte comparison.
+  This adds determinism coverage for both LINT-101 alias paths, not a lint rule,
+  native export, or electrical-intent claim. The focused connector peer and
+  report-inventory pytest run passed two tests on 2026-10-09; the shared probe
+  verified three distinct hash secrets and identical full reports. The v48
+  extension adds synthetic complete reports for nine disconnected reset,
+  enable, and boot/strap input pins and their connected, visibly biased
+  controls. Each report carries the digest of its typed netlist. The fault is
+  `REVIEW` with nine `control.unconnected_control_input` findings; the control
+  is `PASS` with no findings. Both reports matched byte-for-byte across three
+  independently randomized Python processes. The focused report-inventory and
+  control-input determinism tests passed two tests; the `power_lint` selector
+  selected and passed the new case. Architecture and lint-suite size checks
+  passed ten tests. This extends determinism evidence only; it adds no lint
+  rule, native export, or electrical-intent claim. The v49 extension adds full
+  source-bound schematic reports for an unmarked orthogonal-wire crossing and
+  its explicit-junction control. Both use the same typed-netlist digest and
+  scanner version field (`10.0.6`), with distinct schematic source digests.
+  The crossing report has `COMPLETE` geometry coverage and one
+  `schematic.unmarked_wire_crossing` finding at 127 mm; the junction control
+  has `COMPLETE` coverage and no findings. The reports matched byte-for-byte
+  across three independently randomized Python processes. The focused
+  report-inventory and schematic determinism tests passed two tests; the
+  `schematic_lint` selector and existing crossing policy regression each
+  passed. Architecture and lint-suite size checks passed ten tests. This is
+  synthetic source-scan and report-determinism evidence; it invokes no native
+  KiCad export and adds no electrical-intent claim. The v50 test-runner
+  extension assigns each themed determinism suite to one or more report
+  families and lazily imports only their builders. The complete inventory
+  still compares all 132 reports across three processes. Local Python 3.11
+  runs completed the two-report schematic selector in 1.24 s and the
+  interface selector in 1.78 s; the full inventory test took 2.85 s. All 16
+  determinism tests passed together in 3.01 s. Architecture and suite-size
+  checks passed ten tests. These are local slice timings,
+  not a broad suite benchmark. The selector adds no lint predicate or native
+  export. The v51 extension adds complete typed return-path checks for a
+  disconnected synthetic DB9 return and a connected control. Both use the
+  same independently authored requirement digest and include distinct board
+  and connectivity-snapshot digests, the declared KiCad 10.0.5 version,
+  synthetic image digest, probe-source digest, and ordered check rows. The
+  fault fails only the exact return-connectivity check; every control row
+  passes. The reports matched across three independently randomized Python
+  processes. The focused return-path determinism selector passed, the complete
+  inventory passed with 134 reports, the marked return-path suites passed 15
+  tests, and architecture and suite-size checks passed 31 tests. This adds no
+  lint rule, native KiCad export, or electrical-intent claim. The contract and
+  copper-zone regressions now use separate marked pytest modules and shared
+  minimal synthetic builders.
+  The v52 extension adds a source-bound same-net copper-zone split fault and
+  single-island control. Both share the same reviewed direct-return
+  requirement, while board and connectivity-snapshot digests differ. The
+  fault retains exact F.Cu island indexes 0 and 1 on separate components and
+  fails the connectivity row; the connected control places both pads on the
+  same filled island and passes all rows. The four-case return-path family
+  matched across three independently randomized Python processes. The focused
+  selector passed in 1.20 s. All 17 design-lint determinism tests, the 15
+  marked return-path tests, and 31 architecture and suite-size tests passed
+  together (63 tests); the catalog, fixture, and backlog checks passed 165
+  tests and 108 subtests. This remains synthetic evidence and invokes no
+  native KiCad export. The v53 extension adds an exact reviewed bonded-return
+  topology with separate DGND_A and DGND_B endpoint nets and an NT1 net-tie
+  footprint/pad-group requirement. Its fault marks NT1 and both observed tie
+  pads DNP; the control retains the same authored requirement with the net tie
+  fitted. The six-case return-path family matched across three independently
+  randomized Python processes. The DNP case fails the exact bond and
+  connectivity rows; the fitted case passes every row. This remains synthetic
+  evidence and invokes no native KiCad export. The focused selector passed in
+  1.20 s; the return-path, full determinism, architecture, suite-size, and
+  catalog slice passed 73 tests in 4.05 s. The v54 extension covers separate
+  same-net F.Cu and B.Cu return planes with exact per-pad zone-island
+  observations. Its fault has no through via and reports disconnected copper
+  groups; its control binds one fitted through via to both endpoint components
+  and reports its exact synthetic identity, geometry, and F.Cu-to-B.Cu
+  transition. Both retain the
+  same direct-return requirement and distinct board/snapshot digests. The
+  eight-case return-path family matched across three independently randomized
+  Python processes; the fault fails connectivity and the control passes all
+  rows. The complete inventory gate passed with 140 reports. This is synthetic
+  evidence and invokes no native KiCad export.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
@@ -2103,8 +2513,9 @@ is not a reason by itself to expand its scope or change its default policy.
   implementation is first-party and uses only the existing typed netlist
   service.
 - **Verification state:** Unit, catalog, determinism, CLI/MCP, and fixture-lane
-  wiring checks pass locally. `NativeTwoPinComponentFixtureTests` passed on
-  digest-pinned KiCad 10.0.0 and 10.0.5 on 2026-10-07 (one test, ten
+  wiring checks pass locally. The
+  `test_native_custom_mapped_capacitor_same_net_fault_and_control` fixture
+  passed on digest-pinned KiCad 10.0.0 and 10.0.5 on 2026-10-07 (one test, ten
   subtests). The same-net diode fault reports REVIEW and its distinct-net
   control passes on both versions. Their source hashes are
   `c7b34973f881f5c8d8e8ac26b07c03dec70b061f66b8338d61fb085583c2aa8b` (fault)
@@ -2155,7 +2566,8 @@ is not a reason by itself to expand its scope or change its default policy.
   mismatched/missing channel labels; a third connected component; DNP and
   incomplete inventories; shield/chassis reference exclusion; deterministic
   reordering and hash-seed runs; project rule override and exact-ignore lifecycle;
-  and CLI/MCP parity pass locally. The `NativeDigitalPeerFixtureTests` lane
+  and CLI/MCP parity pass locally. The
+  `tests/test_ci_hosted_digital_peers.py::NativeDigitalPeerFixtureTests` lane
   passed on digest-pinned KiCad 10.0.0 and 10.0.5 on 2026-10-07. It exported
   both synthetic label schematics twice per version; the common-reference
   control had no `bus.serial_peer_reference_review` finding, and the split-
@@ -2310,12 +2722,15 @@ is not a reason by itself to expand its scope or change its default policy.
   are assigned to the same schematic net. That topology can bypass a series
   element or short a shunt element while every pin remains connected.
 - **Predicate:** Recognize exact `Device:R`, `Device:C`, and `Device:L` symbol
-  families only when the native netlist contains exactly two distinct pin
+  families, plus custom capacitor symbols with an exact project-authored role
+  binding, only when the native netlist contains exactly two distinct pin
   numbers, one unambiguous net per pin, a fitted component state, and the
-  component value. Report when both pins resolve to the same net. The rule
-  does not infer a required series or shunt function.
+  component value. The custom binding must match `PART_ID`, symbol, footprint,
+  and the full native pin number/function/electrical-type inventory. Report
+  when both pins resolve to the same net. The rule does not infer a required
+  series or shunt function.
 - **Boundary:** A same-net part may be a deliberate jumper, measurement
-  element, or other reviewed topology. Custom symbols, incomplete or
+  element, or other reviewed topology. Unmapped custom symbols, incomplete or
   multi-pin inventories, DNP parts, unassigned pins, and ambiguous net
   assignments are outside the predicate. The schematic netlist cannot prove
   copper connectivity, physical population, current behavior, or whether the
@@ -2331,6 +2746,22 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Fixture inputs:** The
   [synthetic component README](../tests/fixtures/design_lint/two-pin-components/README.md)
   records the source hashes, fault/control topologies, and native export lane.
+- **Exact custom-capacitor extension (2026-10-09):** The public
+  [kicad-happy changelog][happy-changelog] records SP-001 for same-net
+  two-pin passives and diodes. The local baseline already covered common
+  `Device:R/C/L` symbols, so the incremental gap was opaque custom capacitors
+  already classified by a project-authored exact role map. LINT-051 now
+  reuses that shared resolver and reports only a role=`capacitor` entry whose
+  `PART_ID`, symbol, footprint, and complete native pin inventory match. It
+  does not guess from reference, value, or custom symbol name. Synthetic
+  unmapped, mapped same-net, distinct-net, and DNP cases pass; a source-bound
+  synthetic CLI/MCP parity case confirms both surfaces return the same
+  role-bound evidence. A dedicated synthetic same-net schematic and mapped
+  distinct-net control are now listed in the two-pin native export lane for
+  KiCad 10.0.0 and 10.0.5. This host has no usable Docker socket or native
+  KiCad CLI, so those new exact-version exports remain pending package
+  acceptance; exact-role native exports are separately recorded by LINT-091.
+  No cohort source or project design was copied.
 - **Pinned native regression (2026-09-29):** The same two source-hashed synthetic schematics were
   each exported twice with exact KiCad 10.0.0
   (`ghcr.io/kicad/kicad:10.0.0@sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3`)
@@ -2583,7 +3014,7 @@ is not a reason by itself to expand its scope or change its default policy.
   native pins and validates both net assignments. External endpoints remain
   explicitly unverifiable from schematic evidence and are reported
   `NOT_APPLICABLE`.
-- **Native source fixtures:** `tests.test_ci_hosted.NativeCanTerminationFixtureTests`
+- **Native source fixtures:** `tests.test_can_native_fixture_lanes`
   exports synthetic control and single-pin fault schematics twice with the
   digest-pinned KiCad 10.0.0 and 10.0.5 images. The typed netlist hashes match
   across versions: control
@@ -2929,7 +3360,8 @@ is not a reason by itself to expand its scope or change its default policy.
   circuitry that the direct-resistor predicate does not resolve. This screen measures candidate
   volume and repeatability only.
 - **Pinned native revalidation (2026-10-03):** The
-  `NativeControlInputDemoTests` lane passed locally with one test and five
+  `tests/test_ci_hosted_control_inputs.py::NativeControlInputDemoTests` lane
+  passed locally with one test and five
   subtests. It used exact KiCad 10.0.5 from the digest-pinned image recorded in
   the [synthetic alias fixture notes](../tests/fixtures/design_lint/control-input-alias/README.md).
   The `POR_B`/`PORN` source exported twice with the same normalized typed-netlist
@@ -3213,9 +3645,11 @@ is not a reason by itself to expand its scope or change its default policy.
   native 0R control is registered in the same KiCad 10.0.0/10.0.5 fixture lane;
   it was initially unrun locally and is included in the current native run
   recorded below.
-- **Evidence history:** The predicate, tests, and native fixture sources were
-  in this branch before the alias extension. The pinned lane was wired into the
-  existing USB export job but had not run locally at that earlier checkpoint;
+- **Evidence history:**
+
+  The predicate, tests, and native fixture sources were already in this branch
+  before the alias extension. The pinned lane was wired into the existing USB
+  export job but had not run locally at that earlier checkpoint;
   no GitHub result had been recorded for the then-dirty branch. Before the series-path
   extension, the full Python suite passed on 2026-10-07 with the public
   `KiCAD-Test` reference checkout pinned
@@ -3302,7 +3736,8 @@ is not a reason by itself to expand its scope or change its default policy.
   results are recorded below. It does not test physical return continuity.
   The hosted tag run then passed as `v0.5.0rc17` (run `37863872527`). Its
   package suite reported 2,290 passed, 26 skipped, and 2,044 subtests passed;
-  `NativeUsbDataPathFixtureTests` ran on digest-pinned KiCad 10.0.0 and 10.0.5.
+  `test_native_usb_data_path_fixture_lane_is_repeatable` ran on digest-pinned
+  KiCad 10.0.0 and 10.0.5.
   The direct split-reference fault prompted review, its common-reference
   control stayed quiet, the USB-C fault/control behaved as registered, and the
   two-port fault produced two per-port reviews while its common control stayed
@@ -3315,8 +3750,8 @@ is not a reason by itself to expand its scope or change its default policy.
   produced one stable review. The container ran as `linux/amd64` on a
   `linux/aarch64` Docker host. This adds repeatable public-source applicability
   evidence; author dispositions and reviewer time are still unmeasured.
-  The existing `NativeUsbDataPathFixtureTests` also passed locally on the same
-  host with the public template pinned at
+  The existing `test_native_usb_data_path_fixture_lane_is_repeatable` also
+  passed locally on the same host with the public template pinned at
   `ed89536f0dbbcb013145af2994fef41b2250143e`: 1 test, 2 exact-version
   subtests. The focused USB analyzer, data-path, determinism, and CLI/MCP parity
   run passed 36 tests and 10 subtests; the backlog Markdown check passed.
@@ -3739,7 +4174,8 @@ is not a reason by itself to expand its scope or change its default policy.
   electrical service, with a parity test for pass and under-range fault. The
   native acceptance lane repeats both schematics and compares normalized
   netlists before running the same check; source hashes are pinned in
-  `NativeUsbCPortFixtureTests`. The synthetic sources and evidence boundary are
+  `tests/test_ci_hosted_usb_c_ports.py::NativeUsbCPortFixtureTests`. The
+  synthetic sources and evidence boundary are
   documented in the [fixture README][usb-cap-fixture-readme].
 - **Acceptance:** In GitHub run `37863872527`, digest-pinned KiCad 10.0.0 and
   10.0.5 each exported the fault and control twice with matching normalized
@@ -4295,8 +4731,8 @@ is not a reason by itself to expand its scope or change its default policy.
   pcb.rf_module_antenna_keepout_coverage rule. The project-owned typed map,
   source-bound schematic/board identity checks, explicit onboard/external/DNP
   dispositions, deterministic footprint-local polygon transform, policy modes,
-  report and text output are in place; the configured disabled report has
-  CLI/MCP parity. Synthetic fault,
+  report and text output are in place; configured-disabled and enabled
+  fault/control reports have CLI/MCP parity. Synthetic fault,
   control, metamorphic, and review/block/off/ignore cases pass. The
   tooling-owned native fixture verifies front-side 90-degree and 30-degree,
   plus back-side 270-degree footprint transforms against actual named rule
@@ -4330,7 +4766,8 @@ is not a reason by itself to expand its scope or change its default policy.
   module moved without its area fails, while moving the module and area
   together passes. Explicit external-antenna and DNP controls pass. Review,
   block, off, and exact-ignore behavior is tested, as is CLI/MCP parity for a
-  configured disabled report. The native synthetic board has mapped pads on
+  configured disabled report and enabled fault/control outcomes. The native
+  synthetic board has mapped pads on
   front-side 90-degree and 30-degree, and back-side 270-degree footprints;
   each transformed local keepout matches a native rule-area outline on KiCad
   10.0.0 and 10.0.5.
@@ -4338,9 +4775,11 @@ is not a reason by itself to expand its scope or change its default policy.
   with native PCB geometry. It cannot validate that the vendor drawing was
   interpreted correctly, establish antenna performance, or prove copper
   exclusion on a fabricated board. Native DRC remains a separate check.
-- **Acceptance limits:** Enabled CLI/MCP fault-case parity and a candidate
-  runtime trial remain future evidence. The tool accepts only requirements
-  authored in the project repository and uses synthetic fixtures here.
+- **Acceptance limits:** The enabled CLI/MCP test injects source-matched
+  synthetic PCB geometry at the native-scan boundary; it is service-surface
+  parity, not exact native execution. Candidate runtime trial remains future
+  evidence. The tool accepts only requirements authored in the project
+  repository and uses synthetic fixtures here.
 - **Privacy:** Develop with tooling-owned synthetic boards and maps only. Do
   not retain customer or proprietary module layouts or contracts.
 
@@ -4731,6 +5170,21 @@ is not a reason by itself to expand its scope or change its default policy.
   clean design. This scan predates the horizontal-alignment extension below;
   the 2026-10-05 follow-up rescan after that change is recorded below. No
   public project source was copied into this repository.
+- **Pytest suite decomposition (2026-10-09):** The former monolithic schematic
+  geometry suite is now ten focused pytest modules for text, symbol-body,
+  pin-proximity, wire-topology, sheet-hierarchy, and exact-native parity cases.
+  The 848-line PCB reference-plane suite is also split into geometry, adjacent
+  layer, and contract suites. These modules have focused pytest markers, and
+  the architecture test enforces the 500-line review limit for each suite and
+  its support modules. The focused geometry, reference-plane, catalog,
+  reachability, and architecture run passed 304 tests with 25 exact-native
+  tests skipped because no native CLI was configured. The text-only synthetic
+  selection collected 25 tests; `pcb_reference_lint` collected 15 tests. The
+  digest-pinned lane now runs the schematic geometry suites with pytest and
+  records the selected files in its receipts. Its command-construction test
+  passed. This host denied access to the Docker socket, so the exact KiCad
+  matrix has not been rerun after the split; native results below describe
+  earlier single-module runs.
 - **CI regression lane (2026-09-29):** Package acceptance now sets
   `KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY=1` and runs the full
   `test_schematic_geometry.py` suite through the official amd64 KiCad 10.0.6
@@ -6624,7 +7078,7 @@ is not a reason by itself to expand its scope or change its default policy.
   broader `signal.named_pair_without_reviewed_requirement` prompt on `USB_D+`/`USB_D−` for both the
   no-resistor candidate and resistor control. That prompt asks whether the names indicate a physical
   pair; it does not review resistor topology. The exact alias baseline is covered by
-  `tests.test_design_lint.DesignLintTests.test_named_complementary_nets_prompt_for_reviewed_pair_requirements`.
+  `tests.test_design_lint_named_pairs.test_named_complementary_nets_prompt_for_reviewed_pair_requirements`.
   The candidate detector remains unadopted because its generic 15–33 Ω assumption prompts on a
   documented integrated-PHY direct path. The local exact map adds component topology coverage only
   when a project supplies its reviewed decision.
@@ -6712,9 +7166,12 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Baseline and disposition:** Tooling's existing LINT-045 rule reports the no-pull-up case,
   accepts the fitted 10k control, and still prompts for the DNP and 0R cases. Those controls are
   covered by
-  `tests.test_design_lint.DesignLintTests.test_spi_active_low_select_bias_hint_is_review_only_and_configurable`
+  `tests.test_design_lint_spi.test_spi_active_low_select_bias_hint_is_review_only_and_configurable`
   and
-  `tests.test_design_lint.DesignLintTests.test_spi_select_bias_hint_checks_recognized_paths_and_valid_controls`.
+  `tests.test_design_lint_spi.test_spi_select_bias_reports_unusable_pullup_paths`.
+  Valid controls are checked by
+  `tests.test_design_lint_spi.test_spi_select_bias_recognizes_pullup_paths` and
+  `tests.test_design_lint_spi.test_spi_select_bias_ignores_valid_controls`.
   PR-002 adds no new detection on this fixture set and misses two deliberately invalid paths by
   treating DNP and zero-ohm components as pull-ups. Keep no cohort dependency; the local rule
   already applies a fitted-state and resistance window and requires an explicit active-low input.
@@ -6890,6 +7347,48 @@ is not a reason by itself to expand its scope or change its default policy.
   candidate container workflow, reviewer effort, applicability on exact parts,
   and results on approved non-proprietary designs. No product or proprietary source
   was used.
+
+##### Expanded native synthetic recheck (2026-10-09)
+
+- **Pinned runtime:** Rechecked the same public commit and package in a fresh
+  Python 3.11.16 environment under `/private/tmp`, using setuptools 83.0.0 and
+  `--no-build-isolation --no-deps`. The selected analyzer was invoked through
+  the installed package's `ReviewContext` with host KiCad CLI 10.0.6. The
+  candidate source and its Apache-2.0 license hashes match the pinned values
+  above. This does not exercise its full dependency installation or Docker
+  wrapper.
+- **Synthetic inputs:** The 11 schematics under
+  [`tests/fixtures/design_lint/cohort-clock-series-native/`](../tests/fixtures/design_lint/cohort-clock-series-native/README.md)
+  are rendered from
+  `tests/design_lint_fixtures/clock_series_trial.py`. The new
+  `test_design_lint_clock_series_trial.py` checks that the committed sources
+  match the generator. Its native cases compare every exported pin-to-net
+  assignment with the authored synthetic topology and require zero ERC errors.
+  All 11 exports matched and all 11 ERC reports had zero errors; only
+  `Synthetic` library registration warnings remain.
+- **Candidate result:** The targeted heuristic was run twice per case using
+  native netlists; all 11 results were repeatable. It prompted on direct load,
+  direct load with a test point, a shunt pull, a resistor on an unrelated net,
+  and a bypassed series resistor. It also prompted on the fixture-authorized
+  direct-drive control. It stayed quiet on the fitted series controls, but
+  missed the bead mislabeled with an `R` reference, the DNP resistor, and the
+  1 MOhm resistor. The allowed-direct result is a fixture-relative over-prompt;
+  the three quiet fault cases are candidate predicate gaps.
+- **Prior fixture issue:** Native ERC also found two undriven power-input
+  errors in the historical `series-x-control.kicad_sch`. Its `+3V3` local label
+  is on the same wire as X1's output and VDD pin, with a multiple-net-name
+  warning. The earlier hash-pinned no-CLI record remains unchanged; all new
+  cases were authored separately.
+- **Reproducibility record:** The target-only report was identical over two
+  independent native evaluations of every case. Per-source hashes, findings,
+  ERC counts, and the aggregate output digest are in the expanded fixture
+  README. Generated JSON stays under ignored `build/`.
+- **Disposition:** No general clock-series rule or runtime dependency is
+  adopted. Tooling has no existing clock-series map to compare, and the
+  candidate itself cannot distinguish a part-approved direct path or verify
+  fitted part identity, DNP state, or value. Exact part applicability, reviewer
+  effort, full installation cost, and behavior on approved external designs
+  remain open.
 
 ##### Recorded trial: kicad-happy `GP-001` narrow reference-plane void
 
@@ -7509,7 +8008,7 @@ it does not claim field validation or effectiveness against private boards.
   empty. Its fault localizes open J3.1 while J1.1 and J2.1 share `+5V`; the
   minority-net fault localizes J3.1 on `+3V3` while J1.1 and J2.1 share
   `+5V`. The common-net control passes without findings.
-- **Native evidence:** `tests.test_ci_hosted.NativeConnectorReturnFixtureTests`
+- **Native evidence:** `tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests`
   exports the minimum two-connector open-contact fault, an explicit
   no-connect-marker peer fault, and the common-net control, plus the
   three-connector unique-minority fault and common-net control, twice with
@@ -8214,7 +8713,8 @@ it does not claim field validation or effectiveness against private boards.
   design with supported digital-peer functions before claiming public-board
   LINT-066 measurement.
 - **Pinned KiCad-demo follow-up (2026-10-03):** The four native netlists from
-  `NativeControlInputDemoTests` were also screened with the LINT-066 predicate:
+  `NativeControlInputDemoTests` in
+  `tests/test_ci_hosted_control_inputs.py` were also screened with the LINT-066 predicate:
   CM5 Minima, Jetson AGX Thor, ColdFire/Xilinx, and VME-WREN all produced zero
   candidates. These bundled samples had no recognized same-net SPI or
   directionally clear UART/USART peers on different explicit voltage-named
@@ -8988,7 +9488,7 @@ it does not claim field validation or effectiveness against private boards.
   and reversing component/net/pin-map order preserves the finding. These are
   unit results, not new native exports. The self-contained CLI/MCP regression
   `test_dual_uart_split_reference_localizes_one_header_on_cli_and_mcp` in
-  `tests/test_design_lint_i2c_parity.py` runs a digest-bound synthetic netlist
+  `tests/test_design_lint_serial_parity.py` runs a digest-bound synthetic netlist
   with one MCU driving two UART headers: J1 has the split return, J2 shares the
   MCU return, and only J1 is reported; its all-common control is quiet for this
   rule. The same CLI/MCP case now also applies an exact source-matched
@@ -9070,19 +9570,19 @@ it does not claim field validation or effectiveness against private boards.
 #### LINT-075 — Oscillator-module output load-path review
 
 - **Priority and status:** P3 cohort-derived candidate; not an active catalog
-  rule. LINT-031 now records a repeated no-CLI runtime trial on seven
-  tooling-owned schematics. It demonstrates a narrow direct-load hint, a
-  fixture-relative over-prompt for an allowed direct-drive topology, and misses
-  for DNP and wrong-value series components. Native and part-applicability
-  evidence remain open.
+  rule. LINT-031 records the initial repeated no-CLI trial and an expanded
+  native trial on 11 tooling-owned schematics with KiCad 10.0.6. The candidate
+  demonstrates a narrow direct-load hint, a fixture-relative over-prompt for
+  an allowed direct-drive topology, and misses for wrong-part, DNP, and
+  wrong-value series components. Part-specific applicability remains open.
 - **Cohort input:** The public [`kicad_skills` schematic-review
   guide](https://github.com/sabas0ba/kicad_skills/blob/main/docs/guides/kicad-schematic-review.md)
   lists `analog.clock_no_series_resistor`: an oscillator-module output that
   drives a load directly, with resistors and test points treated differently
   from active loads. This is a documented heuristic, not a universal
   clock-design requirement. The candidate review supplied no part-specific
-  datasheet basis for when a series resistor is needed. No code or fixture was
-  imported.
+  datasheet basis for when a series resistor is needed. No candidate source or
+  fixture was copied into the tooling package.
 - **Problem and incremental-value hypothesis:** Native ERC does not compare a
   project's reviewed oscillator-output topology with the source-bound
   schematic. When a specific module requires a source resistor, removing or
@@ -9108,23 +9608,31 @@ it does not claim field validation or effectiveness against private boards.
   evidence before support. Matching a map proves only agreement with the
   authored schematic topology; it does not prove the selected part's
   datasheet, signal integrity, placement, PCB copper, or measured waveform.
-- **Trial fixtures and open evidence:** The initial no-CLI candidate trial in
+- **Trial fixtures and open evidence:** The initial no-CLI trial in
   `tests/fixtures/design_lint/cohort-clock-series/` covers X-reference and
   `Oscillator:` library-ID discovery paths, direct and series topology, a
   shunt pull, a passive crystal, DNP, wrong-value, and an authored direct-drive
-  alternative. The latter is a topology control, not a claim about a real
-  part. Before considering implementation, expand the study to exact
-  source-reviewed module classes and fitted part identities, include permitted
-  test-point, wrong-part, wrong-net, bypass, and native source/netlist/ERC
-  controls, and compare first-party project-map behavior. Measure localization
-  effort and installation cost. Keep findings at `REVIEW` unless a project
-  later supplies an independently reviewed exact requirement.
-- **Done when:** LINT-031 records a pinned cohort version/commit, license,
-  installation procedure, exact synthetic source/output hashes, and a result
-  for every fault and control; a first-party check is added only if it
-  demonstrates unique detection or materially better localization without
-  treating valid direct-drive topologies as faults. No proprietary board or
-  project data is in scope.
+  alternative. The expanded native set in
+  `tests/fixtures/design_lint/cohort-clock-series-native/` adds direct-load
+  test-point, series-side test-point, wrong-part, wrong-net, bypass, and pull
+  cases. KiCad 10.0.6 exports the expected pin-to-net membership for all 11
+  new fixtures, and native ERC reports zero errors. Candidate results repeat
+  across two runs; the machine-readable report digest and source hashes are in
+  that fixture record. The earlier `series-x-control` no-CLI fixture has a
+  native ERC fault: its `+3V3` label is on X1's output wire and VDD pin, and
+  ERC reports two undriven power-input errors. Its historical no-CLI record is
+  unchanged; the new native controls are separately generated. Exact
+  part-specific applicability, an existing first-party clock map, reviewer
+  effort, and the full candidate install/container flow remain unmeasured.
+  Keep any future finding at `REVIEW` unless a project supplies an independently
+  reviewed exact requirement.
+- **Done when:** LINT-031 records the pinned cohort version/commit, license,
+  rule source hash, isolated install procedure, native version, exact synthetic
+  source/output hashes, and result for every fault and control. A first-party
+  check is added only if a project-authored topology requirement demonstrates
+  unique detection or materially better localization without treating valid
+  direct-drive topologies as faults. No proprietary board or project data is
+  in scope.
 
 ### Cohort source inspection register
 
@@ -9226,10 +9734,11 @@ has been run on a private board or imported into this repository.
   container workflow. It showed no unique detection; no adapter or runtime
   dependency is justified. Its public schematic guide also documents
   `analog.clock_no_series_resistor` for a directly loaded oscillator-module
-  output. LINT-075 records a pinned no-CLI trial: it flags direct loads,
-  including a fixture-authorized direct-drive alternative, distinguishes a
-  shunt pull, and misses DNP and wrong-value series components. Native
-  applicability, reviewer effort, and field precision remain unmeasured.
+  output. LINT-075 records a pinned no-CLI trial and an expanded KiCad 10.0.6
+  native synthetic trial: it flags direct loads, including a fixture-authorized
+  direct-drive alternative, distinguishes a shunt pull, and misses wrong-part,
+  DNP, and wrong-value series components. Part applicability, reviewer effort,
+  and field precision remain unmeasured.
 
 ### Curated rule concept register
 
@@ -9637,3 +10146,4 @@ quality, or first-article continuity.
 [cynthion-license]: https://github.com/greatscottgadgets/cynthion-hardware/blob/13aa71c2fb0be3837cd2ec580ee5d2c25fc1c678/LICENSE
 [stickhub-schematic]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/StickHub.kicad_sch
 [stickhub-license]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/LICENSE.md
+[dstat-pcb]: https://microfluidics.utoronto.ca/gitlab/mdryden/dstat-hardware/-/raw/b6b2bbfdb7f8b2997d3035b083edbab2348333dc/dstat-mainboard.kicad_pcb

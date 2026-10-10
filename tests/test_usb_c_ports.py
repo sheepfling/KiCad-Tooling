@@ -6,11 +6,13 @@ import hashlib
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pytest
+
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.design_lint import (
-    _usb_c_port_roster_context,
     evaluate,
 )
+from kicad_tooling.hwrepo.design_lint_project_contexts import usb_c_port_roster_context
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     AnalysisNotApplicable,
@@ -35,6 +37,11 @@ from kicad_tooling.hwrepo.models import (
     UsbCPortRequirement,
 )
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext, unmapped_usb_c_ports
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+]
 
 _NETLIST_SHA256 = "a" * 64
 _CONTRACT_SHA256 = "b" * 64
@@ -449,7 +456,7 @@ def test_inspection_context_loads_and_hashes_the_project_electrical_contract() -
             electrical="projects/synthetic-usb-c-ports/electrical.json",
         )
 
-        context = _usb_c_port_roster_context(root, config)
+        context = usb_c_port_roster_context(root, config)
 
     assert context.state == "required"
     assert context.analysis == contract.usb_c

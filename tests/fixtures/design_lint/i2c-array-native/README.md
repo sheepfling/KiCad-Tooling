@@ -21,7 +21,8 @@ the public reference-template checkout available:
 ```sh
 KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES=1 \
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
-python -B -m pytest -q tests/test_ci_hosted.py::NativeI2cPullupFixtureTests
+python -I -B -m pytest -q -m "interface_lint and native_kicad" \
+  tests/test_i2c_pullup_native_fixture_lane.py
 ```
 
 The lane uses the template's digest-pinned KiCad 10.0.0 and 10.0.5 images,

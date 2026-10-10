@@ -5,7 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .models import NetlistContract
+from .component_roles import resolve_component_role_map
+from .models import ComponentRoleBinding, ComponentRoleMap, NetlistContract
 
 _SUPPORTED_DEVICE_SYMBOL = re.compile(
     r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead|Crystal)"
@@ -35,19 +36,24 @@ class TwoPinComponentOnSameNet:
     kind: str
     pin_numbers: tuple[str, str]
     net: str
+    role_binding: ComponentRoleBinding | None = None
 
 
 def two_pin_components_on_same_net(
     observed: NetlistContract,
+    component_role_map: ComponentRoleMap | None = None,
 ) -> tuple[TwoPinComponentOnSameNet, ...]:
     """Return bounded review candidates without deciding whether a short is intentional.
 
     Recognition requires an exact supported symbol identity, exactly two
     distinct native pin numbers, one unambiguous net per pin, and a fitted
     component. Supported identities are the listed ``Device`` families and
-    ``Switch:SW_SPST``. Project-specific symbols and incomplete inventories
-    are skipped.
+    ``Switch:SW_SPST``. A custom symbol is eligible only when an exact
+    project-authored capacitor role binding matches its PART_ID, symbol,
+    footprint, and complete pin inventory. Other project-specific symbols
+    and incomplete inventories are skipped.
     """
+    role_bindings = resolve_component_role_map(observed, component_role_map).by_reference
     dnp = {reference.casefold() for reference in observed.dnp_components}
     nets_by_pin: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
@@ -67,10 +73,15 @@ def two_pin_components_on_same_net(
             }:
                 continue
             kind = _KIND_NAMES[native_kind]
+            role_binding = None
         elif _SUPPORTED_SWITCH_SYMBOL.fullmatch(symbol):
             kind = "switch"
+            role_binding = None
         else:
-            continue
+            role_binding = role_bindings.get(reference.casefold())
+            if role_binding is None or role_binding.role != "capacitor":
+                continue
+            kind = "capacitor"
 
         raw_pin_numbers = observed.component_pin_numbers.get(reference)
         if raw_pin_numbers is None:
@@ -82,7 +93,7 @@ def two_pin_components_on_same_net(
                 ),
                 (),
             )
-        pin_numbers = tuple(sorted(raw_pin_numbers, key=str.casefold))
+        pin_numbers = tuple(sorted(raw_pin_numbers, key=lambda item: (item.casefold(), item)))
         if len(pin_numbers) != 2 or len({item.casefold() for item in pin_numbers}) != 2:
             continue
 
@@ -114,6 +125,7 @@ def two_pin_components_on_same_net(
                 kind=kind,
                 pin_numbers=(pin_numbers[0], pin_numbers[1]),
                 net=first_net,
+                role_binding=role_binding,
             )
         )
     return tuple(sorted(results, key=lambda item: (item.reference.casefold(), item.reference)))

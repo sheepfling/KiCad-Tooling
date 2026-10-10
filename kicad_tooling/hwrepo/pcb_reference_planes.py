@@ -8,11 +8,13 @@ from math import isqrt
 
 from .models import (
     PcbConnectivitySnapshot,
+    PcbViaObservation,
+    PcbZoneFilledIslandObservation,
+)
+from .pcb_reference_plane_models import (
     PcbReferencePlaneCoverageEntry,
     PcbReferencePlaneMap,
     PcbReferencePlaneTrackMeasurement,
-    PcbViaObservation,
-    PcbZoneFilledIslandObservation,
 )
 
 Point = tuple[int, int]

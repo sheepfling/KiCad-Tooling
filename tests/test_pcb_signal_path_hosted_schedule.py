@@ -14,6 +14,11 @@ from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+]
+
 
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Hosted native orchestration uses a Unix runner"

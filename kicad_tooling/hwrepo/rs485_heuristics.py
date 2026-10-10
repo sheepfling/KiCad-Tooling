@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from .bus_heuristics import DirectResistor, direct_resistors
 from .models import (
     ElectricalCheck,
     NetlistContract,
@@ -17,6 +16,10 @@ from .models import (
     Rs485SignalPairRequirement,
     Rs485TerminationEndpointRequirement,
     Rs485TerminationResistorRequirement,
+)
+from .resistor_paths import (
+    DirectResistor,
+    direct_resistors,
 )
 
 

@@ -7,8 +7,15 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
+
 from kicad_tooling.ci_hosted import HostedLog, connector_inventory_fixture_lane
 from kicad_tooling.hwrepo.models import CommandEvidence, NetlistContract
+
+pytestmark = [
+    pytest.mark.connector_lint,
+    pytest.mark.design_lint,
+]
 
 
 def test_pinned_export_detects_nonstandard_reference_and_keeps_test_point_control(

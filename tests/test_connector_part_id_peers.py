@@ -32,6 +32,12 @@ from tests.synthetic_design_lint_project import (
     synthetic_design_lint_project,
 )
 
+pytestmark = [
+    pytest.mark.connector_lint,
+    pytest.mark.design_lint,
+]
+
+
 RULE_ID = "connector.peer_pin_assignment_outlier"
 DIVERGENCE_RULE_ID = "connector.peer_pin_assignment_divergence"
 NETLIST_SHA256 = "b" * 64
@@ -381,7 +387,7 @@ def test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle() -> No
 def test_part_id_connector_alias_assignment_matches_between_cli_and_mcp(
     tmp_path: Path,
 ) -> None:
-    from tests.test_peer_power_pin_assignment import peer_pin_netlist_xml
+    from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
 
     root, summary_path = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
     netlist_path = summary_path.parent / "netlist.xml"

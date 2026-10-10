@@ -1,0 +1,49 @@
+{
+  "cases": {
+    "bypass-fault": {
+      "candidate_finding": true,
+      "disposition": "direct-bypass-around-series-resistor"
+    },
+    "direct-drive-control": {
+      "candidate_finding": true,
+      "disposition": "candidate-overprompts-on-authored-direct-drive-control"
+    },
+    "direct-load-fault": {
+      "candidate_finding": true,
+      "disposition": "direct-load-fault"
+    },
+    "direct-pull-fault": {
+      "candidate_finding": true,
+      "disposition": "pull-resistor-does-not-count-as-series"
+    },
+    "direct-testpoint-fault": {
+      "candidate_finding": true,
+      "disposition": "direct-load-fault-with-test-point"
+    },
+    "dnp-series-miss": {
+      "candidate_finding": false,
+      "disposition": "candidate-ignores-dnp-state"
+    },
+    "series-control": {
+      "candidate_finding": false,
+      "disposition": "valid-series-control"
+    },
+    "series-testpoint-control": {
+      "candidate_finding": false,
+      "disposition": "valid-series-with-test-point-on-source-side"
+    },
+    "wrong-net-fault": {
+      "candidate_finding": true,
+      "disposition": "only-resistor-is-on-an-unrelated-clock-net"
+    },
+    "wrong-part-miss": {
+      "candidate_finding": false,
+      "disposition": "candidate-uses-reference-prefix-and-misses-wrong-part"
+    },
+    "wrong-value-series-miss": {
+      "candidate_finding": false,
+      "disposition": "candidate-ignores-resistor-value"
+    }
+  },
+  "schema_version": 1
+}

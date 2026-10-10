@@ -24,7 +24,7 @@ Run the native regression with:
 ```sh
 KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 \
 KICAD_TEMPLATE_ROOT=/path/to/public/KiCad-Team-Workflow-Template \
-python -m pytest tests/test_ci_hosted.py -k NativeComplementaryPairFixtureTests
+KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 .venv/bin/python -I -m pytest -q tests/test_complementary_pair_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad'
 ```
 
 The source specifications and alias rationale are linked from

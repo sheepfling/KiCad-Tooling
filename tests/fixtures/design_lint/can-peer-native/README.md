@@ -41,3 +41,14 @@ schematic assignments only; they do not establish bus intent, PCB copper,
 off-board wiring, or physical connectivity. All source is synthetic and
 contains no proprietary or customer project data. Generated exports and receipts stay
 under ignored `build/` directories.
+
+Run the optional exact-version native lane from an installed tooling checkout
+with the separate reference-template checkout available:
+
+```sh
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+KICAD_RUN_NATIVE_CAN_PEER_FIXTURES=1 \
+python3.11 -I -B -m pytest -q \
+  -m "interface_lint and native_kicad" \
+  tests/test_can_native_fixture_lanes.py -k can_peer_assignment
+```

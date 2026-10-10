@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import unittest
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
@@ -24,6 +25,11 @@ from kicad_tooling.hwrepo.models import (
     RegulatorFeedbackRequirement,
 )
 from kicad_tooling.hwrepo.power_connectivity import power_connectivity_checks
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.power_lint,
+]
 
 
 def regulator_feedback_map() -> RegulatorFeedbackMap:

@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+import pytest
+
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -15,6 +17,12 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from kicad_tooling.hwrepo.two_pin_crystals import two_pin_crystals_on_same_net
+
+pytestmark = [
+    pytest.mark.component_lint,
+    pytest.mark.design_lint,
+]
+
 
 RULE_ID = "component.two_pin_crystal_same_net"
 

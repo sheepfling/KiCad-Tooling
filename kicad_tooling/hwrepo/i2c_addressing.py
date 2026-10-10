@@ -23,6 +23,11 @@ _I2C_ADDRESS_PIN_ROLES = {
 }
 
 
+def format_i2c_address(address: int | None) -> str:
+    """Format a resolved or dynamic project-authored I2C address for evidence."""
+    return "dynamic or unresolved" if address is None else f"0x{address:02X}"
+
+
 @dataclass(frozen=True)
 class UnmappedI2cResponder:
     """Likely I2C IC candidate not listed in the project-authored address map."""

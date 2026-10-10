@@ -6,6 +6,8 @@ import hashlib
 import re
 from pathlib import Path
 
+import pytest
+
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -16,7 +18,13 @@ from kicad_tooling.hwrepo.models import (
     PcbDrcMaximumRequirement,
     PcbDrcMinMaxRequirement,
 )
-from kicad_tooling.hwrepo.pcb_drc_coverage import compare_native_rules
+from kicad_tooling.hwrepo.pcb_drc_rule_coverage import compare_native_rules
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+]
+
 
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/differential-pair"
 
@@ -251,7 +259,7 @@ def test_plus_minus_pair_names_and_mil_bounds_are_supported() -> None:
 
 def test_incomplete_coverage_emits_a_configurable_review_finding() -> None:
     from kicad_tooling.hwrepo.design_lint import evaluate
-    from tests.test_design_lint import coach, observed
+    from tests.design_lint_fixtures import coach, observed
 
     report = evaluate(
         "synthetic-pair",

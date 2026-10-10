@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeVar
 
@@ -37,6 +39,13 @@ class CubeMxDocument:
 
     pins: dict[str, CubeMxPin]
     issues: tuple[str, ...]
+
+
+def stm32_pin_map_sha256(pin_maps: Sequence[Stm32CubeMxPinMap]) -> str:
+    """Fingerprint a stable, ID-sorted collection of project-authored pin maps."""
+    payload = [item.model_dump(mode="json") for item in sorted(pin_maps, key=lambda item: item.id)]
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def parse_cubemx_ioc(content: bytes) -> CubeMxDocument:

@@ -21,9 +21,14 @@ from kicad_tooling.hwrepo.models import (
     ProjectKind,
     ValidationSummary,
 )
-from kicad_tooling.hwrepo.pcb_drc_coverage import scan_source_bound_signal_path_map
+from kicad_tooling.hwrepo.pcb_drc_source_scan import scan_source_bound_signal_path_map
 from kicad_tooling.validate import hashes
-from tests.test_pcb_signal_path_coverage import native_rules, path_map, pcb_snapshot, source_netlist
+from tests.design_lint_fixtures.pcb_signal_path import (
+    native_rules,
+    path_map,
+    pcb_snapshot,
+    source_netlist,
+)
 
 SourceBoundFixture = tuple[
     ProjectConfig,

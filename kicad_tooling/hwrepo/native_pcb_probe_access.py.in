@@ -1,0 +1,127 @@
+# Access probes: validate authored requests and measure exposed pad surfaces.
+
+def access_probe_observations(
+    requests: list[dict[str, str]], pad_geometry: list[tuple[str, bool, Any]]
+) -> list[dict[str, Any]]:
+    """Measure each requested pad center to the nearest exposed foreign-net pad."""
+    observations: list[dict[str, Any]] = []
+    layer_ids = {
+        "front": (native_pcbnew.F_Cu, native_pcbnew.F_Mask),
+        "back": (native_pcbnew.B_Cu, native_pcbnew.B_Mask),
+    }
+
+    def exposed(pad: Any, side: str) -> bool:
+        copper_layer, mask_layer = layer_ids[side]
+        layers = pad.GetLayerSet()
+        return bool(layers.Contains(copper_layer) and layers.Contains(mask_layer))
+
+    def aperture_geometry(pad: Any, mask_layer: int) -> tuple[str, int | None]:
+        """Measure circular, undrilled pad-mask apertures without approximating other shapes."""
+        if pad.GetShape(mask_layer) != native_pcbnew.PAD_SHAPE_CIRCLE:
+            return "unsupported", None
+        drill = pad.GetDrillSize()
+        if int(drill.x) > 0 or int(drill.y) > 0:
+            return "unsupported", None
+        copper_size = pad.GetSize(mask_layer)
+        if int(copper_size.x) != int(copper_size.y):
+            return "unsupported", None
+        mask_expansion_nm = int(pad.GetSolderMaskExpansion(mask_layer))
+        diameter_nm = int(copper_size.x) + 2 * mask_expansion_nm
+        if diameter_nm <= 0:
+            return "unsupported", None
+        return "circle", diameter_nm
+
+    for request in requests:
+        endpoint = request["endpoint"]
+        side = request["side"]
+        copper_layer, _mask_layer = layer_ids[side]
+        endpoint_pads = [
+            (dnp, pad)
+            for reference, dnp, pad in pad_geometry
+            if reference.casefold() == endpoint.casefold()
+        ]
+        if not endpoint_pads:
+            raise ValueError(f"Requested probe endpoint {endpoint} is absent from the PCB")
+        target_nets = {pad.GetNetname() or None for _dnp, pad in endpoint_pads}
+        if len(target_nets) != 1:
+            raise ValueError(f"Requested probe endpoint {endpoint} has conflicting pad nets")
+        target_net = next(iter(target_nets))
+        targets = [pad for dnp, pad in endpoint_pads if not dnp and exposed(pad, side)]
+        if len(targets) > 1:
+            raise ValueError(
+                f"Requested probe endpoint {endpoint} has multiple exposed {side}-side pads"
+            )
+        if not targets:
+            observations.append(
+                {
+                    "endpoint": endpoint,
+                    "side": side,
+                    "target_net": target_net,
+                    "target_exposed": False,
+                    "obstacle": None,
+                    "obstacle_net": None,
+                    "distance_nm": None,
+                    "target_aperture_shape": None,
+                    "target_aperture_diameter_nm": None,
+                }
+            )
+            continue
+        target = targets[0]
+        aperture_shape, aperture_diameter_nm = aperture_geometry(target, layer_ids[side][1])
+        nearest: tuple[int, str, str, str | None] | None = None
+        position = target.GetPosition()
+        for reference, dnp, obstacle in pad_geometry:
+            if reference.casefold() == endpoint.casefold() or dnp or not exposed(obstacle, side):
+                continue
+            obstacle_net = obstacle.GetNetname() or None
+            if target_net is not None and obstacle_net == target_net:
+                continue
+            distance = obstacle.GetEffectiveShape(copper_layer).Distance(position)
+            distance_nm = floor(float(distance))
+            if distance_nm < 0:
+                raise ValueError(f"KiCad returned a negative pad distance for {endpoint}")
+            candidate = (distance_nm, reference.casefold(), reference, obstacle_net)
+            if nearest is None or candidate[:3] < nearest[:3]:
+                nearest = candidate
+        observations.append(
+            {
+                "endpoint": endpoint,
+                "side": side,
+                "target_net": target_net,
+                "target_exposed": True,
+                "obstacle": nearest[2] if nearest is not None else None,
+                "obstacle_net": nearest[3] if nearest is not None else None,
+                "distance_nm": nearest[0] if nearest is not None else None,
+                "target_aperture_shape": aperture_shape,
+                "target_aperture_diameter_nm": aperture_diameter_nm,
+            }
+        )
+    return observations
+
+
+def read_access_requests(path: Path | None) -> tuple[list[dict[str, str]], str | None]:
+    if path is None:
+        return [], None
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict) or set(raw) != {"schema_version", "requests"}:
+        raise ValueError("Native probe request file has an invalid object shape")
+    if raw["schema_version"] != "1" or not isinstance(raw["requests"], list):
+        raise ValueError("Native probe request file has an unsupported schema")
+    requests: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for row in raw["requests"]:
+        if not isinstance(row, dict) or set(row) != {"endpoint", "net", "side"}:
+            raise ValueError("Native probe request has an invalid shape")
+        endpoint, net, side = row["endpoint"], row["net"], row["side"]
+        if not all(isinstance(item, str) and item.strip() for item in (endpoint, net, side)):
+            raise ValueError("Native probe request values must be non-empty strings")
+        if side not in {"front", "back"} or endpoint.count(".") != 1:
+            raise ValueError("Native probe request has an invalid endpoint or side")
+        key = (endpoint.casefold(), side)
+        if key in seen:
+            raise ValueError("Native probe requests contain a duplicate endpoint surface")
+        seen.add(key)
+        requests.append({"endpoint": endpoint, "net": net, "side": side})
+    if not requests:
+        raise ValueError("Native probe request file must contain at least one request")
+    return requests, sha256(path)

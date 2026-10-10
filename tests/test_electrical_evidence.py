@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 import unittest
 from datetime import UTC, datetime
@@ -54,7 +53,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.models import (
     TestAccessProbeEnvelope as AccessProbeEnvelope,
 )
-from kicad_tooling.hwrepo.pcb_return_paths import (
+from kicad_tooling.hwrepo.pcb_return_path_capture import (
     capture_native_pcb_connectivity,
     native_pcb_command_matches,
     native_probe_source,
@@ -275,7 +274,7 @@ class ElectricalEvidenceTests(unittest.TestCase):
         def capture(_root, selected, output):
             output.mkdir(parents=True)
             probe_copy = output / "native_pcb_probe.py"
-            shutil.copyfile(native_probe_source(), probe_copy)
+            probe_copy.write_bytes(native_probe_source().encode("utf-8"))
             command = CommandEvidence(
                 argv=(
                     "docker",
@@ -442,7 +441,7 @@ class ElectricalEvidenceTests(unittest.TestCase):
         try:
             with (
                 patch(
-                    "kicad_tooling.hwrepo.pcb_return_paths.run_command",
+                    "kicad_tooling.hwrepo.pcb_return_path_capture.run_command",
                     side_effect=mutate_source_after_probe_started,
                 ),
                 self.assertRaisesRegex(
@@ -634,7 +633,7 @@ class ElectricalEvidenceTests(unittest.TestCase):
             )
 
         with patch(
-            "kicad_tooling.hwrepo.pcb_return_paths.run_command",
+            "kicad_tooling.hwrepo.pcb_return_path_capture.run_command",
             side_effect=fake_native_probe,
         ):
             report = analyze(

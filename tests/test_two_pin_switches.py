@@ -19,6 +19,12 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.two_pin_switches import two_pin_switches_on_same_net
 
+pytestmark = [
+    pytest.mark.component_lint,
+    pytest.mark.design_lint,
+]
+
+
 RULE_ID = "component.two_pin_switch_same_net"
 
 

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .bus_heuristics import can_termination_checks, i2c_pullup_checks, spi_checks, usb_c_checks
+from .can_termination_contract import (
+    can_termination_checks,
+)
 from .component_power_ratings import component_power_rating_checks
 from .component_voltage_ratings import component_voltage_rating_checks
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contracts import read_model, repo_path
-from .control_inputs import control_input_checks
+from .control_input_checks import control_input_checks
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
     bound_inputs,
@@ -22,6 +24,9 @@ from .electrical import (
     simulation_cases,
 )
 from .evidence import digest, evidence_path, verify_source
+from .i2c_pullup_contract import (
+    i2c_pullup_checks,
+)
 from .models import (
     AnalysisNotApplicable,
     CanTerminationAnalysis,
@@ -55,20 +60,23 @@ from .models import (
     UsbCAnalysis,
 )
 from .mosfet_stress import mosfet_stress_checks
-from .pcb_return_paths import (
-    expected_probe_sha256,
-    native_pcb_command_matches,
-    pcb_return_path_checks,
-)
+from .pcb_return_path_capture import expected_probe_sha256, native_pcb_command_matches
+from .pcb_return_path_checks import pcb_return_path_checks
 from .power_connectivity import power_connectivity_checks
 from .rs485_heuristics import rs485_checks
 from .serial_heuristics import serial_peer_checks
+from .spi_contract import (
+    spi_checks,
+)
 from .spice import measured_checks, observed_versions, simulation_deck, waveform_checks
 from .test_access import (
     evaluate_test_access_checks,
     pcb_access_probe_request_set,
     pcb_accessibility_checks,
     pcb_probe_envelope_checks,
+)
+from .usb_c_contract import (
+    usb_c_checks,
 )
 
 

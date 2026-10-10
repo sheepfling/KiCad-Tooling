@@ -4,96 +4,30 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
-import unittest
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from kicad_tooling.check_all import check_all
 from kicad_tooling.check_toolchain import cli_executable
 from kicad_tooling.ci import project_static_pipeline
-from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.discovery import load_config
-from kicad_tooling.hwrepo.evidence import digest
+from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
     CommandEvidence,
-    ConnectorInterfaceReview,
-    ConnectorInventoryReview,
-    DesignLintIgnore,
-    DesignLintPolicy,
-    GovernanceLintReport,
-    ProductPolicyReport,
-    ProjectCheckSummary,
-    ProjectManifest,
-    ProjectTestContract,
-    RepositoryPolicyReport,
     ValidationSummary,
 )
-from kicad_tooling.validate import hashes
 from kicad_tooling.verify import container_command, format_report, run_command, verify
-from tests.support import initialize_git, reference_root
+from tests.verify_support import VerifyFixture, native_summary
+
+pytestmark = pytest.mark.template_checkout
 
 
-def native_summary(status: str = "PASS") -> CheckAllSummary:
-    return CheckAllSummary(
-        governance=GovernanceLintReport(projects=("controller",), issues=(), status="PASS"),
-        repository=RepositoryPolicyReport(status="PASS", issues=()),
-        product_policy=ProductPolicyReport(status="PASS", products=(), open_items={}, issues=()),
-        projects=(
-            ProjectCheckSummary(
-                id="controller",
-                status=status,
-                summary="controller/summary.json",
-            ),
-        ),
-        status=status,
-    )
-
-
-class VerifyTests(unittest.TestCase):
-    def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="kicad-verify-")
-        self.addCleanup(temporary.cleanup)
-        self.root = (Path(temporary.name) / "repository").resolve()
-        shutil.copytree(reference_root(), self.root, ignore=shutil.ignore_patterns(".git"))
-        initialize_git(self.root)
-
-    @staticmethod
-    @contextmanager
-    def runner_environment(local_version: str | None, docker: bool = False) -> Iterator[None]:
-        def which(name: str) -> str | None:
-            if name == "git":
-                return "/usr/bin/git"
-            if name == "docker" and docker:
-                return "/usr/bin/docker"
-            return None
-
-        def output(argv: tuple[str, ...]) -> str | None:
-            if "--version" in argv:
-                return "git version 2.54.0"
-            if "rev-parse" in argv:
-                return "true"
-            if "version" in argv:
-                return "27.5.1"
-            return None
-
-        with (
-            patch("kicad_tooling.hwrepo.doctor.shutil.which", side_effect=which),
-            patch("kicad_tooling.hwrepo.doctor.command_output", side_effect=output),
-            patch("kicad_tooling.hwrepo.doctor.observed_version", return_value=local_version),
-        ):
-            yield
-
+class VerifyTests(VerifyFixture):
     def test_portable_attempts_use_distinct_ignored_receipts_and_typed_json(self) -> None:
         first = verify(self.root, "controller")
         second = verify(self.root, "controller")
@@ -340,170 +274,6 @@ class VerifyTests(unittest.TestCase):
         self.assertIn("NATIVE_ERC", {item.code for item in result.diagnosis.findings})
         self.assertTrue((Path(result.run_directory) / "diagnosis.json").is_file())
 
-    @pytest.mark.design_lint
-    def test_default_design_lint_blocks_native_verify_and_ci_until_reviewed(self) -> None:
-        contract_path = self.root / "examples/projects/controller/tests/contract.json"
-        contract = read_model(contract_path, ProjectTestContract)
-
-        def native(root: Path, output: Path, cli: str, projects: list[str]) -> CheckAllSummary:
-            _ = cli, projects
-            project_output = output / "controller"
-            project_output.mkdir(parents=True)
-            netlist = project_output / "netlist.xml"
-            netlist.write_text(
-                '<export><components><comp ref="J1"><value>Synthetic port</value>'
-                '<libsource lib="Synthetic" part="Port"/></comp><comp ref="J2">'
-                '<value>Synthetic port</value><libsource lib="Synthetic" part="Port"/>'
-                '</comp></components><libparts><libpart lib="Synthetic" part="Port"><pins>'
-                '<pin num="1" name="PWR" type="passive"/>'
-                '<pin num="7" name="GND" type="passive"/></pins></libpart></libparts><nets>'
-                '<net name="GND1"><node ref="J1" pin="7"/></net>'
-                '<net name="GND2"><node ref="J2" pin="7"/></net>'
-                '<net name="+5V"><node ref="J1" pin="1"/></net>'
-                "</nets></export>",
-                encoding="utf-8",
-            )
-            evidence = CommandEvidence(
-                argv=("synthetic-kicad-cli",),
-                started_utc=datetime.now(UTC).isoformat(),
-                returncode=0,
-            )
-            write_model(project_output / "netlist.command.json", evidence)
-            config = load_config(root, "examples/projects/controller/project.json")
-            current = hashes(root, config.source_roots)
-            write_model(
-                project_output / "summary.json",
-                ValidationSummary(
-                    timestamp_utc=datetime.now(UTC).isoformat(),
-                    checked_commit="LOCAL_UNBOUND",
-                    project_id="controller",
-                    project_kind=config.kind,
-                    checks={
-                        "source_scope": CheckEvidence(status="PASS", source_hashes=current),
-                        "source_unchanged": CheckEvidence(status="PASS", source_hashes=current),
-                        "toolchain": CheckEvidence(
-                            status="PASS",
-                            observed_version=config.kicad_version,
-                            image=config.image,
-                        ),
-                        "netlist": CheckEvidence(status="PASS", returncode=0),
-                    },
-                    status="PASS",
-                    artifacts_sha256={
-                        "netlist.xml": digest(netlist),
-                        "netlist.command.json": digest(project_output / "netlist.command.json"),
-                    },
-                ),
-            )
-            write_model(output / "summary.json", native_summary())
-            return native_summary()
-
-        with (
-            self.runner_environment("10.0.0"),
-            patch("kicad_tooling.verify.check_all", side_effect=native),
-        ):
-            open_result = verify(self.root, "controller", depth="native", runner="local")
-        self.assertEqual(open_result.status, "FAIL", open_result.error)
-        self.assertIsNotNone(open_result.design_lint)
-        assert open_result.design_lint is not None
-        self.assertEqual(open_result.design_lint.status, "REVIEW")
-        assert open_result.design_lint.connector_coverage is not None
-        self.assertEqual(open_result.design_lint.connector_coverage.status, "UNDECLARED")
-        self.assertEqual(len(open_result.design_lint.findings), 3)
-        self.assertTrue((Path(open_result.run_directory) / "design-lint.json").is_file())
-
-        def validated(root: Path, output: Path, cli: str, config_path: Path) -> ValidationSummary:
-            _ = config_path
-            native(root, output.parent, cli, ["controller"])
-            return read_model(output / "summary.json", ValidationSummary)
-
-        with patch("kicad_tooling.check_all.validate", side_effect=validated):
-            ci_open = check_all(
-                self.root,
-                self.root / "build/native-lint-open",
-                "synthetic-kicad-cli",
-                ["controller"],
-            )
-        self.assertEqual(ci_open.status, "FAIL")
-        ci_summary = read_model(
-            self.root / "build/native-lint-open/controller/summary.json", ValidationSummary
-        )
-        self.assertEqual(ci_summary.checks["design_lint"].status, "FAIL")
-        self.assertEqual(ci_summary.status, "FAIL")
-        self.assertTrue(
-            (self.root / "build/native-lint-open/controller/design-lint.json").is_file()
-        )
-
-        write_model(
-            contract_path,
-            contract.model_copy(
-                update={
-                    "design_lint": DesignLintPolicy(
-                        ignores=tuple(
-                            DesignLintIgnore(
-                                rule_id=item.rule_id,
-                                fingerprint=item.fingerprint,
-                                reason="Synthetic reviewed pinout accepts this exact observation",
-                            )
-                            for item in open_result.design_lint.findings
-                        )
-                    )
-                }
-            ),
-        )
-        with (
-            self.runner_environment("10.0.0"),
-            patch("kicad_tooling.verify.check_all", side_effect=native),
-        ):
-            reviewed_result = verify(self.root, "controller", depth="native", runner="local")
-        self.assertEqual(reviewed_result.status, "FAIL", reviewed_result.error)
-        assert reviewed_result.design_lint is not None
-        self.assertEqual(reviewed_result.design_lint.status, "REVIEW")
-        assert reviewed_result.design_lint.connector_coverage is not None
-        self.assertEqual(reviewed_result.design_lint.connector_coverage.status, "UNDECLARED")
-
-        manifest_path = self.root / "examples/projects/controller/project.json"
-        manifest = read_model(manifest_path, ProjectManifest)
-        write_model(
-            manifest_path,
-            manifest.model_copy(
-                update={
-                    "connector_reviews": tuple(
-                        ConnectorInterfaceReview(
-                            reference=reference,
-                            disposition="not_applicable",
-                            basis="Synthetic fixture does not define external connector requirements",
-                        )
-                        for reference in ("J1", "J2")
-                    ),
-                    "connector_inventory_review": ConnectorInventoryReview(
-                        basis="Synthetic review covered every connector in the schematic"
-                    ),
-                }
-            ),
-        )
-        with (
-            self.runner_environment("10.0.0"),
-            patch("kicad_tooling.verify.check_all", side_effect=native),
-        ):
-            accepted_result = verify(self.root, "controller", depth="native", runner="local")
-        self.assertEqual(accepted_result.status, "PASS", accepted_result.error)
-        assert accepted_result.design_lint is not None
-        self.assertEqual(accepted_result.design_lint.status, "PASS")
-        assert accepted_result.design_lint.connector_coverage is not None
-        self.assertEqual(
-            accepted_result.design_lint.connector_coverage.inventory_review_basis,
-            "Synthetic review covered every connector in the schematic",
-        )
-        with patch("kicad_tooling.check_all.validate", side_effect=validated):
-            ci_reviewed = check_all(
-                self.root,
-                self.root / "build/native-lint-reviewed",
-                "synthetic-kicad-cli",
-                ["controller"],
-            )
-        self.assertEqual(ci_reviewed.status, "PASS")
-
     def test_unavailable_runner_is_an_actionable_failure_before_native_work(self) -> None:
         with (
             self.runner_environment("10.0.6"),
@@ -520,7 +290,3 @@ class VerifyTests(unittest.TestCase):
     def test_custom_output_cannot_escape_ignored_build(self) -> None:
         with self.assertRaisesRegex(ValueError, "ignored build"):
             verify(self.root, "controller", output=Path("projects/controller/review"))
-
-
-if __name__ == "__main__":
-    unittest.main()

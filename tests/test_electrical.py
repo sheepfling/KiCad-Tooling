@@ -1842,12 +1842,13 @@ def usb_c_netlist(
 
 def install_fixture(root: Path, version: str = "47") -> ElectricalAnalysisContract:
     """Author synthetic requirements only in a disposable copy of the training island."""
-    from tests.support import TEMPLATE_ROOT
+    from tests.support import template_root
 
+    template = template_root()
     directory = root / ISLAND / "tests/electrical"
     directory.mkdir(parents=True)
     for name in ("startup.cir", "signal.cir"):
-        shutil.copy2(TEMPLATE_ROOT / "templates/electrical" / name, directory / name)
+        shutil.copy2(template / "templates/electrical" / name, directory / name)
     config = selected_config(root, PROJECT)
     source = hashes(root, config.source_roots)
 

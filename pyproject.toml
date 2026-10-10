@@ -51,7 +51,7 @@ include = ["kicad_tooling", "kicad_tooling.*"]
 "kicad_tooling.hwrepo" = [
   "kicad_library_license.txt",
   "design-lint-rules.json",
-  "native_pcb_probe.py.in",
+  "native_pcb_probe*.py.in",
   "schematic-text-metrics.json",
   "fixtures/*.kicad_pcb",
 ]
@@ -66,13 +66,19 @@ python_functions = ["test_*"]
 markers = [
   "design_lint: deterministic design-lint rule, catalog, and parity behavior",
   "schematic_lint: schematic connectivity, geometry, and readability heuristics",
+  "schematic_text_lint: schematic text, glyph, and symbol-body overlap checks",
+  "schematic_connectivity_lint: schematic pin, wire, and junction connectivity checks",
+  "schematic_hierarchy_lint: hierarchical schematic sheet resolution and traversal checks",
   "component_lint: component ratings and component-level electrical heuristics",
   "connector_lint: connector inventory, peer-pin, and interface connector checks",
   "interface_lint: USB, serial, SPI, I2C, and digital interface checks",
   "power_lint: power paths, sequencing, protection, and power component checks",
+  "evidence_lint: source-bound evidence integrity and native export checks",
   "pcb_lint: PCB geometry, layout, and source-bound board checks",
+  "pcb_reference_lint: PCB signal-to-reference-plane coverage checks",
   "return_path_lint: ground, return, reference-plane, and return-path checks",
   "parity_lint: cross-surface CLI, MCP, and electrical parity checks",
+  "template_checkout: integration tests that require a separate public template checkout",
   "native_kicad: source or board fixtures run against an exact native KiCad version",
   "slow: cross-process, package, or broad integration checks that take longer to run",
 ]

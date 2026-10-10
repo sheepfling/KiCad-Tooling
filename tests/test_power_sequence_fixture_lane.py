@@ -12,13 +12,20 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
+
 from kicad_tooling.ci_hosted import HostedLog, power_sequence_fixture_lane
 from kicad_tooling.hwrepo.models import CommandEvidence
-from tests.support import reference_root
-from tests.test_power_sequences import (
+from tests.power_sequence_support import (
     power_sequence_netlist,
     power_sequence_output_cycle_netlist,
 )
+from tests.support import reference_root
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.power_lint,
+]
 
 
 class PowerSequenceFixtureLaneTests(unittest.TestCase):

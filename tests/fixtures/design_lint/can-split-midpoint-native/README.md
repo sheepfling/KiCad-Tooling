@@ -35,7 +35,9 @@ the public reference-template checkout available:
 ```sh
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES=1 \
-python3.11 -B -m pytest -q tests/test_ci_hosted.py::NativeCanTerminationFixtureTests
+python3.11 -I -B -m pytest -q \
+  -m "interface_lint and native_kicad" \
+  tests/test_can_native_fixture_lanes.py -k can_split_termination
 ```
 
 The lane uses the template's digest-pinned KiCad images, mounts fixture input
