@@ -2,9 +2,11 @@
 
 These tooling-owned schematics are synthetic controls for the project-mapped
 USB connector-to-PHY rule. They contain no proprietary or product source. They model
-only one USB 2.0 data pair and the components declared in the map; connector
-power, shielding, protection, signal integrity, and PCB routing are outside
-this regression.
+only one USB 2.0 data pair and the components declared in the map. The
+synthetic inline-protection component exercises exact pin-to-net contracts;
+it does not represent a real product or validate device behavior. Connector
+power, shielding, signal integrity, and PCB routing remain outside this
+regression.
 
 | Fixture                                                | Expected path                                                      | Rule result                                       |
 | ------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------- |
@@ -13,6 +15,8 @@ this regression.
 | `external-phy-series-reference-bond-control.kicad_sch` | 27 Ω data paths; USB_GND and BOARD_GND use a mapped fitted 0R bond | No USB data-path or reference review              |
 | `external-phy-series-reference-fault.kicad_sch`        | Same series paths; connector and PHY returns use separate nets     | One reference review with exact resistor evidence |
 | `external-phy-direct-bypass-fault.kicad_sch`           | Connector data lines bypass both resistors before the external PHY | One finding for D+ and one for D−                 |
+| `inline-protection-control.kicad_sch`                  | Exact six-pin pass-through component with mapped data and reference pins | No USB data-path finding                     |
+| `inline-protection-ground-fault.kicad_sch`              | Same path with the inline component's required GND pin explicitly unconnected | Findings for D+ and D− with U2.5 evidence |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -23,6 +27,8 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `external-phy-series-reference-bond-control.kicad_sch` | `5a178e443dcac77c4342d9b3e86a254556f71bbdc1b707bcb2bb23a1459bd9f3` |
 | `external-phy-series-reference-fault.kicad_sch`        | `25e0cea0682898c5300b27024436717fc9b9b50743ef256b922e98909e0520ab` |
 | `external-phy-direct-bypass-fault.kicad_sch`           | `0b6173339fc0e2f937247c6eb5aaea1ac51b0b7a26a31058c25119333cb8f0c2` |
+| `inline-protection-control.kicad_sch`                  | `70b7979e6d1ed15fed2f31bbd73d7f076d579456ac57ed47acd60be2c79ef7d6` |
+| `inline-protection-ground-fault.kicad_sch`              | `0d9d157e7d795067c86a16c7c43235afbfe24dc7b45086ce1407f2873000185b` |
 
 The native regression runs twice with each of these digest-pinned images:
 
@@ -60,6 +66,13 @@ that `reference_policy: "bonded"` resolves the review prompt only when the
 mapped component and schematic net assignments match. It is schematic
 netlist evidence; it does not prove that the component conducts or that PCB
 copper completes the return path.
+
+The inline-protection control and ground-pin fault exercise the exact
+project-authored multi-pin component map. The map checks full native pin
+inventory, every pin's net or explicit no-connect state, and both connector-to-
+PHY data paths. The fault confirms that an open required component ground pin
+is reported with its exact pin evidence. The synthetic symbol does not model a
+real protection device or establish datasheet pinout correctness.
 
 This is source-to-netlist regression evidence only. The lane does not run ERC,
 DRC, PCB copper continuity, component placement, signal-integrity analysis,

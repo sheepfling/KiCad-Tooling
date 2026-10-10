@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import shutil
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
 import pytest
 
 pytestmark = [
@@ -9,6 +13,7 @@ pytestmark = [
     pytest.mark.slow,
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
+    pytest.mark.interface_lint,
 ]
 
 from mcp import Client
@@ -34,7 +39,12 @@ from tests.mcp_parity_support import (
     McpParityHarness,
     run_mcp_parity,
 )
-from tests.usb_data_path_support import usb_data_map as synthetic_usb_data_path_map
+from tests.usb_data_path_support import (
+    usb_data_map as synthetic_usb_data_path_map,
+)
+from tests.usb_data_path_support import (
+    usb_inline_component_map,
+)
 
 
 class _DesignLintMcpParityUsbDataCases(McpParityHarness):
@@ -228,6 +238,110 @@ class _DesignLintMcpParityUsbDataCases(McpParityHarness):
                 bond_finding.evidence["issues"],
             )
 
+    async def _case_test_usb_inline_component_map_parity(self) -> None:
+        """Compare an inline-device pin fault through the shared CLI and MCP service."""
+        native = self.native_evidence()
+        netlist = native.parent / "netlist.xml"
+        fixture = (
+            Path(__file__).parent
+            / "fixtures/design_lint/usb-data-path-native/inline-protection-control.netlist.xml"
+        )
+        manifest_path = self.island / "project.json"
+        manifest = read_model(manifest_path, ProjectManifest)
+        write_model(
+            manifest_path,
+            manifest.model_copy(
+                update={
+                    "component_identity": ComponentIdentity(required=False, part_ids=()),
+                    "interfaces": (),
+                    "connector_reviews": (),
+                    "connector_inventory_review": ConnectorInventoryReview(
+                        basis="Synthetic parity fixture reviewed its USB connector inventory"
+                    ),
+                }
+            ),
+        )
+        contract_path = self.island / "tests/contract.json"
+        contract = read_model(contract_path, ProjectTestContract)
+        write_model(
+            contract_path,
+            contract.model_copy(
+                update={
+                    "design_lint": DesignLintPolicy(usb_data_path_map=usb_inline_component_map())
+                }
+            ),
+        )
+
+        def write_netlist(*, open_ground_pin: bool) -> None:
+            shutil.copyfile(fixture, netlist)
+            if open_ground_pin:
+                tree = ET.parse(netlist)
+                nets = tree.getroot().find("./nets")
+                assert nets is not None
+                ground = next(item for item in nets.findall("net") if item.get("name") == "GND")
+                ground_node = next(
+                    item
+                    for item in ground.findall("node")
+                    if item.get("ref") == "U2" and item.get("pin") == "5"
+                )
+                ground.remove(ground_node)
+                unconnected = ET.SubElement(nets, "net", {"name": "unconnected-(U2-Pad5)"})
+                ET.SubElement(unconnected, "node", {"ref": "U2", "pin": "5"})
+                tree.write(netlist, encoding="utf-8", xml_declaration=True)
+            self.rehash_native_netlist(native)
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+
+            async def compare(*, open_ground_pin: bool) -> DesignLintReport:
+                write_netlist(open_ground_pin=open_ground_pin)
+                cli = await self.cli(
+                    "kicad_tooling.design_lint",
+                    DesignLintReport,
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                    expected_exit=1,
+                )
+                mcp = await self.call(
+                    client,
+                    "inspect_design_lint",
+                    DesignLintReport,
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(self.root).as_posix(),
+                    },
+                )
+                self.assertEqual(cli, mcp)
+                return mcp
+
+            control = await compare(open_ground_pin=False)
+            self.assertFalse(
+                any(item.rule_id == "bus.usb_data_path_mismatch" for item in control.findings),
+                control.findings,
+            )
+            fault = await compare(open_ground_pin=True)
+            findings = tuple(
+                item for item in fault.findings if item.rule_id == "bus.usb_data_path_mismatch"
+            )
+            self.assertEqual(
+                {item.subject for item in findings},
+                {
+                    "usb-protected-port-1: USB D+ path",
+                    "usb-protected-port-1: USB D- path",
+                },
+            )
+            self.assertTrue(
+                all(
+                    any("U2.5 is on unconnected" in issue for issue in item.evidence["issues"])
+                    for item in findings
+                )
+            )
+
 
 def test_usb_data_path_map_parity() -> None:
     run_mcp_parity(_DesignLintMcpParityUsbDataCases, "_case_test_usb_data_path_map_parity")
+
+
+def test_usb_inline_component_map_parity() -> None:
+    run_mcp_parity(_DesignLintMcpParityUsbDataCases, "_case_test_usb_inline_component_map_parity")

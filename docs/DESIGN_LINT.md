@@ -1423,6 +1423,42 @@ and its basis. The rule defaults to `review`; a project can set
 finding. A passing schematic comparison does not prove resistor suitability,
 placement, PCB copper continuity, USB-C role behavior, or USB 3.x routing.
 
+A reviewed path through one multi-pin component can use
+`topology: "inline_component"` on both data lines and an `inline_component`
+map on the interface. Name the exact component symbol and footprint, the four
+component pins that carry connector-side and PHY-side D+/D−, and every native
+component pin's expected net or explicit unconnected state. For example:
+
+```json
+{
+  "inline_component": {
+    "reference": "U2",
+    "expected_symbol": "Synthetic:UsbProtection",
+    "expected_footprint": "Synthetic:QFN",
+    "positive_connector_pin": "U2.1",
+    "positive_phy_pin": "U2.2",
+    "negative_connector_pin": "U2.3",
+    "negative_phy_pin": "U2.4",
+    "pins": [
+      {"pin": "U2.1", "disposition": "net", "net": "USB_DP_PORT"},
+      {"pin": "U2.2", "disposition": "net", "net": "USB_DP_PHY"},
+      {"pin": "U2.3", "disposition": "net", "net": "USB_DM_PORT"},
+      {"pin": "U2.4", "disposition": "net", "net": "USB_DM_PHY"},
+      {"pin": "U2.5", "disposition": "net", "net": "BOARD_GND"},
+      {"pin": "U2.6", "disposition": "unconnected"}
+    ]
+  }
+}
+```
+
+This is a project-authored netlist contract, not automatic recognition of
+protection parts. The map must account for the complete symbol pin inventory;
+the tooling compares every declared assignment with native netlist evidence.
+It cannot establish that the selected symbol pins match the device datasheet,
+that the component conducts or protects as intended, or that board copper
+completes the route. Multiple inline devices and multi-hop paths remain outside
+this contract.
+
 For a direct D+/D− interface whose reference decision has also been reviewed,
 add the endpoint pin and net assignments to the same interface entry. Both
 endpoints need at least one explicit reference pin; multiple pins per endpoint

@@ -29,7 +29,7 @@ def usb_data_path_candidates(
                         if mismatch.line == "reference"
                         else "The connector-to-PHY USB data path differs from the project-authored, "
                         "PHY-specific topology. Review the exact pin assignments, fitted series "
-                        "component, and manufacturer basis. This check does not infer a universal "
+                        "or inline component, and manufacturer basis. This check does not infer a universal "
                         "USB resistor requirement or establish PCB continuity."
                     ),
                     evidence={
@@ -98,6 +98,13 @@ def usb_data_path_candidates(
                                 f"{mismatch.series_resistance_range_ohms[0]:g}–"
                                 f"{mismatch.series_resistance_range_ohms[1]:g} Ω"
                             ),
+                        ),
+                        "inline_component": (mismatch.inline_component_reference or "none",),
+                        "inline_component_identity": (
+                            mismatch.inline_component_identity or "none",
+                        ),
+                        "inline_component_pin_assignments": (
+                            mismatch.inline_component_pin_assignments or ("none",)
                         ),
                         "map_sha256": (map_sha256,),
                         "issues": mismatch.issues,

@@ -61,6 +61,10 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         / "usb-multiport-peer-reference-native/fault.kicad_sch",
         "usb-multiport-peer-reference-control": fixture_root
         / "usb-multiport-peer-reference-native/control.kicad_sch",
+        "inline-component-control": fixture_root
+        / "usb-data-path-native/inline-protection-control.kicad_sch",
+        "inline-component-ground-fault": fixture_root
+        / "usb-data-path-native/inline-protection-ground-fault.kicad_sch",
     }
     source_hashes = {case: digest(path) for case, path in cases.items()}
     scratch = Path(
@@ -175,6 +179,18 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                         f"Native external-PHY bypass should mismatch both USB data lines; "
                         f"observed {sorted(subjects)}"
                     )
+            elif case == "inline-component-ground-fault":
+                if {item.line for item in mismatches} != {"D+", "D-"}:
+                    raise ValueError(
+                        "Native inline-component ground fault should mismatch both USB data lines"
+                    )
+                if not all(
+                    any("U2.5 is on unconnected" in issue for issue in item.issues)
+                    for item in mismatches
+                ):
+                    raise ValueError(
+                        "Native inline-component ground fault omitted exact pin evidence"
+                    )
             elif mismatches:
                 raise ValueError(
                     f"Native {case} USB control mismatched the authored topology: {mismatches}"
@@ -215,12 +231,31 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         "integrated-direct",
         "external-series",
         "external-series-reference-bond-control",
+        "inline-component-control",
     ):
         if any(
             item.rule_id == "bus.usb_data_path_mismatch"
             for item in reports[(case, "first")].findings
         ):
             raise ValueError(f"Native {case} control produced a USB data-path finding")
+    inline_ground_fault = reports[("inline-component-ground-fault", "first")]
+    inline_ground_findings = tuple(
+        item
+        for item in inline_ground_fault.findings
+        if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    if inline_ground_fault.status != "REVIEW" or {
+        item.subject for item in inline_ground_findings
+    } != {
+        "usb-protected-port-1: USB D+ path",
+        "usb-protected-port-1: USB D- path",
+    }:
+        raise ValueError("Native inline-component ground fault did not produce both path findings")
+    if not all(
+        any("U2.5 is on unconnected" in issue for issue in item.evidence.get("issues", ()))
+        for item in inline_ground_findings
+    ):
+        raise ValueError("Native inline-component findings omitted exact ground-pin evidence")
     if any(
         item.rule_id == "bus.usb_peer_reference_review"
         for item in reports[("external-series", "first")].findings

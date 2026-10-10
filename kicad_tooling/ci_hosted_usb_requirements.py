@@ -7,6 +7,8 @@ from typing import Literal
 from .hwrepo.reference_bond_models import ReferenceBondRequirement
 from .hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
+    UsbDataPathInlineComponentRequirement,
+    UsbDataPathInlinePinRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
     UsbDataSeriesResistorRequirement,
@@ -178,6 +180,65 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
             )
         ),
     )
+    inline_component_map = UsbDataPathMap(
+        basis="Synthetic exact USB multi-pin pass-through component map",
+        interfaces=(
+            UsbDataInterfaceRequirement(
+                id="usb-protected-port-1",
+                basis="Synthetic reviewed USB protection pin-to-net requirement",
+                connector_reference="J1",
+                expected_connector_symbol="Connector:USB_A",
+                expected_connector_footprint="Synthetic:USB-A",
+                phy_reference="U1",
+                expected_phy_symbol="Synthetic:UsbPhy",
+                expected_phy_footprint="Synthetic:QFN",
+                positive=UsbDataPathLineRequirement(
+                    line="D+",
+                    connector_pin="J1.1",
+                    phy_pin="U1.1",
+                    connector_net="USB_DP_PORT",
+                    phy_net="USB_DP_PHY",
+                    topology="inline_component",
+                ),
+                negative=UsbDataPathLineRequirement(
+                    line="D-",
+                    connector_pin="J1.2",
+                    phy_pin="U1.2",
+                    connector_net="USB_DM_PORT",
+                    phy_net="USB_DM_PHY",
+                    topology="inline_component",
+                ),
+                inline_component=UsbDataPathInlineComponentRequirement(
+                    reference="U2",
+                    expected_symbol="Synthetic:UsbProtection",
+                    expected_footprint="Synthetic:QFN",
+                    positive_connector_pin="U2.1",
+                    positive_phy_pin="U2.2",
+                    negative_connector_pin="U2.3",
+                    negative_phy_pin="U2.4",
+                    pins=(
+                        UsbDataPathInlinePinRequirement(
+                            pin="U2.1", disposition="net", net="USB_DP_PORT"
+                        ),
+                        UsbDataPathInlinePinRequirement(
+                            pin="U2.2", disposition="net", net="USB_DP_PHY"
+                        ),
+                        UsbDataPathInlinePinRequirement(
+                            pin="U2.3", disposition="net", net="USB_DM_PORT"
+                        ),
+                        UsbDataPathInlinePinRequirement(
+                            pin="U2.4", disposition="net", net="USB_DM_PHY"
+                        ),
+                        UsbDataPathInlinePinRequirement(pin="U2.5", disposition="net", net="GND"),
+                        UsbDataPathInlinePinRequirement(pin="U2.6", disposition="unconnected"),
+                    ),
+                ),
+                connector_reference_pins=(UsbReferencePinRequirement(pin="J1.4", net="GND"),),
+                phy_reference_pins=(UsbReferencePinRequirement(pin="U1.3", net="GND"),),
+                reference_policy="common_net",
+            ),
+        ),
+    )
     requirements = {
         "integrated-direct": direct_map,
         "external-series": series_map,
@@ -190,6 +251,8 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "usb-c-peer-reference-control": usb_c_direct_map,
         "usb-multiport-peer-reference-fault": multiport_map,
         "usb-multiport-peer-reference-control": multiport_map,
+        "inline-component-control": inline_component_map,
+        "inline-component-ground-fault": inline_component_map,
     }
 
     return requirements

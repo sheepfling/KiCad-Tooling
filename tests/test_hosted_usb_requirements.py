@@ -24,6 +24,8 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         "usb-c-peer-reference-control",
         "usb-multiport-peer-reference-fault",
         "usb-multiport-peer-reference-control",
+        "inline-component-ground-fault",
+        "inline-component-control",
     }
 
     bonded = requirements["external-series-reference-bond-control"].interfaces[0]

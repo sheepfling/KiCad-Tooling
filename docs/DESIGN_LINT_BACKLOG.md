@@ -1348,7 +1348,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-049 — USB connector-to-PHY data path contract
 
-- **Status:** Implemented v2 as an opt-in, project-mapped REVIEW rule. The
+- **Status:** Implemented v3 as an opt-in, project-mapped REVIEW rule. The
   cohort's universal series-resistor heuristic remains unadopted.
 - **Cohort input:** The pinned detector looks for connectors whose value or
   library ID contains `USB`, recognizes a bounded set of D+/D− pin names, and
@@ -1372,9 +1372,12 @@ is not a reason by itself to expand its scope or change its default policy.
   missing-resistor cases, so its generic prompt is not adopted.
 - **Predicate:** A project-authored `design_lint.usb_data_path_map` names the
   exact connector and PHY symbol/footprint, D+/D− endpoint pins, expected nets,
-  and per-line `direct` or `series_resistor` topology. A series path maps the
-  exact fitted resistor symbol, footprint, endpoints, and project-approved
-  nominal range. An optional reference policy records `common_net`,
+  and per-line `direct`, `series_resistor`, or `inline_component` topology. A
+  series path maps the exact fitted resistor symbol, footprint, endpoints, and
+  project-approved nominal range. An inline path names one exact multi-pin
+  component, maps the connector-side and PHY-side pin for each data line, and
+  records every native component pin's expected net or explicit no-connect
+  state. An optional reference policy records `common_net`,
   `separate_nets`, or `bonded`; a `bonded` entry also names the exact passive
   two-pin component, value, footprint, and pin-to-net assignments. The rule
   compares those decisions with native KiCad 10 XML netlist evidence. Direct
@@ -1385,13 +1388,15 @@ is not a reason by itself to expand its scope or change its default policy.
   supplies it; it does not infer applicability, select resistor values, or
   validate the referenced manufacturer document. A mapped bond checks native
   component and netlist assignments but does not prove that the component
-  conducts or that PCB copper joins the endpoints. V1 models one conventional
-  resistor per data line or a direct path. It does not prove placement, signal
-  integrity, PCB copper continuity, protector behavior, USB-C roles, or USB
-  3.x lane design.
+  conducts or that PCB copper joins the endpoints. The inline map checks exact
+  schematic pin assignments, not datasheet pinout truth or protector behavior.
+  It supports one inline component and does not model multi-hop paths. The rule
+  does not prove placement, signal integrity, PCB copper continuity, USB-C
+  roles, or USB 3.x lane design.
 - **Fixtures and validation:** Synthetic integrated-STM32 direct-path control;
   TUSB2036 27R-per-line control; missing, DNP, wrong-value, and wrong-net
-  series-part faults; malformed contract topologies; exact 0R reference-bond
+  series-part faults; malformed contract topologies; exact six-pin inline-device
+  control and required-ground-pin fault; malformed/partial inline maps; exact 0R reference-bond
   control and absent, wrong-identity, wrong-value, DNP, active-pin, and
   wrong-net bond faults; rule override, disable, exact-ignore, CLI/MCP parity,
   mapping-order stability, and independent-process hash-seed stability. The
@@ -1401,10 +1406,12 @@ is not a reason by itself to expand its scope or change its default policy.
   Native schematic netlist exports are now regression-tested with synthetic
   direct-PHY control, external-PHY 27R-per-line control, a source-hashed
   external-PHY control with a mapped 0R reference bond, and resistor-bypass
-  fault fixtures on KiCad 10.0.0 and 10.0.5. The controls have no USB path
-  finding; the bypass fault produces one finding for each data line. Repeated
-  exports match after normalization to the parsed netlist contract. This does
-  not run native ERC or validate PCB copper, placement, or signal integrity.
+  fault fixtures on KiCad 10.0.0 and 10.0.5. A synthetic inline-protection
+  control and an open required component ground pin are also source-hashed and
+  exported twice on both versions. The control has no path finding; the fault
+  names U2.5 in both D-line findings. Repeated exports match after
+  normalization to the parsed netlist contract. This does not run native ERC
+  or validate datasheet pinout, PCB copper, placement, or signal integrity.
   Fixture hashes, exact image digests, and the reproduction command are in
   [the native USB regression README](../tests/fixtures/design_lint/usb-data-path-native/README.md).
 

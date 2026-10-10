@@ -105,6 +105,7 @@ USB_HOSTED_THEME_SUITES = (
     "test_hosted_usb_requirements.py",
     "test_usb_data_path_native_fixture_lane.py",
 )
+USB_INLINE_COMPONENT_THEME_SUITES = ("test_usb_inline_component_paths.py",)
 POWER_PATH_HOSTED_THEME_SUITES = (
     "test_hosted_power_path_requirements.py",
     "test_power_path_fixture_lane.py",
@@ -395,6 +396,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *OPEN_DRAIN_THEME_SUITES,
                     *I2C_ADDRESS_THEME_SUITES,
                     *USB_HOSTED_THEME_SUITES,
+                    *USB_INLINE_COMPONENT_THEME_SUITES,
                     *POWER_PATH_HOSTED_THEME_SUITES,
                     *IC_RAIL_NATIVE_THEME_SUITES,
                     *POWER_INPUT_THEME_SUITES,

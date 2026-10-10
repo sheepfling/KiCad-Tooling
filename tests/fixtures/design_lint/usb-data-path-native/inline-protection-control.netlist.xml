@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export>
+  <components>
+    <comp ref="J1">
+      <value>USB_A</value>
+      <footprint>Synthetic:USB-A</footprint>
+      <libsource lib="Connector" part="USB_A"/>
+    </comp>
+    <comp ref="U1">
+      <value>UsbPhy</value>
+      <footprint>Synthetic:QFN</footprint>
+      <libsource lib="Synthetic" part="UsbPhy"/>
+    </comp>
+    <comp ref="U2">
+      <value>UsbProtection</value>
+      <footprint>Synthetic:QFN</footprint>
+      <libsource lib="Synthetic" part="UsbProtection"/>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Connector" part="USB_A">
+      <pins>
+        <pin num="1" name="D+" type="passive"/>
+        <pin num="2" name="D-" type="passive"/>
+        <pin num="4" name="GND" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="UsbPhy">
+      <pins>
+        <pin num="1" name="DP1" type="input"/>
+        <pin num="2" name="DM1" type="input"/>
+        <pin num="3" name="AGND" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="UsbProtection">
+      <pins>
+        <pin num="1" name="PORT_DP" type="input"/>
+        <pin num="2" name="PHY_DP" type="output"/>
+        <pin num="3" name="PORT_DM" type="input"/>
+        <pin num="4" name="PHY_DM" type="output"/>
+        <pin num="5" name="GND" type="power_in"/>
+        <pin num="6" name="AUX" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net name="USB_DP_PORT">
+      <node ref="J1" pin="1"/>
+      <node ref="U2" pin="1"/>
+    </net>
+    <net name="USB_DP_PHY">
+      <node ref="U2" pin="2"/>
+      <node ref="U1" pin="1"/>
+    </net>
+    <net name="USB_DM_PORT">
+      <node ref="J1" pin="2"/>
+      <node ref="U2" pin="3"/>
+    </net>
+    <net name="USB_DM_PHY">
+      <node ref="U2" pin="4"/>
+      <node ref="U1" pin="2"/>
+    </net>
+    <net name="GND">
+      <node ref="J1" pin="4"/>
+      <node ref="U1" pin="3"/>
+      <node ref="U2" pin="5"/>
+    </net>
+    <net name="unconnected-(U2-Pad6)">
+      <node ref="U2" pin="6"/>
+    </net>
+  </nets>
+</export>

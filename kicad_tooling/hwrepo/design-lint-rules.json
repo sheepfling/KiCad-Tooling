@@ -1322,32 +1322,40 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a project-authored connector-to-PHY interface, exact connector and PHY symbol/footprint identities, endpoint pin inventory and net assignments, and the declared direct path or fitted series-resistor identity, value range, and two-net topology must match. A common_net or separate_nets reference policy checks the mapped endpoint reference pins; a bonded policy additionally requires one exact passive two-pin component identity, value, footprint, and side-pin net assignment between the two declared reference nets.",
+      "predicate": "For a project-authored connector-to-PHY interface, exact connector and PHY symbol/footprint identities, endpoint pin inventory and net assignments, and the declared direct path, fitted series-resistor identity/value/two-net topology, or one exact multi-pin inline-component identity and full pin-to-net/no-connect map must match. Inline-component paths also map the component pins that connect each connector-side D+/D- net to its PHY-side net. A common_net or separate_nets reference policy checks the mapped endpoint reference pins; a bonded policy additionally requires one exact passive two-pin component identity, value, footprint, and side-pin net assignment between the two declared reference nets.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The project must author the PHY-specific topology and cite its engineering basis; this rule does not infer that every USB PHY needs or forbids an external resistor.",
-        "Only direct paths and one mapped conventional two-terminal resistor per data line are modeled. Additional series components, arrays, USB-C role behavior, USB 3.x lanes, signal integrity, PCB placement, and copper continuity need separate requirements or evidence.",
+        "Direct paths, one mapped conventional two-terminal resistor per data line, and one explicitly mapped multi-pin inline component are supported. The inline map must account for the component's complete native pin inventory and each pin's expected net or explicit no-connect state. Multiple inline devices, additional series components, USB-C role behavior, USB 3.x lanes, signal integrity, PCB placement, and copper continuity need separate requirements or evidence.",
+        "An inline component map records project-reviewed schematic connectivity. It does not establish that the selected symbol pin mapping matches the manufacturer's datasheet, that the device conducts or protects as intended, or that PCB copper completes the path.",
         "A passing schematic netlist comparison does not validate the selected resistor range against a datasheet or prove electrical or manufacturing suitability.",
         "A mapped reference bond checks native schematic symbol, footprint, value, DNP state, passive pin types, and net assignments; it does not prove component conduction, board copper continuity, or off-board grounding."
       ],
       "fault_fixtures": [
         "tests.test_usb_data_paths.test_missing_required_resistor_is_new_coverage_beyond_named_pair_prompt",
         "tests.test_usb_data_paths.test_value_dnp_and_wrong_net_mutations_are_detected",
-        "tests.test_usb_data_path_reference_bonds.test_bonded_reference_faults_report_exact_component_and_pin_evidence"
+        "tests.test_usb_data_path_reference_bonds.test_bonded_reference_faults_report_exact_component_and_pin_evidence",
+        "tests.test_usb_inline_component_paths.test_inline_component_faults_report_exact_pin_evidence",
+        "tests.test_usb_inline_component_paths.test_missing_inline_component_reports_both_data_lines",
+        "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_usb_data_paths.test_documented_integrated_phy_direct_path_is_a_valid_control",
         "tests.test_usb_data_paths.test_documented_external_phy_and_27r_pair_is_a_valid_control",
-        "tests.test_usb_data_path_reference_bonds.test_exact_bonded_reference_path_is_a_valid_control"
+        "tests.test_usb_data_path_reference_bonds.test_exact_bonded_reference_path_is_a_valid_control",
+        "tests.test_usb_inline_component_paths.test_exact_multi_pin_protection_path_is_a_valid_control",
+        "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_usb_data_paths.test_missing_path_evidence_is_order_stable_and_repair_clears_it",
-        "tests.test_usb_data_path_reference_bonds.test_bonded_reference_fault_evidence_is_order_stable"
+        "tests.test_usb_data_path_reference_bonds.test_bonded_reference_fault_evidence_is_order_stable",
+        "tests.test_usb_inline_component_paths.test_inline_component_findings_are_order_stable_and_repair_clears_them"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_data_paths.py#usb_data_path_mismatches",
+        "kicad_tooling/hwrepo/usb_data_path_inline_components.py#check_usb_inline_component",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",

@@ -17,6 +17,7 @@ from .reference_bonds import reference_bond_issues
 from .resistor_paths import (
     direct_resistors,
 )
+from .usb_data_path_inline_components import check_usb_inline_component
 from .usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,
@@ -53,6 +54,9 @@ class UsbDataPathMismatch:
     reference_bond_identity: str | None = None
     reference_bond_side_a: str | None = None
     reference_bond_side_b: str | None = None
+    inline_component_reference: str | None = None
+    inline_component_identity: str | None = None
+    inline_component_pin_assignments: tuple[str, ...] = ()
 
 
 def _lookup(mapping: Mapping[str, _Value], key: str) -> _Value | None:
@@ -283,10 +287,15 @@ def _reference_issues(
 def usb_data_path_mismatches(
     path_map: UsbDataPathMap, observed: NetlistContract
 ) -> tuple[UsbDataPathMismatch, ...]:
-    """Compare exact project-selected direct or resistor paths with native pin/net evidence."""
+    """Compare project-selected USB paths with source-bound native pin/net evidence."""
     mismatches: list[UsbDataPathMismatch] = []
     for interface in path_map.interfaces:
         reference_issues = _reference_issues(observed, interface)
+        inline_check = (
+            None
+            if interface.inline_component is None
+            else check_usb_inline_component(interface.inline_component, observed)
+        )
         for line in (interface.positive, interface.negative):
             connector_data_pins = _endpoint_data_pins(
                 observed,
@@ -336,6 +345,13 @@ def usb_data_path_mismatches(
                     )
             if line.topology == "series_resistor":
                 issues.extend(_resistor_issues(observed, line, line.connector_net, line.phy_net))
+            if inline_check is not None:
+                issues.extend(inline_check.component_issues)
+                issues.extend(
+                    inline_check.positive_issues
+                    if line.line == "D+"
+                    else inline_check.negative_issues
+                )
             if issues:
                 mismatches.append(
                     UsbDataPathMismatch(
@@ -375,6 +391,32 @@ def usb_data_path_mismatches(
                             )
                         ),
                         issues=tuple(issues),
+                        inline_component_reference=(
+                            None
+                            if interface.inline_component is None
+                            else interface.inline_component.reference
+                        ),
+                        inline_component_identity=(
+                            None
+                            if interface.inline_component is None
+                            else (
+                                f"{interface.inline_component.expected_symbol}; "
+                                f"{interface.inline_component.expected_footprint}"
+                            )
+                        ),
+                        inline_component_pin_assignments=(
+                            ()
+                            if interface.inline_component is None
+                            else tuple(
+                                f"{item.pin}={item.net}"
+                                if item.disposition == "net"
+                                else f"{item.pin}=<unconnected>"
+                                for item in sorted(
+                                    interface.inline_component.pins,
+                                    key=lambda pin: (pin.pin.casefold(), pin.pin),
+                                )
+                            )
+                        ),
                     )
                 )
         if reference_issues:

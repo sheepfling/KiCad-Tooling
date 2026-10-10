@@ -35,6 +35,63 @@ class UsbDataSeriesResistorRequirement(StrictModel):
         return self
 
 
+class UsbDataPathInlinePinRequirement(StrictModel):
+    """Exact expected net or explicit no-connect state for one inline-device pin."""
+
+    pin: Reference
+    disposition: Literal["net", "unconnected"]
+    net: NetName | None = None
+
+    @model_validator(mode="after")
+    def disposition_matches_net(self) -> UsbDataPathInlinePinRequirement:
+        if "." not in self.pin:
+            raise ValueError("USB inline-component pins must use COMPONENT.PIN form")
+        if self.disposition == "net" and self.net is None:
+            raise ValueError("Connected USB inline-component pins need an expected net")
+        if self.disposition == "unconnected" and self.net is not None:
+            raise ValueError("Unconnected USB inline-component pins cannot declare a net")
+        return self
+
+
+class UsbDataPathInlineComponentRequirement(StrictModel):
+    """Reviewed exact pass-through pin map for one multi-pin USB inline component."""
+
+    reference: Identifier
+    expected_symbol: NonEmptyText
+    expected_footprint: NonEmptyText
+    positive_connector_pin: Reference
+    positive_phy_pin: Reference
+    negative_connector_pin: Reference
+    negative_phy_pin: Reference
+    pins: Annotated[tuple[UsbDataPathInlinePinRequirement, ...], Field(min_length=4)]
+
+    @property
+    def data_pins(self) -> tuple[str, ...]:
+        return (
+            self.positive_connector_pin,
+            self.positive_phy_pin,
+            self.negative_connector_pin,
+            self.negative_phy_pin,
+        )
+
+    @model_validator(mode="after")
+    def complete_distinct_component_pin_map(self) -> UsbDataPathInlineComponentRequirement:
+        reference_prefix = f"{self.reference}.".casefold()
+        pins = tuple(item.pin.casefold() for item in self.pins)
+        if any(not item.pin.casefold().startswith(reference_prefix) for item in self.pins):
+            raise ValueError("USB inline-component pin maps must belong to the declared component")
+        if len(set(pins)) != len(pins):
+            raise ValueError("USB inline-component pin maps must be unique")
+        data_pins = tuple(pin.casefold() for pin in self.data_pins)
+        if any(not pin.startswith(reference_prefix) for pin in data_pins):
+            raise ValueError("USB inline data-path pins must belong to the declared component")
+        if len(set(data_pins)) != len(data_pins):
+            raise ValueError("USB inline D+ and D- pins must be distinct")
+        if not set(data_pins) <= set(pins):
+            raise ValueError("USB inline pin inventory must include all four data-path pins")
+        return self
+
+
 class UsbDataPathLineRequirement(StrictModel):
     """PHY-specific path; parallel pin tuples list every same-net contact."""
 
@@ -43,7 +100,7 @@ class UsbDataPathLineRequirement(StrictModel):
     phy_pin: Reference
     connector_net: NetName
     phy_net: NetName
-    topology: Literal["direct", "series_resistor"]
+    topology: Literal["direct", "series_resistor", "inline_component"]
     connector_parallel_pins: tuple[Reference, ...] = ()
     phy_parallel_pins: tuple[Reference, ...] = ()
     series_resistor: UsbDataSeriesResistorRequirement | None = None
@@ -70,9 +127,17 @@ class UsbDataPathLineRequirement(StrictModel):
                 raise ValueError(
                     "Direct USB data paths need one shared net and no series-resistor map"
                 )
-        elif self.connector_net == self.phy_net or self.series_resistor is None:
+        elif self.topology == "series_resistor" and (
+            self.connector_net == self.phy_net or self.series_resistor is None
+        ):
             raise ValueError(
                 "USB data series-resistor paths need distinct nets and an exact resistor map"
+            )
+        elif self.topology == "inline_component" and (
+            self.connector_net == self.phy_net or self.series_resistor is not None
+        ):
+            raise ValueError(
+                "USB inline-component paths need distinct nets and no series-resistor map"
             )
         return self
 
@@ -105,6 +170,7 @@ class UsbDataInterfaceRequirement(StrictModel):
     data_port_group: UsbDataPortGroup | None = None
     positive: UsbDataPathLineRequirement
     negative: UsbDataPathLineRequirement
+    inline_component: UsbDataPathInlineComponentRequirement | None = None
     connector_reference_pins: tuple[UsbReferencePinRequirement, ...] = ()
     phy_reference_pins: tuple[UsbReferencePinRequirement, ...] = ()
     reference_policy: Literal["common_net", "bonded", "separate_nets"] | None = None
@@ -116,6 +182,13 @@ class UsbDataInterfaceRequirement(StrictModel):
             raise ValueError("USB connector and PHY references must differ")
         if self.positive.line != "D+" or self.negative.line != "D-":
             raise ValueError("USB data pair must map one D+ line and one D- line")
+        inline_lines = tuple(
+            line.topology == "inline_component" for line in (self.positive, self.negative)
+        )
+        if self.inline_component is None and any(inline_lines):
+            raise ValueError("USB inline-component data paths need an exact component map")
+        if self.inline_component is not None and inline_lines != (True, True):
+            raise ValueError("USB inline-component maps must cover both D+ and D- paths")
         if any(
             any(
                 not pin.casefold().startswith(f"{self.connector_reference}.".casefold())
@@ -197,6 +270,43 @@ class UsbDataInterfaceRequirement(StrictModel):
             if line.series_resistor is not None
         }:
             raise ValueError("USB reference bond cannot reuse a data-line series resistor")
+        if self.inline_component is not None:
+            if self.inline_component.reference.casefold() in {
+                self.connector_reference.casefold(),
+                self.phy_reference.casefold(),
+            }:
+                raise ValueError("USB inline component cannot reuse an endpoint reference")
+            if self.reference_bond is not None and (
+                self.inline_component.reference.casefold()
+                == self.reference_bond.reference.casefold()
+            ):
+                raise ValueError("USB inline component cannot reuse the reference-bond component")
+            mapped_component_pins = {
+                item.pin.casefold(): item for item in self.inline_component.pins
+            }
+            for line, connector_pin, phy_pin in (
+                (
+                    self.positive,
+                    self.inline_component.positive_connector_pin,
+                    self.inline_component.positive_phy_pin,
+                ),
+                (
+                    self.negative,
+                    self.inline_component.negative_connector_pin,
+                    self.inline_component.negative_phy_pin,
+                ),
+            ):
+                for pin, net in (
+                    (connector_pin, line.connector_net),
+                    (phy_pin, line.phy_net),
+                ):
+                    requirement = mapped_component_pins[pin.casefold()]
+                    if requirement.disposition != "net" or requirement.net is None:
+                        raise ValueError("USB inline data-path pins must have expected nets")
+                    if requirement.net.casefold() != net.casefold():
+                        raise ValueError(
+                            "USB inline data-path pin nets must match the line's endpoint nets"
+                        )
         mapped_signal_and_reference_pins = {
             item.casefold()
             for item in (
@@ -247,6 +357,12 @@ class UsbDataInterfaceRequirement(StrictModel):
             self.phy_reference.casefold(),
         }:
             raise ValueError("USB data resistor cannot reuse a connector or PHY reference")
+        if self.inline_component is not None and self.inline_component.reference.casefold() in {
+            *resistors,
+            self.connector_reference.casefold(),
+            self.phy_reference.casefold(),
+        }:
+            raise ValueError("USB inline component reference must be unique within the interface")
         return self
 
 
@@ -272,4 +388,27 @@ class UsbDataPathMap(StrictModel):
         ]
         if len(set(resistor_references)) != len(resistor_references):
             raise ValueError("USB data series resistors must be unique across mapped paths")
+        inline_references = [
+            item.inline_component.reference.casefold()
+            for item in self.interfaces
+            if item.inline_component is not None
+        ]
+        if len(set(inline_references)) != len(inline_references):
+            raise ValueError("USB inline components must be unique across mapped paths")
+        if set(inline_references) & set(resistor_references):
+            raise ValueError("USB inline components cannot also be mapped as series resistors")
+        endpoint_references = {
+            reference.casefold()
+            for item in self.interfaces
+            for reference in (item.connector_reference, item.phy_reference)
+        }
+        if set(inline_references) & endpoint_references:
+            raise ValueError("USB inline components cannot also be mapped endpoints")
+        reference_bond_references = {
+            item.reference_bond.reference.casefold()
+            for item in self.interfaces
+            if item.reference_bond is not None
+        }
+        if set(inline_references) & reference_bond_references:
+            raise ValueError("USB inline components cannot also be mapped reference bonds")
         return self
