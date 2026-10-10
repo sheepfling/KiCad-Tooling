@@ -60,6 +60,7 @@ class PackageCiTests(unittest.TestCase):
                 "kicad_tooling/fixtures/foreign-eagle-board.xml",
                 "kicad_tooling/fixtures/scaffold-license.txt",
                 "kicad_tooling/hwrepo/external_protection_models.py",
+                "kicad_tooling/hwrepo/usb_data_path_models.py",
                 "kicad_tooling/hwrepo/fixtures/pcb-access-probe-envelope.kicad_pcb",
                 "kicad_tooling/hwrepo/kicad_library_license.txt",
             )

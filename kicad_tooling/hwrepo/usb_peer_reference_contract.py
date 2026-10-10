@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import UsbDataPathLineRequirement, UsbDataPathMap
+from .usb_data_path_models import UsbDataPathLineRequirement, UsbDataPathMap
 from .usb_peer_reference_types import UsbEndpoint, UsbPeerDataLink, UsbPeerDataSeriesResistor
 
 

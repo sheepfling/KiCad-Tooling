@@ -10,6 +10,8 @@ from pydantic import ValidationError
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
+)
+from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataPathLineRequirement,
     UsbDataSeriesResistorRequirement,
 )

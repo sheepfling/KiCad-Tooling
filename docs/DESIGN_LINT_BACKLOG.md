@@ -429,6 +429,11 @@ and optional ecosystem adapters are `P3`.
   lines, including the shrink-only `hwrepo/models.py`; these remain open
   decomposition work, not accepted target sizes. The focused architecture
   slice passes with `-m architecture` and the documented public template root.
+  On 2026-10-10, the five USB connector-to-PHY path contract types moved into
+  `hwrepo/usb_data_path_models.py`. Internal services and fixture builders now
+  import that owner directly; `hwrepo/models.py` retains compatibility exports,
+  and its no-growth ceiling dropped from 5,980 to 5,729 lines. This refactor
+  preserves the existing contract behavior and does not add an electrical rule.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

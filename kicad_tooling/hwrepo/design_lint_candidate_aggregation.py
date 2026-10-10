@@ -50,7 +50,6 @@ from .models import (
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
     Stm32PinMapCoverageReport,
-    UsbDataPathMap,
 )
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
@@ -71,6 +70,7 @@ from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .usb_c_ports import UsbCPortRosterContext
+from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_types import UsbPeerReferenceScan
 
 

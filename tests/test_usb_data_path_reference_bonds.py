@@ -5,7 +5,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo.models import UsbDataInterfaceRequirement, UsbReferencePinRequirement
+from kicad_tooling.hwrepo.usb_data_path_models import (
+    UsbDataInterfaceRequirement,
+    UsbReferencePinRequirement,
+)
 from kicad_tooling.hwrepo.usb_data_paths import usb_data_path_mismatches
 from tests.usb_data_path_support import (
     lint_report,

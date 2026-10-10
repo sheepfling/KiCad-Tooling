@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import NetlistContract, UsbDataPathMap
+from .models import NetlistContract
+from .usb_data_path_models import UsbDataPathMap
 from .usb_data_paths import usb_data_path_mismatches
 
 

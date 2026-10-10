@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 
 from .design_lint_types import Candidate
-from .models import UsbDataPathMap
+from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_types import UsbPeerReferenceScan
 
 

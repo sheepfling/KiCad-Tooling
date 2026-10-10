@@ -8,8 +8,8 @@ from pydantic import ValidationError
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
-    UsbDataInterfaceRequirement,
 )
+from kicad_tooling.hwrepo.usb_data_path_models import UsbDataInterfaceRequirement
 from tests.usb_c_peer_support import (
     usb_c_data_map,
     usb_c_peer_netlist,

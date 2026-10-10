@@ -16,12 +16,13 @@ from .digital_peer_voltage_types import (
     DigitalPeerVoltageLintContext,
     DigitalPeerVoltageScan,
 )
-from .models import NetlistContract, UsbDataPathMap
+from .models import NetlistContract
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_scan import scan_serial_peer_reference_reviews
 from .serial_peer_reference_types import SerialPeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .usb_c_ports import UsbCPortRosterContext
+from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_scan import scan_usb_peer_reference_reviews
 from .usb_peer_reference_types import UsbPeerReferenceScan
 

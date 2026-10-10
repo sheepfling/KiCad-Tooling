@@ -6,7 +6,8 @@ from collections.abc import Iterable
 from typing import Literal
 
 from .connector_identity import connector_candidate_references
-from .models import NetlistContract, UsbDataPathMap
+from .models import NetlistContract
+from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_endpoint_analysis import (
     IC_REFERENCE,
     pin_net_index,

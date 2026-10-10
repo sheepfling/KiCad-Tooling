@@ -12,6 +12,8 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,

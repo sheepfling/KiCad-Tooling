@@ -18,8 +18,8 @@ from .models import (
     PowerSequenceMap,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
-    UsbDataPathMap,
 )
+from .usb_data_path_models import UsbDataPathMap
 
 
 def mapped_coverage_candidates(

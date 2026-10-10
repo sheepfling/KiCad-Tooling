@@ -5,6 +5,8 @@ from __future__ import annotations
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,

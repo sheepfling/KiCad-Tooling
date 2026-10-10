@@ -42,6 +42,7 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
             "kicad_tooling/tool-surfaces.json",
             "kicad_tooling/py.typed",
             "kicad_tooling/hwrepo/external_protection_models.py",
+            "kicad_tooling/hwrepo/usb_data_path_models.py",
             "kicad_tooling/markdown_check/__main__.py",
             "kicad_tooling/fixtures/foreign-eagle-board.xml",
             "kicad_tooling/fixtures/scaffold-license.txt",

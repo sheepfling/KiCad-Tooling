@@ -13,8 +13,8 @@ from .models import (
     DesignLintPolicy,
     PowerPathMap,
     PowerSequenceMap,
-    UsbDataPathMap,
 )
+from .usb_data_path_models import UsbDataPathMap
 
 MappedTopologyRuleId = Literal[
     "bus.usb_data_path_mismatch",

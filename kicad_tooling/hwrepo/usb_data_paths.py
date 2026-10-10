@@ -12,13 +12,15 @@ from .bus_signal_pairs import (
 from .models import (
     ComponentContract,
     NetlistContract,
-    UsbDataInterfaceRequirement,
-    UsbDataPathLineRequirement,
-    UsbDataPathMap,
 )
 from .reference_bonds import reference_bond_issues
 from .resistor_paths import (
     direct_resistors,
+)
+from .usb_data_path_models import (
+    UsbDataInterfaceRequirement,
+    UsbDataPathLineRequirement,
+    UsbDataPathMap,
 )
 from .usb_peer_endpoint_analysis import usb_endpoint_reference_pins
 

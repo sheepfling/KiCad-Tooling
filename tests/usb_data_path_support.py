@@ -13,6 +13,8 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
     ReferenceBondRequirement,
+)
+from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,

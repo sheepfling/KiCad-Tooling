@@ -12,16 +12,14 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
-from .models import (
-    DesignLintRuleOverride,
-    UsbDataPathMap,
-)
+from .models import DesignLintRuleOverride
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import (
     SerialPeerReferenceCoverageReport,
     SerialPeerReferenceLinkCoverageEntry,
 )
 from .serial_peer_reference_types import SerialPeerReferenceScan
+from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_models import (
     UsbPeerDataLineCoverage,
     UsbPeerDataPathCoverage,

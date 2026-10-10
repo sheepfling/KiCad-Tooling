@@ -27,9 +27,9 @@ from kicad_tooling.hwrepo.models import (
     ProjectManifest,
     ProjectTestContract,
     ReferenceBondRequirement,
-    UsbReferencePinRequirement,
     ValidationSummary,
 )
+from kicad_tooling.hwrepo.usb_data_path_models import UsbReferencePinRequirement
 from tests.mcp_parity_support import (
     McpParityHarness,
     run_mcp_parity,
