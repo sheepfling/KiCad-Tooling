@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Literal
 
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_evaluation_types import (
     DesignLintEvaluationReportInput,
 )
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
-    ControlInputBiasHeuristicCoverage,
     DesignLintReport,
     PcbKeepoutCoverageReport,
 )

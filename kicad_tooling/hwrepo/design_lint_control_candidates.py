@@ -6,8 +6,9 @@ from .control_input_inventory import (
     connected_control_inputs_without_visible_rail_resistor,
     unconnected_control_inputs,
 )
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_types import Candidate
-from .models import ControlInputBiasHeuristicCoverage, NetlistContract
+from .models import NetlistContract
 from .open_drain_heuristics import open_output_bias_gaps
 
 

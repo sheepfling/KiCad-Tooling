@@ -6,6 +6,10 @@ from pathlib import Path
 
 from .contracts import repo_path
 from .control_input_bias import control_input_bias_heuristic_coverage
+from .control_input_models import (
+    ControlInputBiasHeuristicCoverage,
+    ControlInputsAnalysis,
+)
 from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .discovery import ProjectConfig
@@ -21,8 +25,6 @@ from .i2c_pullup_models import (
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
-    ControlInputBiasHeuristicCoverage,
-    ControlInputsAnalysis,
     NetlistContract,
     UsbCAnalysis,
 )

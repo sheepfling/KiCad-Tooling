@@ -10,6 +10,7 @@ from typing import Literal
 from ..validate import hashes
 from .contract_coach import inspect_summary as inspect_contract_summary
 from .contracts import read_model, repo_path
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_connector_coverage import (
     connector_coverage_from_project,
     external_protection_coverage_from_project,
@@ -31,7 +32,6 @@ from .discovery import load_config, load_registry
 from .evidence import digest
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
-    ControlInputBiasHeuristicCoverage,
     DesignLintPolicy,
     DesignLintReport,
     ProjectManifest,

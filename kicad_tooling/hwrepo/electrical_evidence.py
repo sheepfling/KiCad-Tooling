@@ -18,6 +18,7 @@ from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contracts import read_model, repo_path
 from .control_input_checks import control_input_checks
+from .control_input_models import ControlInputsAnalysis
 from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
@@ -38,7 +39,6 @@ from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     AnalysisNotApplicable,
     CommandEvidence,
-    ControlInputsAnalysis,
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     ElectricalCheck,

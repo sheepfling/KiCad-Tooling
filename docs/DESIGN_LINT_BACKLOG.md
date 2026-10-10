@@ -111,6 +111,12 @@ intended requirement.
   architecture tests check their size, import boundaries, and compatibility
   identities. This extraction reduced `hwrepo/models.py` from 6,584 to 6,343
   lines without changing the contract schemas.
+  Control-input endpoint and bias requirements, heuristic coverage records,
+  and their discriminated bias union now live in `control_input_models.py`.
+  Control-input and design-lint services import that owner directly while
+  `models.py` retains identity-compatible exports. Architecture tests guard
+  owner size, import boundaries, and compatibility identity; the registry
+  shrank from 6,343 to 6,120 lines without changing contract schemas.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

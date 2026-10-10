@@ -25,6 +25,7 @@ from .contract_coach import (
 )
 from .contracts import repo_path, write_model
 from .control_input_checks import control_input_checks
+from .control_input_models import ControlInputsAnalysis
 from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
@@ -43,7 +44,6 @@ from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
     CommandEvidence,
-    ControlInputsAnalysis,
     ElectricalAnalysisReport,
     ElectricalCheck,
     ElectricalSuiteReport,

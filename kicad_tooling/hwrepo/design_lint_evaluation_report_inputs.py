@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_evaluation_types import (
     DesignLintEvaluationCandidates,
     DesignLintEvaluationPreparation,
@@ -9,10 +10,7 @@ from .design_lint_evaluation_types import (
     DesignLintFindingDisposition,
 )
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import (
-    ControlInputBiasHeuristicCoverage,
-    DesignLintReport,
-)
+from .models import DesignLintReport
 
 
 def evaluation_report_input(

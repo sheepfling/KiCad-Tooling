@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from .control_input_inventory import OUTPUT_CAPABLE_TYPES
-from .models import (
+from .control_input_models import (
     ControlBiasResistorRequirement,
     ControlInputsAnalysis,
     ControlLocalBiasRequirement,
     ControlPinRequirement,
+)
+from .models import (
     ElectricalCheck,
     NetlistContract,
 )

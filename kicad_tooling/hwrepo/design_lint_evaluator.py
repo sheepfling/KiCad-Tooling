@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_evaluation_candidates import scan_evaluation_candidates
 from .design_lint_evaluation_preparation import prepare_evaluation
 from .design_lint_evaluation_report import assemble_design_lint_report
@@ -18,7 +19,6 @@ from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
     ContractCoachReport,
-    ControlInputBiasHeuristicCoverage,
     CrystalNetworkCoverageReport,
     DesignLintPolicy,
     DesignLintReport,

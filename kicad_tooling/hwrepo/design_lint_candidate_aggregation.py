@@ -12,6 +12,7 @@ from .component_peer_pin_scan import (
     ComponentPeerPinAssignmentScans,
     component_peer_pin_assignment_scans,
 )
+from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_bus_candidates import bus_candidates
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_candidates import component_candidates
@@ -39,7 +40,6 @@ from .models import (
     ComponentRoleMap,
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
-    ControlInputBiasHeuristicCoverage,
     CrystalNetworkCoverageReport,
     ExternalProtectionCoverageReport,
     NetlistContract,
