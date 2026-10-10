@@ -62,6 +62,13 @@ intended requirement.
   `design_lint_evaluator.py` as a staged coordinator. Put each rule's predicate
   and evidence assembly in the module that owns its source and electrical
   theme; share parsing and common evidence through focused helpers.
+  Connector candidate dispatch stays in the 29-line
+  `design_lint_connector_candidates.py` facade. Pin and peer-assignment
+  prompts live in `design_lint_connector_pin_candidates.py`, return-role and
+  return-domain prompts in `design_lint_return_domain_candidates.py`, and
+  numbered positive-rail prompts in `design_lint_power_candidates.py`. The
+  architecture suite checks that the connector facade delegates and does not
+  construct findings.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

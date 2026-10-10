@@ -163,6 +163,35 @@ def test_design_lint_public_module_stays_a_small_facade() -> None:
     assert _line_count(facade) < FACADE_MAX_LINES
 
 
+@pytest.mark.connector_lint
+def test_connector_candidate_facade_delegates_by_review_theme() -> None:
+    facade = HWREPO / "design_lint_connector_candidates.py"
+    owners = (
+        HWREPO / "design_lint_connector_pin_candidates.py",
+        HWREPO / "design_lint_return_domain_candidates.py",
+    )
+
+    assert _line_count(facade) < FACADE_MAX_LINES
+    assert all(owner.is_file() for owner in owners)
+
+    tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
+    calls = {
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    candidate_constructions = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Candidate"
+    ]
+
+    assert {"connector_pin_candidates", "return_domain_candidates"} <= calls
+    assert not candidate_constructions, "Connector dispatch should not construct lint findings."
+
+
 def test_design_lint_evaluator_stays_a_staged_coordinator() -> None:
     evaluator = HWREPO / "design_lint_evaluator.py"
 

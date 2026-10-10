@@ -12,6 +12,7 @@ from .models import ComponentRoleMap, NetlistContract, PowerPathMap
 from .net_dc_reference import connector_capacitor_only_nets
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
 from .power_pin_paths import power_inputs_without_supported_source_paths
+from .power_rails import numbered_power_rail_groups
 
 
 def power_candidates(
@@ -161,4 +162,19 @@ def power_candidates(
                 evidence=evidence,
             )
         )
+
+    for group in numbered_power_rail_groups(observed):
+        found.append(
+            Candidate(
+                rule_id="net.numbered_power_rails",
+                subject=group.stem,
+                message=(
+                    "Separately numbered positive supply nets may be intended as one rail. "
+                    "Review whether they are common, intentionally isolated, or represent "
+                    "independent supplies; similar names do not establish a required connection."
+                ),
+                evidence=dict(group.nets),
+            )
+        )
+
     return tuple(found)
