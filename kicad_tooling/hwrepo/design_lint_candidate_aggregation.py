@@ -31,6 +31,7 @@ from .design_lint_stm32_candidates import stm32_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_peer_candidates import usb_data_path_map_sha256
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
+from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
@@ -41,7 +42,6 @@ from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
     CrystalNetworkCoverageReport,
-    ExternalProtectionCoverageReport,
     NetlistContract,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,

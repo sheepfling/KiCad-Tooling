@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import ExternalProtectionCoverageReport
+from .external_protection_models import ExternalProtectionCoverageReport
 
 
 def protection_candidates(

@@ -117,6 +117,10 @@ intended requirement.
   `models.py` retains identity-compatible exports. Architecture tests guard
   owner size, import boundaries, and compatibility identity; the registry
   shrank from 6,343 to 6,120 lines without changing contract schemas.
+  External-protection requirements and source-bound coverage records now live
+  in `external_protection_models.py`. Internal lint services import that owner
+  directly, and architecture tests check owner size, import boundaries, and
+  identity-compatible registry exports; `models.py` shrank by another 140 lines.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

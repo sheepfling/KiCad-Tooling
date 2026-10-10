@@ -22,6 +22,7 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
+from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
@@ -36,7 +37,6 @@ from .models import (
     DesignLintReport,
     DesignLintRuleOverride,
     Digest,
-    ExternalProtectionCoverageReport,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
     RcFilterCoverageReport,

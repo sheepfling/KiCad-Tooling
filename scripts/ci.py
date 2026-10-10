@@ -41,6 +41,7 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
         required = {
             "kicad_tooling/tool-surfaces.json",
             "kicad_tooling/py.typed",
+            "kicad_tooling/hwrepo/external_protection_models.py",
             "kicad_tooling/markdown_check/__main__.py",
             "kicad_tooling/fixtures/foreign-eagle-board.xml",
             "kicad_tooling/fixtures/scaffold-license.txt",
@@ -194,11 +195,9 @@ def build_distributions(output: Path, build_python: str) -> tuple[Path, str]:
 
 
 def adapted_project_fixture(project: Path, destination: Path) -> Path:
-    """Copy the known reference into a nested adopter layout without rewriting CAD.
+    """Copy a reference into a nested adopter layout without rewriting source.
 
-    Keep products, libraries, templates and documentation in place. Only discovery,
-    template presence expectations and project shared-path declarations describe the
-    moved trees; their native source and engineering expectations remain byte-identical.
+    Only layout declarations change; native source and expectations stay byte-identical.
     """
 
     def copy_regular(source: str, target: str) -> str:

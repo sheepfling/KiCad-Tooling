@@ -10,9 +10,9 @@ from .design_lint_rc_filter_candidates import rc_filter_candidates
 from .design_lint_regulator_candidates import regulator_feedback_candidates
 from .design_lint_types import Candidate
 from .design_lint_usb_data_path_candidates import usb_data_path_candidates
+from .external_protection_models import ExternalProtectionCoverageReport
 from .models import (
     CrystalNetworkCoverageReport,
-    ExternalProtectionCoverageReport,
     NetlistContract,
     PowerPathMap,
     PowerSequenceMap,
