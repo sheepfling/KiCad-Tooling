@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
+from .models import ElectricalCheck, NetlistContract
+from .resistor_paths import (
+    DirectResistor,
+    direct_resistors,
+)
+from .rs485_models import (
     Rs485Analysis,
     Rs485BiasResistorRequirement,
     Rs485BusRequirement,
@@ -16,10 +19,6 @@ from .models import (
     Rs485SignalPairRequirement,
     Rs485TerminationEndpointRequirement,
     Rs485TerminationResistorRequirement,
-)
-from .resistor_paths import (
-    DirectResistor,
-    direct_resistors,
 )
 
 

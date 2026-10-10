@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
+from .models import ElectricalCheck, NetlistContract
+from .reference_bonds import reference_bond_issues
+from .serial_logic_models import SerialLogicInputLimits, SerialLogicOutputLimits
+from .serial_peer_models import (
     SerialBridgeRequirement,
     SerialDirectPeerRequirement,
     SerialEndpointRequirement,
     SerialExternalPeerRequirement,
-    SerialLogicInputLimits,
-    SerialLogicOutputLimits,
     SerialPeerAnalysis,
     SerialShiftedPeerRequirement,
 )
-from .reference_bonds import reference_bond_issues
 
 
 def logic_direction_check(

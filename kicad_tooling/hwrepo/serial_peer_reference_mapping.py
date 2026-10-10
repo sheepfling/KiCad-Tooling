@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from typing import cast
 
-from .models import (
-    NetlistContract,
-    SerialDirectPeerRequirement,
-    SerialPeerAnalysis,
-)
+from .models import NetlistContract
 from .reference_bonds import reference_bond_issues
 from .serial_participants import SerialNativePeerLink
+from .serial_peer_models import SerialDirectPeerRequirement, SerialPeerAnalysis
 from .serial_peer_reference_types import (
     DirectPeerView,
     PeerLinkView,

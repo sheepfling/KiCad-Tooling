@@ -13,6 +13,7 @@ from .component_voltage_ratings import component_voltage_rating_checks
 from .connector_contact_ratings import connector_contact_rating_checks
 from .contracts import read_model, repo_path
 from .control_input_checks import control_input_checks
+from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltages import digital_peer_voltage_checks
 from .electrical import (
     bound_inputs,
@@ -36,7 +37,6 @@ from .models import (
     ComponentVoltageRatingAnalysis,
     ConnectorContactRatingAnalysis,
     ControlInputsAnalysis,
-    DigitalPeerVoltageAnalysis,
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     ElectricalCheck,
@@ -51,8 +51,6 @@ from .models import (
     ProjectKind,
     ProjectRecord,
     ReleaseClass,
-    Rs485Analysis,
-    SerialPeerAnalysis,
     SourceState,
     TestAccessAnalysis,
     UsbCAnalysis,
@@ -63,7 +61,9 @@ from .pcb_return_path_capture import expected_probe_sha256, native_pcb_command_m
 from .pcb_return_path_checks import pcb_return_path_checks
 from .power_connectivity import power_connectivity_checks
 from .rs485_heuristics import rs485_checks
+from .rs485_models import Rs485Analysis
 from .serial_heuristics import serial_peer_checks
+from .serial_peer_models import SerialPeerAnalysis
 from .spi_contract import (
     spi_checks,
 )

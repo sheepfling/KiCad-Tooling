@@ -6,8 +6,9 @@ import re
 from decimal import Decimal
 from typing import Literal
 
+from .digital_peer_voltage_models import DigitalPeerPinRequirement, DigitalPeerVoltageAnalysis
 from .digital_peer_voltage_types import DigitalPeerLink, VoltageNamedRail
-from .models import DigitalPeerPinRequirement, DigitalPeerVoltageAnalysis, NetlistContract
+from .models import NetlistContract
 from .return_nets import is_return_like_net_name
 from .serial_participants import serial_function_role_and_channel
 

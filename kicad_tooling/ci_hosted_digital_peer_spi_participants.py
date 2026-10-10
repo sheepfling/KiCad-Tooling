@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
-from .hwrepo.digital_peer_voltages import digital_peer_voltage_checks
-from .hwrepo.models import (
+from .hwrepo.digital_peer_voltage_models import (
     DigitalLogicInputLimits,
     DigitalLogicOutputLimits,
     DigitalPeerPinRequirement,
     DigitalPeerVoltageAnalysis,
     DigitalPeerVoltageLink,
 )
+from .hwrepo.digital_peer_voltages import digital_peer_voltage_checks
 
 
 def verify_spi_participant_voltage(ctx: DigitalPeerFixtureContext):

@@ -33,9 +33,9 @@ def serial_peer_net_label_fixture_lane(
         DesignLintReport,
         DesignLintRuleOverride,
         NetlistContract,
-        SerialPeerAnalysis,
     )
     from .hwrepo.serial_participants import SerialPeerRosterContext
+    from .hwrepo.serial_peer_models import SerialPeerAnalysis
     from .validate import read_netlist
 
     root = root.resolve()

@@ -25,18 +25,17 @@ def can_termination_native_fixture_lane(
     from .hwrepo.can_termination_contract import (
         can_termination_checks,
     )
-    from .hwrepo.contract_coach import pinned_image, run_command
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.evidence import digest
-    from .hwrepo.models import (
+    from .hwrepo.can_termination_models import (
         CanTerminationAnalysis,
         CanTerminationBusRequirement,
         CanTerminationEndpointRequirement,
         CanTerminationMidpointCapacitorRequirement,
         CanTerminationResistorRequirement,
-        ElectricalCheck,
-        NetlistContract,
     )
+    from .hwrepo.contract_coach import pinned_image, run_command
+    from .hwrepo.electrical import selected_config
+    from .hwrepo.evidence import digest
+    from .hwrepo.models import ElectricalCheck, NetlistContract
     from .validate import read_netlist
 
     root = root.resolve()

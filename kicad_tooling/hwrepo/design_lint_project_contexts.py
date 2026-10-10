@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .contracts import repo_path
 from .control_input_bias import control_input_bias_heuristic_coverage
+from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .discovery import ProjectConfig
 from .electrical import load_analysis
@@ -22,12 +23,11 @@ from .models import (
     AnalysisPending,
     ControlInputBiasHeuristicCoverage,
     ControlInputsAnalysis,
-    DigitalPeerVoltageAnalysis,
     NetlistContract,
-    SerialPeerAnalysis,
     UsbCAnalysis,
 )
 from .serial_participants import SerialPeerRosterContext
+from .serial_peer_models import SerialPeerAnalysis
 from .spi_models import SpiAnalysis
 from .spi_participants import SpiRosterContext
 from .usb_c_ports import UsbCPortRosterContext

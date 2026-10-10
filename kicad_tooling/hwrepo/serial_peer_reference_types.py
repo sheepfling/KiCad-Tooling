@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-from .models import ReferenceBondRequirement
+from .reference_bond_models import ReferenceBondRequirement
 from .serial_participants import SerialNativePeerLink
 
 

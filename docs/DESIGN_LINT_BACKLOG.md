@@ -95,6 +95,16 @@ intended requirement.
   identity-compatible re-exports retained for existing callers. The protocol
   architecture test checks the classes, `SpiMisoRequirement` alias, import
   boundary, and owner size; `hwrepo/models.py` shrank from 7,583 to 7,308 lines.
+  UART endpoint and bridge contracts now live in `serial_peer_models.py`,
+  logic-limit and fixture records in `serial_logic_models.py`, and RS-485
+  topology contracts in `rs485_models.py`. Digital-peer voltage requirements
+  join their existing report owner in `digital_peer_voltage_models.py`.
+  Exact reference-bond requirements now live in `reference_bond_models.py` and
+  are imported directly by serial and USB services.
+  Internal tooling services import these owners directly; the shared registry
+  keeps identity-compatible exports. The protocol architecture suite checks
+  ownership, aliases, internal imports, and owner sizes. This extraction
+  reduces `hwrepo/models.py` from 7,308 to 6,584 lines.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

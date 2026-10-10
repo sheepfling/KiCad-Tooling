@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from .models import (
-    DigitalPeerPinRequirement,
-    DigitalPeerVoltageAnalysis,
-    ElectricalCheck,
-    NetlistContract,
-)
+from .digital_peer_voltage_models import DigitalPeerPinRequirement, DigitalPeerVoltageAnalysis
+from .models import ElectricalCheck, NetlistContract
 from .serial_heuristics import logic_direction_check
 
 

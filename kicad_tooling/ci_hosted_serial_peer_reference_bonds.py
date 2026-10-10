@@ -26,8 +26,9 @@ def serial_peer_reference_bond_fixture_lane(
     from .hwrepo.contracts import read_model
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.models import ElectricalCheck, SerialPeerAnalysis
+    from .hwrepo.models import ElectricalCheck
     from .hwrepo.serial_heuristics import serial_peer_checks
+    from .hwrepo.serial_peer_models import SerialPeerAnalysis
     from .validate import read_netlist
 
     root = root.resolve()

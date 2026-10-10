@@ -17,6 +17,7 @@ from .digital_peer_voltage_analysis import (
     pin_assignment_index,
     unambiguous_voltage_named_supply,
 )
+from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 from .digital_peer_voltage_types import (
     DigitalPeerLink,
     DigitalPeerVoltageCoverage,
@@ -24,7 +25,7 @@ from .digital_peer_voltage_types import (
     DigitalPeerVoltageScan,
     VoltageNamedRail,
 )
-from .models import DigitalPeerVoltageAnalysis, NetlistContract
+from .models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 

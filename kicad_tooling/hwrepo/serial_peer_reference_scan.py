@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Literal
 
 from .connector_identity import connector_candidate_references
-from .models import NetlistContract, SerialPeerAnalysis
+from .models import NetlistContract
 from .serial_participants import directly_linked_serial_peers
+from .serial_peer_models import SerialPeerAnalysis
 from .serial_peer_reference_domains import (
     labelled_direct_peer_links,
     pin_index,

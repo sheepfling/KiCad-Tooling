@@ -26,15 +26,14 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     from .hwrepo.i2c_pullup_contract import (
         i2c_pullup_checks,
     )
-    from .hwrepo.models import (
-        ElectricalCheck,
+    from .hwrepo.i2c_pullup_models import (
         I2cPullupAnalysis,
         I2cPullupArrayChannelRequirement,
         I2cPullupArrayRequirement,
         I2cPullupBusRequirement,
         I2cPullupLineRequirement,
-        NetlistContract,
     )
+    from .hwrepo.models import ElectricalCheck, NetlistContract
     from .validate import read_netlist
 
     root = root.resolve()

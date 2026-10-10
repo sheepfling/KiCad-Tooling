@@ -8,9 +8,14 @@ import pytest
 
 from kicad_tooling.hwrepo import (
     can_termination_models,
+    digital_peer_voltage_models,
     i2c_address_models,
     i2c_pullup_models,
     model_primitives,
+    reference_bond_models,
+    rs485_models,
+    serial_logic_models,
+    serial_peer_models,
     spi_models,
 )
 from kicad_tooling.hwrepo import models as shared_models
@@ -74,10 +79,67 @@ PROTOCOL_MODEL_OWNERS = {
             "SpiAnalysis",
         ),
     ),
+    "serial_logic_models.py": (
+        serial_logic_models,
+        (
+            "SerialPinNetRequirement",
+            "SerialLogicOutputLimits",
+            "SerialLogicInputLimits",
+            "SerialLogicLimits",
+            "SerialLabelFixtureExpectedNets",
+        ),
+    ),
+    "serial_peer_models.py": (
+        serial_peer_models,
+        (
+            "SerialEndpointRequirement",
+            "SerialBridgePathRequirement",
+            "SerialBridgeRequirement",
+            "SerialDirectPeerRequirement",
+            "SerialShiftedPeerRequirement",
+            "SerialExternalPeerRequirement",
+            "SerialPeerLinkRequirement",
+            "SerialPeerAnalysis",
+        ),
+    ),
+    "rs485_models.py": (
+        rs485_models,
+        (
+            "Rs485EndpointPinRequirement",
+            "Rs485EndpointRequirement",
+            "Rs485TerminationResistorRequirement",
+            "Rs485DnpResistorRequirement",
+            "Rs485TerminationEndpointRequirement",
+            "Rs485BiasResistorRequirement",
+            "Rs485LocalBiasRequirement",
+            "Rs485RemoteBiasRequirement",
+            "Rs485InternalFailSafeRequirement",
+            "Rs485NoBiasRequirement",
+            "Rs485SignalPairRequirement",
+            "Rs485BusRequirement",
+            "Rs485Analysis",
+        ),
+    ),
+    "reference_bond_models.py": (
+        reference_bond_models,
+        ("ReferenceBondRequirement",),
+    ),
+    "digital_peer_voltage_models.py": (
+        digital_peer_voltage_models,
+        (
+            "DigitalLogicOutputLimits",
+            "DigitalLogicInputLimits",
+            "DigitalPeerPinRequirement",
+            "DigitalPeerVoltageLink",
+            "DigitalPeerVoltageAnalysis",
+        ),
+    ),
 }
 
 PROTOCOL_MODEL_TYPE_ALIASES = {
     "spi_models.py": (spi_models, ("SpiMisoRequirement",)),
+    "serial_peer_models.py": (serial_peer_models, ("SerialPeerRequirement",)),
+    "rs485_models.py": (rs485_models, ("Rs485BiasRequirement",)),
 }
 
 
@@ -108,7 +170,7 @@ def test_protocol_models_live_in_theme_owners_and_services_import_them_directly(
         for name in names:
             assert getattr(shared_models, name) is getattr(owner_module, name)
 
-    for source in sorted(HWREPO.glob("*.py")):
+    for source in sorted(HWREPO.parent.rglob("*.py")):
         if source.name == "models.py":
             continue
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=source.name)

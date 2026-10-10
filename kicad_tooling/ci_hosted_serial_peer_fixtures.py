@@ -31,9 +31,9 @@ def serial_peer_fixture_lane(root: Path, *, project: str, image: str, log: Hoste
         DesignLintReport,
         DesignLintRuleOverride,
         NetlistContract,
-        SerialPeerAnalysis,
     )
     from .hwrepo.serial_participants import SerialPeerRosterContext
+    from .hwrepo.serial_peer_models import SerialPeerAnalysis
     from .validate import read_netlist
 
     root = root.resolve()

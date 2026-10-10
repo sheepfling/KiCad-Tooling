@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from typing import Literal, Protocol, cast
 
 from .connector_identity import connector_candidate_references
-from .models import (
-    NetlistContract,
+from .models import NetlistContract
+from .return_nets import is_return_like_net_name
+from .serial_peer_models import (
     SerialDirectPeerRequirement,
     SerialPeerAnalysis,
     SerialShiftedPeerRequirement,
 )
-from .return_nets import is_return_like_net_name
 
 SerialPeerRosterState = Literal["not_configured", "pending", "not_applicable", "required"]
 

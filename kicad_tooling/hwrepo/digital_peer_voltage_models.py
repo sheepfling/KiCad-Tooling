@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
-from .model_primitives import Digest, NonNegativeCount, RepositoryPath, StrictModel
+from .model_primitives import (
+    Digest,
+    Identifier,
+    NetName,
+    NonEmptyText,
+    NonNegativeCount,
+    Reference,
+    RepositoryPath,
+    StrictModel,
+)
+from .serial_logic_models import SerialLogicInputLimits, SerialLogicOutputLimits
 
 
 class DigitalPeerVoltageRuleCoverage(StrictModel):
@@ -59,4 +69,64 @@ class DigitalPeerVoltageRuleCoverage(StrictModel):
         )
         if self.status != expected_status:
             raise ValueError("Digital-peer voltage coverage status does not match its counts")
+        return self
+
+
+class DigitalLogicOutputLimits(SerialLogicOutputLimits):
+    """Guaranteed output ranges for a mapped direct digital peer."""
+
+
+class DigitalLogicInputLimits(SerialLogicInputLimits):
+    """Receiver thresholds and absolute limits for a mapped digital peer."""
+
+
+class DigitalPeerPinRequirement(StrictModel):
+    """Exact, source-bound identity and net assignment for one peer pin."""
+
+    reference: Identifier
+    symbol: NonEmptyText
+    footprint: NonEmptyText
+    pin: Reference
+    net: NetName
+
+    @model_validator(mode="after")
+    def pin_belongs_to_component(self) -> DigitalPeerPinRequirement:
+        if (
+            "." not in self.pin
+            or self.pin.rsplit(".", 1)[0].casefold() != self.reference.casefold()
+        ):
+            raise ValueError("Digital peer pin must be qualified by its declared component")
+        return self
+
+
+class DigitalPeerVoltageLink(StrictModel):
+    """One reviewed, directly connected output-to-input relationship."""
+
+    id: Identifier
+    basis: NonEmptyText
+    driver: DigitalPeerPinRequirement
+    receiver: DigitalPeerPinRequirement
+    output_limits: DigitalLogicOutputLimits | None = None
+    input_limits: DigitalLogicInputLimits | None = None
+
+    @model_validator(mode="after")
+    def direct_peer_pin_map(self) -> DigitalPeerVoltageLink:
+        if self.driver.reference.casefold() == self.receiver.reference.casefold():
+            raise ValueError("Digital peer endpoints must be distinct components")
+        if self.driver.pin.casefold() == self.receiver.pin.casefold():
+            raise ValueError("Digital peer endpoints must use distinct pins")
+        if self.driver.net != self.receiver.net:
+            raise ValueError("Direct digital peer endpoints must declare the same net")
+        return self
+
+
+class DigitalPeerVoltageAnalysis(StrictModel):
+    mode: Literal["required"] = "required"
+    basis: NonEmptyText
+    links: Annotated[tuple[DigitalPeerVoltageLink, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def unique_link_ids(self) -> DigitalPeerVoltageAnalysis:
+        if len({link.id.casefold() for link in self.links}) != len(self.links):
+            raise ValueError("Digital peer link IDs must be unique")
         return self

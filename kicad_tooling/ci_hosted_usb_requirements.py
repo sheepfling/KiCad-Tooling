@@ -5,13 +5,13 @@ from __future__ import annotations
 from typing import Literal
 
 from .hwrepo.models import (
-    ReferenceBondRequirement,
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
     UsbDataSeriesResistorRequirement,
     UsbReferencePinRequirement,
 )
+from .hwrepo.reference_bond_models import ReferenceBondRequirement
 
 
 def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:

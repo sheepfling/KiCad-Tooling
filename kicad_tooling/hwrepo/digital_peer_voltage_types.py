@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
-from .models import DigitalPeerVoltageAnalysis
+from .digital_peer_voltage_models import DigitalPeerVoltageAnalysis
 
 
 @dataclass(frozen=True)

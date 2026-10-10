@@ -304,11 +304,11 @@ def verify_native(
             ControlInputsAnalysis,
             PcbAccessAnalysis,
             PowerConnectivityAnalysis,
-            Rs485Analysis,
             TestAccessAnalysis,
         )
         from .power_connectivity import power_connectivity_checks
         from .rs485_heuristics import rs485_checks
+        from .rs485_models import Rs485Analysis
         from .test_access import evaluate_test_access_checks, pcb_accessibility_checks
 
         electrical = load_analysis(root, config)
