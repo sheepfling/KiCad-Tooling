@@ -25,10 +25,10 @@ from .models import (
     DigitalPeerVoltageAnalysis,
     NetlistContract,
     SerialPeerAnalysis,
-    SpiAnalysis,
     UsbCAnalysis,
 )
 from .serial_participants import SerialPeerRosterContext
+from .spi_models import SpiAnalysis
 from .spi_participants import SpiRosterContext
 from .usb_c_ports import UsbCPortRosterContext
 

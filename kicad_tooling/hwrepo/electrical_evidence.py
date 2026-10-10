@@ -54,7 +54,6 @@ from .models import (
     Rs485Analysis,
     SerialPeerAnalysis,
     SourceState,
-    SpiAnalysis,
     TestAccessAnalysis,
     UsbCAnalysis,
 )
@@ -68,6 +67,7 @@ from .serial_heuristics import serial_peer_checks
 from .spi_contract import (
     spi_checks,
 )
+from .spi_models import SpiAnalysis
 from .spice import measured_checks, observed_versions, simulation_deck, waveform_checks
 from .test_access import (
     evaluate_test_access_checks,

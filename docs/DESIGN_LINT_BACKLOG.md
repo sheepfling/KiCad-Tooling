@@ -90,6 +90,11 @@ intended requirement.
   architecture suite covers CAN and I2C ownership without growing the
   interface-boundary suite past its review limit. This extraction reduces
   `hwrepo/models.py` from 7,758 to 7,583 lines.
+  SPI roster, pin, bridge, and bus-topology models now live in `spi_models.py`.
+  The contract and roster services import that owner directly, with
+  identity-compatible re-exports retained for existing callers. The protocol
+  architecture test checks the classes, `SpiMisoRequirement` alias, import
+  boundary, and owner size; `hwrepo/models.py` shrank from 7,583 to 7,308 lines.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

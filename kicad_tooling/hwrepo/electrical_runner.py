@@ -58,7 +58,6 @@ from .models import (
     ProjectKind,
     Rs485Analysis,
     SerialPeerAnalysis,
-    SpiAnalysis,
     TestAccessAnalysis,
     UsbCAnalysis,
 )
@@ -72,6 +71,7 @@ from .serial_heuristics import serial_peer_checks
 from .spi_contract import (
     spi_checks,
 )
+from .spi_models import SpiAnalysis
 from .spice import executable_path, run_case, simulator_version
 from .test_access import (
     evaluate_test_access_checks,

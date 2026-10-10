@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
+from .models import ElectricalCheck, NetlistContract
+from .spi_models import (
     SpiAnalysis,
     SpiBridgeRequirement,
     SpiMisoConnectedRequirement,

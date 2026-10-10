@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo import (
     i2c_address_models,
     i2c_pullup_models,
     model_primitives,
+    spi_models,
 )
 from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES
@@ -58,11 +59,31 @@ PROTOCOL_MODEL_OWNERS = {
             "I2cPullupHeuristicCoverage",
         ),
     ),
+    "spi_models.py": (
+        spi_models,
+        (
+            "SpiPinNetRequirement",
+            "SpiPinUnconnectedRequirement",
+            "SpiMisoConnectedRequirement",
+            "SpiPinNotPresent",
+            "SpiControllerRequirement",
+            "SpiDeviceRequirement",
+            "SpiBridgePathRequirement",
+            "SpiBridgeRequirement",
+            "SpiBusRequirement",
+            "SpiAnalysis",
+        ),
+    ),
+}
+
+PROTOCOL_MODEL_TYPE_ALIASES = {
+    "spi_models.py": (spi_models, ("SpiMisoRequirement",)),
 }
 
 
 def test_protocol_models_live_in_theme_owners_and_services_import_them_directly() -> None:
     model_names = {name for _, names in PROTOCOL_MODEL_OWNERS.values() for name in names}
+    model_names.update(name for _, names in PROTOCOL_MODEL_TYPE_ALIASES.values() for name in names)
     registry = HWREPO / "models.py"
     registry_tree = ast.parse(registry.read_text(encoding="utf-8"), filename=registry.name)
     registry_definitions = {
@@ -79,6 +100,11 @@ def test_protocol_models_live_in_theme_owners_and_services_import_them_directly(
         }
         assert set(names) <= owner_definitions
         assert not (set(names) & registry_definitions)
+        for name in names:
+            assert getattr(shared_models, name) is getattr(owner_module, name)
+
+    for filename, (owner_module, names) in PROTOCOL_MODEL_TYPE_ALIASES.items():
+        assert _line_count(HWREPO / filename) < IMPLEMENTATION_MAX_LINES
         for name in names:
             assert getattr(shared_models, name) is getattr(owner_module, name)
 
