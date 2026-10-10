@@ -19,7 +19,7 @@ _DIODE_REFERENCE = re.compile(r"^D[A-Z]*[0-9]+$", re.IGNORECASE)
 _RESISTOR_SYMBOL = re.compile(r"^Device:R(?:_[A-Z0-9_]+)?$", re.IGNORECASE)
 
 
-def _d_designated_shunt_branches(
+def d_designated_shunt_branches(
     observed: NetlistContract,
     data_net: str,
     extra_pins: set[str],
@@ -186,7 +186,7 @@ def _data_line_path(
         }
         if not endpoint_pins <= members:
             return None
-        shunts = _d_designated_shunt_branches(
+        shunts = d_designated_shunt_branches(
             observed,
             connector_net,
             members - endpoint_pins,
@@ -209,13 +209,13 @@ def _data_line_path(
     }
     if not connector_expected <= connector_members or not phy_expected <= phy_members:
         return None
-    connector_shunts = _d_designated_shunt_branches(
+    connector_shunts = d_designated_shunt_branches(
         observed,
         connector_net,
         connector_members - connector_expected,
         reference_nets,
     )
-    phy_shunts = _d_designated_shunt_branches(
+    phy_shunts = d_designated_shunt_branches(
         observed,
         phy_net,
         phy_members - phy_expected,

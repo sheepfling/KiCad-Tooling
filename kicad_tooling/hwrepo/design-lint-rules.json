@@ -2442,14 +2442,14 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, supported USB 2.0 D+/D− pin functions, direct or one-fitted-Device:R-per-line paths, explicit passive or power-input reference pins, and unique net assignments",
-      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, require one or more supported USB 2.0 D+ and D− pins at each endpoint, with each endpoint's pins for one side assigned to one shared native net within a port group. Pair DPn/DMn groups by matching numeric suffix; an unnumbered D+/D− endpoint can pair with one numbered group when exact nets resolve one path. Each line may be direct or bridge connector-side and PHY-side nets through exactly one complete fitted two-pin Device:R. Each data net may also contain complete fitted two-pin passive D-designated branches whose other terminal is on either endpoint's explicit reference net. Report a REVIEW prompt when each endpoint's explicit reference pins share one unique native net, but the connector and PHY reference nets differ. Suppress only an exact USB data-path map that names every supported data pin, uses a matching optional data_port_group where the PHY exposes numbered ports, and has common_net, separate_nets, or bonded policy with complete current reference-pin assignments. The exact component for a bonded policy is independently checked by bus.usb_data_path_mismatch.",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, supported USB 2.0 D+/D− pin functions, direct or one-fitted-Device:R-per-line paths, exact map-backed inline-component paths, explicit passive or power-input reference pins, and unique net assignments",
+      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, require one or more supported USB 2.0 D+ and D− pins at each endpoint, with each endpoint's pins for one side assigned to one shared native net within a port group. Pair DPn/DMn groups by matching numeric suffix; an unnumbered D+/D− endpoint can pair with one numbered group when exact nets resolve one path. Each line may be direct or bridge connector-side and PHY-side nets through exactly one complete fitted two-pin Device:R. A multi-pin inline component is accepted only when one exact current project map matches connector and PHY identities, every data pin and net, the component identity and complete pin inventory, each pin's net or explicit no-connect state, and the complete mapped signal-net membership. Each data net may also contain complete fitted two-pin passive D-designated branches whose other terminal is on either endpoint's explicit reference net. Report a REVIEW prompt when each endpoint's explicit reference pins share one unique native net, but the connector and PHY reference nets differ. Suppress only an exact USB data-path map that names every supported data pin, uses a matching optional data_port_group where the PHY exposes numbered ports, and has common_net, separate_nets, or bonded policy with complete current reference-pin assignments. The exact component for a bonded policy is independently checked by bus.usb_data_path_mismatch.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Separate reference nets can be intentional, joined elsewhere, or linked by a designed bond; the finding asks for review and does not declare that they must be common.",
-        "Only direct USB 2.0 D+/D− paths or paths through exactly one complete fitted two-pin Device:R per line are considered. Same-net duplicate contacts and complete fitted two-pin passive D-designated shunts to an endpoint reference are supported. Numbered DPn/DMn functions are grouped by exact numeric suffix; unnumbered connector aliases pair through exact native connectivity. Multiple series components, arbitrary extra data peers, multi-pin protection arrays, USB 3.x lanes, other multi-hop paths, incomplete or ambiguous pin metadata, mixed reference domains, and DNP endpoints or shunts are skipped.",
+        "Only direct USB 2.0 D+/D− paths, paths through exactly one complete fitted two-pin Device:R per line, or paths through one complete inline component with a current exact project map are considered. Same-net duplicate contacts and complete fitted two-pin passive D-designated shunts to an endpoint reference are supported. Numbered DPn/DMn functions are grouped by exact numeric suffix; unnumbered connector aliases pair through exact native connectivity. Multiple series components, arbitrary extra data peers, unmapped multi-pin protection arrays, USB 3.x lanes, other multi-hop paths, incomplete or ambiguous pin metadata, mixed reference domains, and DNP endpoints or shunts are skipped.",
         "Reference pins use bounded return-like function tokens such as GND, AGND, DGND, PGND, VSS, 0V, RTN, RETURN, or GROUND, including numeric suffixes and GND_A/GND_D/GND_P or VSSA/VSSD/VSSP forms; they must be passive or power_in type. Shield, chassis, frame, and protective-earth functions are excluded.",
         "An exact USB data map records source-reviewed schematic intent and compares the named reference pins and nets, but does not prove a fitted bond, PCB copper continuity, external grounding, connector wiring, or electrical suitability.",
         "A bonded USB map is checked separately by bus.usb_data_path_mismatch against exact native component and pin-to-net assignments; the peer-reference review itself does not establish bond conduction or PCB copper continuity."
@@ -2459,6 +2459,7 @@
         "tests.test_usb_peer_reference_paths.test_usb_c_duplicate_contacts_and_two_pin_diode_shunts_emit_exact_review",
         "tests.test_usb_peer_reference_maps.test_stale_map_identity_does_not_suppress_peer_review",
         "tests.test_usb_peer_reference_paths.test_fitted_series_resistors_preserve_usb_peer_reference_review",
+        "tests.test_usb_peer_reference_paths.test_exact_mapped_inline_component_path_reviews_split_references",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels"
       ],
@@ -2467,6 +2468,7 @@
         "tests.test_usb_peer_reference_coverage.test_coverage_marks_missing_usb_endpoints_and_incomplete_groups",
         "tests.test_usb_peer_reference_coverage.test_coverage_distinguishes_unsupported_paths_and_dnp_endpoints",
         "tests.test_usb_peer_reference_boundaries.test_multi_pin_protection_array_and_ferrite_remain_unsupported",
+        "tests.test_usb_peer_reference_paths.test_exact_mapped_inline_component_path_reviews_split_references",
         "tests.test_usb_peer_reference_paths.test_common_reference_is_a_quiet_control",
         "tests.test_usb_peer_reference_paths.test_usb_c_common_reference_with_duplicate_contacts_and_diodes_is_control",
         "tests.test_usb_peer_reference_paths.test_usb_c_does_not_accept_extra_peers_incomplete_or_non_diode_branches",
@@ -2487,6 +2489,8 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_endpoint",
         "kicad_tooling/hwrepo/usb_peer_path_analysis.py#usb_data_link",
+        "kicad_tooling/hwrepo/usb_peer_path_analysis.py#d_designated_shunt_branches",
+        "kicad_tooling/hwrepo/usb_peer_inline_path_analysis.py#mapped_inline_usb_data_link",
         "kicad_tooling/hwrepo/usb_peer_reference_contract.py#usb_reference_map_matches",
         "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"

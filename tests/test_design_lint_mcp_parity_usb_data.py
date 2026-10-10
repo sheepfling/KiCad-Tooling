@@ -42,9 +42,7 @@ from tests.mcp_parity_support import (
 from tests.usb_data_path_support import (
     usb_data_map as synthetic_usb_data_path_map,
 )
-from tests.usb_data_path_support import (
-    usb_inline_component_map,
-)
+from tests.usb_peer_inline_path_support import usb_inline_peer_case
 
 
 class _DesignLintMcpParityUsbDataCases(McpParityHarness):
@@ -263,31 +261,49 @@ class _DesignLintMcpParityUsbDataCases(McpParityHarness):
         )
         contract_path = self.island / "tests/contract.json"
         contract = read_model(contract_path, ProjectTestContract)
+        _, inline_review_map = usb_inline_peer_case()
         write_model(
             contract_path,
             contract.model_copy(
-                update={
-                    "design_lint": DesignLintPolicy(usb_data_path_map=usb_inline_component_map())
-                }
+                update={"design_lint": DesignLintPolicy(usb_data_path_map=inline_review_map)}
             ),
         )
 
         def write_netlist(*, open_ground_pin: bool) -> None:
             shutil.copyfile(fixture, netlist)
+            tree = ET.parse(netlist)
+            nets = tree.getroot().find("./nets")
+            assert nets is not None
+            ground = next(item for item in nets.findall("net") if item.get("name") == "GND")
+            connector_pin = next(
+                item
+                for item in ground.findall("node")
+                if item.get("ref") == "J1" and item.get("pin") == "4"
+            )
+            phy_pin = next(
+                item
+                for item in ground.findall("node")
+                if item.get("ref") == "U1" and item.get("pin") == "3"
+            )
+            ground.remove(connector_pin)
+            ground.remove(phy_pin)
+            nets.remove(ground)
+            usb_ground = ET.SubElement(nets, "net", {"name": "USB_GND"})
+            ET.SubElement(usb_ground, "node", {"ref": "J1", "pin": "4"})
+            board_ground = ET.SubElement(nets, "net", {"name": "BOARD_GND"})
+            ET.SubElement(board_ground, "node", {"ref": "U1", "pin": "3"})
+            inline_ground = next(
+                item
+                for item in ground.findall("node")
+                if item.get("ref") == "U2" and item.get("pin") == "5"
+            )
+            ground.remove(inline_ground)
             if open_ground_pin:
-                tree = ET.parse(netlist)
-                nets = tree.getroot().find("./nets")
-                assert nets is not None
-                ground = next(item for item in nets.findall("net") if item.get("name") == "GND")
-                ground_node = next(
-                    item
-                    for item in ground.findall("node")
-                    if item.get("ref") == "U2" and item.get("pin") == "5"
-                )
-                ground.remove(ground_node)
                 unconnected = ET.SubElement(nets, "net", {"name": "unconnected-(U2-Pad5)"})
                 ET.SubElement(unconnected, "node", {"ref": "U2", "pin": "5"})
-                tree.write(netlist, encoding="utf-8", xml_declaration=True)
+            else:
+                ET.SubElement(board_ground, "node", {"ref": "U2", "pin": "5"})
+            tree.write(netlist, encoding="utf-8", xml_declaration=True)
             self.rehash_native_netlist(native)
 
         async with Client(create_server(self.root), mode="legacy") as client:
@@ -316,6 +332,10 @@ class _DesignLintMcpParityUsbDataCases(McpParityHarness):
                 return mcp
 
             control = await compare(open_ground_pin=False)
+            self.assertTrue(
+                any(item.rule_id == "bus.usb_peer_reference_review" for item in control.findings),
+                control.findings,
+            )
             self.assertFalse(
                 any(item.rule_id == "bus.usb_data_path_mismatch" for item in control.findings),
                 control.findings,

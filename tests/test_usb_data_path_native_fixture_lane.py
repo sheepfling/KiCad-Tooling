@@ -51,6 +51,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-multiport-peer-reference-control": "80f5af92083dbc5a3fce319dabb5c80efb535899e482ff6ad952a41f576df0d0",
         "inline-component-control": "70b7979e6d1ed15fed2f31bbd73d7f076d579456ac57ed47acd60be2c79ef7d6",
         "inline-component-ground-fault": "0d9d157e7d795067c86a16c7c43235afbfe24dc7b45086ce1407f2873000185b",
+        "inline-component-peer-reference-fault": "118c63f571c341976bc41067cf863eba8c4bbdd13c6577669e7b372eb19ad545",
+        "inline-component-peer-reference-map-control": "118c63f571c341976bc41067cf863eba8c4bbdd13c6577669e7b372eb19ad545",
     }
     root = hosted_reference_root
     config = selected_config(root, project)
@@ -79,6 +81,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/usb-multiport-peer-reference-control",
         "usb-data-path-fixture/inline-component-control",
         "usb-data-path-fixture/inline-component-ground-fault",
+        "usb-data-path-fixture/inline-component-peer-reference-fault",
+        "usb-data-path-fixture/inline-component-peer-reference-map-control",
     }
     for case in (
         "integrated-direct",
@@ -111,6 +115,18 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-protected-port-1: USB D+ path",
         "usb-protected-port-1: USB D- path",
     }
+    inline_peer_fault = results["usb-data-path-fixture/inline-component-peer-reference-fault"]
+    assert inline_peer_fault["status"] == "PASS"
+    assert inline_peer_fault["lint_status"] == "REVIEW"
+    assert inline_peer_fault["usb_path_findings"] == "none"
+    assert inline_peer_fault["usb_reference_findings"] == (
+        "J1 / U1: USB reference-domain review (port 1)"
+    )
+    inline_peer_control = results[
+        "usb-data-path-fixture/inline-component-peer-reference-map-control"
+    ]
+    assert inline_peer_control["status"] == "PASS"
+    assert inline_peer_control["usb_reference_findings"] == "none"
     peer_fault = results["usb-data-path-fixture/peer-reference-fault"]
     assert peer_fault["status"] == "PASS"
     assert peer_fault["lint_status"] == "REVIEW"
@@ -149,6 +165,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-multiport-peer-reference-control",
         "inline-component-control",
         "inline-component-ground-fault",
+        "inline-component-peer-reference-fault",
+        "inline-component-peer-reference-map-control",
     ):
         result = results[f"usb-data-path-fixture/{case}"]
         assert result["kicad_version"] == version

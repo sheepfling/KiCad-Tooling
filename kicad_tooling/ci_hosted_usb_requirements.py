@@ -239,6 +239,43 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
             ),
         ),
     )
+    inline_component_interface = inline_component_map.interfaces[0]
+    inline_component_requirement = inline_component_interface.inline_component
+    assert inline_component_requirement is not None
+    split_inline_pin_map = inline_component_requirement.model_copy(
+        update={
+            "pins": tuple(
+                item.model_copy(update={"net": "BOARD_GND"})
+                if item.pin.casefold() == "u2.5"
+                else item
+                for item in inline_component_requirement.pins
+            )
+        }
+    )
+    inline_peer_fault = inline_component_interface.model_copy(
+        update={
+            "inline_component": split_inline_pin_map,
+            "connector_reference_pins": (),
+            "phy_reference_pins": (),
+            "reference_policy": None,
+        }
+    )
+    inline_peer_map_control = inline_component_interface.model_copy(
+        update={
+            "inline_component": split_inline_pin_map,
+            "connector_reference_pins": (UsbReferencePinRequirement(pin="J1.4", net="USB_GND"),),
+            "phy_reference_pins": (UsbReferencePinRequirement(pin="U1.3", net="BOARD_GND"),),
+            "reference_policy": "separate_nets",
+        }
+    )
+    inline_component_peer_fault_map = UsbDataPathMap(
+        basis="Synthetic exact USB inline path without a reference disposition",
+        interfaces=(inline_peer_fault,),
+    )
+    inline_component_peer_control_map = UsbDataPathMap(
+        basis="Synthetic exact USB inline path with reviewed separate references",
+        interfaces=(inline_peer_map_control,),
+    )
     requirements = {
         "integrated-direct": direct_map,
         "external-series": series_map,
@@ -253,6 +290,8 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "usb-multiport-peer-reference-control": multiport_map,
         "inline-component-control": inline_component_map,
         "inline-component-ground-fault": inline_component_map,
+        "inline-component-peer-reference-fault": inline_component_peer_fault_map,
+        "inline-component-peer-reference-map-control": inline_component_peer_control_map,
     }
 
     return requirements

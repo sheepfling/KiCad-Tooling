@@ -26,6 +26,8 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         "usb-multiport-peer-reference-control",
         "inline-component-ground-fault",
         "inline-component-control",
+        "inline-component-peer-reference-fault",
+        "inline-component-peer-reference-map-control",
     }
 
     bonded = requirements["external-series-reference-bond-control"].interfaces[0]
@@ -39,3 +41,9 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
 
     multiport = requirements["usb-multiport-peer-reference-control"].interfaces
     assert tuple(interface.data_port_group for interface in multiport) == ("1", "2")
+
+    inline_peer_fault = requirements["inline-component-peer-reference-fault"].interfaces[0]
+    assert inline_peer_fault.reference_policy is None
+    assert inline_peer_fault.inline_component.pins[4].net == "BOARD_GND"
+    inline_peer_control = requirements["inline-component-peer-reference-map-control"].interfaces[0]
+    assert inline_peer_control.reference_policy == "separate_nets"

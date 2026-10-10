@@ -3694,8 +3694,9 @@ is not a reason by itself to expand its scope or change its default policy.
   pins use separate explicit nets and no reference policy has been authored.
 - **Predicate:** For fitted connector-to-U/IC pairs, recognize one or more
   supported USB 2.0 D+ and D− pins at each endpoint, with all pins on one side
-  assigned to that side's native net. Each line may be direct or cross exactly
-  one fitted, complete two-pin `Device:R` between the connector-side and PHY-side
+  assigned to that side's native net. Each line may be direct, cross exactly
+  one fitted, complete two-pin `Device:R`, or cross one exact mapped multi-pin
+  inline component between the connector-side and PHY-side
   nets. The function aliases include direct names such as D+/D−, unnumbered
   `UD+`/`UD−`, and numbered hub pairs DPn/DMn or USBnD+/USBnD-, which are
   grouped by matching numeric port number. One
@@ -3704,26 +3705,35 @@ is not a reason by itself to expand its scope or change its default policy.
   endpoint's explicit reference pins
   must use one unambiguous native net; differing nets produce a review. Each
   complete fitted two-pin passive D-designated branch may connect a data net to
-  an endpoint reference. Findings retain data functions, contact pins, resistor
-  assignments, accepted branch pins and partner nets, endpoint identities, and
+  an endpoint reference. A multi-pin path is eligible only when LINT-049's
+  exact current project map validates both endpoints, the component identity
+  and complete native pin inventory, every pin's expected net or explicit
+  no-connect state, and all mapped signal-net members. Unmapped arrays and
+  unexplained signal-net peers remain outside the predicate. Findings retain
+  data functions, contact pins, resistor or inline-component assignments,
+  accepted branch pins and partner nets, endpoint identities, and
   reference functions/types.
 - **Boundary:** Separate nets may be intentional, joined through a reviewed
   bond, or intentionally isolated. This rule asks for review; it does not say
   grounds must be tied. It does not infer unlisted or multi-hop bond paths,
   multiple series components,
-  arbitrary extra peers, multi-pin protection arrays, USB 3.x paths, off-board
+  arbitrary extra peers, unmapped multi-pin protection arrays, USB 3.x paths, off-board
   wiring, or PCB copper. It does not infer resistor suitability or protection
   performance. A `data_port_group` in an exact USB map scopes same-side PHY
   inventory to one numbered pair. Incomplete pin inventories, mixed reference
   domains, DNP endpoints or branch parts, shield/chassis/frame/PE functions,
   and ambiguous assignments are skipped. A source-reviewed USB map suppresses
-  the prompt only when connector and PHY identities, direct or one-resistor
+  the prompt only when connector and PHY identities, direct, one-resistor, or
+  exact mapped inline
   data topology, complete reference pin inventories, and explicit reference
   decision all match. For `bonded`, `bus.usb_data_path_mismatch` separately
   reports a missing, DNP, identity-mismatched, or incorrectly assigned bond;
   this netlist comparison does not prove component conduction or PCB copper.
 - **Fixtures:** Synthetic split-reference fault and common-reference control,
   including native `UD+`/`UD−` PHY-pin aliases;
+  exact mapped inline-protection split-reference fault, common-reference and
+  explicit separate-reference controls, plus unmapped-array and extra-peer
+  controls;
   two connectors to one numbered hub with per-port evidence, a shared-
   reference control, a crossed-channel control, an unused-port control, and
   exact `data_port_group` maps;

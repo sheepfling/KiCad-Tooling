@@ -36,6 +36,18 @@ class UsbPeerDataSeriesResistor:
 
 
 @dataclass(frozen=True)
+class UsbPeerDataInlineComponent:
+    reference: str
+    symbol: str
+    footprint: str
+    connector_pin: str
+    phy_pin: str
+    connector_net: str
+    phy_net: str
+    pin_assignments: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class UsbPeerDataLink:
     connector_positive_pin: str
     phy_positive_pin: str
@@ -53,6 +65,8 @@ class UsbPeerDataLink:
     negative_shunt_branches: tuple[UsbPeerDataShuntBranch, ...] = ()
     positive_series_resistor: UsbPeerDataSeriesResistor | None = None
     negative_series_resistor: UsbPeerDataSeriesResistor | None = None
+    positive_inline_component: UsbPeerDataInlineComponent | None = None
+    negative_inline_component: UsbPeerDataInlineComponent | None = None
     port_group: str | None = None
 
 

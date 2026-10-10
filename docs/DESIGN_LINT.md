@@ -668,10 +668,14 @@ have been connected.
   external-resistor rule from USB names or choose a value.
 - `bus.usb_peer_reference_review` prompts on a fitted USB 2.0 D+/D−
   connector-to-U/IC pair when each endpoint has explicit reference pins on one
-  native net and those two reference nets differ. Each D line may be direct or
-  pass through exactly one complete fitted two-pin `Device:R` between the
-  connector-side and PHY-side nets. The review evidence includes the resistor
-  reference, symbol, value, pin numbers, and nets. Function aliases include
+  native net and those two reference nets differ. Each D line may be direct,
+  pass through exactly one complete fitted two-pin `Device:R`, or pass through
+  one multi-pin component named by a current exact USB data-path map. The inline
+  map must match endpoint identities, data pins and nets, full component identity
+  and pin inventory, every pin's net or explicit no-connect state, and mapped
+  signal-net membership. The review evidence includes the mapped component
+  identity and pin assignments. Series-resistor evidence includes its reference,
+  symbol, value, pin numbers, and nets. Function aliases include
   hub names DPn/DMn, USB_DPn/USB_DMn, and USBnD+/USBnD-; numbered forms pair
   only when their port numbers match. An
   unnumbered connector pair can match a numbered hub port through its exact
@@ -683,14 +687,15 @@ have been connected.
   fitted two-pin passive components with a `D` designator to branch from D+/D−
   to one endpoint's explicit reference net; the report names both branch pins
   and the symbol identity. Multiple series components, arbitrary extra peers,
-  multi-pin protection parts, mixed reference domains, shield/chassis/PE
-  functions, and ambiguous metadata remain outside this bounded rule. Separate
+  unmapped multi-pin protection parts, unexplained data-net peers, mixed
+  reference domains, shield/chassis/PE functions, and ambiguous metadata remain
+  outside this bounded rule. Separate
   nets can be intentional. The prompt asks whether the interface needs a
   common reference, a designed bond, or isolation; it never declares that the
   grounds must be tied. A current exact USB map with `reference_policy` set to
   `common_net`, `separate_nets`, or `bonded` suppresses the prompt only when it
   names all same-net data contacts and its
-  endpoint, direct or one-resistor data-path, and reference-pin identities
+  endpoint, direct, one-resistor, or exact mapped inline data-path, and reference-pin identities
   match. Use
   `connector_parallel_pins` and `phy_parallel_pins` alongside each line's
   primary pin to author additional same-net contacts. The same map checks

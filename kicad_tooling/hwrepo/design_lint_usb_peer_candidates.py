@@ -9,6 +9,26 @@ from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_types import UsbPeerReferenceScan
 
 
+def _reference_policy_state(
+    connector_reference: str,
+    phy_reference: str,
+    usb_data_path_map: UsbDataPathMap | None,
+) -> str:
+    if usb_data_path_map is None:
+        return "no_data_path_map"
+    matching_interfaces = tuple(
+        interface
+        for interface in usb_data_path_map.interfaces
+        if interface.connector_reference.casefold() == connector_reference.casefold()
+        and interface.phy_reference.casefold() == phy_reference.casefold()
+    )
+    if not matching_interfaces:
+        return "no_matching_interface_map"
+    if all(interface.reference_policy is None for interface in matching_interfaces):
+        return "not_configured"
+    return "configured_but_not_matching_observation"
+
+
 def usb_data_path_map_sha256(usb_data_path_map: UsbDataPathMap | None) -> str | None:
     """Return the stable evidence fingerprint used by USB review candidates."""
     if usb_data_path_map is None:
@@ -35,7 +55,13 @@ def usb_peer_reference_candidates(
             f"{', '.join(peer.data_link.connector_negative_pins)} / "
             f"{', '.join(peer.data_link.phy_negative_pins)}"
         )
-        if peer.data_link.positive_series_resistor is None:
+        if peer.data_link.positive_inline_component is not None:
+            positive_link += (
+                f"={peer.data_link.connector_positive_net} to "
+                f"{peer.data_link.phy_positive_net} through mapped inline component "
+                f"{peer.data_link.positive_inline_component.reference}"
+            )
+        elif peer.data_link.positive_series_resistor is None:
             positive_link += f"={peer.data_link.connector_positive_net}"
         else:
             positive_link += (
@@ -43,7 +69,13 @@ def usb_peer_reference_candidates(
                 f"{peer.data_link.phy_positive_net} through "
                 f"{peer.data_link.positive_series_resistor.reference}"
             )
-        if peer.data_link.negative_series_resistor is None:
+        if peer.data_link.negative_inline_component is not None:
+            negative_link += (
+                f"={peer.data_link.connector_negative_net} to "
+                f"{peer.data_link.phy_negative_net} through mapped inline component "
+                f"{peer.data_link.negative_inline_component.reference}"
+            )
+        elif peer.data_link.negative_series_resistor is None:
             negative_link += f"={peer.data_link.connector_negative_net}"
         else:
             negative_link += (
@@ -68,6 +100,13 @@ def usb_peer_reference_candidates(
             "USB_D-_link": (negative_link,),
             "USB_data_map_state": (
                 "configured" if usb_data_path_map is not None else "not_configured",
+            ),
+            "USB_reference_policy_state": (
+                _reference_policy_state(
+                    peer.connector_reference,
+                    peer.phy_reference,
+                    usb_data_path_map,
+                ),
             ),
         }
         if peer.data_link.port_group is not None:
@@ -102,6 +141,12 @@ def usb_peer_reference_candidates(
                     f"{resistor.phy_pin}={resistor.phy_net})"
                 ),
             )
+        if peer.data_link.positive_inline_component is not None:
+            inline = peer.data_link.positive_inline_component
+            evidence["USB_inline_component"] = (
+                f"{inline.reference} ({inline.symbol}; {inline.footprint})",
+            )
+            evidence["USB_inline_component_pin_assignments"] = inline.pin_assignments
         if usb_data_map_sha256 is not None:
             evidence["USB_data_map_sha256"] = (usb_data_map_sha256,)
         found.append(
@@ -117,8 +162,9 @@ def usb_peer_reference_candidates(
                     )
                 ),
                 message=(
-                    "Supported USB 2.0 D+ and D- connector-to-PHY paths (direct or through one "
-                    "fitted two-pin series resistor per line) have separate explicit endpoint "
+                    "Supported USB 2.0 D+ and D- connector-to-PHY paths (direct, through one "
+                    "fitted two-pin series resistor, or through one exact mapped inline component) "
+                    "have separate explicit endpoint "
                     "reference nets. Review whether this interface needs a common reference, an "
                     "explicit bond, or intentional isolation. Pin functions and the bounded "
                     "topology only identify a candidate; this prompt does not prove the required "

@@ -59,6 +59,34 @@ class UsbPeerDataSeriesResistorCoverage(StrictModel):
     phy_net: NetName
 
 
+class UsbPeerDataInlineComponentCoverage(StrictModel):
+    """Exact map identity and complete pin assignments for one multi-pin USB path."""
+
+    reference: Identifier
+    symbol: NonEmptyText
+    footprint: str
+    connector_pin: Reference
+    phy_pin: Reference
+    connector_net: NetName
+    phy_net: NetName
+    pin_assignments: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def assignments_match_component(self) -> UsbPeerDataInlineComponentCoverage:
+        if (
+            self.connector_pin.rsplit(".", 1)[0].casefold() != self.reference.casefold()
+            or self.phy_pin.rsplit(".", 1)[0].casefold() != self.reference.casefold()
+            or self.connector_pin.casefold() == self.phy_pin.casefold()
+            or len({item.casefold() for item in self.pin_assignments}) != len(self.pin_assignments)
+            or f"{self.connector_pin}={self.connector_net}".casefold()
+            not in {item.casefold() for item in self.pin_assignments}
+            or f"{self.phy_pin}={self.phy_net}".casefold()
+            not in {item.casefold() for item in self.pin_assignments}
+        ):
+            raise ValueError("USB inline-component evidence must match its exact pin map")
+        return self
+
+
 class UsbPeerDataLineCoverage(StrictModel):
     """Bounded source evidence for one positive or negative USB 2.0 data line."""
 
@@ -67,6 +95,7 @@ class UsbPeerDataLineCoverage(StrictModel):
     connector_net: NetName
     phy_net: NetName
     series_resistor: UsbPeerDataSeriesResistorCoverage | None = None
+    inline_component: UsbPeerDataInlineComponentCoverage | None = None
     shunt_branches: tuple[UsbPeerDataShuntBranchCoverage, ...] = ()
 
     @model_validator(mode="after")
@@ -75,10 +104,13 @@ class UsbPeerDataLineCoverage(StrictModel):
             if len({item.casefold() for item in pins}) != len(pins):
                 raise ValueError(f"USB {label} data pins must be unique")
         resistor = self.series_resistor
-        if resistor is None:
+        inline = self.inline_component
+        if resistor is not None and inline is not None:
+            raise ValueError("USB data line cannot use a resistor and inline component together")
+        if resistor is None and inline is None:
             if self.connector_net.casefold() != self.phy_net.casefold():
                 raise ValueError("USB direct data evidence must use one shared net")
-        elif (
+        elif resistor is not None and (
             self.connector_net.casefold() == self.phy_net.casefold()
             or resistor.connector_net.casefold() != self.connector_net.casefold()
             or resistor.phy_net.casefold() != self.phy_net.casefold()
@@ -87,6 +119,12 @@ class UsbPeerDataLineCoverage(StrictModel):
             or resistor.connector_pin.casefold() == resistor.phy_pin.casefold()
         ):
             raise ValueError("USB series resistor evidence must join the exact endpoint nets")
+        elif inline is not None and (
+            self.connector_net.casefold() == self.phy_net.casefold()
+            or inline.connector_net.casefold() != self.connector_net.casefold()
+            or inline.phy_net.casefold() != self.phy_net.casefold()
+        ):
+            raise ValueError("USB inline-component evidence must join the exact endpoint nets")
         for branch in self.shunt_branches:
             if branch.data_net.casefold() not in {
                 self.connector_net.casefold(),

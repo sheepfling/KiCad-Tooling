@@ -25,7 +25,11 @@ from tests.lint_architecture_support import (
     line_count as _line_count,
 )
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.architecture,
+]
 
 INTERFACE_COVERAGE_MODEL_OWNERS = {
     "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
@@ -71,6 +75,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_reference_types.py",
     "usb_peer_endpoint_analysis.py",
     "usb_peer_path_analysis.py",
+    "usb_peer_inline_path_analysis.py",
     "usb_peer_reference_contract.py",
     "usb_peer_reference_scan.py",
 )
@@ -202,6 +207,15 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
     )
 
 
+def test_usb_inline_component_coverage_model_stays_in_its_theme_owner() -> None:
+    owner = HWREPO / "usb_peer_reference_models.py"
+    owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    owner_definitions = {node.name for node in owner_tree.body if isinstance(node, ast.ClassDef)}
+
+    assert "UsbPeerDataInlineComponentCoverage" in owner_definitions
+    assert not hasattr(shared_models, "UsbPeerDataInlineComponentCoverage")
+
+
 def test_bus_heuristics_compatibility_facade_stays_small() -> None:
     facade = HWREPO / "bus_heuristics.py"
 
@@ -239,11 +253,26 @@ def test_usb_peer_reference_review_stays_split_by_responsibility() -> None:
 
 
 def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
-    catalog = HWREPO / "design-lint-rules.json"
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
 
-    assert "kicad_tooling/hwrepo/usb_peer_reference_review.py#" not in catalog.read_text(
-        encoding="utf-8"
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.usb_peer_reference_review"
     )
+    references = {
+        item.split("#", maxsplit=1)[0].rsplit("/", maxsplit=1)[-1]
+        for item in rule.implementation_refs
+    }
+
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/usb_peer_inline_path_analysis.py#mapped_inline_usb_data_link"
+        in rule.implementation_refs
+    )
+    assert references <= {*USB_PEER_ANALYSIS_MODULES, "design_lint_candidate_aggregation.py"}
 
 
 def test_serial_peer_reference_review_stays_split_by_responsibility() -> None:

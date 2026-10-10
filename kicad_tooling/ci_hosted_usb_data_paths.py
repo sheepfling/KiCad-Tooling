@@ -65,6 +65,10 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         / "usb-data-path-native/inline-protection-control.kicad_sch",
         "inline-component-ground-fault": fixture_root
         / "usb-data-path-native/inline-protection-ground-fault.kicad_sch",
+        "inline-component-peer-reference-fault": fixture_root
+        / "usb-data-path-native/inline-protection-split-reference.kicad_sch",
+        "inline-component-peer-reference-map-control": fixture_root
+        / "usb-data-path-native/inline-protection-split-reference.kicad_sch",
     }
     source_hashes = {case: digest(path) for case, path in cases.items()}
     scratch = Path(
@@ -232,6 +236,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         "external-series",
         "external-series-reference-bond-control",
         "inline-component-control",
+        "inline-component-peer-reference-map-control",
     ):
         if any(
             item.rule_id == "bus.usb_data_path_mismatch"
@@ -256,6 +261,25 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         for item in inline_ground_findings
     ):
         raise ValueError("Native inline-component findings omitted exact ground-pin evidence")
+    inline_peer_faults = tuple(
+        item
+        for item in reports[("inline-component-peer-reference-fault", "first")].findings
+        if item.rule_id == "bus.usb_peer_reference_review"
+    )
+    if len(inline_peer_faults) != 1:
+        raise ValueError("Native mapped inline split-reference path should produce one review")
+    inline_peer_evidence = inline_peer_faults[0].evidence
+    if inline_peer_evidence.get("USB_inline_component") != (
+        "U2 (Synthetic:UsbProtection; Synthetic:QFN)",
+    ) or "U2.5=BOARD_GND" not in inline_peer_evidence.get(
+        "USB_inline_component_pin_assignments", ()
+    ):
+        raise ValueError("Native inline-path review omitted exact component pin-map evidence")
+    if any(
+        item.rule_id == "bus.usb_peer_reference_review"
+        for item in reports[("inline-component-peer-reference-map-control", "first")].findings
+    ):
+        raise ValueError("Native exact separate-reference inline map did not suppress the review")
     if any(
         item.rule_id == "bus.usb_peer_reference_review"
         for item in reports[("external-series", "first")].findings

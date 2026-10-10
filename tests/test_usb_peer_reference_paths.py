@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint import text_report
 from kicad_tooling.hwrepo.models import ComponentContract
+from kicad_tooling.hwrepo.usb_data_paths import usb_data_path_mismatches
 from kicad_tooling.hwrepo.usb_peer_reference_review import usb_peer_reference_reviews
 from tests.usb_c_peer_support import (
     usb_c_peer_netlist,
 )
+from tests.usb_peer_inline_path_support import usb_inline_peer_case
 from tests.usb_peer_reference_support import (
     PATH_RULE_ID,
     RULE_ID,
@@ -88,6 +91,66 @@ def test_fitted_series_resistors_preserve_usb_peer_reference_review() -> None:
     )
     assert (usb_peer_reference_reviews(common)) == (())
     assert (RULE_ID) not in ({item.rule_id for item in lint_report(common).findings})
+
+
+def test_exact_mapped_inline_component_path_reviews_split_references() -> None:
+    observed, path_map = usb_inline_peer_case()
+    assert path_map.interfaces[0].inline_component.pins[4].net == "BOARD_GND"
+    mismatches = usb_data_path_mismatches(path_map, observed)
+    assert not mismatches, tuple((item.line, item.issues) for item in mismatches)
+    report = lint_report(observed, path_map=path_map)
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert len(findings) == 1
+    assert PATH_RULE_ID not in {item.rule_id for item in report.findings}
+    assert findings[0].evidence["USB_D+_link"] == (
+        "J1.1 / U1.1=USB_DP_PORT to USB_DP_PHY through mapped inline component U2",
+    )
+    assert findings[0].evidence["USB_inline_component"] == (
+        "U2 (Synthetic:UsbProtection; Synthetic:QFN)",
+    )
+    assert findings[0].evidence["USB_reference_policy_state"] == ("not_configured",)
+    assert "U2.5=BOARD_GND" in findings[0].evidence["USB_inline_component_pin_assignments"]
+    path = report.usb_peer_reference_coverage.path_entries[0]
+    assert path.data_path.positive.inline_component.reference == "U2"
+    assert path.data_path.positive.inline_component.connector_pin == "U2.1"
+    assert path.data_path.negative.inline_component.connector_pin == "U2.3"
+    assert "via U2.1 -> U2.2 (U2, mapped inline component)" in text_report(report)
+
+    shunted_observed, shunted_map = usb_inline_peer_case(data_shunt=True)
+    shunted_report = lint_report(shunted_observed, path_map=shunted_map)
+    shunted_finding = next(item for item in shunted_report.findings if item.rule_id == RULE_ID)
+    assert shunted_finding.evidence["USB_D+_shunt_branches"] == (
+        "D1.2 (Synthetic:TVS) to D1.1=USB_GND",
+    )
+
+    named_inline_observed, named_inline_map = usb_inline_peer_case(inline_has_usb_names=True)
+    named_inline_report = lint_report(named_inline_observed, path_map=named_inline_map)
+    named_inline_findings = tuple(
+        item for item in named_inline_report.findings if item.rule_id == RULE_ID
+    )
+    assert tuple(item.subject for item in named_inline_findings) == (
+        "J1 / U1: USB reference-domain review (port 1)",
+    )
+
+    separate_observed, separate_map = usb_inline_peer_case(reference_policy="separate_nets")
+    separate_report = lint_report(separate_observed, path_map=separate_map)
+    assert RULE_ID not in {item.rule_id for item in separate_report.findings}
+    assert separate_report.usb_peer_reference_coverage.mapped_separate_reference_path_count == 1
+
+    common_observed, common_map = usb_inline_peer_case(reference_policy="common_net")
+    common_report = lint_report(common_observed, path_map=common_map)
+    assert RULE_ID not in {item.rule_id for item in common_report.findings}
+    assert common_report.usb_peer_reference_coverage.common_reference_path_count == 1
+
+    unmapped_report = lint_report(observed)
+    assert RULE_ID not in {item.rule_id for item in unmapped_report.findings}
+    assert unmapped_report.usb_peer_reference_coverage.supported_data_path_count == 0
+
+    peer_observed, peer_map = usb_inline_peer_case(extra_data_peer=True)
+    peer_report = lint_report(peer_observed, path_map=peer_map)
+    assert RULE_ID not in {item.rule_id for item in peer_report.findings}
+    assert peer_report.usb_peer_reference_coverage.supported_data_path_count == 0
 
 
 def test_series_resistor_recognition_rejects_dnp_incomplete_and_extra_peers() -> None:

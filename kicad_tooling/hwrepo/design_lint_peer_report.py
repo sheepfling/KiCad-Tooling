@@ -106,6 +106,12 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                     series_text = (
                         f" via {series.reference} ({series.value})" if series is not None else ""
                     )
+                    inline = data_line.inline_component
+                    if inline is not None:
+                        series_text = (
+                            f" via {inline.connector_pin} -> {inline.phy_pin} "
+                            f"({inline.reference}, mapped inline component)"
+                        )
                     shunt_references = tuple(
                         sorted(
                             {

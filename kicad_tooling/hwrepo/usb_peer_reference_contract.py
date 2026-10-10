@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
-from .usb_data_path_models import UsbDataPathLineRequirement, UsbDataPathMap
-from .usb_peer_reference_types import UsbEndpoint, UsbPeerDataLink, UsbPeerDataSeriesResistor
+from .usb_data_path_models import (
+    UsbDataPathInlineComponentRequirement,
+    UsbDataPathLineRequirement,
+    UsbDataPathMap,
+)
+from .usb_peer_reference_types import (
+    UsbEndpoint,
+    UsbPeerDataInlineComponent,
+    UsbPeerDataLink,
+    UsbPeerDataSeriesResistor,
+)
 
 
 def _mapped_line_matches(
@@ -13,9 +22,20 @@ def _mapped_line_matches(
     connector_net: str,
     phy_net: str,
     series_resistor: UsbPeerDataSeriesResistor | None,
+    inline_component: UsbPeerDataInlineComponent | None,
+    inline_requirement: UsbDataPathInlineComponentRequirement | None,
+    *,
+    positive: bool,
 ) -> bool:
+    expected_topology = (
+        "inline_component"
+        if inline_component is not None
+        else "series_resistor"
+        if series_resistor is not None
+        else "direct"
+    )
     if (
-        requirement.topology != ("series_resistor" if series_resistor is not None else "direct")
+        requirement.topology != expected_topology
         or {pin.casefold() for pin in requirement.connector_pins}
         != {pin.casefold() for pin in connector_pins}
         or {pin.casefold() for pin in requirement.phy_pins} != {pin.casefold() for pin in phy_pins}
@@ -25,12 +45,42 @@ def _mapped_line_matches(
         return False
     mapped_resistor = requirement.series_resistor
     if series_resistor is None:
-        return mapped_resistor is None
+        if mapped_resistor is not None:
+            return False
+    elif (
+        mapped_resistor is None
+        or mapped_resistor.reference.casefold() != series_resistor.reference.casefold()
+        or mapped_resistor.expected_symbol != series_resistor.symbol
+        or mapped_resistor.expected_footprint != series_resistor.footprint
+    ):
+        return False
+    if inline_component is None:
+        return inline_requirement is None
+    if inline_requirement is None:
+        return False
+    connector_pin = (
+        inline_requirement.positive_connector_pin
+        if positive
+        else inline_requirement.negative_connector_pin
+    )
+    phy_pin = (
+        inline_requirement.positive_phy_pin if positive else inline_requirement.negative_phy_pin
+    )
+    expected_assignments = {
+        (
+            f"{item.pin}={item.net}" if item.disposition == "net" else f"{item.pin}=<unconnected>"
+        ).casefold()
+        for item in inline_requirement.pins
+    }
     return (
-        mapped_resistor is not None
-        and mapped_resistor.reference.casefold() == series_resistor.reference.casefold()
-        and mapped_resistor.expected_symbol == series_resistor.symbol
-        and mapped_resistor.expected_footprint == series_resistor.footprint
+        inline_component.reference.casefold() == inline_requirement.reference.casefold()
+        and inline_component.symbol == inline_requirement.expected_symbol
+        and inline_component.footprint == inline_requirement.expected_footprint
+        and inline_component.connector_pin.casefold() == connector_pin.casefold()
+        and inline_component.phy_pin.casefold() == phy_pin.casefold()
+        and inline_component.connector_net.casefold() == connector_net.casefold()
+        and inline_component.phy_net.casefold() == phy_net.casefold()
+        and {item.casefold() for item in inline_component.pin_assignments} == expected_assignments
     )
 
 
@@ -67,6 +117,9 @@ def usb_reference_map_matches(
                 data_link.connector_positive_net,
                 data_link.phy_positive_net,
                 data_link.positive_series_resistor,
+                data_link.positive_inline_component,
+                interface.inline_component,
+                positive=True,
             )
             or not _mapped_line_matches(
                 interface.negative,
@@ -75,6 +128,9 @@ def usb_reference_map_matches(
                 data_link.connector_negative_net,
                 data_link.phy_negative_net,
                 data_link.negative_series_resistor,
+                data_link.negative_inline_component,
+                interface.inline_component,
+                positive=False,
             )
         ):
             continue

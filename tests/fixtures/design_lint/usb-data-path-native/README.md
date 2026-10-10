@@ -8,15 +8,16 @@ it does not represent a real product or validate device behavior. Connector
 power, shielding, signal integrity, and PCB routing remain outside this
 regression.
 
-| Fixture                                                | Expected path                                                      | Rule result                                       |
-| ------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------- |
-| `integrated-phy-direct.kicad_sch`                      | Connector D+/D− directly to a synthetic integrated STM32 PHY       | No USB data-path finding                          |
-| `external-phy-series-control.kicad_sch`                | 27 Ω on each TUSB2036 data line; connector and PHY share GND       | No USB data-path or reference review              |
-| `external-phy-series-reference-bond-control.kicad_sch` | 27 Ω data paths; USB_GND and BOARD_GND use a mapped fitted 0R bond | No USB data-path or reference review              |
-| `external-phy-series-reference-fault.kicad_sch`        | Same series paths; connector and PHY returns use separate nets     | One reference review with exact resistor evidence |
-| `external-phy-direct-bypass-fault.kicad_sch`           | Connector data lines bypass both resistors before the external PHY | One finding for D+ and one for D−                 |
-| `inline-protection-control.kicad_sch`                  | Exact six-pin pass-through component with mapped data and reference pins | No USB data-path finding                     |
-| `inline-protection-ground-fault.kicad_sch`              | Same path with the inline component's required GND pin explicitly unconnected | Findings for D+ and D− with U2.5 evidence |
+| Fixture                                                | Expected path                                                                                | Rule result                                                               |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `integrated-phy-direct.kicad_sch`                      | Connector D+/D− directly to a synthetic integrated STM32 PHY                                 | No USB data-path finding                                                  |
+| `external-phy-series-control.kicad_sch`                | 27 Ω on each TUSB2036 data line; connector and PHY share GND                                 | No USB data-path or reference review                                      |
+| `external-phy-series-reference-bond-control.kicad_sch` | 27 Ω data paths; USB_GND and BOARD_GND use a mapped fitted 0R bond                           | No USB data-path or reference review                                      |
+| `external-phy-series-reference-fault.kicad_sch`        | Same series paths; connector and PHY returns use separate nets                               | One reference review with exact resistor evidence                         |
+| `external-phy-direct-bypass-fault.kicad_sch`           | Connector data lines bypass both resistors before the external PHY                           | One finding for D+ and one for D−                                         |
+| `inline-protection-control.kicad_sch`                  | Exact six-pin pass-through component with mapped data and reference pins                     | No USB data-path finding                                                  |
+| `inline-protection-ground-fault.kicad_sch`             | Same path with the inline component's required GND pin explicitly unconnected                | Findings for D+ and D− with U2.5 evidence                                 |
+| `inline-protection-split-reference.kicad_sch`          | Exact mapped inline path; connector return is USB_GND and PHY/protection return is BOARD_GND | One USB reference review unless separate references are explicitly mapped |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -28,7 +29,8 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `external-phy-series-reference-fault.kicad_sch`        | `25e0cea0682898c5300b27024436717fc9b9b50743ef256b922e98909e0520ab` |
 | `external-phy-direct-bypass-fault.kicad_sch`           | `0b6173339fc0e2f937247c6eb5aaea1ac51b0b7a26a31058c25119333cb8f0c2` |
 | `inline-protection-control.kicad_sch`                  | `70b7979e6d1ed15fed2f31bbd73d7f076d579456ac57ed47acd60be2c79ef7d6` |
-| `inline-protection-ground-fault.kicad_sch`              | `0d9d157e7d795067c86a16c7c43235afbfe24dc7b45086ce1407f2873000185b` |
+| `inline-protection-ground-fault.kicad_sch`             | `0d9d157e7d795067c86a16c7c43235afbfe24dc7b45086ce1407f2873000185b` |
+| `inline-protection-split-reference.kicad_sch`          | `118c63f571c341976bc41067cf863eba8c4bbdd13c6577669e7b372eb19ad545` |
 
 The native regression runs twice with each of these digest-pinned images:
 
@@ -73,6 +75,13 @@ inventory, every pin's net or explicit no-connect state, and both connector-to-
 PHY data paths. The fault confirms that an open required component ground pin
 is reported with its exact pin evidence. The synthetic symbol does not model a
 real protection device or establish datasheet pinout correctness.
+
+The split-reference inline fixture exercises the separate peer-reference
+heuristic. Its exact topology map identifies the complete protection component
+and pin assignments while leaving the reference decision unauthored, so the
+tool reports a review. A second native-lane case applies an explicit
+separate-reference policy to the same source and confirms that the configured
+decision suppresses that prompt.
 
 This is source-to-netlist regression evidence only. The lane does not run ERC,
 DRC, PCB copper continuity, component placement, signal-integrity analysis,

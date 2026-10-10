@@ -21,6 +21,7 @@ from .serial_peer_reference_models import (
 from .serial_peer_reference_types import SerialPeerReferenceScan
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_models import (
+    UsbPeerDataInlineComponentCoverage,
     UsbPeerDataLineCoverage,
     UsbPeerDataPathCoverage,
     UsbPeerDataSeriesResistorCoverage,
@@ -31,6 +32,7 @@ from .usb_peer_reference_models import (
     UsbPeerReferencePinCoverage,
 )
 from .usb_peer_reference_types import (
+    UsbPeerDataInlineComponent,
     UsbPeerDataSeriesResistor,
     UsbPeerDataShuntBranch,
     UsbPeerReferencePathCoverage,
@@ -175,6 +177,7 @@ def _usb_peer_reference_path_entry(
         connector_net: str,
         phy_net: str,
         series_resistor: UsbPeerDataSeriesResistor | None,
+        inline_component: UsbPeerDataInlineComponent | None,
         shunt_branches: tuple[UsbPeerDataShuntBranch, ...],
     ) -> UsbPeerDataLineCoverage:
         resistor = (
@@ -191,12 +194,27 @@ def _usb_peer_reference_path_entry(
                 phy_net=series_resistor.phy_net,
             )
         )
+        inline = (
+            None
+            if inline_component is None
+            else UsbPeerDataInlineComponentCoverage(
+                reference=inline_component.reference,
+                symbol=inline_component.symbol,
+                footprint=inline_component.footprint,
+                connector_pin=inline_component.connector_pin,
+                phy_pin=inline_component.phy_pin,
+                connector_net=inline_component.connector_net,
+                phy_net=inline_component.phy_net,
+                pin_assignments=inline_component.pin_assignments,
+            )
+        )
         return UsbPeerDataLineCoverage(
             connector_pins=connector_pins,
             phy_pins=phy_pins,
             connector_net=connector_net,
             phy_net=phy_net,
             series_resistor=resistor,
+            inline_component=inline,
             shunt_branches=tuple(
                 UsbPeerDataShuntBranchCoverage(
                     data_pin=branch.data_pin,
@@ -245,6 +263,7 @@ def _usb_peer_reference_path_entry(
                 link.connector_positive_net,
                 link.phy_positive_net,
                 link.positive_series_resistor,
+                link.positive_inline_component,
                 link.positive_shunt_branches,
             ),
             negative=data_line(
@@ -253,6 +272,7 @@ def _usb_peer_reference_path_entry(
                 link.connector_negative_net,
                 link.phy_negative_net,
                 link.negative_series_resistor,
+                link.negative_inline_component,
                 link.negative_shunt_branches,
             ),
             port_group=link.port_group,

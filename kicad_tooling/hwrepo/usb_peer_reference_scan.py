@@ -14,6 +14,7 @@ from .usb_peer_endpoint_analysis import (
     recognized_usb_data_groups,
     usb_endpoints,
 )
+from .usb_peer_inline_path_analysis import mapped_inline_usb_data_link
 from .usb_peer_path_analysis import usb_data_link
 from .usb_peer_reference_contract import usb_reference_map_matches
 from .usb_peer_reference_types import (
@@ -37,15 +38,25 @@ def scan_usb_peer_reference_reviews(
     uniquely assigned passive/power_in reference pins on one net. Numbered
     DPn/DMn aliases pair only with the same number; unnumbered D+/D- aliases
     pair with each other or with one numbered endpoint group. Each data line must be direct
-    or joined by exactly one fitted two-pin Device:R between endpoint nets.
+    or joined by exactly one fitted two-pin Device:R between endpoint nets, unless one exact
+    current project-authored inline-component map matches the complete path.
     Complete two-pin passive diode-designated shunts to either endpoint
     reference may also appear on those nets. Longer series paths, extra data
-    peers, DNP parts, multi-pin protection parts, and mixed reference domains
+    peers, DNP parts, unmapped multi-pin protection parts, and mixed reference domains
     remain outside this bounded topology check.
     """
     pin_nets, net_members = pin_net_index(observed)
     connector_candidates = connector_candidate_references(observed, declared_connector_references)
     connector_references = {item.casefold() for item in connector_candidates}
+    mapped_inline_references: set[str] = (
+        set()
+        if path_map is None
+        else {
+            item.inline_component.reference.casefold()
+            for item in path_map.interfaces
+            if item.inline_component is not None
+        }
+    )
     connectors = usb_endpoints(
         connector_candidates,
         observed,
@@ -56,6 +67,7 @@ def scan_usb_peer_reference_reviews(
         reference
         for reference in sorted(observed.components, key=lambda item: (item.casefold(), item))
         if reference.casefold() not in connector_references
+        and reference.casefold() not in mapped_inline_references
         and IC_REFERENCE.fullmatch(reference) is not None
     )
     phy_endpoints = usb_endpoints(
@@ -134,6 +146,14 @@ def scan_usb_peer_reference_reviews(
     for connector in connectors:
         for phy in phy_endpoints:
             data_link = usb_data_link(connector, phy, net_members, observed)
+            if data_link is None:
+                data_link = mapped_inline_usb_data_link(
+                    connector,
+                    phy,
+                    net_members,
+                    observed,
+                    path_map,
+                )
             if data_link is None:
                 continue
             common_reference = connector.reference_net.casefold() == phy.reference_net.casefold()
