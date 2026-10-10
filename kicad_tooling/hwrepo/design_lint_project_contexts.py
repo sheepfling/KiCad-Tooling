@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .contracts import repo_path
 from .control_input_bias import control_input_bias_heuristic_coverage
-from .design_lint_peer_candidates import DigitalPeerVoltageLintContext
+from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .discovery import ProjectConfig
 from .electrical import load_analysis
 from .evidence import digest

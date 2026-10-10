@@ -69,6 +69,14 @@ intended requirement.
   numbered positive-rail prompts in `design_lint_power_candidates.py`. The
   architecture suite checks that the connector facade delegates and does not
   construct findings.
+  Peer prompts are dispatched by interface owner: serial, USB, SPI, USB-C, and
+  digital-peer voltage translators have dedicated modules, while
+  `design_lint_peer_candidates.py` coordinates source scans and preserves output
+  order. Bus checks are split among I2C, SPI, CAN, unconnected-interface, and
+  signal-pair candidate modules; `design_lint_bus_candidates.py` preserves their
+  established output order without building findings. Architecture tests keep
+  both coordinators small and verify that they delegate rather than construct
+  `Candidate` records.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

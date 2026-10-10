@@ -6,6 +6,18 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
+from .models import DigitalPeerVoltageAnalysis
+
+
+@dataclass(frozen=True)
+class DigitalPeerVoltageLintContext:
+    """Project contract state and provenance for digital-peer voltage reviews."""
+
+    state: Literal["not_configured", "pending", "not_applicable", "required"]
+    analysis: DigitalPeerVoltageAnalysis | None = None
+    source_path: str | None = None
+    source_sha256: str | None = None
+
 
 @dataclass(frozen=True)
 class VoltageNamedRail:

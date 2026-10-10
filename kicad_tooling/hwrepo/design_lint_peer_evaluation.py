@@ -10,7 +10,6 @@ from .component_peer_pin_scan import (
     ComponentPeerPinAssignmentScans,
     component_peer_pin_assignment_scans,
 )
-from .design_lint_peer_candidates import DigitalPeerVoltageLintContext
 from .design_lint_peer_coverage import (
     digital_peer_voltage_coverage,
     serial_peer_reference_coverage,
@@ -19,7 +18,7 @@ from .design_lint_peer_coverage import (
 from .design_lint_rule_types import DesignLintRuleId
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
-from .digital_peer_voltage_types import DigitalPeerVoltageScan
+from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .models import (
     ConnectorCoverageReport,
     DesignLintRuleOverride,

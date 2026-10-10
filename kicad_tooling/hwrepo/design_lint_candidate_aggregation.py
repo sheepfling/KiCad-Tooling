@@ -21,18 +21,15 @@ from .design_lint_control_candidates import control_candidates
 from .design_lint_mapped_coverage_candidates import mapped_coverage_candidates
 from .design_lint_pcb_measurement_candidates import pcb_measurement_coverage_candidates
 from .design_lint_pcb_requirement_candidates import pcb_requirement_coverage_candidates
-from .design_lint_peer_candidates import (
-    DigitalPeerVoltageLintContext,
-    peer_candidates,
-    usb_data_path_map_sha256,
-)
+from .design_lint_peer_candidates import peer_candidates
 from .design_lint_power_candidates import power_candidates
 from .design_lint_return_distribution_candidates import return_distribution_candidates
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_schematic_geometry import schematic_geometry_candidates
 from .design_lint_stm32_candidates import stm32_candidates
 from .design_lint_types import Candidate
-from .digital_peer_voltage_types import DigitalPeerVoltageScan
+from .design_lint_usb_peer_candidates import usb_data_path_map_sha256
+from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .models import (
     ComponentRoleMap,
     ConnectorCoverageReport,

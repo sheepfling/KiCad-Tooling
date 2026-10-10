@@ -16,11 +16,11 @@ from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
 )
-from .design_lint_peer_candidates import DigitalPeerVoltageLintContext
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
+from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,

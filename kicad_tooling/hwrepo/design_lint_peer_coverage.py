@@ -8,11 +8,10 @@ from typing import Literal
 
 from .component_peer_pin_models import ComponentPeerPinRuleCoverage
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans, PeerPinAssignmentScan
-from .design_lint_peer_candidates import DigitalPeerVoltageLintContext
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
-from .digital_peer_voltage_types import DigitalPeerVoltageScan
+from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
 from .models import (
     DesignLintRuleOverride,
     UsbDataPathMap,

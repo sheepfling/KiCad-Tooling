@@ -9,7 +9,9 @@ import pytest
 from kicad_tooling.hwrepo import (
     component_peer_pin_models,
     connector_peer_pin_models,
+    design_lint_peer_candidates,
     digital_peer_voltage_models,
+    digital_peer_voltage_types,
     serial_peer_reference_models,
     usb_peer_reference_models,
 )
@@ -297,6 +299,98 @@ def test_digital_peer_voltage_review_stays_split_by_responsibility() -> None:
     }
 
     assert not oversized, f"Keep digital peer review modules below 500 lines: {oversized}"
+
+
+@pytest.mark.interface_lint
+def test_peer_candidate_coordinator_delegates_by_protocol() -> None:
+    facade = HWREPO / "design_lint_peer_candidates.py"
+    modules = (
+        "design_lint_serial_peer_candidates.py",
+        "design_lint_usb_peer_candidates.py",
+        "design_lint_spi_peer_candidates.py",
+        "design_lint_digital_peer_voltage_candidates.py",
+        "design_lint_usb_c_candidates.py",
+    )
+
+    assert _line_count(facade) < FACADE_MAX_LINES
+    assert all((HWREPO / name).is_file() for name in modules)
+
+    tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
+    calls = {
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    candidate_constructions = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Candidate"
+    ]
+
+    assert {
+        "serial_unmapped_peer_candidates",
+        "serial_reference_candidates",
+        "usb_peer_reference_candidates",
+        "spi_participant_candidates",
+        "digital_peer_voltage_candidates",
+        "usb_c_port_candidates",
+    } <= calls
+    assert not candidate_constructions, "Peer dispatch should not construct lint findings."
+    assert (
+        design_lint_peer_candidates.DigitalPeerVoltageLintContext
+        is digital_peer_voltage_types.DigitalPeerVoltageLintContext
+    )
+
+
+@pytest.mark.interface_lint
+def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
+    facade = HWREPO / "design_lint_bus_candidates.py"
+    modules = (
+        "design_lint_i2c_candidates.py",
+        "design_lint_spi_candidates.py",
+        "design_lint_unconnected_interface_candidates.py",
+        "design_lint_can_candidates.py",
+        "design_lint_signal_pair_candidates.py",
+    )
+
+    assert _line_count(facade) < FACADE_MAX_LINES
+    assert all((HWREPO / name).is_file() for name in modules)
+
+    tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
+    function = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "bus_candidates"
+    )
+    calls = sorted(
+        (
+            node.lineno,
+            node.func.id,
+        )
+        for node in ast.walk(function)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    )
+    candidate_constructions = [
+        node
+        for node in ast.walk(function)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Candidate"
+    ]
+
+    assert [name for _, name in calls] == [
+        "i2c_pullup_candidates",
+        "spi_bias_candidates",
+        "unconnected_interface_candidates",
+        "can_candidates",
+        "complementary_signal_candidates",
+        "named_differential_pair_candidates",
+        "i2c_address_candidates",
+        "i2c_responder_coverage_candidates",
+    ]
+    assert not candidate_constructions, "Bus dispatch should not construct lint findings."
 
 
 def test_control_and_digital_peer_rule_refs_point_to_their_owners() -> None:

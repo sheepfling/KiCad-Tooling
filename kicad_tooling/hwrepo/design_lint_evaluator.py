@@ -11,7 +11,7 @@ from .design_lint_evaluation_report_inputs import (
 )
 from .design_lint_evaluation_types import DesignLintEvaluationRequest
 from .design_lint_finding_disposition import resolve_finding_dispositions
-from .design_lint_peer_candidates import DigitalPeerVoltageLintContext
+from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
