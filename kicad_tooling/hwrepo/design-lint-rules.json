@@ -137,6 +137,7 @@
       "fault_fixtures": [
         "tests.test_design_lint_connector_peer_pins.test_exact_symbol_peer_pin_divergence_reviews_conflicting_generic_assignments",
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_tie_uses_divergence_without_arbitrary_outlier",
+        "tests.test_design_lint_connector_peer_pins.test_four_generic_peer_ports_review_one_pin_split_across_distinct_nets",
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_divergence_remains_reviewable",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
@@ -148,6 +149,7 @@
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_divergence_requires_conflict_and_fitted_peers",
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_divergence_requires_missing_function_metadata",
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_common_assignment_is_a_control",
+        "tests.test_design_lint_connector_peer_pins.test_four_generic_peer_ports_with_common_pin_assignment_are_quiet_control",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
       ],

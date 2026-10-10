@@ -400,6 +400,40 @@ def test_peer_pin_tie_uses_divergence_without_arbitrary_outlier() -> None:
     assert finding.evidence["J4.2"] == ("PORT_B",)
 
 
+def test_four_generic_peer_ports_review_one_pin_split_across_distinct_nets() -> None:
+    source = peer_connector_pin_assignments(("NET_A", "NET_B", "NET_C", "NET_D")).model_copy(
+        update={"pin_functions": {f"J{index}.2": "Pin_2" for index in range(1, 5)}}
+    )
+    report = evaluate("synthetic-four-peer-pin-split", coach(source), DesignLintPolicy())
+    peer_findings = [
+        item
+        for item in report.findings
+        if item.rule_id == "connector.peer_pin_assignment_divergence"
+    ]
+
+    assert report.status == "REVIEW"
+    assert len(peer_findings) == 1
+    finding = peer_findings[0]
+    assert finding.subject == "Synthetic:PeripheralPort pin 2"
+    assert {pin: finding.evidence[pin] for pin in ("J1.2", "J2.2", "J3.2", "J4.2")} == {
+        "J1.2": ("NET_A",),
+        "J2.2": ("NET_B",),
+        "J3.2": ("NET_C",),
+        "J4.2": ("NET_D",),
+    }
+    assert "does not establish a required connection" in finding.message
+
+
+def test_four_generic_peer_ports_with_common_pin_assignment_are_quiet_control() -> None:
+    source = peer_connector_pin_assignments(("SHARED_NET",) * 4).model_copy(
+        update={"pin_functions": {f"J{index}.2": "Pin_2" for index in range(1, 5)}}
+    )
+    report = evaluate("synthetic-four-peer-pin-common", coach(source), DesignLintPolicy())
+
+    assert report.status == "PASS"
+    assert report.findings == ()
+
+
 @pytest.mark.parametrize(
     "source",
     [
