@@ -80,6 +80,7 @@ markers = [
   "parity_lint: cross-surface CLI, MCP, and electrical parity checks",
   "template_checkout: integration tests that require a separate public template checkout",
   "native_kicad: source or board fixtures run against an exact native KiCad version",
+  "architecture: repository module boundaries and size guardrails",
   "slow: cross-process, package, or broad integration checks that take longer to run",
 ]
 

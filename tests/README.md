@@ -42,6 +42,7 @@ python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_external_protection_contract.py tests/test_external_protection_review.py
 python -I -B -m pytest -q -m "design_lint and power_lint" \
   tests/test_power_sequences.py tests/test_power_sequence_cycles.py
+python -I -B -m pytest -q -m architecture
 python -I -B -m pytest -q -m "design_lint and template_checkout" --durations=20
 python -I -B -m pytest -q -m native_kicad
 python -I -B -m pytest -q -m "evidence_lint and native_kicad" \

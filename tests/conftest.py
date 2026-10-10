@@ -385,9 +385,11 @@ _SLOW_MODULES = frozenset(
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Tag lint and exact-native tests so pytest can select them by scope or cost."""
+    """Tag architecture, lint, and exact-native tests by scope or cost."""
     for item in items:
         path = item.path.relative_to(_ROOT).as_posix()
+        if "architecture" in Path(path).stem:
+            item.add_marker(pytest.mark.architecture)
         if path in _DESIGN_LINT_MODULES:
             item.add_marker(pytest.mark.design_lint)
         for marker, modules in _LINT_AREA_MODULES.items():

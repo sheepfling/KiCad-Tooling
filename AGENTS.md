@@ -34,6 +34,11 @@ large file. Split those modules incrementally; do not require a wholesale
 rewrite as a prerequisite. Keep test-support modules within the same review
 threshold. If a module must exceed these review thresholds, record the reason
 in the change summary.
+The architecture suite applies this limit across Python modules in
+kicad_tooling/, scripts/, and tests/. Existing exceptions are listed in
+tests/python_module_line_ceilings.json; keep each at its recorded ceiling and
+remove its entry when the module is split below 500 lines. New modules must
+remain below the limit unless a reviewed exception is documented.
 
 Treat `hwrepo/models.py` as a shrink-only compatibility registry during its
 incremental split. Put new lint-specific models in theme-owned modules, import

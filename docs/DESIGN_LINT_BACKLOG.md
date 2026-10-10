@@ -353,6 +353,17 @@ and optional ecosystem adapters are `P3`.
   External-protection contract comparisons and review-policy candidates now
   have separate pytest suites using `tests/external_protection_support.py`.
 
+- **Repository module architecture — Prevent new god files while shrinking
+  legacy modules.** The `architecture` pytest marker covers module-boundary
+  checks and a repository-wide scan of Python modules in `kicad_tooling/`,
+  `scripts/`, and `tests/`. New modules must stay below 500 lines; the 42
+  existing modules at or above that size have no-growth ceilings in
+  `tests/python_module_line_ceilings.json`. Remove each ceiling when its module
+  is split below 500 lines. The current inventory has six modules above 1,000
+  lines, including the shrink-only `hwrepo/models.py`; these remain open
+  decomposition work, not accepted target sizes. The focused architecture
+  slice passes with `-m architecture` and the documented public template root.
+
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in
   `tests/test_i2c_pullup_native_fixture_lane.py` with pytest markers for design
