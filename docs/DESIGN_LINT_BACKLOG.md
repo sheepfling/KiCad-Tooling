@@ -434,6 +434,16 @@ and optional ecosystem adapters are `P3`.
   import that owner directly; `hwrepo/models.py` retains compatibility exports,
   and its no-growth ceiling dropped from 5,980 to 5,729 lines. This refactor
   preserves the existing contract behavior and does not add an electrical rule.
+  The follow-on `v0.5.0rc40` split moved eight power-path and power-sequence
+  contract types into `power_path_models.py` and `power_sequence_models.py`.
+  Internal services and regression fixtures import those owners directly;
+  `models.py` keeps identity-compatible exports. The new `design_lint` plus
+  `power_lint` architecture test guards ownership, import boundaries, and size;
+  parameterized package tests require both modules in the wheel. The registry's
+  no-growth ceiling is now 5,521 lines. The wheel asset inventory also moved
+  from `scripts/ci.py` to `kicad_tooling/package_assets.py`, reducing the CI
+  coordinator's ceiling from 556 to 528 lines. This is structural coverage;
+  it adds no electrical rule.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

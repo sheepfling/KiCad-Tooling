@@ -48,7 +48,11 @@ def test_internal_services_import_usb_path_models_from_the_owner() -> None:
         for node in ast.walk(tree):
             if not isinstance(node, ast.ImportFrom) or node.module is None:
                 continue
-            if node.module == "models" and node.level == 1 or node.module == "kicad_tooling.hwrepo.models":
+            if (
+                node.module == "models"
+                and node.level == 1
+                or node.module == "kicad_tooling.hwrepo.models"
+            ):
                 imported = {item.name for item in node.names} & set(USB_DATA_PATH_MODEL_NAMES)
                 legacy_imports.extend(f"{path.name}: {name}" for name in sorted(imported))
 
