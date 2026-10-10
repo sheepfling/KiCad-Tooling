@@ -14,11 +14,11 @@ from .external_protection_models import ExternalProtectionCoverageReport
 from .models import (
     CrystalNetworkCoverageReport,
     NetlistContract,
-    PowerPathMap,
-    PowerSequenceMap,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
 )
+from .power_path_models import PowerPathMap
+from .power_sequence_models import PowerSequenceMap
 from .usb_data_path_models import UsbDataPathMap
 
 

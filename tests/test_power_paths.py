@@ -16,6 +16,8 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.power_path_models import (
     PowerPathElementRequirement,
     PowerPathEndpointRequirement,
     PowerPathMap,

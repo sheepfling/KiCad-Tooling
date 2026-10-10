@@ -5,7 +5,8 @@ from __future__ import annotations
 import hashlib
 
 from .design_lint_types import Candidate
-from .models import NetlistContract, PowerPathMap
+from .models import NetlistContract
+from .power_path_models import PowerPathMap
 from .power_paths import power_path_mismatches
 
 

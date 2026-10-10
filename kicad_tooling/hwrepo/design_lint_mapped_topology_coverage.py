@@ -8,12 +8,9 @@ from typing import Literal
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import (
-    DesignLintMappedCheckRun,
-    DesignLintPolicy,
-    PowerPathMap,
-    PowerSequenceMap,
-)
+from .models import DesignLintMappedCheckRun, DesignLintPolicy
+from .power_path_models import PowerPathMap
+from .power_sequence_models import PowerSequenceMap
 from .usb_data_path_models import UsbDataPathMap
 
 MappedTopologyRuleId = Literal[

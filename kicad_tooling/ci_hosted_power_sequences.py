@@ -28,6 +28,8 @@ def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: Ho
         DesignLintPolicy,
         DesignLintReport,
         NetlistContract,
+    )
+    from .hwrepo.power_sequence_models import (
         PowerSequenceDependencyRequirement,
         PowerSequenceEndpointRequirement,
         PowerSequenceMap,

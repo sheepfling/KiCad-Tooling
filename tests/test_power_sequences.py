@@ -7,12 +7,8 @@ import unittest
 import pytest
 from pydantic import ValidationError
 
-from kicad_tooling.hwrepo.models import (
-    ComponentContract,
-    DesignLintIgnore,
-    DesignLintRuleOverride,
-    PowerSequenceMap,
-)
+from kicad_tooling.hwrepo.models import ComponentContract, DesignLintIgnore, DesignLintRuleOverride
+from kicad_tooling.hwrepo.power_sequence_models import PowerSequenceMap
 from kicad_tooling.hwrepo.power_sequences import (
     power_sequence_graph_has_cycle,
     power_sequence_mismatches,

@@ -8,9 +8,10 @@ from .component_pin_patterns import (
 )
 from .component_roles import resolve_component_role_map
 from .design_lint_types import Candidate
-from .models import ComponentRoleMap, NetlistContract, PowerPathMap
+from .models import ComponentRoleMap, NetlistContract
 from .net_dc_reference import connector_capacitor_only_nets
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
+from .power_path_models import PowerPathMap
 from .power_pin_paths import power_inputs_without_supported_source_paths
 from .power_rails import numbered_power_rail_groups
 

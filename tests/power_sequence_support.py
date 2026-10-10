@@ -12,6 +12,8 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.power_sequence_models import (
     PowerSequenceDependencyRequirement,
     PowerSequenceEndpointRequirement,
     PowerSequenceMap,

@@ -18,6 +18,8 @@ from datetime import UTC, datetime
 from email.parser import Parser
 from pathlib import Path
 
+from kicad_tooling.package_assets import REQUIRED_WHEEL_ASSETS
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -38,37 +40,7 @@ def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
             for name in archive.namelist()
             if name.startswith("kicad_tooling/") or name == metadata_names[0]
         }
-        required = {
-            "kicad_tooling/tool-surfaces.json",
-            "kicad_tooling/py.typed",
-            "kicad_tooling/hwrepo/external_protection_models.py",
-            "kicad_tooling/hwrepo/usb_data_path_models.py",
-            "kicad_tooling/markdown_check/__main__.py",
-            "kicad_tooling/fixtures/foreign-eagle-board.xml",
-            "kicad_tooling/fixtures/scaffold-license.txt",
-            "kicad_tooling/hwrepo/design-lint-rules.json",
-            "kicad_tooling/hwrepo/schematic-text-metrics.json",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-via.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-open.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-zone-connected.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-zone-split.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-zone-through-hole-split.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-unstitched-planes.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-stitched-planes.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-net-tie-connected.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-net-tie-dnp.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-isolation-open.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-return-isolation-bridged.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-access-probe-envelope.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-decoupling-placement.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-protection-entry-path.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-switching-loop.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-switching-loop-inner-plane.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-switching-loop-split-plane.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-reference-narrow-void-control.kicad_pcb",
-            "kicad_tooling/hwrepo/fixtures/pcb-reference-narrow-void-fault.kicad_pcb",
-            "kicad_tooling/hwrepo/kicad_library_license.txt",
-        }
+        required = REQUIRED_WHEEL_ASSETS
         if not required <= payload.keys():
             raise ValueError(f"Missing package assets in {wheel}: {required - payload.keys()}")
         return version, payload

@@ -10,7 +10,34 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
+from kicad_tooling.package_assets import REQUIRED_WHEEL_ASSETS
 from scripts import ci
+
+
+@pytest.mark.parametrize(
+    "missing_asset",
+    (
+        "kicad_tooling/hwrepo/design-lint-rules.json",
+        "kicad_tooling/hwrepo/power_path_models.py",
+        "kicad_tooling/hwrepo/power_sequence_models.py",
+    ),
+    ids=("rule-catalog", "power-path-models", "power-sequence-models"),
+)
+def test_wheel_requires_rule_catalog_and_theme_owned_power_models(missing_asset: str) -> None:
+    metadata = (
+        "synthetic.dist-info/METADATA",
+        "Name: kicad-team-tooling\nVersion: 1.0.0\n\n",
+    )
+    with tempfile.TemporaryDirectory(prefix="package-ci-wheel-") as temporary:
+        wheel = Path(temporary) / "synthetic.whl"
+        with zipfile.ZipFile(wheel, "w") as archive:
+            archive.writestr(*metadata)
+            for path in REQUIRED_WHEEL_ASSETS - {missing_asset}:
+                archive.writestr(path, "synthetic")
+        with pytest.raises(ValueError, match=re.escape(missing_asset)):
+            ci.wheel_contents(wheel)
 
 
 class PackageCiTests(unittest.TestCase):
@@ -45,31 +72,6 @@ class PackageCiTests(unittest.TestCase):
             set(),
             "Native fixture tests must run in the digest-pinned package acceptance job",
         )
-
-    def test_wheel_must_include_the_runtime_design_lint_catalog(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="package-ci-wheel-") as temporary:
-            wheel = Path(temporary) / "synthetic.whl"
-            metadata = (
-                "synthetic.dist-info/METADATA",
-                "Name: kicad-team-tooling\nVersion: 1.0.0\n\n",
-            )
-            required = (
-                "kicad_tooling/tool-surfaces.json",
-                "kicad_tooling/py.typed",
-                "kicad_tooling/markdown_check/__main__.py",
-                "kicad_tooling/fixtures/foreign-eagle-board.xml",
-                "kicad_tooling/fixtures/scaffold-license.txt",
-                "kicad_tooling/hwrepo/external_protection_models.py",
-                "kicad_tooling/hwrepo/usb_data_path_models.py",
-                "kicad_tooling/hwrepo/fixtures/pcb-access-probe-envelope.kicad_pcb",
-                "kicad_tooling/hwrepo/kicad_library_license.txt",
-            )
-            with zipfile.ZipFile(wheel, "w") as archive:
-                archive.writestr(*metadata)
-                for path in required:
-                    archive.writestr(path, "synthetic")
-            with self.assertRaisesRegex(ValueError, "design-lint-rules.json"):
-                ci.wheel_contents(wheel)
 
     def test_distribution_build_clears_stale_staging_without_removing_receipts(self) -> None:
         with tempfile.TemporaryDirectory(prefix="package-ci-build-cache-") as temporary:

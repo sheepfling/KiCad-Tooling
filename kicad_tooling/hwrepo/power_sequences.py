@@ -6,7 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
-from .models import NetlistContract, PowerSequenceMap, PowerSequenceStageRequirement
+from .models import NetlistContract
+from .power_sequence_models import PowerSequenceMap, PowerSequenceStageRequirement
 
 _Value = TypeVar("_Value")
 

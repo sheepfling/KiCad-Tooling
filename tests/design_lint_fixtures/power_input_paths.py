@@ -10,6 +10,8 @@ from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.power_path_models import (
     PowerPathElementRequirement,
     PowerPathEndpointRequirement,
     PowerPathMap,

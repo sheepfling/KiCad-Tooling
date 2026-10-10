@@ -45,8 +45,6 @@ from .models import (
     NetlistContract,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
-    PowerPathMap,
-    PowerSequenceMap,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
     Stm32PinMapCoverageReport,
@@ -63,6 +61,8 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .power_path_models import PowerPathMap
+from .power_sequence_models import PowerSequenceMap
 from .schematic_geometry import (
     SchematicGeometryScan,
 )

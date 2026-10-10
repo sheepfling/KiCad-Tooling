@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .hwrepo.models import (
+from .hwrepo.power_path_models import (
     PowerPathElementRequirement,
     PowerPathEndpointRequirement,
     PowerPathMap,

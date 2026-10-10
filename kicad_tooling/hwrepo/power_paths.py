@@ -6,7 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
-from .models import NetlistContract, PowerPathMap, PowerPathRequirement
+from .models import NetlistContract
+from .power_path_models import PowerPathMap, PowerPathRequirement
 
 _Value = TypeVar("_Value")
 

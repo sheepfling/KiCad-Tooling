@@ -5,7 +5,8 @@ from __future__ import annotations
 import hashlib
 
 from .design_lint_types import Candidate
-from .models import NetlistContract, PowerSequenceMap
+from .models import NetlistContract
+from .power_sequence_models import PowerSequenceMap
 from .power_sequences import (
     power_sequence_graph_has_cycle,
     power_sequence_mismatches,
