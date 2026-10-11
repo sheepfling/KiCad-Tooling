@@ -50,10 +50,9 @@ def return_pin_positive_rail_candidates(
             continue
         mapped = mapped_pins.get(pin)
         native_return = is_return_function(function or "")
-        mapped_return = (
+        if not native_return and not (
             mapped is not None and mapped.role == "return" and pin_function_is_generic(function)
-        )
-        if not native_return and not mapped_return:
+        ):
             continue
 
         assigned_nets = tuple(sorted(nets_by_pin.get(pin, ())))
@@ -63,14 +62,15 @@ def return_pin_positive_rail_candidates(
         if net not in positive_nets:
             continue
 
-        role_evidence = (
-            f"native_function={function}"
-            if native_return
-            else (
-                f"source_matched_interface_role=return;interface_pin={mapped.interface_pin_number};"
-                f"signal={mapped.interface_signal}"
+        if native_return:
+            role_evidence = f"native_function={function}"
+        elif mapped is not None and mapped.role == "return" and pin_function_is_generic(function):
+            role_evidence = (
+                "source_matched_interface_role=return;"
+                f"interface_pin={mapped.interface_pin_number};signal={mapped.interface_signal}"
             )
-        )
+        else:
+            continue
         findings.append(
             Candidate(
                 rule_id="connector.return_pin_on_positive_rail",

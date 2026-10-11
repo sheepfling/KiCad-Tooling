@@ -72,8 +72,8 @@ from .model_primitives import (
     Reference,
     RepositoryPath,
     ResistorReference,
-    Stm32PortPin,  # noqa: F401
-    Stm32SymbolPin,  # noqa: F401
+    Stm32PortPin,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    Stm32SymbolPin,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     StrictModel,
     TemplateVersion,
 )
