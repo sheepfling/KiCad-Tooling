@@ -192,7 +192,11 @@ intended requirement.
   theme-specific pytest suites, and their support modules below the 500-line
   review threshold. Split a larger module by responsibility, then update
   catalog implementation references, pytest area registration, and the
-  architecture size guard. Existing oversized lint-marked test suites are
+  architecture size guard. The architecture catalog checks that every active
+  rule fault, valid-control, and metamorphic fixture module has both the broad
+  `design_lint` marker and a theme-specific area marker or `parity_lint`, so
+  focused selections do not silently omit a regression suite. Existing
+  oversized lint-marked test suites are
   recorded in `tests/lint_suite_line_ceilings.json`; they may shrink but must
   not grow. Remove each ceiling as its suite is split. The two PCB
   reference-plane fixture lanes now live in their own 389-line module. USB

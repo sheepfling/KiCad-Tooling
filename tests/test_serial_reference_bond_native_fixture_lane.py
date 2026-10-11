@@ -18,7 +18,11 @@ from kicad_tooling.hwrepo.models import SerialPeerAnalysis
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.support import reference_root
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.return_path_lint,
+]
 
 FIXTURE_ROOT = (
     Path(__file__).resolve().parent / "fixtures/design_lint/serial-peer-reference-bond-native"

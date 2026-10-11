@@ -20,6 +20,7 @@ from tests.support import reference_root
 
 pytestmark = [
     pytest.mark.design_lint,
+    pytest.mark.interface_lint,
     pytest.mark.native_kicad,
     pytest.mark.slow,
 ]

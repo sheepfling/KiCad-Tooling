@@ -33,6 +33,17 @@ RULE_TYPE_NAMES = ("DesignLintRuleId", "DesignLintTheme")
 LEGACY_MODEL_IMPORTS = {*RULE_MODEL_NAMES, *RULE_TYPE_NAMES}
 RULE_OWNER_MODULES = ("design_lint_rule_models.py", "design_lint_rule_types.py")
 RULE_FIXTURE_FIELDS = ("fault_fixtures", "valid_control_fixtures", "metamorphic_fixtures")
+FOCUSED_LINT_MARKERS = {
+    "component_lint",
+    "connector_lint",
+    "interface_lint",
+    "power_lint",
+    "evidence_lint",
+    "return_path_lint",
+    "schematic_lint",
+    "pcb_lint",
+    "parity_lint",
+}
 
 
 def _fixture_module_path(reference: str) -> Path | None:
@@ -140,16 +151,26 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
         else:
             modules.setdefault(module, set()).add(reference)
 
+    markers_by_module = {path: _module_pytest_markers(path) for path in modules}
     unmarked = {
         path.relative_to(REPO_ROOT).as_posix(): sorted(references_for_module)
         for path, references_for_module in modules.items()
-        if "design_lint" not in _module_pytest_markers(path)
+        if "design_lint" not in markers_by_module[path]
+    }
+    unfocused = {
+        path.relative_to(REPO_ROOT).as_posix(): sorted(references_for_module)
+        for path, references_for_module in modules.items()
+        if not markers_by_module[path] & FOCUSED_LINT_MARKERS
     }
 
     assert not unresolved, f"Active rule fixtures must resolve to Python test modules: {unresolved}"
     assert not unmarked, (
         "Every active rule fault, control, and metamorphic fixture module must carry "
         f"pytest.mark.design_lint so focused runs select it: {unmarked}"
+    )
+    assert not unfocused, (
+        "Active rule fixture modules need a theme or parity marker for focused selection: "
+        f"{unfocused}"
     )
 
 
@@ -174,6 +195,14 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
             {"design_lint", "interface_lint", "power_lint"},
         ),
         ("test_stm32_pin_map.py", {"design_lint", "interface_lint"}),
+        (
+            "test_serial_peer_native_fixture_lane.py",
+            {"design_lint", "interface_lint"},
+        ),
+        (
+            "test_serial_reference_bond_native_fixture_lane.py",
+            {"design_lint", "interface_lint", "return_path_lint"},
+        ),
     ),
 )
 def test_dedicated_lint_suites_have_focused_area_markers(
