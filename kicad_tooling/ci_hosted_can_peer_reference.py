@@ -240,8 +240,16 @@ def can_peer_reference_native_fixture_lane(
             },
             **{f"{reference}.4": "+3V3" for reference in ("U1", "U2", "U3")},
         }
-        if any(pin_nets.get(pin) != net for pin, net in expected_assignments.items()):
-            raise ValueError(f"Native CAN {case} fixture changed the expected pin-to-net assignments")
+        assignment_mismatches = {
+            pin: {"expected": net, "observed": pin_nets.get(pin)}
+            for pin, net in expected_assignments.items()
+            if pin_nets.get(pin) != net
+        }
+        if assignment_mismatches:
+            detail = json.dumps(assignment_mismatches, sort_keys=True)
+            raise ValueError(
+                f"Native CAN {case} fixture changed the expected pin-to-net assignments: {detail}"
+            )
 
         scan = scan_can_peer_references(observed)
         expected_disposition = (
