@@ -475,6 +475,12 @@ and optional ecosystem adapters are `P3`.
   pytest suite selectable with `return_path_lint` and `parity_lint`; the tool
   surface map follows the moved test. This shrank the legacy module by another
   125 lines without changing grounding behavior.
+  Direct and bonded serial-peer parity now live in the themed pytest module
+  `tests/test_electrical_serial_peer_parity.py`, selected with `interface_lint`,
+  `return_path_lint`, and `parity_lint`. The module reuses the typed serial
+  netlist builder and shared CLI/MCP harness; the surface map follows both
+  moved cases. This removes another 255 lines from the mixed legacy suite
+  without changing electrical checks.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

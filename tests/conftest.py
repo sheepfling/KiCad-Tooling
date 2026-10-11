@@ -174,6 +174,7 @@ _LINT_AREA_MODULES = {
             "tests/test_external_protection_review.py",
             "tests/test_design_lint_i2c_parity.py",
             "tests/test_electrical_i2c_parity.py",
+            "tests/test_electrical_serial_peer_parity.py",
             "tests/test_electrical_usb_c_parity.py",
             "tests/test_design_lint_mcp_parity_mapped_custom_passive.py",
             "tests/test_design_lint_determinism_interfaces.py",
@@ -336,6 +337,7 @@ _LINT_AREA_MODULES = {
     "return_path_lint": frozenset(
         {
             "tests/test_electrical_connector_return_parity.py",
+            "tests/test_electrical_serial_peer_parity.py",
             "tests/test_connector_return_distribution.py",
             "tests/test_connector_return_fixture_lane.py",
             "tests/test_ci_hosted_pcb_fixture_schedule.py",
@@ -381,6 +383,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_i2c_parity.py",
             "tests/test_design_lint_serial_parity.py",
             "tests/test_electrical_connector_return_parity.py",
+            "tests/test_electrical_serial_peer_parity.py",
             "tests/test_electrical_parity.py",
             "tests/test_electrical_i2c_parity.py",
             "tests/test_electrical_usb_c_parity.py",
@@ -427,6 +430,7 @@ _SLOW_MODULES = frozenset(
         "tests/test_design_lint_determinism.py",
         "tests/test_electrical_parity.py",
         "tests/test_electrical_connector_return_parity.py",
+        "tests/test_electrical_serial_peer_parity.py",
         "tests/test_electrical_i2c_parity.py",
         "tests/test_electrical_usb_c_parity.py",
         "tests/test_package_ci.py",
