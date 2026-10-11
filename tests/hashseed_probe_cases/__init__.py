@@ -10,6 +10,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_antenna",
     "pcb_drc",
     "pcb_return_paths",
+    "pcb_component_inventory",
     "pcb_measurements",
     "interfaces",
     "analog",

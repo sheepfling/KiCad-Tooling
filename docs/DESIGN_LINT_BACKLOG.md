@@ -2060,8 +2060,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v54. The cross-process probe supports themed report
-  selectors and retains the complete 140-report inventory gate. Fault/control
+- **Status:** Implemented v55. The cross-process probe supports themed report
+  selectors and retains the complete 143-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2483,7 +2483,14 @@ is not a reason by itself to expand its scope or change its default policy.
   eight-case return-path family matched across three independently randomized
   Python processes; the fault fails connectivity and the control passes all
   rows. The complete inventory gate passed with 140 reports. This is synthetic
-  evidence and invokes no native KiCad export.
+  evidence and invokes no native KiCad export. The v55 extension adds separate
+  cross-process reports for a fitted schematic component absent from the PCB,
+  a placed reference with a different exact footprint ID, and the matching
+  footprint control. All three full reports matched across three randomized
+  processes; the two faults remain `REVIEW` and the control passes. The focused
+  PCB inventory selector and complete 143-report inventory test passed, and
+  Ruff passed for the changed Python modules. These cases use synthetic typed
+  snapshots and invoke no native export or electrical-intent check.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
@@ -4749,6 +4756,18 @@ is not a reason by itself to expand its scope or change its default policy.
   property in their KiCad schematic or board files, so those revisions cannot
   exercise this alias predicate. They were not natively exported for this
   check; these absences are not precision measurements.
+- **Bounded public-source search (2026-10-11):**
+  A pinned GitHub code search surfaced the Apache-2.0
+  [PCBDraft repository](https://github.com/qixuancao/pcbdraft/tree/a194856)
+  at commit `a19485657383934de8e9a8a8029795165f12eb14` and [AxxSolder
+  hardware](https://github.com/ITGuyFromIA2/AxxSolder_hw/tree/baa001) at
+  commit `baa0017696c9cec883c9d7c44b4c3da1bd101a48`.
+  PCBDraft's indexed examples and test fixtures did not establish a fitted
+  connector-alias group with a shared `PART_ID` or an independent pinout
+  disposition. The AxxSolder hit places `part_id` on a `Device:R_Small`
+  instance, and GitHub reports no recognized repository license; it is not an
+  eligible connector example. No project files were copied. This bounded
+  search found no qualified sample and is not evidence of precision.
 - **Next:** Find another approved, nonconfidential public example whose fitted
   connector aliases have distinct native symbols and a shared `PART_ID` to
   exercise the added predicate. Collect an independent pinout disposition
@@ -4793,7 +4812,10 @@ is not a reason by itself to expand its scope or change its default policy.
   identity control. Added typed regressions also verify that a case-insensitive
   duplicate schematic reference blocks inventory coverage and that the PCB
   snapshot model rejects case-insensitive duplicate placed references before
-  comparison. The focused selector passed 12 tests on 2026-10-11; exact native
+  comparison. A separate hash-seed suite compares missing-placement and
+  footprint-mismatch faults with an exact-footprint control across three
+  randomized Python processes. The focused selector passed 12 tests on
+  2026-10-11; exact native
   execution remains delegated to the hosted acceptance lane because this
   workspace has no `kicad-cli` or running Docker daemon.
 - **Cohort boundary:** The pinned [kicad-happy cross-validation source][happy-cross-analysis]
@@ -10093,15 +10115,16 @@ documentation descriptions alone do not count as a detection gain.
 ### Domain-specific cohort backlog candidates
 
 The public [kicad-happy changelog](https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md)
-lists additional domain families. This is a source inventory, not evidence of
-local detection value. None of the candidates below is an active lint rule or a
-runtime-trial result. Advance one only when its project-specific source data,
-applicability, deterministic comparison, and valid alternatives can be tested
-without importing a product design.
+lists additional domain families. This inventory does not demonstrate local
+detection value. LINT-097 is now an implemented, opt-in project-authored check;
+the rows below are conditional research leads. Advance a remaining candidate
+only when its project-specific source data, applicability, deterministic
+comparison, and valid alternatives can be tested without importing a product
+design.
 
 | Candidate family                                     | Existing overlap                                                              | First bounded work                                                                                                                                                                                                                                 | Stop or defer when                                                                                                                                                                                                 |
 | ---------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Wireless module antenna and RF feed review           | Connector/pin coverage, protection maps, mapped PCB geometry                  | See proposed LINT-097: bind exact module identity and RF pad/net to a vendor-sourced module-local keepout map, then test only on synthetic schematic/board pairs.                                                                                  | Symbol/value text is the only identity evidence, antenna geometry is absent, or the check cannot distinguish module antennas from external RF connectors and intentional keepouts.                                 |
+| Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                        | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                       | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                              |
 | Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts       | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.  | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings. |
 | Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps         | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.     | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                             |
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | Compare an authored driver-output-to-string map with exact LED/current-control component pins and connectivity; test multi-channel and valid constant-current alternatives against current LED prompts.                                            | The proposed check merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied.                                           |

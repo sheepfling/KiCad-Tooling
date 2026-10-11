@@ -152,6 +152,9 @@ REPORT_ORDER = (
     "stm32_pin_map_control",
     "schematic_wire_crossing_fault",
     "schematic_wire_crossing_junction_control",
+    "pcb_inventory_missing_placement_fault",
+    "pcb_inventory_footprint_mismatch_fault",
+    "pcb_inventory_exact_footprint_control",
 )
 
 
@@ -169,6 +172,7 @@ REPORT_BUILDERS = {
     "interfaces": "tests.hashseed_probe_cases.interfaces",
     "analog": "tests.hashseed_probe_cases.analog",
     "schematic_geometry": "tests.hashseed_probe_cases.schematic_geometry",
+    "pcb_component_inventory": "tests.hashseed_probe_cases.pcb_component_inventory",
 }
 
 
