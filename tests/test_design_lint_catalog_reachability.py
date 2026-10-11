@@ -14,6 +14,7 @@ import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_f
 import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.external_protection_support as _external_protection_support
+import tests.i2c_peer_reference_support as _i2c_peer_reference_support
 import tests.pcb_decoupling_support as _pcb_decoupling_support
 import tests.pcb_rf_antenna_support as _pcb_rf_antenna_support
 import tests.serial_peer_reference_support as _serial_peer_reference_support
@@ -114,6 +115,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.i2c_netlist(),
         _tests_design_lint_fixtures.i2c_netlist_with_parallel_sda(),
         _tests_design_lint_fixtures.i2c_netlist_with_pullup_rails(("+3V3", "+5V"), ("+3V3",)),
+        _i2c_peer_reference_support.i2c_peer_netlist(),
         _tests_design_lint_fixtures.spi_active_low_select_netlist(),
         _tests_design_lint_fixtures.can_netlist(),
         _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),

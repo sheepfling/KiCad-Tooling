@@ -86,6 +86,15 @@ def test_interface_reports_remain_deterministic() -> None:
     assert i2c_address_control["findings"] == []
     assert i2c_address_control["i2c_address_coverage"]["status"] == "COMPLETE"
 
+    i2c_peer_fault = reports["i2c_peer_reference_fault"]
+    i2c_peer_control = reports["i2c_peer_reference_control"]
+    i2c_peer_fault_rules = {item["rule_id"] for item in i2c_peer_fault["findings"]}
+    i2c_peer_control_rules = {item["rule_id"] for item in i2c_peer_control["findings"]}
+    assert "bus.i2c_peer_reference_review" in i2c_peer_fault_rules
+    assert "bus.i2c_peer_reference_review" not in i2c_peer_control_rules
+    assert i2c_peer_fault["i2c_peer_reference_coverage"]["candidate_group_count"] == 1
+    assert i2c_peer_control["i2c_peer_reference_coverage"]["candidate_group_count"] == 0
+
     protection_fault_case = reports["external_protection_fault"]
     protection_control_case = reports["external_protection_control"]
     assert (

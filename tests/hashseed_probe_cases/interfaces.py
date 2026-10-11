@@ -35,6 +35,7 @@ from tests.design_lint_fixtures.i2c_addresses import (
     coach as i2c_address_coach,
 )
 from tests.design_lint_fixtures.i2c_arrays import array_netlist, array_requirement
+from tests.electrical_serial_support import serial_peer_netlist, serial_peer_requirement
 from tests.external_protection_support import (
     observed_netlist as external_protection_netlist,
 )
@@ -42,6 +43,7 @@ from tests.external_protection_support import (
     protection_lint_report,
     protection_map,
 )
+from tests.i2c_peer_reference_support import i2c_peer_netlist
 from tests.serial_participant_support import (
     alternate_function_serial_netlist,
     alternate_function_serial_peer_analysis,
@@ -50,7 +52,6 @@ from tests.serial_peer_reference_support import (
     labelled_serial_reference_netlist,
     multi_uart_connector_reference_netlist,
 )
-from tests.test_electrical import serial_peer_netlist, serial_peer_requirement
 from tests.test_stm32_pin_map import _IOC_FIXTURE
 from tests.test_stm32_pin_map import sample_map as stm32_sample_map
 from tests.test_stm32_pin_map import sample_netlist as stm32_sample_netlist
@@ -152,6 +153,25 @@ def i2c_address_map_lint_report(*, strap_fault: bool) -> dict[str, object]:
         "requirement_sha256": requirement_sha256,
         "report": report.model_dump(mode="json"),
     }
+
+
+def i2c_peer_reference_lint_report(*, split_references: bool) -> dict[str, object]:
+    """Serialize an I2C peer-reference split and common-reference control."""
+    reference_nets = (
+        {"U1": "GND_A", "U2": "GND_B"}
+        if split_references
+        else {"U1": "GND", "U2": "GND"}
+    )
+    observed = i2c_peer_netlist(reference_nets=reference_nets)
+    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    report = evaluate(
+        "synthetic-i2c-peer-split-reference"
+        if split_references
+        else "synthetic-i2c-peer-common-reference",
+        coach(observed, netlist_sha256),
+        DesignLintPolicy(),
+    )
+    return report.model_dump(mode="json")
 
 
 def external_protection_lint_report(*, fault: bool) -> dict[str, object]:
@@ -298,6 +318,8 @@ def report_cases() -> dict[str, object]:
         "i2c_array_contract_control": i2c_array_contract_checks(wrong_sda_channel=False),
         "i2c_address_map_fault": i2c_address_map_lint_report(strap_fault=True),
         "i2c_address_map_control": i2c_address_map_lint_report(strap_fault=False),
+        "i2c_peer_reference_fault": i2c_peer_reference_lint_report(split_references=True),
+        "i2c_peer_reference_control": i2c_peer_reference_lint_report(split_references=False),
         "external_protection_fault": external_protection_lint_report(fault=True),
         "external_protection_control": external_protection_lint_report(fault=False),
         "serial_label_unmapped": serial_label_lint_report(mapped=False),
