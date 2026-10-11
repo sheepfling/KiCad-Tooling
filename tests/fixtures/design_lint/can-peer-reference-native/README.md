@@ -5,8 +5,8 @@ project-board source or project-owned electrical expectations.
 
 | Fixture                       | Purpose                                                                                        | SHA-256                                                            |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `reference-control.kicad_sch` | Three fitted CAN endpoints share exact CANH/CANL nets and a common explicit `GND_A` reference. | `ebd9bddaa27be15635614b76dbf47e1476d02ff75dc0bbf8d06bc69c2b987bcc` |
-| `reference-fault.kicad_sch`   | Same line pair and supplies, with U1/U2 on `GND_A` and a distinct-symbol U3 on `GND_B`.        | `12fc606e4631f4885f2bea51e53ab1ad2a81f4a1f621547a8b869cfa031dd48b` |
+| `reference-control.kicad_sch` | Three fitted CAN endpoints share exact CANH/CANL nets and a common explicit `GND_A` reference. | `ece18cddcf6fb122bcbcd46a7b4792426735146a6a923b62b68642ef0903a96a` |
+| `reference-fault.kicad_sch`   | Same line pair and supplies, with U1/U2 on `GND_A` and a distinct-symbol U3 on `GND_B`.        | `4e636cab9d214f97e68640f1d200df6067d49e83d571ce3e8e117527517103a8` |
 
 U1 and U2 share one exact symbol identity and the same pin assignments, so
 component-peer checks do not cover the split. U3 has a separate exact symbol

@@ -4975,6 +4975,13 @@ is not a reason by itself to expand its scope or change its default policy.
   CLI/MCP parity coverage. Synthetic standalone schematics are registered for
   repeated exports and ERC checks on the digest-pinned KiCad 10.0.0 and 10.0.5
   images; hosted execution remains pending.
+  The `v0.5.0rc63`/`rc64` hosted runs exposed that the synthetic wires attached
+  each label to the opposite vertical pin from the intended pin number. The
+  exported fault was independent of the reference split: all U1–U3 CAN,
+  reference, and supply assignments were reversed. The expected pin map stays
+  tied to the authored pin functions; both synthetic schematics and their
+  source digests are corrected in the next tagged run. Exact native acceptance
+  remains pending until that rerun passes both versions.
 - **Priority:** P1 interface-reference review. Existing CAN peer heuristics
   identify incomplete or divergent CANH/CANL assignments, but do not flag a
   complete shared CANH/CANL pair whose explicit passive or `power_in` return

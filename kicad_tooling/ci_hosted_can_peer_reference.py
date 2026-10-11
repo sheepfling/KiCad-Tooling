@@ -45,8 +45,8 @@ def can_peer_reference_native_fixture_lane(
     cases = ("reference-control", "reference-fault")
     source_hashes = {case: digest(fixture_root / f"{case}.kicad_sch") for case in cases}
     expected_source_hashes = {
-        "reference-control": "ebd9bddaa27be15635614b76dbf47e1476d02ff75dc0bbf8d06bc69c2b987bcc",
-        "reference-fault": "12fc606e4631f4885f2bea51e53ab1ad2a81f4a1f621547a8b869cfa031dd48b",
+        "reference-control": "ece18cddcf6fb122bcbcd46a7b4792426735146a6a923b62b68642ef0903a96a",
+        "reference-fault": "4e636cab9d214f97e68640f1d200df6067d49e83d571ce3e8e117527517103a8",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("CAN peer-reference fixture sources differ from reviewed hashes")
