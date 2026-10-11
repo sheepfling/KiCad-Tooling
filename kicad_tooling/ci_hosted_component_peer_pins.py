@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Literal
 from .hwrepo.contracts import write_model
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 def component_peer_power_output_fixture_lane(

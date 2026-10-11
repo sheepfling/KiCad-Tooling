@@ -18,7 +18,7 @@ from tests.lint_architecture_support import (
     line_count as _line_count,
 )
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 
 def test_hosted_lint_suites_stay_theme_sized() -> None:

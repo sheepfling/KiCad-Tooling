@@ -29,7 +29,7 @@ from tests.lint_architecture_support import (
     line_count as _line_count,
 )
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 PCB_SWITCHING_LOOP_MODULES = (
     "pcb_switching_loop_geometry.py",

@@ -16,7 +16,7 @@ from .hwrepo.models import PcbProtectionPathMap, PcbProtectionPathRequirement
 from .hwrepo.pcb_protection_path import pcb_protection_path_entries
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 def protection_path_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

@@ -13,7 +13,7 @@ from .ci_hosted_power_path_native_evidence import validate_power_path_fixture_ne
 from .ci_hosted_power_path_requirements import power_path_requirement_map
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 def power_path_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

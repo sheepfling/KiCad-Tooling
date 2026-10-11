@@ -16,7 +16,7 @@ from .hwrepo.pcb_track_width import pcb_track_width_entries
 from .hwrepo.pcb_track_width_models import PcbTrackWidthMap, PcbTrackWidthRequirement
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 def track_width_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

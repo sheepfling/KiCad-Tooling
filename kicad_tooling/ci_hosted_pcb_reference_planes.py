@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from .hwrepo.models import ProjectConfig
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 def pcb_reference_plane_via_fixture_lane(

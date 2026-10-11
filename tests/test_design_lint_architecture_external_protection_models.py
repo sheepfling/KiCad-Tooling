@@ -10,7 +10,7 @@ from kicad_tooling.hwrepo import external_protection_models
 from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
 
 EXTERNAL_PROTECTION_MODEL_NAMES = (
     "ExternalProtectionChannelRequirement",

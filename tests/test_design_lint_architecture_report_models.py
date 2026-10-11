@@ -6,7 +6,11 @@ import ast
 from pathlib import Path
 from typing import get_args
 
+import pytest
+
 from kicad_tooling.hwrepo import design_lint_report_models, models
+
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 TOOLING = REPOSITORY / "kicad_tooling"

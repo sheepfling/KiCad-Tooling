@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from .hwrepo.contracts import write_model
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:

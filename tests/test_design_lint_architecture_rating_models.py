@@ -25,6 +25,7 @@ pytestmark = [
     pytest.mark.component_lint,
     pytest.mark.connector_lint,
     pytest.mark.power_lint,
+    pytest.mark.architecture,
 ]
 
 RATING_MODEL_OWNERS = {

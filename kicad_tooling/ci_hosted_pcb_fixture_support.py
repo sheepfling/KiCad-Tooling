@@ -11,7 +11,7 @@ from .hwrepo.models import ProjectConfig
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 class HostedPcbFixtureFailure(RuntimeError):

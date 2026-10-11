@@ -8,7 +8,10 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.design_lint
+import kicad_tooling.ci_hosted as hosted_coordinator
+import kicad_tooling.ci_hosted_support as hosted_support
+
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 COORDINATOR = REPO_ROOT / "kicad_tooling" / "ci_hosted.py"
@@ -194,3 +197,39 @@ def test_large_hosted_fixture_lanes_live_in_bounded_theme_modules(
     assert module_lines < FUNCTION_LIMIT, f"Keep {module_name} bounded: {module_lines} lines"
     assert lane_lines < FUNCTION_LIMIT, f"Keep {lane_name} bounded: {lane_lines} lines"
     assert _lane_lengths()[lane_name] < 100, "Keep the ci_hosted entry point small"
+
+
+def test_hosted_log_support_has_one_owner_and_a_compatible_coordinator_export() -> None:
+    support_path = REPO_ROOT / "kicad_tooling" / "ci_hosted_support.py"
+    coordinator_path = REPO_ROOT / "kicad_tooling" / "ci_hosted.py"
+    support = ast.parse(support_path.read_text(encoding="utf-8"), filename=support_path.name)
+    coordinator = ast.parse(
+        coordinator_path.read_text(encoding="utf-8"), filename=coordinator_path.name
+    )
+    support_classes = {node.name for node in support.body if isinstance(node, ast.ClassDef)}
+    coordinator_imports = {
+        alias.name
+        for node in coordinator.body
+        if isinstance(node, ast.ImportFrom) and node.module == "ci_hosted_support"
+        for alias in node.names
+    }
+    legacy_internal_imports: list[str] = []
+    for source in sorted((REPO_ROOT / "kicad_tooling").rglob("*.py")):
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=source.name)
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module == "ci_hosted"
+                and any(alias.name in {"HostedLog", "HostedCommandError"} for alias in node.names)
+            ):
+                legacy_internal_imports.append(source.relative_to(REPO_ROOT).as_posix())
+
+    assert support_classes == {"HostedCommandError", "HostedLog"}
+    assert coordinator_imports == support_classes
+    assert not legacy_internal_imports, (
+        "Hosted fixture modules should import shared logging support from its owner: "
+        f"{legacy_internal_imports}"
+    )
+
+    assert hosted_coordinator.HostedCommandError is hosted_support.HostedCommandError
+    assert hosted_coordinator.HostedLog is hosted_support.HostedLog

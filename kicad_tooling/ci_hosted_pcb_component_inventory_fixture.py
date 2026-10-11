@@ -21,7 +21,7 @@ from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_
 from .validate import read_netlist
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 def pcb_component_inventory_fixture_lane(

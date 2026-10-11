@@ -16,7 +16,7 @@ from tests.lint_architecture_support import (
     line_count as _line_count,
 )
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 REVIEW_LIMIT = THEME_SUITE_MAX_LINES
 LEGACY_LIMITS_PATH = TESTS / "lint_suite_line_ceilings.json"
@@ -88,6 +88,16 @@ def test_cli_mcp_parity_suites_stay_below_review_limit() -> None:
 
     assert not oversized, f"Split CLI/MCP parity suites by theme below 500 lines: {oversized}"
     assert not (TESTS / "test_mcp_parity.py").exists()
+
+
+def test_architecture_suites_are_selectable_with_the_architecture_marker() -> None:
+    missing = []
+    for path in sorted(TESTS.glob("test_*architecture*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        if "architecture" not in _pytest_marker_names(tree):
+            missing.append(path.name)
+
+    assert not missing, f"Mark architecture suites for focused pytest selection: {missing}"
 
 
 def test_exact_native_fixture_suites_have_selectable_native_markers() -> None:

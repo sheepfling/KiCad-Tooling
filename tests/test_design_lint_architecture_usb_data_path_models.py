@@ -16,7 +16,7 @@ from tests.lint_architecture_support import (
     line_count,
 )
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
 
 USB_DATA_PATH_MODEL_NAMES = (
     "UsbDataSeriesResistorRequirement",

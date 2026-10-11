@@ -22,7 +22,7 @@ from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES
 from tests.lint_architecture_support import line_count as _line_count
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
 
 PROTOCOL_MODEL_OWNERS = {
     "can_termination_models.py": (

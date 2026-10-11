@@ -1,7 +1,7 @@
 {
   "line_limit": 500,
   "ceilings": {
-    "kicad_tooling/ci_hosted.py": 985,
+    "kicad_tooling/ci_hosted.py": 892,
     "kicad_tooling/hwrepo/cad_assets.py": 585,
     "kicad_tooling/hwrepo/cad_library.py": 520,
     "kicad_tooling/hwrepo/contract_coach.py": 613,

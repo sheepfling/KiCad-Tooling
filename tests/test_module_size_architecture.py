@@ -5,7 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from tests.lint_architecture_support import REPO_ROOT, line_count
+
+pytestmark = pytest.mark.architecture
 
 LINE_LIMIT = 500
 CEILINGS_PATH = Path(__file__).with_name("python_module_line_ceilings.json")

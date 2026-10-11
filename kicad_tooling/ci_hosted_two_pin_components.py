@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from .hwrepo.contracts import write_model
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {

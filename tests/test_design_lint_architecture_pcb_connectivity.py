@@ -10,7 +10,7 @@ from kicad_tooling.hwrepo import models as shared_models
 from kicad_tooling.hwrepo import pcb_connectivity_observations, pcb_connectivity_snapshot
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 OBSERVATION_MODEL_NAMES = (
     "PcbAccessProbeObservation",

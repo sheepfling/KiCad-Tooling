@@ -12,7 +12,7 @@ from .hwrepo.evidence import digest
 from .validate import read_netlist
 
 if TYPE_CHECKING:
-    from .ci_hosted import HostedLog
+    from .ci_hosted_support import HostedLog
 
 
 from .hwrepo.connector_contact_rating_models import (

@@ -10,7 +10,7 @@ import pytest
 
 from kicad_tooling.hwrepo import models, spi_peer_reference_models
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.architecture]
 
 ROOT = Path(__file__).resolve().parents[1]
 HWREPO = ROOT / "kicad_tooling" / "hwrepo"

@@ -11,8 +11,6 @@ import json
 import os
 import subprocess
 import sys
-import time
-from datetime import UTC, datetime
 from pathlib import Path
 
 from .ci_hosted_can_peer_assignment import can_peer_assignment_fixture_lane
@@ -66,6 +64,7 @@ from .ci_hosted_serial_peer_reference_bonds import (
 )
 from .ci_hosted_spi_peer_reference_fixtures import spi_peer_reference_native_fixture_lane
 from .ci_hosted_stm32_pin_map import stm32_pin_map_fixture_lane
+from .ci_hosted_support import HostedCommandError, HostedLog
 from .ci_hosted_two_pin_components import (
     TWO_PIN_COMPONENT_FIXTURE_CASES,
     two_pin_component_fixture_lane,
@@ -182,101 +181,6 @@ def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: Ho
 def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Keep the hosted CI import stable while checks live by theme."""
     _run_open_drain_bias_fixture_lane(root, project=project, image=image, log=log)
-
-
-class HostedCommandError(RuntimeError):
-    """A retained child failure whose exit code remains available to the caller."""
-
-    def __init__(self, message: str, returncode: int) -> None:
-        super().__init__(message)
-        self.returncode = returncode
-
-
-class HostedLog:
-    """Small append-only stage journal that survives a failed hosted command."""
-
-    def __init__(self, root: Path, lane: str) -> None:
-        self.directory = root / "build/ci-hosted" / lane
-        self.directory.mkdir(parents=True, exist_ok=True)
-        self.events = self.directory / "events.jsonl"
-        self.event("lane", "START")
-
-    def event(self, stage: str, status: str, **details: str | float) -> None:
-        entry: dict[str, str | float | int] = {
-            "time_utc": datetime.now(UTC).isoformat(),
-            "stage": stage,
-            "status": status,
-            **details,
-        }
-        with self.events.open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps(entry, sort_keys=True) + "\n")
-        suffix = (
-            " " + " ".join(f"{key}={value}" for key, value in details.items()) if details else ""
-        )
-        print(f"hosted-ci: {stage} {status.lower()}{suffix}", file=sys.stderr, flush=True)
-
-    def run(
-        self,
-        stage: str,
-        argv: tuple[str, ...],
-        *,
-        cwd: Path,
-        stdout_path: Path | None = None,
-        env: dict[str, str] | None = None,
-        merge_stderr: bool = False,
-    ) -> Path:
-        """Retain stdout and stderr separately; stream progress to the Actions log."""
-        output = stdout_path or self.directory / f"{stage}.stdout.log"
-        error = self.directory / f"{stage}.stderr.log"
-        output.parent.mkdir(parents=True, exist_ok=True)
-        started = time.monotonic()
-        self.event(stage, "START", command=" ".join(argv))
-        try:
-            with (
-                output.open("w", encoding="utf-8") as stdout,
-                error.open("w", encoding="utf-8") as stderr,
-            ):
-                process = subprocess.Popen(
-                    argv,
-                    cwd=cwd,
-                    stdout=stdout,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    env=env,
-                )
-                assert process.stderr is not None
-                for line in process.stderr:
-                    stderr.write(line)
-                    stderr.flush()
-                    if merge_stderr:
-                        stdout.write(line)
-                        stdout.flush()
-                    sys.stderr.write(line)
-                    sys.stderr.flush()
-                process.stderr.close()
-                code = process.wait()
-        except OSError as exc:
-            self.event(
-                stage, "ERROR", elapsed_seconds=round(time.monotonic() - started, 3), error=str(exc)
-            )
-            raise
-        self.event(
-            stage,
-            "PASS" if code == 0 else "FAIL",
-            elapsed_seconds=round(time.monotonic() - started, 3),
-            exit_code=code,
-        )
-        if code:
-            tail = output.read_text(encoding="utf-8", errors="replace")[-4000:].strip()
-            if tail:
-                print(f"hosted-ci: {stage} stdout tail:\n{tail}", file=sys.stderr)
-            raise HostedCommandError(f"{stage} failed ({code}); inspect {error} and {output}", code)
-        return output
-
-    def finish(self) -> None:
-        self.event("lane", "PASS")
 
 
 def write_action_outputs(values: dict[str, str]) -> None:

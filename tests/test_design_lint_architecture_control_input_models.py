@@ -14,7 +14,7 @@ from tests.lint_architecture_support import (
     line_count,
 )
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint, pytest.mark.architecture]
 
 CONTROL_INPUT_MODEL_NAMES = (
     "ControlInputBiasHeuristicEntry",

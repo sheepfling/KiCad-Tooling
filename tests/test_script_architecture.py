@@ -5,7 +5,11 @@ from __future__ import annotations
 import ast
 import unittest
 
+import pytest
+
 from tests.support import SOURCE_ROOT
+
+pytestmark = pytest.mark.architecture
 
 ROOT = SOURCE_ROOT
 JSON_ADAPTERS = {

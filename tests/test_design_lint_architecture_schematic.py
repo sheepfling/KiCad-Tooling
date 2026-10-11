@@ -13,7 +13,7 @@ from tests.lint_architecture_support import (
     line_count as _line_count,
 )
 
-pytestmark = pytest.mark.design_lint
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 SCHEMATIC_GEOMETRY_MODULES = (
     "schematic_geometry_types.py",
