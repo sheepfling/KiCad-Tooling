@@ -5065,7 +5065,9 @@ is not a reason by itself to expand its scope or change its default policy.
   `REVIEW`, with source-bound `Rs485Analysis` applicability coverage, project
   mode and exact-ignore lifecycle, synthetic fault/control and mapping-order
   regressions, and CLI/MCP parity. A digest-pinned native fixture lane is
-  registered for KiCad 10.0.0 and 10.0.5; hosted acceptance is pending.
+  registered for KiCad 10.0.0 and 10.0.5. Tag `v0.5.0rc77` passed hosted
+  acceptance in Actions run `38138351020`, including the native fixture lane
+  and the installed-wheel check against a separate project checkout.
 - **Priority:** P1 interface-reference review. An authored RS-485 bus map can
   identify connector or transceiver endpoints and their reference pins, while
   native ERC cannot decide whether peers on the same mapped line pair should
@@ -5095,9 +5097,9 @@ is not a reason by itself to expand its scope or change its default policy.
   examples could help estimate how often it prompts review, but need independent
   applicability dispositions. Reviewer effort and field false-prompt rate
   remain unmeasured; no values are inferred.
-- **Next:** Require the registered hosted lane to pass both exact KiCad
-  versions before recording native acceptance. Keep default `REVIEW`; promote
-  only through an independently authored interface or grounding requirement.
+- **Next:** Keep default `REVIEW`; promote only through an independently
+  authored interface or grounding requirement. Reviewer effort and field
+  false-prompt rate remain unmeasured.
 
 ### P2 — PCB geometry and schematic review assistance
 
