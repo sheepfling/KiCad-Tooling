@@ -12,6 +12,7 @@ from pathlib import Path
 LINT_AREAS = frozenset(
     {
         "design_lint",
+        "architecture",
         "schematic_lint",
         "schematic_text_lint",
         "schematic_connectivity_lint",
@@ -39,6 +40,8 @@ class LintGateScope:
 
     @property
     def pytest_markexpr(self) -> str:
+        if self.area in {"design_lint", "architecture"}:
+            return self.area
         return f"design_lint and {self.area}"
 
 

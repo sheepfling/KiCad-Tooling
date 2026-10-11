@@ -116,6 +116,17 @@ def test_lint_tag_areas_are_registered_pytest_markers() -> None:
     assert LINT_AREAS <= markers
 
 
+@pytest.mark.architecture
+def test_architecture_lint_tag_selects_only_architecture_tests() -> None:
+    scope = parse_tag_message("Architecture guardrail\n\nLint-Area: architecture\n", frozenset())
+    assert scope.pytest_markexpr == "architecture"
+
+
+def test_design_lint_parent_tag_does_not_repeat_its_marker() -> None:
+    scope = parse_tag_message("Complete design-lint slice\n\nLint-Area: design_lint\n", frozenset())
+    assert scope.pytest_markexpr == "design_lint"
+
+
 def test_annotated_tag_resolves_scope_and_writes_github_action_files(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
