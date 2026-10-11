@@ -21,14 +21,16 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,
-    Stm32CubeMxPinMap,
-    Stm32PinExclusion,
-    Stm32PinMapCoverageReport,
-    Stm32PinRequirement,
 )
 from kicad_tooling.hwrepo.stm32_pin_map import (
     parse_cubemx_ioc,
     stm32_pin_map_mismatches,
+)
+from kicad_tooling.hwrepo.stm32_pin_map_models import (
+    Stm32CubeMxPinMap,
+    Stm32PinExclusion,
+    Stm32PinMapCoverageReport,
+    Stm32PinRequirement,
 )
 
 pytestmark = [

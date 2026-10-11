@@ -28,7 +28,6 @@ from .models import (
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
     SchematicGeometryCoverage,
-    Stm32PinMapCoverageReport,
 )
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -46,6 +45,7 @@ from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
 from .spi_participants import SpiRosterContext
+from .stm32_pin_map_models import Stm32PinMapCoverageReport
 from .usb_c_ports import UsbCPortRosterContext
 
 

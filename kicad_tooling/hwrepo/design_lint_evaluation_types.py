@@ -45,7 +45,6 @@ from .models import (
     RegulatorFeedbackCoverageReport,
     RepositoryPath,
     SchematicGeometryCoverage,
-    Stm32PinMapCoverageReport,
 )
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -66,6 +65,7 @@ from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
+from .stm32_pin_map_models import Stm32PinMapCoverageReport
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 

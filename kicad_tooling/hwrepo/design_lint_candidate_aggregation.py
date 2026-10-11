@@ -52,7 +52,6 @@ from .models import (
     PcbProtectionPathCoverageReport,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
-    Stm32PinMapCoverageReport,
 )
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -77,6 +76,7 @@ from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
+from .stm32_pin_map_models import Stm32PinMapCoverageReport
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_types import UsbPeerReferenceScan

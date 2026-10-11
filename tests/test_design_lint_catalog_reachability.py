@@ -50,11 +50,11 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
     PcbRfModuleAntennaMap,
-    Stm32PinMapCoverageReport,
 )
 from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
+from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
 from tests.design_lint_fixtures.catalog_reachability import schematic_geometry_rule_ids
 from tests.design_lint_fixtures.catalog_reachability_pcb import (

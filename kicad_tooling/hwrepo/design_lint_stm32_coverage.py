@@ -12,8 +12,6 @@ from .models import (
     ContractCoachReport,
     DesignLintPolicy,
     NetlistContract,
-    Stm32PinMapCoverageReport,
-    Stm32PinMapMismatch,
 )
 from .stm32_pin_map import (
     CubeMxDocument,
@@ -21,6 +19,10 @@ from .stm32_pin_map import (
     stm32_pin_map_mismatches,
     stm32_pin_map_sha256,
     unmapped_stm32_devices,
+)
+from .stm32_pin_map_models import (
+    Stm32PinMapCoverageReport,
+    Stm32PinMapMismatch,
 )
 
 

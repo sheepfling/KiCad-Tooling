@@ -17,7 +17,6 @@ from .models import (
     DesignLintPolicy,
     PcbKeepoutCoverageReport,
     RcFilterCoverageReport,
-    Stm32PinMapCoverageReport,
 )
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport
@@ -26,6 +25,7 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .stm32_pin_map_models import Stm32PinMapCoverageReport
 
 
 @dataclass(frozen=True)

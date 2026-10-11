@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import Stm32PinMapCoverageReport
+from .stm32_pin_map_models import Stm32PinMapCoverageReport
 
 
 def stm32_candidates(

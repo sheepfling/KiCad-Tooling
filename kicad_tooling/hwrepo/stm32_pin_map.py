@@ -12,6 +12,8 @@ from typing import TypeVar
 from .models import (
     ComponentContract,
     NetlistContract,
+)
+from .stm32_pin_map_models import (
     Stm32CubeMxPinMap,
     Stm32PinMapMismatch,
     Stm32UnmappedDevice,

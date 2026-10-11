@@ -26,10 +26,12 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintReport,
     ProjectTestContract,
+    ValidationSummary,
+)
+from kicad_tooling.hwrepo.stm32_pin_map_models import (
     Stm32CubeMxPinMap,
     Stm32PinExclusion,
     Stm32PinRequirement,
-    ValidationSummary,
 )
 from tests.mcp_parity_support import (
     McpParityHarness,

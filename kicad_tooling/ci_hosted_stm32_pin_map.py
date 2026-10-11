@@ -29,6 +29,8 @@ def stm32_pin_map_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
+    )
+    from .hwrepo.stm32_pin_map_models import (
         Stm32CubeMxPinMap,
         Stm32PinExclusion,
         Stm32PinRequirement,
