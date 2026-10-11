@@ -14,9 +14,11 @@ from kicad_tooling.hwrepo.design_lint import (
 )
 from kicad_tooling.hwrepo.design_lint_peer_candidates import DigitalPeerVoltageLintContext
 from kicad_tooling.hwrepo.models import (
+    ComponentContract,
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
+    NetlistContract,
 )
 from tests.design_lint_fixtures import (
     coach,
@@ -34,6 +36,51 @@ pytestmark = [
 
 
 class DesignLintPeerVoltageTests(unittest.TestCase):
+    def test_gpio_to_regulator_enable_is_outside_protocol_peer_voltage_rules(self) -> None:
+        observed = NetlistContract(
+            components={
+                "U1": ComponentContract(value="Synthetic MCU", footprint="Package:MCU"),
+                "U2": ComponentContract(value="Synthetic regulator", footprint="Package:LDO"),
+            },
+            nets={
+                "+3V3": ("U1.2",),
+                "+5V": ("U2.2",),
+                "GND": ("U1.3", "U2.3"),
+                "REGULATOR_ENABLE": ("U1.1", "U2.1"),
+            },
+            component_symbols={"U1": "Synthetic:MCU", "U2": "Synthetic:Regulator"},
+            component_pin_numbers={"U1": ("1", "2", "3"), "U2": ("1", "2", "3")},
+            pin_functions={
+                "U1.1": "GPIO0",
+                "U1.2": "VDD",
+                "U1.3": "GND",
+                "U2.1": "EN",
+                "U2.2": "VIN",
+                "U2.3": "GND",
+            },
+            pin_electrical_types={
+                "U1.1": "output",
+                "U1.2": "power_in",
+                "U1.3": "power_in",
+                "U2.1": "input",
+                "U2.2": "power_in",
+                "U2.3": "power_in",
+            },
+        )
+        report = evaluate(
+            "synthetic-gpio-regulator-enable-boundary",
+            coach(observed),
+            DesignLintPolicy(),
+        )
+
+        protocol_rules = {"bus.spi_peer_voltage_review", "bus.serial_peer_voltage_review"}
+        self.assertFalse(protocol_rules.intersection(item.rule_id for item in report.findings))
+        coverage = {item.rule_id: item for item in report.digital_peer_voltage_coverage}
+        self.assertEqual(set(coverage), protocol_rules)
+        for item in coverage.values():
+            self.assertEqual(item.status, "NO_SUPPORTED_ENDPOINTS")
+            self.assertEqual(item.recognized_endpoint_count, 0)
+
     def test_spi_peer_voltage_prompt_requires_unambiguous_native_evidence(self) -> None:
         source = spi_peer_voltage_netlist()
         findings = [
