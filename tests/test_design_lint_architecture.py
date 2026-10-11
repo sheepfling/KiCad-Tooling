@@ -123,7 +123,9 @@ POWER_INPUT_THEME_SUITES = (
     "test_power_input_policy.py",
 )
 DIGITAL_PEER_FIXTURE_THEME_SUITES = (
-    "test_ci_hosted_digital_peers.py",
+    "test_ci_hosted_digital_peer_spi.py",
+    "test_ci_hosted_digital_peer_serial.py",
+    "test_ci_hosted_component_peer_power.py",
     "test_digital_peer_spi_voltage_fixture_lane.py",
     "test_digital_peer_serial_voltage_fixture_lane.py",
     "test_digital_peer_serial_reference_fixture_lane.py",

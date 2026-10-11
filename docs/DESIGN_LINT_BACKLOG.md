@@ -217,11 +217,12 @@ intended requirement.
   small coordinator, and separate return, power, grounding, peer-pin, off-board,
   mapped-interface, and receipt modules. The digital-peer fixture lane is split
   across SPI participant and roster checks, SPI voltage cases, serial voltage
-  and reference checks, and component power-pin cases. Its hosted-lane
+  and reference checks, and component power-pin cases. Its synthetic lane
   regressions use separate pytest modules for SPI voltage, serial voltage,
-  serial reference, and component power; a session-scoped synthetic runner
-  shares the mocked export across those result checks, with netlist builders in
-  bounded theme modules. Switching-loop fixture
+  serial reference, and component power. Digest-pinned acceptance is also split
+  into SPI, serial/reference, and component-power pytest suites; one
+  session-scoped fixture runs both native project toolchains and shares their
+  result records across theme-specific assertions. Switching-loop fixture
   setup and native geometry checks now live in separate modules with a small
   coordinator. PCB return-path fixtures separate setup, per-case evaluation,
   and specialized via, copper-plane, net-tie, isolation, and zone-island
@@ -2835,9 +2836,9 @@ is not a reason by itself to expand its scope or change its default policy.
   mismatched/missing channel labels; a third connected component; DNP and
   incomplete inventories; shield/chassis reference exclusion; deterministic
   reordering and hash-seed runs; project rule override and exact-ignore lifecycle;
-  and CLI/MCP parity pass locally. The
-  `tests/test_ci_hosted_digital_peers.py::NativeDigitalPeerFixtureTests` lane
-  passed on digest-pinned KiCad 10.0.0 and 10.0.5 on 2026-10-07. It exported
+  and CLI/MCP parity pass locally. The serial-reference pytest suite
+  `tests/test_ci_hosted_digital_peer_serial.py` exercises this lane on
+  digest-pinned KiCad 10.0.0 and 10.0.5. The hosted run on 2026-10-07 exported
   both synthetic label schematics twice per version; the common-reference
   control had no `bus.serial_peer_reference_review` finding, and the split-
   reference fault had that one target finding. Normalized typed-netlist hashes

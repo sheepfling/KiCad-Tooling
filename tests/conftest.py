@@ -14,7 +14,10 @@ from kicad_tooling.hwrepo.schematic_geometry import (
 )
 from tests.hosted_ci_support import copy_reference_checkout
 
-pytest_plugins = ("tests.digital_peer_voltage_lane_support",)
+pytest_plugins = (
+    "tests.digital_peer_voltage_lane_support",
+    "tests.digital_peer_native_acceptance",
+)
 
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -103,7 +106,7 @@ _LINT_AREA_MODULES = {
             "tests/test_peer_bidirectional_pin.py",
             "tests/test_peer_component_pin_identity.py",
             "tests/test_peer_component_pin_coverage.py",
-            "tests/test_ci_hosted_digital_peers.py",
+            "tests/test_ci_hosted_component_peer_power.py",
             "tests/test_led_output_heuristics.py",
             "tests/test_led_rail_native_fixture_lane.py",
             "tests/test_open_drain_bias_fixture_lane.py",
@@ -144,7 +147,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_return_fixture_lane.py",
             "tests/test_design_lint_determinism_interfaces.py",
             "tests/test_native_connector_return_lint.py",
-            "tests/test_ci_hosted_digital_peers.py",
+            "tests/test_ci_hosted_digital_peer_serial.py",
             "tests/test_serial_participants.py",
             "tests/test_serial_participant_net_labels.py",
             "tests/test_serial_peer_reference_review.py",
@@ -189,7 +192,9 @@ _LINT_AREA_MODULES = {
             "tests/test_digital_peer_spi_voltage_fixture_lane.py",
             "tests/test_digital_peer_serial_voltage_fixture_lane.py",
             "tests/test_digital_peer_serial_reference_fixture_lane.py",
-            "tests/test_ci_hosted_digital_peers.py",
+            "tests/test_ci_hosted_digital_peer_spi.py",
+            "tests/test_ci_hosted_digital_peer_serial.py",
+            "tests/test_ci_hosted_component_peer_power.py",
             "tests/test_digital_peer_voltages.py",
             "tests/test_i2c_address_coverage.py",
             "tests/test_i2c_address_collisions.py",
@@ -245,7 +250,7 @@ _LINT_AREA_MODULES = {
             "tests/test_peer_power_assignment_part_id_groups.py",
             "tests/test_peer_power_assignment_cli_mcp.py",
             "tests/test_peer_power_assignment_native.py",
-            "tests/test_ci_hosted_digital_peers.py",
+            "tests/test_ci_hosted_component_peer_power.py",
             "tests/test_net_dc_reference_native_fixture_lane.py",
             "tests/test_design_lint_determinism_interfaces.py",
             "tests/test_design_lint_determinism_regulator.py",
@@ -332,7 +337,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_return_distribution.py",
             "tests/test_connector_return_fixture_lane.py",
             "tests/test_ci_hosted_pcb_fixture_schedule.py",
-            "tests/test_ci_hosted_digital_peers.py",
+            "tests/test_ci_hosted_digital_peer_serial.py",
             "tests/test_native_connector_return_lint.py",
             "tests/test_design_lint_determinism_pcb_protection.py",
             "tests/test_pcb_decoupling_native_fixture_lane.py",

@@ -75,6 +75,12 @@ python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_electrical_spi_contracts.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_electrical_serial_contracts.py
+KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
+  -m "design_lint and interface_lint and native_kicad" \
+  tests/test_ci_hosted_digital_peer_spi.py tests/test_ci_hosted_digital_peer_serial.py
+KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
+  -m "design_lint and component_lint and power_lint and native_kicad" \
+  tests/test_ci_hosted_component_peer_power.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_external_protection_contract.py tests/test_external_protection_review.py
 python -I -B -m pytest -q -m "design_lint and power_lint" \
