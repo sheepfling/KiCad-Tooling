@@ -315,4 +315,51 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                 f"reference nets {references}{incomplete}: {entry.disposition}"
             )
         lines.append(f"    Native netlist SHA-256: {can_peer_coverage.netlist_sha256}")
+    rs485_peer_coverage = report.rs485_peer_reference_coverage
+    if rs485_peer_coverage is not None:
+        lines.append("RS-485 peer-reference heuristic coverage:")
+        lines.append(
+            f"  {rs485_peer_coverage.rule_id}: {rs485_peer_coverage.status} "
+            f"(mode: {rs485_peer_coverage.mode}; "
+            f"{rs485_peer_coverage.recognized_endpoint_count} mapped endpoint(s), "
+            f"{rs485_peer_coverage.shared_pair_count} shared pair group(s), "
+            f"{rs485_peer_coverage.common_reference_pair_count} common-reference, "
+            f"{rs485_peer_coverage.incomplete_reference_pair_count} incomplete, "
+            f"{rs485_peer_coverage.split_reference_pair_count} split-reference "
+            f"({rs485_peer_coverage.candidate_group_count} review candidate(s))"
+        )
+        status_explanation = {
+            "NOT_CONFIGURED": "No project-authored RS-485 topology map is configured.",
+            "PENDING": "The project marks RS-485 topology review as pending.",
+            "NOT_APPLICABLE": "The project records RS-485 topology as not applicable.",
+            "NO_SHARED_ENDPOINTS": (
+                "No mapped fitted endpoints share one exact native RS-485 line pair."
+            ),
+            "INCOMPLETE": (
+                "At least one shared pair lacks complete explicit reference-pin evidence."
+            ),
+            "EVALUATED": (
+                "Every mapped fitted endpoint group has complete explicit reference-pin evidence."
+            ),
+        }[rs485_peer_coverage.status]
+        lines.append(f"    Applicability: {status_explanation}")
+        if rs485_peer_coverage.authored_map_path is not None:
+            lines.append(
+                f"    Authored RS-485 map: {rs485_peer_coverage.authored_map_path} "
+                f"(SHA-256 {rs485_peer_coverage.authored_map_source_sha256})"
+            )
+        for entry in rs485_peer_coverage.entries:
+            participants = ", ".join(entry.participants)
+            references = ", ".join(entry.reference_nets) or "none recognized"
+            incomplete = (
+                f"; incomplete: {', '.join(entry.incomplete_references)}"
+                if entry.incomplete_references
+                else ""
+            )
+            lines.append(
+                f"    Bus {entry.bus_id} pair {entry.pair_id} "
+                f"({entry.line_1_net} / {entry.line_2_net}): {participants}; "
+                f"reference nets {references}{incomplete}: {entry.disposition}"
+            )
+        lines.append(f"    Native netlist SHA-256: {rs485_peer_coverage.netlist_sha256}")
     return lines

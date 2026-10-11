@@ -59,6 +59,8 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
+from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
@@ -98,6 +100,7 @@ class DesignLintEvaluationRequest:
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None
     digital_peer_voltage_context: DigitalPeerVoltageLintContext | None = None
     serial_peer_roster: SerialPeerRosterContext | None = None
+    rs485_peer_reference_context: Rs485PeerReferenceContext | None = None
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None
@@ -167,6 +170,7 @@ class DesignLintEvaluationCandidates:
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
     spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None
     can_peer_reference_coverage: CanPeerReferenceCoverageReport | None
+    rs485_peer_reference_coverage: Rs485PeerReferenceCoverageReport | None
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...]
 
 
@@ -220,5 +224,6 @@ class DesignLintEvaluationReportInput:
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
     spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None
     can_peer_reference_coverage: CanPeerReferenceCoverageReport | None
+    rs485_peer_reference_coverage: Rs485PeerReferenceCoverageReport | None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None

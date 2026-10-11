@@ -1585,6 +1585,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_peer_reference_scan.py#scan_can_peer_references"
     },
     {
+      "rule_id": "bus.rs485_peer_reference_review",
+      "title": "Mapped RS-485 peers on one pair use different explicit reference nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored Rs485Analysis pin map plus KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For fitted mapped RS-485 endpoints whose exact symbol, footprint, and line-pin assignments match one authored pair, emit a REVIEW candidate when explicit mapped reference pins occupy multiple native nets; retain a known split when another mapped endpoint has incomplete reference evidence.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes; project source version is verified before comparison"
+      ],
+      "limitations": [
+        "A split reference is a review cue only; the rule does not require common grounding, decide whether an interface is isolated, or prove that a bond is present.",
+        "Applicability comes only from a project-authored RS-485 topology map. The rule does not infer bus membership or reference pins from net names, component names, or pin-function text.",
+        "DNP endpoints, stale symbol or footprint identity, line-pin map mismatches, multiple reference nets on one endpoint, and unshared native pairs do not provide positive split-reference evidence.",
+        "The result covers schematic net assignments only. It does not prove termination, transceiver behavior, PCB copper continuity, off-board wiring, physical bonding, or electrical suitability."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_peer_reference_review.test_shared_mapped_pair_with_split_references_emits_exact_review",
+        "tests.test_rs485_peer_reference_review.test_partial_split_survives_missing_reference_assignment",
+        "tests.test_rs485_peer_reference_review.test_native_fault_and_control_maps_differ_only_at_the_j3_reference",
+        "tests.test_rs485_peer_reference_native_fixture_lane.test_native_rs485_peer_reference_fault_and_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_peer_reference_review.test_common_references_and_unshared_native_pairs_are_controls",
+        "tests.test_rs485_peer_reference_review.test_absent_map_dnp_and_no_reference_map_remain_visible_without_guessing",
+        "tests.test_rs485_peer_reference_review.test_native_fault_and_control_maps_differ_only_at_the_j3_reference",
+        "tests.test_rs485_peer_reference_native_fixture_lane.test_native_rs485_peer_reference_fault_and_control"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_rs485_peer_reference_review.test_exact_component_peer_duplicate_suppression_and_review_policy",
+        "tests.test_rs485_peer_reference_review.test_source_and_mapping_order_preserve_the_candidate_fingerprint"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_peer_reference_scan.py#scan_rs485_peer_references",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_peer_reference_candidates",
+        "kicad_tooling/hwrepo/rs485_peer_reference_coverage.py#rs485_peer_reference_coverage"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_peer_reference_scan.py#scan_rs485_peer_references"
+    },
+    {
       "rule_id": "bus.complementary_pair_assignment",
       "title": "Complementary signal pair has incomplete net assignment",
       "status": "active",

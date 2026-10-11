@@ -57,6 +57,7 @@ def assemble_design_lint_report(
     i2c_peer_reference_coverage = context.i2c_peer_reference_coverage
     spi_peer_reference_coverage = context.spi_peer_reference_coverage
     can_peer_reference_coverage = context.can_peer_reference_coverage
+    rs485_peer_reference_coverage = context.rs485_peer_reference_coverage
     control_input_bias_coverage = context.control_input_bias_coverage
     i2c_pullup_heuristic_coverage = context.i2c_pullup_heuristic_coverage
 
@@ -373,6 +374,7 @@ def assemble_design_lint_report(
         i2c_peer_reference_coverage=i2c_peer_reference_coverage,
         spi_peer_reference_coverage=spi_peer_reference_coverage,
         can_peer_reference_coverage=can_peer_reference_coverage,
+        rs485_peer_reference_coverage=rs485_peer_reference_coverage,
         connector_peer_pin_coverage=connector_peer_pin_coverage,
         component_peer_pin_coverage=component_peer_pin_coverage,
         connector_coverage=connector_coverage,

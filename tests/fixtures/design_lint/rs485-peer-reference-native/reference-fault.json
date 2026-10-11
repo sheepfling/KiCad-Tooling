@@ -1,0 +1,148 @@
+{
+  "mode": "required",
+  "basis": "Synthetic mapped RS-485 connector peers with one explicit reference net",
+  "buses": [
+    {
+      "id": "field-bus",
+      "basis": "Synthetic tooling-only RS-485 bus",
+      "topology": "two_wire_half_duplex",
+      "pairs": [
+        {
+          "id": "pair-a",
+          "basis": "Synthetic A/B differential pair",
+          "purpose": "bidirectional",
+          "line_1_net": "RS485_A",
+          "line_2_net": "RS485_B",
+          "terminations": [
+            {
+              "id": "termination-not-required",
+              "basis": "Reference fixture does not model termination",
+              "topology": "not_required"
+            }
+          ],
+          "bias": {
+            "mode": "not_required",
+            "basis": "Reference fixture does not model bias",
+            "reason": "The native fixture isolates peer-reference mapping."
+          }
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "endpoint-j1",
+          "kind": "connector",
+          "reference": "J1",
+          "symbol": "Synthetic:Rs485_Endpoint",
+          "footprint": "Synthetic:3PinHeader",
+          "pins": [
+            {
+              "role": "bus_line_1",
+              "pin": "J1.1",
+              "net": "RS485_A",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "bus_line_2",
+              "pin": "J1.2",
+              "net": "RS485_B",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "reference",
+              "pin": "J1.3",
+              "net": "GND_A"
+            }
+          ]
+        },
+        {
+          "id": "endpoint-j2",
+          "kind": "connector",
+          "reference": "J2",
+          "symbol": "Synthetic:Rs485_Endpoint",
+          "footprint": "Synthetic:3PinHeader",
+          "pins": [
+            {
+              "role": "bus_line_1",
+              "pin": "J2.1",
+              "net": "RS485_A",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "bus_line_2",
+              "pin": "J2.2",
+              "net": "RS485_B",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "reference",
+              "pin": "J2.3",
+              "net": "GND_A"
+            }
+          ]
+        },
+        {
+          "id": "endpoint-j3",
+          "kind": "connector",
+          "reference": "J3",
+          "symbol": "Synthetic:Rs485_Endpoint",
+          "footprint": "Synthetic:3PinHeader",
+          "pins": [
+            {
+              "role": "bus_line_1",
+              "pin": "J3.1",
+              "net": "RS485_A",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "bus_line_2",
+              "pin": "J3.2",
+              "net": "RS485_B",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "reference",
+              "pin": "J3.3",
+              "net": "GND_B"
+            }
+          ]
+        },
+        {
+          "id": "endpoint-u1",
+          "kind": "transceiver",
+          "reference": "U1",
+          "symbol": "Synthetic:Rs485_Transceiver",
+          "footprint": "Synthetic:SOIC",
+          "pins": [
+            {
+              "role": "bus_line_1",
+              "pin": "U1.1",
+              "net": "RS485_A",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "bus_line_2",
+              "pin": "U1.2",
+              "net": "RS485_B",
+              "pair_id": "pair-a"
+            },
+            {
+              "role": "driver_input",
+              "pin": "U1.3",
+              "net": "TX_U1"
+            },
+            {
+              "role": "receiver_output",
+              "pin": "U1.4",
+              "net": "RX_U1"
+            },
+            {
+              "role": "reference",
+              "pin": "U1.5",
+              "net": "GND_A"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

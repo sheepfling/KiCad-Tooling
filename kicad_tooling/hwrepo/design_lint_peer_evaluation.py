@@ -31,6 +31,8 @@ from .models import (
     Digest,
     NetlistContract,
 )
+from .rs485_peer_reference_scan import scan_rs485_peer_references
+from .rs485_peer_reference_types import Rs485PeerReferenceContext, Rs485PeerReferenceScan
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .serial_peer_reference_scan import scan_serial_peer_reference_reviews
@@ -59,6 +61,7 @@ class PeerDesignLintEvidence:
     spi_peer_reference_scan: SpiPeerReferenceScan
     can_peer_reference_scan: CanPeerReferenceScan
     can_peer_reference_coverage: CanPeerReferenceCoverageReport | None
+    rs485_peer_reference_scan: Rs485PeerReferenceScan
 
 
 def scan_peer_design_lint_evidence(
@@ -68,6 +71,7 @@ def scan_peer_design_lint_evidence(
     connector_coverage: ConnectorCoverageReport | None,
     digital_peer_voltage_context: DigitalPeerVoltageLintContext | None,
     serial_peer_roster: SerialPeerRosterContext | None,
+    rs485_peer_reference_context: Rs485PeerReferenceContext | None,
     usb_data_path_map: UsbDataPathMap | None,
     default_modes: Mapping[DesignLintRuleId, Literal["review", "block", "off"]],
     overrides: Mapping[str, DesignLintRuleOverride],
@@ -134,6 +138,8 @@ def scan_peer_design_lint_evidence(
     i2c_scan = scan_i2c_peer_references(observed)
     spi_scan = scan_spi_peer_references(observed)
     can_scan = scan_can_peer_references(observed)
+    rs485_scope = rs485_peer_reference_context or Rs485PeerReferenceContext(state="not_configured")
+    rs485_scan = scan_rs485_peer_references(rs485_scope, observed)
     i2c_coverage = (
         None
         if netlist_sha256 is None
@@ -168,4 +174,5 @@ def scan_peer_design_lint_evidence(
         spi_peer_reference_scan=spi_scan,
         can_peer_reference_scan=can_scan,
         can_peer_reference_coverage=can_coverage,
+        rs485_peer_reference_scan=rs485_scan,
     )

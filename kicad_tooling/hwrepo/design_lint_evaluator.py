@@ -42,6 +42,7 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
 from .spi_participants import SpiRosterContext
@@ -74,6 +75,7 @@ def evaluate(
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None,
     digital_peer_voltage_context: DigitalPeerVoltageLintContext | None = None,
     serial_peer_roster: SerialPeerRosterContext | None = None,
+    rs485_peer_reference_context: Rs485PeerReferenceContext | None = None,
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
@@ -106,6 +108,7 @@ def evaluate(
         i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
         digital_peer_voltage_context=digital_peer_voltage_context,
         serial_peer_roster=serial_peer_roster,
+        rs485_peer_reference_context=rs485_peer_reference_context,
         pcb_signal_path_coverage=pcb_signal_path_coverage,
         pcb_keepout_coverage=pcb_keepout_coverage,
         pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,

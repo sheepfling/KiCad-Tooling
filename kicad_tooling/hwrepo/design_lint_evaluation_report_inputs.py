@@ -59,6 +59,7 @@ def evaluation_report_input(
         i2c_peer_reference_coverage=candidates.i2c_peer_reference_coverage,
         spi_peer_reference_coverage=candidates.spi_peer_reference_coverage,
         can_peer_reference_coverage=candidates.can_peer_reference_coverage,
+        rs485_peer_reference_coverage=candidates.rs485_peer_reference_coverage,
         control_input_bias_coverage=coverage.control_input_bias,
         i2c_pullup_heuristic_coverage=coverage.i2c_pullup_heuristic,
     )

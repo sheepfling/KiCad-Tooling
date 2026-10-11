@@ -19,6 +19,7 @@ from .design_lint_pcb_geometry_scan import scan_pcb_geometry
 from .design_lint_project_contexts import (
     control_input_bias_coverage_from_project,
     i2c_pullup_coverage_from_project,
+    rs485_peer_reference_context,
     serial_peer_roster_context,
     spi_roster_context,
     usb_c_port_roster_context,
@@ -76,6 +77,7 @@ def inspect_design_lint_summary(
             raise ValueError("Declared source changed while reading design-lint policy")
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)
+        rs485_peer_context = rs485_peer_reference_context(root, config)
         digital_peer_voltage_context = build_digital_peer_voltage_context(root, config)
         usb_c_port_roster = usb_c_port_roster_context(root, config)
         geometry_scan, geometry_coverage = scan_schematic_geometry(root, config, coach, policy)
@@ -192,6 +194,7 @@ def inspect_design_lint_summary(
             stm32_pin_map_coverage=stm32_pin_map_coverage,
             spi_roster=spi_roster,
             serial_peer_roster=serial_peer_roster,
+            rs485_peer_reference_context=rs485_peer_context,
             usb_c_port_roster=usb_c_port_roster,
             control_input_bias_coverage=control_bias_coverage,
             i2c_pullup_heuristic_coverage=i2c_pullup_coverage,
@@ -225,6 +228,11 @@ def inspect_design_lint_summary(
                 serial_peer_roster.source_path is not None
                 and digest(repo_path(root, serial_peer_roster.source_path))
                 != serial_peer_roster.source_sha256
+            )
+            or (
+                rs485_peer_context.source_path is not None
+                and digest(repo_path(root, rs485_peer_context.source_path))
+                != rs485_peer_context.source_sha256
             )
             or (
                 digital_peer_voltage_context.source_path is not None

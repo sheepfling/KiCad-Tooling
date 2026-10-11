@@ -28,6 +28,8 @@ from .models import (
     NetlistContract,
     UsbCAnalysis,
 )
+from .rs485_models import Rs485Analysis
+from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_models import SerialPeerAnalysis
 from .spi_models import SpiAnalysis
@@ -80,6 +82,37 @@ def serial_peer_roster_context(root: Path, config: ProjectConfig) -> SerialPeerR
         state = mode if mode in {"pending", "not_applicable"} else "not_configured"
         analysis = None
     return SerialPeerRosterContext(
+        state=state,
+        analysis=analysis,
+        source_path=relative_path,
+        source_sha256=expected_digest,
+    )
+
+
+def rs485_peer_reference_context(root: Path, config: ProjectConfig) -> Rs485PeerReferenceContext:
+    """Load the authored RS-485 map and bind it to the exact contract source."""
+    if config.electrical is None:
+        return Rs485PeerReferenceContext(state="not_configured")
+    path = repo_path(root, config.electrical)
+    relative_path = path.relative_to(root).as_posix()
+    expected_digest = digest(path)
+    contract = load_analysis(root, config)
+    if digest(path) != expected_digest:
+        raise ValueError("Electrical contract changed during RS-485 peer inspection")
+    section = None if contract is None else contract.rs485
+    if isinstance(section, Rs485Analysis):
+        state = "required"
+        analysis = section
+    elif isinstance(section, AnalysisPending):
+        state = "pending"
+        analysis = None
+    elif isinstance(section, AnalysisNotApplicable):
+        state = "not_applicable"
+        analysis = None
+    else:
+        state = "not_configured"
+        analysis = None
+    return Rs485PeerReferenceContext(
         state=state,
         analysis=analysis,
         source_path=relative_path,

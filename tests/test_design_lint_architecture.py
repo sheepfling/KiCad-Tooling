@@ -58,6 +58,7 @@ THEME_OWNER_PREFIXES = {
         "external_protection",
         "i2c_",
         "open_drain_",
+        "rs485_",
         "serial_",
         "spi_",
         "usb_",

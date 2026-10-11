@@ -69,6 +69,7 @@ from .pcb_switching_loop_models import (
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
+from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .schematic_geometry import (
     SchematicGeometryScan,
 )
@@ -135,6 +136,7 @@ def candidates(
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
     spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
     can_peer_reference_scan: CanPeerReferenceScan | None = None,
+    rs485_peer_reference_scan: Rs485PeerReferenceScan | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -189,6 +191,7 @@ def candidates(
             i2c_peer_reference_scan=i2c_peer_reference_scan,
             spi_peer_reference_scan=spi_peer_reference_scan,
             can_peer_reference_scan=can_peer_reference_scan,
+            rs485_peer_reference_scan=rs485_peer_reference_scan,
             component_peer_findings=component_peer_findings,
             pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
         )

@@ -5059,6 +5059,46 @@ is not a reason by itself to expand its scope or change its default policy.
   versions before claiming native acceptance. Keep default `REVIEW`; promote
   only through an independently authored interface or grounding requirement.
 
+#### LINT-106 — Mapped RS-485 endpoints share a pair but use split references
+
+- **Status:** Implemented as `bus.rs485_peer_reference_review`, defaulting to
+  `REVIEW`, with source-bound `Rs485Analysis` applicability coverage, project
+  mode and exact-ignore lifecycle, synthetic fault/control and mapping-order
+  regressions, and CLI/MCP parity. A digest-pinned native fixture lane is
+  registered for KiCad 10.0.0 and 10.0.5; hosted acceptance is pending.
+- **Priority:** P1 interface-reference review. An authored RS-485 bus map can
+  identify connector or transceiver endpoints and their reference pins, while
+  native ERC cannot decide whether peers on the same mapped line pair should
+  share, bond, or isolate their reference domains.
+- **Predicate:** For fitted endpoints whose exact symbol, footprint, and
+  mapped line-pin assignments match one authored RS-485 pair, group only that
+  exact native pair. Emit one grouped review when explicit mapped reference
+  pins occupy multiple native nets. Preserve a known split if another mapped
+  endpoint has incomplete reference evidence. Skip DNP, stale identities,
+  line-map mismatches, unshared pairs, and endpoints without mapped reference
+  pins.
+- **Boundary:** This is a deterministic review heuristic. It does not require
+  a common return, infer bus membership or pin roles from names, decide whether
+  an interface is isolated, establish a bond, or prove PCB copper or off-board
+  continuity. A project-authored contract remains the authority for common,
+  bonded, or isolated topology.
+- **Fixtures and verification:** Tooling-owned synthetic schematic/map pairs
+  differ only at J3.3: the control keeps the mapped transceiver and all three
+  connectors on `GND_A`; the fault puts J3.3 on `GND_B` while every endpoint
+  shares the exact `RS485_A`/`RS485_B` pair. Synthetic tests also cover common
+  references, unshared pairs, DNP, missing references, partial splits,
+  duplicate suppression, rule mode/ignore behavior, stable findings, and
+  source-bound coverage. See the
+  [fixture notes](../tests/fixtures/design_lint/rs485-peer-reference-native/README.md).
+- **Applicability evidence:** Additional board projects are not needed to
+  define or regression-test this bounded predicate. Public nonconfidential
+  examples could help estimate how often it prompts review, but need independent
+  applicability dispositions. Reviewer effort and field false-prompt rate
+  remain unmeasured; no values are inferred.
+- **Next:** Require the registered hosted lane to pass both exact KiCad
+  versions before recording native acceptance. Keep default `REVIEW`; promote
+  only through an independently authored interface or grounding requirement.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

@@ -41,6 +41,7 @@ from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
 from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
@@ -72,6 +73,7 @@ class DesignLintReport(StrictModel):
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None = None
     spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None = None
     can_peer_reference_coverage: CanPeerReferenceCoverageReport | None = None
+    rs485_peer_reference_coverage: Rs485PeerReferenceCoverageReport | None = None
     connector_peer_pin_coverage: ConnectorPeerPinHeuristicCoverage | None = None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage = Field(
         default_factory=ControlInputBiasHeuristicCoverage
@@ -247,6 +249,15 @@ class DesignLintReport(StrictModel):
             expected_groups = sum(finding.rule_id == item.rule_id for finding in self.findings)
             if item.candidate_group_count != expected_groups:
                 raise ValueError("CAN peer-reference candidate counts must match report findings")
+        if self.rs485_peer_reference_coverage is not None:
+            item = self.rs485_peer_reference_coverage
+            if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:
+                raise ValueError("RS-485 peer-reference coverage must use this report's netlist")
+            expected_groups = sum(finding.rule_id == item.rule_id for finding in self.findings)
+            if item.candidate_group_count != expected_groups:
+                raise ValueError(
+                    "RS-485 peer-reference candidate counts must match report findings"
+                )
         if self.connector_peer_pin_coverage is not None:
             item = self.connector_peer_pin_coverage
             if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:

@@ -21,6 +21,7 @@ from .design_lint_peer_coverage import (
     i2c_peer_reference_coverage,
 )
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
+from .rs485_peer_reference_coverage import rs485_peer_reference_coverage
 from .spi_peer_reference_coverage import spi_peer_reference_coverage
 
 
@@ -41,6 +42,7 @@ def scan_evaluation_candidates(
         connector_coverage=request.connector_coverage,
         digital_peer_voltage_context=request.digital_peer_voltage_context,
         serial_peer_roster=request.serial_peer_roster,
+        rs485_peer_reference_context=request.rs485_peer_reference_context,
         usb_data_path_map=policy.usb_data_path_map,
         default_modes=prepared.default_modes,
         overrides=prepared.overrides,
@@ -87,11 +89,13 @@ def scan_evaluation_candidates(
         i2c_peer_reference_scan=peer_evidence.i2c_peer_reference_scan,
         spi_peer_reference_scan=peer_evidence.spi_peer_reference_scan,
         can_peer_reference_scan=peer_evidence.can_peer_reference_scan,
+        rs485_peer_reference_scan=peer_evidence.rs485_peer_reference_scan,
         peer_pin_assignment_scans=peer_evidence.peer_pin_assignment_scans,
     )
     i2c_peer_coverage = None
     spi_peer_coverage = None
     can_peer_coverage = None
+    rs485_peer_coverage = None
     if coach.netlist_sha256 is not None:
         i2c_candidate_bus_keys = frozenset(
             (
@@ -134,6 +138,21 @@ def scan_evaluation_candidates(
             prepared.overrides,
             coach.netlist_sha256,
             candidate_bus_keys=can_candidate_bus_keys,
+        )
+        rs485_candidate_keys = frozenset(
+            (
+                item.evidence["bus"][0].casefold(),
+                item.evidence["pair"][0].casefold(),
+            )
+            for item in items
+            if item.rule_id == "bus.rs485_peer_reference_review"
+        )
+        rs485_peer_coverage = rs485_peer_reference_coverage(
+            peer_evidence.rs485_peer_reference_scan,
+            prepared.default_modes,
+            prepared.overrides,
+            coach.netlist_sha256,
+            candidate_keys=rs485_candidate_keys,
         )
     connector_peer_pin_coverage = (
         None
@@ -186,6 +205,7 @@ def scan_evaluation_candidates(
         i2c_peer_reference_coverage=i2c_peer_coverage,
         spi_peer_reference_coverage=spi_peer_coverage,
         can_peer_reference_coverage=can_peer_coverage,
+        rs485_peer_reference_coverage=rs485_peer_coverage,
         mapped_check_runs=mapped_topology_coverage_runs(
             policy, prepared.default_modes, items, coach.netlist_sha256
         ),
