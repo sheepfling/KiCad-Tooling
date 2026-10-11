@@ -39,6 +39,62 @@ def test_exact_tvs_channel_matches_native_component_pin_and_net_inventory() -> N
     assert report.entries[0].device_references == ("D1",)
 
 
+def test_explicitly_mapped_alternate_protector_is_accepted() -> None:
+    requirements = protection_map()
+    interface = requirements.interfaces[0]
+    channel = interface.channels[0].model_copy(
+        update={"device_reference": "D2", "signal_pin": "D2.1", "reference_pin": "D2.2"}
+    )
+    requirements = requirements.model_copy(
+        update={
+            "interfaces": (interface.model_copy(update={"channels": (channel,)}),),
+            "devices": (
+                requirements.devices[0].model_copy(
+                    update={
+                        "reference": "D2",
+                        "expected_symbol": "Synthetic:AlternateTVS",
+                        "expected_footprint": "Synthetic:DFN-2",
+                        "pin_nets": {"D2.1": "USB_DP", "D2.2": "GND"},
+                    }
+                ),
+            ),
+        }
+    )
+    baseline = observed_netlist()
+    observed = baseline.model_copy(
+        update={
+            "components": {
+                "J1": baseline.components["J1"],
+                "D2": baseline.components["D1"].model_copy(
+                    update={"value": "Synthetic alternate TVS", "footprint": "Synthetic:DFN-2"}
+                ),
+            },
+            "nets": {
+                "USB_DP": ("J1.1", "D2.1"),
+                "USB_DM": ("J1.2",),
+                "GND": ("D2.2",),
+            },
+            "component_symbols": {
+                "J1": "Synthetic:UsbPort",
+                "D2": "Synthetic:AlternateTVS",
+            },
+            "pin_functions": {
+                "J1.1": "D+",
+                "J1.2": "D-",
+                "D2.1": "IO",
+                "D2.2": "GND",
+            },
+            "component_pin_numbers": {"J1": ("1", "2"), "D2": ("1", "2")},
+        }
+    )
+
+    report = evaluate(requirements, observed, connector_coverage(), "a" * 64)
+
+    assert report.status == "COMPLETE"
+    assert report.entries[0].status == "PROTECTED"
+    assert report.entries[0].device_references == ("D2",)
+
+
 def test_explicit_not_required_decision_remains_covered() -> None:
     report = evaluate(
         protection_map(disposition="not_required"),

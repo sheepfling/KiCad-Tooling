@@ -422,6 +422,10 @@ and optional ecosystem adapters are `P3`.
   shared synthetic contract builders in `tests/power_sequence_support.py`.
   External-protection contract comparisons and review-policy candidates now
   have separate pytest suites using `tests/external_protection_support.py`.
+  The schematic geometry coverage suite is now six pytest functions instead of
+  two `unittest.TestCase` methods, separating opt-in policy, review/block,
+  ignore staleness, and supported-capability coverage while retaining its
+  `design_lint` and `schematic_lint` markers.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary
@@ -467,7 +471,7 @@ and optional ecosystem adapters are `P3`.
   The legacy hosted test module is smaller; native execution still belongs to
   the digest-pinned package acceptance environment.
 
-- **LINT-086 — Measure review value for the USB split-reference prompt.**
+- **LINT-086 — Bound the USB split-reference prompt with applicability evidence.**
   The default-REVIEW rule has synthetic direct, series-resistor, USB-C,
   duplicated-contact, shunt, and multiport fault/control coverage. Its exact
   native fixture lane passed in tagged `v0.5.0rc15` (GitHub run `37851810081`)
@@ -483,13 +487,14 @@ and optional ecosystem adapters are `P3`.
   exactly one stable review per sample. This records applicability,
   cross-version reproducibility, and seeded-fault sensitivity; it does not
   establish field precision or reviewer value. Independent author dispositions
-  and review times remain absent. The metadata-only receipt is retained under
-  the ignored `build/ci/lint-086-public-review-measurement-20261009/` directory;
-  the public source checkouts and exported netlists remain outside this repo.
-  A reviewer usefulness/time card is prepared at
-  `build/ci/lint-086-public-review-measurement-20261009/review-card.md`; results
-  remain pending. Continue with an independent, source-bound review on approved,
-  nonconfidential examples. Count a quiet result
+  and review times are optional follow-up evidence, not prerequisites for using
+  the rule or continuing lint development. Do not ask reviewers to label a
+  synthetic split as a defect: the heuristic detects a review-worthy difference
+  and cannot infer whether common reference was intended. Keep the rule at
+  default `REVIEW` while field dispositions are unavailable. The prior receipt
+  path was an ignored build artifact and is absent from this checkout; public
+  source checkouts and exported netlists remain outside this repo. Recreate the
+  receipt only if an exact remeasurement needs it. Count a quiet result
   as a supported non-finding only for common-reference paths in
   `common_reference_path_count`; `NO_SUPPORTED_PEER_PATHS` contributes no
   non-finding, and `INCOMPLETE` remains a partial screen. Keep unresolved labels
@@ -9971,12 +9976,36 @@ candidate commit and installation inputs before any new runtime comparison.
 | Candidate                                          | Existing local coverage                                                                                                                                                                                                                  | Disposition and evidence required                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CC-001 connector/contact current versus PCB copper | LINT-021 measures project-mapped net track widths; LINT-071 checks authored component power dissipation. LINT-077 now checks owner-authored current against an exact per-contact rating. Neither local check calculates copper ampacity. | The contact slice is implemented in LINT-077 with exact identity/pin binding; pinned native receipts remain pending. Defer copper-capacity work until an independently reviewed model defines stack-up, temperature, vias/zones, route topology, branching, and current allocation. Do not infer ratings or current sharing from net names or a net-wide minimum width. The public candidate implementation was not installed or runtime-tested; only its documented question informed this narrower local contract. |
-| EG-001 external-connector ESD coverage             | LINT-034 requires a reviewed protection disposition per scoped connector pin; LINT-060 checks mapped PCB entry and return-via geometry.                                                                                                  | No new rule yet. Compare a pinned candidate on synthetic covered, uncovered, DNP, alternate-protection, and explicitly-not-required cases. Advance only if it finds an applicable pin omitted by connector coverage or materially improves localization without treating every connector pin as ESD-sensitive.                                                                                                                                                                                                       |
-| DA-001 decoupling strategy adequacy                | LINT-046 prompts on selected schematic power-input rails without a fitted capacitor; LINT-020 measures project-mapped PCB capacitor placement and optional connected return-via distance.                                                | No new rule from the changelog description alone. Inspect the exact predicate and trial it against multiple supply pins, shared capacitor banks, DNP parts, remote/plane returns, and datasheet-approved alternatives. Require a distinct confirmed finding beyond the two local checks before designing a new contract.                                                                                                                                                                                             |
+| EG-001 external-connector ESD coverage             | LINT-034 requires a reviewed protection disposition per scoped connector pin; LINT-060 checks mapped PCB entry and return-via geometry.                                                                                                  | Pinned source review found no bounded gap beyond LINT-034; retain no new rule. See the source-review note below.                                                                                                                                                                                                                                                                                                                                                                                                     |
+| DA-001 decoupling strategy adequacy                | LINT-046 prompts on selected schematic power-input rails without a fitted capacitor; LINT-020 measures project-mapped PCB capacitor placement and optional connected return-via distance.                                                | Pinned source review found only a generic capacitor-count hint; no requirement-independent gap beyond LINT-046/LINT-020. See source-review note below.                                                                                                                                                                                                                                                                                                                                                               |
 | XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts; selected geometry checks also bind board and netlist hashes.                                                                                                     | Keep deferred until each XV predicate and evidence source is identified. Compare one rule at a time with existing native consistency checks; a second report of the same mismatch is review duplication unless it improves actionable localization or catches a documented gap.                                                                                                                                                                                                                                      |
 | CC-001 style ampacity-target net-class proposal    | LINT-021 accepts project-authored minimum widths and records exact native track measurements.                                                                                                                                            | Treat the public [kicad-tools ampacity-target proposal](https://github.com/rjwalters/kicad-tools/issues/4216) as an unimplemented research lead, not a cohort feature to import. Any future derivation needs a documented, licensed/available calculation basis, explicit copper and temperature assumptions, boundary tests, and comparison with an independent reference. Preserve authored widths as screens until that evidence exists.                                                                          |
 | Mapped bundle route length and inter-signal skew   | LINT-095 audits project-authored exact endpoints, bundle membership, and active native DRC length/skew rules; LINT-022 covers differential-pair constraint coverage.                                                                     | Keep using native DRC for route measurement and LINT-095 for authored intent and rule coverage. Reconsider a separate geometry engine only if it adds independently confirmed coverage or materially clearer localization beyond those checks.                                                                                                                                                                                                                                                                       |
 | Thermal-via coverage for mapped dissipating parts  | LINT-071 compares exact-part dissipated power with an authored derated power limit; it does not estimate package temperature or via benefit.                                                                                             | Keep deferred until a project-authored thermal requirement identifies the exact package, heat path, layers, connected via population, copper stack, and boundary basis. Test any narrow geometry screen against pad-connected, unconnected, wrong-plane, DNP, and datasheet-supported alternatives. Stop if via count or density is presented as thermal adequacy without an independently reviewed model.                                                                                                           |
+
+**EG-001 source review (2026-10-10):** The pinned
+[kicad-happy `check_esd_coverage_gaps` source](https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/cross_analysis.py)
+collects detected protection nets globally, then prompts for each recognized
+connector signal net absent from that set and recommends adding TVS/ESD. The
+predicate has no explicit `not_required` disposition or connector-pin
+protection map, does not inspect DNP state, and does not establish entry-local
+PCB protection. LINT-034 already has synthetic declared, undeclared,
+`not_required`, wrong-net, wrong-identity, and DNP cases; this change adds an
+explicit alternate mapped-protector control. No candidate code was installed
+or run. This is a source review, not a runtime comparison or a claim about
+field precision.
+
+**DA-001 source review (2026-10-10):** The pinned
+[kicad-happy `check_decoupling_adequacy` source](https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/cross_analysis.py)
+counts decoupling capacitors and ICs on each reported rail, then recommends at
+least one 100 nF capacitor per IC when the counts differ. It does not evaluate
+capacitance value, pin-pair coverage, fitted state, shared banks, placement, or
+project-approved alternatives in this predicate. LINT-046 already prompts on
+selected input rails without fitted capacitors, and LINT-020 measures
+project-mapped placement and optional connected return-via distance. A generic
+one-cap-per-IC rule would turn a layout heuristic into a universal requirement
+without a project-owned capacitance strategy. No candidate code was installed
+or run; no duplicate rule is planned.
 
 No candidate code, installation workflow, project design, or example fixture
 is adopted by this audit. Candidate runtime evidence remains under LINT-031;
