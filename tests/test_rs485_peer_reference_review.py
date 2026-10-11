@@ -17,6 +17,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.rs485_heuristics import rs485_checks
 from kicad_tooling.hwrepo.rs485_models import Rs485Analysis
 from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
 from kicad_tooling.hwrepo.rs485_peer_reference_types import Rs485PeerReferenceContext
@@ -126,6 +127,34 @@ def test_partial_split_survives_missing_reference_assignment() -> None:
     assert coverage.status == "INCOMPLETE"
     assert coverage.entries[0].disposition == "PARTIAL_SPLIT_REFERENCE_REVIEW"
     assert coverage.entries[0].incomplete_references == ("U3",)
+
+
+def test_source_reference_drift_fails_contract_and_stays_incomplete_for_review() -> None:
+    analysis, context, source = rs485_peer_reference_fixture()
+    nets = dict(source.nets)
+    nets["GND_A"] = tuple(pin for pin in nets["GND_A"] if pin != "U2.5")
+    nets["GND_B"] = ("U2.5",)
+    drifted_source = source.model_copy(update={"nets": nets})
+
+    exact_checks = {item.id: item for item in rs485_checks(analysis, drifted_source)}
+    report = evaluate(
+        "synthetic-rs485-reference-source-drift",
+        coach(drifted_source),
+        DesignLintPolicy(),
+        rs485_peer_reference_context=context,
+    )
+    coverage = report.rs485_peer_reference_coverage
+
+    assert exact_checks["rs485/field-bus/endpoint/endpoint-u2/pins"].status == "FAIL"
+    assert (
+        "U2.5 is assigned to GND_B; expected GND_A"
+        in exact_checks["rs485/field-bus/endpoint/endpoint-u2/pins"].detail
+    )
+    assert not _findings(report)
+    assert coverage is not None
+    assert coverage.status == "INCOMPLETE"
+    assert coverage.entries[0].disposition == "INCOMPLETE"
+    assert coverage.entries[0].incomplete_references == ("U2",)
 
 
 def test_absent_map_dnp_and_no_reference_map_remain_visible_without_guessing() -> None:

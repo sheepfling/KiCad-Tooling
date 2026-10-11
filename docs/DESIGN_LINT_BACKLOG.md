@@ -5141,6 +5141,8 @@ is not a reason by itself to expand its scope or change its default policy.
   connectors on `GND_A`; the fault puts J3.3 on `GND_B` while every endpoint
   shares the exact `RS485_A`/`RS485_B` pair. Synthetic tests also cover common
   references, unshared pairs, DNP, missing references, partial splits,
+  source-reference drift against one unchanged map (exact contract `FAIL`,
+  heuristic coverage `INCOMPLETE`, with no inferred split-domain finding),
   duplicate suppression, rule mode/ignore behavior, stable findings, and
   source-bound coverage. See the
   [fixture notes](../tests/fixtures/design_lint/rs485-peer-reference-native/README.md).
