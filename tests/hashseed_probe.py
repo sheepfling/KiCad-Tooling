@@ -26,6 +26,7 @@ REPORT_ORDER = (
     "can_peer_reference_control",
     "rs485_peer_reference_fault",
     "rs485_peer_reference_control",
+    "rs485_peer_reference_source_drift",
     "external_protection_fault",
     "external_protection_control",
     "parsed_netlist_pin_metadata",

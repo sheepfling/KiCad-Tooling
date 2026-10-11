@@ -15,6 +15,7 @@ from kicad_tooling.hwrepo.i2c_pullup_heuristics import i2c_pullup_heuristic_cove
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
 )
+from kicad_tooling.hwrepo.rs485_heuristics import rs485_checks
 from kicad_tooling.hwrepo.serial_heuristics import serial_peer_checks
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from tests.can_peer_reference_support import can_peer_reference_netlist
@@ -225,6 +226,26 @@ def rs485_peer_reference_lint_report(*, split_references: bool) -> dict[str, obj
     return report.model_dump(mode="json")
 
 
+def rs485_peer_reference_source_drift() -> dict[str, object]:
+    """Serialize source drift against one unchanged RS-485 map and its exact checks."""
+    analysis, context, source = rs485_peer_reference_fixture()
+    nets = dict(source.nets)
+    nets["GND_A"] = tuple(pin for pin in nets["GND_A"] if pin != "U2.5")
+    nets["GND_B"] = ("U2.5",)
+    observed = source.model_copy(update={"nets": nets})
+    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    report = evaluate(
+        "synthetic-rs485-reference-source-drift",
+        coach(observed, netlist_sha256),
+        DesignLintPolicy(),
+        rs485_peer_reference_context=context,
+    )
+    return {
+        "report": report.model_dump(mode="json"),
+        "checks": [item.model_dump(mode="json") for item in rs485_checks(analysis, observed)],
+    }
+
+
 def external_protection_lint_report(*, fault: bool) -> dict[str, object]:
     """Serialize a mapped protector net fault and its repaired control."""
     requirement = protection_map()
@@ -377,6 +398,7 @@ def report_cases() -> dict[str, object]:
         "can_peer_reference_control": can_peer_reference_lint_report(split_references=False),
         "rs485_peer_reference_fault": rs485_peer_reference_lint_report(split_references=True),
         "rs485_peer_reference_control": rs485_peer_reference_lint_report(split_references=False),
+        "rs485_peer_reference_source_drift": rs485_peer_reference_source_drift(),
         "external_protection_fault": external_protection_lint_report(fault=True),
         "external_protection_control": external_protection_lint_report(fault=False),
         "serial_label_unmapped": serial_label_lint_report(mapped=False),

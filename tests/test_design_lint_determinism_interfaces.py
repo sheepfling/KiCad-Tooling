@@ -234,6 +234,28 @@ def test_interface_reports_remain_deterministic() -> None:
     )
     assert rs485_reference_fault["netlist_sha256"] != rs485_reference_control["netlist_sha256"]
 
+    rs485_source_drift = reports["rs485_peer_reference_source_drift"]
+    drift_report = rs485_source_drift["report"]
+    drift_coverage = drift_report["rs485_peer_reference_coverage"]
+    drift_findings = {item["rule_id"] for item in drift_report["findings"]}
+    drift_pin_check = next(
+        item
+        for item in rs485_source_drift["checks"]
+        if item["id"] == "rs485/field-bus/endpoint/endpoint-u2/pins"
+    )
+    assert "bus.rs485_peer_reference_review" not in drift_findings
+    assert drift_coverage["status"] == "INCOMPLETE"
+    assert drift_coverage["candidate_group_count"] == 0
+    assert drift_coverage["entries"][0]["disposition"] == "INCOMPLETE"
+    assert drift_coverage["entries"][0]["incomplete_references"] == ["U2"]
+    assert (
+        drift_coverage["authored_rs485_map_sha256"]
+        == rs485_control_coverage["authored_rs485_map_sha256"]
+    )
+    assert drift_report["netlist_sha256"] != rs485_reference_control["netlist_sha256"]
+    assert drift_pin_check["status"] == "FAIL"
+    assert "U2.5 is assigned to GND_B; expected GND_A" in drift_pin_check["detail"]
+
     usb_path_fault = reports["usb_data_path_series_fault"]
     usb_path_control = reports["usb_data_path_series_control"]
     usb_direct_control = reports["usb_data_path_direct_topology_control"]

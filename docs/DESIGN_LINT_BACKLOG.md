@@ -2102,8 +2102,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v57. The cross-process probe supports themed report
-  selectors and retains the complete 151-report inventory gate. Fault/control
+- **Status:** Implemented v58. The cross-process probe supports themed report
+  selectors and retains the complete 152-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2554,7 +2554,12 @@ is not a reason by itself to expand its scope or change its default policy.
   theme-owned fixture service; the inventory test module shrank from 429 to
   341 lines. Its slow determinism module is registered in `tests/conftest.py`
   and has a focused selector in `tests/README.md`. This changes no rule or
-  report behavior.
+  report behavior. The v58 extension adds a source-reference-drift report
+  against one unchanged RS-485 map and includes the exact endpoint pin checks.
+  Across three independently randomized Python processes, the complete report
+  remains byte-stable; the unchanged map digest is retained, heuristic coverage
+  stays `INCOMPLETE` without a split-reference candidate, and the exact U2.5
+  contract check remains `FAIL`.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
