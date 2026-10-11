@@ -287,7 +287,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 90 rules are implemented with synthetic regression coverage.
+The following 91 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -338,6 +338,7 @@ Their actual recognition limits are documented in
 - `bus.spi_peer_voltage_review`
 - `bus.serial_peer_voltage_review`
 - `bus.serial_peer_reference_review`
+- `bus.rs485_peer_reference_review`
 - `bus.usb_peer_reference_review`
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_active_low_chip_select_without_pullup`
@@ -1909,7 +1910,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 90 active rules; CI requires every new
+- **Status:** Baseline complete for all 91 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1918,7 +1919,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 90 covered, 0 not applicable, 0 unreviewed.
+  audit: 91 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7944,7 +7945,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 90 active rules. Each entry has a deterministic predicate, evidence
+contains 91 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to
