@@ -31,6 +31,7 @@ from .ci_hosted_connector_return_lane import connector_return_lint_fixture_lane
 from .ci_hosted_control_inputs import native_control_input_demo_lane
 from .ci_hosted_digital_peer_lane import digital_peer_fixture_lane as _digital_peer_fixture_lane
 from .ci_hosted_empty_netlist_evidence import empty_netlist_evidence_fixture_lane
+from .ci_hosted_i2c_peer_reference_fixtures import i2c_peer_reference_native_fixture_lane
 from .ci_hosted_i2c_pullup_fixtures import i2c_pullup_native_fixture_lane
 from .ci_hosted_ic_rail_capacitors import (
     ic_rail_capacitor_fixture_lane as _run_ic_rail_capacitor_fixture_lane,
@@ -106,6 +107,7 @@ __all__ = (
     "electrical_lane",
     "empty_netlist_evidence_fixture_lane",
     "gate_result",
+    "i2c_peer_reference_native_fixture_lane",
     "i2c_pullup_native_fixture_lane",
     "ic_rail_capacitor_fixture_lane",
     "led_rail_fixture_lane",

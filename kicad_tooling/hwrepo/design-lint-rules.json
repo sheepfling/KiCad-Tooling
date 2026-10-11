@@ -1184,6 +1184,45 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_with_multiple_pullup_rail_families"
     },
     {
+      "rule_id": "bus.i2c_peer_reference_review",
+      "title": "I2C peers on one bus use different explicit reference nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For fitted U/IC components with exactly one assigned native SDA and SCL pin, group endpoints that share the exact exported SDA/SCL net pair. Require complete native pin-function and pin-type inventories. Emit one REVIEW candidate when supported endpoints on one shared bus have explicit passive or power_in return-like pin assignments spanning different nets; retain endpoints with incomplete reference evidence in the report without inferring their reference domain.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A split reference is a review cue only; the check does not require common grounding, prove electrical compatibility, or establish a physical return path or bond.",
+        "Only one unambiguous native SDA/SCL pair per fitted U/IC is supported. Multi-port devices, incomplete pin metadata, multiple reference domains on one endpoint, unrecognized return functions, and DNP endpoints are not used as positive reference evidence; incomplete reference assignments remain visible as coverage evidence.",
+        "Only endpoints on the same exact native SDA/SCL net pair are compared. Translated or isolated segments, off-board peers, pull-up voltage limits, and component-specific input tolerance are outside this rule."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2c_peer_reference_review.test_shared_i2c_bus_with_split_references_emits_exact_review",
+        "tests.test_i2c_peer_reference_review.test_one_split_among_three_shared_bus_peers_emits_one_grouped_review",
+        "tests.test_i2c_peer_reference_review.test_known_split_remains_reviewable_when_another_peer_is_incomplete"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2c_peer_reference_review.test_common_reference_is_a_valid_control",
+        "tests.test_i2c_peer_reference_review.test_distinct_i2c_segments_are_not_compared_as_one_bus",
+        "tests.test_i2c_peer_reference_review.test_dnp_incomplete_reference_and_shield_pins_are_not_ground_evidence"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_i2c_peer_reference_review.test_split_reference_candidate_is_stable_under_mapping_order",
+        "tests.test_i2c_peer_reference_review.test_project_override_and_exact_ignore_change_disposition_not_detection"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2c_peer_reference_scan.py#scan_i2c_peer_reference_reviews",
+        "kicad_tooling/hwrepo/design_lint_i2c_candidates.py#i2c_peer_reference_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_peer_reference_scan.py#scan_i2c_peer_reference_reviews"
+    },
+    {
       "rule_id": "bus.spi_unconnected_chip_select",
       "title": "Recognized SPI chip-select pin is unassigned",
       "status": "active",

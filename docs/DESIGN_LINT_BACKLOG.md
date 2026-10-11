@@ -287,7 +287,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 87 rules are implemented with synthetic regression coverage.
+The following 88 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -1897,7 +1897,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 87 active rules; CI requires every new
+- **Status:** Baseline complete for all 88 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1906,7 +1906,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 87 covered, 0 not applicable, 0 unreviewed.
+  audit: 88 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -4852,6 +4852,54 @@ is not a reason by itself to expand its scope or change its default policy.
   at `REVIEW`; project owners must confirm off-board and alternate-footprint
   exceptions before elevating this comparison to a blocking contract.
 
+#### LINT-103 — Shared I2C peer return-domain review
+
+- **Status:** Implemented as `bus.i2c_peer_reference_review`, defaulting to
+  `REVIEW`, with source-netlist-bound coverage, project mode and exact-ignore
+  lifecycle, synthetic fault/control and ordering cases, and a focused CLI/MCP
+  parity case. The prompt is suppressed when the existing repeated-component
+  return review already covers each endpoint in the shared bus group.
+- **Priority:** P1 interface-reference review. A shared native SDA/SCL pair
+  establishes a direct schematic bus relationship, while ERC cannot establish
+  whether the devices' reference domains are intentionally separate.
+- **Predicate:** For each fitted U/IC with exactly one native-assigned SDA and
+  SCL pin and at least one assigned passive or `power_in` return-like pin,
+  group devices by the exact exported SDA/SCL net pair. Emit one grouped review
+  when explicit reference-pin assignments span multiple nets. Keep separate
+  segments separate, skip DNP and ambiguous or incomplete endpoint evidence,
+  and suppress an I2C prompt when `component.peer_power_pin_assignment_divergence`
+  already reviews a return assignment for every endpoint in that group.
+- **Boundary:** The result asks for review; it does not require common grounding,
+  identify all I2C endpoints, resolve level translators or isolation, compare
+  voltage limits, prove a board copper path, or establish physical continuity.
+  Only native pin-function metadata and exact assigned net pairs are used; rail
+  name similarity is not a predicate. This is not a substitute for an approved
+  connector pinout or a project-authored connectivity requirement.
+- **Fixtures and verification:** Synthetic pytest cases cover split and common
+  reference domains, a three-peer bus, separate segments, DNP, incomplete and
+  shield-only pins, mapping-order stability, and duplicate suppression when
+  the component-peer rule covers the same return assignments. The source-bound
+  CLI/MCP case compares the complete typed I2C finding and coverage for split
+  and common-reference cases. Synthetic schematic fault/control fixtures feed
+  a digest-pinned exact-version KiCad export lane for KiCad 10.0.0 and 10.0.5;
+  local exact-native execution remains unavailable until the configured
+  container runtime is available.
+- **Incremental value:** LINT-070 already prompts on split return pins across
+  comparable repeated components. LINT-103 adds the direct-I2C-bus relation
+  between heterogeneous devices when that repeated-component comparison has no
+  matching assignment coverage; the regression confirms no LINT-070 candidate
+  for distinct symbols without a shared `PART_ID`. Coverage records when
+  LINT-070 covers a group so the new prompt does not duplicate it.
+- **Applicability evidence:** No additional project examples are needed to
+  implement or test this bounded rule. No independent board dispositions or
+  reviewer-time measurements are available, so precision, false-prompt rate,
+  and review-time benefit remain unmeasured. Public, nonconfidential examples
+  can be added later only to measure those outcomes.
+- **Next:** Keep the rule at default `REVIEW` until the hosted pinned export
+  lane passes on both supported versions. Do not promote the heuristic to a
+  blocking requirement without an independent project-authored pinout or
+  grounding contract.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -7686,7 +7734,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 87 active rules. Each entry has a deterministic predicate, evidence
+contains 88 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

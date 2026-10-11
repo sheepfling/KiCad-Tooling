@@ -6,7 +6,7 @@ from .design_lint_report_models import DesignLintReport
 
 
 def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
-    """Render digital, USB, and serial peer-reference coverage sections."""
+    """Render digital, USB, serial, and I2C peer-reference coverage sections."""
     lines: list[str] = []
     if report.digital_peer_voltage_coverage:
         lines.append("Direct SPI/UART peer-voltage heuristic coverage:")
@@ -191,4 +191,45 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                 f"{serial_peer_coverage.authored_serial_peer_map_sha256}"
             )
         lines.append(f"    Native netlist SHA-256: {serial_peer_coverage.netlist_sha256}")
+    i2c_peer_coverage = report.i2c_peer_reference_coverage
+    if i2c_peer_coverage is not None:
+        lines.append("I2C peer-reference heuristic coverage:")
+        lines.append(
+            f"  {i2c_peer_coverage.rule_id}: {i2c_peer_coverage.status} "
+            f"(mode: {i2c_peer_coverage.mode}; "
+            f"{i2c_peer_coverage.recognized_endpoint_count} recognized endpoint(s), "
+            f"{i2c_peer_coverage.shared_bus_count} shared bus group(s), "
+            f"{i2c_peer_coverage.common_reference_bus_count} common-reference, "
+            f"{i2c_peer_coverage.incomplete_reference_bus_count} incomplete, "
+            f"{i2c_peer_coverage.split_reference_bus_count} split-reference "
+            f"({i2c_peer_coverage.candidate_group_count} review candidate(s); "
+            f"{i2c_peer_coverage.component_peer_covered_bus_count} covered by component-peer "
+            "review)"
+        )
+        status_explanation = {
+            "NO_SHARED_BUS_PEERS": (
+                "Fewer than two supported fitted IC endpoints share an exact native SDA/SCL pair."
+            ),
+            "INCOMPLETE": (
+                "At least one shared bus group lacks complete explicit reference-pin evidence."
+            ),
+            "EVALUATED": (
+                "Every discovered shared bus group has complete explicit reference-pin evidence; "
+                "split references already covered by component-peer review are not duplicated."
+            ),
+        }[i2c_peer_coverage.status]
+        lines.append(f"    Applicability: {status_explanation}")
+        for entry in i2c_peer_coverage.entries:
+            participants = ", ".join(entry.participants)
+            references = ", ".join(entry.reference_nets) or "none recognized"
+            incomplete = (
+                f"; incomplete: {', '.join(entry.incomplete_references)}"
+                if entry.incomplete_references
+                else ""
+            )
+            lines.append(
+                f"    SDA {entry.sda_net} / SCL {entry.scl_net}: {participants}; "
+                f"reference nets {references}{incomplete}: {entry.disposition}"
+            )
+        lines.append(f"    Native netlist SHA-256: {i2c_peer_coverage.netlist_sha256}")
     return lines

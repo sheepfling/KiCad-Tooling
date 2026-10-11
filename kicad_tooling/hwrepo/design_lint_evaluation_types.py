@@ -25,6 +25,7 @@ from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
+from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ConnectorCoverageReport,
@@ -161,6 +162,7 @@ class DesignLintEvaluationCandidates:
     digital_peer_voltage_coverage: tuple[DigitalPeerVoltageRuleCoverage, ...]
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
+    i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...]
 
 
@@ -211,5 +213,6 @@ class DesignLintEvaluationReportInput:
     digital_peer_voltage_coverage: tuple[DigitalPeerVoltageRuleCoverage, ...]
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
+    i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None

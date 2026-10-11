@@ -14,6 +14,7 @@ from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
+from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
 from .models import (
@@ -66,6 +67,7 @@ class DesignLintReport(StrictModel):
     component_peer_pin_coverage: tuple[ComponentPeerPinRuleCoverage, ...] = ()
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None = None
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None = None
+    i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None = None
     connector_peer_pin_coverage: ConnectorPeerPinHeuristicCoverage | None = None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage = Field(
         default_factory=ControlInputBiasHeuristicCoverage
@@ -220,6 +222,13 @@ class DesignLintReport(StrictModel):
                 raise ValueError(
                     "Serial peer-reference candidate counts must match report findings"
                 )
+        if self.i2c_peer_reference_coverage is not None:
+            item = self.i2c_peer_reference_coverage
+            if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:
+                raise ValueError("I2C peer-reference coverage must use this report's netlist")
+            expected_groups = sum(finding.rule_id == item.rule_id for finding in self.findings)
+            if item.candidate_group_count != expected_groups:
+                raise ValueError("I2C peer-reference candidate counts must match report findings")
         if self.connector_peer_pin_coverage is not None:
             item = self.connector_peer_pin_coverage
             if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:

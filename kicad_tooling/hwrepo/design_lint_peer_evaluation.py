@@ -12,6 +12,7 @@ from .component_peer_pin_scan import (
 )
 from .design_lint_peer_coverage import (
     digital_peer_voltage_coverage,
+    i2c_peer_reference_coverage,
     serial_peer_reference_coverage,
     usb_peer_reference_coverage,
 )
@@ -19,6 +20,8 @@ from .design_lint_rule_types import DesignLintRuleId
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
+from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
+from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_references
 from .models import (
     ConnectorCoverageReport,
     DesignLintRuleOverride,
@@ -47,6 +50,8 @@ class PeerDesignLintEvidence:
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None
     serial_peer_reference_scan: SerialPeerReferenceScan
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
+    i2c_peer_reference_scan: I2cPeerReferenceScan
+    i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
 
 
 def scan_peer_design_lint_evidence(
@@ -119,6 +124,17 @@ def scan_peer_design_lint_evidence(
             netlist_sha256,
         )
     )
+    i2c_scan = scan_i2c_peer_references(observed)
+    i2c_coverage = (
+        None
+        if netlist_sha256 is None
+        else i2c_peer_reference_coverage(
+            i2c_scan,
+            default_modes,
+            overrides,
+            netlist_sha256,
+        )
+    )
     return PeerDesignLintEvidence(
         digital_peer_voltage_scan=digital_scan,
         digital_peer_voltage_coverage=digital_coverage,
@@ -128,4 +144,6 @@ def scan_peer_design_lint_evidence(
         usb_peer_reference_coverage=usb_coverage,
         serial_peer_reference_scan=serial_scan,
         serial_peer_reference_coverage=serial_coverage,
+        i2c_peer_reference_scan=i2c_scan,
+        i2c_peer_reference_coverage=i2c_coverage,
     )

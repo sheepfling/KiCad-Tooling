@@ -16,6 +16,9 @@ from .design_lint_mapped_topology_coverage import mapped_topology_coverage_runs
 from .design_lint_peer_coverage import (
     component_peer_pin_rule_coverage as resolve_component_peer_pin_rule_coverage,
 )
+from .design_lint_peer_coverage import (
+    i2c_peer_reference_coverage,
+)
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
 
 
@@ -79,8 +82,26 @@ def scan_evaluation_candidates(
         digital_peer_voltage_scan=peer_evidence.digital_peer_voltage_scan,
         usb_peer_reference_scan=peer_evidence.usb_peer_reference_scan,
         serial_peer_reference_scan=peer_evidence.serial_peer_reference_scan,
+        i2c_peer_reference_scan=peer_evidence.i2c_peer_reference_scan,
         peer_pin_assignment_scans=peer_evidence.peer_pin_assignment_scans,
     )
+    i2c_peer_coverage = None
+    if coach.netlist_sha256 is not None:
+        i2c_candidate_bus_keys = frozenset(
+            (
+                item.evidence["SDA"][0].casefold(),
+                item.evidence["SCL"][0].casefold(),
+            )
+            for item in items
+            if item.rule_id == "bus.i2c_peer_reference_review"
+        )
+        i2c_peer_coverage = i2c_peer_reference_coverage(
+            peer_evidence.i2c_peer_reference_scan,
+            prepared.default_modes,
+            prepared.overrides,
+            coach.netlist_sha256,
+            candidate_bus_keys=i2c_candidate_bus_keys,
+        )
     connector_peer_pin_coverage = (
         None
         if coach.netlist_sha256 is None
@@ -129,6 +150,7 @@ def scan_evaluation_candidates(
         digital_peer_voltage_coverage=peer_evidence.digital_peer_voltage_coverage,
         usb_peer_reference_coverage=peer_evidence.usb_peer_reference_coverage,
         serial_peer_reference_coverage=peer_evidence.serial_peer_reference_coverage,
+        i2c_peer_reference_coverage=i2c_peer_coverage,
         mapped_check_runs=mapped_topology_coverage_runs(
             policy, prepared.default_modes, items, coach.netlist_sha256
         ),

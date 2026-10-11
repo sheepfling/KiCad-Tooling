@@ -38,6 +38,12 @@ class UnmappedI2cResponder:
     signal_pairs: tuple[tuple[str, str], ...]
 
 
+def i2c_signal_role(function: str) -> str | None:
+    """Normalize the bounded native SDA/SCL function aliases used by I2C checks."""
+    role_key = re.sub(r"[^a-z0-9]", "", function.casefold())
+    return _I2C_ADDRESS_PIN_ROLES.get(role_key)
+
+
 def unmapped_i2c_responders(
     observed: NetlistContract,
     specification: I2cAddressMap | None,
@@ -76,8 +82,7 @@ def unmapped_i2c_responders(
             canonical_reference
         ):
             continue
-        role_key = re.sub(r"[^a-z0-9]", "", function.casefold())
-        role = _I2C_ADDRESS_PIN_ROLES.get(role_key)
+        role = i2c_signal_role(function)
         assigned_nets = pin_nets.get(pin.casefold(), set())
         if role is None or len(assigned_nets) != 1:
             continue

@@ -56,6 +56,7 @@ def evaluation_report_input(
         digital_peer_voltage_coverage=candidates.digital_peer_voltage_coverage,
         usb_peer_reference_coverage=candidates.usb_peer_reference_coverage,
         serial_peer_reference_coverage=candidates.serial_peer_reference_coverage,
+        i2c_peer_reference_coverage=candidates.i2c_peer_reference_coverage,
         control_input_bias_coverage=coverage.control_input_bias,
         i2c_pullup_heuristic_coverage=coverage.i2c_pullup_heuristic,
     )

@@ -11,6 +11,7 @@ from .i2c_address_models import (
     I2cResponderAddressCoverageEntry,
 )
 from .i2c_addressing import format_i2c_address, unmapped_i2c_responders
+from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_references
 from .i2c_pullup_heuristics import (
     i2c_buses_with_low_equivalent_pullup_resistance,
     i2c_buses_with_multiple_pullup_rail_families,
@@ -226,6 +227,82 @@ def i2c_responder_coverage_candidates(
                     "assigned_net_pairs": net_pairs,
                     "address_map": (("configured",) if has_map else ("not_configured",)),
                 },
+            )
+        )
+    return tuple(found)
+
+
+def i2c_peer_reference_candidates(
+    observed: NetlistContract,
+    scan: I2cPeerReferenceScan | None = None,
+    component_peer_findings: tuple[Candidate, ...] = (),
+) -> tuple[Candidate, ...]:
+    """Build split-reference prompts not already covered by component-peer review."""
+    found: list[Candidate] = []
+    reference_scan = scan or scan_i2c_peer_references(observed)
+    component_reference_assignments: dict[str, set[str]] = {}
+    for finding in component_peer_findings:
+        if (
+            finding.rule_id != "component.peer_power_pin_assignment_divergence"
+            or finding.evidence.get("peer_role") != ("ground/return",)
+        ):
+            continue
+        for pin, nets in finding.evidence.items():
+            if "." not in pin or len(nets) != 1:
+                continue
+            component_reference_assignments.setdefault(pin.casefold(), set()).add(
+                nets[0].casefold()
+            )
+
+    for bus in reference_scan.reviews:
+        covered_references: dict[str, set[str]] = {}
+        for endpoint in bus.endpoints:
+            for pin in endpoint.reference_pins:
+                if pin.net.casefold() in component_reference_assignments.get(
+                    pin.pin.casefold(), set()
+                ):
+                    covered_references.setdefault(endpoint.reference.casefold(), set()).add(
+                        pin.net.casefold()
+                    )
+        if (
+            len(covered_references) == len(bus.endpoints)
+            and len({net for nets in covered_references.values() for net in nets}) > 1
+        ):
+            continue
+
+        references = tuple(item.reference for item in bus.endpoints)
+        assignments = tuple(
+            f"{item.reference}: {item.sda_pin} on {item.sda_net}; "
+            f"{item.scl_pin} on {item.scl_net}; "
+            + (
+                f"{', '.join(pin.pin for pin in item.reference_pins)} on {item.reference_net}"
+                if item.reference_net is not None
+                else "reference assignment incomplete"
+            )
+            for item in bus.endpoints
+        )
+        evidence = {
+            "SDA": (bus.sda_net,),
+            "SCL": (bus.scl_net,),
+            "participants": references,
+            "signal_pins": tuple(
+                pin for item in bus.endpoints for pin in (item.sda_pin, item.scl_pin)
+            ),
+            "reference_assignments": assignments,
+        }
+        if bus.incomplete_references:
+            evidence["incomplete_reference_evidence"] = bus.incomplete_references
+        found.append(
+            Candidate(
+                rule_id="bus.i2c_peer_reference_review",
+                subject=f"SDA {bus.sda_net} / SCL {bus.scl_net}: {', '.join(references)}",
+                message=(
+                    "Fitted ICs share the same native I2C SDA and SCL nets, and at least two "
+                    "peers have explicit reference pins on separate nets. Review the approved reference or bond "
+                    "policy; this heuristic does not require common grounding or prove a "
+                    "physical return path."
+                ),
+                evidence=evidence,
             )
         )
     return tuple(found)

@@ -39,6 +39,7 @@ from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
 )
+from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ComponentRoleMap,
@@ -129,6 +130,7 @@ def candidates(
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
     peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None = None,
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
+    i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -166,14 +168,13 @@ def candidates(
             reviewed_connector_references=reviewed_connector_references,
         )
     )
-    found.extend(
-        component_peer_candidates(
-            observed,
-            peer_pin_scans=peer_pin_scans,
-            reviewed_connector_references=reviewed_connector_references,
-            control_pin_keys=control_pin_keys,
-        )
+    component_peer_findings = component_peer_candidates(
+        observed,
+        peer_pin_scans=peer_pin_scans,
+        reviewed_connector_references=reviewed_connector_references,
+        control_pin_keys=control_pin_keys,
     )
+    found.extend(component_peer_findings)
     found.extend(
         bus_candidates(
             observed,
@@ -181,6 +182,8 @@ def candidates(
             i2c_address_coverage=i2c_address_coverage,
             i2c_address_map=i2c_address_map,
             i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
+            i2c_peer_reference_scan=i2c_peer_reference_scan,
+            component_peer_findings=component_peer_findings,
             pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
         )
     )

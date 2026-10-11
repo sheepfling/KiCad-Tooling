@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo import (
     design_lint_peer_candidates,
     digital_peer_voltage_models,
     digital_peer_voltage_types,
+    i2c_peer_reference_models,
     serial_peer_reference_models,
     usb_peer_reference_models,
 )
@@ -52,6 +53,11 @@ INTERFACE_COVERAGE_MODEL_OWNERS = {
         "UsbPeerReferencePathCoverageEntry",
         "UsbPeerReferenceCoverageReport",
     ),
+}
+
+I2C_PEER_REFERENCE_MODELS = {
+    "I2cPeerReferenceBusCoverage",
+    "I2cPeerReferenceCoverageReport",
 }
 
 BUS_ANALYSIS_MODULES = (
@@ -100,6 +106,12 @@ DIGITAL_PEER_VOLTAGE_MODULES = (
     "digital_peer_voltage_types.py",
     "digital_peer_voltage_analysis.py",
     "digital_peer_voltage_scan.py",
+)
+
+
+I2C_PEER_REFERENCE_MODULES = (
+    "i2c_peer_reference_models.py",
+    "i2c_peer_reference_scan.py",
 )
 
 
@@ -155,6 +167,7 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
             "usb_peer_reference_models": set(
                 INTERFACE_COVERAGE_MODEL_OWNERS["usb_peer_reference_models.py"]
             ),
+            "i2c_peer_reference_models": I2C_PEER_REFERENCE_MODELS,
         },
         "design_lint_evaluation_types.py": {
             "component_peer_pin_models": {"ComponentPeerPinRuleCoverage"},
@@ -164,14 +177,21 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
             "digital_peer_voltage_models": {"DigitalPeerVoltageRuleCoverage"},
             "serial_peer_reference_models": {"SerialPeerReferenceCoverageReport"},
             "usb_peer_reference_models": {"UsbPeerReferenceCoverageReport"},
+            "i2c_peer_reference_models": {"I2cPeerReferenceCoverageReport"},
         },
         "design_lint_peer_evaluation.py": {
             "digital_peer_voltage_models": {"DigitalPeerVoltageRuleCoverage"},
             "serial_peer_reference_models": {"SerialPeerReferenceCoverageReport"},
             "usb_peer_reference_models": {"UsbPeerReferenceCoverageReport"},
+            "i2c_peer_reference_models": {"I2cPeerReferenceCoverageReport"},
+        },
+        "design_lint_report_models.py": {
+            "i2c_peer_reference_models": {"I2cPeerReferenceCoverageReport"},
         },
     }
-    model_names = {name for names in INTERFACE_COVERAGE_MODEL_OWNERS.values() for name in names}
+    model_names = {
+        name for names in INTERFACE_COVERAGE_MODEL_OWNERS.values() for name in names
+    } | I2C_PEER_REFERENCE_MODELS
     legacy_imports: list[str] = []
     for filename, expected_imports in expected_by_service.items():
         source = HWREPO / filename
@@ -204,6 +224,19 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
     assert not legacy_imports, (
         "Internal peer-pin services should import coverage models from their theme owners; "
         f"legacy imports: {legacy_imports}"
+    )
+
+
+def test_i2c_peer_reference_coverage_models_stay_in_their_theme_owner() -> None:
+    owner = HWREPO / "i2c_peer_reference_models.py"
+    owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    owner_definitions = {node.name for node in owner_tree.body if isinstance(node, ast.ClassDef)}
+
+    assert I2C_PEER_REFERENCE_MODELS <= owner_definitions
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert all(not hasattr(shared_models, name) for name in I2C_PEER_REFERENCE_MODELS)
+    assert i2c_peer_reference_models.I2cPeerReferenceCoverageReport.__module__.endswith(
+        "i2c_peer_reference_models"
     )
 
 
@@ -331,6 +364,18 @@ def test_digital_peer_voltage_review_stays_split_by_responsibility() -> None:
 
 
 @pytest.mark.interface_lint
+def test_i2c_peer_reference_review_stays_in_focused_protocol_modules() -> None:
+    modules = [HWREPO / name for name in I2C_PEER_REFERENCE_MODULES]
+
+    assert all(path.is_file() for path in modules)
+    module_sizes = {path.name: _line_count(path) for path in modules}
+    oversized = {
+        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
+    }
+    assert not oversized, f"Keep I2C peer-reference modules below 500 lines: {oversized}"
+
+
+@pytest.mark.interface_lint
 def test_peer_candidate_coordinator_delegates_by_protocol() -> None:
     facade = HWREPO / "design_lint_peer_candidates.py"
     modules = (
@@ -411,6 +456,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
 
     assert [name for _, name in calls] == [
         "i2c_pullup_candidates",
+        "i2c_peer_reference_candidates",
         "spi_bias_candidates",
         "unconnected_interface_candidates",
         "can_candidates",

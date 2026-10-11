@@ -37,6 +37,8 @@ from kicad_tooling.hwrepo.models import (
     ProjectTestContract,
     ValidationSummary,
 )
+from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
+from tests.i2c_peer_reference_support import i2c_peer_netlist
 from tests.mcp_parity_support import (
     McpParityHarness,
     run_mcp_parity,
@@ -44,6 +46,66 @@ from tests.mcp_parity_support import (
 
 
 class _DesignLintMcpParityI2CCases(McpParityHarness):
+    async def _case_test_i2c_peer_reference_review_cli_mcp_parity(self) -> None:
+        native = self.native_evidence()
+        source_netlist = native.parent / "netlist.xml"
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+            for reference_nets, expected_review in (
+                ({"U1": "GND_A", "U2": "GND_B"}, True),
+                ({"U1": "GND", "U2": "GND"}, False),
+            ):
+                with self.subTest(expected_review=expected_review):
+                    observed = i2c_peer_netlist(reference_nets=reference_nets)
+                    source_netlist.write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
+                    self.rehash_native_netlist(native)
+                    cli = await self.cli(
+                        "kicad_tooling.design_lint",
+                        DesignLintReport,
+                        "--project",
+                        "controller",
+                        "--native-summary",
+                        str(native),
+                        expected_exit=1,
+                    )
+                    mcp = await self.call(
+                        client,
+                        "inspect_design_lint",
+                        DesignLintReport,
+                        {
+                            "project_id": "controller",
+                            "native_summary": native.relative_to(self.root).as_posix(),
+                        },
+                    )
+                    # The copied PCB invokes an unavailable native geometry probe whose
+                    # receipt path varies by invocation. Compare the full typed I2C result.
+                    cli_i2c_findings = tuple(
+                        item
+                        for item in cli.findings
+                        if item.rule_id == "bus.i2c_peer_reference_review"
+                    )
+                    mcp_i2c_findings = tuple(
+                        item
+                        for item in mcp.findings
+                        if item.rule_id == "bus.i2c_peer_reference_review"
+                    )
+                    self.assertEqual(cli.status, mcp.status)
+                    self.assertEqual(cli_i2c_findings, mcp_i2c_findings)
+                    self.assertEqual(
+                        cli.i2c_peer_reference_coverage,
+                        mcp.i2c_peer_reference_coverage,
+                    )
+                    self.assertEqual(
+                        sum(
+                            item.rule_id == "bus.i2c_peer_reference_review" for item in mcp.findings
+                        ),
+                        int(expected_review),
+                    )
+                    self.assertEqual(
+                        mcp.i2c_peer_reference_coverage.candidate_group_count,
+                        int(expected_review),
+                    )
+
     async def _case_test_i2c_mapped_array_hint_resolution_cli_mcp_parity(self) -> None:
         native = self.native_evidence()
         manifest_path = self.island / "project.json"
@@ -324,3 +386,10 @@ def test_i2c_mapped_array_hint_resolution_cli_mcp_parity() -> None:
 
 def test_i2c_address_map_parity() -> None:
     run_mcp_parity(_DesignLintMcpParityI2CCases, "_case_test_i2c_address_map_parity")
+
+
+def test_i2c_peer_reference_review_cli_mcp_parity() -> None:
+    run_mcp_parity(
+        _DesignLintMcpParityI2CCases,
+        "_case_test_i2c_peer_reference_review_cli_mcp_parity",
+    )
