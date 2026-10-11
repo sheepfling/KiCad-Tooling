@@ -203,6 +203,10 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
             "test_serial_reference_bond_native_fixture_lane.py",
             {"design_lint", "interface_lint", "return_path_lint"},
         ),
+        (
+            "test_design_lint_schematic_readability.py",
+            {"design_lint", "schematic_lint"},
+        ),
     ),
 )
 def test_dedicated_lint_suites_have_focused_area_markers(
