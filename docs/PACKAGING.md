@@ -71,6 +71,24 @@ a package. Native and release acceptance runs against the separately pinned temp
 PyPI publication remains a separate release step. See the
 [repository boundary](../README.md#repository-boundary).
 
+Pull requests, main pushes, and stable version tags keep the full package acceptance
+suite. A prerelease tag containing `rc` runs the same packaging, static checks, and
+external-template rehearsal with only its selected design-lint pytest area and
+declared native fixture lanes. Use an annotated tag with exactly one `Lint-Area`
+line; each optional `Native-Fixture` line must name a switch already covered by the
+full acceptance job:
+
+```text
+Lint-Area: interface_lint
+Native-Fixture: KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES
+```
+
+The area is combined with `design_lint` by the workflow, so unrelated tests are
+deselected while synthetic tests, parity checks, and the explicitly named exact-native
+fixtures in that area remain selected. The tag scope is validated before tests run;
+missing or unsupported declarations fail the prerelease gate. Use a stable version
+tag for the full release acceptance run.
+
 Once published, project repositories should pin an exact tested package version.
 Upgrade that pin through a pull request that runs the project's focused and full
 acceptance lanes. Private projects can then consume public tooling updates without

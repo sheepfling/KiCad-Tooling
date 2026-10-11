@@ -27,7 +27,6 @@
     "kicad_tooling/lint_registry.py": 578,
     "kicad_tooling/parts.py": 560,
     "kicad_tooling/validate.py": 761,
-    "scripts/ci.py": 528,
     "scripts/playtest.py": 553,
     "tests/test_artifact_parity.py": 705,
     "tests/test_ci_driver.py": 530,

@@ -9,59 +9,15 @@ import shutil
 import stat
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 import venv
-import zipfile
 from datetime import UTC, datetime
-from email.parser import Parser
 from pathlib import Path
 
-from kicad_tooling.package_assets import REQUIRED_WHEEL_ASSETS
+from kicad_tooling.package_build import build_distributions
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def wheel_contents(wheel: Path) -> tuple[str, dict[str, bytes]]:
-    """Read authoritative metadata and package payload for distribution comparison."""
-    with zipfile.ZipFile(wheel) as archive:
-        metadata_names = [
-            name for name in archive.namelist() if name.endswith(".dist-info/METADATA")
-        ]
-        if len(metadata_names) != 1:
-            raise ValueError(f"Expected one distribution metadata file in {wheel}")
-        metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
-        version = metadata["Version"]
-        if metadata["Name"] != "kicad-team-tooling" or not version:
-            raise ValueError(f"Unexpected distribution metadata in {wheel}")
-        payload = {
-            name: archive.read(name)
-            for name in archive.namelist()
-            if name.startswith("kicad_tooling/") or name == metadata_names[0]
-        }
-        required = REQUIRED_WHEEL_ASSETS
-        if not required <= payload.keys():
-            raise ValueError(f"Missing package assets in {wheel}: {required - payload.keys()}")
-        return version, payload
-
-
-def only_artifact(directory: Path, pattern: str) -> Path:
-    matches = tuple(directory.glob(pattern))
-    if len(matches) != 1:
-        raise RuntimeError(f"Expected exactly one {pattern} in {directory}")
-    return matches[0]
-
-
-def clear_distribution_build_cache() -> None:
-    """Remove setuptools staging trees so stale modules cannot leak into a wheel."""
-    build_root = ROOT / "build"
-    paths = (build_root / "lib", *build_root.glob("bdist.*"), *build_root.glob("temp.*"))
-    for path in paths:
-        if path.is_symlink() or path.is_file():
-            path.unlink()
-        elif path.is_dir():
-            shutil.rmtree(path)
 
 
 def stage(
@@ -96,75 +52,6 @@ def stage(
         print(result.stderr[-3000:], file=sys.stderr)
         raise RuntimeError(f"{name} failed; inspect {output}")
     return result
-
-
-def build_distributions(output: Path, build_python: str) -> tuple[Path, str]:
-    """Prove a source archive reproduces its wheel without access to Git metadata."""
-    clear_distribution_build_cache()
-    wheels = output / "wheels"
-    wheels.mkdir()
-    stage(
-        "wheel",
-        (build_python, "-m", "build", "--wheel", "--no-isolation", "--outdir", str(wheels), "."),
-        output,
-        cwd=ROOT,
-    )
-    checkout_wheel = only_artifact(wheels, "kicad_team_tooling-*.whl")
-    version, payload = wheel_contents(checkout_wheel)
-    sdists = output / "sdists"
-    sdists.mkdir()
-    stage(
-        "sdist",
-        (build_python, "-m", "build", "--sdist", "--no-isolation", "--outdir", str(sdists), "."),
-        output,
-        cwd=ROOT,
-    )
-    sdist = only_artifact(sdists, "kicad_team_tooling-*.tar.gz")
-    rebuilt_dir = output / "rebuilt-wheels"
-    rebuilt_dir.mkdir()
-    with tempfile.TemporaryDirectory(prefix="kicad-tooling-sdist-") as temporary:
-        extracted = Path(temporary)
-        with tarfile.open(sdist) as archive:
-            archive.extractall(extracted, filter="data")
-        source = only_artifact(extracted, "kicad_team_tooling-*")
-        if any(source.rglob(".git")) or any(
-            (parent / ".git").exists() for parent in source.parents
-        ):
-            raise RuntimeError("Source rebuild must have no Git metadata or parent checkout")
-        stage(
-            "sdist-wheel",
-            (
-                build_python,
-                "-m",
-                "build",
-                "--wheel",
-                "--no-isolation",
-                "--outdir",
-                str(rebuilt_dir),
-                ".",
-            ),
-            output,
-            cwd=source,
-        )
-    rebuilt_wheel = only_artifact(rebuilt_dir, "kicad_team_tooling-*.whl")
-    rebuilt_version, rebuilt_payload = wheel_contents(rebuilt_wheel)
-    if (version, payload) != (rebuilt_version, rebuilt_payload):
-        raise RuntimeError("Source distribution rebuild changed package metadata or payload")
-    (output / "packaging.json").write_text(
-        json.dumps(
-            {
-                "version": version,
-                "source_distribution_version": rebuilt_version,
-                "package_files": len(payload),
-                "source_distribution_contains_git": False,
-                "status": "PASS",
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    return rebuilt_wheel, version
 
 
 def adapted_project_fixture(project: Path, destination: Path) -> Path:
@@ -333,6 +220,10 @@ def main() -> int:
         action="store_true",
         help="Offline local rehearsal only; hosted CI must run mdrepo",
     )
+    parser.add_argument(
+        "--pytest-markexpr",
+        help="Optional pytest marker expression for a scoped prerelease lint gate",
+    )
     args = parser.parse_args()
     logs = ROOT / "build/ci"
     logs.mkdir(parents=True, exist_ok=True)
@@ -354,9 +245,12 @@ def main() -> int:
         unit_environment = os.environ.copy()
         unit_environment.pop("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", None)
         unit_environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+        unit_command = (sys.executable, "-B", "-I", "-m", "pytest", "-q")
+        if args.pytest_markexpr:
+            unit_command += ("-m", args.pytest_markexpr)
         stage(
             "unit",
-            (sys.executable, "-B", "-I", "-m", "pytest", "-q"),
+            unit_command,
             output,
             cwd=ROOT,
             environment=unit_environment,
@@ -435,7 +329,7 @@ def main() -> int:
         )
         if not args.skip_mdrepo:
             stage("mdrepo", (sys.executable, "-m", "mdrepo", "check", "."), output, cwd=ROOT)
-        rebuilt_wheel, version = build_distributions(output, args.build_python)
+        rebuilt_wheel, version = build_distributions(ROOT, output, args.build_python, stage)
         environment_dir = output / "environment"
         venv.EnvBuilder(with_pip=True).create(environment_dir)
         python = environment_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
