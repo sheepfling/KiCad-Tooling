@@ -46,6 +46,10 @@ python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_serial_participants.py tests/test_serial_participant_net_labels.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_electrical_i2c_contracts.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
+  python -I -B -m pytest -q \
+  -m "design_lint and interface_lint and parity_lint" \
+  tests/test_electrical_usb_c_parity.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_i2c_peer_reference_review.py tests/test_spi_peer_reference_review.py \
   tests/test_can_peer_reference_review.py tests/test_can_peer_reference_architecture.py

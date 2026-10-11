@@ -20,21 +20,16 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from tests import electrical_i2c_support as i2c_support
-from tests.electrical_parity_support import ElectricalParityHarness, contract_netlist_xml
+from tests.electrical_parity_support import contract_netlist_xml, parity_harness  # noqa: F401
 from tests.test_electrical import ISLAND, PROJECT
 
 pytestmark = [
     pytest.mark.template_checkout,
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.parity_lint,
+    pytest.mark.slow,
 ]
-
-
-@pytest.fixture
-def parity():
-    harness = ElectricalParityHarness()
-    try:
-        yield harness
-    finally:
-        harness.close()
 
 
 async def _run_i2c_array_pullups_match_cli_and_mcp_for_pass_and_fault(parity) -> None:

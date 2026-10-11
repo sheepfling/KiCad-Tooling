@@ -58,7 +58,7 @@ from tests import electrical_i2c_support as i2c_support
 from tests.electrical_parity_support import ElectricalParityHarness, contract_netlist_xml
 from tests.electrical_serial_support import serial_peer_netlist, serial_peer_requirement
 from tests.electrical_spi_support import spi_requirement
-from tests.electrical_usb_c_support import usb_c_netlist, usb_c_requirement
+from tests.electrical_usb_c_support import usb_c_requirement
 from tests.support import initialize_git
 from tests.test_component_power_ratings import (
     netlist as component_power_netlist,
@@ -106,7 +106,7 @@ from tests.test_mosfet_stress import (
 )
 from tests.test_source_parity import source_bytes
 
-pytestmark = pytest.mark.template_checkout
+pytestmark = [pytest.mark.template_checkout, pytest.mark.parity_lint, pytest.mark.slow]
 
 
 def four_port_db9_netlist(*, isolated_returns: bool) -> NetlistContract:
@@ -746,83 +746,6 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(fault_checks["usb-c/host-port/vbus-capacitance"].status, "FAIL")
         self.assertEqual(fault_checks["usb-c/host-port/vbus-capacitance"].observed, 2_200)
         self.assertEqual(fault_checks["spi/control/device/memory/pins"].status, "FAIL")
-
-    async def test_usb_c_vbus_path_matches_cli_and_mcp_for_pass_and_fault(self) -> None:
-        self.configured()
-        requirement = usb_c_requirement(vbus_path=True)
-
-        def install_netlist(observed: NetlistContract) -> None:
-            serialized = contract_netlist_xml(observed)
-            for root in (self.root, self.mcp_root):
-                contract_path = root / ISLAND / "tests/electrical.json"
-                contract = read_model(contract_path, ElectricalAnalysisContract)
-                write_model(contract_path, contract.model_copy(update={"usb_c": requirement}))
-                native = root / "build/native/controller"
-                netlist = native / "netlist.xml"
-                netlist.write_text(serialized, encoding="utf-8")
-                summary_path = native / "summary.json"
-                summary = read_model(summary_path, ValidationSummary)
-                write_model(
-                    summary_path,
-                    summary.model_copy(
-                        update={
-                            "artifacts_sha256": {
-                                **summary.artifacts_sha256,
-                                "netlist.xml": digest(netlist),
-                            }
-                        }
-                    ),
-                )
-
-        async def analyze_both(view_id: str) -> tuple[ElectricalAnalysisReport, int]:
-            summary = "build/native/controller/summary.json"
-            process = await self.cli(
-                "kicad_tooling.electrical",
-                "--project",
-                PROJECT,
-                "--native-summary",
-                summary,
-                "--output",
-                f"build/electrical/{view_id}",
-            )
-            cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
-            async with Client(
-                create_server(self.mcp_root, allow_checks=True), mode="legacy"
-            ) as client:
-                result = await client.call_tool(
-                    "analyze_electrical",
-                    {
-                        "project_id": PROJECT,
-                        "view_id": view_id,
-                        "native_summary": summary,
-                    },
-                )
-            self.assertFalse(result.is_error, result.content)
-            mcp_report = ElectricalAnalysisReport.model_validate_json(
-                json.dumps(result.structured_content)
-            )
-            self.assertEqual(cli_report.checks, mcp_report.checks)
-            return cli_report, process.returncode
-
-        install_netlist(usb_c_netlist(vbus_path=True))
-        passed, pass_returncode = await analyze_both("usb-c-vbus-path-pass")
-        self.assertEqual(pass_returncode, 0)
-        pass_checks = {item.id: item for item in passed.checks}
-        self.assertEqual(pass_checks["usb-c/host-port/vbus-path/input-path"].status, "PASS")
-
-        observed_fault = usb_c_netlist(vbus_path=True)
-        nets = {
-            net: tuple(pin for pin in pins if pin != "U3.3")
-            for net, pins in observed_fault.nets.items()
-        }
-        nets["VBUS_WRONG"] = ("U3.3",)
-        install_netlist(observed_fault.model_copy(update={"nets": nets}))
-        fault, fault_returncode = await analyze_both("usb-c-vbus-path-fault")
-        self.assertEqual(fault_returncode, 1)
-        fault_checks = {item.id: item for item in fault.checks}
-        path_check = fault_checks["usb-c/host-port/vbus-path/input-path"]
-        self.assertEqual(path_check.status, "FAIL")
-        self.assertIn("U3.3", path_check.detail)
 
     async def test_connector_pin_relationships_match_cli_and_mcp_analysis(self) -> None:
         self.configured(grounding=True)

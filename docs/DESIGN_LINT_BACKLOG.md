@@ -464,6 +464,12 @@ and optional ecosystem adapters are `P3`.
   parity registry points to all four cases. The broad parity module shrank
   from 3,061 to 2,647 lines and its no-growth ceiling was lowered accordingly.
   This is test organization and parity evidence only; it adds no lint rule or
+  electrical behavior. On 2026-10-11, the USB-C VBUS-path fault/control moved
+  into the focused pytest suite `tests/test_electrical_usb_c_parity.py` with
+  `design_lint`, `interface_lint`, `parity_lint`, and `slow` selection. The
+  shared CLI/MCP harness fixture now has one owner in
+  `tests/electrical_parity_support.py`; the I2C and USB-C parity suites both
+  use it. This shrank the legacy parity suite by 77 lines and adds no
   electrical behavior.
 
 - **Repository module architecture — Prevent new god files while shrinking

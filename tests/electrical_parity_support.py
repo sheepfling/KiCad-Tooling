@@ -9,6 +9,8 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+import pytest
+
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.models import (
     GroundDomain,
@@ -128,3 +130,13 @@ class ElectricalParityHarness:
                 }
             )
             write_model(root / ISLAND / "tests/electrical.json", contract)
+
+
+@pytest.fixture(name="parity")
+def parity_harness():
+    """Provide one isolated CLI/MCP project pair to a parity test."""
+    harness = ElectricalParityHarness()
+    try:
+        yield harness
+    finally:
+        harness.close()
