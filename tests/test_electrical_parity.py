@@ -80,12 +80,6 @@ from tests.test_connector_contact_ratings import (
 )
 from tests.test_contract_coach import fake_executable
 from tests.test_control_inputs import control_netlist, control_requirement
-from tests.test_digital_peer_voltages import (
-    observed as digital_peer_netlist,
-)
-from tests.test_digital_peer_voltages import (
-    requirement as digital_peer_requirement,
-)
 from tests.test_electrical import (
     ISLAND,
     NA,
@@ -833,104 +827,6 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             unused_pin = checks["pin-connectivity/unused-pin"]
             self.assertEqual(unused_pin.status, "FAIL")
             self.assertIn("missing symbol pin inventory=['J4']", unused_pin.detail)
-
-    async def test_digital_peer_voltage_requirements_match_cli_and_mcp(self) -> None:
-        self.configured()
-        netlist_xml = contract_netlist_xml(digital_peer_netlist())
-        summary_arg = "build/native/controller/summary.json"
-        for root in (self.root, self.mcp_root):
-            contract_path = root / ISLAND / "tests/electrical.json"
-            contract = read_model(contract_path, ElectricalAnalysisContract)
-            write_model(
-                contract_path,
-                contract.model_copy(update={"digital_peer_voltages": digital_peer_requirement()}),
-            )
-            native = root / "build/native/controller"
-            netlist = native / "netlist.xml"
-            netlist.write_text(netlist_xml, encoding="utf-8")
-            summary_path = native / "summary.json"
-            summary = read_model(summary_path, ValidationSummary)
-            write_model(
-                summary_path,
-                summary.model_copy(
-                    update={
-                        "artifacts_sha256": {
-                            **summary.artifacts_sha256,
-                            "netlist.xml": digest(netlist),
-                        }
-                    }
-                ),
-            )
-
-        process = await self.cli(
-            "kicad_tooling.electrical",
-            "--project",
-            PROJECT,
-            "--native-summary",
-            summary_arg,
-            "--output",
-            "build/electrical/digital-peer-pass",
-        )
-        self.assertEqual(process.returncode, 0, process.stderr + process.stdout)
-        cli_pass = ElectricalAnalysisReport.model_validate_json(process.stdout)
-        async with Client(create_server(self.mcp_root, allow_checks=True), mode="legacy") as client:
-            result = await client.call_tool(
-                "analyze_electrical",
-                {
-                    "project_id": PROJECT,
-                    "view_id": "digital-peer-pass",
-                    "native_summary": summary_arg,
-                },
-            )
-        self.assertFalse(result.is_error, result.content)
-        mcp_pass = ElectricalAnalysisReport.model_validate_json(
-            json.dumps(result.structured_content)
-        )
-        self.assertEqual(cli_pass.checks, mcp_pass.checks)
-        checks = {row.id: row for row in cli_pass.checks}
-        self.assertEqual(checks["digital-peer-voltage/spi-mosi/compatibility"].status, "PASS")
-
-        for root in (self.root, self.mcp_root):
-            contract_path = root / ISLAND / "tests/electrical.json"
-            contract = read_model(contract_path, ElectricalAnalysisContract)
-            write_model(
-                contract_path,
-                contract.model_copy(
-                    update={
-                        "digital_peer_voltages": digital_peer_requirement(output_high_maximum_v=5.0)
-                    }
-                ),
-            )
-        process = await self.cli(
-            "kicad_tooling.electrical",
-            "--project",
-            PROJECT,
-            "--native-summary",
-            summary_arg,
-            "--output",
-            "build/electrical/digital-peer-fault",
-        )
-        self.assertEqual(process.returncode, 1, process.stderr + process.stdout)
-        cli_fault = ElectricalAnalysisReport.model_validate_json(process.stdout)
-        async with Client(create_server(self.mcp_root, allow_checks=True), mode="legacy") as client:
-            result = await client.call_tool(
-                "analyze_electrical",
-                {
-                    "project_id": PROJECT,
-                    "view_id": "digital-peer-fault",
-                    "native_summary": summary_arg,
-                },
-            )
-        self.assertFalse(result.is_error, result.content)
-        mcp_fault = ElectricalAnalysisReport.model_validate_json(
-            json.dumps(result.structured_content)
-        )
-        self.assertEqual(cli_fault.checks, mcp_fault.checks)
-        fault_checks = {row.id: row for row in cli_fault.checks}
-        self.assertEqual(
-            fault_checks["digital-peer-voltage/spi-mosi/compatibility"].status,
-            "FAIL",
-        )
 
     async def test_component_voltage_rating_requirement_matches_cli_and_mcp(self) -> None:
         self.configured()

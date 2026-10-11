@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import shutil
 import subprocess
@@ -10,15 +11,21 @@ import sys
 import xml.etree.ElementTree as ET
 
 import pytest
+from mcp import Client
 
-from kicad_tooling.hwrepo.contracts import write_model
+from kicad_tooling.hwrepo.contracts import read_model, write_model
+from kicad_tooling.hwrepo.evidence import digest
+from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
+    ElectricalAnalysisContract,
+    ElectricalAnalysisReport,
     GroundDomain,
     GroundingAnalysis,
     NetlistContract,
+    ValidationSummary,
 )
 from tests import test_contract_coach as coach_fixture
-from tests.test_electrical import ISLAND, NA, install_fixture
+from tests.test_electrical import ISLAND, NA, PROJECT, install_fixture
 
 
 def contract_netlist_xml(observed: NetlistContract) -> str:
@@ -114,6 +121,33 @@ class ElectricalParityHarness:
             timeout=60,
         )
 
+    async def analyze_electrical(
+        self, view_id: str
+    ) -> tuple[ElectricalAnalysisReport, ElectricalAnalysisReport, int]:
+        """Run one saved electrical view through CLI and MCP and compare outputs."""
+        summary = "build/native/controller/summary.json"
+        process = await self.cli(
+            "kicad_tooling.electrical",
+            "--project",
+            PROJECT,
+            "--native-summary",
+            summary,
+            "--output",
+            f"build/electrical/{view_id}",
+        )
+        cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
+        async with Client(create_server(self.mcp_root, allow_checks=True), mode="legacy") as client:
+            result = await client.call_tool(
+                "analyze_electrical",
+                {"project_id": PROJECT, "view_id": view_id, "native_summary": summary},
+            )
+        assert not result.is_error, result.content
+        mcp_report = ElectricalAnalysisReport.model_validate_json(
+            json.dumps(result.structured_content)
+        )
+        assert cli_report.checks == mcp_report.checks
+        return cli_report, mcp_report, process.returncode
+
     def configured(self, *, simulation: bool = False, grounding: bool = False) -> None:
         for root in (self.root, self.mcp_root):
             contract = install_fixture(root)
@@ -130,6 +164,31 @@ class ElectricalParityHarness:
                 }
             )
             write_model(root / ISLAND / "tests/electrical.json", contract)
+
+    def install_netlist_contract(
+        self, observed: NetlistContract, contract_updates: dict[str, object]
+    ) -> None:
+        """Install one typed netlist and its reviewed contract update on both surfaces."""
+        serialized = contract_netlist_xml(observed)
+        for root in (self.root, self.mcp_root):
+            contract_path = root / ISLAND / "tests/electrical.json"
+            contract = read_model(contract_path, ElectricalAnalysisContract)
+            write_model(contract_path, contract.model_copy(update=contract_updates))
+            netlist = root / "build/native/controller/netlist.xml"
+            netlist.write_text(serialized, encoding="utf-8")
+            summary_path = root / "build/native/controller/summary.json"
+            summary = read_model(summary_path, ValidationSummary)
+            write_model(
+                summary_path,
+                summary.model_copy(
+                    update={
+                        "artifacts_sha256": {
+                            **summary.artifacts_sha256,
+                            "netlist.xml": digest(netlist),
+                        }
+                    }
+                ),
+            )
 
 
 @pytest.fixture(name="parity")

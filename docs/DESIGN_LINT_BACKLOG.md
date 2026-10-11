@@ -481,6 +481,12 @@ and optional ecosystem adapters are `P3`.
   netlist builder and shared CLI/MCP harness; the surface map follows both
   moved cases. This removes another 255 lines from the mixed legacy suite
   without changing electrical checks.
+  Digital-peer voltage contract parity now has its own interface pytest suite,
+  `tests/test_electrical_digital_peer_voltage_parity.py`. The shared
+  `ElectricalParityHarness` owns typed netlist/contract installation, digest
+  binding, and CLI/MCP report comparison for the connector-return, serial-peer,
+  and digital-peer voltage suites. This removes another 104 lines from the
+  mixed legacy suite.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

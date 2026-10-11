@@ -3,24 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-import json
 
 import pytest
-from mcp import Client
 
-from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.evidence import digest
-from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
-    ElectricalAnalysisContract,
-    ElectricalAnalysisReport,
     GroundDomain,
     GroundingAnalysis,
-    ValidationSummary,
 )
 from tests.design_lint_fixtures.connector_return_cases import return_case_contracts
-from tests.electrical_parity_support import contract_netlist_xml, parity_harness  # noqa: F401
-from tests.test_electrical import ISLAND, PROJECT
+from tests.electrical_parity_support import parity_harness  # noqa: F401
 
 pytestmark = [
     pytest.mark.template_checkout,
@@ -57,60 +48,15 @@ async def _run_db9_grounding_requirement_matrix(parity) -> None:
 
     for case_id, isolated_returns, requirement_id, expected_status in cases:
         observed = netlists["four-db9-fault" if isolated_returns else "four-db9-control"]
-        serialized = contract_netlist_xml(observed)
-        for root in (parity.root, parity.mcp_root):
-            contract_path = root / ISLAND / "tests/electrical.json"
-            contract = read_model(contract_path, ElectricalAnalysisContract)
-            write_model(
-                contract_path,
-                contract.model_copy(update={"grounding": requirements[requirement_id]}),
-            )
-            native = root / "build/native/controller"
-            netlist = native / "netlist.xml"
-            netlist.write_text(serialized, encoding="utf-8")
-            summary_path = native / "summary.json"
-            summary = read_model(summary_path, ValidationSummary)
-            write_model(
-                summary_path,
-                summary.model_copy(
-                    update={
-                        "artifacts_sha256": {
-                            **summary.artifacts_sha256,
-                            "netlist.xml": digest(netlist),
-                        }
-                    }
-                ),
-            )
+        parity.install_netlist_contract(
+            observed, {"grounding": requirements[requirement_id]}
+        )
 
-        summary_arg = "build/native/controller/summary.json"
-        process = await parity.cli(
-            "kicad_tooling.electrical",
-            "--project",
-            PROJECT,
-            "--native-summary",
-            summary_arg,
-            "--output",
-            f"build/electrical/db9-{case_id}",
+        cli_report, mcp_report, returncode = await parity.analyze_electrical(
+            f"db9-{case_id}"
         )
         expected_returncode = 0 if expected_status == "PASS" else 1
-        assert process.returncode == expected_returncode, process.stderr + process.stdout
-        cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
-        async with Client(
-            create_server(parity.mcp_root, allow_checks=True), mode="legacy"
-        ) as client:
-            result = await client.call_tool(
-                "analyze_electrical",
-                {
-                    "project_id": PROJECT,
-                    "view_id": f"db9-{case_id}",
-                    "native_summary": summary_arg,
-                },
-            )
-        assert not result.is_error, result.content
-        mcp_report = ElectricalAnalysisReport.model_validate_json(
-            json.dumps(result.structured_content)
-        )
-        assert cli_report.checks == mcp_report.checks
+        assert returncode == expected_returncode
         for report in (cli_report, mcp_report):
             assert report.status == expected_status
             checks = {item.id: item for item in report.checks}
