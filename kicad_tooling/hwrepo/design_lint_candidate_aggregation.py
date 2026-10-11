@@ -138,6 +138,7 @@ def candidates(
     can_peer_reference_scan: CanPeerReferenceScan | None = None,
     rs485_peer_reference_scan: Rs485PeerReferenceScan | None = None,
     peer_power_output_review_enabled: bool = True,
+    connector_power_output_review_enabled: bool = True,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -161,6 +162,7 @@ def candidates(
             observed,
             connector_coverage=connector_coverage,
             reviewed_connector_references=reviewed_connector_references,
+            power_output_review_enabled=connector_power_output_review_enabled,
         )
     )
     found.extend(return_distribution_candidates(connector_return_distribution))

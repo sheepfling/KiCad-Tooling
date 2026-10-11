@@ -22,6 +22,7 @@ DesignLintRuleId = Literal[
     "component.two_pin_switch_same_net",
     "connector.no_connected_return",
     "connector.unconnected_power_input",
+    "connector.unconnected_power_output",
     "connector.unconnected_supply_pin",
     "connector.unconnected_return_pin",
     "connector.return_pin_on_positive_rail",

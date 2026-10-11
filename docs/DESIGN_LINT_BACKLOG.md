@@ -291,7 +291,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 93 rules are implemented with synthetic regression coverage.
+The following 94 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -315,6 +315,7 @@ Their actual recognition limits are documented in
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
 - `connector.unconnected_power_input`
+- `connector.unconnected_power_output`
 - `component.unconnected_power_input`
 - `component.unconnected_power_output`
 - `component.unconnected_supply_pin`
@@ -1988,7 +1989,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 93 active rules; CI requires every new
+- **Status:** Baseline complete for all 94 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1997,7 +1998,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 93 covered, 0 not applicable, 0 unreviewed.
+  audit: 94 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5300,9 +5301,51 @@ is not a reason by itself to expand its scope or change its default policy.
   bounded check. Additional nonconfidential projects could help measure how
   often the prompt is applicable, but each needs an independent disposition;
   applicability and reviewer time remain unmeasured.
-- **Acceptance:** Local unit, parity, architecture, and exact-version native
-  regressions are being checked in this gate. No URSA project source or
-  proprietary design fixture is used.
+- **Acceptance:** Tagged hosted acceptance passed in GitHub Actions run
+  `38166720030` for `v0.5.0rc103` on 2026-10-11. The scoped pytest run selected
+  `design_lint and power_lint` and enabled
+  `KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES=1`, so the pinned KiCad 10.0.0
+  and 10.0.5 fault/control exports ran. The installed wheel also passed checks
+  against a separate public project checkout. No customer project source or
+  proprietary design fixture was used.
+
+#### LINT-109 — Generic connector power-output pin is unassigned
+
+- **Status:** Implemented as `connector.unconnected_power_output`, default
+  `REVIEW`, with project `review`/`block`/`off` overrides and exact-fingerprint
+  ignores. It uses KiCad's native connector pin-type inventory and produces
+  the same typed report through CLI and MCP.
+- **Priority:** P1 connector-pin completeness. Connector peer checks can miss
+  a generic contact when every matching peer is open. Native `power_out`
+  metadata supplies a review clue without claiming a required connection.
+- **Predicate:** A fitted connector pin is classified by the native netlist as
+  `power_out`, has an absent, blank, numeric, or generic `Pin_N` function, and
+  has no exported net assignment. Meaningful named functions and DNP
+  connector instances are outside this generic predicate. When enabled, this
+  finding owns a matching open peer-outlier or repeated-role finding; when
+  disabled, those broader comparisons remain available.
+- **Boundary:** Native electrical type does not identify the contact's role or
+  prove that it must connect. An explicit no-connect still prompts review.
+  This does not establish the approved connector pinout, off-board wiring, PCB
+  copper, or physical continuity. A project-authored connector contract is
+  needed to make a specific net relationship enforceable.
+- **Fixtures:** The tooling-owned fault leaves pin 1 open on two generic
+  synthetic connector symbols; the control assigns both pins to `+5V`. Pin 2
+  is tied to GND in both sources. Tests cover absent/blank/placeholder function,
+  connected, named, non-connector, DNP, policy overrides, stable ordering, and
+  duplicate suppression. The
+  [native fixture record](../tests/fixtures/design_lint/generic-connector-power-output/README.md)
+  binds source hashes and repeated exports on digest-pinned KiCad 10.0.0 and
+  10.0.5. A source-bound synthetic CLI/MCP parity test covers fault and
+  control reports. No customer or proprietary board fixture is used.
+- **Applicability evidence:** More projects are not needed to define this
+  bounded predicate. Public or synthetic examples may help tune its candidate
+  selection, while field applicability and reviewer-time benefit remain
+  unmeasured until findings receive independent dispositions.
+- **Acceptance:** Local synthetic, CLI/MCP parity, catalog, architecture, and
+  style checks pass. Tagged acceptance for this rule exercises the exact
+  KiCad 10.0.0/10.0.5 fault/control lane and the installed-wheel check against
+  a separate project checkout. No hardware or electrical approval is inferred.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -8159,7 +8202,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 93 active rules. Each entry has a deterministic predicate, evidence
+contains 94 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

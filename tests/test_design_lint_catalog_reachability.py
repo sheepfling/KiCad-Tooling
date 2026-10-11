@@ -95,6 +95,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     cases = (
         _tests_design_lint_fixtures.observed(),
         _tests_design_lint_fixtures.generic_connector_power_input_netlist(),
+        _tests_design_lint_fixtures.generic_connector_power_output_netlist(),
         _tests_design_lint_fixtures.connector_capacitor_only_netlist(),
         _power_input_paths.source_path_netlist(wrong_rail=True),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(),

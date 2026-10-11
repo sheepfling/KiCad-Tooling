@@ -39,6 +39,22 @@ class UnconnectedGenericPowerInputConnectorPin:
     electrical_type: str
 
 
+@dataclass(frozen=True)
+class UnconnectedGenericPowerOutputConnectorPin:
+    pin: str
+    symbol: str
+    function: str | None
+    electrical_type: str
+
+
+@dataclass(frozen=True)
+class _UnconnectedGenericPowerConnectorPin:
+    pin: str
+    symbol: str
+    function: str | None
+    electrical_type: str
+
+
 def unconnected_named_connector_pins(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
@@ -89,13 +105,14 @@ def unconnected_named_connector_pins(
     return tuple(sorted(results, key=lambda item: (item.category, item.pin, item.function)))
 
 
-def unconnected_generic_power_input_connector_pins(
+def _unconnected_generic_power_connector_pins(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     *,
+    expected_electrical_type: str,
     excluded_pins: frozenset[str] = frozenset(),
-) -> tuple[UnconnectedGenericPowerInputConnectorPin, ...]:
-    """Find unassigned generic connector pins with the native ``power_in`` type."""
+) -> tuple[_UnconnectedGenericPowerConnectorPin, ...]:
+    """Find unassigned generic connector pins with one native power type."""
     connector_references = {
         reference.casefold()
         for reference in connector_candidate_references(observed, declared_references)
@@ -108,7 +125,7 @@ def unconnected_generic_power_input_connector_pins(
     connected = {pin.casefold() for pins in observed.nets.values() for pin in pins}
     pin_functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
     excluded = {pin.casefold() for pin in excluded_pins}
-    results: list[UnconnectedGenericPowerInputConnectorPin] = []
+    results: list[_UnconnectedGenericPowerConnectorPin] = []
     for pin, electrical_type in observed.pin_electrical_types.items():
         pin_key = pin.casefold()
         reference = pin.rsplit(".", 1)[0]
@@ -116,7 +133,7 @@ def unconnected_generic_power_input_connector_pins(
         function = pin_functions.get(pin_key)
         symbol = symbols_by_reference.get(reference_key)
         if (
-            electrical_type.strip().casefold() != "power_in"
+            electrical_type.strip().casefold() != expected_electrical_type.casefold()
             or reference_key not in connector_references
             or reference_key in dnp
             or pin_key in connected
@@ -126,14 +143,60 @@ def unconnected_generic_power_input_connector_pins(
         ):
             continue
         results.append(
-            UnconnectedGenericPowerInputConnectorPin(
+            _UnconnectedGenericPowerConnectorPin(
                 pin=pin,
                 symbol=symbol[1],
                 function=function,
-                electrical_type="power_in",
+                electrical_type=expected_electrical_type,
             )
         )
     return tuple(sorted(results, key=lambda item: (item.pin.casefold(), item.pin)))
+
+
+def unconnected_generic_power_input_connector_pins(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+    *,
+    excluded_pins: frozenset[str] = frozenset(),
+) -> tuple[UnconnectedGenericPowerInputConnectorPin, ...]:
+    """Find unassigned generic connector pins with the native ``power_in`` type."""
+    return tuple(
+        UnconnectedGenericPowerInputConnectorPin(
+            pin=item.pin,
+            symbol=item.symbol,
+            function=item.function,
+            electrical_type=item.electrical_type,
+        )
+        for item in _unconnected_generic_power_connector_pins(
+            observed,
+            declared_references,
+            expected_electrical_type="power_in",
+            excluded_pins=excluded_pins,
+        )
+    )
+
+
+def unconnected_generic_power_output_connector_pins(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+    *,
+    excluded_pins: frozenset[str] = frozenset(),
+) -> tuple[UnconnectedGenericPowerOutputConnectorPin, ...]:
+    """Find unassigned generic connector pins with the native ``power_out`` type."""
+    return tuple(
+        UnconnectedGenericPowerOutputConnectorPin(
+            pin=item.pin,
+            symbol=item.symbol,
+            function=item.function,
+            electrical_type=item.electrical_type,
+        )
+        for item in _unconnected_generic_power_connector_pins(
+            observed,
+            declared_references,
+            expected_electrical_type="power_out",
+            excluded_pins=excluded_pins,
+        )
+    )
 
 
 def connectors_without_connected_return(

@@ -137,7 +137,7 @@ def generic_connector_power_input_netlist(
 ) -> NetlistContract:
     pins = tuple(f"{reference}.1" for reference in references)
     nets = {"+5V": pins} if connected else {}
-    pin_functions = {pin: function for pin in pins} if function is not None else {}
+    pin_functions = {pin: function for pin in pins} if function not in {None, ""} else {}
     return NetlistContract(
         components={
             reference: ComponentContract(value="Synthetic port", footprint="Synthetic:Port")
@@ -151,6 +151,30 @@ def generic_connector_power_input_netlist(
         component_pin_numbers={reference: ("1",) for reference in references},
         pin_functions=pin_functions,
         pin_electrical_types={pin: electrical_type for pin in pins},
+    )
+
+
+def generic_connector_power_output_netlist(
+    *,
+    connected: bool = False,
+    function: str | None = "1",
+    dnp_references: tuple[str, ...] = (),
+    references: tuple[str, ...] = ("J1", "J2"),
+) -> NetlistContract:
+    """Build generic connector pins classified natively as ``power_out``."""
+    source = generic_connector_power_input_netlist(
+        connected=connected,
+        function=function,
+        electrical_type="power_out",
+        dnp_references=dnp_references,
+        references=references,
+    )
+    return source.model_copy(
+        update={
+            "component_symbols": {
+                reference: "Synthetic:GenericPowerOutputPort" for reference in references
+            }
+        }
     )
 
 

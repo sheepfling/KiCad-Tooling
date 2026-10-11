@@ -846,6 +846,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_input_connector_pins"
     },
     {
+      "rule_id": "connector.unconnected_power_output",
+      "title": "Generic connector power-output typed pin is unassigned",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "A fitted connector pin has native electrical type power_out, its native pin function is absent, generic, or numeric-only, and no exported net assigns it.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The electrical type does not identify the contact's role or establish that it must be connected.",
+        "The rule reports a review candidate even when an explicit no-connect marker exists; intentional open contacts need a reviewed decision or exact ignore.",
+        "Meaningful function labels, including named output labels, are outside the generic-function predicate; this rule does not decide whether an unassigned named output is a defect.",
+        "Recognized native or project-mapped supply and return roles remain with their specific pin checks.",
+        "Only connector candidates identified by native or project-reviewed connector identity are evaluated; DNP instances are excluded. When this rule is off, matching contacts may remain visible through peer-outlier or repeated-role checks."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_unconnected_power_output.test_unassigned_generic_connector_power_output_contacts_are_reviewed",
+        "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_unconnected_power_output.test_valid_and_out_of_scope_contacts_do_not_emit_the_rule",
+        "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_connector_unconnected_power_output.test_project_can_block_ignore_or_disable_the_review"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_unconnected_power_output.test_finding_is_mapping_order_stable_and_assignment_clears_it",
+        "tests.test_connector_unconnected_power_output.test_typed_output_finding_owns_an_open_peer_outlier_when_enabled",
+        "tests.test_connector_unconnected_power_output.test_peer_outlier_remains_when_the_power_output_rule_is_disabled"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_output_connector_pins",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_output_connector_pins"
+    },
+    {
       "rule_id": "component.unconnected_power_input",
       "title": "Generic non-connector power-input pin is unassigned",
       "status": "active",

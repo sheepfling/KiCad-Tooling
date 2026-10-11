@@ -15,6 +15,7 @@ from .connector_peer_pin_findings import (
 )
 from .connector_return_pins import (
     unconnected_generic_power_input_connector_pins,
+    unconnected_generic_power_output_connector_pins,
     unconnected_named_connector_pins,
 )
 from .design_lint_rule_types import DesignLintRuleId
@@ -103,6 +104,7 @@ def connector_pin_candidates(
     *,
     connector_coverage: ConnectorCoverageReport | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
+    power_output_review_enabled: bool = True,
 ) -> tuple[Candidate, ...]:
     """Build review prompts from connector pin roles and peer assignments."""
     found: list[Candidate] = []
@@ -157,6 +159,37 @@ def connector_pin_candidates(
             )
         )
 
+    unconnected_power_output_pins = unconnected_generic_power_output_connector_pins(
+        observed,
+        reviewed_connector_references,
+        excluded_pins=named_open_connector_pins,
+    )
+    unconnected_power_output_pin_keys = frozenset(
+        item.pin.casefold() for item in unconnected_power_output_pins
+    )
+    for pin in unconnected_power_output_pins:
+        evidence = {
+            "symbol": (pin.symbol,),
+            "pin_electrical_type": (pin.electrical_type,),
+            pin.pin: (),
+        }
+        if pin.function is not None:
+            evidence["native_pin_function"] = (pin.function,)
+        found.append(
+            Candidate(
+                rule_id="connector.unconnected_power_output",
+                subject=f"{pin.pin}: generic native power-output pin is unassigned",
+                message=(
+                    "KiCad's native symbol metadata classifies this generic connector pin as "
+                    "power_out, but the exported netlist assigns it to no net. Review the "
+                    "approved pinout to determine whether the contact is intentionally open "
+                    "or whether a power-output connection is missing. The electrical type does "
+                    "not identify the contact's specific role or require it to be connected."
+                ),
+                evidence=evidence,
+            )
+        )
+
     repeated_connector_pin_groups = similar_connector_pin_groups(
         observed,
         reviewed_connector_references,
@@ -168,6 +201,13 @@ def connector_pin_candidates(
         group_pin_keys = {pin.casefold() for pin in group.pins}
         if group_pin_keys and group_pin_keys <= unconnected_power_input_pin_keys:
             # The native power-input type provides the more specific open-pin finding.
+            continue
+        if (
+            power_output_review_enabled
+            and group_pin_keys
+            and group_pin_keys <= unconnected_power_output_pin_keys
+        ):
+            # The native power-output type provides the more specific open-pin finding.
             continue
         found.append(
             Candidate(
@@ -200,6 +240,12 @@ def connector_pin_candidates(
     ):
         if {pin.casefold() for pin in group.outlier_pins} <= unconnected_power_input_pin_keys:
             # The typed power-input finding already identifies every open outlier pin.
+            continue
+        if (
+            power_output_review_enabled
+            and {pin.casefold() for pin in group.outlier_pins} <= unconnected_power_output_pin_keys
+        ):
+            # Keep the typed power-output finding when it is enabled.
             continue
         if any(
             set(group.assignments) <= set(specific_group.pins)

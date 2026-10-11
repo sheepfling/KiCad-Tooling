@@ -13,6 +13,7 @@ def connector_candidates(
     *,
     connector_coverage: ConnectorCoverageReport | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
+    power_output_review_enabled: bool = True,
 ) -> tuple[Candidate, ...]:
     """Collect connector pin findings followed by return-domain review prompts."""
     return (
@@ -20,6 +21,7 @@ def connector_candidates(
             observed,
             connector_coverage=connector_coverage,
             reviewed_connector_references=reviewed_connector_references,
+            power_output_review_enabled=power_output_review_enabled,
         ),
         *return_domain_candidates(
             observed,

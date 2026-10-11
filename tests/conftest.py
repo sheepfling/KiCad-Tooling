@@ -122,6 +122,8 @@ _LINT_AREA_MODULES = {
     ),
     "connector_lint": frozenset(
         {
+            "tests/test_connector_unconnected_power_output.py",
+            "tests/test_design_lint_mcp_parity_connector_power_output.py",
             "tests/test_connector_contact_ratings.py",
             "tests/test_component_rating_native_fixture_lane.py",
             "tests/test_connector_inventory_coverage.py",
@@ -232,6 +234,8 @@ _LINT_AREA_MODULES = {
     ),
     "power_lint": frozenset(
         {
+            "tests/test_connector_unconnected_power_output.py",
+            "tests/test_design_lint_mcp_parity_connector_power_output.py",
             "tests/test_component_unconnected_power_output.py",
             "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
             "tests/test_component_power_ratings.py",
