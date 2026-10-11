@@ -2102,8 +2102,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v56. The cross-process probe supports themed report
-  selectors and retains the complete 143-report inventory gate. Fault/control
+- **Status:** Implemented v57. The cross-process probe supports themed report
+  selectors and retains the complete 151-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2112,7 +2112,8 @@ is not a reason by itself to expand its scope or change its default policy.
   split and common supply/return assignments across distinct symbols with one
   matching component `PART_ID`,
   the multi-UART split-reference heuristic, SPI/UART voltage-domain review
-  with exact-map controls, CAN peer asymmetry, a connector-only SPI/UART
+  with exact-map controls, CAN peer asymmetry, mapped RS-485 split/common
+  reference reports, a connector-only SPI/UART
   boundary control, coverage-sensitive connector peer finding suppression,
   mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
   open-contact case, plus the typed contact-rating boundary and over-limit
@@ -2168,6 +2169,16 @@ is not a reason by itself to expand its scope or change its default policy.
   retains its unrelated STM32 CubeMX and physical differential-pair REVIEW
   findings, confirming the USB path map does not suppress independent review
   families.
+  The RS-485 extension compares complete typed reports for a mapped
+  three-endpoint split-reference case and its common-reference control. Both
+  retain the same bus endpoints, pair roles, and A/B line nets. The fault maps
+  and observes U2 on `GND_B`; the control maps and observes it on `GND_A`, so
+  their exact authored-map digests and typed-netlist digests differ. The fault
+  has one `bus.rs485_peer_reference_review` candidate group, while the control
+  has none. Three independently randomized Python processes emitted identical
+  report JSON for both cases. This verifies deterministic serialization and
+  fixture behavior; it does not establish that the references should be
+  common or model a netlist regression against one unchanged authored map.
   A separate cross-symbol supply-role pair uses two exact, complete interface
   maps with the same authored `external-5v` voltage domain. The open-contact
   fault keeps `J2.5` with an empty net assignment in the REVIEW evidence and
@@ -2530,7 +2541,7 @@ is not a reason by itself to expand its scope or change its default policy.
   a placed reference with a different exact footprint ID, and the matching
   footprint control. All three full reports matched across three randomized
   processes; the two faults remain `REVIEW` and the control passes. The focused
-  PCB inventory selector and complete 143-report inventory test passed, and
+  PCB inventory selector and complete 151-report inventory test passed, and
   Ruff passed for the changed Python modules. These cases use synthetic typed
   snapshots and invoke no native export or electrical-intent check.
   The v56 test-support refactor moves the shared synthetic schematic, board,

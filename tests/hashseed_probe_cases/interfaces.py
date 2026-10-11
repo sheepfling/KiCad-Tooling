@@ -45,6 +45,7 @@ from tests.external_protection_support import (
     protection_map,
 )
 from tests.i2c_peer_reference_support import i2c_peer_netlist
+from tests.rs485_peer_reference_support import rs485_peer_reference_fixture
 from tests.serial_participant_support import (
     alternate_function_serial_netlist,
     alternate_function_serial_peer_analysis,
@@ -204,6 +205,26 @@ def can_peer_reference_lint_report(*, split_references: bool) -> dict[str, objec
     return report.model_dump(mode="json")
 
 
+def rs485_peer_reference_lint_report(*, split_references: bool) -> dict[str, object]:
+    """Serialize an authored RS-485 split-reference fault and common control."""
+    reference_nets = (
+        {"U1": "GND_A", "U2": "GND_B", "U3": "GND_A"}
+        if split_references
+        else {"U1": "GND_A", "U2": "GND_A", "U3": "GND_A"}
+    )
+    _analysis, context, observed = rs485_peer_reference_fixture(reference_nets=reference_nets)
+    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    report = evaluate(
+        "synthetic-rs485-peer-split-reference"
+        if split_references
+        else "synthetic-rs485-peer-common-reference",
+        coach(observed, netlist_sha256),
+        DesignLintPolicy(),
+        rs485_peer_reference_context=context,
+    )
+    return report.model_dump(mode="json")
+
+
 def external_protection_lint_report(*, fault: bool) -> dict[str, object]:
     """Serialize a mapped protector net fault and its repaired control."""
     requirement = protection_map()
@@ -354,6 +375,8 @@ def report_cases() -> dict[str, object]:
         "spi_peer_reference_control": spi_peer_reference_lint_report(split_references=False),
         "can_peer_reference_fault": can_peer_reference_lint_report(split_references=True),
         "can_peer_reference_control": can_peer_reference_lint_report(split_references=False),
+        "rs485_peer_reference_fault": rs485_peer_reference_lint_report(split_references=True),
+        "rs485_peer_reference_control": rs485_peer_reference_lint_report(split_references=False),
         "external_protection_fault": external_protection_lint_report(fault=True),
         "external_protection_control": external_protection_lint_report(fault=False),
         "serial_label_unmapped": serial_label_lint_report(mapped=False),

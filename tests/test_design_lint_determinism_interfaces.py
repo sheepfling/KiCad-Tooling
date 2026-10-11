@@ -216,6 +216,24 @@ def test_interface_reports_remain_deterministic() -> None:
     assert can_reference_fault["can_peer_reference_coverage"]["candidate_group_count"] == 1
     assert can_reference_control["can_peer_reference_coverage"]["candidate_group_count"] == 0
     assert can_reference_fault["netlist_sha256"] != can_reference_control["netlist_sha256"]
+
+    rs485_reference_fault = reports["rs485_peer_reference_fault"]
+    rs485_reference_control = reports["rs485_peer_reference_control"]
+    rs485_fault_findings = {item["rule_id"] for item in rs485_reference_fault["findings"]}
+    rs485_control_findings = {item["rule_id"] for item in rs485_reference_control["findings"]}
+    assert "bus.rs485_peer_reference_review" in rs485_fault_findings
+    assert "bus.rs485_peer_reference_review" not in rs485_control_findings
+    rs485_fault_coverage = rs485_reference_fault["rs485_peer_reference_coverage"]
+    rs485_control_coverage = rs485_reference_control["rs485_peer_reference_coverage"]
+    assert rs485_fault_coverage["candidate_group_count"] == 1
+    assert rs485_control_coverage["candidate_group_count"] == 0
+    assert rs485_fault_coverage["authored_map_source_sha256"] == "a" * 64
+    assert (
+        rs485_fault_coverage["authored_rs485_map_sha256"]
+        != rs485_control_coverage["authored_rs485_map_sha256"]
+    )
+    assert rs485_reference_fault["netlist_sha256"] != rs485_reference_control["netlist_sha256"]
+
     usb_path_fault = reports["usb_data_path_series_fault"]
     usb_path_control = reports["usb_data_path_series_control"]
     usb_direct_control = reports["usb_data_path_direct_topology_control"]
