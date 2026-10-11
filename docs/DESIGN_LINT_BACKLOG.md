@@ -470,7 +470,11 @@ and optional ecosystem adapters are `P3`.
   shared CLI/MCP harness fixture now has one owner in
   `tests/electrical_parity_support.py`; the I2C and USB-C parity suites both
   use it. This shrank the legacy parity suite by 77 lines and adds no
-  electrical behavior.
+  electrical behavior. The four-case DB9 common/isolated return matrix now
+  lives in `tests/test_electrical_connector_return_parity.py` as a focused
+  pytest suite selectable with `return_path_lint` and `parity_lint`; the tool
+  surface map follows the moved test. This shrank the legacy module by another
+  125 lines without changing grounding behavior.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary
