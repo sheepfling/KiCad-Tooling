@@ -56,7 +56,7 @@ def test_native_rs485_peer_reference_fault_and_control(
         log=log,
     )
 
-    native = lane_event(log, "rs485-peer-reference-fixture/native-export")
+    native = lane_event(log, "rs485-peer-reference-fixture/native-export", status="PASS")
     assert native["status"] == "PASS"
     assert native["kicad_version"] == version
     assert native["repeatable"] == "true"

@@ -26,8 +26,14 @@ def copy_reference_checkout(destination: Path) -> Path:
     return destination
 
 
-def lane_event(log: HostedLog, stage: str) -> dict[str, Any]:
+def lane_event(
+    log: HostedLog, stage: str, *, status: str | None = None
+) -> dict[str, Any]:
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
-    matches = tuple(item for item in events if item.get("stage") == stage)
+    matches = tuple(
+        item
+        for item in events
+        if item.get("stage") == stage and (status is None or item.get("status") == status)
+    )
     assert len(matches) == 1
     return matches[0]

@@ -7,7 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.ci_hosted import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
+from tests.pcb_native_fixture_support import lane_event
 
 
 def test_native_fixture_receipt_accepts_separate_read_only_inputs_and_outputs(
@@ -60,3 +62,15 @@ def test_native_fixture_receipt_rejects_writable_inputs_or_unbounded_mounts(
 
     with pytest.raises(AssertionError):
         assert_native_fixture_mounts(tmp_path, "build/command.json")
+
+
+def test_lane_event_selects_a_terminal_status_after_start(tmp_path: Path) -> None:
+    log = HostedLog(tmp_path, "synthetic-native-lane")
+    log.event("native-export", "START")
+    log.event("native-export", "PASS", fixture_count=2)
+
+    event = lane_event(log, "native-export", status="PASS")
+
+    assert event["fixture_count"] == 2
+    with pytest.raises(AssertionError):
+        lane_event(log, "native-export")
