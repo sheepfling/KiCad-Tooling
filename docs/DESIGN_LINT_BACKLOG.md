@@ -435,8 +435,10 @@ and optional ecosystem adapters are `P3`.
   now have their own `interface_lint` pytest suite, with reusable synthetic
   model builders isolated in `tests/electrical_i2c_support.py`. SPI contract
   tests now have the same focused pytest selection, with builders in
-  `tests/electrical_spi_support.py`; the old electrical test file continues to
-  shrink without adding a rule or changing electrical behavior.
+  `tests/electrical_spi_support.py`. Serial peer contracts now use their own
+  focused suite and support module as well; these moves continue to shrink the
+  old electrical test file without adding rules or changing electrical
+  behavior.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

@@ -60,6 +60,7 @@ from kicad_tooling.hwrepo.spice import expanded_deck
 from kicad_tooling.validate import hashes
 from tests import electrical_i2c_support as i2c_support
 from tests import test_contract_coach as coach_fixture
+from tests.electrical_serial_support import serial_peer_netlist, serial_peer_requirement
 from tests.electrical_spi_support import spi_requirement
 from tests.support import initialize_git
 from tests.test_component_power_ratings import (
@@ -101,8 +102,6 @@ from tests.test_electrical import (
     power_connectivity_requirement,
     rs485_netlist,
     rs485_requirement,
-    serial_peer_netlist,
-    serial_peer_requirement,
     usb_c_netlist,
     usb_c_requirement,
 )

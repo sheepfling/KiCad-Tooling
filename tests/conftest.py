@@ -185,6 +185,7 @@ _LINT_AREA_MODULES = {
             "tests/test_open_drain_bias_fixture_lane.py",
             "tests/test_open_drain_heuristics.py",
             "tests/test_serial_participants.py",
+            "tests/test_electrical_serial_contracts.py",
             "tests/test_serial_peer_reference_review.py",
             "tests/test_serial_peer_reference_coverage.py",
             "tests/test_serial_peer_reference_maps.py",
