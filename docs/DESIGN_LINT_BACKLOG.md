@@ -4901,12 +4901,15 @@ is not a reason by itself to expand its scope or change its default policy.
   CLI/MCP case compares the complete typed I2C finding and coverage for split
   and common-reference cases. Synthetic schematic fault/control fixtures feed
   a digest-pinned exact-version KiCad export lane for KiCad 10.0.0 and 10.0.5;
-  local exact-native execution remains unavailable until the configured
-  container runtime is available. See the
+  local exact-native execution remains unavailable in this workspace. See the
   [fixture notes](../tests/fixtures/design_lint/i2c-peer-reference-native/README.md).
   The focused I2C review suite passed 11 tests on 2026-10-11. Its exact-native
-  lane is marked `native_kicad` and `slow`, and hosted acceptance remains
-  pending.
+  lane is marked `native_kicad` and `slow`. The full scoped `v0.5.0rc69`
+  GitHub gate passed on 2026-10-11 (run `38132142651`), enabled
+  `KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES`, and passed the native
+  fault/control lane on both pinned KiCad versions. Formatting, lint, typing,
+  Markdown, package builds, installed-wheel checks, external-template
+  verification, and playtest also passed.
 - **Incremental value:** LINT-070 already prompts on split return pins across
   comparable repeated components. LINT-103 adds the direct-I2C-bus relation
   between heterogeneous devices when that repeated-component comparison has no
