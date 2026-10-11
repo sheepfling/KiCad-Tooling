@@ -4718,8 +4718,12 @@ is not a reason by itself to expand its scope or change its default policy.
   source-distribution builds, source-archive wheel equality, fresh
   installed-wheel origin/version checks, external inventory/surface/portable
   verification, relocated-layout checks, and playtest all passed. The ignored
-  receipts are under `build/ci/run-c060t4wl/`. Hosted tagged-source acceptance
-  remains pending.
+  receipts are under `build/ci/run-c060t4wl/`. The focused connector peer
+  selector passed 24 tests on 2026-10-11, including CLI/MCP parity and the
+  three-process hash-seed regression. Its source-bound parity project explicitly
+  disables the unrelated PCB inventory rule because that synthetic project
+  carries no native PCB snapshot. Hosted tagged-source acceptance remains
+  pending.
 - **Priority:** P1 connector peer-pin completeness. Existing peer comparisons
   grouped only exact native symbol IDs, so equivalent connector parts drawn
   with distinct symbol aliases could be skipped.
@@ -4839,9 +4843,12 @@ is not a reason by itself to expand its scope or change its default policy.
   randomized Python processes. See the
   [fixture notes](../tests/fixtures/design_lint/component-inventory-footprint-identity/README.md).
   The focused selector passed 12 tests on
-  2026-10-11; exact native
-  execution remains delegated to the hosted acceptance lane because this
-  workspace has no `kicad-cli` or running Docker daemon.
+  2026-10-11. The full scoped `v0.5.0rc67` GitHub gate passed on that date
+  ([run 38130863552](https://github.com/sheepfling/KiCad-Tooling/actions/runs/38130863552));
+  its hosted unit stage enabled `KICAD_RUN_NATIVE_PCB_FIXTURES` and ran the
+  fault/control lane against both pinned KiCad versions. Formatting, lint,
+  typing, Markdown, package builds, installed-wheel checks, external-template
+  verification, and playtest also passed.
 - **Cohort boundary:** The pinned [kicad-happy cross-validation source][happy-cross-analysis]
   also compares board-only references and schematic/PCB values using reference
   prefix exclusions. Those broader predicates are not adopted. This rule is
@@ -4852,10 +4859,11 @@ is not a reason by itself to expand its scope or change its default policy.
   off-board dispositions could later estimate how often it prompts review;
   no dispositions or reviewer-time measurements have been collected, so no
   precision or review-value claim is made.
-- **Next:** Run the pinned native lane in the hosted environment before claiming
-  exact-version native acceptance for the identity comparison. Keep the default
-  at `REVIEW`; project owners must confirm off-board and alternate-footprint
-  exceptions before elevating this comparison to a blocking contract.
+- **Next:** Keep the pinned native lane in hosted acceptance for changes to
+  this rule. Keep the default at `REVIEW`; project owners must confirm off-board
+  and alternate-footprint exceptions before elevating this comparison to a
+  blocking contract. Public examples with independent dispositions remain
+  optional evidence for reviewer-value measurement.
 
 #### LINT-103 — Shared I2C peer return-domain review
 

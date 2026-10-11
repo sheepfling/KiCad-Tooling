@@ -390,7 +390,18 @@ def test_part_id_connector_alias_assignment_matches_between_cli_and_mcp(
 ) -> None:
     from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
 
-    root, summary_path = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
+    root, summary_path = synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_component_inventory",
+                    mode="off",
+                    reason="Synthetic parity fixture has no native PCB snapshot evidence.",
+                ),
+            )
+        ),
+    )
     netlist_path = summary_path.parent / "netlist.xml"
     summary = read_model(summary_path, ValidationSummary)
 
