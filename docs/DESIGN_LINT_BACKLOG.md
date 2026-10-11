@@ -2060,7 +2060,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v55. The cross-process probe supports themed report
+- **Status:** Implemented v56. The cross-process probe supports themed report
   selectors and retains the complete 143-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
@@ -2491,6 +2491,13 @@ is not a reason by itself to expand its scope or change its default policy.
   PCB inventory selector and complete 143-report inventory test passed, and
   Ruff passed for the changed Python modules. These cases use synthetic typed
   snapshots and invoke no native export or electrical-intent check.
+  The v56 test-support refactor moves the shared synthetic schematic, board,
+  and coverage builders into `tests/design_lint_fixtures/pcb_component_inventory.py`.
+  The focused inventory suite and cross-process probe now import the same
+  theme-owned fixture service; the inventory test module shrank from 429 to
+  341 lines. Its slow determinism module is registered in `tests/conftest.py`
+  and has a focused selector in `tests/README.md`. This changes no rule or
+  report behavior.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each

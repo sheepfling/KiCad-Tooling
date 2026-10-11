@@ -106,6 +106,9 @@ exact-version native source-bound fixtures:
 ```sh
 .venv/bin/python -I -B -m pytest -q -m "design_lint and pcb_lint" \
   tests/test_pcb_component_inventory.py tests/test_pcb_component_inventory_mcp_parity.py
+.venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and pcb_lint and slow" \
+  tests/test_design_lint_determinism_pcb_component_inventory.py
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and pcb_lint and native_kicad" \
   tests/test_pcb_component_inventory_native_fixture_lane.py

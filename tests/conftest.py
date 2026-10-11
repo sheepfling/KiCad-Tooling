@@ -251,6 +251,7 @@ _LINT_AREA_MODULES = {
             "tests/test_pcb_component_inventory.py",
             "tests/test_pcb_component_inventory_mcp_parity.py",
             "tests/test_pcb_component_inventory_native_fixture_lane.py",
+            "tests/test_design_lint_determinism_pcb_component_inventory.py",
             "tests/test_native_connector_return_lint.py",
             "tests/test_pcb_access_native_fixture_lane.py",
             "tests/test_pcb_access_fixture_lane.py",

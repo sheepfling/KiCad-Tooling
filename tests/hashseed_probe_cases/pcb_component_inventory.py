@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import DesignLintPolicy
-from tests.test_pcb_component_inventory import coach, complete_report, netlist, snapshot
+from tests.design_lint_fixtures.pcb_component_inventory import (
+    coach,
+    complete_report,
+    netlist,
+    snapshot,
+)
 
 
 def _inventory_report(*, board_references: tuple[str, ...], placed_footprint: str | None) -> dict[str, object]:
