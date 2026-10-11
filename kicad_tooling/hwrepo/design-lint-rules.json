@@ -3575,19 +3575,19 @@
         "Only the bounded UTF-8 line syntax for CubeMX .Signal and .GPIO_Label assignments is parsed, including physical-pin alternate-function suffixes with hyphens or escaped spaces; duplicate fields, conflicting raw keys that normalize to one physical pin, and unsupported pin keys block comparison instead of being guessed."
       ],
       "fault_fixtures": [
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_netlist_or_cube_mx_drift_emits_mismatch",
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_identity_dnp_and_missing_ioc_pin_faults_are_visible",
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_duplicate_or_unsupported_ioc_assignments_block_coverage",
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_conflicting_alternate_function_suffixes_block_coverage"
+        "tests.test_stm32_pin_map.test_netlist_or_cube_mx_drift_emits_mismatch",
+        "tests.test_stm32_pin_map.test_identity_dnp_and_missing_ioc_pin_faults_are_visible",
+        "tests.test_stm32_pin_map.test_duplicate_or_unsupported_ioc_assignments_block_coverage",
+        "tests.test_stm32_pin_map.test_conflicting_alternate_function_suffixes_block_coverage"
       ],
       "valid_control_fixtures": [
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_correct_netlist_and_cube_mx_values_are_a_control",
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_exact_aliases_and_reasoned_package_exclusions_are_accepted",
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_cubemx_alternate_function_and_escaped_pin_suffixes_are_supported",
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_ioc_pin_assignment_order_preserves_coverage_and_source_binding"
+        "tests.test_stm32_pin_map.test_correct_netlist_and_cube_mx_values_are_a_control",
+        "tests.test_stm32_pin_map.test_exact_aliases_and_reasoned_package_exclusions_are_accepted",
+        "tests.test_stm32_pin_map.test_cubemx_alternate_function_and_escaped_pin_suffixes_are_supported",
+        "tests.test_stm32_pin_map.test_ioc_pin_assignment_order_preserves_coverage_and_source_binding"
       ],
       "metamorphic_fixtures": [
-        "tests.test_stm32_pin_map.Stm32PinMapTests.test_ioc_pin_assignment_order_preserves_coverage_and_source_binding"
+        "tests.test_stm32_pin_map.test_ioc_pin_assignment_order_preserves_coverage_and_source_binding"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/stm32_pin_map.py#parse_cubemx_ioc",

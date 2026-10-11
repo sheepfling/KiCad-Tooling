@@ -80,6 +80,31 @@ def test_stm32_models_have_a_theme_owner_and_compatibility_exports() -> None:
     assert shared_models.Stm32SymbolPin is model_primitives.Stm32SymbolPin
 
 
+def test_stm32_regressions_are_plain_pytest_functions() -> None:
+    suite = Path(__file__).with_name("test_stm32_pin_map.py")
+    tree = ast.parse(suite.read_text(encoding="utf-8"), filename=suite.name)
+    tests = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+    ]
+    unittest_imports = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.Import) and any(alias.name == "unittest" for alias in node.names)
+    ]
+    unittest_classes = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef)
+        and any("TestCase" in ast.unparse(base) for base in node.bases)
+    ]
+
+    assert len(tests) >= 10
+    assert not unittest_imports
+    assert not unittest_classes
+
+
 @pytest.mark.parametrize(("consumer", "expected_models"), MODEL_CONSUMERS.items())
 def test_stm32_services_import_models_from_owner(consumer: Path, expected_models: set[str]) -> None:
     tree = ast.parse(consumer.read_text(encoding="utf-8"), filename=consumer.name)

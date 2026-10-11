@@ -449,7 +449,10 @@ and optional ecosystem adapters are `P3`.
   `tests/electrical_spi_support.py`. Serial peer contracts now use their own
   focused suite and support module as well; these moves continue to shrink the
   old electrical test file without adding rules or changing electrical
-  behavior.
+  behavior. STM32/CubeMX fault, control, and source-binding regressions now
+  use top-level pytest functions with their existing `design_lint`,
+  `component_lint`, and `interface_lint` markers; catalog references point to
+  those functions. This improves selection without changing LINT-050.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary
@@ -492,7 +495,11 @@ and optional ecosystem adapters are `P3`.
   chart services import their owner types directly. Architecture tests preserve
   identity-compatible registry exports and prevent the shared module from
   regaining those definitions. It removes a further 52 lines from the shared
-  model registry and adds no lint rule.
+  model registry and adds no lint rule. The STM32/CubeMX contracts and coverage
+  records now live in `stm32_pin_map_models.py`; the shared registry preserves
+  their compatibility exports, internal services import the owner directly,
+  and architecture tests guard ownership and imports. This removes 124 lines
+  from `models.py` without changing LINT-050.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

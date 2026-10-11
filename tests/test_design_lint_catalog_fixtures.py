@@ -81,9 +81,6 @@ from tests.test_serial_peer_reference_maps import (
 from tests.test_serial_peer_reference_review import (
     SerialPeerReferenceReviewTests as SerialPeerReferenceReviewCase,
 )
-from tests.test_stm32_pin_map import (
-    Stm32PinMapTests as Stm32PinMapCase,
-)
 
 pytestmark = pytest.mark.design_lint
 
@@ -112,7 +109,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         PcbReferencePlaneLayerCase: PcbReferencePlaneLayerCase(),
         PcbSwitchingLoopGeometryCase: PcbSwitchingLoopGeometryCase(),
         PcbSwitchingLoopRouteCase: PcbSwitchingLoopRouteCase(),
-        Stm32PinMapCase: Stm32PinMapCase(),
         SerialPeerReferenceReviewCase: SerialPeerReferenceReviewCase(),
         SerialPeerReferenceCoverageCase: SerialPeerReferenceCoverageCase(),
         SerialPeerReferenceMapCase: SerialPeerReferenceMapCase(),
