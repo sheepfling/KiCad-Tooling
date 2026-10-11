@@ -28,6 +28,8 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         "inline-component-control",
         "inline-component-peer-reference-fault",
         "inline-component-peer-reference-map-control",
+        "inline-component-peer-reference-bond-fault",
+        "inline-component-peer-reference-bond-control",
     }
 
     bonded = requirements["external-series-reference-bond-control"].interfaces[0]
@@ -47,3 +49,7 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
     assert inline_peer_fault.inline_component.pins[4].net == "BOARD_GND"
     inline_peer_control = requirements["inline-component-peer-reference-map-control"].interfaces[0]
     assert inline_peer_control.reference_policy == "separate_nets"
+    inline_peer_bond = requirements["inline-component-peer-reference-bond-control"].interfaces[0]
+    assert inline_peer_bond.reference_policy == "bonded"
+    assert inline_peer_bond.reference_bond is not None
+    assert inline_peer_bond.reference_bond.reference == "R3"

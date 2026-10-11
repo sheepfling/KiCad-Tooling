@@ -1427,17 +1427,20 @@ is not a reason by itself to expand its scope or change its default policy.
   protection device with a reference ferrite: the valid map stays quiet, while
   absent, miswired, or DNP ferrites produce one reference-path mismatch. These
   cases confirm that the exact path contract reports the bond fault without
-  duplicating a split-reference heuristic prompt. The combined shape remains
-  synthetic typed-netlist evidence; the native lane continues to validate the
-  inline-protection and bonded-reference cases separately.
+  duplicating a split-reference heuristic prompt. Source-hashed synthetic
+  native fault/control fixtures now combine the inline protection path with a
+  mapped 0R return bond; the exact-version lane must verify their schematic
+  exports before this combination counts as native evidence.
   Native schematic netlist exports are now regression-tested with synthetic
   direct-PHY control, external-PHY 27R-per-line control, a source-hashed
   external-PHY control with a mapped 0R reference bond, and resistor-bypass
   fault fixtures on KiCad 10.0.0 and 10.0.5. A synthetic inline-protection
-  control and an open required component ground pin are also source-hashed and
-  exported twice on both versions. The control has no path finding; the fault
-  names U2.5 in both D-line findings. Repeated exports match after
-  normalization to the parsed netlist contract. This does not run native ERC
+  control, an open required component ground pin, and combined inline-path
+  plus mapped-return-bond fault/control fixtures are also source-hashed for
+  export on both versions. The valid control has no path finding; the fault
+  reports the missing mapped R3 on one reference-path finding. Repeated exports
+  must match after normalization to the parsed netlist contract. This does not
+  run native ERC
   or validate datasheet pinout, PCB copper, placement, or signal integrity.
   Fixture hashes, exact image digests, and the reproduction command are in
   [the native USB regression README](../tests/fixtures/design_lint/usb-data-path-native/README.md).

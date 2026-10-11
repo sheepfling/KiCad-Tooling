@@ -69,6 +69,10 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         / "usb-data-path-native/inline-protection-split-reference.kicad_sch",
         "inline-component-peer-reference-map-control": fixture_root
         / "usb-data-path-native/inline-protection-split-reference.kicad_sch",
+        "inline-component-peer-reference-bond-fault": fixture_root
+        / "usb-data-path-native/inline-protection-reference-bond-fault.kicad_sch",
+        "inline-component-peer-reference-bond-control": fixture_root
+        / "usb-data-path-native/inline-protection-reference-bond-control.kicad_sch",
     }
     source_hashes = {case: digest(path) for case, path in cases.items()}
     scratch = Path(
@@ -195,6 +199,14 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                     raise ValueError(
                         "Native inline-component ground fault omitted exact pin evidence"
                     )
+            elif case == "inline-component-peer-reference-bond-fault":
+                if tuple(item.line for item in mismatches) != ("reference",) or not any(
+                    "R3 is absent or ambiguous" in issue
+                    for issue in mismatches[0].issues
+                ):
+                    raise ValueError(
+                        "Native inline bonded-reference fault omitted exact missing-bond evidence"
+                    )
             elif mismatches:
                 raise ValueError(
                     f"Native {case} USB control mismatched the authored topology: {mismatches}"
@@ -236,6 +248,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         "external-series",
         "external-series-reference-bond-control",
         "inline-component-control",
+        "inline-component-peer-reference-bond-control",
         "inline-component-peer-reference-map-control",
     ):
         if any(
@@ -280,6 +293,23 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         for item in reports[("inline-component-peer-reference-map-control", "first")].findings
     ):
         raise ValueError("Native exact separate-reference inline map did not suppress the review")
+    if any(
+        item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+        for item in reports[("inline-component-peer-reference-bond-control", "first")].findings
+    ):
+        raise ValueError("Native exact bonded-reference inline map produced a USB finding")
+    inline_bond_fault = reports[("inline-component-peer-reference-bond-fault", "first")]
+    inline_bond_findings = tuple(
+        item
+        for item in inline_bond_fault.findings
+        if item.rule_id == "bus.usb_data_path_mismatch"
+    )
+    if inline_bond_fault.status != "REVIEW" or tuple(
+        item.subject for item in inline_bond_findings
+    ) != ("usb-protected-port-1: USB reference path",):
+        raise ValueError("Native missing inline reference bond did not produce one exact finding")
+    if any(item.rule_id == "bus.usb_peer_reference_review" for item in inline_bond_fault.findings):
+        raise ValueError("Native missing mapped inline bond duplicated the USB peer review")
     if any(
         item.rule_id == "bus.usb_peer_reference_review"
         for item in reports[("external-series", "first")].findings

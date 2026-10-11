@@ -18,6 +18,8 @@ regression.
 | `inline-protection-control.kicad_sch`                  | Exact six-pin pass-through component with mapped data and reference pins                     | No USB data-path finding                                                  |
 | `inline-protection-ground-fault.kicad_sch`             | Same path with the inline component's required GND pin explicitly unconnected                | Findings for D+ and D− with U2.5 evidence                                 |
 | `inline-protection-split-reference.kicad_sch`          | Exact mapped inline path; connector return is USB_GND and PHY/protection return is BOARD_GND | One USB reference review unless separate references are explicitly mapped |
+| `inline-protection-reference-bond-fault.kicad_sch`     | Same inline path; the authored R3 0R bond is absent                                          | One exact USB reference-path finding naming the absent R3                 |
+| `inline-protection-reference-bond-control.kicad_sch`   | Same inline path; USB_GND and BOARD_GND use a mapped fitted 0R bond                          | No USB path or reference finding; exact bond map is required              |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -31,6 +33,8 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `inline-protection-control.kicad_sch`                  | `cce0c203ea0eb8a04a186526c8c9396050e311018f732c7b6e33dbe8f6ea8ad6` |
 | `inline-protection-ground-fault.kicad_sch`             | `02868a8ff51f8a942bd6719ff0bde57776b3d92aac75e0f225b71ab189e0dcb8` |
 | `inline-protection-split-reference.kicad_sch`          | `457f1046ebef0e0d7f65aeb55b9439eeeb2449bfca776412d5edbcfc3ef9702e` |
+| `inline-protection-reference-bond-fault.kicad_sch`     | `716852ab9d4d72ea4a76eaded2b78645014eb9f38a660f7fe61b91925546c057` |
+| `inline-protection-reference-bond-control.kicad_sch`   | `9fe5743dd58a6e486888d2541b21f7a3e8388607d8a6e3b4fb192edfd8d8fb2f` |
 
 The native regression runs twice with each of these digest-pinned images:
 
@@ -82,6 +86,14 @@ and pin assignments while leaving the reference decision unauthored, so the
 tool reports a review. A second native-lane case applies an explicit
 separate-reference policy to the same source and confirms that the configured
 decision suppresses that prompt.
+
+A second composed fault/control pair keeps the inline data path intact while
+mapping the connector return (`USB_GND`) to the board return (`BOARD_GND`)
+through R3, a fitted 0R resistor. The control has no USB finding. The fault
+omits R3 and must produce one exact USB reference-path finding naming the
+missing bond, without a duplicate peer-reference prompt. This tests the
+project-authored bond requirement alongside the inline path; it still proves
+schematic net assignments only, not component conduction or PCB copper.
 
 This is source-to-netlist regression evidence only. The lane does not run ERC,
 DRC, PCB copper continuity, component placement, signal-integrity analysis,

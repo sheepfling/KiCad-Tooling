@@ -268,6 +268,24 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
             "reference_policy": "separate_nets",
         }
     )
+    inline_peer_bond_control = inline_component_interface.model_copy(
+        update={
+            "inline_component": split_inline_pin_map,
+            "connector_reference_pins": (UsbReferencePinRequirement(pin="J1.4", net="USB_GND"),),
+            "phy_reference_pins": (UsbReferencePinRequirement(pin="U1.3", net="BOARD_GND"),),
+            "reference_policy": "bonded",
+            "reference_bond": ReferenceBondRequirement(
+                reference="R3",
+                expected_symbol="Device:R",
+                expected_footprint="Synthetic:0603",
+                expected_value="0R",
+                side_a_pin="R3.1",
+                side_b_pin="R3.2",
+                side_a_net="USB_GND",
+                side_b_net="BOARD_GND",
+            ),
+        }
+    )
     inline_component_peer_fault_map = UsbDataPathMap(
         basis="Synthetic exact USB inline path without a reference disposition",
         interfaces=(inline_peer_fault,),
@@ -275,6 +293,10 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
     inline_component_peer_control_map = UsbDataPathMap(
         basis="Synthetic exact USB inline path with reviewed separate references",
         interfaces=(inline_peer_map_control,),
+    )
+    inline_component_peer_bond_control_map = UsbDataPathMap(
+        basis="Synthetic exact USB inline path with a mapped fitted reference bond",
+        interfaces=(inline_peer_bond_control,),
     )
     requirements = {
         "integrated-direct": direct_map,
@@ -292,6 +314,8 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "inline-component-ground-fault": inline_component_map,
         "inline-component-peer-reference-fault": inline_component_peer_fault_map,
         "inline-component-peer-reference-map-control": inline_component_peer_control_map,
+        "inline-component-peer-reference-bond-fault": inline_component_peer_bond_control_map,
+        "inline-component-peer-reference-bond-control": inline_component_peer_bond_control_map,
     }
 
     return requirements
