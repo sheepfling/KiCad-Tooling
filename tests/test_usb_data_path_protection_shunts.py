@@ -112,6 +112,7 @@ def test_stale_or_faulty_shunt_map_fails_closed(fault: str) -> None:
     path_findings = tuple(item for item in report.findings if item.rule_id == PATH_RULE_ID)
     assert len(path_findings) == 1
     assert path_findings[0].evidence["line"] == ("protection_shunt",)
+    assert path_findings[0].subject == "usb-port-1: USB protection shunt map"
     assert RULE_ID not in {item.rule_id for item in report.findings}
     assert report.usb_peer_reference_coverage.supported_data_path_count == 0
 

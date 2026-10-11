@@ -160,7 +160,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     assert shunt_pin_fault["status"] == "PASS"
     assert shunt_pin_fault["lint_status"] == "REVIEW"
     assert shunt_pin_fault["usb_path_findings"] == (
-        "usb-protection-shunt-port-1: USB protection_shunt path"
+        "usb-protection-shunt-port-1: USB protection shunt map"
     )
     assert shunt_pin_fault["usb_reference_findings"] == "none"
     inline_peer_bond_fault = results[
