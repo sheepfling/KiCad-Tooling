@@ -12,16 +12,28 @@ _Value = TypeVar("_Value")
 
 
 class _PinRequirement(Protocol):
-    pin: str
-    disposition: str
-    net: str | None
+    @property
+    def pin(self) -> str: ...
+
+    @property
+    def disposition(self) -> str: ...
+
+    @property
+    def net(self) -> str | None: ...
 
 
 class _ComponentPinMap(Protocol):
-    reference: str
-    expected_symbol: str
-    expected_footprint: str
-    pins: tuple[_PinRequirement, ...]
+    @property
+    def reference(self) -> str: ...
+
+    @property
+    def expected_symbol(self) -> str: ...
+
+    @property
+    def expected_footprint(self) -> str: ...
+
+    @property
+    def pins(self) -> tuple[_PinRequirement, ...]: ...
 
 
 @dataclass(frozen=True)

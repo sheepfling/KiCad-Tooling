@@ -12,6 +12,7 @@ from .usb_peer_reference_types import (
     UsbPeerDataLink,
     UsbPeerDataProtectionShunt,
     UsbPeerDataProtectionShuntPin,
+    UsbPeerDataShuntBranch,
 )
 
 
@@ -106,7 +107,7 @@ def _direct_shunt_path(
 ) -> UsbPeerDataLink | None:
     _pin_nets, net_members = pin_net_index(observed)
     reference_nets = {connector.reference_net.casefold(), phy.reference_net.casefold()}
-    branch_groups = []
+    branch_groups: list[tuple[UsbPeerDataShuntBranch, ...]] = []
     for line, connector_pins, phy_pins, net in (
         ("D+", connector.positive_pins, phy.positive_pins, connector.positive_net),
         ("D-", connector.negative_pins, phy.negative_pins, connector.negative_net),
