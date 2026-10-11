@@ -426,7 +426,12 @@ and optional ecosystem adapters are `P3`.
   The schematic geometry coverage suite is now six pytest functions instead of
   two `unittest.TestCase` methods, separating opt-in policy, review/block,
   ignore staleness, and supported-capability coverage while retaining its
-  `design_lint` and `schematic_lint` markers.
+  `design_lint` and `schematic_lint` markers. The grounding and connector-pin
+  contract regressions are also split from `tests/test_electrical.py` into
+  focused pytest modules selectable with `return_path_lint` and
+  `connector_lint`. The repeated connector power-pin example is a small
+  synthetic netlist fixture. These are existing contract regressions; the move
+  adds no lint rule or measured reviewer outcome.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

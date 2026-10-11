@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export>
+  <components>
+    <comp ref="J1">
+      <value>Synthetic port</value>
+      <libsource lib="Synthetic" part="Port" />
+      <units><unit name="A"><pins><pin num="1" /><pin num="2" /></pins></unit></units>
+    </comp>
+    <comp ref="J2">
+      <value>Synthetic port</value>
+      <libsource lib="Synthetic" part="Port" />
+      <units><unit name="A"><pins><pin num="1" /><pin num="2" /></pins></unit></units>
+    </comp>
+    <comp ref="J3">
+      <value>Synthetic port</value>
+      <libsource lib="Synthetic" part="Port" />
+      <units><unit name="A"><pins><pin num="1" /><pin num="2" /></pins></unit></units>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Synthetic" part="Port">
+      <pins>
+        <pin num="1" name="PWR" type="passive" />
+        <pin num="2" name="GND" type="passive" />
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net name="+5V"><node ref="J1" pin="1" /><node ref="J2" pin="1" /></net>
+    <net name="GND"><node ref="J1" pin="2" /><node ref="J2" pin="2" /><node ref="J3" pin="2" /></net>
+    <net name="unconnected-(J3-PWR-Pad1)"><node ref="J3" pin="1" /></net>
+  </nets>
+</export>
