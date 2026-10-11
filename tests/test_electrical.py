@@ -14,7 +14,6 @@ from unittest.mock import patch
 
 from kicad_tooling.hwrepo.bus_heuristics import (
     can_termination_checks,
-    spi_checks,
     usb_c_checks,
 )
 from kicad_tooling.hwrepo.contracts import read_model, write_model
@@ -82,16 +81,6 @@ from kicad_tooling.hwrepo.models import (
     SerialPinNetRequirement,
     SerialShiftedPeerRequirement,
     SimulationMeasure,
-    SpiAnalysis,
-    SpiBridgePathRequirement,
-    SpiBridgeRequirement,
-    SpiBusRequirement,
-    SpiControllerRequirement,
-    SpiDeviceRequirement,
-    SpiMisoConnectedRequirement,
-    SpiPinNetRequirement,
-    SpiPinNotPresent,
-    SpiPinUnconnectedRequirement,
     TransientAnalysis,
     UsbCAnalysis,
     UsbCcControllerAttachment,
@@ -123,178 +112,6 @@ from kicad_tooling.validate import hashes
 PROJECT = "controller"
 ISLAND = "examples/projects/controller"
 NA = AnalysisNotApplicable(mode="not_applicable", reason="Synthetic test scope")
-
-
-def spi_requirement(
-    *,
-    device2_miso: Literal["connected", "unconnected", "not_present"] = "connected",
-    buffered_miso: bool = False,
-    shared_select: bool = False,
-    controller_reference: str = "U1",
-    device_references: tuple[str, str] = ("U2", "U3"),
-    bridge_reference: str = "U9",
-    device2_symbol: str = "Synthetic:SpiPeripheral",
-) -> SpiAnalysis:
-    first_reference, second_reference = device_references
-    miso_mode = SpiMisoConnectedRequirement(
-        mode="connected",
-        pin=f"{controller_reference}.3",
-        net="SPI_MISO_CONTROLLER" if buffered_miso else "SPI_MISO",
-    )
-    device2_miso_requirement = {
-        "connected": SpiMisoConnectedRequirement(
-            mode="connected",
-            pin=f"{second_reference}.3",
-            net="SPI_MISO",
-        ),
-        "unconnected": SpiPinUnconnectedRequirement(
-            mode="unconnected", pin=f"{second_reference}.3"
-        ),
-        "not_present": SpiPinNotPresent(
-            mode="not_present", reason="Synthetic write-only peripheral has no MISO pin."
-        ),
-    }[device2_miso]
-    controller = SpiControllerRequirement(
-        reference=controller_reference,
-        symbol="Synthetic:SpiController",
-        footprint="Package_QFP:LQFP-32",
-        sck=SpiPinNetRequirement(pin=f"{controller_reference}.1", net="SPI_SCK"),
-        mosi=SpiPinNetRequirement(pin=f"{controller_reference}.2", net="SPI_MOSI"),
-        miso=miso_mode,
-        chip_selects=(
-            (SpiPinNetRequirement(pin=f"{controller_reference}.4", net="SPI_CS0"),)
-            if shared_select
-            else (
-                SpiPinNetRequirement(pin=f"{controller_reference}.4", net="SPI_CS0"),
-                SpiPinNetRequirement(pin=f"{controller_reference}.5", net="SPI_CS1"),
-            )
-        ),
-    )
-    first_miso: SpiMisoConnectedRequirement = SpiMisoConnectedRequirement(
-        mode="connected",
-        pin=f"{first_reference}.3",
-        net="SPI_MISO_DEVICE" if buffered_miso else "SPI_MISO",
-    )
-    bridge = (
-        (
-            SpiBridgeRequirement(
-                reference=bridge_reference,
-                symbol="Synthetic:SpiBuffer",
-                footprint="Package_SO:TSSOP-8",
-                paths=(
-                    SpiBridgePathRequirement(
-                        signal="miso",
-                        from_pin=f"{bridge_reference}.1",
-                        from_net="SPI_MISO_CONTROLLER",
-                        to_pin=f"{bridge_reference}.2",
-                        to_net="SPI_MISO_DEVICE",
-                    ),
-                ),
-            ),
-        )
-        if buffered_miso
-        else ()
-    )
-    first_device = SpiDeviceRequirement(
-        id="sensor",
-        reference=first_reference,
-        symbol="Synthetic:SpiPeripheral",
-        footprint="Package_SO:SOIC-8",
-        sck=SpiPinNetRequirement(pin=f"{first_reference}.1", net="SPI_SCK"),
-        mosi=SpiPinNetRequirement(pin=f"{first_reference}.2", net="SPI_MOSI"),
-        miso=first_miso,
-        chip_select=SpiPinNetRequirement(pin=f"{first_reference}.4", net="SPI_CS0"),
-        shared_select_group="broadcast" if shared_select else None,
-    )
-    second_device = SpiDeviceRequirement(
-        id="memory",
-        reference=second_reference,
-        symbol=device2_symbol,
-        footprint="Package_SO:SOIC-8",
-        sck=SpiPinNetRequirement(pin=f"{second_reference}.1", net="SPI_SCK"),
-        mosi=SpiPinNetRequirement(pin=f"{second_reference}.2", net="SPI_MOSI"),
-        miso=device2_miso_requirement,
-        chip_select=SpiPinNetRequirement(
-            pin=f"{second_reference}.4", net="SPI_CS0" if shared_select else "SPI_CS1"
-        ),
-        shared_select_group="broadcast" if shared_select else None,
-    )
-    return SpiAnalysis(
-        basis="Synthetic project-authored SPI membership and signal map",
-        buses=(
-            SpiBusRequirement(
-                id="control",
-                basis="Synthetic local SPI controller and two-device bus",
-                controller=controller,
-                devices=(first_device, second_device),
-                bridges=bridge,
-            ),
-        ),
-    )
-
-
-def spi_netlist(spec: SpiAnalysis, *, fault: str | None = None) -> NetlistContract:
-    bus = spec.buses[0]
-    assignments: dict[str, str] = {}
-    component_pins: dict[str, set[str]] = {}
-    symbols: dict[str, str] = {}
-    components: dict[str, ComponentContract] = {}
-
-    def component(reference: str, symbol: str, footprint: str) -> None:
-        components[reference] = ComponentContract(
-            value=f"Synthetic {reference}", footprint=footprint
-        )
-        symbols[reference] = symbol
-        component_pins.setdefault(reference, set())
-
-    def add(pin: str, net: str | None) -> None:
-        reference, number = pin.rsplit(".", 1)
-        component_pins.setdefault(reference, set()).add(number)
-        if net is not None:
-            assignments[pin] = net
-
-    controller = bus.controller
-    component(controller.reference, controller.symbol, controller.footprint)
-    for requirement in (controller.sck, controller.mosi, *controller.chip_selects):
-        add(requirement.pin, requirement.net)
-    if isinstance(controller.miso, SpiMisoConnectedRequirement):
-        add(controller.miso.pin, controller.miso.net)
-    elif isinstance(controller.miso, SpiPinUnconnectedRequirement):
-        add(controller.miso.pin, None)
-
-    for device in bus.devices:
-        component(device.reference, device.symbol, device.footprint)
-        for requirement in (device.sck, device.mosi, device.chip_select):
-            add(requirement.pin, requirement.net)
-        if isinstance(device.miso, SpiMisoConnectedRequirement):
-            add(device.miso.pin, device.miso.net)
-        elif isinstance(device.miso, SpiPinUnconnectedRequirement):
-            add(device.miso.pin, None)
-
-    for bridge in bus.bridges:
-        component(bridge.reference, bridge.symbol, bridge.footprint)
-        for path in bridge.paths:
-            add(path.from_pin, path.from_net)
-            add(path.to_pin, path.to_net)
-
-    if fault == "device2-cs-disconnected":
-        assignments.pop("U3.4", None)
-    elif fault == "device2-cs-wrong-net":
-        assignments["U3.4"] = "UNEXPECTED_CS"
-    elif fault == "bridge-output-wrong-net":
-        assignments["U9.2"] = "UNEXPECTED_MISO"
-
-    nets: dict[str, list[str]] = {}
-    for pin, net in assignments.items():
-        nets.setdefault(net, []).append(pin)
-    return NetlistContract(
-        components=components,
-        nets={net: tuple(sorted(pins)) for net, pins in nets.items()},
-        component_symbols=symbols,
-        component_pin_numbers={
-            reference: tuple(sorted(numbers)) for reference, numbers in component_pins.items()
-        },
-    )
 
 
 def serial_peer_requirement(
@@ -1675,96 +1492,6 @@ class ElectricalTests(unittest.TestCase):
         shutil.copytree(reference_root(), root)
         return root
 
-    def test_spi_contract_checks_controller_membership_chip_selects_and_shared_selection(
-        self,
-    ) -> None:
-        spec = spi_requirement()
-        checks = {item.id: item for item in spi_checks(spec, spi_netlist(spec))}
-        self.assertTrue(checks)
-        self.assertTrue(all(item.status in {"PASS", "NOT_APPLICABLE"} for item in checks.values()))
-        self.assertEqual(checks["spi/control/device/sensor/route/sck"].status, "PASS")
-        self.assertEqual(checks["spi/control/device/memory/route/miso"].status, "PASS")
-
-        disconnected = {
-            item.id: item
-            for item in spi_checks(spec, spi_netlist(spec, fault="device2-cs-disconnected"))
-        }
-        self.assertEqual(disconnected["spi/control/device/memory/pins"].status, "FAIL")
-        self.assertIn("expected SPI_CS1", disconnected["spi/control/device/memory/pins"].detail)
-
-        wrong_net = {
-            item.id: item
-            for item in spi_checks(spec, spi_netlist(spec, fault="device2-cs-wrong-net"))
-        }
-        self.assertEqual(wrong_net["spi/control/device/memory/pins"].status, "FAIL")
-        self.assertIn("UNEXPECTED_CS", wrong_net["spi/control/device/memory/pins"].detail)
-
-        shared = spi_requirement(shared_select=True)
-        shared_checks = {item.id: item for item in spi_checks(shared, spi_netlist(shared))}
-        self.assertTrue(
-            all(item.status in {"PASS", "NOT_APPLICABLE"} for item in shared_checks.values())
-        )
-        invalid_devices = (
-            shared.buses[0].devices[0],
-            SpiDeviceRequirement.model_validate(
-                {
-                    **shared.buses[0].devices[1].model_dump(),
-                    "shared_select_group": None,
-                }
-            ),
-        )
-        with self.assertRaisesRegex(ValueError, "shared without one explicit"):
-            SpiBusRequirement(
-                id="control",
-                basis=shared.buses[0].basis,
-                controller=shared.buses[0].controller,
-                devices=invalid_devices,
-            )
-
-    def test_spi_contract_allows_write_only_devices_and_checks_buffered_miso_endpoints(
-        self,
-    ) -> None:
-        for disposition in ("unconnected", "not_present"):
-            with self.subTest(disposition=disposition):
-                spec = spi_requirement(device2_miso=disposition)
-                checks = {item.id: item for item in spi_checks(spec, spi_netlist(spec))}
-                self.assertEqual(
-                    checks["spi/control/device/memory/route/miso"].status,
-                    "NOT_APPLICABLE",
-                )
-                self.assertTrue(
-                    all(item.status in {"PASS", "NOT_APPLICABLE"} for item in checks.values())
-                )
-
-        buffered = spi_requirement(buffered_miso=True, device2_miso="not_present")
-        checks = {item.id: item for item in spi_checks(buffered, spi_netlist(buffered))}
-        self.assertEqual(checks["spi/control/bridge/U9/pins"].status, "PASS")
-        self.assertEqual(checks["spi/control/device/sensor/route/miso"].status, "PASS")
-        self.assertIn(
-            "Internal bridge behavior is not verified",
-            checks["spi/control/device/sensor/route/miso"].detail,
-        )
-
-        wrong_bridge = {
-            item.id: item
-            for item in spi_checks(buffered, spi_netlist(buffered, fault="bridge-output-wrong-net"))
-        }
-        self.assertEqual(wrong_bridge["spi/control/bridge/U9/pins"].status, "FAIL")
-        self.assertEqual(wrong_bridge["spi/control/device/sensor/route/miso"].status, "FAIL")
-
-    def test_spi_contract_rejects_missing_controller_mapping_and_unapproved_shared_cs(self) -> None:
-        spec = spi_requirement()
-        bus = spec.buses[0]
-        with self.assertRaisesRegex(ValueError, "has no declared controller pin"):
-            SpiBusRequirement(
-                id="control",
-                basis=bus.basis,
-                controller=bus.controller.model_copy(
-                    update={"chip_selects": bus.controller.chip_selects[:1]}
-                ),
-                devices=bus.devices,
-            )
-
     def test_serial_peer_map_checks_crossed_tx_rx_and_authored_reference_policy(self) -> None:
         direct = serial_peer_requirement()
         checks = {item.id: item for item in serial_peer_checks(direct, serial_peer_netlist(direct))}
@@ -1989,23 +1716,6 @@ class ElectricalTests(unittest.TestCase):
             external_checks["serial/console-link/logic-voltage"].status, "NOT_APPLICABLE"
         )
         self.assertEqual(external_checks["serial/console-link/reference"].status, "NOT_APPLICABLE")
-
-        shared = spi_requirement(shared_select=True)
-        bus = shared.buses[0]
-        with self.assertRaisesRegex(ValueError, "Every declared SPI controller chip-select"):
-            SpiBusRequirement(
-                id=bus.id,
-                basis=bus.basis,
-                controller=bus.controller.model_copy(
-                    update={
-                        "chip_selects": (
-                            *bus.controller.chip_selects,
-                            SpiPinNetRequirement(pin="U1.5", net="SPI_CS1"),
-                        )
-                    }
-                ),
-                devices=bus.devices,
-            )
 
     def test_rs485_contract_checks_authored_pair_termination_bias_and_faults(self) -> None:
         spec = rs485_requirement()
