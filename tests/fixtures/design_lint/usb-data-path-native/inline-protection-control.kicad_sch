@@ -146,7 +146,7 @@
     (stroke (width 0) (type default)) (uuid "51000000-0000-4000-8000-000000000477"))
   (wire (pts (xy 132.08 98.00) (xy 132.08 88.90))
     (stroke (width 0) (type default)) (uuid "51000000-0000-4000-8000-000000000478"))
-  (label "USB_DM_PHY" (at 116.84 78.74 0)
+  (label "USB_DM_PHY" (at 116.84 98.00 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid "51000000-0000-4000-8000-000000000464"))
   (wire (pts (xy 63.50 58.42) (xy 55.88 58.42))
