@@ -4151,6 +4151,20 @@ is not a reason by itself to expand its scope or change its default policy.
   not a supported peer-pair non-finding, precision datapoint, or proof of
   physical behavior. Only hashes and this summary are recorded here; the
   public source and generated exports remain outside the repository.
+  **Switchable-return boundary screen:** The GPL-3.0 public
+  [USB-sleuth cable tester][usb-sleuth]
+  documents a B-side receptacle ground connected to board ground through a DIP
+  switch and A-side ground isolated from the MCU sense input through another
+  switch during DMM testing. Its [pinned README][usb-sleuth-readme]
+  also states that the A/B USB 2.0 data pairs are not connected on the PCB;
+  this is a cable tester rather than a supported connector-to-PHY path for
+  LINT-086. It is therefore excluded from supported-path and reviewer-value
+  counts. This is useful boundary evidence for preserving intentional,
+  switchable return domains, not evidence that a USB interface should be
+  connected or isolated by default. The repository [LICENSE][usb-sleuth-license]
+  declares GPL-3.0 for its hardware documentation; only the pinned source
+  reference and this summary are recorded here, with no project files copied
+  into Tooling.
   **Pinned public source lead (2026-10-08):** The public
   [StickHub schematic][stickhub-schematic] at commit
   `5f369a785bedc4b1d3b99222c841ac684e04f016` contains native pin-function
@@ -10953,5 +10967,8 @@ quality, or first-article continuity.
 [cynthion-license]: https://github.com/greatscottgadgets/cynthion-hardware/blob/13aa71c2fb0be3837cd2ec580ee5d2c25fc1c678/LICENSE
 [stickhub-schematic]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/StickHub.kicad_sch
 [stickhub-license]: https://github.com/rbtsco/StickHub/blob/5f369a785bedc4b1d3b99222c841ac684e04f016/LICENSE.md
+[usb-sleuth]: https://github.com/smaroukis/usb-sleuth/tree/6ecdcfdd4bbb30c7d143cdca862ee048d6409ab1
+[usb-sleuth-readme]: https://github.com/smaroukis/usb-sleuth/blob/6ecdcfdd4bbb30c7d143cdca862ee048d6409ab1/README.md
+[usb-sleuth-license]: https://github.com/smaroukis/usb-sleuth/blob/6ecdcfdd4bbb30c7d143cdca862ee048d6409ab1/LICENSE
 [dstat-pcb]: https://microfluidics.utoronto.ca/gitlab/mdryden/dstat-hardware/-/raw/b6b2bbfdb7f8b2997d3035b083edbab2348333dc/dstat-mainboard.kicad_pcb
 [happy-cross-analysis]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/cross_analysis.py>
