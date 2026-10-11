@@ -39,8 +39,7 @@ def can_peer_reference_native_fixture_lane(
         raise ValueError(f"CAN peer-reference fixtures do not cover KiCad {config.kicad_version}")
 
     fixture_root = (
-        Path(__file__).resolve().parents[1]
-        / "tests/fixtures/design_lint/can-peer-reference-native"
+        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/can-peer-reference-native"
     )
     cases = ("reference-control", "reference-fault")
     source_hashes = {case: digest(fixture_root / f"{case}.kicad_sch") for case in cases}
@@ -53,7 +52,9 @@ def can_peer_reference_native_fixture_lane(
 
     pinned = pinned_image(config.image)
     scratch = Path(
-        tempfile.mkdtemp(prefix=f"native-can-peer-reference-{project}-", dir=log.directory.resolve())
+        tempfile.mkdtemp(
+            prefix=f"native-can-peer-reference-{project}-", dir=log.directory.resolve()
+        )
     )
     inputs = scratch / "input"
     output = scratch / "output"
@@ -211,7 +212,10 @@ def can_peer_reference_native_fixture_lane(
             for reference in ("U1", "U2", "U3")
             for number, function in (("1", "CANH"), ("2", "CAN_L"), ("3", "GND"), ("4", "VDD"))
         }
-        if any(observed.pin_functions.get(pin) != function for pin, function in expected_functions.items()):
+        if any(
+            observed.pin_functions.get(pin) != function
+            for pin, function in expected_functions.items()
+        ):
             raise ValueError(f"Native CAN {case} fixture changed a required pin function")
         if any(
             observed.component_pin_numbers.get(reference) != ("1", "2", "3", "4")
@@ -232,9 +236,7 @@ def can_peer_reference_native_fixture_lane(
             },
             **{
                 f"{reference}.3": (
-                    "GND_A"
-                    if case == "reference-control" or reference != "U3"
-                    else "GND_B"
+                    "GND_A" if case == "reference-control" or reference != "U3" else "GND_B"
                 )
                 for reference in ("U1", "U2", "U3")
             },
@@ -263,11 +265,12 @@ def can_peer_reference_native_fixture_lane(
             or tuple(item.reference for item in scan.buses[0].endpoints) != ("U1", "U2", "U3")
         ):
             raise ValueError(f"Native CAN {case} did not preserve the expected peer group")
-        if (
-            observed.component_symbols.get("U1") != observed.component_symbols.get("U2")
-            or observed.component_symbols.get("U1") == observed.component_symbols.get("U3")
-        ):
-            raise ValueError("Native CAN fixture must retain two comparable peers and one distinct peer")
+        if observed.component_symbols.get("U1") != observed.component_symbols.get(
+            "U2"
+        ) or observed.component_symbols.get("U1") == observed.component_symbols.get("U3"):
+            raise ValueError(
+                "Native CAN fixture must retain two comparable peers and one distinct peer"
+            )
         if component_peer_power_pin_assignment_divergences(observed):
             raise ValueError("CAN reference fixture unexpectedly overlaps component-peer findings")
         candidates = can_peer_reference_candidates(observed, scan)
@@ -291,7 +294,9 @@ def can_peer_reference_native_fixture_lane(
             repeat_normalized_erc_sha256=erc_hashes["repeat"],
             canh_net=scan.buses[0].canh_net,
             canl_net=scan.buses[0].canl_net,
-            references=",".join(sorted({item.reference_net or "" for item in scan.buses[0].endpoints})),
+            references=",".join(
+                sorted({item.reference_net or "" for item in scan.buses[0].endpoints})
+            ),
             disposition=expected_disposition,
             lint_candidate_count=str(expected_count),
             erc_errors="0",
@@ -314,8 +319,6 @@ def can_peer_reference_native_fixture_lane(
         kicad_version=config.kicad_version,
         image=pinned,
         source_hashes=";".join(f"{case}:{source_hashes[case]}" for case in cases),
-        normalized_netlist_hashes=";".join(
-            f"{case}:{normalized_by_case[case]}" for case in cases
-        ),
+        normalized_netlist_hashes=";".join(f"{case}:{normalized_by_case[case]}" for case in cases),
         command_receipt=receipt_path,
     )

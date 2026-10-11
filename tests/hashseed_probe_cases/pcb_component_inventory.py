@@ -12,13 +12,13 @@ from tests.design_lint_fixtures.pcb_component_inventory import (
 )
 
 
-def _inventory_report(*, board_references: tuple[str, ...], placed_footprint: str | None) -> dict[str, object]:
+def _inventory_report(
+    *, board_references: tuple[str, ...], placed_footprint: str | None
+) -> dict[str, object]:
     observed = netlist(components={"U1": "Package_QFP:TQFP-48"})
     board = snapshot(
         *board_references,
-        footprint_by_reference=(
-            {"U1": placed_footprint} if placed_footprint is not None else None
-        ),
+        footprint_by_reference=({"U1": placed_footprint} if placed_footprint is not None else None),
     )
     report = evaluate(
         "synthetic-pcb-component-inventory-hash-seed",

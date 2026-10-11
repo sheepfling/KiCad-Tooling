@@ -52,8 +52,7 @@ def can_peer_reference_coverage(
         for bus in scan.buses
     )
     incomplete_count = sum(
-        item.disposition in {"INCOMPLETE", "PARTIAL_SPLIT_REFERENCE_REVIEW"}
-        for item in entries
+        item.disposition in {"INCOMPLETE", "PARTIAL_SPLIT_REFERENCE_REVIEW"} for item in entries
     )
     split_count = sum(
         item.disposition
@@ -69,11 +68,7 @@ def can_peer_reference_coverage(
         for item in entries
     )
     status: Literal["NO_SHARED_CAN_BUSES", "INCOMPLETE", "EVALUATED"] = (
-        "NO_SHARED_CAN_BUSES"
-        if not entries
-        else "INCOMPLETE"
-        if incomplete_count
-        else "EVALUATED"
+        "NO_SHARED_CAN_BUSES" if not entries else "INCOMPLETE" if incomplete_count else "EVALUATED"
     )
     return CanPeerReferenceCoverageReport(
         rule_id=rule_id,

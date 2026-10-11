@@ -34,8 +34,7 @@ def test_spi_peer_reference_models_stay_in_their_theme_owner() -> None:
     imported = {
         alias.name
         for node in ast.walk(coverage_tree)
-        if isinstance(node, ast.ImportFrom)
-        and node.module == "spi_peer_reference_models"
+        if isinstance(node, ast.ImportFrom) and node.module == "spi_peer_reference_models"
         for alias in node.names
     }
     assert imported == {"SpiClockPeerCoverage", "SpiPeerReferenceCoverageReport"}

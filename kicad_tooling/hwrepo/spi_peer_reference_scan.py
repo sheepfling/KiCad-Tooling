@@ -62,8 +62,6 @@ class SpiPeerReferenceScan:
         )
 
 
-
-
 def scan_spi_peer_references(observed: NetlistContract) -> SpiPeerReferenceScan:
     """Review separate explicit references among fitted ICs sharing native SCK.
 

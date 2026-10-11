@@ -191,9 +191,7 @@ def test_separate_serial_returns_pass_when_isolation_is_declared() -> None:
 
     common = GroundingAnalysis(
         basis="Synthetic approved pinout requires common returns",
-        domains=(
-            GroundDomain(net="SERIAL_1_GND", pins=("U1.3", "J1.5", "U2.3", "J2.5")),
-        ),
+        domains=(GroundDomain(net="SERIAL_1_GND", pins=("U1.3", "J1.5", "U2.3", "J2.5")),),
     )
     checks = {row.id: row for row in grounding_checks(common, observed)}
     assert checks["grounding/SERIAL_1_GND"].status == "FAIL"
@@ -261,7 +259,9 @@ def test_misleading_return_names_need_reasoned_exceptions_and_no_stale_waiver() 
             }
         }
     )
-    review = next(row for row in grounding_checks(stale, observed) if row.id.endswith("return-net-review"))
+    review = next(
+        row for row in grounding_checks(stale, observed) if row.id.endswith("return-net-review")
+    )
     assert review.status == "FAIL"
 
     with pytest.raises(ValueError):

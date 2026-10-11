@@ -114,6 +114,7 @@ I2C_PEER_REFERENCE_MODULES = (
     "i2c_peer_reference_scan.py",
 )
 
+
 def test_connector_pin_analysis_facade_stays_small() -> None:
     facade = HWREPO / "connector_pins.py"
 

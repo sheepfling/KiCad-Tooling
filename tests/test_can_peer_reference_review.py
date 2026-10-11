@@ -51,9 +51,7 @@ def test_shared_can_line_pair_with_split_references_emits_one_exact_review() -> 
         ),
     }
     assert "common return" in findings[0].message
-    assert "bus.can_peer_assignment_divergence" not in {
-        item.rule_id for item in report.findings
-    }
+    assert "bus.can_peer_assignment_divergence" not in {item.rule_id for item in report.findings}
     assert report.can_peer_reference_coverage is not None
     assert report.can_peer_reference_coverage.netlist_sha256 == report.netlist_sha256
     assert report.can_peer_reference_coverage.candidate_group_count == 1
@@ -81,11 +79,7 @@ def test_common_reference_distinct_can_buses_dnp_and_shield_are_controls() -> No
     )
     shield = evaluate(
         "synthetic-can-reference",
-        coach(
-            can_peer_reference_netlist(
-                reference_functions={"U1": "SHIELD", "U2": "SHIELD"}
-            )
-        ),
+        coach(can_peer_reference_netlist(reference_functions={"U1": "SHIELD", "U2": "SHIELD"})),
         DesignLintPolicy(),
     )
 

@@ -77,9 +77,7 @@ def scan_can_peer_references(observed: NetlistContract) -> CanPeerReferenceScan:
         reference.casefold(): tuple(numbers)
         for reference, numbers in observed.component_pin_numbers.items()
     }
-    component_references = {
-        reference.casefold(): reference for reference in observed.components
-    }
+    component_references = {reference.casefold(): reference for reference in observed.components}
     symbol_references = {reference.casefold() for reference in observed.component_symbols}
     dnp = {reference.casefold() for reference in observed.dnp_components}
 
@@ -131,9 +129,9 @@ def scan_can_peer_references(observed: NetlistContract) -> CanPeerReferenceScan:
 
     grouped: dict[tuple[str, str], list[CanPeerReferenceEndpoint]] = {}
     for endpoint in endpoints:
-        grouped.setdefault(
-            (endpoint.canh_net.casefold(), endpoint.canl_net.casefold()), []
-        ).append(endpoint)
+        grouped.setdefault((endpoint.canh_net.casefold(), endpoint.canl_net.casefold()), []).append(
+            endpoint
+        )
 
     buses: list[CanPeerReferenceBus] = []
     for endpoints_on_bus in grouped.values():
@@ -143,9 +141,7 @@ def scan_can_peer_references(observed: NetlistContract) -> CanPeerReferenceScan:
             sorted(endpoints_on_bus, key=lambda item: (item.reference.casefold(), item.reference))
         )
         reference_nets = {
-            item.reference_net.casefold()
-            for item in ordered
-            if item.reference_net is not None
+            item.reference_net.casefold() for item in ordered if item.reference_net is not None
         }
         incomplete = tuple(item.reference for item in ordered if item.reference_net is None)
         if len(reference_nets) > 1:

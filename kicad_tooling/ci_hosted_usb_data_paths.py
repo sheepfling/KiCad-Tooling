@@ -201,8 +201,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                     )
             elif case == "inline-component-peer-reference-bond-fault":
                 if tuple(item.line for item in mismatches) != ("reference",) or not any(
-                    "R3 is absent or ambiguous" in issue
-                    for issue in mismatches[0].issues
+                    "R3 is absent or ambiguous" in issue for issue in mismatches[0].issues
                 ):
                     raise ValueError(
                         "Native inline bonded-reference fault omitted exact missing-bond evidence"
@@ -300,9 +299,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         raise ValueError("Native exact bonded-reference inline map produced a USB finding")
     inline_bond_fault = reports[("inline-component-peer-reference-bond-fault", "first")]
     inline_bond_findings = tuple(
-        item
-        for item in inline_bond_fault.findings
-        if item.rule_id == "bus.usb_data_path_mismatch"
+        item for item in inline_bond_fault.findings if item.rule_id == "bus.usb_data_path_mismatch"
     )
     if inline_bond_fault.status != "REVIEW" or tuple(
         item.subject for item in inline_bond_findings
