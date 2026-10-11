@@ -1023,22 +1023,19 @@ evidence for a `REVIEW` prompt. The synthetic fault/control pair is repeated on
 the digest-pinned KiCad 10.0.0 and 10.0.5 images in the connector acceptance
 lane; it does not declare that the contacts must share a net.
 
-- **LINT-012 test selection — Keep USB-C contract regressions theme-selectable.**
-  CC role, controller, mode-strap, debug-accessory boundary, VBUS capacitance,
-  and ordered VBUS-path cases now live in the pytest modules
-  `tests/test_electrical_usb_c_cc.py` and
-  `tests/test_electrical_usb_c_vbus.py`, selected with `interface_lint`; the
-  VBUS module also carries `power_lint`. Their shared synthetic builders live
-  in `tests/electrical_usb_c_support.py` and are reused by the evidence and
-  CLI/MCP parity suites. The legacy `tests/test_electrical.py` shrank from
-  2,602 to 1,831 lines. All 26 focused pytest cases pass; the existing
-  electrical/evidence regressions and USB-C VBUS CLI/MCP parity case also pass
-  with the separate public template checkout configured. This is test
-  organization only: no contract behavior or rule default changed. A declared
-  debug-accessory role remains `NOT_RUN`; static schematic assignments cannot
-  establish its dynamic CC-state behavior.
-  Select the focused slice with
-  `.venv/bin/python -I -m pytest tests/test_electrical_usb_c_cc.py tests/test_electrical_usb_c_vbus.py -m 'interface_lint'`.
+- **LINT-012 test selection — Keep USB-C contract regressions theme-selectable.** CC role,
+  controller, mode-strap, debug-accessory boundary, VBUS capacitance, and ordered VBUS-path cases
+  now live in the pytest modules `tests/test_electrical_usb_c_cc.py` and
+  `tests/test_electrical_usb_c_vbus.py`, selected with `interface_lint`; the VBUS module also
+  carries `power_lint`. Their shared synthetic builders live in `tests/electrical_usb_c_support.py`
+  and are reused by the evidence and CLI/MCP parity suites. The legacy `tests/test_electrical.py`
+  shrank from 2,602 to 1,831 lines. All 26 focused pytest cases pass; the existing
+  electrical/evidence regressions and USB-C VBUS CLI/MCP parity case also pass with the separate
+  public template checkout configured. This is test organization only: no contract behavior or rule
+  default changed. A declared debug-accessory role remains `NOT_RUN`; static schematic assignments
+  cannot establish its dynamic CC-state behavior. Select the focused slice with
+  `.venv/bin/python -I -m pytest tests/test_electrical_usb_c_cc.py
+  tests/test_electrical_usb_c_vbus.py -m 'interface_lint'`.
 
 This execution focus is updated as evidence closes. A completed implementation
 is not a reason by itself to expand its scope or change its default policy.
@@ -5259,8 +5256,9 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Fixtures:** Tooling-owned synthetic contract tests cover a native GND pin
   on `+5V`, a mapped generic return pin on a recognized positive rail, a
   common-return control, negative-rail and unrecognized-role controls, shields,
-  DNP, open assignments, input order, and reassignment. Source schematics
-  under `tests/fixtures/design_lint/return-pin-positive-rail/` feed the
+  DNP, open assignments, input order, and reassignment. The
+  [fixture note](../tests/fixtures/design_lint/return-pin-positive-rail/README.md)
+  and its source schematics feed the
   digest-pinned KiCad 10.0.0/10.0.5 connector-return lane.
 - **Applicability evidence:** No additional board projects are needed to
   define or regression-test this bounded predicate. Public nonconfidential
@@ -7017,7 +7015,6 @@ is not a reason by itself to expand its scope or change its default policy.
   A same-rail negative control does not measure false positives on 5 V-tolerant
   or mixed-supply parts. Reviewer effort, false-positive rate, performance,
   and behavior on approved non-proprietary projects remain unmeasured.
-
 - **Follow-up source recheck (2026-10-11):** The public
   [kicad-happy v2.3.1 release](https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1)
   reports a correct 3.3 V GPIO-to-regulator-EN connection that VM-001 had
@@ -10464,7 +10461,7 @@ engineering advice applies to every design.
 | MOSFET operating-state terminal stress                 | kicad-tools 0.21.1 `component-stress`                                                              | LINT-073 uses the cohort trial as a requirements lead and defers its analyzer because the trial passed DNP and changed-part controls. The local `mosfet_stress` contract checks exact three-pin identity and role mapping, required-state potential intervals, and VDS/VGS utilization; synthetic parity, retained-receipt, and digest-pinned KiCad 10.0.0/10.0.5 acceptance passed on 2026-10-02. The native lane validates synthetic source and calculation behavior, not device suitability.                                                                                                                                                                                                                                                                                                                                                                                    |
 | I2C pull-up rail families                              | kicad-happy bus voltage/pull-up summaries; NXP UM10204                                             | LINT-059 prompts when visible fitted pull-up paths use different recognized rail-name families across SDA/SCL. It does not resolve rail values, assert incompatibility, or replace project-authored endpoint voltage limits. Same-family aliases, DNP devices, custom names, and unmodeled pull-up circuits have controls or explicit boundaries.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | SPI participant and CS review                          | kicad-happy `detect_sensor_interfaces` and `validate_spi_bus`                                      | LINT-052 compares bounded SPI-like native pin functions with the source-hashed project roster; it prompts for review when a likely participant is unlisted or no roster exists. Exact-version native exports on KiCad 10.0.0/10.0.5 preserve prefixed SCLK/COPI/CIPO/NSS functions and distinguish an absent-roster prompt from a complete-roster control. Pinned source inspection found that sensor peers are listed by shared extracted nets but not compared with authored membership; its CS detector covers pull-up topology. LINT-045 separately implements the CS-bias prompt. The inventory is a clue, not proof that a device belongs on that bus.                                                                                                                                                                                                                       |
-| Unmapped cross-supply digital peers                    | kicad-happy `VM-001`                                                                               | LINT-066 implements default-REVIEW prompts for recognized SPI and UART/USART TX-to-RX peers using complete native pin-type and exact voltage-explicit supply-label evidence. It does not infer incompatibility; complete exact LINT-061 maps take over covered links. Synthetic fault/control and CLI/MCP parity pass. SPI repeated native exports pass on pinned KiCad 10.0.0/10.0.5; UART repeated local KiCad 10.0.6 exports pass and the pinned-version lane is configured. A source-informed GPIO-to-regulator-EN anti-control now protects the protocol-only boundary; this does not measure field false-positive rates. See both fixture notes.                                                                                                                                                                                                                                                                 |
+| Unmapped cross-supply digital peers                    | kicad-happy `VM-001`                                                                               | LINT-066 implements default-REVIEW prompts for recognized SPI and UART/USART TX-to-RX peers using complete native pin-type and exact voltage-explicit supply-label evidence. It does not infer incompatibility; complete exact LINT-061 maps take over covered links. Synthetic fault/control and CLI/MCP parity pass. SPI repeated native exports pass on pinned KiCad 10.0.0/10.0.5; UART repeated local KiCad 10.0.6 exports pass and the pinned-version lane is configured. A source-informed GPIO-to-regulator-EN anti-control now protects the protocol-only boundary; this does not measure field false-positive rates. See both fixture notes.                                                                                                                                                                                                                             |
 | CAN peer pair net asymmetry                            | kicad-happy v2.2.1 CAN protocol checks; repeated native CAN pin assignments                        | LINT-067 prompts when fitted complete CANH/CANL pairs share one exact schematic net but diverge on the other. It is a review-localization hint, not a determination that the pairs must be joined. Synthetic same-pair, one-side split, separate-bus, and DNP controls plus repeated native exports without ERC errors pass on KiCad 10.0.0/10.0.5; isolated-library warnings are recorded. The LINT-031 runtime trial emitted the same empty-net missing-termination message on control and fault and did not expose PR-003 in JSON. Reviewer effort and field false positives remain unmeasured.                                                                                                                                                                                                                                                                                 |
 | USB-C port role-map coverage                           | kicad-happy USB-C CC validation                                                                    | LINT-053 prompts when a connector exports both CC1/CC2 pin functions but is absent from the authored role map. Native exports on KiCad 10.0.0/10.0.5 prove this bounded pin-function field and mapped/unmapped behavior. A pinned v2.1.0 runtime trial recognized simple 56 kΩ source and 5.1 kΩ sink controls, but for an unknown role it emitted sink-specific missing-pull-down findings while reporting the role as unknown. It adds no unique coverage over the local role-map prompt and authored role checks; details and hashes are in the synthetic fixture notes.                                                                                                                                                                                                                                                                                                        |
 | LED current-limiter presence                           | kicad-happy `validate_led_resistors`, LR-001; LED audit `LA-AUD`                                   | LINT-048 keeps exact `Device:LED` direct positive-rail/return assignments as a review hint; LINT-063 prompts when a native output-capable pin directly shares an LED terminal and the other terminal is on a recognized rail. A read-only `LA-AUD` trial corroborates the simple direct-output case but misclassifies the parallel-resistor fault as `resistor_limited`; the local rule retains that finding. Native exports on KiCad 10.0.0/10.0.5 assert the parallel resistor shares both LED nets before testing. ERC, current, and electrical qualification remain open; exact cohort hashes and reports are in the synthetic fixture notes.                                                                                                                                                                                                                                  |
