@@ -1857,7 +1857,14 @@ is not a reason by itself to expand its scope or change its default policy.
   on KiCad 10.0.0 and 10.0.5. The current exact-version lane was rerun locally
   on 2026-10-08 and passed on both versions. Numeric-only pin functions with
   neutral net labels still surfaced the mismatch, and the common-net control
-  cleared it. Hosted acceptance for this revision remains pending.
+  cleared it. Hosted tagged acceptance passed in GitHub run `38143923818`
+  (`v0.5.0rc86`, commit `2155056`) on 2026-10-11. Its unit stage selected
+  `design_lint and connector_lint` with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`: 293 passed, 10 skipped, 2,387
+  deselected, and 10 subtests passed. The connector native lane recorded 59
+  passing fixture stages for each digest-pinned KiCad 10.0.0 and 10.0.5
+  project, including mapped return/supply role cases and the four-DB9
+  split-return fault/common-return control.
 - **Priority:** P0 connector coverage. A connector library may leave an
   interface contact generic or number-only, hiding the return or supply role
   from native-function heuristics. The reviewed interface catalog is already
