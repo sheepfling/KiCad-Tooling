@@ -14,6 +14,8 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 
+pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
+
 _REFERENCES = ("J1", "J2", "J3")
 _NETLIST_SHA256 = "a" * 64
 
