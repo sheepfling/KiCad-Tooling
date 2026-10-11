@@ -28,9 +28,9 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `external-phy-series-reference-bond-control.kicad_sch` | `5a178e443dcac77c4342d9b3e86a254556f71bbdc1b707bcb2bb23a1459bd9f3` |
 | `external-phy-series-reference-fault.kicad_sch`        | `25e0cea0682898c5300b27024436717fc9b9b50743ef256b922e98909e0520ab` |
 | `external-phy-direct-bypass-fault.kicad_sch`           | `0b6173339fc0e2f937247c6eb5aaea1ac51b0b7a26a31058c25119333cb8f0c2` |
-| `inline-protection-control.kicad_sch`                  | `70b7979e6d1ed15fed2f31bbd73d7f076d579456ac57ed47acd60be2c79ef7d6` |
-| `inline-protection-ground-fault.kicad_sch`             | `0d9d157e7d795067c86a16c7c43235afbfe24dc7b45086ce1407f2873000185b` |
-| `inline-protection-split-reference.kicad_sch`          | `118c63f571c341976bc41067cf863eba8c4bbdd13c6577669e7b372eb19ad545` |
+| `inline-protection-control.kicad_sch`                  | `cf85e10487c4a92779de40f44fa56ddb518c4897117088652f6ce8f7387be8fd` |
+| `inline-protection-ground-fault.kicad_sch`             | `947136aa5a997895493d05e5dd4781ff9ea07f2ffa48e60a20b915d5ddff52dc` |
+| `inline-protection-split-reference.kicad_sch`          | `1ca140bcd75dbc3330a3839c53cb6086b22f9f56f4f8d03049f7b84c67558444` |
 
 The native regression runs twice with each of these digest-pinned images:
 

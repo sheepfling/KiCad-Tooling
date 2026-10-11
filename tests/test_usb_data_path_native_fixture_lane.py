@@ -49,10 +49,10 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-c-peer-reference-control": "456f8d1f23735db18f4ec1b0c347cc1ab1d396af3b957c40d9158e535015a70f",
         "usb-multiport-peer-reference-fault": "9cbc4ebc8692b02fc9ef8b6a1723d926536b2b7a74251ff4d37e045cdacae615",
         "usb-multiport-peer-reference-control": "80f5af92083dbc5a3fce319dabb5c80efb535899e482ff6ad952a41f576df0d0",
-        "inline-component-control": "70b7979e6d1ed15fed2f31bbd73d7f076d579456ac57ed47acd60be2c79ef7d6",
-        "inline-component-ground-fault": "0d9d157e7d795067c86a16c7c43235afbfe24dc7b45086ce1407f2873000185b",
-        "inline-component-peer-reference-fault": "118c63f571c341976bc41067cf863eba8c4bbdd13c6577669e7b372eb19ad545",
-        "inline-component-peer-reference-map-control": "118c63f571c341976bc41067cf863eba8c4bbdd13c6577669e7b372eb19ad545",
+        "inline-component-control": "cf85e10487c4a92779de40f44fa56ddb518c4897117088652f6ce8f7387be8fd",
+        "inline-component-ground-fault": "947136aa5a997895493d05e5dd4781ff9ea07f2ffa48e60a20b915d5ddff52dc",
+        "inline-component-peer-reference-fault": "1ca140bcd75dbc3330a3839c53cb6086b22f9f56f4f8d03049f7b84c67558444",
+        "inline-component-peer-reference-map-control": "1ca140bcd75dbc3330a3839c53cb6086b22f9f56f4f8d03049f7b84c67558444",
     }
     root = hosted_reference_root
     config = selected_config(root, project)
