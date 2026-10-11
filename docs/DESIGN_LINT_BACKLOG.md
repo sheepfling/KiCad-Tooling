@@ -1337,6 +1337,11 @@ is not a reason by itself to expand its scope or change its default policy.
   as `connector.peer_pin_assignment_divergence`; each common-net control
   passes. The same lane asserts that a unique two-to-one assignment emits only
   the higher-confidence outlier rule.
+- **Focused gate acceptance (2026-10-11):** The annotated tag `v0.5.0rc78`
+  declared `Lint-Area: connector_lint` and passed GitHub Actions run
+  `38139244092`, including the new synthetic nine-contact split-return case.
+  No native fixture switch was needed because this addition expanded
+  regression coverage without changing the analyzer.
 - **Done:** The new default-review finding is catalogued, source-bound to exact
   pin/net evidence, independently configurable, and exercised by synthetic
   fault/control, exact-version native export, and CLI/MCP parity checks. No
