@@ -27,6 +27,7 @@
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
         "tests.test_design_lint_connector_returns.test_return_pin_disagreement_within_one_connector_needs_review",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
+        "tests.test_connector_peer_pin_coverage.test_split_meaningful_returns_are_reported_and_counted",
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
@@ -38,6 +39,7 @@
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
         "tests.test_design_lint_connector_returns.test_connector_power_labels_do_not_merge_distinct_domains",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_return_control_clears_review_findings",
+        "tests.test_connector_peer_pin_coverage.test_common_peer_assignments_are_counted_without_a_finding",
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_population_heuristics_ignore_dnp_instances",
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
@@ -85,6 +87,7 @@
       "fault_fixtures": [
         "tests.test_design_lint_connector_peer_pins.test_exact_symbol_peer_pin_outlier_localizes_missing_generic_contact",
         "tests.test_design_lint_connector_peer_pins.test_two_peer_open_generic_contact_prompts_and_supports_exact_ignore",
+        "tests.test_connector_peer_pin_coverage.test_open_generic_peer_pin_is_reported_with_a_valid_common_control",
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_outlier_uses_unique_majority",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
@@ -95,6 +98,7 @@
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_peer_pins.test_exact_symbol_peer_pin_controls_exclude_consistent_independent_and_dnp_cases",
         "tests.test_design_lint_connector_peer_pins.test_two_peer_open_generic_contact_prompts_and_supports_exact_ignore",
+        "tests.test_connector_peer_pin_coverage.test_common_peer_assignments_are_counted_without_a_finding",
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_connector_part_id_peers.test_common_part_id_aliases_are_a_quiet_control_and_split_groups_allow_isolation",
