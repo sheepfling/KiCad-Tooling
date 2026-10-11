@@ -713,7 +713,7 @@
         "Connector references listed as DNP by the native netlist are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "valid_control_fixtures": [
@@ -721,7 +721,7 @@
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_population_heuristics_ignore_dnp_instances"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_named_open_connector_supply_and_return_order_and_completion"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_open_connector_supply_and_return_order_and_completion"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_named_connector_pins",
@@ -749,7 +749,7 @@
         "Connector references listed as DNP by the native netlist are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "valid_control_fixtures": [
@@ -757,7 +757,7 @@
         "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_population_heuristics_ignore_dnp_instances"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_named_open_connector_supply_and_return_order_and_completion"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_open_connector_supply_and_return_order_and_completion"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_named_connector_pins",
@@ -785,13 +785,16 @@
         "Only exact connector candidates identified by native or project-reviewed connector identity are evaluated; DNP instances are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_unconnected_generic_power_input_type_is_reported_and_configurable"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_report_includes_native_evidence"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_unconnected_generic_power_input_type_is_reported_and_configurable"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_valid_controls_are_suppressed",
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_generic_connector_power_pins_keep_specific_rules",
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_supports_policy_block_ignore_and_off"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_generic_power_input_type_is_order_stable_and_clears_when_assigned"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_type_is_order_stable",
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_connected_generic_power_input_clears_the_candidate"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_input_connector_pins",
@@ -819,13 +822,15 @@
         "Connector candidates, including source-reviewed connector references, and DNP components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
+        "tests.test_design_lint_component_power_pins.test_unconnected_generic_component_power_input_is_reviewable"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_unconnected_generic_component_power_input_is_reviewable_and_configurable"
+        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_valid_controls_are_suppressed",
+        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_keeps_specific_supply_and_connector_rules",
+        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_supports_policy_block_ignore_and_off"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.DesignLintPowerPinPatternTests.test_generic_component_power_input_is_order_stable"
+        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_is_order_stable"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_generic_power_input_component_pins",
@@ -924,7 +929,7 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_control_inputs.DesignLintControlInputTests.test_control_input_candidates_are_order_stable_and_each_assignment_clears_one"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_control_input_candidates_are_order_stable_and_each_assignment_clears_one"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/control_input_inventory.py#unconnected_control_inputs",
@@ -950,15 +955,15 @@
         "Internal pulls, off-board bias, connected drivers, firmware behavior, resistor adequacy, and PCB copper continuity are not modeled; DNP control components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_control_inputs.DesignLintControlInputTests.test_connected_control_input_without_visible_bias_is_review_only_and_configurable"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_input_without_visible_bias_is_review_only_and_configurable"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_control_inputs.DesignLintControlInputTests.test_connected_control_bias_prompt_checks_assignments_and_valid_controls",
-        "tests.test_design_lint_control_inputs.DesignLintControlInputTests.test_connected_control_bias_prompt_uses_exact_source_bound_contract_decisions"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_prompt_checks_assignments_and_valid_controls",
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_exact_source_bound_contract_decision_satisfies_heuristic_coverage"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_control_inputs.DesignLintControlInputTests.test_connected_control_bias_finding_is_order_stable_and_direct_resistor_clears_it"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_finding_is_order_stable_and_direct_resistor_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/control_input_inventory.py#connected_control_inputs_without_visible_rail_resistor",
@@ -2114,7 +2119,7 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_wire_through_symbol_body_is_reported_and_clear_control_is_valid",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_overlap_uses_guard_and_minimum_length",
-        "tests.test_design_lint_schematic_readability.DesignLintSchematicReadabilityTests.test_wire_through_symbol_body_rule_is_configurable_and_off_by_default"
+        "tests.test_design_lint_schematic_readability.test_wire_through_symbol_body_review_has_source_evidence"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_wire_through_symbol_body_is_reported_and_clear_control_is_valid",

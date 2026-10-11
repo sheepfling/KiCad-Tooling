@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint import candidates, evaluate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     DesignLintIgnore,
@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests.design_lint_fixtures import (
     coach,
+    generic_component_power_input_netlist,
     observed,
     repeated_component_supply_pins,
     unconnected_component_power_pins,
@@ -281,3 +282,164 @@ def test_component_open_power_pin_findings_are_order_stable_and_assignment_clear
     )
     repaired_report = evaluate("synthetic-logic", coach(repaired), DesignLintPolicy())
     assert not target_rules & {item.rule_id for item in repaired_report.findings}
+
+
+def test_unconnected_generic_component_power_input_is_reviewable() -> None:
+    source = generic_component_power_input_netlist()
+    report = evaluate("synthetic-generic-component-power-input", coach(source), DesignLintPolicy())
+
+    assert report.status == "REVIEW"
+    assert len(report.findings) == 1
+    finding = report.findings[0]
+    assert finding.rule_id == "component.unconnected_power_input"
+    assert finding.subject == "U1.1: generic native power-input pin is unassigned"
+    assert finding.evidence == {
+        "symbol": ("Synthetic:GenericPowerInputComponent",),
+        "pin_electrical_type": ("power_in",),
+        "U1.1": (),
+        "native_pin_function": ("1",),
+    }
+    assert "does not identify the pin's specific role" in finding.message
+
+    absent_function = evaluate(
+        "synthetic-generic-component-power-input-absent-function",
+        coach(generic_component_power_input_netlist(function=None)),
+        DesignLintPolicy(),
+    )
+    assert {item.rule_id for item in absent_function.findings} == {
+        "component.unconnected_power_input"
+    }
+    assert "native_pin_function" not in absent_function.findings[0].evidence
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        pytest.param(generic_component_power_input_netlist(connected=True), id="connected"),
+        pytest.param(generic_component_power_input_netlist(dnp_references=("U1",)), id="dnp"),
+        pytest.param(
+            generic_component_power_input_netlist(electrical_type="passive"), id="passive"
+        ),
+        pytest.param(
+            generic_component_power_input_netlist(electrical_type="power_out"), id="power-out"
+        ),
+        pytest.param(generic_component_power_input_netlist(function="VCC"), id="named-supply"),
+        pytest.param(generic_component_power_input_netlist(reference="J1"), id="connector"),
+    ),
+)
+def test_generic_component_power_input_valid_controls_are_suppressed(
+    source: NetlistContract,
+) -> None:
+    report = evaluate(
+        "synthetic-generic-component-power-input-control", coach(source), DesignLintPolicy()
+    )
+
+    assert "component.unconnected_power_input" not in {item.rule_id for item in report.findings}
+
+
+def test_generic_component_power_input_keeps_specific_supply_and_connector_rules() -> None:
+    named_supply = evaluate(
+        "synthetic-generic-component-named-supply",
+        coach(generic_component_power_input_netlist(function="VCC")),
+        DesignLintPolicy(),
+    )
+    assert {item.rule_id for item in named_supply.findings} == {"component.unconnected_supply_pin"}
+
+    connector_source = generic_component_power_input_netlist(reference="J1")
+    connector = evaluate(
+        "synthetic-generic-component-connector-exclusion",
+        coach(connector_source),
+        DesignLintPolicy(),
+    )
+    assert {item.rule_id for item in connector.findings} == {"connector.unconnected_power_input"}
+
+    reviewed_custom_connector = candidates(
+        generic_component_power_input_netlist(
+            reference="PORT_A",
+            symbol="Synthetic:ReviewedGenericPort",
+        ),
+        reviewed_connector_references=("PORT_A",),
+    )
+    assert {item.rule_id for item in reviewed_custom_connector} == {
+        "connector.unconnected_power_input"
+    }
+
+
+def test_generic_component_power_input_supports_policy_block_ignore_and_off() -> None:
+    source = generic_component_power_input_netlist()
+    initial = evaluate("synthetic-generic-component-power-input", coach(source), DesignLintPolicy())
+    finding = next(
+        item for item in initial.findings if item.rule_id == "component.unconnected_power_input"
+    )
+
+    blocking = evaluate(
+        "synthetic-generic-component-power-input",
+        coach(source),
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="component.unconnected_power_input",
+                    mode="block",
+                    reason="Synthetic project requires disposition of open power inputs",
+                ),
+            )
+        ),
+    )
+    assert blocking.status == "FAIL"
+
+    ignored = evaluate(
+        "synthetic-generic-component-power-input",
+        coach(source),
+        DesignLintPolicy(
+            ignores=(
+                DesignLintIgnore(
+                    rule_id="component.unconnected_power_input",
+                    fingerprint=finding.fingerprint,
+                    reason="Synthetic approved design intentionally leaves this pin open",
+                ),
+            )
+        ),
+    )
+    assert ignored.status == "PASS"
+    assert ignored.findings[0].disposition == "IGNORED"
+
+    disabled = evaluate(
+        "synthetic-generic-component-power-input",
+        coach(source),
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="component.unconnected_power_input",
+                    mode="off",
+                    reason="Synthetic owner confirmed an intentional internal supply connection",
+                ),
+            )
+        ),
+    )
+    assert disabled.status == "PASS"
+    assert disabled.findings[0].disposition == "RULE_OFF"
+
+
+def test_generic_component_power_input_is_order_stable() -> None:
+    source = generic_component_power_input_netlist()
+    reordered = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+        }
+    )
+    original = evaluate(
+        "synthetic-generic-component-power-input", coach(source), DesignLintPolicy()
+    )
+    reordered_report = evaluate(
+        "synthetic-generic-component-power-input", coach(reordered), DesignLintPolicy()
+    )
+
+    assert tuple(
+        (item.fingerprint, item.subject, item.evidence) for item in original.findings
+    ) == tuple(
+        (item.fingerprint, item.subject, item.evidence) for item in reordered_report.findings
+    )

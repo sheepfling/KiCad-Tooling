@@ -15,24 +15,17 @@ from tests.test_design_lint_complementary_pairs import (
     DesignLintComplementaryPairTests as ComplementaryPairCase,
 )
 from tests.test_design_lint_connector_roles import DesignLintConnectorRoleTests as ConnectorRoleCase
-from tests.test_design_lint_control_inputs import DesignLintControlInputTests as ControlInputCase
 from tests.test_design_lint_dc_reference import DesignLintDcReferenceTests as DcReferenceCase
 from tests.test_design_lint_decoupling import DesignLintDecouplingTests as DecouplingCase
 from tests.test_design_lint_i2c import DesignLintI2cTests as I2cCase
 from tests.test_design_lint_led_topology import DesignLintLedTopologyTests as LedTopologyCase
 from tests.test_design_lint_peer_voltage import DesignLintPeerVoltageTests as PeerVoltageCase
 from tests.test_design_lint_policy import DesignLintPolicyTests as PolicyCase
-from tests.test_design_lint_power_pin_patterns import (
-    DesignLintPowerPinPatternTests as PowerPinPatternCase,
-)
 from tests.test_design_lint_schematic_connectivity import (
     DesignLintSchematicConnectivityTests as SchematicConnectivityCase,
 )
 from tests.test_design_lint_schematic_coverage import (
     DesignLintSchematicCoverageTests as SchematicCoverageCase,
-)
-from tests.test_design_lint_schematic_readability import (
-    DesignLintSchematicReadabilityTests as SchematicReadabilityCase,
 )
 from tests.test_design_lint_schematic_text import DesignLintSchematicTextTests as SchematicTextCase
 from tests.test_design_lint_serial_peer_voltage import (
@@ -107,15 +100,12 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         DcReferenceCase: DcReferenceCase(),
         DecouplingCase: DecouplingCase(),
         SchematicConnectivityCase: SchematicConnectivityCase(),
-        SchematicReadabilityCase: SchematicReadabilityCase(),
         SchematicCoverageCase: SchematicCoverageCase(),
         ConnectorRoleCase: ConnectorRoleCase(),
         LedTopologyCase: LedTopologyCase(),
-        PowerPinPatternCase: PowerPinPatternCase(),
         I2cCase: I2cCase(),
         ComplementaryPairCase: ComplementaryPairCase(),
         UnconnectedInterfaceCase: UnconnectedInterfaceCase(),
-        ControlInputCase: ControlInputCase(),
         PolicyCase: PolicyCase(),
         SchematicGeometryHierarchyCase: SchematicGeometryHierarchyCase(),
         SchematicGeometryPinProximityCase: SchematicGeometryPinProximityCase(),
@@ -170,7 +160,10 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
                 assert owner in instances, name
                 fixtures.add((owner, attributes[-1]))
             else:
-                assert len(attributes) == 1, name
+                if isinstance(owner, type):
+                    assert owner.__name__.startswith("Test"), name
+                else:
+                    assert len(attributes) == 1, name
                 assert target.__name__.startswith("test_"), name
                 pytest_fixtures.add(name)
 
