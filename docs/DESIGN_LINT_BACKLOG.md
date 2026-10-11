@@ -8640,6 +8640,10 @@ it does not claim field validation or effectiveness against private boards.
   faults but are not counted as LINT-055's incremental result. The incremental
   result is the assigned wrong-net case, where native ERC has no errors and the
   exact authored path map reports the source-to-load mismatch.
+- **Tagged hosted acceptance:** The scoped `v0.5.0rc71` gate passed on
+  2026-10-11 (GitHub Actions run `38133015752`). The native power-path fixture
+  lane was enabled with `KICAD_RUN_NATIVE_POWER_PATH_FIXTURES=1`; its control
+  and fault passed on pinned KiCad 10.0.0 and 10.0.5.
 
 #### LINT-056 — Unmapped power-input source-path review
 
@@ -8806,6 +8810,10 @@ it does not claim field validation or effectiveness against private boards.
   the authored LINT-055 path map when a project needs an exact topology. A
   custom-named external source without exported source-pin evidence still
   needs an explicit project decision.
+- **Tagged hosted acceptance:** The scoped `v0.5.0rc71` gate passed on
+  2026-10-11 (GitHub Actions run `38133015752`) with
+  `KICAD_RUN_NATIVE_POWER_PATH_FIXTURES=1`. Hosted native fixtures passed under
+  the pinned KiCad 10.0.0 and 10.0.5 images.
 
 #### LINT-057 — Direct serial logic-voltage compatibility
 
@@ -9401,6 +9409,10 @@ it does not claim field validation or effectiveness against private boards.
   A numeric timing extension remains a separate follow-up with its own approved
   source schema and synthetic boundaries; it must not be inferred from device
   names or cohort defaults.
+- **Tagged hosted acceptance:** The scoped `v0.5.0rc71` gate passed on
+  2026-10-11 (GitHub Actions run `38133015752`) with
+  `KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES=1`. Hosted native fixtures passed
+  under the pinned KiCad 10.0.0 and 10.0.5 images.
 
 #### LINT-063 — Output-driven LED series-path review
 
