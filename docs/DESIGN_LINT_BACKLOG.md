@@ -5119,7 +5119,10 @@ is not a reason by itself to expand its scope or change its default policy.
   regressions, and CLI/MCP parity. A digest-pinned native fixture lane is
   registered for KiCad 10.0.0 and 10.0.5. Tag `v0.5.0rc77` passed hosted
   acceptance in Actions run `38138351020`, including the native fixture lane
-  and the installed-wheel check against a separate project checkout.
+  and the installed-wheel check against a separate project checkout. The
+  unchanged-map source-reference-drift regression passed scoped hosted
+  acceptance in tag `v0.5.0rc92`, Actions run `38147088547`, including the
+  installed-wheel check and Ubuntu, macOS, and Windows previews.
 - **Priority:** P1 interface-reference review. An authored RS-485 bus map can
   identify connector or transceiver endpoints and their reference pins, while
   native ERC cannot decide whether peers on the same mapped line pair should
