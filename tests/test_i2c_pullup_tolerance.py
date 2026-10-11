@@ -6,7 +6,7 @@ import pytest
 
 from kicad_tooling.hwrepo.bus_heuristics import i2c_pullup_checks
 from kicad_tooling.hwrepo.models import ElectricalCheck, I2cPullupElectricalWindow
-from tests.test_electrical import (
+from tests.electrical_i2c_support import (
     i2c_pullup_netlist,
     i2c_pullup_requirement,
     i2c_pullup_window_requirement,

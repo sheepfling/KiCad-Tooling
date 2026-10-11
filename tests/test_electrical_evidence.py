@@ -61,6 +61,7 @@ from kicad_tooling.hwrepo.pcb_return_path_capture import (
 from kicad_tooling.hwrepo.releasing import reference, retained_paths
 from kicad_tooling.validate import hashes
 from tests import test_contract_coach as coaching
+from tests.electrical_i2c_support import i2c_pullup_window_requirement
 from tests.support import initialize_git
 from tests.test_component_power_ratings import (
     native_netlist_xml as component_power_netlist_xml,
@@ -86,7 +87,6 @@ from tests.test_electrical import (
     NA,
     PROJECT,
     can_split_termination_requirement,
-    i2c_pullup_window_requirement,
     install_fixture,
     power_connectivity_requirement,
     rs485_requirement,

@@ -431,7 +431,9 @@ and optional ecosystem adapters are `P3`.
   focused pytest modules selectable with `return_path_lint` and
   `connector_lint`. The repeated connector power-pin example is a small
   synthetic netlist fixture. These are existing contract regressions; the move
-  adds no lint rule or measured reviewer outcome.
+  adds no lint rule or measured reviewer outcome. I2C pull-up contract tests
+  now have their own `interface_lint` pytest suite, with reusable synthetic
+  model builders isolated in `tests/electrical_i2c_support.py`.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

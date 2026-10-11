@@ -58,6 +58,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.spice import expanded_deck
 from kicad_tooling.validate import hashes
+from tests import electrical_i2c_support as i2c_support
 from tests import test_contract_coach as coach_fixture
 from tests.support import initialize_git
 from tests.test_component_power_ratings import (
@@ -94,13 +95,6 @@ from tests.test_electrical import (
     NA,
     PROJECT,
     can_split_termination_requirement,
-    i2c_pullup_array_netlist,
-    i2c_pullup_array_requirement,
-    i2c_pullup_requirement,
-    i2c_pullup_voltage_requirement,
-    i2c_pullup_window_requirement,
-    i2c_series_pullup_netlist,
-    i2c_series_pullup_requirement,
     install_fixture,
     power_connectivity_netlist,
     power_connectivity_requirement,
@@ -655,9 +649,9 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             device_references=("U11", "U12"),
             device2_symbol="Synthetic:SpiWriteOnly",
         )
-        pullups = i2c_pullup_requirement()
+        pullups = i2c_support.i2c_pullup_requirement()
         tolerance_window = (
-            i2c_pullup_window_requirement(
+            i2c_support.i2c_pullup_window_requirement(
                 maximum_per_resistor_tolerance_percent=5.0,
                 resistor_tolerance_basis="Synthetic resistor tolerance for every pull-up element",
             )
@@ -846,7 +840,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_i2c_array_pullups_match_cli_and_mcp_for_pass_and_fault(self) -> None:
         self.configured()
-        requirement = i2c_pullup_array_requirement()
+        requirement = i2c_support.i2c_pullup_array_requirement()
 
         def install_netlist(observed: NetlistContract) -> None:
             serialized = contract_netlist_xml(observed)
@@ -906,7 +900,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(cli_report.checks, mcp_report.checks)
             return cli_report, mcp_report, process.returncode
 
-        install_netlist(i2c_pullup_array_netlist())
+        install_netlist(i2c_support.i2c_pullup_array_netlist())
         cli_pass, _, pass_returncode = await analyze_both("i2c-array-pass")
         self.assertEqual(pass_returncode, 0)
         pass_checks = {item.id: item for item in cli_pass.checks}
@@ -914,7 +908,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(pass_checks[f"i2c-pullup/array-bus/{line}"].status, "PASS")
             self.assertEqual(pass_checks[f"i2c-pullup/array-bus/{line}"].observed, 4_700)
 
-        observed_fault = i2c_pullup_array_netlist()
+        observed_fault = i2c_support.i2c_pullup_array_netlist()
         components = dict(observed_fault.components)
         components["RN1"] = ComponentContract(value="4x10k", footprint="Synthetic:RA4")
         install_netlist(observed_fault.model_copy(update={"components": components}))
@@ -987,8 +981,8 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(cli_report.checks, mcp_report.checks)
             return cli_report, mcp_report, process.returncode
 
-        observed = i2c_series_pullup_netlist()
-        install_netlist(observed, i2c_pullup_voltage_requirement())
+        observed = i2c_support.i2c_series_pullup_netlist()
+        install_netlist(observed, i2c_support.i2c_pullup_voltage_requirement())
         pass_report, _, pass_returncode = await analyze_both("i2c-voltage-pass")
         self.assertEqual(pass_returncode, 0)
         self.assertIn(f"{ISLAND}/tests/electrical.json", pass_report.input_sha256)
@@ -1000,7 +994,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
 
         install_netlist(
             observed,
-            i2c_pullup_voltage_requirement(maximum_input_voltage_v=3.2),
+            i2c_support.i2c_pullup_voltage_requirement(maximum_input_voltage_v=3.2),
         )
         fault_report, _, fault_returncode = await analyze_both("i2c-voltage-fault")
         self.assertEqual(fault_returncode, 1)
@@ -1069,8 +1063,8 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(cli_report.checks, mcp_report.checks)
             return cli_report, process.returncode
 
-        observed = i2c_series_pullup_netlist()
-        install_netlist(observed, i2c_pullup_window_requirement())
+        observed = i2c_support.i2c_series_pullup_netlist()
+        install_netlist(observed, i2c_support.i2c_pullup_window_requirement())
         pass_report, pass_returncode = await analyze_both("i2c-window-pass")
         self.assertEqual(pass_returncode, 0)
         pass_checks = {item.id: item for item in pass_report.checks}
@@ -1083,7 +1077,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
 
         install_netlist(
             observed,
-            i2c_pullup_window_requirement(maximum_bus_capacitance_pf=100.0),
+            i2c_support.i2c_pullup_window_requirement(maximum_bus_capacitance_pf=100.0),
         )
         fault_report, fault_returncode = await analyze_both("i2c-window-fault")
         self.assertEqual(fault_returncode, 1)
@@ -1097,7 +1091,7 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_i2c_series_pullups_match_cli_and_mcp_for_pass_and_fault(self) -> None:
         self.configured()
-        requirement = i2c_series_pullup_requirement()
+        requirement = i2c_support.i2c_series_pullup_requirement()
 
         def install_netlist(observed: NetlistContract) -> None:
             serialized = contract_netlist_xml(observed)
@@ -1155,14 +1149,14 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(cli_report.checks, mcp_report.checks)
             return cli_report, process.returncode
 
-        install_netlist(i2c_series_pullup_netlist())
+        install_netlist(i2c_support.i2c_series_pullup_netlist())
         passed, pass_returncode = await analyze_both("i2c-series-pass")
         self.assertEqual(pass_returncode, 0)
         pass_checks = {item.id: item for item in passed.checks}
         self.assertEqual(pass_checks["i2c-pullup/series-bus/sda/series/sda-chain"].status, "PASS")
         self.assertEqual(pass_checks["i2c-pullup/series-bus/sda"].observed, 4_700)
 
-        install_netlist(i2c_series_pullup_netlist(first_value="2k"))
+        install_netlist(i2c_support.i2c_series_pullup_netlist(first_value="2k"))
         fault, fault_returncode = await analyze_both("i2c-series-fault")
         self.assertEqual(fault_returncode, 1)
         fault_checks = {item.id: item for item in fault.checks}

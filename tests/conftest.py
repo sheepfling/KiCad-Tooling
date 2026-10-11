@@ -178,6 +178,7 @@ _LINT_AREA_MODULES = {
             "tests/test_i2c_address_straps.py",
             "tests/test_i2c_address_contract.py",
             "tests/test_i2c_pullup_heuristic_coverage.py",
+            "tests/test_electrical_i2c_contracts.py",
             "tests/test_i2c_pullup_native_fixture_lane.py",
             "tests/test_i2c_pullup_tolerance.py",
             "tests/test_open_drain_bias_fixture_lane.py",

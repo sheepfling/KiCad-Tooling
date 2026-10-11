@@ -43,6 +43,8 @@ python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_serial_participants.py tests/test_serial_participant_net_labels.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
+  tests/test_electrical_i2c_contracts.py
+python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_external_protection_contract.py tests/test_external_protection_review.py
 python -I -B -m pytest -q -m "design_lint and power_lint" \
   tests/test_power_sequences.py tests/test_power_sequence_cycles.py
