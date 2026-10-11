@@ -2179,6 +2179,10 @@ is not a reason by itself to expand its scope or change its default policy.
   report JSON for both cases. This verifies deterministic serialization and
   fixture behavior; it does not establish that the references should be
   common or model a netlist regression against one unchanged authored map.
+  Hosted tagged acceptance passed in GitHub Actions run `38146346709`
+  (`v0.5.0rc91`, commit `3310202`) with the `interface_lint` scope. The hosted
+  gate exercised the focused lint and installed wheel against a separate
+  project; Ubuntu, macOS, and Windows preview jobs also passed.
   A separate cross-symbol supply-role pair uses two exact, complete interface
   maps with the same authored `external-5v` voltage domain. The open-contact
   fault keeps `J2.5` with an empty net assignment in the REVIEW evidence and
