@@ -35,6 +35,8 @@ python -I -B -m pytest -q -m \
 python -I -B -m pytest -q -m "schematic_lint and not native_kicad and not slow"
 python -I -B -m pytest -q -m "connector_lint and not native_kicad and not slow"
 python -I -B -m pytest -q -m "return_path_lint and not native_kicad and not slow"
+python -I -B -m pytest -q tests/test_design_lint_numbered_returns.py \
+  -m "design_lint and connector_lint and return_path_lint"
 python -I -B -m pytest -q -m "design_lint and connector_lint" \
   tests/test_electrical_connector_pin_contracts.py
 python -I -B -m pytest -q -m "design_lint and return_path_lint" \

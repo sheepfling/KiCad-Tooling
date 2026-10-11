@@ -17,7 +17,11 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests.design_lint_fixtures import coach, four_db9_return_domains
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.return_path_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.connector_lint,
+    pytest.mark.return_path_lint,
+]
 
 UNINDEXED_RETURN_RULE = "net.return_labels_without_pin_roles"
 NUMBERED_RETURN_RULE = "net.numbered_returns"

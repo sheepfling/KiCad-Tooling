@@ -179,6 +179,10 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
     (
         ("test_connector_peer_pin_coverage.py", {"design_lint", "connector_lint"}),
         (
+            "test_design_lint_numbered_returns.py",
+            {"design_lint", "connector_lint", "return_path_lint"},
+        ),
+        (
             "test_design_lint_power_pin_patterns.py",
             {"design_lint", "connector_lint", "power_lint"},
         ),
