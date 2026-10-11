@@ -8919,9 +8919,14 @@ it does not claim field validation or effectiveness against private boards.
   surfaces. The new per-requirement `review_excluded_short_tracks` option can
   make any such exclusion an explicit `REVIEW` coverage gap; the default leaves
   the project-authored minimum as the scope boundary. Synthetic quiet/review/
-  block controls and CLI/MCP parity cover both choices. Exact hosted results
-  for the new narrow-void lane are pending; the local 10.0.6 compatibility run
-  does not substitute for the pinned 10.0.0/10.0.5 evidence.
+  block controls and CLI/MCP parity cover both choices. Tagged hosted
+  acceptance passed in `v0.5.0rc72` (GitHub Actions run `38133685685`) with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, including the digest-pinned KiCad
+  10.0.0/10.0.5 narrow-void fault/control lane. The focused local non-native
+  PCB lint slice passed 216 tests; the local 10.0.6 compatibility run remains
+  supplementary and is not used as a substitute for the pinned versions.
+  The tagged gate also passed the package, installed-wheel external-project,
+  typing, lint, documentation, and playtest stages.
 
 #### LINT-059 — I2C pull-up rail-family review
 
