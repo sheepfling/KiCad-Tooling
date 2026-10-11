@@ -5266,8 +5266,10 @@ is not a reason by itself to expand its scope or change its default policy.
   disposition and reviewer-time measurement are needed to assess usefulness.
   Precision and review-time benefit remain unmeasured.
 - **Acceptance:** Focused synthetic and mocked native-lane checks pass locally.
-  Exact KiCad 10.0.0/10.0.5 hosted acceptance is pending; no physical board,
-  proprietary source, or project-specific requirement was used.
+  Tagged hosted connector-lint acceptance passed on 2026-10-11 under
+  `v0.5.0rc100`, including exact KiCad 10.0.0/10.0.5 fixtures and an
+  installed-wheel check against an external project checkout. No physical
+  board or proprietary project source was used.
 
 ### P2 — PCB geometry and schematic review assistance
 
