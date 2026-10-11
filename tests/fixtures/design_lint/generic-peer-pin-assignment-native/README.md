@@ -78,8 +78,9 @@ supply is physically present.
 
 ## Exact native export lane
 
-`tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests` exports the
-schematics twice with digest-pinned KiCad 10.0.0 and 10.0.5. The lane checks
+The `connector_return_results_by_version` fixture in
+`tests/test_ci_hosted_connector_returns.py` exports the schematics twice with
+digest-pinned KiCad 10.0.0 and 10.0.5. The lane checks
 fixture hashes, normalized netlist repeatability, exact J1.1/J2.1/J3.1
 assignments, open-contact and minority-net outliers, no-majority divergence,
 the generic `Pin_1` divergence and control, the split-return peer-scope fault

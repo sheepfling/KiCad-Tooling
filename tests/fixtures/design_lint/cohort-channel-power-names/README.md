@@ -25,9 +25,10 @@ case says that similarly named rails must be joined.
 
 ## Exact native export lane
 
-`tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests` exports these
-schematics twice through the digest-pinned KiCad 10.0.0 and 10.0.5 images.
-It checks source hashes, normalized typed netlist repeatability, exact
+The `connector_return_results_by_version` fixture in
+`tests/test_ci_hosted_connector_returns.py` exports these schematics twice
+through the digest-pinned KiCad 10.0.0 and 10.0.5 images. It checks source
+hashes, normalized typed netlist repeatability, exact
 `J1.3`/`J2.3` evidence, the fault finding, and the common-net control. Receipts
 stay under ignored `build/ci/` directories.
 

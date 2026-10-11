@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 
-def assert_connector_result_sources(testcase, results, version, cases):
+def assert_connector_result_sources(results, version, cases):
     for case in cases:
         result = results[f"connector-return-fixture/{case}"]
-        testcase.assertEqual(result["kicad_version"], version)
-        testcase.assertEqual(result["repeatable"], "true")
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
 
 
 def normalized_connector_return_patterns(results):

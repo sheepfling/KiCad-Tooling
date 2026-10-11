@@ -1133,8 +1133,8 @@ is not a reason by itself to expand its scope or change its default policy.
   path and USB-C tests cover the same identity boundary. A CLI/MCP parity case
   checks nonstandard-reference findings. Native fixture orchestration is tested by
   `tests.test_connector_inventory_fixture_lane`; the exact pinned exports run
-  in `tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests`. Native verify
-  and CLI/MCP regressions assert that incomplete or undeclared coverage stays
+  in version-parameterized pytest cases in `tests.test_ci_hosted_connector_returns`.
+  Native verify and CLI/MCP regressions assert that incomplete or undeclared coverage stays
   visible.
 - **Remaining:** Physical connector inventory and symbols with custom library
   aliases remain human-authored scope decisions. Keep `UNASSESSED` distinct in
@@ -8686,8 +8686,9 @@ it does not claim field validation or effectiveness against private boards.
   empty. Its fault localizes open J3.1 while J1.1 and J2.1 share `+5V`; the
   minority-net fault localizes J3.1 on `+3V3` while J1.1 and J2.1 share
   `+5V`. The common-net control passes without findings.
-- **Native evidence:** `tests.test_ci_hosted_connector_returns.NativeConnectorReturnFixtureTests`
-  exports the minimum two-connector open-contact fault, an explicit
+- **Native evidence:** version-parameterized pytest cases in
+  `tests.test_ci_hosted_connector_returns` export the minimum two-connector
+  open-contact fault, an explicit
   no-connect-marker peer fault, and the common-net control, plus the
   three-connector unique-minority fault and common-net control, twice with
   digest-pinned KiCad 10.0.0 and 10.0.5. The two-connector open and marked-open

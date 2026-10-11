@@ -6,8 +6,8 @@ import json
 import os
 import shutil
 import tempfile
-import unittest
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -26,6 +26,10 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.native_kicad,
     pytest.mark.slow,
+    pytest.mark.skipif(
+        os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
+        reason="native connector fixtures run in the digest-pinned package acceptance lane",
+    ),
 ]
 
 
@@ -94,101 +98,95 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
 }
 
 
-@unittest.skipUnless(
-    os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") == "1",
-    "native connector fixtures run in the digest-pinned package acceptance lane",
-)
-class NativeConnectorReturnFixtureTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        from kicad_tooling.ci_hosted import HostedLog, connector_return_lint_fixture_lane
-        from kicad_tooling.hwrepo.electrical import selected_config
+@pytest.fixture(scope="module")
+def connector_return_results_by_version() -> dict[str, dict[str, dict[str, Any]]]:
+    from kicad_tooling.ci_hosted import HostedLog, connector_return_lint_fixture_lane
+    from kicad_tooling.hwrepo.electrical import selected_config
 
-        repository = Path(__file__).resolve().parents[1]
-        acceptance = repository / "build/ci"
-        acceptance.mkdir(parents=True, exist_ok=True)
-        root = Path(tempfile.mkdtemp(prefix="native-connector-return-project-", dir=acceptance))
-        shutil.copytree(
-            reference_root(),
-            root,
-            dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
-        )
-        expected_versions = {
-            "controller": "10.0.0",
-            "raspberry-pi-status-led": "10.0.5",
-        }
-        cls.results_by_version = {}
-        for project, version in expected_versions.items():
-            config = selected_config(root, project)
-            if config.kicad_version != version:
-                raise AssertionError(
-                    f"{project} selected KiCad {config.kicad_version}; expected {version}"
-                )
-            log = HostedLog(root, f"native-connector-return-{project}")
-            connector_return_lint_fixture_lane(
-                root,
-                project=project,
-                image=config.image,
-                log=log,
+    repository = Path(__file__).resolve().parents[1]
+    acceptance = repository / "build/ci"
+    acceptance.mkdir(parents=True, exist_ok=True)
+    root = Path(tempfile.mkdtemp(prefix="native-connector-return-project-", dir=acceptance))
+    shutil.copytree(
+        reference_root(),
+        root,
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
+    )
+    expected_versions = {
+        "controller": "10.0.0",
+        "raspberry-pi-status-led": "10.0.5",
+    }
+    results_by_version: dict[str, dict[str, dict[str, Any]]] = {}
+    for project, version in expected_versions.items():
+        config = selected_config(root, project)
+        if config.kicad_version != version:
+            raise AssertionError(
+                f"{project} selected KiCad {config.kicad_version}; expected {version}"
             )
-            events = tuple(json.loads(line) for line in log.events.read_text().splitlines())
-            results = {
-                item["stage"]: item
-                for item in events
-                if item.get("stage", "").startswith("connector-return-fixture/")
-            }
-            if set(results) != EXPECTED_CONNECTOR_RETURN_STAGES:
-                missing = sorted(EXPECTED_CONNECTOR_RETURN_STAGES - set(results))
-                extra = sorted(set(results) - EXPECTED_CONNECTOR_RETURN_STAGES)
-                raise AssertionError(
-                    f"Connector fixture stage mismatch: missing={missing}, extra={extra}"
-                )
-            cls.results_by_version[version] = results
-        cls.normalized_pattern_hashes = {
-            version: normalized_connector_return_patterns(results)
-            for version, results in cls.results_by_version.items()
-        }
-
-    @pytest.mark.connector_lint
-    @pytest.mark.return_path_lint
-    def test_return_pin_on_positive_rail(self) -> None:
-        for version, results in self.results_by_version.items():
-            with self.subTest(kicad_version=version):
-                assert_positive_rail_return_cases(self, results, version)
-
-    @pytest.mark.connector_lint
-    @pytest.mark.return_path_lint
-    def test_return_net_and_cross_symbol_findings(self) -> None:
-        for version, results in self.results_by_version.items():
-            with self.subTest(kicad_version=version):
-                assert_base_connector_return_cases(self, results, version)
-
-    @pytest.mark.connector_lint
-    @pytest.mark.interface_lint
-    def test_peer_pin_assignments_and_offboard_scope(self) -> None:
-        for version, results in self.results_by_version.items():
-            with self.subTest(kicad_version=version):
-                assert_connector_peer_pin_cases(self, results, version)
-
-    @pytest.mark.connector_lint
-    @pytest.mark.power_lint
-    def test_power_pin_and_reviewed_role_cases(self) -> None:
-        for version, results in self.results_by_version.items():
-            with self.subTest(kicad_version=version):
-                assert_connector_power_and_role_cases(self, results, version)
-
-    @pytest.mark.connector_lint
-    @pytest.mark.return_path_lint
-    def test_grounding_and_pin_connectivity_contracts(self) -> None:
-        for version, results in self.results_by_version.items():
-            with self.subTest(kicad_version=version):
-                assert_grounding_contract_cases(self, results, version)
-
-    @pytest.mark.connector_lint
-    @pytest.mark.return_path_lint
-    def test_normalized_return_patterns_match_across_versions(self) -> None:
-        self.assertEqual(
-            self.normalized_pattern_hashes["10.0.0"],
-            self.normalized_pattern_hashes["10.0.5"],
+        log = HostedLog(root, f"native-connector-return-{project}")
+        connector_return_lint_fixture_lane(
+            root,
+            project=project,
+            image=config.image,
+            log=log,
         )
+        events = tuple(json.loads(line) for line in log.events.read_text().splitlines())
+        results = {
+            item["stage"]: item
+            for item in events
+            if item.get("stage", "").startswith("connector-return-fixture/")
+        }
+        if set(results) != EXPECTED_CONNECTOR_RETURN_STAGES:
+            missing = sorted(EXPECTED_CONNECTOR_RETURN_STAGES - set(results))
+            extra = sorted(set(results) - EXPECTED_CONNECTOR_RETURN_STAGES)
+            raise AssertionError(
+                f"Connector fixture stage mismatch: missing={missing}, extra={extra}"
+            )
+        results_by_version[version] = results
+    return results_by_version
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+@pytest.mark.return_path_lint
+def test_return_pin_on_positive_rail(connector_return_results_by_version, version):
+    assert_positive_rail_return_cases(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+@pytest.mark.return_path_lint
+def test_return_net_and_cross_symbol_findings(connector_return_results_by_version, version):
+    assert_base_connector_return_cases(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+@pytest.mark.interface_lint
+def test_peer_pin_assignments_and_offboard_scope(connector_return_results_by_version, version):
+    assert_connector_peer_pin_cases(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+@pytest.mark.power_lint
+def test_power_pin_and_reviewed_role_cases(connector_return_results_by_version, version):
+    assert_connector_power_and_role_cases(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+@pytest.mark.return_path_lint
+def test_grounding_and_pin_connectivity_contracts(connector_return_results_by_version, version):
+    assert_grounding_contract_cases(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.connector_lint
+@pytest.mark.return_path_lint
+def test_normalized_return_patterns_match_across_versions(connector_return_results_by_version):
+    patterns_by_version = {
+        version: normalized_connector_return_patterns(results)
+        for version, results in connector_return_results_by_version.items()
+    }
+    assert patterns_by_version["10.0.0"] == patterns_by_version["10.0.5"]
