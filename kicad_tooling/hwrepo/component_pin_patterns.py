@@ -22,11 +22,29 @@ class UnconnectedGenericPowerInputComponentPin:
     electrical_type: str
 
 
-def unconnected_generic_power_input_component_pins(
+@dataclass(frozen=True)
+class UnconnectedGenericPowerOutputComponentPin:
+    pin: str
+    symbol: str
+    function: str | None
+    electrical_type: str
+
+
+@dataclass(frozen=True)
+class _UnconnectedGenericPowerComponentPin:
+    pin: str
+    symbol: str
+    function: str | None
+    electrical_type: str
+
+
+def _unconnected_generic_power_component_pins(
     observed: NetlistContract,
-    declared_connector_references: tuple[str, ...] = (),
-) -> tuple[UnconnectedGenericPowerInputComponentPin, ...]:
-    """Find unassigned generic ``power_in`` pins on fitted non-connectors."""
+    declared_connector_references: tuple[str, ...],
+    *,
+    expected_electrical_type: str,
+) -> tuple[_UnconnectedGenericPowerComponentPin, ...]:
+    """Find unassigned generic native power pins on fitted non-connectors."""
     connector_references = {
         reference.casefold()
         for reference in connector_candidate_references(observed, declared_connector_references)
@@ -38,7 +56,7 @@ def unconnected_generic_power_input_component_pins(
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
     connected = {pin.casefold() for pins in observed.nets.values() for pin in pins}
     functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
-    results: list[UnconnectedGenericPowerInputComponentPin] = []
+    results: list[_UnconnectedGenericPowerComponentPin] = []
     for pin, electrical_type in observed.pin_electrical_types.items():
         pin_key = pin.casefold()
         reference = pin.rsplit(".", 1)[0]
@@ -46,7 +64,7 @@ def unconnected_generic_power_input_component_pins(
         symbol = symbols.get(reference_key)
         if (
             "." not in pin
-            or electrical_type.strip().casefold() != "power_in"
+            or electrical_type.strip().casefold() != expected_electrical_type.casefold()
             or reference_key not in component_references
             or reference_key in connector_references
             or reference_key in unpopulated
@@ -56,14 +74,54 @@ def unconnected_generic_power_input_component_pins(
         ):
             continue
         results.append(
-            UnconnectedGenericPowerInputComponentPin(
+            _UnconnectedGenericPowerComponentPin(
                 pin=pin,
                 symbol=symbol,
                 function=functions.get(pin_key),
-                electrical_type="power_in",
+                electrical_type=expected_electrical_type,
             )
         )
     return tuple(sorted(results, key=lambda item: (item.pin.casefold(), item.pin)))
+
+
+def unconnected_generic_power_input_component_pins(
+    observed: NetlistContract,
+    declared_connector_references: tuple[str, ...] = (),
+) -> tuple[UnconnectedGenericPowerInputComponentPin, ...]:
+    """Find unassigned generic ``power_in`` pins on fitted non-connectors."""
+    return tuple(
+        UnconnectedGenericPowerInputComponentPin(
+            pin=item.pin,
+            symbol=item.symbol,
+            function=item.function,
+            electrical_type=item.electrical_type,
+        )
+        for item in _unconnected_generic_power_component_pins(
+            observed,
+            declared_connector_references,
+            expected_electrical_type="power_in",
+        )
+    )
+
+
+def unconnected_generic_power_output_component_pins(
+    observed: NetlistContract,
+    declared_connector_references: tuple[str, ...] = (),
+) -> tuple[UnconnectedGenericPowerOutputComponentPin, ...]:
+    """Find unassigned generic ``power_out`` pins on fitted non-connectors."""
+    return tuple(
+        UnconnectedGenericPowerOutputComponentPin(
+            pin=item.pin,
+            symbol=item.symbol,
+            function=item.function,
+            electrical_type=item.electrical_type,
+        )
+        for item in _unconnected_generic_power_component_pins(
+            observed,
+            declared_connector_references,
+            expected_electrical_type="power_out",
+        )
+    )
 
 
 @dataclass(frozen=True)

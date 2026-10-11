@@ -400,6 +400,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     )
     emitted.update(
         item.rule_id
+        for item in candidates(_tests_design_lint_fixtures.generic_component_power_output_netlist())
+    )
+    emitted.update(
+        item.rule_id
         for item in candidates(
             _tests_test_usb_c_ports.usb_c_netlist(),
             usb_c_port_roster=UsbCPortRosterContext(state="not_configured"),

@@ -20,6 +20,7 @@ def generic_component_power_input_netlist(
     electrical_type: str = "power_in",
     dnp_references: tuple[str, ...] = (),
     symbol: str = "Synthetic:GenericPowerInputComponent",
+    net_name: str = "POWER_INPUT_TEST",
 ) -> NetlistContract:
     pin = f"{reference}.1"
     pin_functions = {pin: function} if function is not None else {}
@@ -28,12 +29,33 @@ def generic_component_power_input_netlist(
         components={
             reference: ComponentContract(value="Synthetic component", footprint="Synthetic:Part")
         },
-        nets={"POWER_INPUT_TEST": (pin,)} if connected else {"SIGNAL": (f"{reference}.2",)},
+        nets={net_name: (pin,)} if connected else {"SIGNAL": (f"{reference}.2",)},
         dnp_components=dnp_references,
         component_symbols={reference: symbol},
         component_pin_numbers={reference: ("1", "2")},
         pin_functions=pin_functions,
         pin_electrical_types={pin: electrical_type, f"{reference}.2": "passive"},
+    )
+
+
+def generic_component_power_output_netlist(
+    *,
+    reference: str = "U1",
+    connected: bool = False,
+    function: str | None = "1",
+    electrical_type: str = "power_out",
+    dnp_references: tuple[str, ...] = (),
+    symbol: str = "Synthetic:GenericPowerOutputComponent",
+) -> NetlistContract:
+    """Build one generic native power-output pin with optional assignment."""
+    return generic_component_power_input_netlist(
+        reference=reference,
+        connected=connected,
+        function=function,
+        electrical_type=electrical_type,
+        dnp_references=dnp_references,
+        symbol=symbol,
+        net_name="POWER_OUTPUT_TEST",
     )
 
 

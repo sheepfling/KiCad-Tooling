@@ -191,6 +191,20 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
             {"design_lint", "component_lint", "power_lint"},
         ),
         (
+            "test_component_unconnected_power_output.py",
+            {"design_lint", "component_lint", "power_lint"},
+        ),
+        (
+            "test_design_lint_mcp_parity_unconnected_power_output.py",
+            {
+                "design_lint",
+                "component_lint",
+                "power_lint",
+                "parity_lint",
+                "slow",
+            },
+        ),
+        (
             "test_design_lint_mcp_parity_peer_pins.py",
             {"design_lint", "component_lint", "parity_lint"},
         ),

@@ -299,6 +299,16 @@ The first rules are:
   decisions. Named supply and return pins remain with their specific checks.
   See the
   [synthetic native fixture record](../tests/fixtures/design_lint/generic-component-power-input/README.md).
+- `component.unconnected_power_output` prompts review for a fitted,
+  non-connector component pin that KiCad types as `power_out`, has a generic,
+  absent, or numeric-only function, and receives no exported net assignment.
+  Comparable open outputs remain with the more specific peer rule; named
+  outputs, connectors, and DNP components are excluded. The native type does
+  not establish the pin's purpose or prove it must connect, so this defaults to
+  `REVIEW` and accepts project `review`, `block`, `off`, or exact-fingerprint
+  ignore decisions. The synthetic native fault/control pair is exported twice
+  on pinned KiCad 10.0.0 and 10.0.5. See the
+  [synthetic native fixture record](../tests/fixtures/design_lint/generic-component-power-output/README.md).
 - `component.unconnected_supply_pin` and
   `component.unconnected_return_pin` apply the same named-pin coverage to
   non-connector components, including IC power pins. They only flag pins with
@@ -926,7 +936,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 92 active rules. They
+`synthetic_validated`; the catalog currently contains 93 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow

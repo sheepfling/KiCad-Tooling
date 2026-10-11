@@ -78,6 +78,8 @@ _LINT_AREA_MODULES = {
     ),
     "component_lint": frozenset(
         {
+            "tests/test_component_unconnected_power_output.py",
+            "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
             "tests/test_component_power_ratings.py",
             "tests/test_component_voltage_ratings.py",
             "tests/test_component_rating_native_fixture_lane.py",
@@ -230,6 +232,8 @@ _LINT_AREA_MODULES = {
     ),
     "power_lint": frozenset(
         {
+            "tests/test_component_unconnected_power_output.py",
+            "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
             "tests/test_component_power_ratings.py",
             "tests/test_component_rating_native_fixture_lane.py",
             "tests/test_component_peer_power_fixture_lane.py",
@@ -362,6 +366,7 @@ _LINT_AREA_MODULES = {
     ),
     "parity_lint": frozenset(
         {
+            "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
             "tests/test_design_lint_i2c_parity.py",
             "tests/test_design_lint_serial_parity.py",
             "tests/test_electrical_parity.py",

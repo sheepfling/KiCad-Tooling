@@ -137,6 +137,7 @@ def candidates(
     spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
     can_peer_reference_scan: CanPeerReferenceScan | None = None,
     rs485_peer_reference_scan: Rs485PeerReferenceScan | None = None,
+    peer_power_output_review_enabled: bool = True,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -144,6 +145,16 @@ def candidates(
     peer_pin_scans = peer_pin_assignment_scans or component_peer_pin_assignment_scans(
         observed,
         reviewed_connector_references,
+    )
+    peer_unconnected_power_output_pins: frozenset[str] = (
+        frozenset(
+            pin.casefold()
+            for group in peer_pin_scans.power_output.outliers
+            for pin, nets in group.assignments.items()
+            if not nets
+        )
+        if peer_power_output_review_enabled
+        else frozenset[str]()
     )
     found.extend(
         connector_candidates(
@@ -172,6 +183,7 @@ def candidates(
             component_role_map=component_role_map,
             power_path_map=power_path_map,
             reviewed_connector_references=reviewed_connector_references,
+            peer_unconnected_power_output_pins=peer_unconnected_power_output_pins,
         )
     )
     component_peer_findings = component_peer_candidates(

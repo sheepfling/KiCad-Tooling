@@ -24,6 +24,9 @@ from .ci_hosted_component_peer_pins import (
 )
 from .ci_hosted_component_peer_power_assignment import component_peer_power_assignment_fixture_lane
 from .ci_hosted_component_rating_lane import component_rating_fixtures_lane
+from .ci_hosted_component_unconnected_power_output import (
+    component_unconnected_power_output_fixture_lane,
+)
 from .ci_hosted_connector_inventory import connector_inventory_fixture_lane
 from .ci_hosted_connector_return_lane import connector_return_lint_fixture_lane
 from .ci_hosted_control_inputs import native_control_input_demo_lane
@@ -102,6 +105,7 @@ __all__ = (
     "component_peer_signal_input_fixture_lane",
     "component_peer_signal_output_fixture_lane",
     "component_rating_fixtures_lane",
+    "component_unconnected_power_output_fixture_lane",
     "connector_inventory_fixture_lane",
     "connector_return_lint_fixture_lane",
     "digital_peer_fixture_lane",

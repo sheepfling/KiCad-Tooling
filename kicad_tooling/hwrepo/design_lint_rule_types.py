@@ -26,6 +26,7 @@ DesignLintRuleId = Literal[
     "connector.unconnected_return_pin",
     "connector.return_pin_on_positive_rail",
     "component.unconnected_power_input",
+    "component.unconnected_power_output",
     "component.unconnected_supply_pin",
     "component.unconnected_return_pin",
     "component.led_directly_across_supply_and_return",

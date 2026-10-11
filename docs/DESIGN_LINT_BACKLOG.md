@@ -291,7 +291,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 92 rules are implemented with synthetic regression coverage.
+The following 93 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -316,6 +316,7 @@ Their actual recognition limits are documented in
 - `connector.unconnected_return_pin`
 - `connector.unconnected_power_input`
 - `component.unconnected_power_input`
+- `component.unconnected_power_output`
 - `component.unconnected_supply_pin`
 - `component.unconnected_return_pin`
 - `component.led_directly_across_supply_and_return`
@@ -1987,7 +1988,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 92 active rules; CI requires every new
+- **Status:** Baseline complete for all 93 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1996,7 +1997,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 92 covered, 0 not applicable, 0 unreviewed.
+  audit: 93 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5271,6 +5272,38 @@ is not a reason by itself to expand its scope or change its default policy.
   installed-wheel check against an external project checkout. No physical
   board or proprietary project source was used.
 
+#### LINT-108 — Generic component power-output pin is unassigned
+
+- **Status:** Implemented as `component.unconnected_power_output`, default
+  `REVIEW`. The predicate reports a generic, absent, or numeric-only native
+  `power_out` pin on a fitted non-connector component when it has no exported
+  net and no comparable-peer power-output rule already owns the open pin.
+- **Problem:** The existing peer rule only catches an open output when a
+  comparable connected peer gives it context. A single-output component, or a
+  group with no assigned peer, can still leave an output pin open without that
+  rule identifying the open pin.
+- **Boundary:** KiCad's `power_out` electrical type is pin metadata, not a
+  project requirement. It does not identify the pin's actual function or prove
+  that it must connect. The rule is therefore an advisory review prompt;
+  named outputs, connector candidates, DNP parts, and open pins already owned
+  by the comparable-peer rule are excluded. It does not validate output
+  voltage, current, source capability, or PCB copper.
+- **Fixtures:** Synthetic contract cases cover an open output, assigned
+  control, absent/generic functions, named-output, passive and power-input
+  controls, connector and DNP exclusion, peer-rule duplicate suppression,
+  stable ordering, assignment clearing, and project policy/ignore handling.
+  The fault/control schematics are exported twice with pinned KiCad 10.0.0 and
+  10.0.5; CLI/MCP report parity is checked from a tooling-owned synthetic
+  project. See the
+  [native fixture record](../tests/fixtures/design_lint/generic-component-power-output/README.md).
+- **Applicability evidence:** Public examples are not needed to define this
+  bounded check. Additional nonconfidential projects could help measure how
+  often the prompt is applicable, but each needs an independent disposition;
+  applicability and reviewer time remain unmeasured.
+- **Acceptance:** Local unit, parity, architecture, and exact-version native
+  regressions are being checked in this gate. No URSA project source or
+  proprietary design fixture is used.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8126,7 +8159,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 92 active rules. Each entry has a deterministic predicate, evidence
+contains 93 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

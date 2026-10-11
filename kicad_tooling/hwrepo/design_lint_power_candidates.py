@@ -6,6 +6,7 @@ from .component_pin_patterns import (
     component_supply_pins_on_different_nets,
     unconnected_generic_power_input_component_pins,
 )
+from .component_power_output_candidates import unconnected_power_output_candidates
 from .component_roles import resolve_component_role_map
 from .design_lint_types import Candidate
 from .models import ComponentRoleMap, NetlistContract
@@ -22,6 +23,7 @@ def power_candidates(
     component_role_map: ComponentRoleMap | None = None,
     power_path_map: PowerPathMap | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
+    peer_unconnected_power_output_pins: frozenset[str] = frozenset(),
 ) -> tuple[Candidate, ...]:
     """Build review prompts for rails, fitted supplies, and visible source paths."""
     found: list[Candidate] = []
@@ -163,6 +165,14 @@ def power_candidates(
                 evidence=evidence,
             )
         )
+
+    found.extend(
+        unconnected_power_output_candidates(
+            observed,
+            declared_connector_references=reviewed_connector_references,
+            peer_unconnected_pins=peer_unconnected_power_output_pins,
+        )
+    )
 
     for group in numbered_power_rail_groups(observed):
         found.append(

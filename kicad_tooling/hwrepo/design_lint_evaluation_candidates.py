@@ -45,6 +45,12 @@ def scan_evaluation_candidates(
         default_modes=prepared.default_modes,
         overrides=prepared.overrides,
     )
+    peer_power_output_override = prepared.overrides.get("component.peer_power_output_unconnected")
+    peer_power_output_mode = (
+        peer_power_output_override.mode
+        if peer_power_output_override is not None
+        else prepared.default_modes["component.peer_power_output_unconnected"]
+    )
     items = candidates(
         observed,
         prepared.catalog,
@@ -89,6 +95,7 @@ def scan_evaluation_candidates(
         can_peer_reference_scan=peer_evidence.can_peer_reference_scan,
         rs485_peer_reference_scan=peer_evidence.rs485_peer_reference_scan,
         peer_pin_assignment_scans=peer_evidence.peer_pin_assignment_scans,
+        peer_power_output_review_enabled=peer_power_output_mode != "off",
     )
     i2c_peer_coverage = None
     spi_peer_coverage = None

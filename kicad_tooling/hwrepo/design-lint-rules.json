@@ -882,6 +882,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_generic_power_input_component_pins"
     },
     {
+      "rule_id": "component.unconnected_power_output",
+      "title": "Generic non-connector power-output pin is unassigned",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "A fitted non-connector component pin has native electrical type power_out, its native pin function is absent, generic, or numeric-only, no exported net assigns it, and no comparable-peer power-output rule owns the open pin.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The native electrical type does not identify the output's specific role or establish that it must be connected.",
+        "The rule reports an explicit no-connect marker as a review candidate; intentional open outputs need a reviewed decision or exact ignore.",
+        "Named power-output functions remain with the specific named-pin rule, while comparable open peers remain with component.peer_power_output_unconnected.",
+        "Connector candidates and DNP components are excluded; the heuristic does not evaluate source capability, voltage, current, or PCB connectivity."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_unconnected_power_output.test_unconnected_generic_power_output_is_an_evidence_backed_review",
+        "tests.test_component_unconnected_power_output.test_generic_pin_placeholder_is_reviewed",
+        "tests.test_component_unconnected_power_output.test_generic_power_output_fault_and_control_on_pinned_native_versions"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_unconnected_power_output.test_valid_pin_controls_do_not_emit_the_generic_power_output_rule",
+        "tests.test_component_unconnected_power_output.test_generic_power_output_fault_and_control_on_pinned_native_versions"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_unconnected_power_output.test_finding_is_mapping_order_stable_and_assignment_clears_it"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_power_output_candidates.py#unconnected_power_output_candidates",
+        "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_generic_power_output_component_pins",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#power_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_power_output_candidates.py#unconnected_power_output_candidates"
+    },
+    {
       "rule_id": "component.unconnected_supply_pin",
       "title": "Named component supply pin is unassigned",
       "status": "active",
