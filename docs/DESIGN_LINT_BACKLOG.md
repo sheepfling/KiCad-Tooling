@@ -517,7 +517,11 @@ and optional ecosystem adapters are `P3`.
   records now live in `stm32_pin_map_models.py`; the shared registry preserves
   their compatibility exports, internal services import the owner directly,
   and architecture tests guard ownership and imports. This removes 124 lines
-  from `models.py` without changing LINT-050.
+  from `models.py` without changing LINT-050. Hosted impact planning and
+  GitHub Actions output writing now have one owner in `ci_hosted_planning.py`;
+  `ci_hosted.py` retains compatible imports for callers. The architecture suite
+  checks ownership and those exports, and the hosted coordinator ceiling fell
+  from 892 to 846 lines without changing execution behavior.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

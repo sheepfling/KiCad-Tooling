@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import kicad_tooling.ci_hosted as hosted_coordinator
+import kicad_tooling.ci_hosted_planning as hosted_planning
 import kicad_tooling.ci_hosted_support as hosted_support
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
@@ -107,7 +108,7 @@ def test_connector_return_fixture_lane_is_split_by_theme() -> None:
     }
 
     assert lane_lines < 100, f"Keep the fixture lane as a coordinator: {lane_lines} lines"
-    assert len(modules) == 14, "Keep connector return fixture work in named theme modules"
+    assert len(modules) == 15, "Keep connector return fixture work in named theme modules"
     assert not oversized_modules, (
         f"Split connector return modules by responsibility: {oversized_modules}"
     )
@@ -130,7 +131,7 @@ def test_digital_peer_fixture_lane_is_split_by_interface_theme() -> None:
     }
 
     assert lane_lines < 100, f"Keep the digital peer lane as a coordinator: {lane_lines} lines"
-    assert len(modules) == 9, "Keep digital peer fixtures in named interface theme modules"
+    assert len(modules) == 10, "Keep digital peer fixtures in named interface theme modules"
     assert not oversized_modules, (
         f"Split digital peer modules by responsibility: {oversized_modules}"
     )
@@ -233,3 +234,30 @@ def test_hosted_log_support_has_one_owner_and_a_compatible_coordinator_export() 
 
     assert hosted_coordinator.HostedCommandError is hosted_support.HostedCommandError
     assert hosted_coordinator.HostedLog is hosted_support.HostedLog
+
+
+def test_hosted_planning_has_one_owner_and_compatible_coordinator_exports() -> None:
+    planning_path = REPO_ROOT / "kicad_tooling" / "ci_hosted_planning.py"
+    planning_tree = ast.parse(
+        planning_path.read_text(encoding="utf-8"), filename=planning_path.name
+    )
+    coordinator_tree = ast.parse(COORDINATOR.read_text(encoding="utf-8"), filename=COORDINATOR.name)
+    owner_functions = {
+        node.name for node in planning_tree.body if isinstance(node, ast.FunctionDef)
+    }
+    coordinator_functions = {
+        node.name for node in coordinator_tree.body if isinstance(node, ast.FunctionDef)
+    }
+    planning_imports = {
+        alias.name
+        for node in coordinator_tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "ci_hosted_planning"
+        for alias in node.names
+    }
+
+    assert len(planning_path.read_text(encoding="utf-8").splitlines()) < FUNCTION_LIMIT
+    assert owner_functions == {"plan_scope", "write_action_outputs"}
+    assert not owner_functions & coordinator_functions
+    assert planning_imports == owner_functions
+    assert hosted_coordinator.plan_scope is hosted_planning.plan_scope
+    assert hosted_coordinator.write_action_outputs is hosted_planning.write_action_outputs
