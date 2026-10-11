@@ -157,6 +157,8 @@ class PowerSequenceFixtureLaneTests(unittest.TestCase):
     os.environ.get("KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES") == "1",
     "native power-sequence exports run in the digest-pinned package acceptance lane",
 )
+@pytest.mark.native_kicad
+@pytest.mark.slow
 class NativePowerSequenceFixtureTests(unittest.TestCase):
     def test_control_open_enable_and_cycle_repeat_on_pinned_kicad_versions(self) -> None:
         repository = Path(__file__).resolve().parents[1]

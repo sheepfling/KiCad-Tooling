@@ -4710,7 +4710,13 @@ is not a reason by itself to expand its scope or change its default policy.
   in the pinned KiCad 10.0.0/10.0.5 connector-return lane. On 2026-10-09 the
   local native lane passed on both pinned versions: 2 tests and 4 subtests,
   including repeated exports and matching normalized typed-netlist hashes
-  across versions. The latest complete local package acceptance passed from
+  across versions. The full scoped `v0.5.0rc68` GitHub gate passed on
+  2026-10-11 (GitHub Actions run `38131498561`);
+  its hosted unit stage enabled `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` and
+  passed the fault/control lane against both pinned KiCad versions. Formatting,
+  lint, typing, Markdown, package builds, installed-wheel checks,
+  external-template verification, and playtest also passed. The latest
+  complete local package acceptance passed from
   source version `0.5.0rc25.dev0+g4e13ff7bf.d20261009` against the public
   template at commit `ed89536f0dbbcb013145af2994fef41b2250143e`: 2,398 tests
   passed, 59 were environment-gated skips, and 1,893 subtests passed. Ruff,
@@ -4722,8 +4728,8 @@ is not a reason by itself to expand its scope or change its default policy.
   selector passed 24 tests on 2026-10-11, including CLI/MCP parity and the
   three-process hash-seed regression. Its source-bound parity project explicitly
   disables the unrelated PCB inventory rule because that synthetic project
-  carries no native PCB snapshot. Hosted tagged-source acceptance remains
-  pending.
+  carries no native PCB snapshot. Hosted tagged-source acceptance was
+  confirmed by the passing `v0.5.0rc68` gate.
 - **Priority:** P1 connector peer-pin completeness. Existing peer comparisons
   grouped only exact native symbol IDs, so equivalent connector parts drawn
   with distinct symbol aliases could be skipped.
@@ -4844,7 +4850,7 @@ is not a reason by itself to expand its scope or change its default policy.
   [fixture notes](../tests/fixtures/design_lint/component-inventory-footprint-identity/README.md).
   The focused selector passed 12 tests on
   2026-10-11. The full scoped `v0.5.0rc67` GitHub gate passed on that date
-  ([run 38130863552](https://github.com/sheepfling/KiCad-Tooling/actions/runs/38130863552));
+  (GitHub Actions run `38130863552`);
   its hosted unit stage enabled `KICAD_RUN_NATIVE_PCB_FIXTURES` and ran the
   fault/control lane against both pinned KiCad versions. Formatting, lint,
   typing, Markdown, package builds, installed-wheel checks, external-template
@@ -4898,6 +4904,9 @@ is not a reason by itself to expand its scope or change its default policy.
   local exact-native execution remains unavailable until the configured
   container runtime is available. See the
   [fixture notes](../tests/fixtures/design_lint/i2c-peer-reference-native/README.md).
+  The focused I2C review suite passed 11 tests on 2026-10-11. Its exact-native
+  lane is marked `native_kicad` and `slow`, and hosted acceptance remains
+  pending.
 - **Incremental value:** LINT-070 already prompts on split return pins across
   comparable repeated components. LINT-103 adds the direct-I2C-bus relation
   between heterogeneous devices when that repeated-component comparison has no
@@ -4958,6 +4967,9 @@ is not a reason by itself to expand its scope or change its default policy.
   standalone synthetic KiCad schematics bind source hashes and are configured
   for repeated exact-version native exports on KiCad 10.0.0 and 10.0.5; see
   [the fixture notes](../tests/fixtures/design_lint/spi-peer-reference-native/README.md).
+  The focused SPI review suite passed 10 tests on 2026-10-11. Its exact-native
+  lane is marked `native_kicad` and `slow`, and hosted acceptance remains
+  pending.
 - **Incremental value:** The equal `+3V3` control/fault pair isolates return
   assignments as the changed variable. The split case has distinct symbol
   identities and no component-peer assignment finding, while the existing SPI
@@ -4983,7 +4995,7 @@ is not a reason by itself to expand its scope or change its default policy.
   CLI/MCP parity coverage. Synthetic standalone schematics are registered for
   repeated exports and ERC checks on the digest-pinned KiCad 10.0.0 and 10.0.5
   images. The full scoped `v0.5.0rc66` GitHub gate passed on 2026-10-11
-  ([run 38130384785](https://github.com/sheepfling/KiCad-Tooling/actions/runs/38130384785));
+  (GitHub Actions run `38130384785`);
   its hosted unit stage included the native CAN fault/control lane on both
   pinned versions. Ruff format and lint, Pyright and Windows types, Markdown,
   wheel and source-distribution builds, installed-wheel checks, external

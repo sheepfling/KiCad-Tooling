@@ -18,6 +18,8 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.power_lint]
     os.environ.get("KICAD_RUN_NATIVE_POWER_PATH_FIXTURES") != "1",
     reason="native power-path fixtures run in the digest-pinned package acceptance lane",
 )
+@pytest.mark.native_kicad
+@pytest.mark.slow
 @pytest.mark.parametrize(
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),

@@ -21,6 +21,8 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
     os.environ.get("KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES") != "1",
     reason="native I2C peer-reference fixtures run in the digest-pinned package acceptance lane",
 )
+@pytest.mark.native_kicad
+@pytest.mark.slow
 def test_native_i2c_peer_reference_fault_and_control_on_supported_images(
     tmp_path: Path,
 ) -> None:

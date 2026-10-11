@@ -33,6 +33,7 @@ from kicad_tooling.hwrepo.stm32_pin_map import (
 
 pytestmark = [
     pytest.mark.design_lint,
+    pytest.mark.component_lint,
     pytest.mark.interface_lint,
 ]
 

@@ -17,7 +17,13 @@ from kicad_tooling.ci_hosted import (
 )
 from tests.support import reference_root
 
-pytestmark = pytest.mark.template_checkout
+pytestmark = [
+    pytest.mark.template_checkout,
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.native_kicad,
+    pytest.mark.slow,
+]
 
 
 @unittest.skipUnless(

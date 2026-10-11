@@ -202,7 +202,10 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
             "test_open_drain_heuristics.py",
             {"design_lint", "interface_lint", "power_lint"},
         ),
-        ("test_stm32_pin_map.py", {"design_lint", "interface_lint"}),
+        (
+            "test_stm32_pin_map.py",
+            {"design_lint", "component_lint", "interface_lint"},
+        ),
         (
             "test_serial_peer_native_fixture_lane.py",
             {"design_lint", "interface_lint"},
