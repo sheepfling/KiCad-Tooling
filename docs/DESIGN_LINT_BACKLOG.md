@@ -4932,7 +4932,12 @@ is not a reason by itself to expand its scope or change its default policy.
   `REVIEW`, with source-netlist-bound applicability coverage, project mode and
   exact-ignore lifecycle, a synthetic fault/control suite, and focused
   CLI/MCP parity. The exact-native lane is registered for digest-pinned KiCad
-  10.0.0 and 10.0.5, but hosted execution has not yet been observed.
+  10.0.0 and 10.0.5. The full scoped `v0.5.0rc70` GitHub gate passed on
+  2026-10-11 (run `38132546468`), enabled
+  `KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES`, and passed the fault/control
+  lane on both pinned KiCad versions. Formatting, lint, typing, Markdown,
+  package builds, installed-wheel checks, external-template verification, and
+  playtest also passed.
 - **Priority:** P1 interface-reference review. A direct shared SPI clock can
   connect heterogeneous ICs whose explicit return pins are assigned to
   separate schematic nets. Existing component-peer checks need a comparable
@@ -4971,8 +4976,8 @@ is not a reason by itself to expand its scope or change its default policy.
   for repeated exact-version native exports on KiCad 10.0.0 and 10.0.5; see
   [the fixture notes](../tests/fixtures/design_lint/spi-peer-reference-native/README.md).
   The focused SPI review suite passed 10 tests on 2026-10-11. Its exact-native
-  lane is marked `native_kicad` and `slow`, and hosted acceptance remains
-  pending.
+  lane is marked `native_kicad` and `slow`; hosted tagged-source acceptance is
+  confirmed by `v0.5.0rc70`.
 - **Incremental value:** The equal `+3V3` control/fault pair isolates return
   assignments as the changed variable. The split case has distinct symbol
   identities and no component-peer assignment finding, while the existing SPI
@@ -4985,10 +4990,9 @@ is not a reason by itself to expand its scope or change its default policy.
   substitute for a reviewer disposition or time measurement. No independent
   board dispositions or reviewer-time measurements are available; precision,
   false-prompt rate, and review-time benefit remain unmeasured.
-- **Next:** Run the hosted digest-pinned native lane on both supported KiCad
-  versions and record the resulting hashes before claiming exact-native
-  acceptance. Keep default `REVIEW`; only a project-authored contract can
-  establish that its peers must share, bond, or isolate their references.
+- **Next:** Keep the hosted digest-pinned native lane for changes to this rule.
+  Keep default `REVIEW`; only a project-authored contract can establish that
+  its peers must share, bond, or isolate their references.
 
 #### LINT-105 — CAN peers share a complete line pair but have split explicit references
 
