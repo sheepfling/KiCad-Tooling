@@ -472,7 +472,12 @@ and optional ecosystem adapters are `P3`.
   no-growth ceiling is now 5,521 lines. The wheel asset inventory also moved
   from `scripts/ci.py` to `kicad_tooling/package_assets.py`, reducing the CI
   coordinator's ceiling from 556 to 528 lines. This is structural coverage;
-  it adds no electrical rule.
+  it adds no electrical rule. On 2026-10-11, the shared peer-coverage adapter
+  was split into component-pin, digital-voltage, I2C, serial, and USB modules.
+  Evaluation coordinators now import each coverage owner directly, and the
+  architecture suite guards every module below 500 lines and checks model
+  ownership. The extracted adapters preserve existing report fields and add no
+  lint rule.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

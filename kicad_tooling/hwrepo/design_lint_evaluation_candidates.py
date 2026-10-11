@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from .can_peer_reference_coverage import can_peer_reference_coverage
+from .component_peer_pin_coverage import (
+    component_peer_pin_rule_coverage as resolve_component_peer_pin_rule_coverage,
+)
 from .connector_coverage import (
     source_matched_connector_peer_assignment_groups,
     source_matched_connector_pin_evidence,
@@ -14,13 +17,8 @@ from .design_lint_evaluation_types import (
     DesignLintEvaluationPreparation,
 )
 from .design_lint_mapped_topology_coverage import mapped_topology_coverage_runs
-from .design_lint_peer_coverage import (
-    component_peer_pin_rule_coverage as resolve_component_peer_pin_rule_coverage,
-)
-from .design_lint_peer_coverage import (
-    i2c_peer_reference_coverage,
-)
 from .design_lint_peer_evaluation import scan_peer_design_lint_evidence
+from .i2c_peer_reference_coverage import i2c_peer_reference_coverage
 from .rs485_peer_reference_coverage import rs485_peer_reference_coverage
 from .spi_peer_reference_coverage import spi_peer_reference_coverage
 

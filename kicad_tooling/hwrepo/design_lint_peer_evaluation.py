@@ -13,16 +13,12 @@ from .component_peer_pin_scan import (
     ComponentPeerPinAssignmentScans,
     component_peer_pin_assignment_scans,
 )
-from .design_lint_peer_coverage import (
-    digital_peer_voltage_coverage,
-    i2c_peer_reference_coverage,
-    serial_peer_reference_coverage,
-    usb_peer_reference_coverage,
-)
 from .design_lint_rule_types import DesignLintRuleId
+from .digital_peer_voltage_coverage import digital_peer_voltage_coverage
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .digital_peer_voltage_scan import scan_digital_peer_voltage_reviews
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
+from .i2c_peer_reference_coverage import i2c_peer_reference_coverage
 from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_references
 from .models import (
@@ -34,11 +30,13 @@ from .models import (
 from .rs485_peer_reference_scan import scan_rs485_peer_references
 from .rs485_peer_reference_types import Rs485PeerReferenceContext, Rs485PeerReferenceScan
 from .serial_participants import SerialPeerRosterContext
+from .serial_peer_reference_coverage import serial_peer_reference_coverage
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .serial_peer_reference_scan import scan_serial_peer_reference_reviews
 from .serial_peer_reference_types import SerialPeerReferenceScan
 from .spi_peer_reference_scan import SpiPeerReferenceScan, scan_spi_peer_references
 from .usb_data_path_models import UsbDataPathMap
+from .usb_peer_reference_coverage import usb_peer_reference_coverage
 from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 from .usb_peer_reference_scan import scan_usb_peer_reference_reviews
 from .usb_peer_reference_types import UsbPeerReferenceScan
