@@ -2559,7 +2559,9 @@ is not a reason by itself to expand its scope or change its default policy.
   Across three independently randomized Python processes, the complete report
   remains byte-stable; the unchanged map digest is retained, heuristic coverage
   stays `INCOMPLETE` without a split-reference candidate, and the exact U2.5
-  contract check remains `FAIL`.
+  contract check remains `FAIL`. Tag `v0.5.0rc93` passed scoped hosted
+  acceptance in Actions run `38147931718`, including the installed-wheel check
+  against a separate project checkout and Ubuntu, macOS, and Windows previews.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
