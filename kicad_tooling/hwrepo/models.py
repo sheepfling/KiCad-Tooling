@@ -29,6 +29,7 @@ from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
 from . import digital_peer_voltage_models as _digital_peer_voltage_models
 from . import external_protection_models as _external_protection_models
+from . import grounding_models as _grounding_models
 from . import i2c_address_models as _i2c_address_models
 from . import i2c_pullup_models as _i2c_pullup_models
 from . import mosfet_stress_models as _mosfet_stress_models
@@ -37,9 +38,11 @@ from . import pcb_connectivity_snapshot as _pcb_connectivity_snapshot
 from . import pcb_decoupling_models as _pcb_decoupling_models
 from . import pcb_drc_models as _pcb_drc_models
 from . import pcb_reference_plane_models as _pcb_reference_plane_models
+from . import pcb_return_path_models as _pcb_return_path_models
 from . import pcb_rf_antenna_models as _pcb_rf_antenna_models
 from . import pcb_switching_loop_models as _pcb_switching_loop_models
 from . import pcb_track_width_models as _pcb_track_width_models
+from . import pin_connectivity_models as _pin_connectivity_models
 from . import power_path_models as _power_path_models
 from . import power_sequence_models as _power_sequence_models
 from . import reference_bond_models as _reference_bond_models
@@ -135,6 +138,14 @@ UsbDataPathLineRequirement = _usb_data_path_models.UsbDataPathLineRequirement
 UsbReferencePinRequirement = _usb_data_path_models.UsbReferencePinRequirement
 UsbDataInterfaceRequirement = _usb_data_path_models.UsbDataInterfaceRequirement
 UsbDataPathMap = _usb_data_path_models.UsbDataPathMap
+PcbReturnEndpointRequirement = _pcb_return_path_models.PcbReturnEndpointRequirement
+PcbReturnBondRequirement = _pcb_return_path_models.PcbReturnBondRequirement
+PcbReturnDomainRequirement = _pcb_return_path_models.PcbReturnDomainRequirement
+PcbReturnPathsAnalysis = _pcb_return_path_models.PcbReturnPathsAnalysis
+GroundDomain = _grounding_models.GroundDomain
+GroundingAnalysis = _grounding_models.GroundingAnalysis
+PinRelationshipRule = _pin_connectivity_models.PinRelationshipRule
+PinConnectivityAnalysis = _pin_connectivity_models.PinConnectivityAnalysis
 PowerPathEndpointRequirement = _power_path_models.PowerPathEndpointRequirement
 PowerPathElementRequirement = _power_path_models.PowerPathElementRequirement
 PowerPathRequirement = _power_path_models.PowerPathRequirement
@@ -3824,153 +3835,6 @@ class AnalysisPending(StrictModel):
 class AnalysisNotApplicable(StrictModel):
     mode: Literal["not_applicable"]
     reason: NonEmptyText
-
-
-class GroundDomain(StrictModel):
-    net: NetName
-    pins: Annotated[tuple[Reference, ...], Field(min_length=1)]
-
-
-class GroundingAnalysis(StrictModel):
-    mode: Literal["required"] = "required"
-    basis: NonEmptyText
-    domains: Annotated[tuple[GroundDomain, ...], Field(min_length=1)]
-    exempt_components: Mapping[Identifier, NonEmptyText] = Field(default_factory=dict)
-    reviewed_return_exceptions: Mapping[NetName, NonEmptyText] = Field(default_factory=dict)
-
-    @model_validator(mode="after")
-    def distinct_domains(self) -> GroundingAnalysis:
-        names = [domain.net for domain in self.domains]
-        pins = [pin for domain in self.domains for pin in domain.pins]
-        if len(set(names)) != len(names) or len(set(pins)) != len(pins):
-            raise ValueError("Ground domains and their pins must be unique")
-        if any(name.startswith("/") for name in (*names, *self.reviewed_return_exceptions)):
-            raise ValueError("Use net names without the leading slash, as in the native contract")
-        if set(names) & set(self.reviewed_return_exceptions):
-            raise ValueError("A return net cannot be both a ground domain and an exception")
-        return self
-
-
-class PcbReturnEndpointRequirement(StrictModel):
-    """One exact PCB pad and its independently reviewed expected net/footprint."""
-
-    pad: Reference
-    net: NetName
-    footprint: NonEmptyText
-
-    @model_validator(mode="after")
-    def exact_pad_reference(self) -> PcbReturnEndpointRequirement:
-        if self.pad.count(".") != 1:
-            raise ValueError("PCB return endpoints must use an exact reference.pad number")
-        if self.net.startswith("/"):
-            raise ValueError("Use the native net name without a leading slash")
-        return self
-
-
-class PcbReturnBondRequirement(StrictModel):
-    """One reviewed, fitted KiCad net-tie footprint and its exact bridge groups."""
-
-    reference: Identifier
-    footprint: NonEmptyText
-    pad_groups: Annotated[tuple[tuple[Reference, ...], ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def exact_bridge_groups(self) -> PcbReturnBondRequirement:
-        if not self.pad_groups or any(len(group) < 2 for group in self.pad_groups):
-            raise ValueError("Each declared PCB return bond group needs at least two exact pads")
-        pads = [pad for group in self.pad_groups for pad in group]
-        if any(pad.count(".") != 1 for pad in pads):
-            raise ValueError("PCB return bond groups must use exact reference.pad numbers")
-        if len({pad.casefold() for pad in pads}) != len(pads):
-            raise ValueError("PCB return bond pads must occur in exactly one declared group")
-        prefix = f"{self.reference}.".casefold()
-        if any(not pad.casefold().startswith(prefix) for pad in pads):
-            raise ValueError("PCB return bond pads must belong to the declared component")
-        return self
-
-
-class PcbReturnDomainRequirement(StrictModel):
-    """A required physical return domain; separate domains declare isolation."""
-
-    id: Identifier
-    basis: NonEmptyText
-    topology: Literal["direct", "bonded"]
-    endpoints: Annotated[tuple[PcbReturnEndpointRequirement, ...], Field(min_length=2)]
-    bonds: tuple[PcbReturnBondRequirement, ...] = ()
-
-    @model_validator(mode="after")
-    def valid_return_topology(self) -> PcbReturnDomainRequirement:
-        pads = [item.pad.casefold() for item in self.endpoints]
-        if len(set(pads)) != len(pads):
-            raise ValueError("PCB return domain endpoints must be unique")
-        if len({item.reference.casefold() for item in self.bonds}) != len(self.bonds):
-            raise ValueError("PCB return bond component references must be unique")
-        if self.topology == "direct":
-            if self.bonds:
-                raise ValueError("Direct PCB return domains cannot declare net-tie bonds")
-            if len({item.net.casefold() for item in self.endpoints}) != 1:
-                raise ValueError("Direct PCB return endpoints must declare one common net")
-        else:
-            if not self.bonds:
-                raise ValueError("Bonded PCB return domains must declare exact net-tie groups")
-            if len({item.net.casefold() for item in self.endpoints}) < 2:
-                raise ValueError(
-                    "Bonded PCB return domains must declare at least two distinct nets"
-                )
-        return self
-
-
-class PcbReturnPathsAnalysis(StrictModel):
-    """Source-bound PCB copper connectivity requirements for reviewed returns."""
-
-    mode: Literal["required"] = "required"
-    basis: NonEmptyText
-    domains: Annotated[tuple[PcbReturnDomainRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_domains_and_endpoints(self) -> PcbReturnPathsAnalysis:
-        if len({domain.id.casefold() for domain in self.domains}) != len(self.domains):
-            raise ValueError("PCB return domain IDs must be unique")
-        pads = [item.pad.casefold() for domain in self.domains for item in domain.endpoints]
-        bonds = [bond.reference.casefold() for domain in self.domains for bond in domain.bonds]
-        if len(set(pads)) != len(pads):
-            raise ValueError("PCB return endpoint pads must belong to one domain only")
-        if len(set(bonds)) != len(bonds):
-            raise ValueError("PCB return bond components must belong to one domain only")
-        return self
-
-
-class PinRelationshipRule(StrictModel):
-    id: Identifier
-    basis: NonEmptyText
-    topology: Literal["common_net", "separate_nets", "unconnected"]
-    pins: Annotated[tuple[Reference, ...], Field(min_length=1)]
-    net: NetName | None = None
-
-    @model_validator(mode="after")
-    def valid_relationship(self) -> PinRelationshipRule:
-        if len(set(self.pins)) != len(self.pins):
-            raise ValueError("Pin relationship pins must be unique")
-        if self.topology in {"common_net", "separate_nets"} and len(self.pins) < 2:
-            raise ValueError("Connected pin relationships need at least two pins")
-        if self.topology != "common_net" and self.net is not None:
-            raise ValueError("Only common-net relationships can name one net")
-        if self.net is not None and self.net.startswith("/"):
-            raise ValueError("Use the native net name without a leading slash")
-        return self
-
-
-class PinConnectivityAnalysis(StrictModel):
-    mode: Literal["required"] = "required"
-    basis: NonEmptyText
-    rules: Annotated[tuple[PinRelationshipRule, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def distinct_rules(self) -> PinConnectivityAnalysis:
-        identifiers = [rule.id for rule in self.rules]
-        if len(set(identifiers)) != len(identifiers):
-            raise ValueError("Pin relationship IDs must be unique")
-        return self
 
 
 class TestAccessProbeEnvelope(StrictModel):

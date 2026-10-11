@@ -9,16 +9,18 @@ from kicad_tooling.hwrepo.models import (
     PcbConnectivitySnapshot,
     PcbNetTieObservation,
     PcbPadConnectivityObservation,
-    PcbReturnBondRequirement,
-    PcbReturnDomainRequirement,
-    PcbReturnEndpointRequirement,
-    PcbReturnPathsAnalysis,
     PcbViaObservation,
     PcbZoneIdentity,
     PcbZoneIslandIdentity,
     PcbZoneObservation,
 )
 from kicad_tooling.hwrepo.pcb_return_path_checks import pcb_return_path_checks
+from kicad_tooling.hwrepo.pcb_return_path_models import (
+    PcbReturnBondRequirement,
+    PcbReturnDomainRequirement,
+    PcbReturnEndpointRequirement,
+    PcbReturnPathsAnalysis,
+)
 
 BOARD = "a" * 64
 PROBE = "b" * 64

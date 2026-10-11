@@ -14,7 +14,6 @@ from kicad_tooling.hwrepo.design_lint import (
 from tests.test_design_lint_complementary_pairs import (
     DesignLintComplementaryPairTests as ComplementaryPairCase,
 )
-from tests.test_design_lint_connector_roles import DesignLintConnectorRoleTests as ConnectorRoleCase
 from tests.test_design_lint_dc_reference import DesignLintDcReferenceTests as DcReferenceCase
 from tests.test_design_lint_decoupling import DesignLintDecouplingTests as DecouplingCase
 from tests.test_design_lint_i2c import DesignLintI2cTests as I2cCase
@@ -97,7 +96,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         DcReferenceCase: DcReferenceCase(),
         DecouplingCase: DecouplingCase(),
         SchematicConnectivityCase: SchematicConnectivityCase(),
-        ConnectorRoleCase: ConnectorRoleCase(),
         LedTopologyCase: LedTopologyCase(),
         I2cCase: I2cCase(),
         ComplementaryPairCase: ComplementaryPairCase(),

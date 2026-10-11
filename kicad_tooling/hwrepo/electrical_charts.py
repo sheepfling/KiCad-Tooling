@@ -13,6 +13,7 @@ from .contracts import read_model, repo_path, write_model
 from .electrical import simulation_cases
 from .electrical_plot import render_case
 from .evidence import digest
+from .grounding_models import GroundingAnalysis
 from .models import (
     ContractCoachReport,
     ElectricalAnalysisContract,
@@ -21,7 +22,6 @@ from .models import (
     ElectricalChartsReport,
     ElectricalChartsSuiteReport,
     ElectricalSuiteReport,
-    GroundingAnalysis,
     PowerAnalysis,
 )
 from .waveform_data import WaveformData, read_waveform

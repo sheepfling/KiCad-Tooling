@@ -10,7 +10,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
 )
-from tests.design_lint_fixtures import coach
+from tests.design_lint_fixtures import coach, three_port_power_pin_drift
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -167,3 +167,32 @@ def test_numbered_power_rail_controls_do_not_merge_distinct_or_ambiguous_rails(
     report = evaluate("synthetic-numbered-power-control", coach(observed_rails), DesignLintPolicy())
 
     assert "net.numbered_power_rails" not in {item.rule_id for item in report.findings}
+
+
+def test_numbered_power_rail_order_is_stable_and_commoning_clears_the_hint() -> None:
+    source = three_port_power_pin_drift()
+    reordered = source.model_copy(
+        update={
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+        }
+    )
+    original_report = evaluate("synthetic-three-port-power", coach(source), DesignLintPolicy())
+    reordered_report = evaluate("synthetic-three-port-power", coach(reordered), DesignLintPolicy())
+    original_finding = next(
+        item for item in original_report.findings if item.rule_id == "net.numbered_power_rails"
+    )
+    reordered_finding = next(
+        item for item in reordered_report.findings if item.rule_id == "net.numbered_power_rails"
+    )
+    assert (reordered_finding.fingerprint, reordered_finding.evidence) == (
+        original_finding.fingerprint,
+        original_finding.evidence,
+    )
+    common_report = evaluate(
+        "synthetic-three-port-power-common",
+        coach(three_port_power_pin_drift(common=True)),
+        DesignLintPolicy(),
+    )
+    assert "net.numbered_power_rails" not in {item.rule_id for item in common_report.findings}

@@ -15,12 +15,8 @@ def verify_connector_grounding_contracts(
     import hashlib
 
     from .hwrepo.electrical import grounding_checks, pin_relationship_checks
-    from .hwrepo.models import (
-        GroundDomain,
-        GroundingAnalysis,
-        PinConnectivityAnalysis,
-        PinRelationshipRule,
-    )
+    from .hwrepo.grounding_models import GroundDomain, GroundingAnalysis
+    from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis, PinRelationshipRule
 
     if db9_control_nets.get("COMMON_RETURN") != tuple(
         f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)

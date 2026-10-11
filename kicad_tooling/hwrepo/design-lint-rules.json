@@ -28,8 +28,8 @@
         "tests.test_design_lint_connector_returns.test_return_pin_disagreement_within_one_connector_needs_review",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_connector_peer_pin_coverage.test_split_meaningful_returns_are_reported_and_counted",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
+        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
+        "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
@@ -40,9 +40,9 @@
         "tests.test_design_lint_connector_returns.test_connector_power_labels_do_not_merge_distinct_domains",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_return_control_clears_review_findings",
         "tests.test_connector_peer_pin_coverage.test_common_peer_assignments_are_counted_without_a_finding",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_population_heuristics_ignore_dnp_instances",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
+        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
+        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances",
+        "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_common_assignment_is_a_control",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
@@ -50,7 +50,7 @@
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
+        "tests.test_design_lint_connector_returns.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
         "tests.test_design_lint_numbered_returns.test_neutral_net_renaming_preserves_repeated_pin_review",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
@@ -88,7 +88,7 @@
         "tests.test_design_lint_connector_peer_pins.test_exact_symbol_peer_pin_outlier_localizes_missing_generic_contact",
         "tests.test_design_lint_connector_peer_pins.test_two_peer_open_generic_contact_prompts_and_supports_exact_ignore",
         "tests.test_connector_peer_pin_coverage.test_open_generic_peer_pin_is_reported_with_a_valid_common_control",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
+        "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_outlier_uses_unique_majority",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_connector_part_id_peers.test_shared_part_id_symbol_aliases_surface_open_generic_pin_with_coverage",
@@ -99,7 +99,7 @@
         "tests.test_design_lint_connector_peer_pins.test_exact_symbol_peer_pin_controls_exclude_consistent_independent_and_dnp_cases",
         "tests.test_design_lint_connector_peer_pins.test_two_peer_open_generic_contact_prompts_and_supports_exact_ignore",
         "tests.test_connector_peer_pin_coverage.test_common_peer_assignments_are_counted_without_a_finding",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
+        "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_connector_part_id_peers.test_common_part_id_aliases_are_a_quiet_control_and_split_groups_allow_isolation",
         "tests.test_connector_part_id_peers.test_dnp_and_ambiguous_pin_assignments_do_not_trigger_alias_findings",
@@ -676,13 +676,13 @@
         "tests.test_design_lint_connector_returns.test_multiconductor_connector_without_connected_return_needs_review",
         "tests.test_design_lint_connector_returns.test_return_named_net_is_context_not_proof_of_connector_pin_role",
         "tests.test_design_lint_connector_returns.test_shield_connection_does_not_count_as_a_signal_return",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
+        "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_small_connector_is_excluded_from_missing_return_candidate",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_population_heuristics_ignore_dnp_instances",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
+        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances",
+        "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
       ],
       "metamorphic_status": "covered",
@@ -720,7 +720,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_connector_power_labels_do_not_merge_distinct_domains",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_population_heuristics_ignore_dnp_instances"
+        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_open_connector_supply_and_return_order_and_completion"
@@ -756,7 +756,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_population_heuristics_ignore_dnp_instances"
+        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_open_connector_supply_and_return_order_and_completion"
@@ -1876,15 +1876,15 @@
       "fault_fixtures": [
         "tests.test_design_lint_numbered_power_rails.test_numbered_positive_supply_rail_names_need_review",
         "tests.test_design_lint_numbered_power_rails.test_channel_prefixed_positive_supply_rail_names_need_review",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_three_generic_power_pins_report_different_and_missing_sibling_assignments"
+        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_numbered_power_rails.test_numbered_power_rail_controls_do_not_merge_distinct_or_ambiguous_rails",
         "tests.test_design_lint_numbered_power_rails.test_channel_prefixed_power_name_controls_do_not_infer_or_merge_rails",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_three_generic_power_pins_report_different_and_missing_sibling_assignments"
+        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_numbered_power_rail_order_is_stable_and_commoning_clears_the_hint"
+        "tests.test_design_lint_numbered_power_rails.test_numbered_power_rail_order_is_stable_and_commoning_clears_the_hint"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_rails.py#numbered_power_rail_groups",
@@ -3367,7 +3367,7 @@
         "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_fitted_capacitor_to_return_controls_review",
         "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_custom_decoupling_capacitor_requires_exact_project_role",
         "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_ic_power_decoupling_review_supports_rule_policy_and_exact_ignore",
-        "tests.test_design_lint_connector_roles.DesignLintConnectorRoleTests.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs"
+        "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

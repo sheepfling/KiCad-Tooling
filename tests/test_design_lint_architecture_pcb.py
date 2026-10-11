@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo import (
     pcb_reference_plane_models,
     pcb_return_path_capture,
     pcb_return_path_checks,
+    pcb_return_path_models,
     pcb_return_paths,
     pcb_rf_antenna_models,
     pcb_switching_loop_models,
@@ -48,8 +49,15 @@ PCB_DRC_COVERAGE_MODULES = (
     "pcb_drc_source_scan.py",
 )
 PCB_RETURN_PATH_MODULES = (
+    "pcb_return_path_models.py",
     "pcb_return_path_checks.py",
     "pcb_return_path_capture.py",
+)
+PCB_RETURN_PATH_MODEL_NAMES = (
+    "PcbReturnEndpointRequirement",
+    "PcbReturnBondRequirement",
+    "PcbReturnDomainRequirement",
+    "PcbReturnPathsAnalysis",
 )
 PCB_RF_ANTENNA_MODEL_NAMES = (
     "PcbRfAntennaPolygon",
@@ -126,7 +134,7 @@ SHARED_MODEL_PRIMITIVE_NAMES = (
     "NonNegativeCapacitancePf",
 )
 # Lower this baseline alongside each registry extraction; never raise it.
-SHARED_MODEL_REGISTRY_MAX_LINES = 5_729
+SHARED_MODEL_REGISTRY_MAX_LINES = 5_593
 
 
 def _top_level_definitions(path: Path) -> set[str]:
@@ -335,6 +343,42 @@ def test_pcb_return_path_facade_reexports_the_thematic_owners() -> None:
         is pcb_return_path_capture.native_pcb_command_matches
     )
     assert pcb_return_paths.pcb_return_path_checks is pcb_return_path_checks.pcb_return_path_checks
+
+
+def test_pcb_return_path_models_have_a_theme_owner_and_compatibility_exports() -> None:
+    owner = HWREPO / "pcb_return_path_models.py"
+    registry = HWREPO / "models.py"
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert set(PCB_RETURN_PATH_MODEL_NAMES) <= _top_level_definitions(owner)
+    registry_tree = ast.parse(registry.read_text(encoding="utf-8"), filename=registry.name)
+    registry_definitions = {
+        node.name for node in registry_tree.body if isinstance(node, ast.ClassDef)
+    }
+    assert not (set(PCB_RETURN_PATH_MODEL_NAMES) & registry_definitions)
+    for name in PCB_RETURN_PATH_MODEL_NAMES:
+        assert getattr(shared_models, name) is getattr(pcb_return_path_models, name)
+
+
+def test_internal_pcb_return_services_import_models_from_the_theme_owner() -> None:
+    moved_names = set(PCB_RETURN_PATH_MODEL_NAMES)
+    registry = HWREPO / "models.py"
+    legacy_imports: list[str] = []
+    for path in sorted((REPO_ROOT / "kicad_tooling").rglob("*.py")):
+        if path == registry:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module is not None
+                and node.module.rsplit(".", 1)[-1] == "models"
+                and any(alias.name in moved_names for alias in node.names)
+            ):
+                legacy_imports.append(path.relative_to(REPO_ROOT).as_posix())
+    assert not legacy_imports, (
+        "Internal PCB services should import return-path models from their theme owner; "
+        f"legacy imports: {sorted(set(legacy_imports))}"
+    )
 
 
 def test_rf_antenna_models_have_a_theme_owner_and_compatibility_exports() -> None:

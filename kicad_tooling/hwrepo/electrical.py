@@ -10,16 +10,15 @@ from pathlib import Path
 from ..validate import hashes
 from .contracts import parse_model_text, read_model, repo_path
 from .discovery import load_config, load_registry
+from .grounding_models import GroundingAnalysis
 from .models import (
     AnalysisNotApplicable,
     AnalysisPending,
     ElectricalAnalysisContract,
     ElectricalCheck,
     FrequencyAnalysis,
-    GroundingAnalysis,
     HighFrequencyAnalysis,
     NetlistContract,
-    PinConnectivityAnalysis,
     PowerAnalysis,
     ProjectConfig,
     ProjectKind,
@@ -27,6 +26,7 @@ from .models import (
     TestAccessAnalysis,
     TransientAnalysis,
 )
+from .pin_connectivity_models import PinConnectivityAnalysis
 from .return_nets import return_net_groups
 
 SimulationCase = TransientAnalysis | FrequencyAnalysis

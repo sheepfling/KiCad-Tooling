@@ -7,12 +7,14 @@ import hashlib
 from kicad_tooling.hwrepo.models import (
     PcbConnectivitySnapshot,
     PcbNetTieObservation,
-    PcbReturnBondRequirement,
-    PcbReturnPathsAnalysis,
     PcbViaObservation,
     PcbZoneIdentity,
     PcbZoneIslandIdentity,
     PcbZoneObservation,
+)
+from kicad_tooling.hwrepo.pcb_return_path_models import (
+    PcbReturnBondRequirement,
+    PcbReturnPathsAnalysis,
 )
 from tests.design_lint_fixtures.pcb_return_paths import (
     BOARD,

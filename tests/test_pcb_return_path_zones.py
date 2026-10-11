@@ -6,11 +6,11 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.models import (
-    PcbReturnPathsAnalysis,
     PcbZoneIdentity,
     PcbZoneIslandIdentity,
     PcbZoneObservation,
 )
+from kicad_tooling.hwrepo.pcb_return_path_models import PcbReturnPathsAnalysis
 from tests.design_lint_fixtures.pcb_return_paths import (
     checks_for,
     domain,

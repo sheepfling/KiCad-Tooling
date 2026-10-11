@@ -32,6 +32,7 @@ from .electrical import (
     simulation_cases,
 )
 from .evidence import digest, evidence_path, verify_source
+from .grounding_models import GroundingAnalysis
 from .i2c_pullup_contract import (
     i2c_pullup_checks,
 )
@@ -43,11 +44,8 @@ from .models import (
     ElectricalAnalysisReport,
     ElectricalCheck,
     EvidenceFile,
-    GroundingAnalysis,
     PcbAccessAnalysis,
     PcbAccessProbeRequestSet,
-    PcbReturnPathsAnalysis,
-    PinConnectivityAnalysis,
     PowerConnectivityAnalysis,
     ProjectKind,
     ProjectRecord,
@@ -61,6 +59,8 @@ from .mosfet_stress_models import MosfetStressAnalysis
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_return_path_capture import expected_probe_sha256, native_pcb_command_matches
 from .pcb_return_path_checks import pcb_return_path_checks
+from .pcb_return_path_models import PcbReturnPathsAnalysis
+from .pin_connectivity_models import PinConnectivityAnalysis
 from .power_connectivity import power_connectivity_checks
 from .rs485_heuristics import rs485_checks
 from .rs485_models import Rs485Analysis

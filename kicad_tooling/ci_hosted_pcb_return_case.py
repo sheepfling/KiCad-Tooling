@@ -20,14 +20,14 @@ from .ci_hosted_pcb_return_evidence import (
 )
 from .hwrepo import pcb_return_path_capture
 from .hwrepo.evidence import digest
-from .hwrepo.models import (
+from .hwrepo.pcb_return_path_checks import (
+    pcb_return_path_checks,
+)
+from .hwrepo.pcb_return_path_models import (
     PcbReturnBondRequirement,
     PcbReturnDomainRequirement,
     PcbReturnEndpointRequirement,
     PcbReturnPathsAnalysis,
-)
-from .hwrepo.pcb_return_path_checks import (
-    pcb_return_path_checks,
 )
 
 

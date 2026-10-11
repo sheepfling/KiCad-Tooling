@@ -62,6 +62,7 @@ from tests import electrical_i2c_support as i2c_support
 from tests import test_contract_coach as coach_fixture
 from tests.electrical_serial_support import serial_peer_netlist, serial_peer_requirement
 from tests.electrical_spi_support import spi_requirement
+from tests.electrical_usb_c_support import usb_c_netlist, usb_c_requirement
 from tests.support import initialize_git
 from tests.test_component_power_ratings import (
     netlist as component_power_netlist,
@@ -102,8 +103,6 @@ from tests.test_electrical import (
     power_connectivity_requirement,
     rs485_netlist,
     rs485_requirement,
-    usb_c_netlist,
-    usb_c_requirement,
 )
 from tests.test_mosfet_stress import multi_device_netlist as mosfet_stress_multi_device_netlist
 from tests.test_mosfet_stress import (

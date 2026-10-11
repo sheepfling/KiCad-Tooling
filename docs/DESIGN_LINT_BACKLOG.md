@@ -438,8 +438,11 @@ and optional ecosystem adapters are `P3`.
   contract regressions are also split from `tests/test_electrical.py` into
   focused pytest modules selectable with `return_path_lint` and
   `connector_lint`. The repeated connector power-pin example is a small
-  synthetic netlist fixture. These are existing contract regressions; the move
-  adds no lint rule or measured reviewer outcome. I2C pull-up contract tests
+  synthetic netlist fixture. The connector-role regressions now use pytest
+  functions split across connector identity/population, returns, and power-pin
+  suites; catalog fixture paths track those owners. These are existing
+  contract regressions; the move adds no lint rule or measured reviewer
+  outcome. I2C pull-up contract tests
   now have their own `interface_lint` pytest suite, with reusable synthetic
   model builders isolated in `tests/electrical_i2c_support.py`. SPI contract
   tests now have the same focused pytest selection, with builders in
@@ -477,7 +480,19 @@ and optional ecosystem adapters are `P3`.
   Evaluation coordinators now import each coverage owner directly, and the
   architecture suite guards every module below 500 lines and checks model
   ownership. The extracted adapters preserve existing report fields and add no
-  lint rule.
+  lint rule. The PCB return-path requirement models then moved to
+  `pcb_return_path_models.py`; internal services, the native fixture runner,
+  and synthetic builders now import that owner directly. The shared registry
+  retains identity-compatible exports, while architecture tests guard owner
+  size and import boundaries. This split shrank `models.py` by 84 lines and
+  lowered its recorded ceiling by the same amount; it changes no return-path
+  behavior and adds no lint rule. Ground-domain and exact pin-connectivity
+  contract records now live in `grounding_models.py` and
+  `pin_connectivity_models.py`; electrical evaluation, evidence, runner, and
+  chart services import their owner types directly. Architecture tests preserve
+  identity-compatible registry exports and prevent the shared module from
+  regaining those definitions. It removes a further 52 lines from the shared
+  model registry and adds no lint rule.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in
@@ -991,6 +1006,23 @@ assignment to report. Native KiCad electrical type now supplies bounded
 evidence for a `REVIEW` prompt. The synthetic fault/control pair is repeated on
 the digest-pinned KiCad 10.0.0 and 10.0.5 images in the connector acceptance
 lane; it does not declare that the contacts must share a net.
+
+- **LINT-012 test selection — Keep USB-C contract regressions theme-selectable.**
+  CC role, controller, mode-strap, debug-accessory boundary, VBUS capacitance,
+  and ordered VBUS-path cases now live in the pytest modules
+  `tests/test_electrical_usb_c_cc.py` and
+  `tests/test_electrical_usb_c_vbus.py`, selected with `interface_lint`; the
+  VBUS module also carries `power_lint`. Their shared synthetic builders live
+  in `tests/electrical_usb_c_support.py` and are reused by the evidence and
+  CLI/MCP parity suites. The legacy `tests/test_electrical.py` shrank from
+  2,602 to 1,831 lines. All 26 focused pytest cases pass; the existing
+  electrical/evidence regressions and USB-C VBUS CLI/MCP parity case also pass
+  with the separate public template checkout configured. This is test
+  organization only: no contract behavior or rule default changed. A declared
+  debug-accessory role remains `NOT_RUN`; static schematic assignments cannot
+  establish its dynamic CC-state behavior.
+  Select the focused slice with
+  `.venv/bin/python -I -m pytest tests/test_electrical_usb_c_cc.py tests/test_electrical_usb_c_vbus.py -m 'interface_lint'`.
 
 This execution focus is updated as evidence closes. A completed implementation
 is not a reason by itself to expand its scope or change its default policy.

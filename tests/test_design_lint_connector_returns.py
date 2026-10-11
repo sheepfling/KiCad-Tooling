@@ -185,3 +185,63 @@ def test_common_return_across_symbols_keeps_shield_separate() -> None:
 
     assert report.status == "PASS"
     assert not report.findings
+
+
+def test_return_functions_across_connector_symbols_need_review() -> None:
+    report = evaluate("synthetic-ports", coach(cross_symbol_returns()), DesignLintPolicy())
+    assert report.status == "REVIEW"
+    returns = [
+        item
+        for item in report.findings
+        if item.subject == "multiple connector symbols: ground/return"
+    ]
+    assert len(returns) == 1
+    assert returns[0].evidence == {"J1.4": ("USB_RETURN",), "J2.7": ("SERIAL_RETURN",)}
+    assert "common, bonded, or intentionally isolated" in returns[0].message
+
+
+def test_cross_connector_return_order_preserves_finding_and_commoning_clears_it() -> None:
+    separate = cross_symbol_returns()
+    reordered = separate.model_copy(
+        update={
+            "nets": dict(reversed(tuple(separate.nets.items()))),
+            "component_symbols": dict(reversed(tuple(separate.component_symbols.items()))),
+            "pin_functions": dict(reversed(tuple(separate.pin_functions.items()))),
+        }
+    )
+    original_report = evaluate("synthetic-ports", coach(separate), DesignLintPolicy())
+    reordered_report = evaluate("synthetic-ports", coach(reordered), DesignLintPolicy())
+    original_finding = next(
+        item
+        for item in original_report.findings
+        if item.subject == "multiple connector symbols: ground/return"
+    )
+    reordered_finding = next(
+        item
+        for item in reordered_report.findings
+        if item.subject == "multiple connector symbols: ground/return"
+    )
+    assert (reordered_finding.fingerprint, reordered_finding.evidence) == (
+        original_finding.fingerprint,
+        original_finding.evidence,
+    )
+    common_report = evaluate(
+        "synthetic-ports-common", coach(cross_symbol_returns(common=True)), DesignLintPolicy()
+    )
+    assert common_report.status == "PASS"
+    assert "connector.repeated_pin_function" not in {
+        item.rule_id for item in common_report.findings
+    }
+
+
+def test_unconnected_return_pin_across_symbols_is_reported() -> None:
+    report = evaluate(
+        "synthetic-ports", coach(cross_symbol_returns(serial_connected=False)), DesignLintPolicy()
+    )
+    returns = [
+        item
+        for item in report.findings
+        if item.subject == "multiple connector symbols: ground/return"
+    ]
+    assert len(returns) == 1
+    assert returns[0].evidence["J2.7"] == ()
