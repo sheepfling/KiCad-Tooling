@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import tests.can_peer_reference_support as _can_peer_reference_support
 import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
@@ -17,6 +18,7 @@ import tests.external_protection_support as _external_protection_support
 import tests.i2c_peer_reference_support as _i2c_peer_reference_support
 import tests.pcb_decoupling_support as _pcb_decoupling_support
 import tests.pcb_rf_antenna_support as _pcb_rf_antenna_support
+import tests.rs485_peer_reference_support as _rs485_peer_reference_support
 import tests.serial_peer_reference_support as _serial_peer_reference_support
 import tests.spi_peer_reference_support as _spi_peer_reference_support
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
@@ -50,6 +52,7 @@ from kicad_tooling.hwrepo.models import (
     PcbRfModuleAntennaMap,
     Stm32PinMapCoverageReport,
 )
+from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
@@ -120,6 +123,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _spi_peer_reference_support.spi_peer_netlist(),
         _tests_design_lint_fixtures.spi_active_low_select_netlist(),
         _tests_design_lint_fixtures.can_netlist(),
+        _can_peer_reference_support.can_peer_reference_netlist(),
         _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),
         no_can_assignments,
         _tests_design_lint_fixtures.complementary_usb_netlist(negative_net=None),
@@ -414,6 +418,13 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             serial_participant_netlist(),
             serial_peer_roster=SerialPeerRosterContext(state="not_configured"),
         )
+    )
+    _, rs485_context, rs485_source = _rs485_peer_reference_support.rs485_peer_reference_fixture(
+        reference_nets={"U1": "GND_A", "U2": "GND_B", "U3": "GND_A"}
+    )
+    rs485_scan = scan_rs485_peer_references(rs485_context, rs485_source)
+    emitted.update(
+        item.rule_id for item in candidates(rs485_source, rs485_peer_reference_scan=rs485_scan)
     )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

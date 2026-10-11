@@ -49,6 +49,15 @@ def hosted_reference_root(tmp_path: Path) -> Path:
 # Keep the area catalog explicit. Adding a lint test module here also includes
 # it in the portable design_lint selection derived below.
 _LINT_AREA_MODULES = {
+    "catalog_lint": frozenset(
+        {
+            "tests/test_design_lint_backlog.py",
+            "tests/test_design_lint_catalog.py",
+            "tests/test_design_lint_catalog_fixtures.py",
+            "tests/test_design_lint_catalog_reachability.py",
+            "tests/test_design_lint_architecture_catalog.py",
+        }
+    ),
     "schematic_lint": frozenset(
         {
             "tests/test_schematic_geometry_text.py",

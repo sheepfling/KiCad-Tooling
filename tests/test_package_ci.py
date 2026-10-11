@@ -127,6 +127,13 @@ def test_design_lint_parent_tag_does_not_repeat_its_marker() -> None:
     assert scope.pytest_markexpr == "design_lint"
 
 
+@pytest.mark.design_lint
+@pytest.mark.catalog_lint
+def test_catalog_lint_tag_selects_only_catalog_regressions() -> None:
+    scope = parse_tag_message("Catalog consistency gate\n\nLint-Area: catalog_lint\n", frozenset())
+    assert scope.pytest_markexpr == "design_lint and catalog_lint"
+
+
 def test_annotated_tag_resolves_scope_and_writes_github_action_files(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

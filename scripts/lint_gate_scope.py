@@ -12,6 +12,7 @@ from pathlib import Path
 LINT_AREAS = frozenset(
     {
         "design_lint",
+        "catalog_lint",
         "architecture",
         "schematic_lint",
         "schematic_text_lint",

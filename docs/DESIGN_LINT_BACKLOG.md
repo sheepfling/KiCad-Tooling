@@ -276,6 +276,10 @@ intended requirement.
   requires each owning test module to carry `design_lint`, so focused runs do
   not silently omit catalogued evidence. Avoid a generic checker that
   accumulates unrelated predicates or duplicate copies of shared utilities.
+- Use `catalog_lint` to run catalog metadata, implementation-owner, fixture
+  reachability, and backlog-synchronization regressions without executing every
+  lint theme: `python -I -m pytest -m 'design_lint and catalog_lint'`. Annotated
+  prerelease tags can select the same slice with `Lint-Area: catalog_lint`.
 - The I2C address-map suite follows this layout: coverage, address collisions,
   strap decoding, and contract validation have separate test modules, with
   shared synthetic builders in `tests/design_lint_fixtures/i2c_addresses.py`.
