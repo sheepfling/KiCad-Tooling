@@ -4790,9 +4790,12 @@ is not a reason by itself to expand its scope or change its default policy.
   receipt evidence, and CLI/MCP parity. The exact-version native lane
   uses SHA-256-pinned tooling-owned schematic and PCB fixtures for KiCad 10.0.0
   and 10.0.5, including a one-reference footprint-identity fault and exact
-  identity control. The native lane is added but was not executed in this
-  workspace: `kicad-cli` is absent, Docker's daemon is unavailable, and no
-  separate public `KICAD_TEMPLATE_ROOT` is configured.
+  identity control. Added typed regressions also verify that a case-insensitive
+  duplicate schematic reference blocks inventory coverage and that the PCB
+  snapshot model rejects case-insensitive duplicate placed references before
+  comparison. The focused selector passed 12 tests on 2026-10-11; exact native
+  execution remains delegated to the hosted acceptance lane because this
+  workspace has no `kicad-cli` or running Docker daemon.
 - **Cohort boundary:** The pinned [kicad-happy cross-validation source][happy-cross-analysis]
   also compares board-only references and schematic/PCB values using reference
   prefix exclusions. Those broader predicates are not adopted. This rule is

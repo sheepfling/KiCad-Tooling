@@ -383,6 +383,32 @@ def test_missing_native_inventory_evidence_is_not_reported_as_clean() -> None:
     )
 
 
+def test_casefolded_schematic_reference_collision_blocks_inventory_coverage() -> None:
+    observed = netlist(components={"U1": "Package_SO:SOIC-8", "u1": "Package_TSSOP:TSSOP-8"})
+    coverage = evaluate_native_component_inventory_coverage(
+        observed,
+        snapshot("U1"),
+        mode="review",
+        netlist_sha256=NETLIST_SHA256,
+        board_path="synthetic/controller.kicad_pcb",
+        board_sha256=BOARD_SHA256,
+        snapshot_path="build/design-lint/native/snapshot.json",
+        snapshot_sha256=SNAPSHOT_SHA256,
+        probe_sha256=PROBE_SHA256,
+    )
+
+    assert coverage.status == "BLOCKED"
+    assert coverage.issue == "Native netlist has duplicate case-insensitive component references"
+    (candidate,) = pcb_component_inventory_candidates(coverage)
+    assert candidate.subject == "native PCB footprint inventory unavailable"
+    assert candidate.evidence["coverage_issue"] == (coverage.issue,)
+
+
+def test_casefolded_board_reference_collision_is_rejected_at_snapshot_boundary() -> None:
+    with pytest.raises(ValidationError, match="duplicate footprint references"):
+        snapshot("U1", "u1")
+
+
 def test_complete_inventory_receipt_requires_native_source_digests() -> None:
     with pytest.raises(ValidationError, match="full source receipt"):
         PcbComponentInventoryCoverageReport(status="COMPLETE", mode="review")
