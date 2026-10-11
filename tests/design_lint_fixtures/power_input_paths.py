@@ -23,6 +23,7 @@ RULE_ID = "power.input_without_supported_source_path"
 
 def source_path_netlist(
     *,
+    series_reference: str = "FB1",
     wrong_rail: bool = False,
     source_present: bool = True,
     capacitor_present: bool = True,
@@ -36,15 +37,15 @@ def source_path_netlist(
     supply_net = "+3V3" if source_less_name_only else "VLOAD"
     source_net = "VIN" if source_present else "LOCAL_SOURCE"
     components = {
-        "FB1": ComponentContract(value=series_value, footprint="Synthetic:0603"),
+        series_reference: ComponentContract(value=series_value, footprint="Synthetic:0603"),
         "U2": ComponentContract(value="Synthetic load", footprint="Synthetic:PowerLoad"),
     }
-    symbols = {"FB1": series_symbol, "U2": "Synthetic:PowerLoad"}
-    pin_numbers = {"FB1": ("1", "2"), "U2": ("1",)}
+    symbols = {series_reference: series_symbol, "U2": "Synthetic:PowerLoad"}
+    pin_numbers = {series_reference: ("1", "2"), "U2": ("1",)}
     dnp: list[str] = []
     nets: dict[str, tuple[str, ...]] = {
-        source_net: ("FB1.1",),
-        supply_net: ("FB1.2", "U2.1"),
+        source_net: (f"{series_reference}.1",),
+        supply_net: (f"{series_reference}.2", "U2.1"),
         "GND": (),
     }
     if source_present:
@@ -53,10 +54,10 @@ def source_path_netlist(
         )
         symbols["U1"] = "Synthetic:PowerSource"
         pin_numbers["U1"] = ("1",)
-        nets[source_net] = ("U1.1", "FB1.1")
+        nets[source_net] = ("U1.1", f"{series_reference}.1")
     if wrong_rail:
         nets[source_net] = ("U1.1",) if source_present else ()
-        nets["GND"] = ("FB1.1",)
+        nets["GND"] = (f"{series_reference}.1",)
     if capacitor_present:
         components["C1"] = ComponentContract(value="100nF", footprint="Synthetic:0603")
         symbols["C1"] = capacitor_symbol
@@ -66,7 +67,7 @@ def source_path_netlist(
         if capacitor_dnp:
             dnp.append("C1")
     if series_dnp:
-        dnp.append("FB1")
+        dnp.append(series_reference)
     nets = {net: pins for net, pins in nets.items() if pins}
     return NetlistContract(
         components=components,
@@ -79,6 +80,44 @@ def source_path_netlist(
             "U2.1": "power_in",
         },
         component_pin_numbers=pin_numbers,
+    )
+
+
+def f_referenced_logic_ic_netlist() -> NetlistContract:
+    """Keep an F-designated logic IC out of the exact fuse path class."""
+    source = source_path_netlist(
+        series_reference="F1",
+        series_symbol="74xx:74LS32",
+        series_value="74LS32",
+    )
+    components = dict(source.components)
+    components["F1"] = components["F1"].model_copy(update={"footprint": "Synthetic:SOIC-14"})
+    pin_numbers = dict(source.component_pin_numbers)
+    pin_numbers["F1"] = tuple(str(number) for number in range(1, 15))
+    nets = dict(source.nets)
+    nets["VIN"] = (*nets["VIN"], "F1.14")
+    nets["GND"] = (*nets["GND"], "F1.7")
+    pin_functions = {
+        **source.pin_functions,
+        "F1.1": "A1",
+        "F1.2": "B1",
+        "F1.3": "Y1",
+        "F1.7": "GND",
+        "F1.14": "VCC",
+    }
+    pin_electrical_types = {
+        **source.pin_electrical_types,
+        "F1.7": "power_in",
+        "F1.14": "power_in",
+    }
+    return source.model_copy(
+        update={
+            "components": components,
+            "component_pin_numbers": pin_numbers,
+            "nets": nets,
+            "pin_functions": pin_functions,
+            "pin_electrical_types": pin_electrical_types,
+        }
     )
 
 

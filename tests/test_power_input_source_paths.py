@@ -8,6 +8,7 @@ from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.power_pin_paths import power_inputs_without_supported_source_paths
 from tests.design_lint_fixtures.power_input_paths import (
     RULE_ID,
+    f_referenced_logic_ic_netlist,
     lint_report,
     series_diode_netlist,
     series_jumper_netlist,
@@ -121,6 +122,29 @@ def test_bridged12_does_not_infer_a_path_to_terminal_three() -> None:
 )
 def test_open_dnp_or_incompletely_mapped_solder_jumpers_remain_review_candidates(netlist) -> None:
     assert power_inputs_without_supported_source_paths(netlist)
+
+
+def test_f_referenced_exact_fuse_symbol_remains_a_supported_path() -> None:
+    netlist = source_path_netlist(
+        series_reference="F1",
+        series_symbol="Device:Fuse",
+        series_value="1A",
+    )
+
+    assert not power_inputs_without_supported_source_paths(netlist)
+    assert RULE_ID not in {item.rule_id for item in candidates(netlist)}
+
+
+def test_f_referenced_logic_ic_does_not_count_as_a_fuse_path() -> None:
+    netlist = f_referenced_logic_ic_netlist()
+
+    gaps = power_inputs_without_supported_source_paths(netlist)
+    assert len(gaps) == 1
+    assert gaps[0].net == "VLOAD"
+    assert gaps[0].input_pins == ("U2.1",)
+    assert gaps[0].source_nets == ("VIN",)
+    assert RULE_ID in {item.rule_id for item in candidates(netlist)}
+    assert lint_report(netlist).status == "REVIEW"
 
 
 @pytest.mark.parametrize(

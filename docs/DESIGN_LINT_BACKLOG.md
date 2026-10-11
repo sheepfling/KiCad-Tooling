@@ -6126,7 +6126,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v17; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v18; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below. The UART peer heuristic now
@@ -7467,6 +7467,15 @@ is not a reason by itself to expand its scope or change its default policy.
   internal rails, false-positive rate, and reviewer effort. The new control is
   synthetic ERC evidence only; it is not a power-source design recommendation
   or an electrical approval.
+- **Follow-up source recheck (2026-10-11):** The
+  [kicad-happy v2.3.0 changelog](https://github.com/aklofas/kicad-happy/blob/v2.3.0/CHANGELOG.md)
+  records a PP-001 false fuse classification for an `F1`-referenced 74LS32.
+  A matched synthetic LINT-056 pair confirms an `F1`/`74xx:74LS32` is not a
+  supported path, while an `F1`/`Device:Fuse` remains one. An additional
+  LINT-084 case confirms a real `Device:Fuse` remains detectable when its
+  reference is `U1`. This is a source-informed local regression set, not a
+  runtime comparison or a new native export. No candidate code or project
+  source was copied.
 
 ##### Follow-up trial: kicad-happy decoupling-presence detector
 
@@ -8824,6 +8833,16 @@ it does not claim field validation or effectiveness against private boards.
   not copied. Repeated candidate report digests and source pins are recorded
   under LINT-031 and in the synthetic fixture notes:
   [power-path-native](../tests/fixtures/design_lint/power-path-native/README.md).
+- **Cohort-derived anti-control (2026-10-11):** The public
+  [kicad-happy v2.3.0 changelog](https://github.com/aklofas/kicad-happy/blob/v2.3.0/CHANGELOG.md)
+  records a false fuse classification for an `F1`-referenced 74LS32 and a fix
+  that uses IC identity rather than the reference prefix. Tooling's path graph
+  already recognizes only exact native fuse, polyfuse, and other supported
+  symbol identities. A new typed-netlist pair puts an `F1` 74LS32 between the
+  synthetic source and load and confirms LINT-056 still reports the
+  unsupported path, while the matching `F1`/`Device:Fuse` control clears it.
+  This is source-informed first-party coverage, not a runtime trial of
+  kicad-happy or a new native export; no cohort code or board source was copied.
 - **Predicate:** For a fitted internal native `power_in` pin on a net with a
   fitted, inventoried two-terminal capacitor to a recognized return, emit
   `REVIEW` when no recognized source anchor exists, or when an anchor exists

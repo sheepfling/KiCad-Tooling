@@ -565,7 +565,8 @@
         "The schematic netlist does not prove copper connectivity, fuse behavior, footprint pin mapping, or physical population. DNP parts are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_fuses.test_detects_exact_fuse_and_polyfuse_families_on_one_net"
+        "tests.test_two_pin_fuses.test_detects_exact_fuse_and_polyfuse_families_on_one_net",
+        "tests.test_two_pin_fuses.test_exact_fuse_symbol_is_not_limited_to_f_reference_prefix"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_fuses.test_distinct_pin_nets_are_the_no_finding_control",
@@ -3482,6 +3483,7 @@
       "fault_fixtures": [
         "tests.test_power_input_source_paths.test_wrong_rail_with_fitted_decoupling_is_reviewed_without_authored_map",
         "tests.test_power_input_source_paths.test_only_recognized_fitted_paths_and_supported_metadata_count",
+        "tests.test_power_input_source_paths.test_f_referenced_logic_ic_does_not_count_as_a_fuse_path",
         "tests.test_power_input_source_anchors.test_unrecognized_external_connector_source_becomes_a_coverage_review",
         "tests.test_power_input_source_anchors.test_dnp_external_power_out_does_not_anchor_the_assembly",
         "tests.test_power_input_source_paths.test_unmapped_diode_generic_jumper_and_custom_library_paths_remain_review_candidates",
@@ -3493,6 +3495,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_power_input_source_paths.test_valid_ferrite_low_resistance_and_named_rail_paths_are_controls",
+        "tests.test_power_input_source_paths.test_f_referenced_exact_fuse_symbol_remains_a_supported_path",
         "tests.test_power_input_source_paths.test_forward_series_diodes_with_exact_native_identity_and_pin_roles_are_controls",
         "tests.test_power_input_source_paths.test_exact_fitted_bridged_solder_jumper_is_a_bidirectional_control",
         "tests.test_power_input_source_paths.test_exact_three_terminal_bridge_topologies_are_recognized",

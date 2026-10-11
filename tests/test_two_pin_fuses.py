@@ -122,6 +122,20 @@ def test_detects_exact_fuse_and_polyfuse_families_on_one_net() -> None:
     assert "does not establish that the topology is wrong" in fuse_finding.message
 
 
+def test_exact_fuse_symbol_is_not_limited_to_f_reference_prefix() -> None:
+    observed = fuse_netlist(symbols={"U1": "Device:Fuse"})
+
+    candidates = two_pin_fuses_on_same_net(observed)
+    assert [(item.reference, item.kind) for item in candidates] == [("U1", "fuse")]
+    findings = [
+        item
+        for item in lint_report(observed).findings
+        if item.rule_id == "component.two_pin_fuse_same_net"
+    ]
+    assert len(findings) == 1
+    assert findings[0].subject.startswith("U1 ")
+
+
 def test_distinct_pin_nets_are_the_no_finding_control() -> None:
     report = lint_report(fuse_netlist(same_net=False))
     assert "component.two_pin_fuse_same_net" not in {item.rule_id for item in report.findings}
