@@ -31,6 +31,7 @@ from kicad_tooling.hwrepo.pcb_reference_plane_models import PcbReferencePlaneCov
 from kicad_tooling.hwrepo.pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from kicad_tooling.hwrepo.pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
 from kicad_tooling.hwrepo.pcb_track_width_models import PcbTrackWidthCoverageReport
+from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
@@ -122,7 +123,7 @@ def test_component_inventory_findings_match_cli_and_mcp(
     mcp_report = asyncio.run(inspect_mcp())
 
     assert cli_returncode == 1
-    assert cli_report == mcp_report
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
     findings = tuple(
         item for item in mcp_report.findings if item.rule_id == "pcb.schematic_component_inventory"
     )

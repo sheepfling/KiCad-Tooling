@@ -20,6 +20,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     ValidationSummary,
 )
+from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
     synthetic_design_lint_project,
@@ -105,7 +106,9 @@ def test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity(tmp_path: Path) ->
         assert process.returncode in {0, 1}, process.stderr + process.stdout
         cli_report = parse_model_text(process.stdout, DesignLintReport)
         mcp_report = asyncio.run(inspect_mcp())
-        assert cli_report == mcp_report
+        assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(
+            mcp_report
+        )
         return cli_report
 
     write_netlist(same_net=True)

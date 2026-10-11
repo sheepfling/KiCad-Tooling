@@ -35,6 +35,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
 from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
 from kicad_tooling.hwrepo.pcb_track_width_models import PcbTrackWidthCoverageReport
+from tests.mcp_parity_support import semantic_design_lint_report
 from tests.pcb_rf_antenna_support import FOOTPRINT, SYMBOL, requirement
 from tests.pcb_rf_antenna_support import snapshot as antenna_snapshot
 from tests.synthetic_design_lint_project import (
@@ -106,7 +107,7 @@ def test_disabled_rf_antenna_coverage_matches_cli_and_mcp(tmp_path: Path) -> Non
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
     mcp_report = asyncio.run(inspect_mcp())
-    assert cli_report == mcp_report
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
     assert mcp_report.pcb_rf_module_antenna_coverage.status == "DISABLED"
     assert (
         mcp_report.pcb_rf_module_antenna_coverage.map_sha256
@@ -218,7 +219,7 @@ def test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp(
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
     mcp_report = asyncio.run(inspect_mcp())
-    assert cli_report == mcp_report
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
     assert mcp_report.pcb_rf_module_antenna_coverage.status == expected_coverage_status
     findings = tuple(
         item

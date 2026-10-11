@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -26,11 +27,15 @@ from kicad_tooling.hwrepo.models import (
     CheckEvidence,
     ComponentIdentity,
     ConnectorInventoryReview,
+    DesignLintPolicy,
+    DesignLintReport,
+    DesignLintRuleOverride,
     PartRecord,
     PartsCatalog,
     PartStatus,
     ProjectKind,
     ProjectManifest,
+    ProjectTestContract,
     ValidationSummary,
 )
 from kicad_tooling.validate import hashes
@@ -60,14 +65,42 @@ def parity_workspace(base: Path) -> tuple[Path, Path, Path]:
             }
         ),
     )
-    initialize_git(root)
     island = root / "examples/projects/controller"
+    contract_path = island / "tests/contract.json"
+    contract = read_model(contract_path, ProjectTestContract)
+    write_model(
+        contract_path,
+        contract.model_copy(
+            update={
+                "design_lint": parity_design_lint_policy(contract.design_lint or DesignLintPolicy())
+            }
+        ),
+    )
+    initialize_git(root)
     incoming = root / "build/incoming/Incoming board.kicad_pro"
     incoming.parent.mkdir(parents=True)
     incoming.write_text("{}", encoding="utf-8")
     incoming.with_suffix(".kicad_sch").write_text("(kicad_sch)", encoding="utf-8")
     incoming.with_suffix(".kicad_pcb").write_text("(kicad_pcb)", encoding="utf-8")
     return root, island, incoming
+
+
+def parity_design_lint_policy(policy: DesignLintPolicy) -> DesignLintPolicy:
+    """Keep unrelated native PCB inventory capture out of synthetic parity cases."""
+    if any(item.rule_id == "pcb.schematic_component_inventory" for item in policy.rules):
+        return policy
+    return policy.model_copy(
+        update={
+            "rules": (
+                *policy.rules,
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_component_inventory",
+                    mode="off",
+                    reason="Synthetic parity fixture isolates its declared lint behavior",
+                ),
+            )
+        }
+    )
 
 
 async def parity_cli_process(base: Path, root: Path, module: str, *arguments: str):
@@ -165,9 +198,17 @@ class McpParityHarness:
         self._assertions = unittest.TestCase()
 
     def __getattr__(self, name: str):
+        if name == "assertEqual":
+            return self._assert_equal
         if name == "subTest" or name.startswith(("assert", "fail")):
             return getattr(self._assertions, name)
         raise AttributeError(name)
+
+    def _assert_equal(self, first: object, second: object, msg: str | None = None) -> None:
+        if isinstance(first, DesignLintReport) and isinstance(second, DesignLintReport):
+            first = semantic_design_lint_report(first)
+            second = semantic_design_lint_report(second)
+        self._assertions.assertEqual(first, second, msg=msg)
 
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory(prefix="mcp-semantic-parity-")
@@ -175,6 +216,8 @@ class McpParityHarness:
         self.root, self.island, self.incoming = parity_workspace(self.base)
 
     async def cli_process(self, module, *arguments):
+        if module == "kicad_tooling.design_lint":
+            self._isolate_unrelated_native_pcb_inventory()
         return await parity_cli_process(self.base, self.root, module, *arguments)
 
     async def cli(self, module, model, *arguments, expected_exit=0):
@@ -183,14 +226,23 @@ class McpParityHarness:
         return parse_model_text(process.stdout, model)
 
     async def call(self, client, tool, model, arguments=None):
+        if tool == "inspect_design_lint":
+            self._isolate_unrelated_native_pcb_inventory()
         result = await client.call_tool(tool, arguments or {})
         self.assertFalse(result.is_error, result.content)
         self.assertIsNotNone(result.structured_content)
         return model.model_validate_json(json.dumps(result.structured_content))
 
+    def _isolate_unrelated_native_pcb_inventory(self) -> None:
+        contract_path = self.island / "tests/contract.json"
+        contract = read_model(contract_path, ProjectTestContract)
+        policy = parity_design_lint_policy(contract.design_lint or DesignLintPolicy())
+        if contract.design_lint != policy:
+            write_model(contract_path, contract.model_copy(update={"design_lint": policy}))
+
     @staticmethod
-    def semantic(report: BaseModel, receipt: str | None = None):
-        def normalize(value, field=None):
+    def semantic(report: BaseModel, receipt: str | None = None) -> Any:
+        def normalize(value: Any, field: str | None = None) -> Any:
             if isinstance(value, dict):
                 return {key: normalize(item, key) for key, item in value.items()}
             if isinstance(value, list):
@@ -206,7 +258,7 @@ class McpParityHarness:
                     )
             return value
 
-        return normalize(report.model_dump(mode="json"))
+        return normalize_per_run_pcb_geometry_paths(normalize(report.model_dump(mode="json")))
 
     def receipt_equal(self, cli, mcp, field="run_directory") -> None:
         left = getattr(cli, field)
@@ -248,6 +300,26 @@ class McpParityHarness:
                 }
             ),
         )
+
+
+def semantic_design_lint_report(report: DesignLintReport) -> dict[str, Any]:
+    """Remove per-run PCB geometry output IDs before semantic parity comparison."""
+    return normalize_per_run_pcb_geometry_paths(report.model_dump(mode="json"))
+
+
+def normalize_per_run_pcb_geometry_paths(value: Any) -> Any:
+    """Normalize only generated PCB geometry run IDs in a typed report or dump."""
+    if isinstance(value, dict):
+        return {key: normalize_per_run_pcb_geometry_paths(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [normalize_per_run_pcb_geometry_paths(item) for item in value]
+    if isinstance(value, str):
+        return re.sub(
+            r"build/design-lint/pcb-geometry-[0-9a-f]{12}",
+            "build/design-lint/pcb-geometry-<run>",
+            value,
+        )
+    return value
 
 
 def comprehensive_lint_netlist() -> str:

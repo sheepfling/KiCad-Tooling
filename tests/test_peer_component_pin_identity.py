@@ -22,6 +22,7 @@ from tests.component_peer_pin_support import (
     peer_component_pin_netlist,
     peer_power_output_netlist,
 )
+from tests.mcp_parity_support import semantic_design_lint_report
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
@@ -79,6 +80,7 @@ def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
     from kicad_tooling.hwrepo.mcp_server import create_server
     from kicad_tooling.hwrepo.models import (
         ConnectorInventoryReview,
+        DesignLintRuleOverride,
         ProjectManifest,
         ValidationSummary,
     )
@@ -88,7 +90,18 @@ def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
         synthetic_design_lint_project,
     )
 
-    root, summary_path = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
+    root, summary_path = synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_component_inventory",
+                    mode="off",
+                    reason="Synthetic peer-pin parity case isolates component identity review",
+                ),
+            )
+        ),
+    )
     netlist_path = summary_path.parent / "netlist.xml"
     summary = read_model(summary_path, ValidationSummary)
     manifest_path = root / "projects/controller/project.json"
@@ -149,7 +162,9 @@ def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
                     json.dumps(result.structured_content)
                 )
 
-                assert cli_report == mcp_report
+                assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(
+                    mcp_report
+                )
                 assert mcp_report.status == ("REVIEW" if fault else "PASS")
                 findings = tuple(item for item in mcp_report.findings if item.rule_id == rule_id)
                 coverage = component_peer_coverage(mcp_report, rule_id)
@@ -197,7 +212,9 @@ def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
             assert not result.is_error, result.content
             assert result.structured_content is not None
             mcp_report = DesignLintReport.model_validate_json(json.dumps(result.structured_content))
-            assert cli_report == mcp_report
+            assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(
+                mcp_report
+            )
             assert mcp_report.status == "PASS"
             assert not any(item.rule_id == rule_id for item in mcp_report.findings)
             coverage = component_peer_coverage(mcp_report, rule_id)

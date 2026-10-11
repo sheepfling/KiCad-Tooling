@@ -36,6 +36,7 @@ from tests.mcp_parity_support import (
     parity_native_evidence,
     parity_workspace,
     run_mcp_parity,
+    semantic_design_lint_report,
 )
 
 
@@ -218,7 +219,9 @@ def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
                     json.dumps(result.structured_content)
                 )
 
-                assert cli_report == mcp_report
+                assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(
+                    mcp_report
+                )
                 assert mcp_report.status == ("REVIEW" if fault else "PASS")
                 findings = tuple(item for item in mcp_report.findings if item.rule_id == rule_id)
                 coverage = next(

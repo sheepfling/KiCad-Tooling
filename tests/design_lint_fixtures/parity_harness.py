@@ -21,7 +21,9 @@ from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     ComponentContract,
     ComponentIdentity,
+    DesignLintPolicy,
     DesignLintReport,
+    DesignLintRuleOverride,
     IgnoredChecks,
     PcbValidationContract,
     ProjectDiscovery,
@@ -42,6 +44,7 @@ from tests.design_lint_fixtures.i2c_serial_parity import (
     TOOLCHAIN_IMAGE,
     electrical_contract,
 )
+from tests.mcp_parity_support import semantic_design_lint_report
 
 
 class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
@@ -96,6 +99,15 @@ class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
                 expected_ignored_checks=IgnoredChecks(erc=(), drc=()),
             ),
             electrical="tests/electrical.json",
+            design_lint=DesignLintPolicy(
+                rules=(
+                    DesignLintRuleOverride(
+                        rule_id="pcb.schematic_component_inventory",
+                        mode="off",
+                        reason="Synthetic serial and I2C parity case has no native PCB fixture",
+                    ),
+                )
+            ),
         )
 
     def _write_repository_configuration(self) -> None:
@@ -234,7 +246,10 @@ class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
         self.assertIn(process.returncode, (0, 1), process.stderr + process.stdout)
         cli_report = DesignLintReport.model_validate_json(process.stdout)
         self.assertEqual(process.returncode, int(cli_report.status != "PASS"), process.stderr)
-        self.assertEqual(cli_report, mcp_report)
+        self.assertEqual(
+            semantic_design_lint_report(cli_report),
+            semantic_design_lint_report(mcp_report),
+        )
         return mcp_report
 
     async def _check_surface_registration(self) -> None:

@@ -6,12 +6,17 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintReport
+from kicad_tooling.hwrepo.models import (
+    DesignLintPolicy,
+    DesignLintReport,
+    DesignLintRuleOverride,
+)
 from tests.component_peer_power_assignment_support import (
     RULE_ID,
     peer_pin_netlist_xml,
     peer_power_netlist,
 )
+from tests.mcp_parity_support import semantic_design_lint_report
 
 pytestmark = [
     pytest.mark.component_lint,
@@ -36,7 +41,18 @@ def test_shared_part_id_power_assignment_matches_between_cli_and_mcp(tmp_path: P
         synthetic_design_lint_project,
     )
 
-    root, summary_path = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
+    root, summary_path = synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_component_inventory",
+                    mode="off",
+                    reason="Synthetic power-peer parity case isolates net assignment review",
+                ),
+            )
+        ),
+    )
     netlist_path = summary_path.parent / "netlist.xml"
     summary = read_model(summary_path, ValidationSummary)
     part_ids = {"U1": "SYNTHETIC-POWER-001", "U2": "synthetic-power-001"}
@@ -81,7 +97,7 @@ def test_shared_part_id_power_assignment_matches_between_cli_and_mcp(tmp_path: P
                 return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
         mcp_report = asyncio.run(inspect_mcp())
-        assert cli_report == mcp_report
+        assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
         assert cli_report.status == "REVIEW"
         findings = [item for item in cli_report.findings if item.rule_id == RULE_ID]
         assert {item.evidence["peer_role"][0] for item in findings} == expected_roles

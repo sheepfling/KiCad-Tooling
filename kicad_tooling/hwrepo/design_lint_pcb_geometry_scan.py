@@ -199,8 +199,8 @@ def scan_pcb_geometry(
         command, snapshot = capture_native_pcb_connectivity(root, config, output)
         if snapshot is None:
             raise ValueError(
-                "Native PCB geometry probe failed; inspect "
-                f"{output.relative_to(root).as_posix()}/native.command.json"
+                "Native PCB geometry probe failed; inspect a native.command.json receipt under "
+                "build/design-lint/pcb-geometry-*"
             )
         if (
             snapshot.schema_version not in {"10", "11", "12"}

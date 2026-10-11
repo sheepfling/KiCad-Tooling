@@ -47,6 +47,7 @@ from kicad_tooling.hwrepo.pcb_track_width_models import (
 )
 from tests.mcp_parity_support import (
     McpParityHarness,
+    normalize_per_run_pcb_geometry_paths,
     pcb_native_snapshot_shim,
     run_mcp_parity,
 )
@@ -251,7 +252,10 @@ class _DesignLintMcpParityPcbLayoutCases(McpParityHarness):
             report["pcb_reference_plane"]["snapshot_path"] = "<per-run native snapshot>"
             report["pcb_switching_loop"]["snapshot_path"] = "<per-run native snapshot>"
 
-        self.assertEqual(cli_result, mcp_result)
+        self.assertEqual(
+            normalize_per_run_pcb_geometry_paths(cli_result),
+            normalize_per_run_pcb_geometry_paths(mcp_result),
+        )
         self.assertEqual(mcp.status, "REVIEW", mcp.issues)
         self.assertEqual(mcp.pcb_decoupling.status, "COMPLETE")
         self.assertEqual(mcp.pcb_protection_path.status, "COMPLETE")

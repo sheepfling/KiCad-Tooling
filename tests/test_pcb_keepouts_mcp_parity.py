@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     DesignLintRuleOverride,
 )
+from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
     synthetic_design_lint_project,
@@ -54,7 +55,7 @@ def test_disabled_keepout_coverage_matches_cli_and_mcp(tmp_path: Path) -> None:
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
     mcp_report = asyncio.run(inspect_mcp())
-    assert cli_report == mcp_report
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
     assert mcp_report.pcb_keepout_coverage.status == "DISABLED"
     assert (
         mcp_report.pcb_keepout_coverage.map_sha256

@@ -27,6 +27,7 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     ValidationSummary,
 )
+from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
     synthetic_design_lint_project,
@@ -435,7 +436,9 @@ def test_part_id_connector_alias_assignment_matches_between_cli_and_mcp(
                     json.dumps(result.structured_content)
                 )
 
-                assert cli_report == mcp_report
+                assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(
+                    mcp_report
+                )
                 assert mcp_report.status == "REVIEW"
                 peer_rule_ids = {
                     item.rule_id
