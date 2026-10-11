@@ -4605,7 +4605,12 @@ is not a reason by itself to expand its scope or change its default policy.
   pytest typed-netlist regressions, rule-catalog coverage, project policy and
   exact-ignore controls, CLI/MCP parity, and a repeated native-export lane for
   the pinned KiCad 10.0.0 and 10.0.5 profiles. The local native lane passed on
-  both profiles on 2026-10-09; hosted acceptance remains pending.
+  both profiles on 2026-10-09. Hosted tagged acceptance passed in GitHub run
+  `38144622092` (`v0.5.0rc88`, commit `995692f`) on 2026-10-11. The unit stage
+  selected `design_lint and component_lint` with
+  `KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES=1`: 353 passed, 10 skipped,
+  2,327 deselected, and 29 subtests passed. This enabled the exact-version
+  native output, input, and bidirectional peer-pin fault/control lanes.
 - **Priority:** P1 component-pin completeness. LINT-094 recognizes native
   `power_out` pins, while this rule covers otherwise comparable pins classified
   as ordinary `output`. A missing assignment on one exact-symbol peer can be
@@ -4649,7 +4654,10 @@ is not a reason by itself to expand its scope or change its default policy.
   pytest typed-netlist regressions, project policy and exact-ignore controls,
   CLI/MCP parity, and a repeated native-export lane for pinned KiCad 10.0.0 and
   10.0.5. The local native lane passed on both profiles on 2026-10-09; hosted
-  acceptance remains pending.
+  tagged acceptance passed in GitHub run `38144622092` (`v0.5.0rc88`, commit
+  `995692f`) on 2026-10-11. The focused component gate enabled its
+  exact-version native input fault/control lane; shared stage totals are
+  recorded under LINT-098.
 - **Priority:** P1 component-pin completeness. LINT-094 and LINT-098 cover
   native power and signal outputs. This adds a narrow review prompt for an
   otherwise ordinary `input` or `input_low` pin left open on one comparable
@@ -4690,8 +4698,10 @@ is not a reason by itself to expand its scope or change its default policy.
   defaulting to `REVIEW`, with pytest fault/control coverage, project policy
   and exact-ignore controls, CLI/MCP parity, and a repeated native-export lane
   for the pinned KiCad 10.0.0 and 10.0.5 profiles. The local native lane passed
-  on both profiles on 2026-10-09; hosted acceptance is queued for the next
-  tagged source.
+  on both profiles on 2026-10-09. Hosted tagged acceptance passed in GitHub
+  run `38144622092` (`v0.5.0rc88`, commit `995692f`) on 2026-10-11. The focused
+  component gate enabled its exact-version native bidirectional fault/control
+  lane; shared stage totals are recorded under LINT-098.
 - **Priority:** P1 component-pin completeness. LINT-094, LINT-098, and
   LINT-099 cover native power outputs, signal outputs, and input pins. This
   adds the same bounded missing-assignment prompt for native bidirectional
