@@ -266,6 +266,17 @@ The first rules are:
   generic, absent, or numeric-only native function as supply or return for
   these checks. DNP connector instances are excluded. Findings ask whether the
   pin is intentionally unused or a connection is missing.
+- `connector.return_pin_on_positive_rail` prompts review when a fitted,
+  source-identified connector return pin has exactly one assigned net and the
+  shared positive-rail recognizer identifies that net from its name or an
+  attached native pin function. A complete source-matched interface map can
+  identify a return role when native function text is absent or generic.
+  Shield pins, DNP connectors, open pins, and ambiguous assignments are
+  excluded. A recognized rail name does not prove electrical potential or
+  intended connectivity; project policy can review, block, disable, or exactly
+  ignore the candidate. The approved connector pinout remains authoritative.
+  Synthetic native fault/control sources are registered for the exact-version
+  connector-return lane.
 - `connector.unconnected_power_input` prompts review when a fitted connector
   pin has native electrical type `power_in`, a generic, absent, or numeric-only
   function, and no exported net assignment. This catches an open generic
@@ -915,7 +926,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 91 active rules. They
+`synthetic_validated`; the catalog currently contains 92 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow

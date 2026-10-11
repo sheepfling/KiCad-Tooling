@@ -10,6 +10,7 @@ import pytest
 import tests.can_peer_reference_support as _can_peer_reference_support
 import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
+import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_fixtures
 import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixtures
@@ -101,6 +102,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         unroled_return_labels,
         numbered_power_rails,
         _tests_design_lint_fixtures.multiconductor_connector(return_named=False),
+        _connector_return_supply_fixtures.return_pin_positive_rail_netlist(),
         component_pins,
         _tests_design_lint_fixtures.unconnected_component_power_pins(),
         _tests_design_lint_fixtures.ic_power_decoupling_fixture(),

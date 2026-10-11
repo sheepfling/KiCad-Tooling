@@ -44,6 +44,36 @@ def assert_base_connector_return_cases(testcase, results, version):
     )
 
 
+def assert_positive_rail_return_cases(testcase, results, version):
+    fault = results["connector-return-fixture/return-positive-rail-fault"]
+    control = results["connector-return-fixture/return-positive-rail-control"]
+    testcase.assertEqual(fault["status"], "PASS")
+    testcase.assertEqual(fault["lint_status"], "REVIEW")
+    testcase.assertIn("connector.return_pin_on_positive_rail", fault["findings"].split(","))
+    testcase.assertIn("J1.1=GND", fault["pin_functions"])
+    testcase.assertIn("J1.2=GND", fault["pin_functions"])
+    finding_subject_pairs = tuple(
+        zip(fault["findings"].split(","), fault["subjects"].split(";"), strict=True)
+    )
+    testcase.assertEqual(
+        {
+            subject
+            for rule_id, subject in finding_subject_pairs
+            if rule_id == "connector.return_pin_on_positive_rail"
+        },
+        {"J1.1: return assigned to +5V", "J1.2: return assigned to +5V"},
+    )
+    testcase.assertEqual(control["status"], "PASS")
+    testcase.assertEqual(control["lint_status"], "PASS")
+    testcase.assertEqual(control["findings"], "none")
+    assert_connector_result_sources(
+        testcase,
+        results,
+        version,
+        ("return-positive-rail-fault", "return-positive-rail-control"),
+    )
+
+
 def assert_grounding_contract_cases(testcase, results, version):
     db9_fault = results["connector-return-fixture/four-db9-fault"]
     db9_control = results["connector-return-fixture/four-db9-control"]

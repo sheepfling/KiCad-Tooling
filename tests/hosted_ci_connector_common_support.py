@@ -12,6 +12,8 @@ def assert_connector_result_sources(testcase, results, version, cases):
 
 def normalized_connector_return_patterns(results):
     cases = (
+        "return-positive-rail-fault",
+        "return-positive-rail-control",
         "four-db9-fault",
         "four-db9-control",
         "four-db9-neutral-fault",

@@ -20,6 +20,7 @@ from .ci_hosted_connector_return_peer_scope import verify_connector_peer_scope
 from .ci_hosted_connector_return_power import verify_connector_power_inputs
 from .ci_hosted_connector_return_receipts import emit_connector_return_receipts
 from .ci_hosted_connector_return_returns import verify_connector_return_distribution
+from .ci_hosted_connector_return_supply import verify_positive_rail_return_cases
 
 
 def connector_return_lint_fixture_lane(
@@ -29,6 +30,7 @@ def connector_return_lint_fixture_lane(
     context = prepare_connector_return_fixture_context(root, project=project, image=image, log=log)
     db9_control_nets = verify_connector_return_distribution(context)
     verify_connector_power_inputs(context)
+    verify_positive_rail_return_cases(context)
     verify_connector_grounding_contracts(context, db9_control_nets)
     verify_db9_neutral_return_cases(context)
     verify_peer_power_inputs(context)

@@ -17,6 +17,7 @@ from tests.hosted_ci_connector_power_support import assert_connector_power_and_r
 from tests.hosted_ci_connector_return_support import (
     assert_base_connector_return_cases,
     assert_grounding_contract_cases,
+    assert_positive_rail_return_cases,
 )
 from tests.support import reference_root
 
@@ -32,6 +33,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/native-export",
     "connector-return-fixture/fault",
     "connector-return-fixture/control",
+    "connector-return-fixture/return-positive-rail-fault",
+    "connector-return-fixture/return-positive-rail-control",
     "connector-return-fixture/unconnected-generic-power-input-fault",
     "connector-return-fixture/unconnected-generic-power-input-control",
     "connector-return-fixture/unconnected-generic-component-power-input-fault",
@@ -146,6 +149,13 @@ class NativeConnectorReturnFixtureTests(unittest.TestCase):
             version: normalized_connector_return_patterns(results)
             for version, results in cls.results_by_version.items()
         }
+
+    @pytest.mark.connector_lint
+    @pytest.mark.return_path_lint
+    def test_return_pin_on_positive_rail(self) -> None:
+        for version, results in self.results_by_version.items():
+            with self.subTest(kicad_version=version):
+                assert_positive_rail_return_cases(self, results, version)
 
     @pytest.mark.connector_lint
     @pytest.mark.return_path_lint

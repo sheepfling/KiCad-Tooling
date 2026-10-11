@@ -770,6 +770,45 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_named_connector_pins"
     },
     {
+      "rule_id": "connector.return_pin_on_positive_rail",
+      "title": "Connector return pin is assigned to a positive rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted connector pin with a recognized native ground/return function, or a return role from a complete source-matched project interface map when native function text is absent, generic, or numeric-only, emit a review candidate when exactly one exported net assignment exists and the shared positive-rail recognizer classifies that net as a positive supply.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Positive rails are limited to the names and attached pin functions recognized by positive_power_nets; custom rail names can evade detection.",
+        "A recognized name or pin function does not prove electrical potential, intended connectivity, or that the connector contact must be isolated from the supply.",
+        "This is a review hint only. The approved connector pinout and project requirements remain authoritative.",
+        "Only bounded native or project-reviewed connector identities are considered, and references listed as DNP are excluded.",
+        "Pins with no assignment or multiple ambiguous assignments are left to other checks or manual review."
+      ],
+      "fault_fixtures": [
+        "tests.test_design_lint_return_pin_positive_rail.test_return_pin_assigned_to_positive_supply_requests_review",
+        "tests.test_design_lint_return_pin_positive_rail.test_source_matched_generic_return_role_is_checked"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_design_lint_return_pin_positive_rail.test_reference_net_negative_rail_and_unrecognized_pin_are_controls",
+        "tests.test_design_lint_return_pin_positive_rail.test_shield_open_and_dnp_pins_are_not_return_to_rail_findings",
+        "tests.test_design_lint_return_pin_positive_rail.test_project_policy_can_block_or_turn_off_the_review_hint"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_design_lint_return_pin_positive_rail.test_finding_is_order_stable_and_reassignment_clears_it"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_return_supply.py#return_pin_positive_rail_candidates",
+        "kicad_tooling/hwrepo/resistor_paths.py#positive_power_nets",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "returns",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_supply.py#return_pin_positive_rail_candidates"
+    },
+    {
       "rule_id": "connector.unconnected_power_input",
       "title": "Generic connector power-input typed pin is unassigned",
       "status": "active",

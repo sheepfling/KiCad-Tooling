@@ -7,6 +7,7 @@ from .connector_return_pins import (
     connectors_without_connected_return,
     unconnected_named_connector_pins,
 )
+from .connector_return_supply import return_pin_positive_rail_candidates
 from .design_lint_types import Candidate
 from .models import ConnectorCoverageReport, NetlistContract
 from .return_nets import (
@@ -33,6 +34,13 @@ def return_domain_candidates(
         reviewed_connector_pins,
     )
     found: list[Candidate] = []
+    found.extend(
+        return_pin_positive_rail_candidates(
+            observed,
+            connector_coverage=connector_coverage,
+            reviewed_connector_references=reviewed_connector_references,
+        )
+    )
     connectors_with_unconnected_return = {
         item.pin.rsplit(".", 1)[0] for item in unconnected_named_pins if item.category == "return"
     }

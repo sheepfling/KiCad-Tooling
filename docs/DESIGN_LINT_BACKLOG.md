@@ -291,7 +291,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 91 rules are implemented with synthetic regression coverage.
+The following 92 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -311,6 +311,7 @@ Their actual recognition limits are documented in
 - `component.two_pin_ferrite_same_net`
 - `component.two_pin_switch_same_net`
 - `connector.no_connected_return`
+- `connector.return_pin_on_positive_rail`
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
 - `connector.unconnected_power_input`
@@ -1989,7 +1990,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 91 active rules; CI requires every new
+- **Status:** Baseline complete for all 92 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1998,7 +1999,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 91 covered, 0 not applicable, 0 unreviewed.
+  audit: 92 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5238,6 +5239,38 @@ is not a reason by itself to expand its scope or change its default policy.
   authored interface or grounding requirement. Reviewer effort and field
   false-prompt rate remain unmeasured.
 
+#### LINT-107 — Connector return pin assigned to a recognized positive rail
+
+- **Status:** Implemented as `connector.return_pin_on_positive_rail`, default
+  `REVIEW`. The predicate uses bounded connector-role recognizers and the
+  shared positive-rail recognizer. It supports native return functions and
+  complete source-matched interface return roles for generic native pins.
+- **Problem:** Existing checks prompt on open named returns, differing peer
+  assignments, or suspiciously separated return domains. A connected pin
+  explicitly identified as a return could still be assigned directly to a
+  recognized positive supply rail without those checks identifying this
+  specific mismatch.
+- **Boundary:** This is a review hint. A rail name or attached pin function
+  does not prove electrical potential, an approved connector pinout, or that
+  the contact must connect to a particular return domain. The heuristic skips
+  shields, DNP connectors, open pins, ambiguous assignments, and unrecognized
+  connector identities. A project-authored interface/grounding contract is
+  required to make a connectivity expectation blocking.
+- **Fixtures:** Tooling-owned synthetic contract tests cover a native GND pin
+  on `+5V`, a mapped generic return pin on a recognized positive rail, a
+  common-return control, negative-rail and unrecognized-role controls, shields,
+  DNP, open assignments, input order, and reassignment. Source schematics
+  under `tests/fixtures/design_lint/return-pin-positive-rail/` feed the
+  digest-pinned KiCad 10.0.0/10.0.5 connector-return lane.
+- **Applicability evidence:** No additional board projects are needed to
+  define or regression-test this bounded predicate. Public nonconfidential
+  examples could help estimate how often it prompts review, but an independent
+  disposition and reviewer-time measurement are needed to assess usefulness.
+  Precision and review-time benefit remain unmeasured.
+- **Acceptance:** Focused synthetic and mocked native-lane checks pass locally.
+  Exact KiCad 10.0.0/10.0.5 hosted acceptance is pending; no physical board,
+  proprietary source, or project-specific requirement was used.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8094,7 +8127,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 91 active rules. Each entry has a deterministic predicate, evidence
+contains 92 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

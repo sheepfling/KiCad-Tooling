@@ -16,7 +16,10 @@ from tests.design_lint_fixtures.connector_power_cases import (
     connector_power_case_contracts,
     generic_component_power_input_cases,
 )
-from tests.design_lint_fixtures.connector_return_cases import return_case_contracts
+from tests.design_lint_fixtures.connector_return_cases import (
+    return_case_contracts,
+    return_positive_rail_case_contracts,
+)
 
 pytestmark = [
     pytest.mark.connector_lint,
@@ -32,6 +35,7 @@ def connector_return_fixture_lane_context(tmp_path: Path) -> SimpleNamespace:
     config = SimpleNamespace(image=image, kicad_version="10.0.0")
     observed: dict[str, NetlistContract] = {}
     observed.update(return_case_contracts())
+    observed.update(return_positive_rail_case_contracts())
     observed.update(peer_pin_case_contracts())
     observed.update(connector_power_case_contracts())
     observed.update(generic_component_power_input_cases())
@@ -114,6 +118,15 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
     assert control["status"] == "PASS"
     assert control["lint_status"] == "PASS"
     assert control["findings"] == "none"
+    positive_rail_fault = results["connector-return-fixture/return-positive-rail-fault"]
+    positive_rail_control = results["connector-return-fixture/return-positive-rail-control"]
+    assert positive_rail_fault["status"] == "PASS"
+    assert positive_rail_fault["lint_status"] == "REVIEW"
+    assert "connector.return_pin_on_positive_rail" in positive_rail_fault["findings"].split(",")
+    assert "J1.1=GND" in positive_rail_fault["pin_functions"]
+    assert "J1.2=GND" in positive_rail_fault["pin_functions"]
+    assert positive_rail_control["lint_status"] == "PASS"
+    assert positive_rail_control["findings"] == "none"
     cross_fault = results["connector-return-fixture/cross-symbol-fault"]
     assert cross_fault["lint_status"] == "REVIEW"
     assert set(cross_fault["subjects"].split(";")) == {

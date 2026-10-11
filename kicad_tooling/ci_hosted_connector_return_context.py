@@ -70,6 +70,8 @@ def prepare_connector_return_fixture_context(
     fixtures = {
         "fault": fixture_root / "cohort-connector-ground-domains/fault.kicad_sch",
         "control": fixture_root / "cohort-connector-ground-domains/control.kicad_sch",
+        "return-positive-rail-fault": fixture_root / "return-pin-positive-rail/fault.kicad_sch",
+        "return-positive-rail-control": fixture_root / "return-pin-positive-rail/control.kicad_sch",
         "cross-symbol-fault": fixture_root
         / "cohort-cross-symbol-connectors/cross-symbol-fault.kicad_sch",
         "cross-symbol-control": fixture_root
@@ -136,6 +138,8 @@ def prepare_connector_return_fixture_context(
     expected_source_hashes = {
         "fault": "aea557c738a417192ccfce0e7228b5832aab566f66c2a354dce72f5df7882474",
         "control": "9584fbcc1f0560ac66306691f49d161617199b240cb7520588ad298a69b72176",
+        "return-positive-rail-fault": "1837bf8f8cec031d5dff5fb7ddb65ad59f87fdf7aa80706d142b969c7fc8a967",
+        "return-positive-rail-control": "9584fbcc1f0560ac66306691f49d161617199b240cb7520588ad298a69b72176",
         "cross-symbol-fault": "941aa1acc62384d86fe04e7dec77638a5e23cd8b67b196bc1d93130e5e99f21e",
         "cross-symbol-control": "5b9f1a9d18b4e57495d090e815ff192c44f61b8a164ef03622e3d962ac553baf",
         "cross-symbol-open": "180c28fd280b71febe0c636e799217f0d86a3659c45e280cb86a768b7a03533a",

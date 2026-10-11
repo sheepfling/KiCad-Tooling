@@ -208,3 +208,16 @@ def return_case_contracts() -> dict[str, NetlistContract]:
             },
         ),
     }
+
+
+def return_positive_rail_case_contracts() -> dict[str, NetlistContract]:
+    """Return native-lane cases for a return pin on +5V and a common-return control."""
+    control = return_case_contracts()["control"]
+    fault_nets = dict(control.nets)
+    fault_nets["GND"] = tuple(pin for pin in control.nets["GND"] if not pin.startswith("J1."))
+    fault_nets["+5V"] = ("J1.1", "J1.2")
+    fault = control.model_copy(update={"nets": fault_nets})
+    return {
+        "return-positive-rail-fault": fault,
+        "return-positive-rail-control": control,
+    }
