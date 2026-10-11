@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import unittest
-
 import pytest
 
 from kicad_tooling.hwrepo.control_input_bias import control_input_bias_heuristic_coverage
@@ -31,7 +29,7 @@ pytestmark = [
 ]
 
 
-class DesignLintControlInputTests(unittest.TestCase):
+class TestDesignLintControlInput:
     def test_connected_control_input_without_visible_bias_is_review_only_and_configurable(
         self,
     ) -> None:
@@ -40,18 +38,17 @@ class DesignLintControlInputTests(unittest.TestCase):
         rule_id = "control.connected_control_input_without_visible_bias"
         findings = [item for item in report.findings if item.rule_id == rule_id]
 
-        self.assertEqual(report.status, "REVIEW")
-        self.assertEqual(
-            {item.evidence["net"][0] for item in findings},
-            {"RESET_LINE", "ENABLE_LINE", "ENABLE_A", "BOOT_STRAP"},
-        )
-        self.assertTrue(all(item.mode == "review" for item in findings))
-        self.assertTrue(all(item.evidence["output_capable_peers"] == () for item in findings))
-        self.assertTrue(
-            all(
-                "does not establish that a resistor is required" in item.message
-                for item in findings
-            )
+        assert report.status == "REVIEW"
+        assert {item.evidence["net"][0] for item in findings} == {
+            "RESET_LINE",
+            "ENABLE_LINE",
+            "ENABLE_A",
+            "BOOT_STRAP",
+        }
+        assert all(item.mode == "review" for item in findings)
+        assert all(item.evidence["output_capable_peers"] == () for item in findings)
+        assert all(
+            "does not establish that a resistor is required" in item.message for item in findings
         )
 
         blocked = evaluate(
@@ -67,7 +64,7 @@ class DesignLintControlInputTests(unittest.TestCase):
                 )
             ),
         )
-        self.assertEqual(blocked.status, "FAIL")
+        assert blocked.status == "FAIL"
 
         disabled = evaluate(
             "synthetic-control-bias",
@@ -82,8 +79,8 @@ class DesignLintControlInputTests(unittest.TestCase):
                 )
             ),
         )
-        self.assertEqual(disabled.status, "PASS")
-        self.assertTrue(all(item.disposition == "RULE_OFF" for item in disabled.findings))
+        assert disabled.status == "PASS"
+        assert all(item.disposition == "RULE_OFF" for item in disabled.findings)
 
         ignored = evaluate(
             "synthetic-control-bias",
@@ -99,8 +96,8 @@ class DesignLintControlInputTests(unittest.TestCase):
                 )
             ),
         )
-        self.assertEqual(ignored.status, "PASS")
-        self.assertTrue(all(item.disposition == "IGNORED" for item in ignored.findings))
+        assert ignored.status == "PASS"
+        assert all(item.disposition == "IGNORED" for item in ignored.findings)
 
     def test_connected_control_bias_prompt_checks_assignments_and_valid_controls(self) -> None:
         rule_id = "control.connected_control_input_without_visible_bias"
@@ -109,7 +106,7 @@ class DesignLintControlInputTests(unittest.TestCase):
             coach(control_input_pins(connected=True)),
             DesignLintPolicy(),
         )
-        self.assertNotIn(rule_id, {item.rule_id for item in locally_biased.findings})
+        assert rule_id not in {item.rule_id for item in locally_biased.findings}
 
         pull_down = with_control_resistor(
             control_input_pins(connected=True, visible_bias=False),
@@ -117,14 +114,9 @@ class DesignLintControlInputTests(unittest.TestCase):
             rail_net="GND",
         )
         pull_down_report = evaluate("synthetic-control-bias", coach(pull_down), DesignLintPolicy())
-        self.assertNotIn(
-            "RESET_LINE",
-            {
-                item.evidence["net"][0]
-                for item in pull_down_report.findings
-                if item.rule_id == rule_id
-            },
-        )
+        assert "RESET_LINE" not in {
+            item.evidence["net"][0] for item in pull_down_report.findings if item.rule_id == rule_id
+        }
 
         dnp_bias = with_control_resistor(
             control_input_pins(connected=True, visible_bias=False),
@@ -132,14 +124,9 @@ class DesignLintControlInputTests(unittest.TestCase):
             rail_net="+3V3",
         ).model_copy(update={"dnp_components": ("R1",)})
         dnp_bias_report = evaluate("synthetic-control-bias", coach(dnp_bias), DesignLintPolicy())
-        self.assertIn(
-            "RESET_LINE",
-            {
-                item.evidence["net"][0]
-                for item in dnp_bias_report.findings
-                if item.rule_id == rule_id
-            },
-        )
+        assert "RESET_LINE" in {
+            item.evidence["net"][0] for item in dnp_bias_report.findings if item.rule_id == rule_id
+        }
 
         unrecognized_rail = with_control_resistor(
             control_input_pins(connected=True, visible_bias=False),
@@ -149,21 +136,18 @@ class DesignLintControlInputTests(unittest.TestCase):
         unrecognized_rail_report = evaluate(
             "synthetic-control-bias", coach(unrecognized_rail), DesignLintPolicy()
         )
-        self.assertIn(
-            "RESET_LINE",
-            {
-                item.evidence["net"][0]
-                for item in unrecognized_rail_report.findings
-                if item.rule_id == rule_id
-            },
-        )
+        assert "RESET_LINE" in {
+            item.evidence["net"][0]
+            for item in unrecognized_rail_report.findings
+            if item.rule_id == rule_id
+        }
 
         dnp = evaluate(
             "synthetic-control-bias",
             coach(control_input_pins(connected=True, dnp=True, visible_bias=False)),
             DesignLintPolicy(),
         )
-        self.assertNotIn(rule_id, {item.rule_id for item in dnp.findings})
+        assert rule_id not in {item.rule_id for item in dnp.findings}
 
         source = control_input_pins(connected=True, visible_bias=False)
         with_driver = source.model_copy(
@@ -194,44 +178,45 @@ class DesignLintControlInputTests(unittest.TestCase):
             for item in driver_report.findings
             if item.rule_id == rule_id and item.evidence["net"] == ("RESET_LINE",)
         )
-        self.assertEqual(
-            reset_finding.evidence["output_capable_peers"], ("U2.1: RESET_OUT (open_collector)",)
+        assert reset_finding.evidence["output_capable_peers"] == (
+            "U2.1: RESET_OUT (open_collector)",
         )
 
-    def test_connected_control_bias_prompt_uses_exact_source_bound_contract_decisions(self) -> None:
+    @pytest.mark.parametrize("bias_mode", ("internal", "external", "not_required"))
+    def test_exact_source_bound_contract_decision_satisfies_heuristic_coverage(
+        self, bias_mode: str
+    ) -> None:
         rule_id = "control.connected_control_input_without_visible_bias"
         source = control_netlist(fault="missing-resistor")
-        for bias_mode in ("internal", "external", "not_required"):
-            with self.subTest(bias_mode=bias_mode):
-                coverage = control_input_bias_heuristic_coverage(
-                    source,
-                    netlist_sha256="a" * 64,
-                    source_path="projects/synthetic/electrical.json",
-                    source_sha256="b" * 64,
-                    state="required",
-                    spec=control_requirement(bias_mode=bias_mode),
-                )
-                self.assertEqual(coverage.status, "COMPLETE")
-                self.assertEqual(len(coverage.entries), 1)
-                self.assertEqual(coverage.entries[0].status, "COVERED")
-                report = evaluate(
-                    "synthetic-control-bias",
-                    coach(source),
-                    DesignLintPolicy(),
-                    control_input_bias_coverage=coverage,
-                )
-                self.assertNotIn(rule_id, {item.rule_id for item in report.findings})
-                self.assertEqual(report.control_input_bias_coverage, coverage)
-                rendered = text_report(report)
-                self.assertIn("Control-input bias heuristic coverage: COMPLETE", rendered)
-                failed_summary = report.model_copy(update={"native_status": "FAIL"})
-                self.assertIn(
-                    "Validation summary status: FAIL",
-                    text_report(failed_summary),
-                )
-                self.assertIn(f"bias={bias_mode}", rendered)
-                self.assertIn("projects/synthetic/electrical.json", rendered)
+        coverage = control_input_bias_heuristic_coverage(
+            source,
+            netlist_sha256="a" * 64,
+            source_path="projects/synthetic/electrical.json",
+            source_sha256="b" * 64,
+            state="required",
+            spec=control_requirement(bias_mode=bias_mode),
+        )
+        assert coverage.status == "COMPLETE"
+        assert len(coverage.entries) == 1
+        assert coverage.entries[0].status == "COVERED"
+        report = evaluate(
+            "synthetic-control-bias",
+            coach(source),
+            DesignLintPolicy(),
+            control_input_bias_coverage=coverage,
+        )
+        assert rule_id not in {item.rule_id for item in report.findings}
+        assert report.control_input_bias_coverage == coverage
+        rendered = text_report(report)
+        assert "Control-input bias heuristic coverage: COMPLETE" in rendered
+        failed_summary = report.model_copy(update={"native_status": "FAIL"})
+        assert "Validation summary status: FAIL" in text_report(failed_summary)
+        assert f"bias={bias_mode}" in rendered
+        assert "projects/synthetic/electrical.json" in rendered
 
+    def test_incomplete_source_bound_contract_decisions_remain_open(self) -> None:
+        rule_id = "control.connected_control_input_without_visible_bias"
+        source = control_netlist(fault="missing-resistor")
         local_missing = control_input_bias_heuristic_coverage(
             source,
             netlist_sha256="a" * 64,
@@ -240,15 +225,15 @@ class DesignLintControlInputTests(unittest.TestCase):
             state="required",
             spec=control_requirement(bias_mode="local"),
         )
-        self.assertEqual(local_missing.status, "OPEN")
-        self.assertTrue(any("bias:" in issue for issue in local_missing.entries[0].issues))
+        assert local_missing.status == "OPEN"
+        assert any("bias:" in issue for issue in local_missing.entries[0].issues)
         local_report = evaluate(
             "synthetic-control-bias",
             coach(source),
             DesignLintPolicy(),
             control_input_bias_coverage=local_missing,
         )
-        self.assertIn(rule_id, {item.rule_id for item in local_report.findings})
+        assert rule_id in {item.rule_id for item in local_report.findings}
 
         no_bias_with_extra_output = control_netlist(fault="missing-resistor")
         no_bias_with_extra_output = no_bias_with_extra_output.model_copy(
@@ -289,15 +274,15 @@ class DesignLintControlInputTests(unittest.TestCase):
             state="required",
             spec=control_requirement(bias_mode="external"),
         )
-        self.assertEqual(undisclosed_driver.status, "OPEN")
-        self.assertTrue(any("drivers:" in issue for issue in undisclosed_driver.entries[0].issues))
+        assert undisclosed_driver.status == "OPEN"
+        assert any("drivers:" in issue for issue in undisclosed_driver.entries[0].issues)
         driver_report = evaluate(
             "synthetic-control-bias",
             coach(no_bias_with_extra_output),
             DesignLintPolicy(),
             control_input_bias_coverage=undisclosed_driver,
         )
-        self.assertIn(rule_id, {item.rule_id for item in driver_report.findings})
+        assert rule_id in {item.rule_id for item in driver_report.findings}
 
         partial_source = source.model_copy(
             update={
@@ -327,16 +312,16 @@ class DesignLintControlInputTests(unittest.TestCase):
             state="required",
             spec=control_requirement(bias_mode="external"),
         )
-        self.assertEqual(partial_coverage.status, "OPEN")
-        self.assertIn("U1.8", partial_coverage.entries[0].control_pins)
-        self.assertIsNone(partial_coverage.entries[0].signal_id)
+        assert partial_coverage.status == "OPEN"
+        assert "U1.8" in partial_coverage.entries[0].control_pins
+        assert partial_coverage.entries[0].signal_id is None
         partial_report = evaluate(
             "synthetic-control-bias",
             coach(partial_source),
             DesignLintPolicy(),
             control_input_bias_coverage=partial_coverage,
         )
-        self.assertIn(rule_id, {item.rule_id for item in partial_report.findings})
+        assert rule_id in {item.rule_id for item in partial_report.findings}
 
     def test_connected_control_bias_finding_is_order_stable_and_direct_resistor_clears_it(
         self,
@@ -367,7 +352,7 @@ class DesignLintControlInputTests(unittest.TestCase):
             for item in reordered.findings
             if item.rule_id == rule_id
         }
-        self.assertEqual(reordered_findings, original_findings)
+        assert reordered_findings == original_findings
 
         repaired = with_control_resistor(
             source,
@@ -382,7 +367,7 @@ class DesignLintControlInputTests(unittest.TestCase):
         }
         expected = dict(original_findings)
         del expected["RESET_LINE"]
-        self.assertEqual(repaired_findings, expected)
+        assert repaired_findings == expected
 
     def test_control_input_candidates_are_order_stable_and_each_assignment_clears_one(self) -> None:
         base = control_input_pins()
@@ -423,8 +408,8 @@ class DesignLintControlInputTests(unittest.TestCase):
             for item in reordered.findings
             if item.rule_id == rule_id
         }
-        self.assertEqual(len(original_findings), 9)
-        self.assertEqual(reordered_findings, original_findings)
+        assert len(original_findings) == 9
+        assert reordered_findings == original_findings
 
         for subject, finding in original_findings.items():
             pin = subject.split(":", maxsplit=1)[0]
@@ -435,7 +420,7 @@ class DesignLintControlInputTests(unittest.TestCase):
                 found_unconnected_pin |= len(remaining) != len(pins)
                 if remaining:
                     remaining_unconnected[net_name] = remaining
-            self.assertTrue(found_unconnected_pin, pin)
+            assert found_unconnected_pin, pin
             assigned = source.model_copy(
                 update={
                     "nets": {
@@ -455,4 +440,4 @@ class DesignLintControlInputTests(unittest.TestCase):
             }
             expected = dict(original_findings)
             del expected[subject]
-            self.assertEqual(remaining_findings, expected, finding)
+            assert remaining_findings == expected, finding
