@@ -26,6 +26,7 @@ from tests.test_control_inputs import control_netlist, control_requirement
 
 pytestmark = [
     pytest.mark.design_lint,
+    pytest.mark.interface_lint,
     pytest.mark.power_lint,
 ]
 

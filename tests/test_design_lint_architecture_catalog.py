@@ -50,10 +50,11 @@ def _fixture_module_path(reference: str) -> Path | None:
     return None
 
 
-def _has_module_design_lint_marker(path: Path) -> bool:
-    """Return whether a test module applies pytest's design_lint marker."""
+def _module_pytest_markers(path: Path) -> set[str]:
+    """Return markers applied through a module-level pytestmark assignment."""
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     assignments = (node for node in tree.body if isinstance(node, (ast.Assign, ast.AnnAssign)))
+    markers: set[str] = set()
     for assignment in assignments:
         targets = assignment.targets if isinstance(assignment, ast.Assign) else [assignment.target]
         value = assignment.value
@@ -62,7 +63,7 @@ def _has_module_design_lint_marker(path: Path) -> bool:
         ):
             continue
         for node in ast.walk(value):
-            if not isinstance(node, ast.Attribute) or node.attr != "design_lint":
+            if not isinstance(node, ast.Attribute):
                 continue
             mark = node.value
             if (
@@ -71,8 +72,8 @@ def _has_module_design_lint_marker(path: Path) -> bool:
                 and isinstance(mark.value, ast.Name)
                 and mark.value.id == "pytest"
             ):
-                return True
-    return False
+                markers.add(node.attr)
+    return markers
 
 
 def test_catalog_types_have_small_rule_owned_modules() -> None:
@@ -142,7 +143,7 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
     unmarked = {
         path.relative_to(REPO_ROOT).as_posix(): sorted(references_for_module)
         for path, references_for_module in modules.items()
-        if not _has_module_design_lint_marker(path)
+        if "design_lint" not in _module_pytest_markers(path)
     }
 
     assert not unresolved, f"Active rule fixtures must resolve to Python test modules: {unresolved}"
@@ -150,3 +151,36 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
         "Every active rule fault, control, and metamorphic fixture module must carry "
         f"pytest.mark.design_lint so focused runs select it: {unmarked}"
     )
+
+
+@pytest.mark.parametrize(
+    ("module_name", "expected_markers"),
+    (
+        ("test_connector_peer_pin_coverage.py", {"design_lint", "connector_lint"}),
+        (
+            "test_design_lint_mcp_parity_peer_pins.py",
+            {"design_lint", "component_lint", "parity_lint"},
+        ),
+        (
+            "test_design_lint_control_inputs.py",
+            {"design_lint", "interface_lint", "power_lint"},
+        ),
+        (
+            "test_design_lint_open_control_inputs.py",
+            {"design_lint", "interface_lint", "power_lint"},
+        ),
+        (
+            "test_open_drain_heuristics.py",
+            {"design_lint", "interface_lint", "power_lint"},
+        ),
+        ("test_stm32_pin_map.py", {"design_lint", "interface_lint"}),
+    ),
+)
+def test_dedicated_lint_suites_have_focused_area_markers(
+    module_name: str,
+    expected_markers: set[str],
+) -> None:
+    path = REPO_ROOT / "tests" / module_name
+    markers = _module_pytest_markers(path)
+
+    assert expected_markers <= markers

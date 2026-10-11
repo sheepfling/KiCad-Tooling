@@ -14,6 +14,7 @@ from tests.design_lint_fixtures import coach, control_input_pins
 
 pytestmark = [
     pytest.mark.design_lint,
+    pytest.mark.interface_lint,
     pytest.mark.power_lint,
 ]
 
