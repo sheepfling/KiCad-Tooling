@@ -1,6 +1,6 @@
 # Native UART connector-reference fixtures
 
-These four schematics are synthetic test inputs owned by KiCad-Tooling. They
+These five schematics are synthetic test inputs owned by KiCad-Tooling. They
 contain no customer or private project data.
 
 `serial-connector-fault.kicad_sch` directly connects U1's UART TX/RX pins to
@@ -62,6 +62,21 @@ Fixture source SHA-256 values:
   `a0ac8548431af625c5116c1d456e4f2c6cf1714e58cca84c6fe595165d87c561`
 - `serial-label-fault.kicad_sch`:
   `2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20`
+
+`serial-optical-isolation-control.kicad_sch` is a synthetic two-direction UART
+link with a dual-channel optical isolator. The host and target UARTs each have
+separate supply and ground domains, and each signal segment terminates at an
+isolator pin. It is a valid control for LINT-074's direct-peer boundary: the
+rule must not infer a host-to-target direct connection or ask that the two
+grounds be joined. The digest-pinned native lane exports this fixture twice on
+KiCad 10.0.0 and 10.0.5, checks the exact pin and net assignments, and requires
+stable normalized exports and reports. Hosted native results are retained in
+the CI run; local mocked exports are not native KiCad evidence.
+
+Fixture source SHA-256:
+
+- `serial-optical-isolation-control.kicad_sch`:
+  `2d3cfb6f98d2d97114a97c8948f6fac290f4401fac58474af8c974dbf2e1da46`
 
 The check is advisory. It asks whether the separate references are intentional;
 it does not require common grounding or infer electrical approval. Native

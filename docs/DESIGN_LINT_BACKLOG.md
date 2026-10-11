@@ -10356,8 +10356,12 @@ it does not claim field validation or effectiveness against private boards.
   `GND_STM`, places the CP2102 on the USB side, and carries the UART signals
   through two ACPL-M61L optocouplers. A tooling-owned synthetic two-direction
   optocoupled UART control confirms that LINT-074 does not bridge those grounds
-  or report them as directly linked peers. The manual is contextual evidence
-  only: no source-bound KiCad export or reviewer measurement was made from it,
+  or report them as directly linked peers. A separate tooling-owned synthetic
+  schematic now exercises this boundary in the digest-pinned native lane: it
+  checks both signal directions, exact host/device supply and return pins,
+  repeated normalized exports, and the absence of a direct-peer finding on
+  KiCad 10.0.0 and 10.0.5. The hosted lane supplies the native result; this is
+  not a measurement from the ST design. The manual is contextual evidence only,
   and no manual or project files were copied into Tooling.
 - **Applicability report extension (2026-10-07):** LINT-074 now returns
   source-bound coverage for discovered native-function and numbered-label

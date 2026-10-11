@@ -2724,7 +2724,8 @@
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_exact_channel_label_map_suppresses_but_stale_map_does_not",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_skips_ambiguous_or_incomplete_cases",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_obeys_rule_override_and_exact_ignore",
-        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_optically_isolated_uart_pair_is_not_treated_as_direct_peers"
+        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_optically_isolated_uart_pair_is_not_treated_as_direct_peers",
+        "tests.test_digital_peer_serial_reference_fixture_lane.test_serial_optical_isolation_control_stays_outside_direct_peer_review"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

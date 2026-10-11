@@ -105,7 +105,11 @@ def prepare_digital_peer_fixture_context(
             raise ValueError(f"Synthetic UART {case} fixture changed while preparing native input")
     serial_connector_reference_fixtures = {
         case: fixture_root / f"serial-peer-connector-reference-native/{case}.kicad_sch"
-        for case in ("serial-connector-control", "serial-connector-fault")
+        for case in (
+            "serial-connector-control",
+            "serial-connector-fault",
+            "serial-optical-isolation-control",
+        )
     }
     serial_connector_reference_source_hashes = {
         case: digest(path) for (case, path) in serial_connector_reference_fixtures.items()
@@ -150,7 +154,7 @@ def prepare_digital_peer_fixture_context(
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
-    script = f'mkdir -p "$HOME"\nactual="$(kicad-cli version)"\nprintf "kicad_version=%s\\n" "$actual"\ntest "$actual" = "{config.kicad_version}"\nfor case in multi-device peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-label-control serial-label-fault component-peer-control component-peer-fault; do\n  for run in first repeat; do\n    kicad-cli sch export netlist --format kicadxml       --output "/output/${{case}}.${{run}}.netlist.xml"       "/fixtures/${{case}}.kicad_sch"\n    case "$case" in component-peer-*)\n      kicad-cli sch erc --format json --severity-all         --output "/output/${{case}}.${{run}}.erc.json"         "/fixtures/${{case}}.kicad_sch" ;;\n    esac\n  done\ndone\n'
+    script = f'mkdir -p "$HOME"\nactual="$(kicad-cli version)"\nprintf "kicad_version=%s\\n" "$actual"\ntest "$actual" = "{config.kicad_version}"\nfor case in multi-device peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-optical-isolation-control serial-label-control serial-label-fault component-peer-control component-peer-fault; do\n  for run in first repeat; do\n    kicad-cli sch export netlist --format kicadxml       --output "/output/${{case}}.${{run}}.netlist.xml"       "/fixtures/${{case}}.kicad_sch"\n    case "$case" in component-peer-*)\n      kicad-cli sch erc --format json --severity-all         --output "/output/${{case}}.${{run}}.erc.json"         "/fixtures/${{case}}.kicad_sch" ;;\n    esac\n  done\ndone\n'
     argv = (
         "docker",
         "run",

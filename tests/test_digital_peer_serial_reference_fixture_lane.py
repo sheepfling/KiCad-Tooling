@@ -33,20 +33,32 @@ _FIXTURE_ROOT = (
             "2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20",
             id="label-fault",
         ),
+        pytest.param(
+            "serial-optical-isolation-control.kicad_sch",
+            "2d3cfb6f98d2d97114a97c8948f6fac290f4401fac58474af8c974dbf2e1da46",
+            id="optical-isolation-control",
+        ),
     ),
 )
-def test_serial_label_reference_fixture_matches_synthetic_digest(filename, expected_sha256) -> None:
+def test_serial_reference_fixture_matches_synthetic_digest(filename, expected_sha256) -> None:
     source = _FIXTURE_ROOT / filename
     text = source.read_text(encoding="utf-8")
 
     assert hashlib.sha256(source.read_bytes()).hexdigest() == expected_sha256
     assert "NOT FOR MANUFACTURE - tooling fixture" in text
-    assert '"UART.0.TX"' in text
-    assert '"UART.0.RX"' in text
-    assert '"B2"' in text
-    assert '"ADBUS1"' in text
-    assert '(property "Reference" "U2"' in text
-    assert '(property "Reference" "J1"' not in text
+    if filename == "serial-optical-isolation-control.kicad_sch":
+        assert '"Synthetic:UartOpticalIsolator"' in text
+        assert '"GND_HOST"' in text
+        assert '"GND_DEVICE"' in text
+        assert '(property "Reference" "U2"' in text
+        assert '(property "Reference" "J1"' not in text
+    else:
+        assert '"UART.0.TX"' in text
+        assert '"UART.0.RX"' in text
+        assert '"B2"' in text
+        assert '"ADBUS1"' in text
+        assert '(property "Reference" "U2"' in text
+        assert '(property "Reference" "J1"' not in text
 
 
 def test_serial_connector_reference_lane_reports_split_and_common_controls(
@@ -82,3 +94,28 @@ def test_serial_connector_reference_lane_reports_split_and_common_controls(
     for result in (connector_control, connector_fault, label_control, label_fault):
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+
+
+def test_serial_optical_isolation_control_stays_outside_direct_peer_review(
+    digital_peer_fixture_results,
+) -> None:
+    result = digital_peer_fixture_results[
+        "spi-participant-fixture/serial-optical-isolation-control"
+    ]
+
+    assert result["peer_reference_findings"] == "none"
+    assert result["reference_assignments"] == ("GND_DEVICE=U2.4,U3.8;GND_HOST=U1.4,U3.6")
+    assert result["supply_assignments"] == "VDD_DEVICE=U2.3,U3.7;VDD_HOST=U1.3,U3.5"
+    assert result["isolated_signal_pin_pairs"] == (
+        "host_tx_to_isolator=U1.1,U3.1;isolator_to_target_rx=U3.3,U2.1;"
+        "target_tx_to_isolator=U2.2,U3.4;isolator_to_host_rx=U3.2,U1.2"
+    )
+    assert result["pin_functions"] == (
+        "U1.1=UART1_TX;U1.2=UART1_RX;U1.3=VDD;U1.4=GND;"
+        "U2.1=UART1_RX;U2.2=UART1_TX;U2.3=VDD;U2.4=GND;"
+        "U3.1=CHANNEL_A_INPUT;U3.2=CHANNEL_A_OUTPUT;U3.3=CHANNEL_B_OUTPUT;"
+        "U3.4=CHANNEL_B_INPUT;U3.5=VDD_HOST;U3.6=GND_HOST;"
+        "U3.7=VDD_DEVICE;U3.8=GND_DEVICE"
+    )
+    assert result["repeatable"] == "true"
+    assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

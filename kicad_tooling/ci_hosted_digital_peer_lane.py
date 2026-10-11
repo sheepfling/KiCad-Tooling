@@ -9,6 +9,7 @@ from .ci_hosted_digital_peer_context import DigitalPeerLog, prepare_digital_peer
 from .ci_hosted_digital_peer_serial_connector_reference import (
     verify_serial_connector_reference_cases,
 )
+from .ci_hosted_digital_peer_serial_isolation import verify_serial_isolation_boundary_control
 from .ci_hosted_digital_peer_serial_label_reference import verify_serial_label_reference_cases
 from .ci_hosted_digital_peer_serial_peer_voltage import verify_serial_peer_voltage_cases
 from .ci_hosted_digital_peer_spi_participants import verify_spi_participant_voltage
@@ -24,5 +25,6 @@ def digital_peer_fixture_lane(root: Path, *, project: str, image: str, log: Digi
     verify_spi_peer_voltage_cases(context)
     serial_peer_policy = verify_serial_peer_voltage_cases(context)
     verify_serial_connector_reference_cases(context, serial_peer_policy)
+    verify_serial_isolation_boundary_control(context)
     verify_serial_label_reference_cases(context)
     verify_component_peer_power_cases(context)

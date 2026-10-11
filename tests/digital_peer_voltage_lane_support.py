@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.models import CommandEvidence, NetlistContract
 from tests.design_lint_fixtures.component_peer_power import component_peer_power_netlist
 from tests.design_lint_fixtures.digital_peer_serial import (
     serial_label_reference_netlist,
+    serial_optically_isolated_uart_netlist,
     serial_peer_netlist,
 )
 from tests.design_lint_fixtures.digital_peer_spi import (
@@ -43,7 +44,7 @@ def digital_peer_fixture_results(tmp_path_factory):
         assert 'test "$actual" = "10.0.0"' in script
         assert "kicad-cli sch erc --format json --severity-all" in script
         assert (
-            "peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-label-control serial-label-fault component-peer-control component-peer-fault"
+            "peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-optical-isolation-control serial-label-control serial-label-fault component-peer-control component-peer-fault"
             in script
         )
         mounts = tuple((argv[index + 1] for index, item in enumerate(argv[:-1]) if item == "-v"))
@@ -61,6 +62,7 @@ def digital_peer_fixture_results(tmp_path_factory):
             "serial-reference-fault.kicad_sch",
             "serial-connector-control.kicad_sch",
             "serial-connector-fault.kicad_sch",
+            "serial-optical-isolation-control.kicad_sch",
             "serial-label-control.kicad_sch",
             "serial-label-fault.kicad_sch",
             "component-peer-control.kicad_sch",
@@ -76,6 +78,7 @@ def digital_peer_fixture_results(tmp_path_factory):
             "serial-reference-fault",
             "serial-connector-control",
             "serial-connector-fault",
+            "serial-optical-isolation-control",
             "serial-label-control",
             "serial-label-fault",
             "component-peer-control",
@@ -119,6 +122,8 @@ def digital_peer_fixture_results(tmp_path_factory):
             )
         if path.name.startswith("serial-connector-fault"):
             return serial_connector_reference_netlist()
+        if path.name.startswith("serial-optical-isolation-control"):
+            return serial_optically_isolated_uart_netlist()
         if path.name.startswith("serial-label-control"):
             return serial_label_reference_netlist(split_references=False)
         if path.name.startswith("serial-label-fault"):

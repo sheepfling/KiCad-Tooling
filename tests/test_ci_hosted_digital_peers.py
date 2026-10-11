@@ -67,7 +67,7 @@ class NativeDigitalPeerFixtureTests(unittest.TestCase):
         component_peer_netlist_hashes: dict[str, tuple[str, str]] = {}
         peer_voltage_netlist_hashes: dict[str, tuple[str, str, str]] = {}
         serial_peer_netlist_hashes: dict[str, tuple[str, str, str]] = {}
-        serial_connector_netlist_hashes: dict[str, tuple[str, str]] = {}
+        serial_connector_netlist_hashes: dict[str, tuple[str, str, str]] = {}
         serial_label_netlist_hashes: dict[str, tuple[str, str]] = {}
         for project, version in expected_versions.items():
             with self.subTest(project=project):
@@ -105,6 +105,7 @@ class NativeDigitalPeerFixtureTests(unittest.TestCase):
                         "spi-participant-fixture/serial-reference-fault",
                         "spi-participant-fixture/serial-connector-control",
                         "spi-participant-fixture/serial-connector-fault",
+                        "spi-participant-fixture/serial-optical-isolation-control",
                         "spi-participant-fixture/serial-label-control",
                         "spi-participant-fixture/serial-label-fault",
                         "component-peer-power-fixture/control",
@@ -216,6 +217,9 @@ class NativeDigitalPeerFixtureTests(unittest.TestCase):
                     "spi-participant-fixture/serial-connector-control"
                 ]
                 serial_connector_fault = results["spi-participant-fixture/serial-connector-fault"]
+                serial_isolation_control = results[
+                    "spi-participant-fixture/serial-optical-isolation-control"
+                ]
                 serial_label_control = results["spi-participant-fixture/serial-label-control"]
                 serial_label_fault = results["spi-participant-fixture/serial-label-fault"]
                 self.assertEqual(serial_connector_control["lint_status"], "REVIEW")
@@ -245,6 +249,11 @@ class NativeDigitalPeerFixtureTests(unittest.TestCase):
                     serial_connector_fault["pin_types"],
                     "J1.1=input;J1.2=output;J1.3=passive;J1.4=passive;"
                     "U1.1=output;U1.2=input;U1.3=power_in;U1.4=power_in",
+                )
+                self.assertEqual(serial_isolation_control["peer_reference_findings"], "none")
+                self.assertEqual(
+                    serial_isolation_control["reference_assignments"],
+                    "GND_DEVICE=U2.4,U3.8;GND_HOST=U1.4,U3.6",
                 )
                 self.assertEqual(serial_label_control["lint_status"], "REVIEW")
                 self.assertEqual(serial_label_control["peer_reference_findings"], "none")
@@ -294,6 +303,7 @@ class NativeDigitalPeerFixtureTests(unittest.TestCase):
                 serial_connector_netlist_hashes[version] = (
                     serial_connector_control["normalized_netlist_sha256"],
                     serial_connector_fault["normalized_netlist_sha256"],
+                    serial_isolation_control["normalized_netlist_sha256"],
                 )
                 serial_label_netlist_hashes[version] = (
                     serial_label_control["normalized_netlist_sha256"],
@@ -362,6 +372,7 @@ class NativeDigitalPeerFixtureTests(unittest.TestCase):
                     reference_fault,
                     serial_connector_control,
                     serial_connector_fault,
+                    serial_isolation_control,
                     component_peer_control,
                     component_peer_fault,
                 ):
@@ -406,6 +417,7 @@ class NativeDigitalPeerFixtureTests(unittest.TestCase):
                             "spi-participant-fixture/serial-reference-fault": "d3c9a6e14e9bc4314c2b616e8be3962638161b1e056789ea7b66977e430081be",
                             "spi-participant-fixture/serial-connector-control": "7d086f4f838504fa3cefc906f7f9e415240b10d89e95c9063c19780922915f16",
                             "spi-participant-fixture/serial-connector-fault": "ee9ce9a51a78c422da96e260720247bb09403abe314921952f29c5d9ba110c20",
+                            "spi-participant-fixture/serial-optical-isolation-control": "2d3cfb6f98d2d97114a97c8948f6fac290f4401fac58474af8c974dbf2e1da46",
                             "spi-participant-fixture/serial-label-control": "a0ac8548431af625c5116c1d456e4f2c6cf1714e58cca84c6fe595165d87c561",
                             "spi-participant-fixture/serial-label-fault": "2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20",
                         }
