@@ -1922,6 +1922,7 @@
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_design_lint_numbered_returns.test_four_db9_numbered_pwm_return_names_are_reviewed",
+        "tests.test_design_lint_numbered_returns.test_project_can_block_numbered_return_review",
         "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review"
       ],
       "valid_control_fixtures": [

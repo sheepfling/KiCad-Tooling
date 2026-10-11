@@ -1228,6 +1228,9 @@ is not a reason by itself to expand its scope or change its default policy.
   `0V_PWM1`–`0V_PWM4` names; all three produce the numbered-return review. A
   common `0V PWM` net is a quiet control. This covers the failure's naming
   pattern without importing a board or adding a native-export claim. A
+  project-policy regression also keeps the default at `REVIEW` while proving
+  an explicitly configured `block` override changes the report to `FAIL`
+  without changing the finding fingerprint or evidence. A
   separate CLI/MCP parity case binds the spaced-name fixture to a synthetic
   netlist digest and confirms both surfaces return the same review finding;
   it verifies adapter parity, not native KiCad export behavior. A

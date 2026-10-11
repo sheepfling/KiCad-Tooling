@@ -101,6 +101,33 @@ def test_four_db9_common_pwm_return_name_is_a_valid_control() -> None:
     assert NUMBERED_RETURN_RULE not in {item.rule_id for item in report.findings}
 
 
+def test_project_can_block_numbered_return_review() -> None:
+    isolated = four_db9_return_domains()
+    default_report = _source_bound_report(isolated)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id=NUMBERED_RETURN_RULE,
+                mode="block",
+                reason="Synthetic project requires explicit review of split returns",
+            ),
+        )
+    )
+
+    blocked_report = _source_bound_report(isolated, policy)
+    default_finding = _finding(default_report, NUMBERED_RETURN_RULE)
+    blocked_finding = _finding(blocked_report, NUMBERED_RETURN_RULE)
+
+    assert default_report.status == "REVIEW"
+    assert blocked_report.status == "FAIL"
+    assert blocked_finding.mode == "block"
+    assert blocked_finding.disposition == "OPEN"
+    assert (blocked_finding.fingerprint, blocked_finding.evidence) == (
+        default_finding.fingerprint,
+        default_finding.evidence,
+    )
+
+
 def test_four_db9_common_return_control_clears_review_findings() -> None:
     report = evaluate(
         "synthetic-four-db9-common",
