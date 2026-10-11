@@ -34,7 +34,7 @@
     "tests/test_diagnostics.py": 613,
     "tests/test_electrical.py": 1831,
     "tests/test_electrical_evidence.py": 1624,
-    "tests/test_electrical_parity.py": 3069,
+    "tests/test_electrical_parity.py": 2647,
     "tests/test_mcp.py": 1073,
     "tests/test_part_picker.py": 618,
     "tests/test_parts_assistant.py": 917,

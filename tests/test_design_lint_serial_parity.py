@@ -305,11 +305,11 @@ class DesignLintSerialParityTests(I2cSerialParityHarness):
         self,
     ) -> None:
         from kicad_tooling.hwrepo.models import ReferenceBondRequirement
+        from tests.electrical_parity_support import contract_netlist_xml
         from tests.serial_peer_reference_support import (
             bonded_serial_reference_netlist,
             serial_peer_map,
         )
-        from tests.test_electrical_parity import contract_netlist_xml
 
         requirement = serial_peer_map(
             reference_policy="bonded",

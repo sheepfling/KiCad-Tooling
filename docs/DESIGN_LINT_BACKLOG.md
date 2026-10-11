@@ -452,7 +452,15 @@ and optional ecosystem adapters are `P3`.
   behavior. STM32/CubeMX fault, control, and source-binding regressions now
   use top-level pytest functions with their existing `design_lint`,
   `component_lint`, and `interface_lint` markers; catalog references point to
-  those functions. This improves selection without changing LINT-050.
+  those functions. This improves selection without changing LINT-050. Four
+  I2C electrical-contract parity cases now live as top-level pytest tests in
+  `tests/test_electrical_i2c_parity.py`, selected by `interface_lint` and
+  `parity_lint`. Their shared project harness and native-netlist serializer
+  live in `tests/electrical_parity_support.py`; the electrical tool-surface
+  parity registry points to all four cases. The broad parity module shrank
+  from 3,061 to 2,647 lines and its no-growth ceiling was lowered accordingly.
+  This is test organization and parity evidence only; it adds no lint rule or
+  electrical behavior.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

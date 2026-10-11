@@ -166,6 +166,7 @@ _LINT_AREA_MODULES = {
             "tests/test_external_protection_contract.py",
             "tests/test_external_protection_review.py",
             "tests/test_design_lint_i2c_parity.py",
+            "tests/test_electrical_i2c_parity.py",
             "tests/test_design_lint_mcp_parity_mapped_custom_passive.py",
             "tests/test_design_lint_determinism_interfaces.py",
             "tests/test_design_lint_serial_parity.py",
@@ -364,6 +365,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_i2c_parity.py",
             "tests/test_design_lint_serial_parity.py",
             "tests/test_electrical_parity.py",
+            "tests/test_electrical_i2c_parity.py",
             "tests/test_pcb_component_inventory_mcp_parity.py",
             "tests/test_pcb_keepouts_mcp_parity.py",
             "tests/test_pcb_rf_antenna_mcp_parity.py",
@@ -406,6 +408,7 @@ _SLOW_MODULES = frozenset(
     {
         "tests/test_design_lint_determinism.py",
         "tests/test_electrical_parity.py",
+        "tests/test_electrical_i2c_parity.py",
         "tests/test_package_ci.py",
         "tests/test_can_native_fixture_lanes.py",
         "tests/test_empty_netlist_evidence_native_fixture_lane.py",

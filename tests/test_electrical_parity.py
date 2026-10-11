@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
-import shutil
 import subprocess
-import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from xml.etree import ElementTree as ET
 
+import pytest
 from mcp import Client
 
 from kicad_tooling.hwrepo import electrical_setup, mcp_electrical, mcp_files
@@ -32,7 +29,6 @@ from kicad_tooling.hwrepo.models import (
     ExcludedTestAccess,
     GroundDomain,
     GroundingAnalysis,
-    I2cPullupAnalysis,
     MosfetOperatingState,
     MosfetVoltageInterval,
     NetlistContract,
@@ -59,7 +55,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.spice import expanded_deck
 from kicad_tooling.validate import hashes
 from tests import electrical_i2c_support as i2c_support
-from tests import test_contract_coach as coach_fixture
+from tests.electrical_parity_support import ElectricalParityHarness, contract_netlist_xml
 from tests.electrical_serial_support import serial_peer_netlist, serial_peer_requirement
 from tests.electrical_spi_support import spi_requirement
 from tests.electrical_usb_c_support import usb_c_netlist, usb_c_requirement
@@ -110,57 +106,7 @@ from tests.test_mosfet_stress import (
 )
 from tests.test_source_parity import source_bytes
 
-
-def contract_netlist_xml(observed: NetlistContract) -> str:
-    root = ET.Element("export")
-    components = ET.SubElement(root, "components")
-    library_pins: dict[tuple[str, str], dict[str, str]] = {}
-    library_pin_types: dict[tuple[str, str], dict[str, str]] = {}
-    symbols = observed.component_symbols
-    for reference, component in observed.components.items():
-        symbol = symbols[reference]
-        library, part = symbol.split(":", maxsplit=1)
-        library_pins.setdefault((library, part), {})
-        library_pin_types.setdefault((library, part), {})
-        entry = ET.SubElement(components, "comp", ref=reference)
-        ET.SubElement(entry, "value").text = component.value
-        ET.SubElement(entry, "footprint").text = component.footprint
-        if component.part_id is not None:
-            fields = ET.SubElement(entry, "fields")
-            ET.SubElement(fields, "field", name="PART_ID").text = component.part_id
-        if reference in observed.dnp_components:
-            ET.SubElement(entry, "property", name="dnp", value="true")
-        ET.SubElement(entry, "libsource", lib=library, part=part)
-        units = ET.SubElement(entry, "units")
-        unit = ET.SubElement(units, "unit", name="A")
-        pins = ET.SubElement(unit, "pins")
-        for number in observed.component_pin_numbers.get(reference, ()):
-            ET.SubElement(pins, "pin", num=number)
-            library_pins[(library, part)][number] = observed.pin_functions.get(
-                f"{reference}.{number}", number
-            )
-            library_pin_types[(library, part)][number] = observed.pin_electrical_types.get(
-                f"{reference}.{number}", "passive"
-            )
-    libparts = ET.SubElement(root, "libparts")
-    for (library, part), pin_functions in sorted(library_pins.items()):
-        libpart = ET.SubElement(libparts, "libpart", lib=library, part=part)
-        pins = ET.SubElement(libpart, "pins")
-        for number, name in sorted(pin_functions.items()):
-            ET.SubElement(
-                pins,
-                "pin",
-                num=number,
-                name=name,
-                type=library_pin_types[(library, part)].get(number, "passive"),
-            )
-    nets = ET.SubElement(root, "nets")
-    for net_name, assignments in sorted(observed.nets.items()):
-        net = ET.SubElement(nets, "net", name=net_name)
-        for pin in assignments:
-            reference, number = pin.rsplit(".", 1)
-            ET.SubElement(net, "node", ref=reference, pin=number)
-    return ET.tostring(root, encoding="unicode")
+pytestmark = pytest.mark.template_checkout
 
 
 def four_port_db9_netlist(*, isolated_returns: bool) -> NetlistContract:
@@ -205,52 +151,17 @@ def testpoint_board_source() -> str:
 
 class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.fixture = coach_fixture.ContractCoachTests()
-        self.fixture.setUp()
-        self.addCleanup(self.fixture.doCleanups)
-        self.root = self.fixture.root
-        self.mcp_root = self.root.parent / "mcp-repository"
-        shutil.copytree(self.root, self.mcp_root)
+        self.parity = ElectricalParityHarness()
+        self.addCleanup(self.parity.close)
+        self.fixture = self.parity.fixture
+        self.root = self.parity.root
+        self.mcp_root = self.parity.mcp_root
 
     async def cli(self, module: str, *arguments: str) -> subprocess.CompletedProcess[str]:
-        return await asyncio.to_thread(
-            subprocess.run,
-            (
-                sys.executable,
-                "-B",
-                "-I",
-                "-m",
-                module,
-                "--root",
-                str(self.root),
-                *arguments,
-                "--format",
-                "json",
-            ),
-            cwd=self.root.parent,
-            env=os.environ.copy(),
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=60,
-        )
+        return await self.parity.cli(module, *arguments)
 
     def configured(self, *, simulation: bool = False, grounding: bool = False) -> None:
-        for root in (self.root, self.mcp_root):
-            contract = install_fixture(root)
-            contract = contract.model_copy(
-                update={
-                    "grounding": GroundingAnalysis(
-                        basis="Synthetic independently authored pin review",
-                        domains=(GroundDomain(net="PILOT_C", pins=("R1.2", "R3.2")),),
-                    )
-                    if grounding
-                    else NA,
-                    "high_frequency": NA,
-                    **({} if simulation else {"power": NA}),
-                }
-            )
-            write_model(root / ISLAND / "tests/electrical.json", contract)
+        self.parity.configured(simulation=simulation, grounding=grounding)
 
     async def test_init_and_capture_match_cli_without_approving_requirements(self) -> None:
         before = source_bytes(self.root)
@@ -835,331 +746,6 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(fault_checks["usb-c/host-port/vbus-capacitance"].status, "FAIL")
         self.assertEqual(fault_checks["usb-c/host-port/vbus-capacitance"].observed, 2_200)
         self.assertEqual(fault_checks["spi/control/device/memory/pins"].status, "FAIL")
-
-    async def test_i2c_array_pullups_match_cli_and_mcp_for_pass_and_fault(self) -> None:
-        self.configured()
-        requirement = i2c_support.i2c_pullup_array_requirement()
-
-        def install_netlist(observed: NetlistContract) -> None:
-            serialized = contract_netlist_xml(observed)
-            for root in (self.root, self.mcp_root):
-                contract_path = root / ISLAND / "tests/electrical.json"
-                contract = read_model(contract_path, ElectricalAnalysisContract)
-                write_model(
-                    contract_path,
-                    contract.model_copy(update={"i2c_pullups": requirement}),
-                )
-                native = root / "build/native/controller"
-                netlist = native / "netlist.xml"
-                netlist.write_text(serialized, encoding="utf-8")
-                summary_path = native / "summary.json"
-                summary = read_model(summary_path, ValidationSummary)
-                write_model(
-                    summary_path,
-                    summary.model_copy(
-                        update={
-                            "artifacts_sha256": {
-                                **summary.artifacts_sha256,
-                                "netlist.xml": digest(netlist),
-                            }
-                        }
-                    ),
-                )
-
-        async def analyze_both(
-            view_id: str,
-        ) -> tuple[ElectricalAnalysisReport, ElectricalAnalysisReport, int]:
-            summary = "build/native/controller/summary.json"
-            process = await self.cli(
-                "kicad_tooling.electrical",
-                "--project",
-                PROJECT,
-                "--native-summary",
-                summary,
-                "--output",
-                f"build/electrical/{view_id}",
-            )
-            cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
-            async with Client(
-                create_server(self.mcp_root, allow_checks=True), mode="legacy"
-            ) as client:
-                result = await client.call_tool(
-                    "analyze_electrical",
-                    {
-                        "project_id": PROJECT,
-                        "view_id": view_id,
-                        "native_summary": summary,
-                    },
-                )
-            self.assertFalse(result.is_error, result.content)
-            mcp_report = ElectricalAnalysisReport.model_validate_json(
-                json.dumps(result.structured_content)
-            )
-            self.assertEqual(cli_report.checks, mcp_report.checks)
-            return cli_report, mcp_report, process.returncode
-
-        install_netlist(i2c_support.i2c_pullup_array_netlist())
-        cli_pass, _, pass_returncode = await analyze_both("i2c-array-pass")
-        self.assertEqual(pass_returncode, 0)
-        pass_checks = {item.id: item for item in cli_pass.checks}
-        for line in ("sda", "scl"):
-            self.assertEqual(pass_checks[f"i2c-pullup/array-bus/{line}"].status, "PASS")
-            self.assertEqual(pass_checks[f"i2c-pullup/array-bus/{line}"].observed, 4_700)
-
-        observed_fault = i2c_support.i2c_pullup_array_netlist()
-        components = dict(observed_fault.components)
-        components["RN1"] = ComponentContract(value="4x10k", footprint="Synthetic:RA4")
-        install_netlist(observed_fault.model_copy(update={"components": components}))
-        cli_fault, _, fault_returncode = await analyze_both("i2c-array-fault")
-        self.assertEqual(fault_returncode, 1)
-        fault_checks = {item.id: item for item in cli_fault.checks}
-        for line in ("sda", "scl"):
-            check = fault_checks[f"i2c-pullup/array-bus/{line}"]
-            self.assertEqual(check.status, "FAIL")
-            self.assertIn("RN1 value is 4x10k; expected 4x4.7k", check.detail)
-
-    async def test_i2c_voltage_compatibility_matches_cli_and_mcp_for_pass_and_fault(self) -> None:
-        self.configured()
-
-        def install_netlist(observed: NetlistContract, requirement: I2cPullupAnalysis) -> None:
-            serialized = contract_netlist_xml(observed)
-            for root in (self.root, self.mcp_root):
-                contract_path = root / ISLAND / "tests/electrical.json"
-                contract = read_model(contract_path, ElectricalAnalysisContract)
-                write_model(
-                    contract_path,
-                    contract.model_copy(update={"i2c_pullups": requirement}),
-                )
-                native = root / "build/native/controller"
-                netlist = native / "netlist.xml"
-                netlist.write_text(serialized, encoding="utf-8")
-                summary_path = native / "summary.json"
-                summary = read_model(summary_path, ValidationSummary)
-                write_model(
-                    summary_path,
-                    summary.model_copy(
-                        update={
-                            "artifacts_sha256": {
-                                **summary.artifacts_sha256,
-                                "netlist.xml": digest(netlist),
-                            }
-                        }
-                    ),
-                )
-
-        async def analyze_both(
-            view_id: str,
-        ) -> tuple[ElectricalAnalysisReport, ElectricalAnalysisReport, int]:
-            summary = "build/native/controller/summary.json"
-            process = await self.cli(
-                "kicad_tooling.electrical",
-                "--project",
-                PROJECT,
-                "--native-summary",
-                summary,
-                "--output",
-                f"build/electrical/{view_id}",
-            )
-            cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
-            async with Client(
-                create_server(self.mcp_root, allow_checks=True), mode="legacy"
-            ) as client:
-                result = await client.call_tool(
-                    "analyze_electrical",
-                    {
-                        "project_id": PROJECT,
-                        "view_id": view_id,
-                        "native_summary": summary,
-                    },
-                )
-            self.assertFalse(result.is_error, result.content)
-            mcp_report = ElectricalAnalysisReport.model_validate_json(
-                json.dumps(result.structured_content)
-            )
-            self.assertEqual(cli_report.checks, mcp_report.checks)
-            return cli_report, mcp_report, process.returncode
-
-        observed = i2c_support.i2c_series_pullup_netlist()
-        install_netlist(observed, i2c_support.i2c_pullup_voltage_requirement())
-        pass_report, _, pass_returncode = await analyze_both("i2c-voltage-pass")
-        self.assertEqual(pass_returncode, 0)
-        self.assertIn(f"{ISLAND}/tests/electrical.json", pass_report.input_sha256)
-        pass_checks = {item.id: item for item in pass_report.checks}
-        for line in ("sda", "scl"):
-            check = pass_checks[f"i2c-pullup/series-bus/{line}/voltage-compatibility"]
-            self.assertEqual(check.status, "PASS")
-            self.assertEqual(check.observed, 3.3)
-
-        install_netlist(
-            observed,
-            i2c_support.i2c_pullup_voltage_requirement(maximum_input_voltage_v=3.2),
-        )
-        fault_report, _, fault_returncode = await analyze_both("i2c-voltage-fault")
-        self.assertEqual(fault_returncode, 1)
-        fault_checks = {item.id: item for item in fault_report.checks}
-        for pin, line in (("U1.1", "sda"), ("U1.2", "scl")):
-            check = fault_checks[f"i2c-pullup/series-bus/{line}/voltage-compatibility"]
-            self.assertEqual(check.status, "FAIL")
-            self.assertIn(f"{pin} maximum bus voltage 3.2 V", check.detail)
-
-    async def test_i2c_pullup_electrical_window_matches_cli_and_mcp(self) -> None:
-        self.configured()
-
-        def install_netlist(observed: NetlistContract, requirement: I2cPullupAnalysis) -> None:
-            serialized = contract_netlist_xml(observed)
-            for root in (self.root, self.mcp_root):
-                contract_path = root / ISLAND / "tests/electrical.json"
-                contract = read_model(contract_path, ElectricalAnalysisContract)
-                write_model(
-                    contract_path,
-                    contract.model_copy(update={"i2c_pullups": requirement}),
-                )
-                native = root / "build/native/controller"
-                netlist = native / "netlist.xml"
-                netlist.write_text(serialized, encoding="utf-8")
-                summary_path = native / "summary.json"
-                summary = read_model(summary_path, ValidationSummary)
-                write_model(
-                    summary_path,
-                    summary.model_copy(
-                        update={
-                            "artifacts_sha256": {
-                                **summary.artifacts_sha256,
-                                "netlist.xml": digest(netlist),
-                            }
-                        }
-                    ),
-                )
-
-        async def analyze_both(view_id: str) -> tuple[ElectricalAnalysisReport, int]:
-            summary = "build/native/controller/summary.json"
-            process = await self.cli(
-                "kicad_tooling.electrical",
-                "--project",
-                PROJECT,
-                "--native-summary",
-                summary,
-                "--output",
-                f"build/electrical/{view_id}",
-            )
-            cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
-            async with Client(
-                create_server(self.mcp_root, allow_checks=True), mode="legacy"
-            ) as client:
-                result = await client.call_tool(
-                    "analyze_electrical",
-                    {
-                        "project_id": PROJECT,
-                        "view_id": view_id,
-                        "native_summary": summary,
-                    },
-                )
-            self.assertFalse(result.is_error, result.content)
-            mcp_report = ElectricalAnalysisReport.model_validate_json(
-                json.dumps(result.structured_content)
-            )
-            self.assertEqual(cli_report.checks, mcp_report.checks)
-            return cli_report, process.returncode
-
-        observed = i2c_support.i2c_series_pullup_netlist()
-        install_netlist(observed, i2c_support.i2c_pullup_window_requirement())
-        pass_report, pass_returncode = await analyze_both("i2c-window-pass")
-        self.assertEqual(pass_returncode, 0)
-        pass_checks = {item.id: item for item in pass_report.checks}
-        for line in ("sda", "scl"):
-            for bound in ("minimum-sink-resistance", "maximum-rise-resistance"):
-                self.assertEqual(
-                    pass_checks[f"i2c-pullup/series-bus/{line}/electrical-window/{bound}"].status,
-                    "PASS",
-                )
-
-        install_netlist(
-            observed,
-            i2c_support.i2c_pullup_window_requirement(maximum_bus_capacitance_pf=100.0),
-        )
-        fault_report, fault_returncode = await analyze_both("i2c-window-fault")
-        self.assertEqual(fault_returncode, 1)
-        fault_checks = {item.id: item for item in fault_report.checks}
-        for line in ("sda", "scl"):
-            check = fault_checks[
-                f"i2c-pullup/series-bus/{line}/electrical-window/maximum-rise-resistance"
-            ]
-            self.assertEqual(check.status, "FAIL")
-            self.assertIn("3540.66Ω", check.detail)
-
-    async def test_i2c_series_pullups_match_cli_and_mcp_for_pass_and_fault(self) -> None:
-        self.configured()
-        requirement = i2c_support.i2c_series_pullup_requirement()
-
-        def install_netlist(observed: NetlistContract) -> None:
-            serialized = contract_netlist_xml(observed)
-            for root in (self.root, self.mcp_root):
-                contract_path = root / ISLAND / "tests/electrical.json"
-                contract = read_model(contract_path, ElectricalAnalysisContract)
-                write_model(
-                    contract_path,
-                    contract.model_copy(update={"i2c_pullups": requirement}),
-                )
-                native = root / "build/native/controller"
-                netlist = native / "netlist.xml"
-                netlist.write_text(serialized, encoding="utf-8")
-                summary_path = native / "summary.json"
-                summary = read_model(summary_path, ValidationSummary)
-                write_model(
-                    summary_path,
-                    summary.model_copy(
-                        update={
-                            "artifacts_sha256": {
-                                **summary.artifacts_sha256,
-                                "netlist.xml": digest(netlist),
-                            }
-                        }
-                    ),
-                )
-
-        async def analyze_both(view_id: str) -> tuple[ElectricalAnalysisReport, int]:
-            summary = "build/native/controller/summary.json"
-            process = await self.cli(
-                "kicad_tooling.electrical",
-                "--project",
-                PROJECT,
-                "--native-summary",
-                summary,
-                "--output",
-                f"build/electrical/{view_id}",
-            )
-            cli_report = ElectricalAnalysisReport.model_validate_json(process.stdout)
-            async with Client(
-                create_server(self.mcp_root, allow_checks=True), mode="legacy"
-            ) as client:
-                result = await client.call_tool(
-                    "analyze_electrical",
-                    {
-                        "project_id": PROJECT,
-                        "view_id": view_id,
-                        "native_summary": summary,
-                    },
-                )
-            self.assertFalse(result.is_error, result.content)
-            mcp_report = ElectricalAnalysisReport.model_validate_json(
-                json.dumps(result.structured_content)
-            )
-            self.assertEqual(cli_report.checks, mcp_report.checks)
-            return cli_report, process.returncode
-
-        install_netlist(i2c_support.i2c_series_pullup_netlist())
-        passed, pass_returncode = await analyze_both("i2c-series-pass")
-        self.assertEqual(pass_returncode, 0)
-        pass_checks = {item.id: item for item in passed.checks}
-        self.assertEqual(pass_checks["i2c-pullup/series-bus/sda/series/sda-chain"].status, "PASS")
-        self.assertEqual(pass_checks["i2c-pullup/series-bus/sda"].observed, 4_700)
-
-        install_netlist(i2c_support.i2c_series_pullup_netlist(first_value="2k"))
-        fault, fault_returncode = await analyze_both("i2c-series-fault")
-        self.assertEqual(fault_returncode, 1)
-        fault_checks = {item.id: item for item in fault.checks}
-        self.assertEqual(fault_checks["i2c-pullup/series-bus/sda/series/sda-chain"].status, "FAIL")
-        self.assertEqual(fault_checks["i2c-pullup/series-bus/sda"].status, "FAIL")
 
     async def test_usb_c_vbus_path_matches_cli_and_mcp_for_pass_and_fault(self) -> None:
         self.configured()

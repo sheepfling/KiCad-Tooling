@@ -25,11 +25,11 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from tests.design_lint_fixtures import header_only_spi_uart_netlist
+from tests.electrical_parity_support import contract_netlist_xml
 from tests.mcp_parity_support import (
     McpParityHarness,
     run_mcp_parity,
 )
-from tests.test_electrical_parity import contract_netlist_xml
 
 
 class _DesignLintMcpParitySpiCases(McpParityHarness):
