@@ -9,12 +9,12 @@ from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
 )
+from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .models import (
     ConnectorReturnDistributionCoverageReport,
     ContractCoachReport,
     DesignLintPolicy,
-    DesignLintReport,
     PcbKeepoutCoverageReport,
     RcFilterCoverageReport,
     Stm32PinMapCoverageReport,

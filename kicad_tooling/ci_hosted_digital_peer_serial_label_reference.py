@@ -5,7 +5,11 @@ from __future__ import annotations
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
 from .hwrepo.contracts import read_model
 from .hwrepo.design_lint import evaluate
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintReport
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.models import (
+    ContractCoachReport,
+    DesignLintPolicy,
+)
 from .hwrepo.serial_logic_models import SerialLabelFixtureExpectedNets
 
 

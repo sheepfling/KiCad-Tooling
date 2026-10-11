@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import DesignLintReport
+from .design_lint_report_models import DesignLintReport
 
 
 def _format_polygon_area_mm2(area_twice_nm2: int | None) -> str:
@@ -430,4 +430,27 @@ def pcb_coverage_report_lines(report: DesignLintReport) -> list[str]:
 
     if rf_antennas.issue is not None:
         lines.append(f"  Coverage issue: {rf_antennas.issue}")
+
+    inventory = report.pcb_component_inventory
+    if inventory.status != "NOT_APPLICABLE":
+        lines.append(
+            f"PCB schematic component inventory: {inventory.status} "
+            f"(mode: {inventory.mode or 'not configured'})"
+        )
+        if inventory.board_path is not None:
+            lines.append(
+                f"  Board: {inventory.board_path} "
+                f"(SHA-256 {inventory.board_sha256 or 'unavailable'})"
+            )
+        if inventory.snapshot_path is not None:
+            lines.append(
+                f"  Native footprint inventory: {inventory.snapshot_path} "
+                f"(SHA-256 {inventory.snapshot_sha256 or 'unavailable'}; "
+                f"schema {inventory.snapshot_schema or 'unknown'}; "
+                f"KiCad {inventory.kicad_version or 'unknown'})"
+            )
+        for item in inventory.missing_placements:
+            lines.append(f"  Missing board footprint: {item.reference} ({item.assigned_footprint})")
+        if inventory.issue is not None:
+            lines.append(f"  Coverage issue: {inventory.issue}")
     return lines

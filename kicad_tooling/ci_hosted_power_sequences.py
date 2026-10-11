@@ -21,12 +21,12 @@ def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: Ho
 
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintReport,
         NetlistContract,
     )
     from .hwrepo.power_sequence_models import (

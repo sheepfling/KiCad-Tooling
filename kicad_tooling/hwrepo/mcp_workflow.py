@@ -26,6 +26,7 @@ from . import (
     three_d,
 )
 from .contracts import read_model, repo_path, write_model
+from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .diagnostic_journal import DiagnosticJournal
 from .discovery import load_config, load_registry
@@ -36,7 +37,6 @@ from .exports import require_declared_variant, verify_exports
 from .mcp_files import artifact_path
 from .models import (
     ContractCoachReport,
-    DesignLintReport,
     DiagnosticReport,
     Identifier,
     LocalRescueReport,

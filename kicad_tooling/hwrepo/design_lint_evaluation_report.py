@@ -8,9 +8,9 @@ from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_evaluation_types import (
     DesignLintEvaluationReportInput,
 )
+from .design_lint_report_models import DesignLintReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
-    DesignLintReport,
     PcbKeepoutCoverageReport,
 )
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
@@ -37,6 +37,7 @@ def assemble_design_lint_report(
     rc_filter_coverage = context.rc_filter_coverage
     connector_return_distribution_coverage = context.connector_return_distribution_coverage
     pcb_decoupling_coverage = context.pcb_decoupling_coverage
+    pcb_component_inventory_coverage = context.pcb_component_inventory_coverage
     pcb_protection_path_coverage = context.pcb_protection_path_coverage
     pcb_track_width_coverage = context.pcb_track_width_coverage
     pcb_reference_plane_coverage = context.pcb_reference_plane_coverage
@@ -70,6 +71,7 @@ def assemble_design_lint_report(
         or rc_filter_coverage.status == "BLOCKED"
         or connector_return_distribution_coverage.status == "BLOCKED"
         or pcb_decoupling_coverage.status == "BLOCKED"
+        or pcb_component_inventory_coverage.status == "BLOCKED"
         or pcb_protection_path_coverage.status == "BLOCKED"
         or pcb_track_width_coverage.status == "BLOCKED"
         or pcb_reference_plane_coverage.status == "BLOCKED"
@@ -133,6 +135,11 @@ def assemble_design_lint_report(
             else (connector_return_distribution_coverage.issue,)
         )
         + (() if pcb_decoupling_coverage.issue is None else (pcb_decoupling_coverage.issue,))
+        + (
+            ()
+            if pcb_component_inventory_coverage.issue is None
+            else (pcb_component_inventory_coverage.issue,)
+        )
         + (
             ()
             if pcb_protection_path_coverage.issue is None
@@ -243,6 +250,8 @@ def assemble_design_lint_report(
         )
     if pcb_decoupling_coverage.status == "BLOCKED":
         actions += ("Repair source-bound PCB geometry evidence, then rerun design lint.",)
+    if pcb_component_inventory_coverage.status == "BLOCKED":
+        actions += ("Restore the exact native PCB footprint inventory and rerun design lint.",)
     if pcb_decoupling_coverage.status == "INCOMPLETE":
         actions += (
             "Review mapped IC and capacitor pad identities, fitted state, copper paths, and the project-authored distance limit.",
@@ -370,6 +379,7 @@ def assemble_design_lint_report(
         rc_filter_coverage=rc_filter_coverage,
         connector_return_distribution=connector_return_distribution_coverage,
         pcb_decoupling=pcb_decoupling_coverage,
+        pcb_component_inventory=pcb_component_inventory_coverage,
         pcb_protection_path=pcb_protection_path_coverage,
         pcb_track_width=pcb_track_width_coverage,
         pcb_reference_plane=pcb_reference_plane_coverage,

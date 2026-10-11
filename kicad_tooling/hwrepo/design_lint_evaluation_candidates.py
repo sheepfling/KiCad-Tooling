@@ -74,6 +74,7 @@ def scan_evaluation_candidates(
         pcb_signal_path_coverage=coverage.pcb_signal_path,
         pcb_keepout_coverage=coverage.pcb_keepout,
         pcb_rf_module_antenna_coverage=coverage.pcb_rf_module_antenna,
+        pcb_component_inventory_coverage=coverage.pcb_component_inventory,
         connector_coverage=request.connector_coverage,
         digital_peer_voltage_scan=peer_evidence.digital_peer_voltage_scan,
         usb_peer_reference_scan=peer_evidence.usb_peer_reference_scan,

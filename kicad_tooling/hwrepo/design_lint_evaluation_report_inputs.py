@@ -9,8 +9,8 @@ from .design_lint_evaluation_types import (
     DesignLintEvaluationReportInput,
     DesignLintFindingDisposition,
 )
+from .design_lint_report_models import DesignLintReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import DesignLintReport
 
 
 def evaluation_report_input(
@@ -39,6 +39,7 @@ def evaluation_report_input(
         rc_filter_coverage=coverage.rc_filter,
         connector_return_distribution_coverage=coverage.connector_return_distribution,
         pcb_decoupling_coverage=coverage.pcb_decoupling,
+        pcb_component_inventory_coverage=coverage.pcb_component_inventory,
         pcb_protection_path_coverage=coverage.pcb_protection_path,
         pcb_track_width_coverage=coverage.pcb_track_width,
         pcb_reference_plane_coverage=coverage.pcb_reference_plane,
@@ -84,6 +85,7 @@ def blocked_wrong_ignore_report(
         rc_filter_coverage=coverage.rc_filter,
         connector_return_distribution=coverage.connector_return_distribution,
         pcb_decoupling=coverage.pcb_decoupling,
+        pcb_component_inventory=coverage.pcb_component_inventory,
         pcb_protection_path=coverage.pcb_protection_path,
         pcb_track_width=coverage.pcb_track_width,
         pcb_reference_plane=coverage.pcb_reference_plane,

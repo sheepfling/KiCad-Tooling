@@ -17,6 +17,7 @@ from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
 )
+from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
@@ -34,7 +35,6 @@ from .models import (
     DesignLintIgnore,
     DesignLintMappedCheckRun,
     DesignLintPolicy,
-    DesignLintReport,
     DesignLintRuleOverride,
     Digest,
     PcbKeepoutCoverageReport,
@@ -45,6 +45,7 @@ from .models import (
     SchematicGeometryCoverage,
     Stm32PinMapCoverageReport,
 )
+from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -81,6 +82,7 @@ class DesignLintEvaluationRequest:
     rc_filter_coverage: RcFilterCoverageReport | None = None
     connector_return_distribution_coverage: ConnectorReturnDistributionCoverageReport | None = None
     pcb_decoupling_coverage: PcbDecouplingCoverageReport | None = None
+    pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None
     pcb_protection_path_coverage: PcbProtectionPathCoverageReport | None = None
     pcb_track_width_coverage: PcbTrackWidthCoverageReport | None = None
     pcb_switching_loop_coverage: PcbSwitchingLoopCoverageReport | None = None
@@ -110,6 +112,7 @@ class DesignLintResolvedCoverage:
     rc_filter: RcFilterCoverageReport
     connector_return_distribution: ConnectorReturnDistributionCoverageReport
     pcb_decoupling: PcbDecouplingCoverageReport
+    pcb_component_inventory: PcbComponentInventoryCoverageReport
     pcb_protection_path: PcbProtectionPathCoverageReport
     pcb_track_width: PcbTrackWidthCoverageReport
     pcb_reference_plane: PcbReferencePlaneCoverageReport
@@ -191,6 +194,7 @@ class DesignLintEvaluationReportInput:
     rc_filter_coverage: RcFilterCoverageReport
     connector_return_distribution_coverage: ConnectorReturnDistributionCoverageReport
     pcb_decoupling_coverage: PcbDecouplingCoverageReport
+    pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport
     pcb_protection_path_coverage: PcbProtectionPathCoverageReport
     pcb_track_width_coverage: PcbTrackWidthCoverageReport
     pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport

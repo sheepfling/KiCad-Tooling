@@ -12,6 +12,7 @@ from .design_lint_evaluation_report_inputs import (
 )
 from .design_lint_evaluation_types import DesignLintEvaluationRequest
 from .design_lint_finding_disposition import resolve_finding_dispositions
+from .design_lint_report_models import DesignLintReport
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
@@ -22,7 +23,6 @@ from .models import (
     ContractCoachReport,
     CrystalNetworkCoverageReport,
     DesignLintPolicy,
-    DesignLintReport,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
     RcFilterCoverageReport,
@@ -30,6 +30,7 @@ from .models import (
     SchematicGeometryCoverage,
     Stm32PinMapCoverageReport,
 )
+from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -76,6 +77,7 @@ def evaluate(
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
+    pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
 ) -> DesignLintReport:
     """Apply project policy to findings while preserving the established call shape."""
     request = DesignLintEvaluationRequest(
@@ -107,6 +109,7 @@ def evaluate(
         pcb_signal_path_coverage=pcb_signal_path_coverage,
         pcb_keepout_coverage=pcb_keepout_coverage,
         pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
+        pcb_component_inventory_coverage=pcb_component_inventory_coverage,
     )
     result = prepare_evaluation(request)
     if result.report is not None:

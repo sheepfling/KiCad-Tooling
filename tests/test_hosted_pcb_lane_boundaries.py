@@ -7,18 +7,34 @@ from types import SimpleNamespace
 
 import pytest
 
-from kicad_tooling.ci_hosted import pcb_return_fixture_lane, pcb_switching_loop_fixture_lane
+from kicad_tooling.ci_hosted import (
+    pcb_component_inventory_fixture_lane,
+    pcb_return_fixture_lane,
+    pcb_switching_loop_fixture_lane,
+)
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.return_path_lint]
+pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
 
 
 @pytest.mark.parametrize(
     ("lane", "message"),
     [
-        (pcb_return_fixture_lane, "PCB return-path native fixtures do not cover KiCad 10.0.6"),
-        (
+        pytest.param(
+            pcb_component_inventory_fixture_lane,
+            "PCB component inventory native fixtures do not cover KiCad 10.0.6",
+            id="component-inventory",
+        ),
+        pytest.param(
+            pcb_return_fixture_lane,
+            "PCB return-path native fixtures do not cover KiCad 10.0.6",
+            marks=pytest.mark.return_path_lint,
+            id="return-path",
+        ),
+        pytest.param(
             pcb_switching_loop_fixture_lane,
             "Switching-loop native fixtures do not cover KiCad 10.0.6",
+            marks=pytest.mark.return_path_lint,
+            id="switching-loop",
         ),
     ],
 )

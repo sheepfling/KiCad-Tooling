@@ -41,14 +41,13 @@ from .ci_hosted_open_drain_bias import (
     open_drain_bias_fixture_lane as _run_open_drain_bias_fixture_lane,
 )
 from .ci_hosted_pcb_access import pcb_access_fixture_lane
+from .ci_hosted_pcb_component_inventory_fixture import pcb_component_inventory_fixture_lane
 from .ci_hosted_pcb_geometry_fixtures import pcb_decoupling_fixture_lane
 from .ci_hosted_pcb_reference_planes import (
     pcb_reference_plane_narrow_void_fixture_lane,
     pcb_reference_plane_via_fixture_lane,
 )
-from .ci_hosted_pcb_return_lane import (
-    run_pcb_return_fixture_lane as _run_pcb_return_fixture_lane,
-)
+from .ci_hosted_pcb_return_lane import run_pcb_return_fixture_lane as pcb_return_fixture_lane
 from .ci_hosted_pcb_signal_path_drc import pcb_signal_path_drc_fixture_lane
 from .ci_hosted_pcb_switching_loop_lane import (
     run_switching_loop_fixture_lane as _run_switching_loop_fixture_lane,
@@ -118,6 +117,7 @@ __all__ = (
     "net_dc_reference_fixture_lane",
     "open_drain_bias_fixture_lane",
     "pcb_access_fixture_lane",
+    "pcb_component_inventory_fixture_lane",
     "pcb_decoupling_fixture_lane",
     "pcb_reference_plane_narrow_void_fixture_lane",
     "pcb_reference_plane_via_fixture_lane",
@@ -156,11 +156,6 @@ def pcb_switching_loop_fixture_lane(
 ) -> None:
     """Keep the hosted CI import stable while checks live by theme."""
     _run_switching_loop_fixture_lane(root, project=project, image=image, log=log)
-
-
-def pcb_return_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
-    """Keep the hosted CI import stable while checks live by theme."""
-    _run_pcb_return_fixture_lane(root, project=project, image=image, log=log)
 
 
 def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
@@ -544,6 +539,7 @@ def native_lane(
         pcb_signal_path_drc_fixture_lane(root, project=project, image=image, log=log)
         pcb_return_fixture_lane(root, project=project, image=image, log=log)
         pcb_access_fixture_lane(root, project=project, image=image, log=log)
+        pcb_component_inventory_fixture_lane(root, project=project, image=image, log=log)
         pcb_decoupling_fixture_lane(root, project=project, image=image, log=log)
         pcb_switching_loop_fixture_lane(root, project=project, image=image, log=log)
         pcb_reference_plane_via_fixture_lane(root, project=project, image=image, log=log)

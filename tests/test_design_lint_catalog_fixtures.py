@@ -24,9 +24,6 @@ from tests.test_design_lint_policy import DesignLintPolicyTests as PolicyCase
 from tests.test_design_lint_schematic_connectivity import (
     DesignLintSchematicConnectivityTests as SchematicConnectivityCase,
 )
-from tests.test_design_lint_schematic_coverage import (
-    DesignLintSchematicCoverageTests as SchematicCoverageCase,
-)
 from tests.test_design_lint_schematic_text import DesignLintSchematicTextTests as SchematicTextCase
 from tests.test_design_lint_serial_peer_voltage import (
     DesignLintSerialPeerVoltageTests as SerialPeerVoltageCase,
@@ -100,7 +97,6 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         DcReferenceCase: DcReferenceCase(),
         DecouplingCase: DecouplingCase(),
         SchematicConnectivityCase: SchematicConnectivityCase(),
-        SchematicCoverageCase: SchematicCoverageCase(),
         ConnectorRoleCase: ConnectorRoleCase(),
         LedTopologyCase: LedTopologyCase(),
         I2cCase: I2cCase(),

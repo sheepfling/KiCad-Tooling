@@ -76,6 +76,7 @@ DesignLintRuleId = Literal[
     "pcb.signal_path_rule_coverage",
     "pcb.keepout_intent_coverage",
     "pcb.rf_module_antenna_keepout_coverage",
+    "pcb.schematic_component_inventory",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",

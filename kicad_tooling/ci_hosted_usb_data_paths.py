@@ -23,12 +23,12 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.contracts import write_model
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintReport,
     )
     from .hwrepo.usb_data_paths import usb_data_path_mismatches
     from .validate import read_netlist

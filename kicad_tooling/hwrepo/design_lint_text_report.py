@@ -6,7 +6,7 @@ from .design_lint_connector_report import connector_peer_report_lines
 from .design_lint_contract_coverage_report import contract_coverage_report_lines
 from .design_lint_pcb_report import pcb_coverage_report_lines
 from .design_lint_peer_report import peer_reference_report_lines
-from .models import DesignLintReport
+from .design_lint_report_models import DesignLintReport
 
 
 def text_report(report: DesignLintReport) -> str:

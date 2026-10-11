@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from .design_lint_report_models import DesignLintReport
 from .i2c_addressing import format_i2c_address
-from .models import DesignLintReport
 
 
 def contract_coverage_report_lines(report: DesignLintReport) -> list[str]:

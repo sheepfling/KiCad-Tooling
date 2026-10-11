@@ -8,8 +8,8 @@ from .design_lint_candidate_aggregation import candidates, fingerprint
 from .design_lint_catalog import rule_catalog
 from .design_lint_evaluator import evaluate
 from .design_lint_project_inspection import inspect_design_lint_summary
+from .design_lint_report_models import DesignLintReport
 from .design_lint_text_report import text_report
-from .models import DesignLintReport
 
 __all__ = [
     "candidates",

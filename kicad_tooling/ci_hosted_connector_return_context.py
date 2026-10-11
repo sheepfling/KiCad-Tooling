@@ -12,7 +12,11 @@ from pathlib import Path
 from typing import Protocol
 
 from .hwrepo.contracts import write_model
-from .hwrepo.models import DesignLintReport, NetlistContract, ProjectConfig
+from .hwrepo.design_lint_report_models import DesignLintReport
+from .hwrepo.models import (
+    NetlistContract,
+    ProjectConfig,
+)
 
 
 class ConnectorReturnLog(Protocol):

@@ -26,6 +26,7 @@ from . import mcp_parts_extensions as part_tools
 from . import mcp_planning as planning
 from . import mcp_workflow as workflow
 from .contracts import read_model, repo_path
+from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .doctor import NativeRunner
 from .doctor import doctor as inspect_environment
@@ -39,7 +40,6 @@ from .models import (
     CadSourcingReview,
     CadStepReport,
     ContractCoachReport,
-    DesignLintReport,
     DiagnosticReport,
     ElectricalAnalysisReport,
     ElectricalChartsReport,

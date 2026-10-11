@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .models import DesignLintReport
+from .design_lint_report_models import DesignLintReport
 
 
 def connector_peer_report_lines(report: DesignLintReport) -> list[str]:

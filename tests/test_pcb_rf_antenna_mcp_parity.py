@@ -29,6 +29,9 @@ from kicad_tooling.hwrepo.models import (
     PcbSwitchingLoopCoverageReport,
     ValidationSummary,
 )
+from kicad_tooling.hwrepo.pcb_component_inventory_models import (
+    PcbComponentInventoryCoverageReport,
+)
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
 from kicad_tooling.hwrepo.pcb_rf_antenna import pcb_rf_module_antenna_entries
 from kicad_tooling.hwrepo.pcb_track_width_models import PcbTrackWidthCoverageReport
@@ -76,6 +79,11 @@ def test_disabled_rf_antenna_coverage_matches_cli_and_mcp(tmp_path: Path) -> Non
                 rule_id="pcb.rf_module_antenna_keepout_coverage",
                 mode="off",
                 reason="Synthetic parity fixture disables RF antenna review",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_component_inventory",
+                mode="off",
+                reason="Synthetic parity fixture isolates RF antenna review",
             ),
         ),
     )
@@ -169,6 +177,7 @@ def test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp(
             PcbSignalPathRuleCoverageReport(),
             PcbKeepoutCoverageReport(),
             coverage,
+            PcbComponentInventoryCoverageReport(),
         )
 
     monkeypatch.setattr(

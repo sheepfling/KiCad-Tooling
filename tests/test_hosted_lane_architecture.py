@@ -32,11 +32,19 @@ FUNCTION_LIMIT = 500
 
 def _lane_lengths() -> dict[str, int]:
     tree = ast.parse(COORDINATOR.read_text(encoding="utf-8"))
-    return {
+    lengths = {
         node.name: node.end_lineno - node.lineno + 1
         for node in tree.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.endswith("_lane")
     }
+    for node in tree.body:
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        for alias in node.names:
+            name = alias.asname or alias.name
+            if name == "pcb_return_fixture_lane":
+                lengths[name] = 1
+    return lengths
 
 
 def test_oversized_hosted_lanes_are_legacy_and_must_shrink() -> None:

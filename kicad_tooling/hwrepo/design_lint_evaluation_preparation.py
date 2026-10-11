@@ -25,6 +25,7 @@ from .design_lint_pcb_coverage_policy import (
     normalize_pcb_input_coverage_policy,
     normalize_pcb_mapped_coverage_policy,
 )
+from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_schematic_coverage import (
     SCHEMATIC_GEOMETRY_RULE_IDS,
@@ -34,10 +35,10 @@ from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
-    DesignLintReport,
     SchematicGeometryCoverage,
     SchematicGeometryRuleId,
 )
+from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport
 from .pcb_switching_loop_models import (
@@ -172,6 +173,9 @@ def prepare_evaluation(
             if policy.pcb_decoupling_map is not None
             else PcbDecouplingCoverageReport()
         )
+    pcb_component_inventory_coverage = (
+        request.pcb_component_inventory_coverage or PcbComponentInventoryCoverageReport()
+    )
     pcb_track_width_coverage = request.pcb_track_width_coverage
     if pcb_track_width_coverage is None:
         pcb_track_width_coverage = (
@@ -232,6 +236,7 @@ def prepare_evaluation(
             rc_filter=component_map_coverage.rc_filter,
             connector_return_distribution=component_map_coverage.connector_return_distribution,
             pcb_decoupling=pcb_decoupling_coverage,
+            pcb_component_inventory=pcb_component_inventory_coverage,
             pcb_protection_path=mapped_pcb_coverage.protection_path,
             pcb_track_width=pcb_track_width_coverage,
             pcb_reference_plane=mapped_pcb_coverage.reference_plane,

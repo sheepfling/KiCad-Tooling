@@ -22,6 +22,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
     from .hwrepo.component_roles import resolve_component_role_map
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
@@ -30,7 +31,6 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         ComponentRolePin,
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintReport,
     )
     from .hwrepo.power_decoupling import ic_power_rails_without_fitted_capacitors
     from .validate import read_netlist

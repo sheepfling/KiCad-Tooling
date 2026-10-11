@@ -248,6 +248,9 @@ _LINT_AREA_MODULES = {
     ),
     "pcb_lint": frozenset(
         {
+            "tests/test_pcb_component_inventory.py",
+            "tests/test_pcb_component_inventory_mcp_parity.py",
+            "tests/test_pcb_component_inventory_native_fixture_lane.py",
             "tests/test_native_connector_return_lint.py",
             "tests/test_pcb_access_native_fixture_lane.py",
             "tests/test_pcb_access_fixture_lane.py",
@@ -280,6 +283,7 @@ _LINT_AREA_MODULES = {
             "tests/test_hosted_pcb_lane_boundaries.py",
             "tests/test_pcb_rf_antenna.py",
             "tests/test_pcb_rf_antenna_mcp_parity.py",
+            "tests/test_pcb_component_inventory_mcp_parity.py",
             "tests/test_pcb_signal_path_coverage.py",
             "tests/test_pcb_signal_path_evidence.py",
             "tests/test_pcb_signal_path_hosted_schedule.py",
@@ -337,6 +341,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_i2c_parity.py",
             "tests/test_design_lint_serial_parity.py",
             "tests/test_electrical_parity.py",
+            "tests/test_pcb_component_inventory_mcp_parity.py",
             "tests/test_pcb_keepouts_mcp_parity.py",
             "tests/test_pcb_rf_antenna_mcp_parity.py",
             "tests/test_pcb_signal_path_mcp_parity.py",
@@ -365,6 +370,7 @@ _NATIVE_KICAD_MODULES = frozenset(
         "tests/test_i2c_pullup_native_fixture_lane.py",
         "tests/test_native_connector_return_lint.py",
         "tests/test_pcb_access_native_fixture_lane.py",
+        "tests/test_pcb_component_inventory_native_fixture_lane.py",
         "tests/test_power_path_native_fixture_lane.py",
         "tests/test_pcb_keepouts_native.py",
         "tests/test_pcb_signal_path_native.py",
@@ -381,6 +387,7 @@ _SLOW_MODULES = frozenset(
         "tests/test_i2c_pullup_native_fixture_lane.py",
         "tests/test_component_rating_native_fixture_lane.py",
         "tests/test_pcb_access_native_fixture_lane.py",
+        "tests/test_pcb_component_inventory_native_fixture_lane.py",
         "tests/test_power_path_native_fixture_lane.py",
     }
 )

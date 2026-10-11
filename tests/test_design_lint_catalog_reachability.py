@@ -52,6 +52,9 @@ from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
 from tests.design_lint_fixtures.catalog_reachability import schematic_geometry_rule_ids
+from tests.design_lint_fixtures.catalog_reachability_pcb import (
+    pcb_component_inventory_rule_ids,
+)
 from tests.power_sequence_support import (
     power_sequence_map as synthetic_power_sequence_map,
 )
@@ -168,6 +171,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id for item in candidates(stm32_netlist, stm32_pin_map_coverage=stm32_coverage)
     )
+    emitted.update(pcb_component_inventory_rule_ids())
     i2c_specification = _tests_i2c_address_fixtures.address_map(
         _tests_i2c_address_fixtures.responder("U1", address=80),
         _tests_i2c_address_fixtures.responder("U2", address=81, strap=False),

@@ -70,6 +70,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         ) as other_native_fixtures,
         patch("kicad_tooling.ci_hosted.pcb_return_fixture_lane") as pcb_fixture,
         patch("kicad_tooling.ci_hosted.pcb_access_fixture_lane") as access_fixture,
+        patch("kicad_tooling.ci_hosted.pcb_component_inventory_fixture_lane") as inventory_fixture,
         patch("kicad_tooling.ci_hosted.pcb_decoupling_fixture_lane") as decoupling_fixture,
         patch("kicad_tooling.ci_hosted.pcb_switching_loop_fixture_lane") as switching_loop_fixture,
         patch(
@@ -117,6 +118,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         rail_cap_fixture,
         pcb_fixture,
         access_fixture,
+        inventory_fixture,
         decoupling_fixture,
         switching_loop_fixture,
         reference_plane_fixture,

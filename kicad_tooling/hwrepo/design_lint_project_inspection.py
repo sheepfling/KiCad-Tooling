@@ -26,6 +26,7 @@ from .design_lint_project_contexts import (
 from .design_lint_project_contexts import (
     digital_peer_voltage_context as build_digital_peer_voltage_context,
 )
+from .design_lint_report_models import DesignLintReport
 from .design_lint_schematic_coverage import scan_schematic_geometry
 from .design_lint_stm32_coverage import scan_stm32_pin_maps
 from .discovery import load_config, load_registry
@@ -33,7 +34,6 @@ from .evidence import digest
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     DesignLintPolicy,
-    DesignLintReport,
     ProjectManifest,
 )
 from .pcb_drc_models import (
@@ -88,6 +88,7 @@ def inspect_design_lint_summary(
             pcb_signal_path_coverage,
             pcb_keepout_coverage,
             pcb_rf_module_antenna_coverage,
+            pcb_component_inventory_coverage,
         ) = scan_pcb_geometry(root, config, coach, policy, native_summary)
         pair_map: PcbDifferentialPairRuleMap | None = policy.pcb_differential_pair_rule_map
         pair_override = next(
@@ -179,6 +180,7 @@ def inspect_design_lint_summary(
             geometry_coverage=geometry_coverage,
             external_protection_coverage=protection_coverage,
             pcb_decoupling_coverage=pcb_decoupling_coverage,
+            pcb_component_inventory_coverage=pcb_component_inventory_coverage,
             pcb_protection_path_coverage=pcb_protection_path_coverage,
             pcb_track_width_coverage=pcb_track_width_coverage,
             pcb_reference_plane_coverage=pcb_reference_plane_coverage,

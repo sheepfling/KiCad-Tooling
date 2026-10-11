@@ -24,12 +24,12 @@ def power_path_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.contracts import read_kicad_erc_report, write_model
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintReport,
     )
     from .hwrepo.power_paths import PowerPathMismatch, power_path_mismatches
     from .validate import read_netlist

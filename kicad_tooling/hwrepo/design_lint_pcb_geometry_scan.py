@@ -24,6 +24,8 @@ from .models import (
     PcbProtectionPathMap,
     ProjectKind,
 )
+from .pcb_component_inventory import evaluate_native_component_inventory_coverage
+from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
     PcbSignalPathRuleCoverageReport,
@@ -64,6 +66,7 @@ def scan_pcb_geometry(
     PcbSignalPathRuleCoverageReport,
     PcbKeepoutCoverageReport,
     PcbRfModuleAntennaCoverageReport,
+    PcbComponentInventoryCoverageReport,
 ]:
     """Capture one native PCB snapshot for all configured geometry review maps."""
     decoupling_map: PcbDecouplingMap | None = policy.pcb_decoupling_map
@@ -74,6 +77,10 @@ def scan_pcb_geometry(
     signal_path_map: PcbSignalPathRuleMap | None = policy.pcb_signal_path_rule_map
     keepout_map: PcbKeepoutMap | None = policy.pcb_keepout_map
     rf_antenna_map: PcbRfModuleAntennaMap | None = policy.pcb_rf_module_antenna_map
+    overrides = {item.rule_id: item for item in policy.rules}
+    inventory_override = overrides.get("pcb.schematic_component_inventory")
+    inventory_mode = "review" if inventory_override is None else inventory_override.mode
+    inventory_required = config.kind is ProjectKind.PCB and inventory_mode != "off"
     if (
         decoupling_map is None
         and protection_path_map is None
@@ -83,6 +90,7 @@ def scan_pcb_geometry(
         and signal_path_map is None
         and keepout_map is None
         and rf_antenna_map is None
+        and not inventory_required
     ):
         return (
             PcbDecouplingCoverageReport(),
@@ -93,8 +101,11 @@ def scan_pcb_geometry(
             PcbSignalPathRuleCoverageReport(),
             PcbKeepoutCoverageReport(),
             PcbRfModuleAntennaCoverageReport(),
+            PcbComponentInventoryCoverageReport(
+                status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
+                mode=inventory_mode if config.kind is ProjectKind.PCB else None,
+            ),
         )
-    overrides = {item.rule_id: item for item in policy.rules}
     decoupling_override = overrides.get("pcb.decoupling_proximity")
     decoupling_mode = "review" if decoupling_override is None else decoupling_override.mode
     protection_path_override = overrides.get("pcb.protection_entry_path")
@@ -125,6 +136,7 @@ def scan_pcb_geometry(
     signal_path_disabled = signal_path_map is None or signal_path_mode == "off"
     keepout_disabled = keepout_map is None or keepout_mode == "off"
     rf_antenna_disabled = rf_antenna_map is None or rf_antenna_mode == "off"
+    inventory_disabled = not inventory_required
     if (
         decoupling_disabled
         and protection_path_disabled
@@ -134,6 +146,7 @@ def scan_pcb_geometry(
         and signal_path_disabled
         and keepout_disabled
         and rf_antenna_disabled
+        and inventory_disabled
     ):
         return (
             PcbDecouplingCoverageReport(status="DISABLED", mode=decoupling_mode)
@@ -160,11 +173,19 @@ def scan_pcb_geometry(
             PcbRfModuleAntennaCoverageReport(status="DISABLED", mode=rf_antenna_mode)
             if rf_antenna_map is not None
             else PcbRfModuleAntennaCoverageReport(),
+            PcbComponentInventoryCoverageReport(
+                status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
+                mode=inventory_mode if config.kind is ProjectKind.PCB else None,
+            ),
         )
     board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
     board_path = repo_path(root, board_relative)
     output = root / "build" / "design-lint" / f"pcb-geometry-{uuid4().hex[:12]}"
     board_hash: str | None = None
+    inventory_report = PcbComponentInventoryCoverageReport(
+        status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
+        mode=inventory_mode if config.kind is ProjectKind.PCB else None,
+    )
     try:
         if config.kind is not ProjectKind.PCB:
             raise ValueError("PCB geometry requirements need an authoritative PCB project")
@@ -216,6 +237,18 @@ def scan_pcb_geometry(
             command_path=pcb_command_path,
             command_sha256=digest(pcb_command_path),
         )
+        if inventory_required:
+            inventory_report = evaluate_native_component_inventory_coverage(
+                coach.observed,
+                snapshot,
+                mode=inventory_mode,
+                netlist_sha256=coach.netlist_sha256,
+                board_path=evidence.board_path,
+                board_sha256=evidence.board_sha256,
+                snapshot_path=evidence.snapshot_relative_path,
+                snapshot_sha256=evidence.snapshot_sha256,
+                probe_sha256=evidence.probe_sha256,
+            )
         modes: dict[str, PcbRuleMode] = {
             "pcb.decoupling_proximity": decoupling_mode,
             "pcb.protection_entry_path": protection_path_mode,
@@ -225,6 +258,7 @@ def scan_pcb_geometry(
             "pcb.signal_path_rule_coverage": signal_path_mode,
             "pcb.keepout_intent_coverage": keepout_mode,
             "pcb.rf_module_antenna_keepout_coverage": rf_antenna_mode,
+            "pcb.schematic_component_inventory": inventory_mode,
         }
         (
             decoupling_report,
@@ -262,6 +296,7 @@ def scan_pcb_geometry(
             signal_path_report,
             keepout_report,
             rf_antenna_report,
+            inventory_report,
         )
     except (OSError, ValueError, TypeError) as exc:
         issue = f"Could not bind native PCB geometry evidence: {exc}"
@@ -384,6 +419,21 @@ def scan_pcb_geometry(
             if rf_antenna_map is not None
             else PcbRfModuleAntennaCoverageReport()
         )
+        inventory_report = (
+            PcbComponentInventoryCoverageReport(
+                status="BLOCKED",
+                mode=inventory_mode,
+                netlist_sha256=coach.netlist_sha256,
+                board_path=board_relative,
+                board_sha256=board_hash,
+                issue=issue,
+            )
+            if inventory_required
+            else PcbComponentInventoryCoverageReport(
+                status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
+                mode=inventory_mode if config.kind is ProjectKind.PCB else None,
+            )
+        )
     return (
         decoupling_report,
         protection_path_report,
@@ -393,4 +443,5 @@ def scan_pcb_geometry(
         signal_path_report,
         keepout_report,
         rf_antenna_report,
+        inventory_report,
     )

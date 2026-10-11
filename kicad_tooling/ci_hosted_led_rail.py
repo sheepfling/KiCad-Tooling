@@ -21,6 +21,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
 
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.led_heuristics import (
@@ -33,7 +34,6 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         ComponentRolePin,
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintReport,
     )
     from .validate import read_netlist
 

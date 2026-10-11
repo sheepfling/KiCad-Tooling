@@ -15,6 +15,7 @@ from .check_all import check_all
 from .ci import project_static_pipeline
 from .hwrepo.container_git import git_metadata_mounts
 from .hwrepo.contracts import read_model
+from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.diagnostic_journal import DiagnosticJournal
 from .hwrepo.diagnostics import diagnose_project, format_text
 from .hwrepo.discovery import load_config, load_registry
@@ -22,7 +23,6 @@ from .hwrepo.doctor import NativeRunner, doctor
 from .hwrepo.models import (
     CheckAllSummary,
     CommandEvidence,
-    DesignLintReport,
     DiagnosticReport,
     ProjectStaticPipelineReport,
     ProjectVerificationReport,

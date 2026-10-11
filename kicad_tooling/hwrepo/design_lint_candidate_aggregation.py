@@ -20,6 +20,9 @@ from .design_lint_component_peer_candidates import component_peer_candidates
 from .design_lint_connector_candidates import connector_candidates
 from .design_lint_control_candidates import control_candidates
 from .design_lint_mapped_coverage_candidates import mapped_coverage_candidates
+from .design_lint_pcb_component_inventory_candidates import (
+    pcb_component_inventory_candidates,
+)
 from .design_lint_pcb_measurement_candidates import pcb_measurement_coverage_candidates
 from .design_lint_pcb_requirement_candidates import pcb_requirement_coverage_candidates
 from .design_lint_peer_candidates import peer_candidates
@@ -49,6 +52,7 @@ from .models import (
     RegulatorFeedbackCoverageReport,
     Stm32PinMapCoverageReport,
 )
+from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -124,6 +128,7 @@ def candidates(
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
     peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None = None,
+    pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -140,6 +145,7 @@ def candidates(
         )
     )
     found.extend(return_distribution_candidates(connector_return_distribution))
+    found.extend(pcb_component_inventory_candidates(pcb_component_inventory_coverage))
     control_findings, control_pin_keys = control_candidates(
         observed,
         control_input_bias_coverage=control_input_bias_coverage,
