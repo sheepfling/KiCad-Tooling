@@ -57,11 +57,11 @@ def rs485_peer_reference_native_fixture_lane(
     }
     expected_source_hashes = {
         "reference-control": {
-            "schematic": "dfaa9efdcb84d62a94269a090fe0b76fdcfb979f7e3a287da4f42c2c5d5b1782",
+            "schematic": "f1dc5c95eb275ff3fde445f34889112351c24ff2490c940ef863a9cf90deebcf",
             "analysis": "96135ffa15a09b2529b0c383e3171d82ec33c271760413a819ca8c2e9cb956c4",
         },
         "reference-fault": {
-            "schematic": "b966a89ffba66e8960e137c29d4b33cedf2880a3d8755a9a8f5b5fb3d889a01a",
+            "schematic": "6db1623fc9384949324e86efcb324227a94c9d091637bc2ac9e4d9e02adbb0dc",
             "analysis": "8694c6ee028fdd3aca09eecb1c91e3c938ce35b62385672100d630ad7c2005bb",
         },
     }
@@ -194,7 +194,14 @@ def rs485_peer_reference_native_fixture_lane(
             erc = read_kicad_erc_report(erc_path)
             if erc.kicad_version != config.kicad_version:
                 raise ValueError(f"Native RS-485 {case} ERC version differs from selected KiCad")
-            errors = tuple(sorted(item.type for item in erc.violations if item.severity == "error"))
+            errors = tuple(
+                sorted(
+                    f"{item.type}: {item.description or 'no description'}; items="
+                    f"{tuple((detail.description, detail.x, detail.y) for detail in item.items)!r}"
+                    for item in erc.violations
+                    if item.severity == "error"
+                )
+            )
             if errors:
                 raise ValueError(f"Native RS-485 {case} fixture has ERC errors: {errors}")
             erc_rows = sorted(

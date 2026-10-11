@@ -426,6 +426,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "design_lint_spi_candidates.py",
         "design_lint_unconnected_interface_candidates.py",
         "design_lint_can_candidates.py",
+        "design_lint_rs485_candidates.py",
         "design_lint_signal_pair_candidates.py",
     )
 
@@ -461,6 +462,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "spi_bias_candidates",
         "unconnected_interface_candidates",
         "can_candidates",
+        "rs485_peer_reference_candidates",
         "complementary_signal_candidates",
         "named_differential_pair_candidates",
         "i2c_address_candidates",

@@ -5,9 +5,9 @@ project-board source or project-owned electrical expectations.
 
 | Fixture                       | Purpose                                                                                        | SHA-256                                                            |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `reference-control.kicad_sch` | One local transceiver and three mapped RS-485 connectors share one exact A/B pair and `GND_A`. | `dfaa9efdcb84d62a94269a090fe0b76fdcfb979f7e3a287da4f42c2c5d5b1782` |
+| `reference-control.kicad_sch` | One local transceiver and three mapped RS-485 connectors share one exact A/B pair and `GND_A`. | `f1dc5c95eb275ff3fde445f34889112351c24ff2490c940ef863a9cf90deebcf` |
 | `reference-control.json`      | Explicit synthetic bus, pair, transceiver, connector, and reference-pin map for the control.   | `96135ffa15a09b2529b0c383e3171d82ec33c271760413a819ca8c2e9cb956c4` |
-| `reference-fault.kicad_sch`   | The same pair with J3's mapped reference pin assigned to `GND_B`; U1 stays on `GND_A`.         | `b966a89ffba66e8960e137c29d4b33cedf2880a3d8755a9a8f5b5fb3d889a01a` |
+| `reference-fault.kicad_sch`   | The same pair with J3's mapped reference pin assigned to `GND_B`; U1 stays on `GND_A`.         | `6db1623fc9384949324e86efcb324227a94c9d091637bc2ac9e4d9e02adbb0dc` |
 | `reference-fault.json`        | The same authored map except J3.3 explicitly expects `GND_B`.                                  | `8694c6ee028fdd3aca09eecb1c91e3c938ce35b62385672100d630ad7c2005bb` |
 
 The deterministic review should recognize all four fitted endpoints on the
