@@ -1791,7 +1791,7 @@
         "tests.test_electrical_digital_peer_voltage_parity.test_digital_peer_voltage_requirements_match_cli_and_mcp",
         "tests.test_electrical_component_rating_parity.test_component_voltage_rating_requirement_matches_cli_and_mcp",
         "tests.test_electrical_component_rating_parity.test_component_power_rating_requirement_matches_cli_and_mcp",
-        "tests.test_electrical_parity.ElectricalParityTests.test_connector_contact_rating_requirement_matches_cli_and_mcp",
+        "tests.test_electrical_connector_rating_parity.test_connector_contact_rating_requirement_matches_cli_and_mcp",
         "tests.test_electrical_component_rating_parity.test_mosfet_state_stress_requirement_matches_cli_and_mcp",
         "tests.test_electrical_parity.ElectricalParityTests.test_rs485_contract_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_parity.ElectricalParityTests.test_power_connectivity_matches_cli_and_mcp_for_pass_and_fault",

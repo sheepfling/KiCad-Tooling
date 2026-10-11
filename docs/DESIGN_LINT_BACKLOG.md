@@ -492,7 +492,12 @@ and optional ecosystem adapters are `P3`.
   `component_lint` and `parity_lint`. Those pytest cases reuse the existing
   typed component builders and the shared source-bound harness; the electrical
   surface map now includes all three. The mixed legacy suite shrank by another
-  331 lines.
+  331 lines. Connector contact-current parity now lives in
+  `tests/test_electrical_connector_rating_parity.py`, selected with
+  `connector_lint` and `parity_lint`; it uses the same typed harness and the
+  shared contact-rating builders. The surface map follows the move, and the
+  mixed legacy suite shrank by another 119 lines. This changes test selection
+  only, not the lint predicate or its default disposition.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

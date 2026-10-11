@@ -55,15 +55,6 @@ from tests.electrical_parity_support import ElectricalParityHarness, contract_ne
 from tests.electrical_spi_support import spi_requirement
 from tests.electrical_usb_c_support import usb_c_requirement
 from tests.support import initialize_git
-from tests.test_connector_contact_ratings import (
-    contact as connector_contact,
-)
-from tests.test_connector_contact_ratings import (
-    native_netlist_xml as connector_contact_netlist_xml,
-)
-from tests.test_connector_contact_ratings import (
-    requirement as connector_contact_requirement,
-)
 from tests.test_contract_coach import fake_executable
 from tests.test_control_inputs import control_netlist, control_requirement
 from tests.test_electrical import (
@@ -809,116 +800,6 @@ class ElectricalParityTests(unittest.IsolatedAsyncioTestCase):
             unused_pin = checks["pin-connectivity/unused-pin"]
             self.assertEqual(unused_pin.status, "FAIL")
             self.assertIn("missing symbol pin inventory=['J4']", unused_pin.detail)
-
-    async def test_connector_contact_rating_requirement_matches_cli_and_mcp(self) -> None:
-        self.configured()
-        netlist_xml = connector_contact_netlist_xml()
-        summary_arg = "build/native/controller/summary.json"
-        for root in (self.root, self.mcp_root):
-            contract_path = root / ISLAND / "tests/electrical.json"
-            contract = read_model(contract_path, ElectricalAnalysisContract)
-            write_model(
-                contract_path,
-                contract.model_copy(
-                    update={"connector_contact_ratings": connector_contact_requirement()}
-                ),
-            )
-            native = root / "build/native/controller"
-            netlist = native / "netlist.xml"
-            netlist.write_text(netlist_xml, encoding="utf-8")
-            summary_path = native / "summary.json"
-            summary = read_model(summary_path, ValidationSummary)
-            write_model(
-                summary_path,
-                summary.model_copy(
-                    update={
-                        "artifacts_sha256": {
-                            **summary.artifacts_sha256,
-                            "netlist.xml": digest(netlist),
-                        }
-                    }
-                ),
-            )
-
-        process = await self.cli(
-            "kicad_tooling.electrical",
-            "--project",
-            PROJECT,
-            "--native-summary",
-            summary_arg,
-            "--output",
-            "build/electrical/connector-contact-rating-pass",
-        )
-        self.assertEqual(process.returncode, 0, process.stderr + process.stdout)
-        cli_pass = ElectricalAnalysisReport.model_validate_json(process.stdout)
-        async with Client(create_server(self.mcp_root, allow_checks=True), mode="legacy") as client:
-            result = await client.call_tool(
-                "analyze_electrical",
-                {
-                    "project_id": PROJECT,
-                    "view_id": "connector-contact-rating-pass",
-                    "native_summary": summary_arg,
-                },
-            )
-        self.assertFalse(result.is_error, result.content)
-        mcp_pass = ElectricalAnalysisReport.model_validate_json(
-            json.dumps(result.structured_content)
-        )
-        self.assertEqual(cli_pass.checks, mcp_pass.checks)
-        checks = {row.id: row for row in cli_pass.checks}
-        self.assertEqual(
-            checks[
-                "connector-contact-rating/host-connector/contact-vbus-contact/utilization"
-            ].status,
-            "PASS",
-        )
-
-        for root in (self.root, self.mcp_root):
-            contract_path = root / ISLAND / "tests/electrical.json"
-            contract = read_model(contract_path, ElectricalAnalysisContract)
-            write_model(
-                contract_path,
-                contract.model_copy(
-                    update={
-                        "connector_contact_ratings": connector_contact_requirement(
-                            contacts=(connector_contact(maximum_expected_current_a=1.61),)
-                        )
-                    }
-                ),
-            )
-
-        process = await self.cli(
-            "kicad_tooling.electrical",
-            "--project",
-            PROJECT,
-            "--native-summary",
-            summary_arg,
-            "--output",
-            "build/electrical/connector-contact-rating-fault",
-        )
-        self.assertEqual(process.returncode, 1, process.stderr + process.stdout)
-        cli_fault = ElectricalAnalysisReport.model_validate_json(process.stdout)
-        async with Client(create_server(self.mcp_root, allow_checks=True), mode="legacy") as client:
-            result = await client.call_tool(
-                "analyze_electrical",
-                {
-                    "project_id": PROJECT,
-                    "view_id": "connector-contact-rating-fault",
-                    "native_summary": summary_arg,
-                },
-            )
-        self.assertFalse(result.is_error, result.content)
-        mcp_fault = ElectricalAnalysisReport.model_validate_json(
-            json.dumps(result.structured_content)
-        )
-        self.assertEqual(cli_fault.checks, mcp_fault.checks)
-        fault_checks = {row.id: row for row in cli_fault.checks}
-        self.assertEqual(
-            fault_checks[
-                "connector-contact-rating/host-connector/contact-vbus-contact/utilization"
-            ].status,
-            "FAIL",
-        )
 
     async def test_rs485_contract_matches_cli_and_mcp_for_pass_and_fault(self) -> None:
         self.configured()
