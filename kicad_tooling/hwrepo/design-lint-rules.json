@@ -139,6 +139,7 @@
         "DNP connector instances are excluded, and the result does not establish PCB copper connectivity or off-board wiring."
       ],
       "fault_fixtures": [
+        "tests.test_connector_split_return_peers.test_four_peer_connectors_with_two_split_return_pins_are_reviewed",
         "tests.test_design_lint_connector_peer_pins.test_exact_symbol_peer_pin_divergence_reviews_conflicting_generic_assignments",
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_tie_uses_divergence_without_arbitrary_outlier",
         "tests.test_design_lint_connector_peer_pins.test_four_generic_peer_ports_review_one_pin_split_across_distinct_nets",
@@ -150,6 +151,7 @@
         "tests.test_connector_part_id_peers.test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle"
       ],
       "valid_control_fixtures": [
+        "tests.test_connector_split_return_peers.test_four_peer_connectors_with_common_return_pins_do_not_diverge",
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_divergence_requires_conflict_and_fitted_peers",
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_divergence_requires_missing_function_metadata",
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_common_assignment_is_a_control",

@@ -1325,7 +1325,11 @@ is not a reason by itself to expand its scope or change its default policy.
   with two assignments on each net; three distinct assigned nets; same-net
   control; DNP exclusion; fully named and partially named groups delegated to
   the existing function rule; explicit review/block/off and fingerprint-ignore
-  policy; CLI/MCP parity. All netlist inputs are synthetic.
+  policy; CLI/MCP parity. A focused synthetic regression also models four
+  nine-contact connectors with two split return-pin assignments and a shared-
+  return control that is quiet for this peer-divergence rule. Both split pins
+  produce `REVIEW`; the check does not decide that they must be bonded. All
+  netlist inputs are synthetic.
 - **Native evidence:** The tooling-owned
   [generic peer-pin fixture set](../tests/fixtures/design_lint/generic-peer-pin-assignment-native/README.md)
   exports absent-function and generic `Pin_N` faults and their controls twice
