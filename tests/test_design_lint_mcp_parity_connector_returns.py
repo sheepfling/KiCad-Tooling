@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 
 pytestmark = [
+    pytest.mark.connector_lint,
     pytest.mark.parity_lint,
+    pytest.mark.return_path_lint,
     pytest.mark.slow,
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
@@ -21,6 +23,7 @@ from kicad_tooling.hwrepo.contracts import (
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
+    ComponentContract,
     ComponentIdentity,
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
@@ -35,6 +38,8 @@ from kicad_tooling.hwrepo.models import (
     ProjectTestContract,
     ValidationSummary,
 )
+from tests.design_lint_fixtures import four_db9_return_domains
+from tests.electrical_parity_support import contract_netlist_xml
 from tests.mcp_parity_support import (
     McpParityHarness,
     run_mcp_parity,
@@ -42,6 +47,73 @@ from tests.mcp_parity_support import (
 
 
 class _DesignLintMcpParityConnectorReturnsCases(McpParityHarness):
+    async def _case_test_numbered_pwm_return_cli_mcp_parity(self) -> None:
+        native = self.native_evidence()
+        netlist_path = native.parent / "netlist.xml"
+        base = four_db9_return_domains()
+        observed = base.model_copy(
+            update={
+                "nets": {
+                    **{f"0V PWM {port}": (f"J{port}.7", f"J{port}.9") for port in range(1, 5)},
+                    "UNRELATED_A": ("R1.1",),
+                    "UNRELATED_B": ("R1.2",),
+                },
+                "components": {
+                    **{
+                        f"J{port}": ComponentContract(
+                            value="Synthetic DB9", footprint="Synthetic:DB9"
+                        )
+                        for port in range(1, 5)
+                    },
+                    "R1": ComponentContract(
+                        value="1k",
+                        footprint="Synthetic:R_0603",
+                        part_id="resistor-1k",
+                    ),
+                },
+                "component_symbols": {**base.component_symbols, "R1": "Device:R"},
+                "component_pin_numbers": {
+                    **base.component_pin_numbers,
+                    "R1": ("1", "2"),
+                },
+                "pin_functions": {
+                    **base.pin_functions,
+                    "R1.1": "1",
+                    "R1.2": "2",
+                },
+            }
+        )
+        netlist_path.write_text(contract_netlist_xml(observed), encoding="utf-8")
+        self.rehash_native_netlist(native)
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+            cli = await self.cli(
+                "kicad_tooling.design_lint",
+                DesignLintReport,
+                "--project",
+                "controller",
+                "--native-summary",
+                str(native),
+                expected_exit=1,
+            )
+            mcp = await self.call(
+                client,
+                "inspect_design_lint",
+                DesignLintReport,
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(self.root).as_posix(),
+                },
+            )
+
+        self.assertEqual(cli, mcp)
+        self.assertEqual(mcp.status, "REVIEW", mcp.issues)
+        finding = next(item for item in mcp.findings if item.rule_id == "net.numbered_returns")
+        self.assertEqual(
+            finding.evidence,
+            {f"0V PWM {port}": (f"J{port}.7", f"J{port}.9") for port in range(1, 5)},
+        )
+
     async def _case_test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity(self) -> None:
         """Compare a connector/capacitor-only net hint and local-driver control."""
         native = self.native_evidence()
@@ -279,6 +351,13 @@ def test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity() -> None:
     run_mcp_parity(
         _DesignLintMcpParityConnectorReturnsCases,
         "_case_test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity",
+    )
+
+
+def test_numbered_pwm_return_cli_mcp_parity() -> None:
+    run_mcp_parity(
+        _DesignLintMcpParityConnectorReturnsCases,
+        "_case_test_numbered_pwm_return_cli_mcp_parity",
     )
 
 

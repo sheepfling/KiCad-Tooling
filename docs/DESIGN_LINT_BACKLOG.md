@@ -1223,6 +1223,14 @@ is not a reason by itself to expand its scope or change its default policy.
   and exercises both repeated-function and numbered-return review candidates,
   the `COMMON_RETURN` control, and an explicit rule-off decision for
   intentional isolation. A
+  typed-netlist follow-up applies the same pin pattern to spaced
+  `0V PWM 1`–`0V PWM 4`, underscored `0V_PWM_1`–`0V_PWM_4`, and compact
+  `0V_PWM1`–`0V_PWM4` names; all three produce the numbered-return review. A
+  common `0V PWM` net is a quiet control. This covers the failure's naming
+  pattern without importing a board or adding a native-export claim. A
+  separate CLI/MCP parity case binds the spaced-name fixture to a synthetic
+  netlist digest and confirms both surfaces return the same review finding;
+  it verifies adapter parity, not native KiCad export behavior. A
   three-port case leaves one generic power contact unassigned while sibling
   contacts use separately numbered positive rails; both the pin-function
   mismatch and rail-name candidates identify it. No project board source is

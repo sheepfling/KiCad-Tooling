@@ -61,6 +61,46 @@ def test_four_db9_separately_named_return_domains_are_reviewed() -> None:
     assert "intentionally isolated" in return_finding.message
 
 
+@pytest.mark.parametrize(
+    "net_names",
+    [
+        pytest.param(tuple(f"0V PWM {port}" for port in range(1, 5)), id="spaced"),
+        pytest.param(tuple(f"0V_PWM_{port}" for port in range(1, 5)), id="underscored"),
+        pytest.param(tuple(f"0V_PWM{port}" for port in range(1, 5)), id="compact"),
+    ],
+)
+def test_four_db9_numbered_pwm_return_names_are_reviewed(
+    net_names: tuple[str, ...],
+) -> None:
+    isolated = four_db9_return_domains()
+    observed = isolated.model_copy(
+        update={
+            "nets": {
+                name: (f"J{port}.7", f"J{port}.9") for port, name in enumerate(net_names, start=1)
+            }
+        }
+    )
+
+    report = _source_bound_report(observed)
+    return_finding = _finding(report, NUMBERED_RETURN_RULE)
+
+    assert report.status == "REVIEW"
+    assert return_finding.evidence == {
+        name: (f"J{port}.7", f"J{port}.9") for port, name in enumerate(net_names, start=1)
+    }
+
+
+def test_four_db9_common_pwm_return_name_is_a_valid_control() -> None:
+    isolated = four_db9_return_domains(common=True)
+    pins = tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))
+    observed = isolated.model_copy(update={"nets": {"0V PWM": pins}})
+
+    report = _source_bound_report(observed)
+
+    assert report.status == "PASS"
+    assert NUMBERED_RETURN_RULE not in {item.rule_id for item in report.findings}
+
+
 def test_four_db9_common_return_control_clears_review_findings() -> None:
     report = evaluate(
         "synthetic-four-db9-common",

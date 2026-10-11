@@ -386,6 +386,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_i2c_parity.py",
             "tests/test_design_lint_serial_parity.py",
             "tests/test_electrical_connector_return_parity.py",
+            "tests/test_design_lint_mcp_parity_connector_returns.py",
             "tests/test_electrical_digital_peer_voltage_parity.py",
             "tests/test_electrical_component_rating_parity.py",
             "tests/test_electrical_connector_rating_parity.py",
