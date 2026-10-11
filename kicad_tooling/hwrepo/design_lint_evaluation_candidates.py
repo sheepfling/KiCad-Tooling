@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .can_peer_reference_coverage import can_peer_reference_coverage
 from .connector_coverage import (
     source_matched_connector_peer_assignment_groups,
     source_matched_connector_pin_evidence,
@@ -85,10 +86,12 @@ def scan_evaluation_candidates(
         serial_peer_reference_scan=peer_evidence.serial_peer_reference_scan,
         i2c_peer_reference_scan=peer_evidence.i2c_peer_reference_scan,
         spi_peer_reference_scan=peer_evidence.spi_peer_reference_scan,
+        can_peer_reference_scan=peer_evidence.can_peer_reference_scan,
         peer_pin_assignment_scans=peer_evidence.peer_pin_assignment_scans,
     )
     i2c_peer_coverage = None
     spi_peer_coverage = None
+    can_peer_coverage = None
     if coach.netlist_sha256 is not None:
         i2c_candidate_bus_keys = frozenset(
             (
@@ -116,6 +119,21 @@ def scan_evaluation_candidates(
             prepared.overrides,
             coach.netlist_sha256,
             candidate_clock_keys=spi_candidate_clock_keys,
+        )
+        can_candidate_bus_keys = frozenset(
+            (
+                item.evidence["CANH"][0].casefold(),
+                item.evidence["CANL"][0].casefold(),
+            )
+            for item in items
+            if item.rule_id == "bus.can_peer_reference_review"
+        )
+        can_peer_coverage = can_peer_reference_coverage(
+            peer_evidence.can_peer_reference_scan,
+            prepared.default_modes,
+            prepared.overrides,
+            coach.netlist_sha256,
+            candidate_bus_keys=can_candidate_bus_keys,
         )
     connector_peer_pin_coverage = (
         None
@@ -167,6 +185,7 @@ def scan_evaluation_candidates(
         serial_peer_reference_coverage=peer_evidence.serial_peer_reference_coverage,
         i2c_peer_reference_coverage=i2c_peer_coverage,
         spi_peer_reference_coverage=spi_peer_coverage,
+        can_peer_reference_coverage=can_peer_coverage,
         mapped_check_runs=mapped_topology_coverage_runs(
             policy, prepared.default_modes, items, coach.netlist_sha256
         ),

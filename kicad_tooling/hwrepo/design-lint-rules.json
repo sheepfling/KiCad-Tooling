@@ -1549,6 +1549,42 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_peer_heuristics.py#can_peer_assignment_divergences"
     },
     {
+      "rule_id": "bus.can_peer_reference_review",
+      "title": "CAN peers on one line pair use different explicit reference nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For fitted U/IC components with exactly one assigned native CANH and CANL pin on distinct nets, group endpoints by the exact exported line-net pair. Emit one REVIEW candidate when explicit passive or power_in return-like pin assignments span different nets; retain a known split when another endpoint reference assignment is incomplete.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A split reference is a review cue only; the check does not require a common return, establish a bond, or prove a physical return path.",
+        "Only native CANH/CAN_HIGH and CANL/CAN_LOW function aliases with one exact assigned CANH/CANL pair per fitted U/IC endpoint are supported. DNP, ambiguous, incomplete signal assignments, unrelated net pairs, and endpoints without explicit passive or power_in return pins do not provide positive evidence.",
+        "The rule does not infer CAN membership from component reference/value names, resolve isolated or translated segments, compare transceiver voltage compatibility, or establish PCB copper and off-board continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_peer_reference_review.test_shared_can_line_pair_with_split_references_emits_one_exact_review",
+        "tests.test_can_peer_reference_review.test_known_split_survives_an_incomplete_peer_and_keeps_coverage_visible"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_peer_reference_review.test_common_reference_distinct_can_buses_dnp_and_shield_are_controls"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_can_peer_reference_review.test_component_peer_duplicate_suppression_requires_every_reference_assignment",
+        "tests.test_can_peer_reference_review.test_rule_policy_ignore_and_mapping_order_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_peer_reference_scan.py#scan_can_peer_references",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_peer_reference_candidates",
+        "kicad_tooling/hwrepo/can_peer_reference_coverage.py#can_peer_reference_coverage"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_peer_reference_scan.py#scan_can_peer_references"
+    },
+    {
       "rule_id": "bus.complementary_pair_assignment",
       "title": "Complementary signal pair has incomplete net assignment",
       "status": "active",

@@ -15,6 +15,7 @@ from kicad_tooling.ci_hosted import (
     can_peer_assignment_fixture_lane,
     can_termination_native_fixture_lane,
 )
+from kicad_tooling.ci_hosted_can_peer_reference import can_peer_reference_native_fixture_lane
 from kicad_tooling.hwrepo.electrical import selected_config
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.support import reference_root
@@ -62,6 +63,11 @@ PEER_HASHES = {
         "60e310e7faae4cee9b8982b1d2abc5be3e8d6c48d815dd9808ae82e7578ecbc6",
         "337f52c298085c36f4e738f1ba486dceeea15cae32dea6f4094c362f159c8e26",
     ),
+}
+
+PEER_REFERENCE_HASHES = {
+    "reference-control": "ebd9bddaa27be15635614b76dbf47e1476d02ff75dc0bbf8d06bc69c2b987bcc",
+    "reference-fault": "12fc606e4631f4885f2bea51e53ab1ad2a81f4a1f621547a8b869cfa031dd48b",
 }
 
 
@@ -169,4 +175,51 @@ def test_native_can_peer_assignment_fault_and_control(
         assert result["repeatable"] == "true"
         assert result["source_sha256"] == source_hash
         assert result["normalized_netlist_sha256"] == netlist_hash
+        assert_native_fixture_mounts(native_project_root, result["command_receipt"])
+
+
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES") != "1",
+    reason="native CAN peer-reference fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize(("project", "version", "image"), PROJECT_TOOLCHAINS)
+def test_native_can_peer_reference_fault_and_control(
+    native_project_root: Path, project: str, version: str, image: str
+) -> None:
+    config = selected_config(native_project_root, project)
+    assert (config.kicad_version, config.image) == (version, image)
+    log = HostedLog(native_project_root, f"native-can-peer-reference-{project}")
+    can_peer_reference_native_fixture_lane(
+        native_project_root,
+        project=project,
+        image=config.image,
+        log=log,
+    )
+    results = _stage_results(log, "can-peer-reference-fixture/")
+    assert set(results) == {
+        "can-peer-reference-fixture/native-export",
+        "can-peer-reference-fixture/reference-control",
+        "can-peer-reference-fixture/reference-fault",
+    }
+    assert results["can-peer-reference-fixture/native-export"]["status"] == "PASS"
+    expected = {
+        "reference-control": ("COMMON_REFERENCE", "GND_A", "0"),
+        "reference-fault": ("SPLIT_REFERENCE_REVIEW", "GND_A,GND_B", "1"),
+    }
+    for case, (disposition, references, candidate_count) in expected.items():
+        result = results[f"can-peer-reference-fixture/{case}"]
+        assert result["status"] == "PASS"
+        assert result["kicad_version"] == version
+        assert result["canh_net"] == "NET_B"
+        assert result["canl_net"] == "NET_A"
+        assert result["references"] == references
+        assert result["disposition"] == disposition
+        assert result["lint_candidate_count"] == candidate_count
+        assert result["erc_errors"] == "0"
+        assert result["repeatable"] == "true"
+        assert result["source_sha256"] == PEER_REFERENCE_HASHES[case]
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+        assert result["normalized_erc_sha256"] == result["repeat_normalized_erc_sha256"]
+        assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_netlist_sha256"])
+        assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_erc_sha256"])
         assert_native_fixture_mounts(native_project_root, result["command_receipt"])

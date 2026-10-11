@@ -287,7 +287,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 89 rules are implemented with synthetic regression coverage.
+The following 90 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -347,6 +347,7 @@ Their actual recognition limits are documented in
 - `bus.can_unconnected_line`
 - `bus.can_missing_termination`
 - `bus.can_peer_assignment_divergence`
+- `bus.can_peer_reference_review`
 - `bus.complementary_pair_assignment`
 - `signal.named_pair_without_reviewed_requirement`
 - `net.numbered_returns`
@@ -1899,7 +1900,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 89 active rules; CI requires every new
+- **Status:** Baseline complete for all 90 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1908,7 +1909,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 89 covered, 0 not applicable, 0 unreviewed.
+  audit: 90 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -4966,6 +4967,58 @@ is not a reason by itself to expand its scope or change its default policy.
   acceptance. Keep default `REVIEW`; only a project-authored contract can
   establish that its peers must share, bond, or isolate their references.
 
+#### LINT-105 — CAN peers share a complete line pair but have split explicit references
+
+- **Status:** Implemented as `bus.can_peer_reference_review`, defaulting to
+  `REVIEW`, with source-netlist-bound applicability coverage, project mode and
+  exact-ignore lifecycle, synthetic fault/control and mapping-order tests, and
+  CLI/MCP parity coverage. Synthetic standalone schematics are registered for
+  repeated exports and ERC checks on the digest-pinned KiCad 10.0.0 and 10.0.5
+  images; hosted execution remains pending.
+- **Priority:** P1 interface-reference review. Existing CAN peer heuristics
+  identify incomplete or divergent CANH/CANL assignments, but do not flag a
+  complete shared CANH/CANL pair whose explicit passive or `power_in` return
+  pins use separate schematic nets. General component-peer checks may not
+  compare heterogeneous transceiver symbols.
+- **Predicate:** For fitted U/IC endpoints with exactly one uniquely assigned
+  native CANH and CANL pin on distinct nets, group only exact exported line-net
+  pairs. Emit one grouped review when recognized explicit return-pin
+  assignments span multiple native nets. Preserve known split evidence when a
+  peer's return assignment is incomplete. Suppress a complete-group prompt
+  only when existing component-peer return findings cover every explicit
+  return-pin assignment in that group.
+- **Boundary:** This is a deterministic review heuristic. It does not require
+  a common return, infer CAN membership from component names, resolve
+  translators or isolated segments, judge transceiver compatibility, or prove
+  board copper/off-board continuity. DNP, ambiguous or incomplete CAN pin
+  assignments, unrelated CAN line pairs, shield-only functions, and endpoints
+  without explicit return pins do not become positive split-reference
+  evidence. A project-authored contract remains the authority for common,
+  bonded, or isolated topology.
+- **Fixtures and verification:** Synthetic tests cover a split reference on
+  one complete CANH/CANL pair, common-reference and distinct-bus controls, DNP,
+  shield-only and incomplete endpoints, duplicate suppression, exact evidence,
+  deterministic ordering, policy/ignore behavior, and typed coverage. The CLI
+  and MCP parity case compares findings and coverage. Native fixtures check
+  the exact pin-to-net assignments, repeatable netlists and ERC reports, and
+  zero ERC errors on KiCad 10.0.0 and 10.0.5. See the
+  [fixture notes](../tests/fixtures/design_lint/can-peer-reference-native/README.md).
+- **Incremental value:** The expected pin-to-net maps differ only at U3's
+  reference assignment. U1/U2 share one symbol identity and have equal return/supply
+  assignments; U3 has a distinct symbol identity, so component-peer comparison
+  does not cover the split. All three peers share the same exact CANH/CANL
+  pair, and the existing CAN pair-divergence rule stays quiet. This proves a
+  distinct candidate class in the synthetic baseline, not field detection or
+  that the references should be common.
+- **Applicability evidence:** No additional project examples are needed to
+  implement or regression-test this bounded predicate. Public,
+  nonconfidential schematics could help estimate applicability but cannot
+  replace an independent reviewer disposition or reviewer-time measurement.
+  Those outcomes remain unmeasured.
+- **Next:** Require the registered hosted lane to pass on both exact KiCad
+  versions before claiming native acceptance. Keep default `REVIEW`; promote
+  only through an independently authored interface or grounding requirement.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -7800,7 +7853,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 89 active rules. Each entry has a deterministic predicate, evidence
+contains 90 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

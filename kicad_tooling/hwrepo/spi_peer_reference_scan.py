@@ -8,25 +8,15 @@ from typing import Literal
 
 from .digital_peer_voltage_analysis import INPUT_TYPES, OUTPUT_TYPES, canonical_spi_function
 from .models import NetlistContract
-from .return_nets import is_return_like_net_name
+from .peer_reference_assignments import (
+    PeerReferencePinAssignment as SpiReferencePinAssignment,
+)
+from .peer_reference_assignments import (
+    peer_reference_assignments,
+)
 
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-_NON_SIGNAL_REFERENCE = re.compile(
-    r"(?:^|[^A-Z0-9])(?:CHASSIS|SHIELD|FRAME|PE)(?:$|[^A-Z0-9])",
-    re.IGNORECASE,
-)
-_REFERENCE_PIN_TYPES = frozenset({"passive", "power_in"})
 _CLOCK_PIN_TYPES = OUTPUT_TYPES | INPUT_TYPES
-
-
-@dataclass(frozen=True)
-class SpiReferencePinAssignment:
-    """One explicitly assigned return-like pin from a complete native inventory."""
-
-    pin: str
-    function: str
-    electrical_type: str
-    net: str
 
 
 @dataclass(frozen=True)
@@ -72,48 +62,6 @@ class SpiPeerReferenceScan:
         )
 
 
-def _reference_assignments(
-    reference: str,
-    observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
-    pin_numbers: tuple[str, ...],
-) -> tuple[str | None, tuple[SpiReferencePinAssignment, ...]]:
-    if not pin_numbers:
-        return None, ()
-    functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
-    electrical_types = {
-        pin.casefold(): value.casefold() for pin, value in observed.pin_electrical_types.items()
-    }
-    assignments: list[SpiReferencePinAssignment] = []
-    for number in pin_numbers:
-        pin = f"{reference}.{number}"
-        pin_key = pin.casefold()
-        function = functions.get(pin_key)
-        electrical_type = electrical_types.get(pin_key)
-        if function is None or electrical_type is None:
-            return None, ()
-        if _NON_SIGNAL_REFERENCE.search(function) or not is_return_like_net_name(function):
-            continue
-        if electrical_type not in _REFERENCE_PIN_TYPES:
-            return None, ()
-        nets = pin_nets.get(pin_key, set())
-        if len(nets) != 1:
-            return None, ()
-        assignments.append(
-            SpiReferencePinAssignment(
-                pin=pin,
-                function=function,
-                electrical_type=electrical_type,
-                net=next(iter(nets)),
-            )
-        )
-    if not assignments:
-        return None, ()
-    reference_nets = {item.net.casefold() for item in assignments}
-    ordered = tuple(sorted(assignments, key=lambda item: item.pin.casefold()))
-    if len(reference_nets) != 1:
-        return None, ordered
-    return ordered[0].net, ordered
 
 
 def scan_spi_peer_references(observed: NetlistContract) -> SpiPeerReferenceScan:
@@ -163,7 +111,7 @@ def scan_spi_peer_references(observed: NetlistContract) -> SpiPeerReferenceScan:
         if len(clock_pins) != 1:
             continue
         clock_pin, clock_net, clock_type = clock_pins[0]
-        reference_net, reference_pins = _reference_assignments(
+        reference_evidence = peer_reference_assignments(
             reference,
             observed,
             pin_nets,
@@ -175,8 +123,8 @@ def scan_spi_peer_references(observed: NetlistContract) -> SpiPeerReferenceScan:
                 clock_pin=clock_pin,
                 clock_type=clock_type,
                 clock_net=clock_net,
-                reference_net=reference_net,
-                reference_pins=reference_pins,
+                reference_net=reference_evidence.net,
+                reference_pins=reference_evidence.pins,
             )
         )
 

@@ -9,6 +9,7 @@ from typing import Literal
 from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
 )
+from .can_peer_reference_models import CanPeerReferenceCoverageReport
 from .component_peer_pin_models import ComponentPeerPinRuleCoverage
 from .component_roles import ComponentRoleResolution
 from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
@@ -165,6 +166,7 @@ class DesignLintEvaluationCandidates:
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
     spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None
+    can_peer_reference_coverage: CanPeerReferenceCoverageReport | None
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...]
 
 
@@ -217,5 +219,6 @@ class DesignLintEvaluationReportInput:
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
     spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None
+    can_peer_reference_coverage: CanPeerReferenceCoverageReport | None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None

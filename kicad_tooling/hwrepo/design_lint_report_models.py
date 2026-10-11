@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from .can_peer_reference_models import CanPeerReferenceCoverageReport
 from .component_peer_pin_models import ComponentPeerPinRuleCoverage
 from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .control_input_models import ControlInputBiasHeuristicCoverage
@@ -70,6 +71,7 @@ class DesignLintReport(StrictModel):
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None = None
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None = None
     spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None = None
+    can_peer_reference_coverage: CanPeerReferenceCoverageReport | None = None
     connector_peer_pin_coverage: ConnectorPeerPinHeuristicCoverage | None = None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage = Field(
         default_factory=ControlInputBiasHeuristicCoverage
@@ -238,6 +240,13 @@ class DesignLintReport(StrictModel):
             expected_groups = sum(finding.rule_id == item.rule_id for finding in self.findings)
             if item.candidate_group_count != expected_groups:
                 raise ValueError("SPI peer-reference candidate counts must match report findings")
+        if self.can_peer_reference_coverage is not None:
+            item = self.can_peer_reference_coverage
+            if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:
+                raise ValueError("CAN peer-reference coverage must use this report's netlist")
+            expected_groups = sum(finding.rule_id == item.rule_id for finding in self.findings)
+            if item.candidate_group_count != expected_groups:
+                raise ValueError("CAN peer-reference candidate counts must match report findings")
         if self.connector_peer_pin_coverage is not None:
             item = self.connector_peer_pin_coverage
             if self.netlist_sha256 is not None and item.netlist_sha256 != self.netlist_sha256:

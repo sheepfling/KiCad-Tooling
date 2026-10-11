@@ -61,6 +61,7 @@ DesignLintRuleId = Literal[
     "bus.can_unconnected_line",
     "bus.can_missing_termination",
     "bus.can_peer_assignment_divergence",
+    "bus.can_peer_reference_review",
     "bus.complementary_pair_assignment",
     "mcu.stm32_cubemx_pin_map",
     "signal.named_pair_without_reviewed_requirement",

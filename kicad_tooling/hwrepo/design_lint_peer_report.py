@@ -273,4 +273,46 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                 f"{incomplete}: {entry.disposition}"
             )
         lines.append(f"    Native netlist SHA-256: {spi_peer_coverage.netlist_sha256}")
+    can_peer_coverage = report.can_peer_reference_coverage
+    if can_peer_coverage is not None:
+        lines.append("CAN peer-reference heuristic coverage:")
+        lines.append(
+            f"  {can_peer_coverage.rule_id}: {can_peer_coverage.status} "
+            f"(mode: {can_peer_coverage.mode}; "
+            f"{can_peer_coverage.recognized_endpoint_count} recognized endpoint(s), "
+            f"{can_peer_coverage.shared_can_bus_count} shared CAN bus group(s), "
+            f"{can_peer_coverage.common_reference_bus_count} common-reference, "
+            f"{can_peer_coverage.incomplete_reference_bus_count} incomplete, "
+            f"{can_peer_coverage.split_reference_bus_count} split-reference "
+            f"({can_peer_coverage.candidate_group_count} review candidate(s); "
+            f"{can_peer_coverage.component_peer_covered_bus_count} covered by component-peer "
+            "review)"
+        )
+        status_explanation = {
+            "NO_SHARED_CAN_BUSES": (
+                "Fewer than two supported fitted IC endpoints share one exact native CANH/CANL pair."
+            ),
+            "INCOMPLETE": (
+                "At least one shared CAN bus group lacks complete explicit reference-pin evidence."
+            ),
+            "EVALUATED": (
+                "Every discovered shared CAN bus group has complete explicit reference-pin "
+                "evidence; split references already covered by component-peer review are not "
+                "duplicated."
+            ),
+        }[can_peer_coverage.status]
+        lines.append(f"    Applicability: {status_explanation}")
+        for entry in can_peer_coverage.entries:
+            participants = ", ".join(entry.participants)
+            references = ", ".join(entry.reference_nets) or "none recognized"
+            incomplete = (
+                f"; incomplete: {', '.join(entry.incomplete_references)}"
+                if entry.incomplete_references
+                else ""
+            )
+            lines.append(
+                f"    CANH {entry.canh_net} / CANL {entry.canl_net}: {participants}; "
+                f"reference nets {references}{incomplete}: {entry.disposition}"
+            )
+        lines.append(f"    Native netlist SHA-256: {can_peer_coverage.netlist_sha256}")
     return lines

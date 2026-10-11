@@ -17,6 +17,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.serial_heuristics import serial_peer_checks
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
+from tests.can_peer_reference_support import can_peer_reference_netlist
 from tests.design_lint_fixtures import (
     can_peer_netlist,
     coach,
@@ -188,6 +189,25 @@ def spi_peer_reference_lint_report(*, split_references: bool) -> dict[str, objec
     return report.model_dump(mode="json")
 
 
+def can_peer_reference_lint_report(*, split_references: bool) -> dict[str, object]:
+    """Serialize a CAN line-pair split and common-reference control."""
+    references = (
+        {"U1": "GND_A", "U2": "GND_B"}
+        if split_references
+        else {"U1": "GND", "U2": "GND"}
+    )
+    observed = can_peer_reference_netlist(reference_nets=references)
+    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    report = evaluate(
+        "synthetic-can-peer-split-reference"
+        if split_references
+        else "synthetic-can-peer-common-reference",
+        coach(observed, netlist_sha256),
+        DesignLintPolicy(),
+    )
+    return report.model_dump(mode="json")
+
+
 def external_protection_lint_report(*, fault: bool) -> dict[str, object]:
     """Serialize a mapped protector net fault and its repaired control."""
     requirement = protection_map()
@@ -336,6 +356,8 @@ def report_cases() -> dict[str, object]:
         "i2c_peer_reference_control": i2c_peer_reference_lint_report(split_references=False),
         "spi_peer_reference_fault": spi_peer_reference_lint_report(split_references=True),
         "spi_peer_reference_control": spi_peer_reference_lint_report(split_references=False),
+        "can_peer_reference_fault": can_peer_reference_lint_report(split_references=True),
+        "can_peer_reference_control": can_peer_reference_lint_report(split_references=False),
         "external_protection_fault": external_protection_lint_report(fault=True),
         "external_protection_control": external_protection_lint_report(fault=False),
         "serial_label_unmapped": serial_label_lint_report(mapped=False),

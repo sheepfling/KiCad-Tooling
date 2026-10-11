@@ -205,6 +205,17 @@ def test_interface_reports_remain_deterministic() -> None:
     assert can_fault["netlist_sha256"] != can_control["netlist_sha256"], (
         "fault and control reports must bind their distinct typed-netlist inputs"
     )
+    can_reference_fault = reports["can_peer_reference_fault"]
+    can_reference_control = reports["can_peer_reference_control"]
+    assert "bus.can_peer_reference_review" in {
+        finding["rule_id"] for finding in can_reference_fault["findings"]
+    }
+    assert "bus.can_peer_reference_review" not in {
+        finding["rule_id"] for finding in can_reference_control["findings"]
+    }
+    assert can_reference_fault["can_peer_reference_coverage"]["candidate_group_count"] == 1
+    assert can_reference_control["can_peer_reference_coverage"]["candidate_group_count"] == 0
+    assert can_reference_fault["netlist_sha256"] != can_reference_control["netlist_sha256"]
     usb_path_fault = reports["usb_data_path_series_fault"]
     usb_path_control = reports["usb_data_path_series_control"]
     usb_direct_control = reports["usb_data_path_direct_topology_control"]

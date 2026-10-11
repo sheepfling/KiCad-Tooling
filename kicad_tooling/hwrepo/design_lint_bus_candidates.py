@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
+from .can_peer_reference_scan import CanPeerReferenceScan
 from .design_lint_can_candidates import can_candidates
 from .design_lint_i2c_candidates import (
     i2c_address_candidates,
@@ -37,6 +38,7 @@ def bus_candidates(
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None,
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
     spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
+    can_peer_reference_scan: CanPeerReferenceScan | None = None,
     component_peer_findings: tuple[Candidate, ...] = (),
     pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None,
 ) -> tuple[Candidate, ...]:
@@ -55,7 +57,7 @@ def bus_candidates(
         ),
         *spi_bias_candidates(observed),
         *unconnected_interface_candidates(observed),
-        *can_candidates(observed),
+        *can_candidates(observed, can_peer_reference_scan, component_peer_findings),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
         *i2c_address_candidates(i2c_address_coverage),

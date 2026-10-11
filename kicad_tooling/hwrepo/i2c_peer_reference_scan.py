@@ -8,24 +8,14 @@ from typing import Literal
 
 from .i2c_addressing import i2c_signal_role
 from .models import NetlistContract
-from .return_nets import is_return_like_net_name
+from .peer_reference_assignments import (
+    PeerReferencePinAssignment as I2cReferencePinAssignment,
+)
+from .peer_reference_assignments import (
+    peer_reference_assignments,
+)
 
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-_NON_SIGNAL_REFERENCE = re.compile(
-    r"(?:^|[^A-Z0-9])(?:CHASSIS|SHIELD|FRAME|PE)(?:$|[^A-Z0-9])",
-    re.IGNORECASE,
-)
-_REFERENCE_PIN_TYPES = frozenset({"passive", "power_in"})
-
-
-@dataclass(frozen=True)
-class I2cReferencePinAssignment:
-    """One exported return-like pin assignment used to identify an IC reference."""
-
-    pin: str
-    function: str
-    electrical_type: str
-    net: str
 
 
 @dataclass(frozen=True)
@@ -88,50 +78,6 @@ class I2cPeerReferenceScan:
         )
 
 
-def _endpoint_reference_assignments(
-    reference: str,
-    observed: NetlistContract,
-    pin_nets: dict[str, set[str]],
-    pin_numbers: tuple[str, ...],
-) -> tuple[str | None, tuple[I2cReferencePinAssignment, ...]]:
-    if not pin_numbers:
-        return None, ()
-    functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
-    electrical_types = {
-        pin.casefold(): value.casefold() for pin, value in observed.pin_electrical_types.items()
-    }
-    assignments: list[I2cReferencePinAssignment] = []
-    for number in pin_numbers:
-        pin = f"{reference}.{number}"
-        pin_key = pin.casefold()
-        function = functions.get(pin_key)
-        electrical_type = electrical_types.get(pin_key)
-        if function is None or electrical_type is None:
-            return None, ()
-        if _NON_SIGNAL_REFERENCE.search(function) or not is_return_like_net_name(function):
-            continue
-        if electrical_type not in _REFERENCE_PIN_TYPES:
-            return None, ()
-        nets = pin_nets.get(pin_key, set())
-        if len(nets) != 1:
-            return None, ()
-        assignments.append(
-            I2cReferencePinAssignment(
-                pin=pin,
-                function=function,
-                electrical_type=electrical_type,
-                net=next(iter(nets)),
-            )
-        )
-    if not assignments:
-        return None, ()
-    reference_nets = {item.net.casefold() for item in assignments}
-    ordered_assignments = tuple(sorted(assignments, key=lambda item: item.pin.casefold()))
-    if len(reference_nets) != 1:
-        return None, ordered_assignments
-    return assignments[0].net, ordered_assignments
-
-
 def scan_i2c_peer_references(
     observed: NetlistContract,
 ) -> I2cPeerReferenceScan:
@@ -175,7 +121,7 @@ def scan_i2c_peer_references(
         scl_pin, scl_net = signal_pins["SCL"][0]
         if sda_net.casefold() == scl_net.casefold():
             continue
-        reference_net, reference_pins = _endpoint_reference_assignments(
+        reference_evidence = peer_reference_assignments(
             reference,
             observed,
             pin_nets,
@@ -188,8 +134,8 @@ def scan_i2c_peer_references(
                 scl_pin=scl_pin,
                 sda_net=sda_net,
                 scl_net=scl_net,
-                reference_net=reference_net,
-                reference_pins=reference_pins,
+                reference_net=reference_evidence.net,
+                reference_pins=reference_evidence.pins,
             )
         )
 

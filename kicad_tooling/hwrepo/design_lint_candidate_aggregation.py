@@ -8,6 +8,7 @@ import json
 from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
 )
+from .can_peer_reference_scan import CanPeerReferenceScan
 from .component_peer_pin_scan import (
     ComponentPeerPinAssignmentScans,
     component_peer_pin_assignment_scans,
@@ -133,6 +134,7 @@ def candidates(
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
     spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
+    can_peer_reference_scan: CanPeerReferenceScan | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -186,6 +188,7 @@ def candidates(
             i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
             i2c_peer_reference_scan=i2c_peer_reference_scan,
             spi_peer_reference_scan=spi_peer_reference_scan,
+            can_peer_reference_scan=can_peer_reference_scan,
             component_peer_findings=component_peer_findings,
             pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
         )

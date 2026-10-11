@@ -6,6 +6,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from .can_peer_reference_coverage import can_peer_reference_coverage
+from .can_peer_reference_models import CanPeerReferenceCoverageReport
+from .can_peer_reference_scan import CanPeerReferenceScan, scan_can_peer_references
 from .component_peer_pin_scan import (
     ComponentPeerPinAssignmentScans,
     component_peer_pin_assignment_scans,
@@ -54,6 +57,8 @@ class PeerDesignLintEvidence:
     i2c_peer_reference_scan: I2cPeerReferenceScan
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
     spi_peer_reference_scan: SpiPeerReferenceScan
+    can_peer_reference_scan: CanPeerReferenceScan
+    can_peer_reference_coverage: CanPeerReferenceCoverageReport | None
 
 
 def scan_peer_design_lint_evidence(
@@ -128,11 +133,22 @@ def scan_peer_design_lint_evidence(
     )
     i2c_scan = scan_i2c_peer_references(observed)
     spi_scan = scan_spi_peer_references(observed)
+    can_scan = scan_can_peer_references(observed)
     i2c_coverage = (
         None
         if netlist_sha256 is None
         else i2c_peer_reference_coverage(
             i2c_scan,
+            default_modes,
+            overrides,
+            netlist_sha256,
+        )
+    )
+    can_coverage = (
+        None
+        if netlist_sha256 is None
+        else can_peer_reference_coverage(
+            can_scan,
             default_modes,
             overrides,
             netlist_sha256,
@@ -150,4 +166,6 @@ def scan_peer_design_lint_evidence(
         i2c_peer_reference_scan=i2c_scan,
         i2c_peer_reference_coverage=i2c_coverage,
         spi_peer_reference_scan=spi_scan,
+        can_peer_reference_scan=can_scan,
+        can_peer_reference_coverage=can_coverage,
     )
