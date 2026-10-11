@@ -1346,6 +1346,7 @@
         "tests.test_usb_data_paths.test_missing_required_resistor_is_new_coverage_beyond_named_pair_prompt",
         "tests.test_usb_data_paths.test_value_dnp_and_wrong_net_mutations_are_detected",
         "tests.test_usb_data_path_reference_bonds.test_bonded_reference_faults_report_exact_component_and_pin_evidence",
+        "tests.test_usb_inline_bonded_reference_paths.test_inline_reference_ferrite_faults_report_on_the_exact_map",
         "tests.test_usb_inline_component_paths.test_inline_component_faults_report_exact_pin_evidence",
         "tests.test_usb_inline_component_paths.test_missing_inline_component_reports_both_data_lines",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
@@ -1354,6 +1355,7 @@
         "tests.test_usb_data_paths.test_documented_integrated_phy_direct_path_is_a_valid_control",
         "tests.test_usb_data_paths.test_documented_external_phy_and_27r_pair_is_a_valid_control",
         "tests.test_usb_data_path_reference_bonds.test_exact_bonded_reference_path_is_a_valid_control",
+        "tests.test_usb_inline_bonded_reference_paths.test_exact_inline_protection_and_reference_ferrite_map_is_a_valid_control",
         "tests.test_usb_inline_component_paths.test_exact_multi_pin_protection_path_is_a_valid_control",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
       ],
@@ -2488,7 +2490,9 @@
         "tests.test_usb_peer_reference_boundaries.test_isolator_mediated_usb_path_is_not_traced_across_domains",
         "tests.test_usb_peer_reference_coverage.test_single_port_numbered_usb_data_functions_are_recognized",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
-        "tests.test_usb_data_path_reference_bonds.test_exact_bonded_reference_path_is_a_valid_control"
+        "tests.test_usb_data_path_reference_bonds.test_exact_bonded_reference_path_is_a_valid_control",
+        "tests.test_usb_inline_bonded_reference_paths.test_exact_inline_protection_and_reference_ferrite_map_is_a_valid_control",
+        "tests.test_usb_inline_bonded_reference_paths.test_inline_reference_ferrite_faults_report_on_the_exact_map"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

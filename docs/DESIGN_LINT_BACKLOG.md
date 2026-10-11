@@ -1423,6 +1423,13 @@ is not a reason by itself to expand its scope or change its default policy.
   new fault is distinct from the broad named-pair prompt
   because that baseline does not compare connector-to-PHY component topology.
   Fixtures contain no product design.
+  A typed exact-map composition control now combines a mapped multi-pin USB
+  protection device with a reference ferrite: the valid map stays quiet, while
+  absent, miswired, or DNP ferrites produce one reference-path mismatch. These
+  cases confirm that the exact path contract reports the bond fault without
+  duplicating a split-reference heuristic prompt. The combined shape remains
+  synthetic typed-netlist evidence; the native lane continues to validate the
+  inline-protection and bonded-reference cases separately.
   Native schematic netlist exports are now regression-tested with synthetic
   direct-PHY control, external-PHY 27R-per-line control, a source-hashed
   external-PHY control with a mapped 0R reference bond, and resistor-bypass
@@ -3773,7 +3780,9 @@ is not a reason by itself to expand its scope or change its default policy.
   side net. CLI and MCP return identical fault evidence. A source-hashed
   native 0R control is registered in the same KiCad 10.0.0/10.0.5 fixture lane;
   it was initially unrun locally and is included in the current native run
-  recorded below.
+  recorded below. A typed exact-map composition case also verifies that an
+  inline protection path with a reference ferrite remains outside the heuristic
+  review count, while LINT-049 reports missing, miswired, or DNP ferrite faults.
 - **Evidence history:**
 
   The predicate, tests, and native fixture sources were already in this branch
