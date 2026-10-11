@@ -664,8 +664,11 @@ have been connected.
   explicitly reviewed integrated-PHY disposition; a series path names one
   fitted resistor and a project-selected nominal range. A `bonded` reference
   policy also checks the exact mapped passive two-pin bond identity, value,
-  footprint, and pin-to-net assignments. It does not infer a universal
-  external-resistor rule from USB names or choose a value.
+  footprint, and pin-to-net assignments. A direct path may also declare exact
+  multi-pin protection shunts, including their D+/D− taps and every native pin's
+  expected net or explicit no-connect state. The map checks the complete native
+  pin inventory and rejects stale identity or pin assignments. It does not
+  infer a universal external-resistor rule from USB names or choose a value.
 - `bus.usb_peer_reference_review` prompts on a fitted USB 2.0 D+/D−
   connector-to-U/IC pair when each endpoint has explicit reference pins on one
   native net and those two reference nets differ. Each D line may be direct,
@@ -675,7 +678,10 @@ have been connected.
   and pin inventory, every pin's net or explicit no-connect state, and mapped
   signal-net membership. The review evidence includes the mapped component
   identity and pin assignments. Series-resistor evidence includes its reference,
-  symbol, value, pin numbers, and nets. Function aliases include
+  symbol, value, pin numbers, and nets. A direct path with a multi-pin
+  protection part is considered only when the map names its exact D+/D− taps
+  and every native pin assignment; otherwise that array remains unsupported.
+  Function aliases include
   hub names DPn/DMn, USB_DPn/USB_DMn, and USBnD+/USBnD-; numbered forms pair
   only when their port numbers match. An
   unnumbered connector pair can match a numbered hub port through its exact
@@ -695,8 +701,8 @@ have been connected.
   grounds must be tied. A current exact USB map with `reference_policy` set to
   `common_net`, `separate_nets`, or `bonded` suppresses the prompt only when it
   names all same-net data contacts and its
-  endpoint, direct, one-resistor, or exact mapped inline data-path, and reference-pin identities
-  match. Use
+  endpoint, direct, one-resistor, exact mapped inline data-path, or direct path
+  with exact mapped protection shunts, and reference-pin identities match. Use
   `connector_parallel_pins` and `phy_parallel_pins` alongside each line's
   primary pin to author additional same-net contacts. The same map checks
   those authored pin and net assignments and reports stale assignments
@@ -1463,6 +1469,45 @@ It cannot establish that the selected symbol pins match the device datasheet,
 that the component conducts or protects as intended, or that board copper
 completes the route. Multiple inline devices and multi-hop paths remain outside
 this contract.
+
+A multi-pin part that shunts D+/D− while leaving the connector-to-PHY path
+direct can be declared under `protection_shunts` instead of
+`inline_component`:
+
+```json
+{
+  "protection_shunts": [
+    {
+      "reference": "U6",
+      "expected_symbol": "Synthetic:UsbProtectionArray",
+      "expected_footprint": "Synthetic:DFN-6",
+      "data_pins": [
+        {"pin": "U6.1", "line": "D+", "net": "USB_DP"},
+        {"pin": "U6.3", "line": "D-", "net": "USB_DM"}
+      ],
+      "pins": [
+        {"pin": "U6.1", "disposition": "net", "net": "USB_DP"},
+        {"pin": "U6.2", "disposition": "net", "net": "BOARD_GND"},
+        {"pin": "U6.3", "disposition": "net", "net": "USB_DM"},
+        {"pin": "U6.4", "disposition": "net", "net": "BOARD_GND"},
+        {"pin": "U6.5", "disposition": "net", "net": "BOARD_GND"},
+        {"pin": "U6.6", "disposition": "unconnected"}
+      ]
+    }
+  ]
+}
+```
+
+This map makes the multi-pin part eligible for the USB peer-reference review
+only when its exact identity, full native pin inventory, every assignment, and
+data-net membership match. A changed or incomplete map fails closed. It can
+make a split-reference data path reviewable when no reference policy is
+authored; adding common_net, separate_nets, or bonded requires the separately
+reviewed endpoint reference-pin decision above. The lint does not decide that
+the protection ground must join either endpoint, and the schematic map does not
+prove the device's datasheet pinout, protection performance, or PCB copper
+continuity. This initial mapping supports direct paths only and cannot be
+combined with an inline-component path.
 
 For a direct D+/D− interface whose reference decision has also been reviewed,
 add the endpoint pin and net assignments to the same interface entry. Both

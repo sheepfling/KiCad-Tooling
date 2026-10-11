@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
 from .ci_hosted_usb_requirements import usb_data_path_requirements
 
 if TYPE_CHECKING:
@@ -73,6 +74,12 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         / "usb-data-path-native/inline-protection-reference-bond-fault.kicad_sch",
         "inline-component-peer-reference-bond-control": fixture_root
         / "usb-data-path-native/inline-protection-reference-bond-control.kicad_sch",
+        "protection-shunt-split-reference": fixture_root
+        / "usb-data-path-native/protection-shunt-split-reference.kicad_sch",
+        "protection-shunt-common-reference": fixture_root
+        / "usb-data-path-native/protection-shunt-common-reference.kicad_sch",
+        "protection-shunt-pin-fault": fixture_root
+        / "usb-data-path-native/protection-shunt-pin-fault.kicad_sch",
     }
     source_hashes = {case: digest(path) for case, path in cases.items()}
     scratch = Path(
@@ -206,6 +213,13 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                     raise ValueError(
                         "Native inline bonded-reference fault omitted exact missing-bond evidence"
                     )
+            elif case == "protection-shunt-pin-fault":
+                if tuple(item.line for item in mismatches) != ("protection_shunt",) or not any(
+                    "U6.2 is on USB_DP" in issue for issue in mismatches[0].issues
+                ):
+                    raise ValueError(
+                        "Native protection-shunt pin fault omitted exact U6.2 net evidence"
+                    )
             elif mismatches:
                 raise ValueError(
                     f"Native {case} USB control mismatched the authored topology: {mismatches}"
@@ -249,6 +263,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         "inline-component-control",
         "inline-component-peer-reference-bond-control",
         "inline-component-peer-reference-map-control",
+        "protection-shunt-common-reference",
     ):
         if any(
             item.rule_id == "bus.usb_data_path_mismatch"
@@ -317,6 +332,8 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         for item in reports[("external-series-reference-bond-control", "first")].findings
     ):
         raise ValueError("Native exact bonded-reference USB control produced a reference finding")
+
+    validate_usb_protection_shunt_fixture_reports(reports)
 
     series_peer_faults = tuple(
         item

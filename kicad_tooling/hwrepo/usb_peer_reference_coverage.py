@@ -13,6 +13,8 @@ from .usb_peer_reference_models import (
     UsbPeerDataInlineComponentCoverage,
     UsbPeerDataLineCoverage,
     UsbPeerDataPathCoverage,
+    UsbPeerDataProtectionShuntCoverage,
+    UsbPeerDataProtectionShuntPinCoverage,
     UsbPeerDataSeriesResistorCoverage,
     UsbPeerDataShuntBranchCoverage,
     UsbPeerEndpointGroupCoverage,
@@ -139,6 +141,23 @@ def _usb_peer_reference_path_entry(
                 link.negative_shunt_branches,
             ),
             port_group=link.port_group,
+            protection_shunts=tuple(
+                UsbPeerDataProtectionShuntCoverage(
+                    reference=shunt.reference,
+                    symbol=shunt.symbol,
+                    footprint=shunt.footprint,
+                    data_pins=tuple(
+                        UsbPeerDataProtectionShuntPinCoverage(
+                            line=pin.line,
+                            pin=pin.pin,
+                            net=pin.net,
+                        )
+                        for pin in shunt.data_pins
+                    ),
+                    pin_assignments=shunt.pin_assignments,
+                )
+                for shunt in link.protection_shunts
+            ),
         ),
     )
 

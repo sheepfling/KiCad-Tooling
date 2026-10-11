@@ -87,6 +87,44 @@ class UsbPeerDataInlineComponentCoverage(StrictModel):
         return self
 
 
+class UsbPeerDataProtectionShuntPinCoverage(StrictModel):
+    """Mapped data pin for one exact multi-pin USB protection component."""
+
+    line: Literal["D+", "D-"]
+    pin: Reference
+    net: NetName
+
+
+class UsbPeerDataProtectionShuntCoverage(StrictModel):
+    """Exact mapped identity and complete pin map for one data shunt."""
+
+    reference: Identifier
+    symbol: NonEmptyText
+    footprint: str
+    data_pins: Annotated[tuple[UsbPeerDataProtectionShuntPinCoverage, ...], Field(min_length=2)]
+    pin_assignments: Annotated[tuple[NonEmptyText, ...], Field(min_length=3)]
+
+    @model_validator(mode="after")
+    def assignments_match_component(self) -> UsbPeerDataProtectionShuntCoverage:
+        if (
+            {item.line for item in self.data_pins} != {"D+", "D-"}
+            or len(self.data_pins) != 2
+            or len({item.pin.casefold() for item in self.data_pins}) != 2
+            or any(
+                item.pin.rsplit(".", 1)[0].casefold() != self.reference.casefold()
+                for item in self.data_pins
+            )
+            or len({item.casefold() for item in self.pin_assignments}) != len(self.pin_assignments)
+            or any(
+                f"{item.pin}={item.net}".casefold()
+                not in {assignment.casefold() for assignment in self.pin_assignments}
+                for item in self.data_pins
+            )
+        ):
+            raise ValueError("USB protection-shunt evidence must match its exact pin map")
+        return self
+
+
 class UsbPeerDataLineCoverage(StrictModel):
     """Bounded source evidence for one positive or negative USB 2.0 data line."""
 
@@ -140,6 +178,32 @@ class UsbPeerDataPathCoverage(StrictModel):
     positive: UsbPeerDataLineCoverage
     negative: UsbPeerDataLineCoverage
     port_group: UsbDataPortGroup | None = None
+    protection_shunts: tuple[UsbPeerDataProtectionShuntCoverage, ...] = ()
+
+    @model_validator(mode="after")
+    def mapped_shunts_match_direct_lines(self) -> UsbPeerDataPathCoverage:
+        if self.protection_shunts and any(
+            line.series_resistor is not None or line.inline_component is not None
+            for line in (self.positive, self.negative)
+        ):
+            raise ValueError("USB mapped protection shunts require direct data-line evidence")
+        if len({item.reference.casefold() for item in self.protection_shunts}) != len(
+            self.protection_shunts
+        ):
+            raise ValueError("USB mapped protection-shunt evidence must be unique")
+        for shunt in self.protection_shunts:
+            for item in shunt.data_pins:
+                line = self.positive if item.line == "D+" else self.negative
+                if (
+                    item.pin.casefold()
+                    in {pin.casefold() for pin in (*line.connector_pins, *line.phy_pins)}
+                    or item.net.casefold() != line.connector_net.casefold()
+                    or item.net.casefold() != line.phy_net.casefold()
+                ):
+                    raise ValueError(
+                        "USB mapped protection-shunt data pins must match direct lines"
+                    )
+        return self
 
 
 class UsbPeerReferencePathCoverageEntry(StrictModel):

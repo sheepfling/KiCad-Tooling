@@ -1436,7 +1436,10 @@ is not a reason by itself to expand its scope or change its default policy.
   two-pin component, value, footprint, and pin-to-net assignments. The rule
   compares those decisions with native KiCad 10 XML netlist evidence. Direct
   paths support documented integrated PHYs; series paths support explicitly
-  selected external resistor networks. It uses the standard project `review`,
+  selected external resistor networks. A direct path can additionally map
+  exact multi-pin protection shunts by identity, one D+/D− tap per part, full
+  native pin inventory, and expected net or explicit no-connect assignments.
+  It uses the standard project `review`,
   `block`, `off`, and exact-ignore lifecycle.
 - **Boundary:** This rule checks a schematic decision after the project
   supplies it; it does not infer applicability, select resistor values, or
@@ -1444,7 +1447,8 @@ is not a reason by itself to expand its scope or change its default policy.
   component and netlist assignments but does not prove that the component
   conducts or that PCB copper joins the endpoints. The inline map checks exact
   schematic pin assignments, not datasheet pinout truth or protector behavior.
-  It supports one inline component and does not model multi-hop paths. The rule
+  It supports one inline component or direct-path protection shunts, but does
+  not combine these maps or model multi-hop paths. The rule
   does not prove placement, signal integrity, PCB copper continuity, USB-C
   roles, or USB 3.x lane design.
 - **Fixtures and validation:** Synthetic integrated-STM32 direct-path control;
@@ -1452,9 +1456,15 @@ is not a reason by itself to expand its scope or change its default policy.
   series-part faults; malformed contract topologies; exact six-pin inline-device
   control and required-ground-pin fault; malformed/partial inline maps; exact 0R reference-bond
   control and absent, wrong-identity, wrong-value, DNP, active-pin, and
-  wrong-net bond faults; rule override, disable, exact-ignore, CLI/MCP parity,
+  wrong-net bond faults; exact multi-pin protection-shunt pin-map control and
+  stale identity, population, inventory, net, and no-connect faults in
+  `tests/test_usb_data_path_protection_shunts.py`; rule override, disable,
+  exact-ignore, CLI/MCP parity,
   mapping-order stability, and independent-process hash-seed stability. The
-  new fault is distinct from the broad named-pair prompt
+  hash-pinned native lane now includes a split-reference protection-shunt
+  review, a common-reference control, and a miswired shunt-pin fault. Those
+  source fixtures are registered but have not run under native KiCad locally.
+  The exact topology check adds coverage beyond the broad named-pair prompt,
   because that baseline does not compare connector-to-PHY component topology.
   Fixtures contain no product design.
   A typed exact-map composition control now combines a mapped multi-pin USB
@@ -3818,10 +3828,13 @@ is not a reason by itself to expand its scope or change its default policy.
   endpoint's explicit reference pins
   must use one unambiguous native net; differing nets produce a review. Each
   complete fitted two-pin passive D-designated branch may connect a data net to
-  an endpoint reference. A multi-pin path is eligible only when LINT-049's
-  exact current project map validates both endpoints, the component identity
-  and complete native pin inventory, every pin's expected net or explicit
-  no-connect state, and all mapped signal-net members. Unmapped arrays and
+  an endpoint reference. A multi-pin inline path is eligible only when
+  LINT-049's exact current project map validates both endpoints, the inline
+  component identity and complete native pin inventory, every pin's expected
+  net or explicit no-connect state, and all mapped signal-net members. A
+  direct path with a multi-pin protection shunt is eligible only when an exact
+  current map validates each shunt identity, its D+/D− tap pins, every native
+  pin assignment, and complete data-net membership. Unmapped arrays and
   unexplained signal-net peers remain outside the predicate. Findings retain
   data functions, contact pins, resistor or inline-component assignments,
   accepted branch pins and partner nets, endpoint identities, and
@@ -3838,8 +3851,9 @@ is not a reason by itself to expand its scope or change its default policy.
   and ambiguous assignments are skipped. A source-reviewed USB map suppresses
   the prompt only when connector and PHY identities, direct, one-resistor, or
   exact mapped inline
-  data topology, complete reference pin inventories, and explicit reference
-  decision all match. For `bonded`, `bus.usb_data_path_mismatch` separately
+  data topology, any exact direct-path protection-shunt maps, complete
+  reference pin inventories, and explicit reference decision all match. For
+  `bonded`, `bus.usb_data_path_mismatch` separately
   reports a missing, DNP, identity-mismatched, or incorrectly assigned bond;
   this netlist comparison does not prove component conduction or PCB copper.
 - **Fixtures:** Synthetic split-reference fault and common-reference control,
@@ -3866,9 +3880,16 @@ is not a reason by itself to expand its scope or change its default policy.
   side net. CLI and MCP return identical fault evidence. A source-hashed
   native 0R control is registered in the same KiCad 10.0.0/10.0.5 fixture lane;
   it was initially unrun locally and is included in the current native run
-  recorded below. A typed exact-map composition case also verifies that an
-  inline protection path with a reference ferrite remains outside the heuristic
-  review count, while LINT-049 reports missing, miswired, or DNP ferrite faults.
+  recorded below. A typed exact-map composition case verifies that an inline
+  protection path with a reference ferrite remains outside the heuristic review
+  count, while LINT-049 reports missing, miswired, or DNP ferrite faults. A new
+  typed synthetic-netlist regression covers an exact six-pin protection shunt
+  map, split-reference review, common-reference control, stale identity and
+  pin/net/no-connect maps, an unmapped array, and unexplained extra peers.
+  Three source-hashed synthetic schematics for split-reference review,
+  common-reference control, and a wrong shunt-pin assignment are now registered
+  in the digest-pinned KiCad 10.0.0/10.0.5 lane. The native lane has not run in
+  the current local environment, so these fixtures provide no native result yet.
 - **Evidence history:**
 
   The predicate, tests, and native fixture sources were already in this branch

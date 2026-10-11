@@ -20,6 +20,9 @@ regression.
 | `inline-protection-split-reference.kicad_sch`          | Exact mapped inline path; connector return is USB_GND and PHY/protection return is BOARD_GND | One USB reference review unless separate references are explicitly mapped |
 | `inline-protection-reference-bond-fault.kicad_sch`     | Same inline path; the authored R3 0R bond is absent                                          | One exact USB reference-path finding naming the absent R3                 |
 | `inline-protection-reference-bond-control.kicad_sch`   | Same inline path; USB_GND and BOARD_GND use a mapped fitted 0R bond                          | No USB path or reference finding; exact bond map is required              |
+| `protection-shunt-split-reference.kicad_sch`           | Direct data pair with an exact six-pin shunt map; connector and PHY references differ        | One reference review with the shunt's complete pin-map evidence           |
+| `protection-shunt-common-reference.kicad_sch`          | Same shunt with an explicit common reference policy                                          | No USB path or reference finding                                          |
+| `protection-shunt-pin-fault.kicad_sch`                 | Shunt pin U6.2 is incorrectly assigned to USB_DP                                             | One exact mapped shunt-pin finding; no duplicate peer review              |
 
 SHA-256 hashes of the version-controlled schematic inputs:
 
@@ -35,6 +38,9 @@ SHA-256 hashes of the version-controlled schematic inputs:
 | `inline-protection-split-reference.kicad_sch`          | `457f1046ebef0e0d7f65aeb55b9439eeeb2449bfca776412d5edbcfc3ef9702e` |
 | `inline-protection-reference-bond-fault.kicad_sch`     | `716852ab9d4d72ea4a76eaded2b78645014eb9f38a660f7fe61b91925546c057` |
 | `inline-protection-reference-bond-control.kicad_sch`   | `9fe5743dd58a6e486888d2541b21f7a3e8388607d8a6e3b4fb192edfd8d8fb2f` |
+| `protection-shunt-split-reference.kicad_sch`           | `315b0318669d9cadeb28fcfe2ec549100f9ac5c10555e3828619e379770d287b` |
+| `protection-shunt-common-reference.kicad_sch`          | `0d2d087d73bc68cae85b2446cf2f8432ed07296d999fd4a588d53a7470b43ec5` |
+| `protection-shunt-pin-fault.kicad_sch`                 | `27a95acc910f2b379a3c1158c0dcb3bf7ca1faf644564d6d8b7811433838cc61` |
 
 The native regression runs twice with each of these digest-pinned images:
 
@@ -94,6 +100,16 @@ omits R3 and must produce one exact USB reference-path finding naming the
 missing bond, without a duplicate peer-reference prompt. This tests the
 project-authored bond requirement alongside the inline path; it still proves
 schematic net assignments only, not component conduction or PCB copper.
+
+The protection-shunt cases use a synthetic six-pin part with D+ and D− taps
+on U6.1 and U6.3, three explicitly mapped board-reference pins, and U6.6
+explicitly unconnected. The split-reference and common-reference variants
+exercise LINT-086's review and control paths while LINT-049 validates the
+complete component identity and pin map. The pin-fault variant moves U6.2 onto
+USB_DP and checks that LINT-049 reports that exact mismatch without a duplicate
+peer-reference finding. These source fixtures are registered in the
+digest-pinned native lane; exact KiCad execution has not been performed in the
+current local environment.
 
 This is source-to-netlist regression evidence only. The lane does not run ERC,
 DRC, PCB copper continuity, component placement, signal-integrity analysis,

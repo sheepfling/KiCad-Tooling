@@ -123,6 +123,16 @@ def usb_peer_reference_candidates(
                 f"{branch.reference_pin}={branch.reference_net}"
                 for branch in peer.data_link.negative_shunt_branches
             )
+        if peer.data_link.protection_shunts:
+            evidence["USB_mapped_protection_shunts"] = tuple(
+                f"{item.reference} ({item.symbol}; {item.footprint})"
+                for item in peer.data_link.protection_shunts
+            )
+            evidence["USB_mapped_protection_shunt_pin_assignments"] = tuple(
+                assignment
+                for item in peer.data_link.protection_shunts
+                for assignment in item.pin_assignments
+            )
         if peer.data_link.positive_series_resistor is not None:
             resistor = peer.data_link.positive_series_resistor
             evidence["USB_D+_series_resistor"] = (

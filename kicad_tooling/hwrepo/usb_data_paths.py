@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import TypeVar
 
 from .bus_signal_pairs import (
@@ -23,40 +22,11 @@ from .usb_data_path_models import (
     UsbDataPathLineRequirement,
     UsbDataPathMap,
 )
+from .usb_data_path_protection_shunts import protection_shunt_mismatches
+from .usb_data_path_types import UsbDataPathMismatch
 from .usb_peer_endpoint_analysis import usb_endpoint_reference_pins
 
 _Value = TypeVar("_Value")
-
-
-@dataclass(frozen=True)
-class UsbDataPathMismatch:
-    interface_id: str
-    basis: str
-    line: str
-    connector_reference: str
-    connector_symbol: str
-    connector_footprint: str
-    connector_pin: str
-    connector_net: str
-    phy_reference: str
-    phy_symbol: str
-    phy_footprint: str
-    phy_pin: str
-    phy_net: str
-    expected_topology: str
-    series_resistor_reference: str | None
-    series_resistor_symbol: str | None
-    series_resistor_footprint: str | None
-    series_resistance_range_ohms: tuple[float, float] | None
-    issues: tuple[str, ...]
-    reference_policy: str | None = None
-    reference_bond_reference: str | None = None
-    reference_bond_identity: str | None = None
-    reference_bond_side_a: str | None = None
-    reference_bond_side_b: str | None = None
-    inline_component_reference: str | None = None
-    inline_component_identity: str | None = None
-    inline_component_pin_assignments: tuple[str, ...] = ()
 
 
 def _lookup(mapping: Mapping[str, _Value], key: str) -> _Value | None:
@@ -290,6 +260,7 @@ def usb_data_path_mismatches(
     """Compare project-selected USB paths with source-bound native pin/net evidence."""
     mismatches: list[UsbDataPathMismatch] = []
     for interface in path_map.interfaces:
+        mismatches.extend(protection_shunt_mismatches(interface, observed))
         reference_issues = _reference_issues(observed, interface)
         inline_check = (
             None

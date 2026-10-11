@@ -55,6 +55,9 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "inline-component-peer-reference-map-control": "457f1046ebef0e0d7f65aeb55b9439eeeb2449bfca776412d5edbcfc3ef9702e",
         "inline-component-peer-reference-bond-fault": "716852ab9d4d72ea4a76eaded2b78645014eb9f38a660f7fe61b91925546c057",
         "inline-component-peer-reference-bond-control": "9fe5743dd58a6e486888d2541b21f7a3e8388607d8a6e3b4fb192edfd8d8fb2f",
+        "protection-shunt-split-reference": "315b0318669d9cadeb28fcfe2ec549100f9ac5c10555e3828619e379770d287b",
+        "protection-shunt-common-reference": "0d2d087d73bc68cae85b2446cf2f8432ed07296d999fd4a588d53a7470b43ec5",
+        "protection-shunt-pin-fault": "27a95acc910f2b379a3c1158c0dcb3bf7ca1faf644564d6d8b7811433838cc61",
     }
     root = hosted_reference_root
     config = selected_config(root, project)
@@ -87,6 +90,9 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/inline-component-peer-reference-map-control",
         "usb-data-path-fixture/inline-component-peer-reference-bond-fault",
         "usb-data-path-fixture/inline-component-peer-reference-bond-control",
+        "usb-data-path-fixture/protection-shunt-split-reference",
+        "usb-data-path-fixture/protection-shunt-common-reference",
+        "usb-data-path-fixture/protection-shunt-pin-fault",
     }
     for case in (
         "integrated-direct",
@@ -94,6 +100,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "external-series-reference-bond-control",
         "inline-component-control",
         "inline-component-peer-reference-bond-control",
+        "protection-shunt-common-reference",
     ):
         result = results[f"usb-data-path-fixture/{case}"]
         assert result["status"] == "PASS"
@@ -138,6 +145,24 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     assert inline_peer_bond_control["status"] == "PASS"
     assert inline_peer_bond_control["usb_path_findings"] == "none"
     assert inline_peer_bond_control["usb_reference_findings"] == "none"
+    shunt_split = results["usb-data-path-fixture/protection-shunt-split-reference"]
+    assert shunt_split["status"] == "PASS"
+    assert shunt_split["lint_status"] == "REVIEW"
+    assert shunt_split["usb_path_findings"] == "none"
+    assert shunt_split["usb_reference_findings"] == (
+        "J1 / U1: USB reference-domain review (port 1)"
+    )
+    shunt_common = results["usb-data-path-fixture/protection-shunt-common-reference"]
+    assert shunt_common["status"] == "PASS"
+    assert shunt_common["usb_path_findings"] == "none"
+    assert shunt_common["usb_reference_findings"] == "none"
+    shunt_pin_fault = results["usb-data-path-fixture/protection-shunt-pin-fault"]
+    assert shunt_pin_fault["status"] == "PASS"
+    assert shunt_pin_fault["lint_status"] == "REVIEW"
+    assert shunt_pin_fault["usb_path_findings"] == (
+        "usb-protection-shunt-port-1: USB protection_shunt path"
+    )
+    assert shunt_pin_fault["usb_reference_findings"] == "none"
     inline_peer_bond_fault = results[
         "usb-data-path-fixture/inline-component-peer-reference-bond-fault"
     ]
@@ -189,6 +214,9 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "inline-component-peer-reference-map-control",
         "inline-component-peer-reference-bond-fault",
         "inline-component-peer-reference-bond-control",
+        "protection-shunt-split-reference",
+        "protection-shunt-common-reference",
+        "protection-shunt-pin-fault",
     ):
         result = results[f"usb-data-path-fixture/{case}"]
         assert result["kicad_version"] == version

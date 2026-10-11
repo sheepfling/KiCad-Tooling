@@ -129,6 +129,12 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                         f"({data_line.connector_net}) -> {', '.join(data_line.phy_pins)} "
                         f"({data_line.phy_net}){series_text}{shunt_text}"
                     )
+                for shunt in path.data_path.protection_shunts:
+                    assignments = ", ".join(shunt.pin_assignments)
+                    lines.append(
+                        f"        mapped protection shunt: {shunt.reference} "
+                        f"({shunt.symbol}; {shunt.footprint}) [{assignments}]"
+                    )
         if usb_peer_coverage.usb_data_path_map_sha256 is not None:
             lines.append(
                 f"    USB data-path map SHA-256: {usb_peer_coverage.usb_data_path_map_sha256}"

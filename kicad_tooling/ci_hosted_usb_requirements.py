@@ -5,10 +5,14 @@ from __future__ import annotations
 from typing import Literal
 
 from .hwrepo.reference_bond_models import ReferenceBondRequirement
+from .hwrepo.usb_data_path_component_models import (
+    UsbDataPathInlinePinRequirement,
+    UsbDataPathProtectionShuntDataPinRequirement,
+    UsbDataPathProtectionShuntRequirement,
+)
 from .hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathInlineComponentRequirement,
-    UsbDataPathInlinePinRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
     UsbDataSeriesResistorRequirement,
@@ -298,6 +302,72 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         basis="Synthetic exact USB inline path with a mapped fitted reference bond",
         interfaces=(inline_peer_bond_control,),
     )
+
+    protection_shunt = UsbDataPathProtectionShuntRequirement(
+        reference="U6",
+        expected_symbol="Synthetic:UsbProtectionArray",
+        expected_footprint="Synthetic:DFN-6",
+        data_pins=(
+            UsbDataPathProtectionShuntDataPinRequirement(pin="U6.1", line="D+", net="USB_DP"),
+            UsbDataPathProtectionShuntDataPinRequirement(pin="U6.3", line="D-", net="USB_DM"),
+        ),
+        pins=(
+            UsbDataPathInlinePinRequirement(pin="U6.1", disposition="net", net="USB_DP"),
+            UsbDataPathInlinePinRequirement(pin="U6.2", disposition="net", net="BOARD_GND"),
+            UsbDataPathInlinePinRequirement(pin="U6.3", disposition="net", net="USB_DM"),
+            UsbDataPathInlinePinRequirement(pin="U6.4", disposition="net", net="BOARD_GND"),
+            UsbDataPathInlinePinRequirement(pin="U6.5", disposition="net", net="BOARD_GND"),
+            UsbDataPathInlinePinRequirement(pin="U6.6", disposition="unconnected"),
+        ),
+    )
+
+    def protection_shunt_map(*, common_reference: bool) -> UsbDataPathMap:
+        return UsbDataPathMap(
+            basis="Synthetic exact USB protection-shunt pin map",
+            interfaces=(
+                UsbDataInterfaceRequirement(
+                    id="usb-protection-shunt-port-1",
+                    basis="Synthetic reviewed direct USB pair and protection shunt",
+                    connector_reference="J1",
+                    expected_connector_symbol="Connector:USB_A",
+                    expected_connector_footprint="Synthetic:USB-A",
+                    phy_reference="U1",
+                    expected_phy_symbol="Synthetic:UsbPhy",
+                    expected_phy_footprint="Synthetic:QFN",
+                    positive=UsbDataPathLineRequirement(
+                        line="D+",
+                        connector_pin="J1.1",
+                        phy_pin="U1.1",
+                        connector_net="USB_DP",
+                        phy_net="USB_DP",
+                        topology="direct",
+                    ),
+                    negative=UsbDataPathLineRequirement(
+                        line="D-",
+                        connector_pin="J1.2",
+                        phy_pin="U1.2",
+                        connector_net="USB_DM",
+                        phy_net="USB_DM",
+                        topology="direct",
+                    ),
+                    protection_shunts=(protection_shunt,),
+                    connector_reference_pins=(
+                        (UsbReferencePinRequirement(pin="J1.4", net="BOARD_GND"),)
+                        if common_reference
+                        else ()
+                    ),
+                    phy_reference_pins=(
+                        (UsbReferencePinRequirement(pin="U1.3", net="BOARD_GND"),)
+                        if common_reference
+                        else ()
+                    ),
+                    reference_policy="common_net" if common_reference else None,
+                ),
+            ),
+        )
+
+    protection_shunt_split_map = protection_shunt_map(common_reference=False)
+    protection_shunt_common_map = protection_shunt_map(common_reference=True)
     requirements = {
         "integrated-direct": direct_map,
         "external-series": series_map,
@@ -316,6 +386,9 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "inline-component-peer-reference-map-control": inline_component_peer_control_map,
         "inline-component-peer-reference-bond-fault": inline_component_peer_bond_control_map,
         "inline-component-peer-reference-bond-control": inline_component_peer_bond_control_map,
+        "protection-shunt-split-reference": protection_shunt_split_map,
+        "protection-shunt-common-reference": protection_shunt_common_map,
+        "protection-shunt-pin-fault": protection_shunt_split_map,
     }
 
     return requirements

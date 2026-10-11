@@ -20,9 +20,17 @@ def usb_data_path_candidates(
             found.append(
                 Candidate(
                     rule_id="bus.usb_data_path_mismatch",
-                    subject=f"{mismatch.interface_id}: USB {mismatch.line} path",
+                    subject=(
+                        f"{mismatch.interface_id}: USB protection shunt map"
+                        if mismatch.line == "protection_shunt"
+                        else f"{mismatch.interface_id}: USB {mismatch.line} path"
+                    ),
                     message=(
-                        "The connector-to-PHY USB reference pins or exact mapped bond differ "
+                        "The mapped multi-pin USB protection shunt differs "
+                        "from the project-authored component identity, complete pin inventory, "
+                        "or pin assignments. Review its symbol, footprint, population, and pins."
+                        if mismatch.line == "protection_shunt"
+                        else "The connector-to-PHY USB reference pins or exact mapped bond differ "
                         "from the project-authored reference policy. Review the pins, nets, and "
                         "bond component; the map records schematic intent but does not prove "
                         "component conduction or PCB continuity."
@@ -105,6 +113,13 @@ def usb_data_path_candidates(
                         ),
                         "inline_component_pin_assignments": (
                             mismatch.inline_component_pin_assignments or ("none",)
+                        ),
+                        "protection_shunt": (mismatch.protection_shunt_reference or "none",),
+                        "protection_shunt_identity": (
+                            mismatch.protection_shunt_identity or "none",
+                        ),
+                        "protection_shunt_pin_assignments": (
+                            mismatch.protection_shunt_pin_assignments or ("none",)
                         ),
                         "map_sha256": (map_sha256,),
                         "issues": mismatch.issues,

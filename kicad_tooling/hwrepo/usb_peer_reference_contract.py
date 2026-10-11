@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .usb_data_path_models import (
+    UsbDataInterfaceRequirement,
     UsbDataPathInlineComponentRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
@@ -84,6 +85,40 @@ def _mapped_line_matches(
     )
 
 
+def _mapped_protection_shunts_match(
+    interface: UsbDataInterfaceRequirement,
+    data_link: UsbPeerDataLink,
+) -> bool:
+    requirements = {item.reference.casefold(): item for item in interface.protection_shunts}
+    observed = {item.reference.casefold(): item for item in data_link.protection_shunts}
+    if requirements.keys() != observed.keys():
+        return False
+    for reference, requirement in requirements.items():
+        component = observed[reference]
+        expected_pins = {
+            (item.line, item.pin.casefold(), item.net.casefold()) for item in requirement.data_pins
+        }
+        actual_pins = {
+            (item.line, item.pin.casefold(), item.net.casefold()) for item in component.data_pins
+        }
+        expected_assignments = {
+            (
+                f"{item.pin}={item.net}"
+                if item.disposition == "net"
+                else f"{item.pin}=<unconnected>"
+            ).casefold()
+            for item in requirement.pins
+        }
+        if (
+            component.symbol != requirement.expected_symbol
+            or component.footprint != requirement.expected_footprint
+            or expected_pins != actual_pins
+            or expected_assignments != {item.casefold() for item in component.pin_assignments}
+        ):
+            return False
+    return True
+
+
 def usb_reference_map_matches(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
@@ -132,6 +167,7 @@ def usb_reference_map_matches(
                 interface.inline_component,
                 positive=False,
             )
+            or not _mapped_protection_shunts_match(interface, data_link)
         ):
             continue
         mapped_connector_references = {

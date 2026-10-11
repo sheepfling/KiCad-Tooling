@@ -106,7 +106,11 @@ USB_HOSTED_THEME_SUITES = (
     "test_hosted_usb_requirements.py",
     "test_usb_data_path_native_fixture_lane.py",
 )
-USB_INLINE_COMPONENT_THEME_SUITES = ("test_usb_inline_component_paths.py",)
+USB_INLINE_COMPONENT_THEME_SUITES = (
+    "test_usb_inline_component_paths.py",
+    "test_usb_data_path_protection_shunts.py",
+    "test_design_lint_mcp_parity_usb_protection_shunts.py",
+)
 POWER_PATH_HOSTED_THEME_SUITES = (
     "test_hosted_power_path_requirements.py",
     "test_power_path_fixture_lane.py",

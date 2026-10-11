@@ -17,6 +17,10 @@ from .model_primitives import (
     UsbDataPortGroup,
 )
 from .reference_bond_models import ReferenceBondRequirement
+from .usb_data_path_component_models import (
+    UsbDataPathInlinePinRequirement,
+    UsbDataPathProtectionShuntRequirement,
+)
 
 
 class UsbDataSeriesResistorRequirement(StrictModel):
@@ -32,24 +36,6 @@ class UsbDataSeriesResistorRequirement(StrictModel):
     def valid_resistance_range(self) -> UsbDataSeriesResistorRequirement:
         if self.maximum_ohms < self.minimum_ohms:
             raise ValueError("USB data series-resistor range is reversed")
-        return self
-
-
-class UsbDataPathInlinePinRequirement(StrictModel):
-    """Exact expected net or explicit no-connect state for one inline-device pin."""
-
-    pin: Reference
-    disposition: Literal["net", "unconnected"]
-    net: NetName | None = None
-
-    @model_validator(mode="after")
-    def disposition_matches_net(self) -> UsbDataPathInlinePinRequirement:
-        if "." not in self.pin:
-            raise ValueError("USB inline-component pins must use COMPONENT.PIN form")
-        if self.disposition == "net" and self.net is None:
-            raise ValueError("Connected USB inline-component pins need an expected net")
-        if self.disposition == "unconnected" and self.net is not None:
-            raise ValueError("Unconnected USB inline-component pins cannot declare a net")
         return self
 
 
@@ -171,6 +157,7 @@ class UsbDataInterfaceRequirement(StrictModel):
     positive: UsbDataPathLineRequirement
     negative: UsbDataPathLineRequirement
     inline_component: UsbDataPathInlineComponentRequirement | None = None
+    protection_shunts: tuple[UsbDataPathProtectionShuntRequirement, ...] = ()
     connector_reference_pins: tuple[UsbReferencePinRequirement, ...] = ()
     phy_reference_pins: tuple[UsbReferencePinRequirement, ...] = ()
     reference_policy: Literal["common_net", "bonded", "separate_nets"] | None = None
@@ -189,6 +176,14 @@ class UsbDataInterfaceRequirement(StrictModel):
             raise ValueError("USB inline-component data paths need an exact component map")
         if self.inline_component is not None and inline_lines != (True, True):
             raise ValueError("USB inline-component maps must cover both D+ and D- paths")
+        if self.inline_component is not None and self.protection_shunts:
+            raise ValueError(
+                "USB inline-component and protection-shunt maps cannot be combined in one interface"
+            )
+        if self.protection_shunts and any(
+            line.topology != "direct" for line in (self.positive, self.negative)
+        ):
+            raise ValueError("USB protection-shunt maps currently require direct data paths")
         if any(
             any(
                 not pin.casefold().startswith(f"{self.connector_reference}.".casefold())
@@ -307,6 +302,64 @@ class UsbDataInterfaceRequirement(StrictModel):
                         raise ValueError(
                             "USB inline data-path pin nets must match the line's endpoint nets"
                         )
+        if self.protection_shunts:
+            expected_data_nets = {
+                "D+": self.positive.connector_net.casefold(),
+                "D-": self.negative.connector_net.casefold(),
+            }
+            reserved_pins = {
+                pin.casefold()
+                for pin in (
+                    *self.positive.connector_pins,
+                    *self.positive.phy_pins,
+                    *self.negative.connector_pins,
+                    *self.negative.phy_pins,
+                    *(item.pin for item in self.connector_reference_pins),
+                    *(item.pin for item in self.phy_reference_pins),
+                )
+            }
+            series_references = {
+                line.series_resistor.reference.casefold()
+                for line in (self.positive, self.negative)
+                if line.series_resistor is not None
+            }
+            if self.reference_bond is not None:
+                reserved_pins.update(
+                    {
+                        self.reference_bond.side_a_pin.casefold(),
+                        self.reference_bond.side_b_pin.casefold(),
+                    }
+                )
+            shunt_references = [item.reference.casefold() for item in self.protection_shunts]
+            if len(set(shunt_references)) != len(shunt_references):
+                raise ValueError("USB protection-shunt references must be unique")
+            for shunt in self.protection_shunts:
+                if shunt.reference.casefold() in {
+                    self.connector_reference.casefold(),
+                    self.phy_reference.casefold(),
+                    *series_references,
+                    *(
+                        ()
+                        if self.reference_bond is None
+                        else (self.reference_bond.reference.casefold(),)
+                    ),
+                } or (
+                    self.inline_component is not None
+                    and shunt.reference.casefold() == self.inline_component.reference.casefold()
+                ):
+                    raise ValueError(
+                        "USB protection-shunt reference must be unique in the interface"
+                    )
+                shunt_pin_ids = {item.pin.casefold() for item in shunt.pins}
+                if reserved_pins & shunt_pin_ids:
+                    raise ValueError(
+                        "USB protection-shunt pins must be distinct from endpoint pins"
+                    )
+                for data_pin in shunt.data_pins:
+                    if data_pin.net.casefold() != expected_data_nets[data_pin.line]:
+                        raise ValueError(
+                            "USB protection-shunt data pin nets must match direct endpoint nets"
+                        )
         mapped_signal_and_reference_pins = {
             item.casefold()
             for item in (
@@ -411,4 +464,17 @@ class UsbDataPathMap(StrictModel):
         }
         if set(inline_references) & reference_bond_references:
             raise ValueError("USB inline components cannot also be mapped reference bonds")
+        protection_shunt_references = [
+            shunt.reference.casefold()
+            for item in self.interfaces
+            for shunt in item.protection_shunts
+        ]
+        if len(set(protection_shunt_references)) != len(protection_shunt_references):
+            raise ValueError("USB protection-shunt components must be unique across mapped paths")
+        if set(protection_shunt_references) & (
+            set(inline_references) | set(resistor_references) | reference_bond_references
+        ):
+            raise ValueError("USB protection shunts cannot also be mapped path components")
+        if set(protection_shunt_references) & endpoint_references:
+            raise ValueError("USB protection shunts cannot also be mapped endpoints")
         return self

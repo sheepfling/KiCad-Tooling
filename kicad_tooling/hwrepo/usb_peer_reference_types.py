@@ -48,6 +48,22 @@ class UsbPeerDataInlineComponent:
 
 
 @dataclass(frozen=True)
+class UsbPeerDataProtectionShuntPin:
+    line: Literal["D+", "D-"]
+    pin: str
+    net: str
+
+
+@dataclass(frozen=True)
+class UsbPeerDataProtectionShunt:
+    reference: str
+    symbol: str
+    footprint: str
+    data_pins: tuple[UsbPeerDataProtectionShuntPin, ...]
+    pin_assignments: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class UsbPeerDataLink:
     connector_positive_pin: str
     phy_positive_pin: str
@@ -67,6 +83,7 @@ class UsbPeerDataLink:
     negative_series_resistor: UsbPeerDataSeriesResistor | None = None
     positive_inline_component: UsbPeerDataInlineComponent | None = None
     negative_inline_component: UsbPeerDataInlineComponent | None = None
+    protection_shunts: tuple[UsbPeerDataProtectionShunt, ...] = ()
     port_group: str | None = None
 
 

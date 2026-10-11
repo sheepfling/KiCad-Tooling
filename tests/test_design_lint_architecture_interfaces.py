@@ -82,6 +82,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_endpoint_analysis.py",
     "usb_peer_path_analysis.py",
     "usb_peer_inline_path_analysis.py",
+    "usb_peer_protection_shunt_analysis.py",
     "usb_peer_reference_contract.py",
     "usb_peer_reference_scan.py",
 )
@@ -169,6 +170,10 @@ def test_usb_inline_component_coverage_model_stays_in_its_theme_owner() -> None:
 
     assert "UsbPeerDataInlineComponentCoverage" in owner_definitions
     assert not hasattr(shared_models, "UsbPeerDataInlineComponentCoverage")
+    assert "UsbPeerDataProtectionShuntCoverage" in owner_definitions
+    assert "UsbPeerDataProtectionShuntPinCoverage" in owner_definitions
+    assert not hasattr(shared_models, "UsbPeerDataProtectionShuntCoverage")
+    assert not hasattr(shared_models, "UsbPeerDataProtectionShuntPinCoverage")
 
 
 def test_bus_heuristics_compatibility_facade_stays_small() -> None:
@@ -225,6 +230,10 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
     assert rule.implementation_owner in rule.implementation_refs
     assert (
         "kicad_tooling/hwrepo/usb_peer_inline_path_analysis.py#mapped_inline_usb_data_link"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/usb_peer_protection_shunt_analysis.py#mapped_protection_shunt_usb_data_link"
         in rule.implementation_refs
     )
     assert references <= {*USB_PEER_ANALYSIS_MODULES, "design_lint_candidate_aggregation.py"}
