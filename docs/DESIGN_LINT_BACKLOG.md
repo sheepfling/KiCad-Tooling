@@ -472,6 +472,16 @@ and optional ecosystem adapters are `P3`.
   The legacy hosted test module is smaller; native execution still belongs to
   the digest-pinned package acceptance environment.
 
+- **LINT-102 — Compare schematic assignments with placed PCB footprint IDs.**
+  The source-bound inventory now reports both missing fitted placements and
+  exact `library:footprint` identity differences as review findings. A
+  tooling-owned native schematic/PCB fault-control pair pins the expected
+  assigned and placed IDs, while the existing mode and exact-ignore lifecycle
+  applies to both finding types. The rule does not infer pad-geometry
+  equivalence. The exact KiCad 10.0.0/10.0.5 lane is wired into tagged
+  acceptance; local native execution remains unavailable without `kicad-cli`
+  or a running Docker daemon.
+
 - **LINT-086 — Bound the USB split-reference prompt with applicability evidence.**
   The default-REVIEW rule has synthetic direct, series-resistor, USB-C,
   duplicated-contact, shunt, and multiport fault/control coverage. Its exact
@@ -4733,52 +4743,58 @@ is not a reason by itself to expand its scope or change its default policy.
   and reviewer time before claiming review value. Keep the predicate and
   default `REVIEW` unchanged while that evidence is absent.
 
-#### LINT-102 — Fitted schematic components missing from the native PCB
+#### LINT-102 — Schematic and native PCB component-inventory differences
 
 - **Status:** Implemented as the default-`REVIEW` rule
   `pcb.schematic_component_inventory`. It compares source-bound native
-  schematic and PCB evidence and emits an exact-fingerprint finding when a
+  schematic and PCB evidence and emits exact-fingerprint findings when a
   non-DNP, footprint-assigned schematic reference is absent from board
-  footprint inventory. Projects can select `review`, `block`, or `off`.
+  footprint inventory or its exact assigned footprint identity differs from
+  the placed identity. Projects can select `review`, `block`, or `off`.
 - **Priority:** P1 source consistency at the fabrication handoff.
 - **Predicate:** Compare case-insensitive component references from the
-  source-bound native schematic netlist and KiCad PCB snapshot schema 12. Emit
-  a review candidate only when a schematic component has a nonempty assigned
-  footprint, is not DNP, and has no matching native PCB footprint reference.
-- **Boundary:** This is a placement consistency prompt, not proof that every
-  schematic symbol belongs on the PCB. Off-board components with assigned
-  footprints may need a reviewed exact ignore. Empty-footprint symbols and
-  DNP components are outside the initial predicate. Do not report board-only
-  mechanical or fabrication footprints or compare component values: the
-  current PCB snapshot does not provide value evidence. Missing, stale, or
-  unsupported source snapshots are coverage gaps, never passes.
+  source-bound native schematic netlist and KiCad PCB snapshot schema 12. For
+  each non-DNP schematic component with a nonempty assigned footprint, report
+  a missing-placement candidate when no native board reference matches. When a
+  board footprint is present, report a second candidate if its exact
+  `library:footprint` identity differs from the schematic assignment.
+- **Boundary:** This is a placement and exact-name consistency prompt, not
+  proof that every schematic symbol belongs on the PCB or that different
+  footprint IDs have different pad geometry. Off-board components and approved
+  alternate footprints may need reviewed exact ignores. Empty-footprint
+  symbols, DNP components, board-only mechanical or fabrication footprints,
+  value differences, DNP disagreements, and pad equivalence are outside the
+  predicate. Missing, stale, or unsupported source snapshots are coverage
+  gaps, never passes.
 - **Policy and evidence:** Default `REVIEW`; allow project `review`/`block`/`off`
   and the existing exact-fingerprint ignore lifecycle. Bind each finding and
   quiet result to the native netlist digest, board digest, KiCad version, image,
   probe digest, and snapshot schema. Require exact source-bound CLI/MCP service
   parity and a pinned native regression on every supported KiCad version.
-- **Fixtures:** Synthetic fitted-part-absent fault and exact-board-footprint
-  control; DNP-absent and empty-footprint controls; deterministic inventory
-  ordering, `review`/`block`/`off`, exact-ignore staleness, unsupported schema,
-  changed receipt evidence, and CLI/MCP parity. The exact-version native lane
+- **Fixtures:** Synthetic fitted-part-absent fault, exact-footprint control,
+  and present-reference/different-footprint fault; DNP-absent and
+  empty-footprint controls; deterministic inventory ordering,
+  `review`/`block`/`off`, exact-ignore staleness, unsupported schema, changed
+  receipt evidence, and CLI/MCP parity. The exact-version native lane
   uses SHA-256-pinned tooling-owned schematic and PCB fixtures for KiCad 10.0.0
-  and 10.0.5. The native lane is added but was not executed in this workspace:
-  Docker's daemon is unavailable and no separate public `KICAD_TEMPLATE_ROOT`
-  is configured.
+  and 10.0.5, including a one-reference footprint-identity fault and exact
+  identity control. The native lane is added but was not executed in this
+  workspace: `kicad-cli` is absent, Docker's daemon is unavailable, and no
+  separate public `KICAD_TEMPLATE_ROOT` is configured.
 - **Cohort boundary:** The pinned [kicad-happy cross-validation source][happy-cross-analysis]
   also compares board-only references and schematic/PCB values using reference
   prefix exclusions. Those broader predicates are not adopted. This rule is
-  limited to a fitted schematic component with an explicit footprint
-  assignment missing from native board placement evidence.
+  limited to missing fitted placements and exact assigned-footprint identity
+  differences; it does not infer equivalence from names or compare values.
 - **Applicability evidence:** No additional project examples are needed to
   implement or test this predicate. Public examples with independent
   off-board dispositions could later estimate how often it prompts review;
   no dispositions or reviewer-time measurements have been collected, so no
   precision or review-value claim is made.
 - **Next:** Run the pinned native lane in the hosted environment before claiming
-  exact-version native acceptance. Keep the default at `REVIEW` until project
-  owners establish the expected off-board exception rate and the value of the
-  prompts.
+  exact-version native acceptance for the identity comparison. Keep the default
+  at `REVIEW`; project owners must confirm off-board and alternate-footprint
+  exceptions before elevating this comparison to a blocking contract.
 
 ### P2 — PCB geometry and schematic review assistance
 

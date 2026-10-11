@@ -7,17 +7,19 @@ from typing import Literal
 from .model_primitives import Digest, RepositoryPath
 from .models import NetlistContract
 from .pcb_component_inventory_models import (
+    PcbComponentInventoryComparison,
     PcbComponentInventoryCoverageReport,
+    PcbFootprintIdentityMismatch,
     PcbMissingFootprintPlacement,
 )
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 
-def missing_fitted_footprint_placements(
+def compare_fitted_schematic_pcb_inventory(
     netlist: NetlistContract,
     snapshot: PcbConnectivitySnapshot,
-) -> tuple[PcbMissingFootprintPlacement, ...]:
-    """Find fitted, footprint-assigned schematic parts absent from native PCB inventory."""
+) -> PcbComponentInventoryComparison:
+    """Compare fitted schematic footprint assignments with native PCB placements."""
     if snapshot.schema_version != "12":
         raise ValueError("PCB component inventory requires native footprint snapshot schema 12")
 
@@ -28,16 +30,50 @@ def missing_fitted_footprint_placements(
             raise ValueError("Native netlist has duplicate case-insensitive component references")
         schematic_references[key] = reference
 
-    board_references = {item.reference.casefold() for item in snapshot.footprints}
+    board_footprints: dict[str, str] = {}
+    for item in snapshot.footprints:
+        key = item.reference.casefold()
+        if key in board_footprints:
+            raise ValueError("Native PCB has duplicate case-insensitive footprint references")
+        board_footprints[key] = item.footprint
+
     dnp_references = {reference.casefold() for reference in netlist.dnp_components}
-    missing = [
-        PcbMissingFootprintPlacement(reference=reference, assigned_footprint=component.footprint)
-        for reference, component in netlist.components.items()
-        if component.footprint.strip()
-        and reference.casefold() not in dnp_references
-        and reference.casefold() not in board_references
-    ]
-    return tuple(sorted(missing, key=lambda item: item.reference.casefold()))
+    missing: list[PcbMissingFootprintPlacement] = []
+    mismatches: list[PcbFootprintIdentityMismatch] = []
+    for reference, component in netlist.components.items():
+        assigned_footprint = component.footprint.strip()
+        key = reference.casefold()
+        if not assigned_footprint or key in dnp_references:
+            continue
+        placed = board_footprints.get(key)
+        if placed is None:
+            missing.append(
+                PcbMissingFootprintPlacement(
+                    reference=reference,
+                    assigned_footprint=assigned_footprint,
+                )
+            )
+        elif assigned_footprint != placed.strip():
+            mismatches.append(
+                PcbFootprintIdentityMismatch(
+                    reference=reference,
+                    assigned_footprint=assigned_footprint,
+                    placed_footprint=placed,
+                )
+            )
+
+    return PcbComponentInventoryComparison(
+        missing_placements=tuple(sorted(missing, key=lambda item: item.reference.casefold())),
+        footprint_mismatches=tuple(sorted(mismatches, key=lambda item: item.reference.casefold())),
+    )
+
+
+def missing_fitted_footprint_placements(
+    netlist: NetlistContract,
+    snapshot: PcbConnectivitySnapshot,
+) -> tuple[PcbMissingFootprintPlacement, ...]:
+    """Compatibility view of fitted schematic parts absent from native PCB inventory."""
+    return compare_fitted_schematic_pcb_inventory(netlist, snapshot).missing_placements
 
 
 def evaluate_native_component_inventory_coverage(
@@ -57,7 +93,7 @@ def evaluate_native_component_inventory_coverage(
         return PcbComponentInventoryCoverageReport(status="DISABLED", mode=mode)
 
     issue: str | None = None
-    missing: tuple[PcbMissingFootprintPlacement, ...] = ()
+    comparison = PcbComponentInventoryComparison()
     if netlist is None:
         issue = "Source-bound native schematic netlist is unavailable"
     elif netlist_sha256 is None:
@@ -66,7 +102,7 @@ def evaluate_native_component_inventory_coverage(
         issue = "PCB component inventory needs native footprint snapshot schema 12"
     else:
         try:
-            missing = missing_fitted_footprint_placements(netlist, snapshot)
+            comparison = compare_fitted_schematic_pcb_inventory(netlist, snapshot)
         except ValueError as exc:
             issue = str(exc)
 
@@ -93,9 +129,10 @@ def evaluate_native_component_inventory_coverage(
         board_sha256=board_sha256,
         snapshot_path=snapshot_path,
         snapshot_sha256=snapshot_sha256,
-        snapshot_schema=snapshot.schema_version,
+        snapshot_schema="12",
         kicad_version=snapshot.kicad_version,
         image=snapshot.image,
         probe_sha256=probe_sha256,
-        missing_placements=missing,
+        missing_placements=comparison.missing_placements,
+        footprint_mismatches=comparison.footprint_mismatches,
     )

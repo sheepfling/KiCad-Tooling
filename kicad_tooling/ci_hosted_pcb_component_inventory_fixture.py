@@ -16,7 +16,7 @@ from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, ProjectKind
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .validate import read_netlist
 
@@ -92,7 +92,9 @@ def pcb_component_inventory_fixture_lane(
             for repeat in ("first", "repeat"):
                 netlist_path = context.scratch / f"{case}.{repeat}.netlist.xml"
                 netlist_command = runner.export(root, fixture_config, netlist_path)
-                write_model(context.scratch / f"{case}.{repeat}.netlist.command.json", netlist_command)
+                write_model(
+                    context.scratch / f"{case}.{repeat}.netlist.command.json", netlist_command
+                )
                 if netlist_command.returncode != 0 or netlist_command.error is not None:
                     raise ValueError(
                         f"Native {case} schematic export failed: "
@@ -119,8 +121,7 @@ def pcb_component_inventory_fixture_lane(
                     raise ValueError(f"Repeated native {case} component inventory evidence changed")
 
             if (
-                retained_netlist is None
-                or retained_snapshot is None
+                retained_snapshot is None
                 or retained_netlist_hash is None
                 or retained_snapshot_path is None
                 or retained_receipt is None
@@ -143,7 +144,7 @@ def pcb_component_inventory_fixture_lane(
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
                 project_id=f"native-component-inventory-{case}",
-                project_kind="pcb",
+                project_kind=ProjectKind.PCB,
                 selected_runner="container",
                 source_hashes={
                     schematic.relative_to(root).as_posix(): schematic_hash,
@@ -170,6 +171,7 @@ def pcb_component_inventory_fixture_lane(
                 item
                 for item in report.findings
                 if item.rule_id == "pcb.schematic_component_inventory"
+                and "schematic footprint absent from PCB" in item.subject
             )
             observed = tuple(item.subject.split(":", maxsplit=1)[0] for item in findings)
             if observed != expected:
@@ -199,3 +201,182 @@ def pcb_component_inventory_fixture_lane(
             error=str(exc),
         )
         raise HostedPcbFixtureFailure(str(exc)) from exc
+
+    identity_fixture_root = fixture_root / "component-inventory-footprint-identity"
+    identity_board_source = identity_fixture_root / "control.kicad_pcb"
+    identity_cases = {
+        "fault": identity_fixture_root / "fault.kicad_sch",
+        "control": identity_fixture_root / "control.kicad_sch",
+    }
+    identity_hashes = {
+        "fault": "3a66be0b39af5f2a065de3b10e9476a53838042bc4e87f8618e711b31ad59e2b",
+        "control": "3acf612f93c0f2f48c6b469928ab9366fc2374644966b9bf07087c8a4cd808f8",
+        "board": "500ba5a3fbaa36cec9d57cdd6a74f9b65cd03517ed37f11cd960de425c1d5522",
+    }
+    for case, schematic_source in identity_cases.items():
+        if digest(schematic_source) != identity_hashes[case]:
+            raise ValueError(f"Native {case} footprint identity schematic fixture digest changed")
+    if digest(identity_board_source) != identity_hashes["board"]:
+        raise ValueError("Native footprint identity PCB fixture digest changed")
+
+    expected_mismatches = {"fault": ("U1",), "control": ()}
+    identity_results: dict[str, DesignLintReport] = {}
+    identity_receipts: dict[str, str] = {}
+    identity_schematic_hashes: dict[str, str] = {}
+    identity_footprint_ids: dict[str, tuple[str, str]] = {}
+    try:
+        for case, schematic_source in identity_cases.items():
+            relative_project = context.scratch.relative_to(root) / f"identity-{case}.kicad_pro"
+            project_base = root / relative_project
+            schematic = project_base.with_suffix(".kicad_sch")
+            board = project_base.with_suffix(".kicad_pcb")
+            shutil.copyfile(schematic_source, schematic)
+            shutil.copyfile(identity_board_source, board)
+            fixture_config = config.model_copy(update={"project": relative_project.as_posix()})
+            schematic_hash = digest(schematic)
+            board_hash = digest(board)
+            identity_schematic_hashes[case] = schematic_hash
+
+            retained_netlist = None
+            retained_snapshot = None
+            retained_netlist_hash: str | None = None
+            retained_snapshot_path: Path | None = None
+            for repeat in ("first", "repeat"):
+                netlist_path = context.scratch / f"identity-{case}.{repeat}.netlist.xml"
+                command = runner.export(root, fixture_config, netlist_path)
+                write_model(
+                    context.scratch / f"identity-{case}.{repeat}.netlist.command.json",
+                    command,
+                )
+                if command.returncode != 0 or command.error is not None:
+                    raise ValueError(
+                        f"Native footprint identity {case} export failed: "
+                        f"{command.stderr or command.error}"
+                    )
+                observed_netlist = read_netlist(netlist_path)
+                receipt = context.scratch / f"identity-{case}.{repeat}.pcb-receipt"
+                observed_snapshot = capture_verified_pcb_snapshot(
+                    context,
+                    fixture_config,
+                    receipt,
+                    expected_board_sha256=board_hash,
+                    purpose=f"{case} footprint identity PCB",
+                )
+                if retained_netlist is None:
+                    retained_netlist = observed_netlist
+                    retained_snapshot = observed_snapshot
+                    retained_netlist_hash = digest(netlist_path)
+                    retained_snapshot_path = receipt / "snapshot.json"
+                    identity_receipts[case] = retained_snapshot_path.relative_to(root).as_posix()
+                elif observed_netlist != retained_netlist or observed_snapshot != retained_snapshot:
+                    raise ValueError(f"Repeated native footprint identity {case} evidence changed")
+
+            if (
+                retained_snapshot is None
+                or retained_netlist_hash is None
+                or retained_snapshot_path is None
+            ):
+                raise ValueError(f"Native footprint identity {case} evidence is unavailable")
+            if retained_snapshot.schema_version != "12":
+                raise ValueError("Native footprint identity comparison requires snapshot schema 12")
+            component = retained_netlist.components.get("U1")
+            placement = next(
+                (
+                    item
+                    for item in retained_snapshot.footprints
+                    if item.reference.casefold() == "u1"
+                ),
+                None,
+            )
+            if component is None or placement is None:
+                raise ValueError(
+                    "Native footprint identity fixture must contain schematic and board U1"
+                )
+            identity_footprint_ids[case] = (component.footprint, placement.footprint)
+            expected_footprint_ids = (
+                ("Synthetic:Wrong_Footprint", "Synthetic:Probe_Module")
+                if case == "fault"
+                else ("Synthetic:Probe_Module", "Synthetic:Probe_Module")
+            )
+            if identity_footprint_ids[case] != expected_footprint_ids:
+                raise ValueError(
+                    f"Native {case} schematic/PCB footprint identities changed: "
+                    f"{identity_footprint_ids[case]}"
+                )
+            inventory = evaluate_native_component_inventory_coverage(
+                retained_netlist,
+                retained_snapshot,
+                mode="review",
+                netlist_sha256=retained_netlist_hash,
+                board_path=board.relative_to(root).as_posix(),
+                board_sha256=board_hash,
+                snapshot_path=retained_snapshot_path.relative_to(root).as_posix(),
+                snapshot_sha256=digest(retained_snapshot_path),
+                probe_sha256=retained_snapshot.probe_sha256,
+            )
+            if inventory.status != "COMPLETE" or inventory.missing_placements:
+                raise ValueError(
+                    "Native footprint identity fixture has incomplete/missing inventory"
+                )
+            observed_mismatches = tuple(item.reference for item in inventory.footprint_mismatches)
+            if observed_mismatches != expected_mismatches[case]:
+                raise ValueError(
+                    f"Native {case} footprint identity mismatches changed: {observed_mismatches}"
+                )
+            coach = ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id=f"native-component-footprint-identity-{case}",
+                project_kind=ProjectKind.PCB,
+                selected_runner="container",
+                source_hashes={
+                    schematic.relative_to(root).as_posix(): schematic_hash,
+                    board.relative_to(root).as_posix(): board_hash,
+                },
+                netlist_sha256=retained_netlist_hash,
+                observed=retained_netlist,
+            )
+            identity_results[case] = evaluate(
+                coach.project_id,
+                coach,
+                DesignLintPolicy(),
+                pcb_component_inventory_coverage=inventory,
+            )
+
+        for case, expected in expected_mismatches.items():
+            actual = tuple(
+                finding.subject.split(":", maxsplit=1)[0]
+                for finding in identity_results[case].findings
+                if finding.rule_id == "pcb.schematic_component_inventory"
+                and "identities differ" in finding.subject
+            )
+            if actual != expected:
+                raise ValueError(f"Native {case} design-lint identity candidates changed: {actual}")
+    except Exception as exc:
+        log.event(
+            "pcb-component-inventory-fixture/footprint-identity",
+            "FAIL",
+            project=project,
+            kicad_version=config.kicad_version,
+            error=str(exc),
+        )
+        raise HostedPcbFixtureFailure(str(exc)) from exc
+
+    log.event(
+        "pcb-component-inventory-fixture/footprint-identity",
+        "PASS",
+        project=project,
+        kicad_version=config.kicad_version,
+        fault_mismatch_references=",".join(expected_mismatches["fault"]),
+        control_mismatch_references=",".join(expected_mismatches["control"]),
+        fault_assigned_footprint=identity_footprint_ids["fault"][0],
+        fault_placed_footprint=identity_footprint_ids["fault"][1],
+        control_assigned_footprint=identity_footprint_ids["control"][0],
+        control_placed_footprint=identity_footprint_ids["control"][1],
+        native_netlist_and_board_evidence="true",
+        repeated_evidence="stable",
+        fault_schematic_sha256=identity_schematic_hashes["fault"],
+        control_schematic_sha256=identity_schematic_hashes["control"],
+        board_sha256=digest(identity_board_source),
+        fault_receipt=identity_receipts["fault"],
+        control_receipt=identity_receipts["control"],
+    )

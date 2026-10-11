@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
 from kicad_tooling.hwrepo.design_lint_pcb_component_inventory_candidates import (
     pcb_component_inventory_candidates,
 )
+from kicad_tooling.hwrepo.design_lint_pcb_report import pcb_coverage_report_lines
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -23,11 +24,14 @@ from kicad_tooling.hwrepo.models import (
     PcbFootprintPlacementObservation,
 )
 from kicad_tooling.hwrepo.pcb_component_inventory import (
+    compare_fitted_schematic_pcb_inventory,
     evaluate_native_component_inventory_coverage,
     missing_fitted_footprint_placements,
 )
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
+    PcbFootprintIdentityMismatch,
+    PcbMissingFootprintPlacement,
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
@@ -59,7 +63,12 @@ def netlist(
 def snapshot(
     *references: str,
     schema_version: str = "12",
+    footprint_by_reference: dict[str, str] | None = None,
 ) -> PcbConnectivitySnapshot:
+    identity_by_reference = {
+        reference.casefold(): footprint
+        for reference, footprint in (footprint_by_reference or {}).items()
+    }
     return PcbConnectivitySnapshot(
         schema_version=schema_version,
         board_sha256=BOARD_SHA256,
@@ -79,7 +88,7 @@ def snapshot(
         footprints=tuple(
             PcbFootprintPlacementObservation(
                 reference=reference,
-                footprint="Synthetic:Footprint",
+                footprint=identity_by_reference.get(reference.casefold(), "Synthetic:Footprint"),
                 dnp=False,
                 position_nm=(0, 0),
                 orientation_microdegrees=0,
@@ -96,7 +105,7 @@ def complete_report(
     *,
     mode: str = "review",
 ) -> PcbComponentInventoryCoverageReport:
-    missing = missing_fitted_footprint_placements(observed, board)
+    comparison = compare_fitted_schematic_pcb_inventory(observed, board)
     return PcbComponentInventoryCoverageReport(
         status="COMPLETE",
         mode=mode,
@@ -109,7 +118,8 @@ def complete_report(
         kicad_version=board.kicad_version,
         image=board.image,
         probe_sha256=board.probe_sha256,
-        missing_placements=missing,
+        missing_placements=comparison.missing_placements,
+        footprint_mismatches=comparison.footprint_mismatches,
     )
 
 
@@ -197,16 +207,25 @@ def test_placed_reference_dnp_empty_assignment_and_board_extras_are_controls() -
         },
         dnp=("R1",),
     )
-    board = snapshot("U1", "U3", "H_MOUNT1")
+    board = snapshot(
+        "U1",
+        "U3",
+        "H_MOUNT1",
+        footprint_by_reference={
+            "U1": "Package_QFP:TQFP-48",
+            "U3": "Package_SO:SOIC-8",
+        },
+    )
 
     assert missing_fitted_footprint_placements(observed, board) == ()
     report = complete_report(observed, board)
     assert report.status == "COMPLETE"
     assert report.missing_placements == ()
+    assert report.footprint_mismatches == ()
     assert pcb_component_inventory_candidates(report) == ()
 
 
-def test_reference_and_inventory_order_do_not_change_missing_set() -> None:
+def test_reference_and_inventory_order_do_not_change_comparison() -> None:
     observed = netlist(
         components={
             "J2": "Connector:USB_B",
@@ -214,8 +233,18 @@ def test_reference_and_inventory_order_do_not_change_missing_set() -> None:
             "J1": "Connector:DB9",
         }
     )
-    first = missing_fitted_footprint_placements(observed, snapshot("J2"))
-    reordered = missing_fitted_footprint_placements(
+    first = compare_fitted_schematic_pcb_inventory(
+        observed,
+        snapshot(
+            "J2",
+            "U1",
+            footprint_by_reference={
+                "J2": "Connector:USB_B",
+                "U1": "Package_SO:SOIC-8",
+            },
+        ),
+    )
+    reordered = compare_fitted_schematic_pcb_inventory(
         netlist(
             components={
                 "J1": "Connector:DB9",
@@ -223,11 +252,97 @@ def test_reference_and_inventory_order_do_not_change_missing_set() -> None:
                 "J2": "Connector:USB_B",
             }
         ),
-        snapshot("j2"),
+        snapshot(
+            "u1",
+            "j2",
+            footprint_by_reference={
+                "u1": "Package_SO:SOIC-8",
+                "j2": "Connector:USB_B",
+            },
+        ),
     )
 
-    assert tuple(item.reference for item in first) == ("J1", "U1")
+    assert tuple(item.reference for item in first.missing_placements) == ("J1",)
+    assert tuple(item.reference for item in first.footprint_mismatches) == ("U1",)
     assert reordered == first
+
+
+def test_present_component_with_different_footprint_identity_is_reviewable_and_configurable() -> (
+    None
+):
+    observed = netlist(components={"U1": "Package_SO:SOIC-8"})
+    coverage = complete_report(
+        observed,
+        snapshot("u1", footprint_by_reference={"U1": "Package_TSSOP:TSSOP-8"}),
+    )
+
+    (candidate,) = pcb_component_inventory_candidates(coverage)
+    assert candidate.rule_id == RULE
+    assert candidate.subject == "U1: schematic and PCB footprint identities differ"
+    assert candidate.evidence["assigned_footprint"] == ("Package_SO:SOIC-8",)
+    assert candidate.evidence["placed_footprint"] == ("Package_TSSOP:TSSOP-8",)
+
+    blocked = evaluate(
+        "synthetic-component-inventory",
+        coach(observed),
+        DesignLintPolicy(
+            rules=(DesignLintRuleOverride(rule_id=RULE, mode="block", reason="release review"),)
+        ),
+        pcb_component_inventory_coverage=coverage,
+    )
+    assert blocked.status == "FAIL"
+    assert blocked.findings[0].evidence["placed_footprint"] == ("Package_TSSOP:TSSOP-8",)
+
+    ignored = DesignLintPolicy(
+        ignores=(
+            DesignLintIgnore(
+                rule_id=RULE,
+                fingerprint=fingerprint(candidate),
+                reason="approved alternate package",
+            ),
+        )
+    )
+    reviewed = evaluate(
+        "synthetic-component-inventory",
+        coach(observed),
+        ignored,
+        pcb_component_inventory_coverage=coverage,
+    )
+    assert reviewed.status == "PASS"
+    assert reviewed.findings[0].disposition == "IGNORED"
+    assert (
+        "  Footprint identity mismatch: U1; schematic Package_SO:SOIC-8; PCB Package_TSSOP:TSSOP-8"
+    ) in pcb_coverage_report_lines(reviewed)
+
+
+def test_inventory_mismatch_model_rejects_duplicate_reference_categories() -> None:
+    with pytest.raises(ValidationError, match="references must be unique"):
+        PcbComponentInventoryCoverageReport(
+            status="COMPLETE",
+            mode="review",
+            netlist_sha256=NETLIST_SHA256,
+            board_path="synthetic/controller.kicad_pcb",
+            board_sha256=BOARD_SHA256,
+            snapshot_path="build/design-lint/native/snapshot.json",
+            snapshot_sha256=SNAPSHOT_SHA256,
+            snapshot_schema="12",
+            kicad_version="10.0.5",
+            image=IMAGE,
+            probe_sha256=PROBE_SHA256,
+            missing_placements=(
+                PcbMissingFootprintPlacement(
+                    reference="U1",
+                    assigned_footprint="Package_SO:SOIC-8",
+                ),
+            ),
+            footprint_mismatches=(
+                PcbFootprintIdentityMismatch(
+                    reference="u1",
+                    assigned_footprint="Package_SO:SOIC-8",
+                    placed_footprint="Package_TSSOP:TSSOP-8",
+                ),
+            ),
+        )
 
 
 def test_unsupported_snapshot_schema_is_a_coverage_gap() -> None:

@@ -99,12 +99,13 @@ python -I -B -m pytest -q -m "design_lint and pcb_lint" \
   tests/test_pcb_decoupling.py tests/test_pcb_decoupling_return_vias.py
 ```
 
-The schematic-to-PCB component inventory heuristic has a fast synthetic slice
-and exact-version native source-bound fixtures:
+The schematic-to-PCB component inventory review checks missing placements and
+exact footprint-ID differences. It has a fast synthetic/parity slice and
+exact-version native source-bound fixtures:
 
 ```sh
 .venv/bin/python -I -B -m pytest -q -m "design_lint and pcb_lint" \
-  tests/test_pcb_component_inventory.py
+  tests/test_pcb_component_inventory.py tests/test_pcb_component_inventory_mcp_parity.py
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and pcb_lint and native_kicad" \
   tests/test_pcb_component_inventory_native_fixture_lane.py

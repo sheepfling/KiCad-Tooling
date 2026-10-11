@@ -31,7 +31,7 @@ def pcb_component_inventory_candidates(
                 },
             ),
         )
-    return tuple(
+    candidates = [
         Candidate(
             rule_id="pcb.schematic_component_inventory",
             subject=f"{item.reference}: schematic footprint absent from PCB",
@@ -55,4 +55,31 @@ def pcb_component_inventory_candidates(
             },
         )
         for item in report.missing_placements
+    ]
+    candidates.extend(
+        Candidate(
+            rule_id="pcb.schematic_component_inventory",
+            subject=f"{item.reference}: schematic and PCB footprint identities differ",
+            message=(
+                "The schematic assigns a different footprint identity from the source-bound PCB. "
+                "Confirm the intended package or document the approved alternate; differing IDs "
+                "can be intentional, and this exact-name comparison does not establish pad or "
+                "geometry equivalence."
+            ),
+            evidence={
+                "reference": (item.reference,),
+                "assigned_footprint": (item.assigned_footprint,),
+                "placed_footprint": (item.placed_footprint,),
+                "netlist_sha256": (report.netlist_sha256 or "unavailable",),
+                "board_path": (report.board_path or "unavailable",),
+                "board_sha256": (report.board_sha256 or "unavailable",),
+                "snapshot_sha256": (report.snapshot_sha256 or "unavailable",),
+                "snapshot_schema": (report.snapshot_schema or "unavailable",),
+                "kicad_version": (report.kicad_version or "unavailable",),
+                "image": (report.image or "unavailable",),
+                "probe_sha256": (report.probe_sha256 or "unavailable",),
+            },
+        )
+        for item in report.footprint_mismatches
     )
+    return tuple(sorted(candidates, key=lambda item: item.subject.casefold()))

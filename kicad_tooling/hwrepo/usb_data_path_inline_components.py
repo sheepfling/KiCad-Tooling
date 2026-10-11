@@ -65,7 +65,7 @@ def check_usb_inline_component(
         if len(actual_numbers) != len(pin_numbers) or actual_numbers != expected_numbers:
             missing = sorted(expected_numbers - actual_numbers)
             extra = sorted(actual_numbers - expected_numbers)
-            details = []
+            details: list[str] = []
             if missing:
                 details.append(f"missing {', '.join(missing)}")
             if extra:

@@ -54,3 +54,19 @@ def test_native_component_inventory_fault_and_control_are_source_bound(
     assert len(result["control_schematic_sha256"]) == 64
     assert len(result["board_sha256"]) == 64
     assert result["fault_receipt"] != result["control_receipt"]
+
+    identity = lane_event(log, "pcb-component-inventory-fixture/footprint-identity")
+    assert identity["status"] == "PASS"
+    assert identity["kicad_version"] == version
+    assert identity["fault_mismatch_references"] == "U1"
+    assert identity["control_mismatch_references"] == ""
+    assert identity["fault_assigned_footprint"] == "Synthetic:Wrong_Footprint"
+    assert identity["fault_placed_footprint"] == "Synthetic:Probe_Module"
+    assert identity["control_assigned_footprint"] == "Synthetic:Probe_Module"
+    assert identity["control_placed_footprint"] == "Synthetic:Probe_Module"
+    assert identity["native_netlist_and_board_evidence"] == "true"
+    assert identity["repeated_evidence"] == "stable"
+    assert len(identity["fault_schematic_sha256"]) == 64
+    assert len(identity["control_schematic_sha256"]) == 64
+    assert len(identity["board_sha256"]) == 64
+    assert identity["fault_receipt"] != identity["control_receipt"]

@@ -3043,38 +3043,40 @@
     },
     {
       "rule_id": "pcb.schematic_component_inventory",
-      "title": "Fitted schematic component is missing from the native PCB footprint inventory",
+      "title": "Schematic and native PCB component inventory differ",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "Source-bound native schematic netlist compared with exact KiCad native PCB footprint snapshot schema 12",
-      "predicate": "For each schematic component with a nonempty assigned footprint that is not marked DNP, compare its reference case-insensitively with the native PCB footprint inventory and report a review candidate when the reference is absent.",
+      "predicate": "For each schematic component with a nonempty assigned footprint that is not marked DNP, compare its reference case-insensitively with the native PCB footprint inventory. Report a review candidate when the reference is absent or when the exact assigned footprint identity differs from the placed native footprint identity.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
       ],
       "limitations": [
-        "The check does not infer whether a fitted schematic component is intended to be off-board. Projects can suppress a reviewed exception with the existing exact-fingerprint ignore lifecycle.",
-        "Only missing references are reported. Board-only mechanical footprints, value differences, assigned-footprint identity differences, schematic/board DNP disagreements, and physical assembly state are outside this predicate.",
+        "The check does not infer whether a fitted schematic component is intended to be off-board or whether two different footprint identities are geometrically equivalent. Projects can suppress a reviewed exception with the existing exact-fingerprint ignore lifecycle.",
+        "Only missing references and exact assigned-footprint identity differences are reported. Board-only mechanical footprints, value differences, schematic/board DNP disagreements, pad equivalence, and physical assembly state are outside this predicate.",
         "The check requires a source-bound netlist and KiCad PCB footprint inventory snapshot schema 12. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
       ],
       "fault_fixtures": [
         "tests.test_pcb_component_inventory.test_fitted_assigned_footprint_missing_from_board_is_reviewable_and_configurable",
+        "tests.test_pcb_component_inventory.test_present_component_with_different_footprint_identity_is_reviewable_and_configurable",
         "tests.test_pcb_component_inventory.test_missing_native_inventory_evidence_is_not_reported_as_clean",
         "tests.test_pcb_component_inventory.test_unsupported_snapshot_schema_is_a_coverage_gap",
-        "tests.test_pcb_component_inventory_mcp_parity.test_missing_footprint_inventory_finding_matches_cli_and_mcp",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
         "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_component_inventory.test_placed_reference_dnp_empty_assignment_and_board_extras_are_controls",
-        "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_missing_set",
-        "tests.test_pcb_component_inventory_mcp_parity.test_missing_footprint_inventory_finding_matches_cli_and_mcp",
+        "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_comparison",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
         "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_missing_set"
+        "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_comparison"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_component_inventory.py#compare_fitted_schematic_pcb_inventory",
         "kicad_tooling/hwrepo/pcb_component_inventory.py#missing_fitted_footprint_placements",
         "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
         "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_candidates.py#pcb_component_inventory_candidates",
@@ -3082,7 +3084,7 @@
         "kicad_tooling/ci_hosted_pcb_component_inventory_fixture.py#pcb_component_inventory_fixture_lane"
       ],
       "theme": "pcb",
-      "implementation_owner": "kicad_tooling/hwrepo/pcb_component_inventory.py#missing_fitted_footprint_placements"
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_component_inventory.py#compare_fitted_schematic_pcb_inventory"
     },
     {
       "rule_id": "component.led_directly_across_supply_and_return",

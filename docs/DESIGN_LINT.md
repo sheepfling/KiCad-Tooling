@@ -2179,26 +2179,30 @@ rules and that mapped endpoints agree with source and copper evidence; it does
 not establish that a chosen limit is electrically appropriate, nor prove
 off-board wiring or physical continuity.
 
-## Review schematic components missing from the PCB
+## Review schematic and PCB component-inventory differences
 
-`pcb.schematic_component_inventory` compares component references in the
-source-bound native schematic netlist with footprint references in a native PCB
-snapshot. It prompts when a non-DNP schematic component has an assigned
-footprint but no board footprint has the same reference, ignoring case. DNP and
-empty-footprint components are controls; board-only mechanical footprints are
-outside this check.
+`pcb.schematic_component_inventory` compares fitted, footprint-assigned
+schematic components with the source-bound native PCB footprint inventory. It
+prompts when a reference has no board placement, or when the exact assigned
+footprint identity differs from the placed footprint identity. Component
+references are compared case-insensitively; footprint identities are compared
+exactly. DNP and empty-footprint schematic components are controls, and
+board-only mechanical footprints are outside this check.
 
 The rule defaults to `review`. A project can select `block`, `off`, or suppress
 an exact finding through the existing fingerprint-ignore lifecycle. An
-assigned footprint does not prove the part belongs on the board, so the prompt
-asks the reviewer to confirm whether the component is intentionally off-board.
-The finding binds the native netlist digest, board digest, native footprint
-snapshot digest and schema, KiCad version, image, and probe. Missing, stale, or
-unsupported evidence is reported as a coverage gap, not as a clean comparison.
+assigned footprint does not prove the part belongs on the board, and different
+footprint IDs do not prove that the land patterns differ. Prompts ask the
+reviewer to confirm whether a component is intentionally off-board or whether
+the placed footprint is an approved alternate. Each finding binds the native
+netlist digest, board digest, native footprint snapshot digest and schema,
+KiCad version, image, and probe. Missing, stale, or unsupported evidence is
+reported as a coverage gap, not as a clean comparison.
 
-This is a placement-consistency screen. It does not compare footprint identity,
-values, DNP agreement, board-only parts, assembly state, or electrical
-connectivity. It does not prove the fabricated board matches the source.
+This is a placement and exact-name consistency screen. It does not compare
+values, DNP agreement, board-only parts, pad geometry, assembly state, or
+electrical connectivity. A matching footprint ID does not prove the fabricated
+board matches the source.
 
 ## Review mapped PCB keepout intent
 

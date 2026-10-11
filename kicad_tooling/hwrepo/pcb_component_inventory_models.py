@@ -16,8 +16,33 @@ class PcbMissingFootprintPlacement(StrictModel):
     assigned_footprint: NonEmptyText
 
 
+class PcbFootprintIdentityMismatch(StrictModel):
+    """A schematic-assigned footprint identity differs from its native board placement."""
+
+    reference: Identifier
+    assigned_footprint: NonEmptyText
+    placed_footprint: NonEmptyText
+
+
+class PcbComponentInventoryComparison(StrictModel):
+    """Deterministic comparison results for fitted schematic component placements."""
+
+    missing_placements: tuple[PcbMissingFootprintPlacement, ...] = ()
+    footprint_mismatches: tuple[PcbFootprintIdentityMismatch, ...] = ()
+
+    @model_validator(mode="after")
+    def unique_references(self) -> PcbComponentInventoryComparison:
+        references = [
+            item.reference.casefold()
+            for item in (*self.missing_placements, *self.footprint_mismatches)
+        ]
+        if len(references) != len(set(references)):
+            raise ValueError("PCB component inventory comparison references must be unique")
+        return self
+
+
 class PcbComponentInventoryCoverageReport(StrictModel):
-    """Native source receipt and missing schematic-to-board placement candidates."""
+    """Native source receipt and schematic-to-board inventory candidates."""
 
     status: Literal["NOT_APPLICABLE", "COMPLETE", "BLOCKED", "DISABLED"] = "NOT_APPLICABLE"
     mode: Literal["review", "block", "off"] | None = None
@@ -31,13 +56,17 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     image: NonEmptyText | None = None
     probe_sha256: Digest | None = None
     missing_placements: tuple[PcbMissingFootprintPlacement, ...] = ()
+    footprint_mismatches: tuple[PcbFootprintIdentityMismatch, ...] = ()
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def consistent_source_receipt(self) -> PcbComponentInventoryCoverageReport:
-        references = [item.reference.casefold() for item in self.missing_placements]
+        references = [
+            item.reference.casefold()
+            for item in (*self.missing_placements, *self.footprint_mismatches)
+        ]
         if len(references) != len(set(references)):
-            raise ValueError("PCB component inventory missing references must be unique")
+            raise ValueError("PCB component inventory finding references must be unique")
         if self.status == "COMPLETE":
             if any(
                 value is None
@@ -61,6 +90,6 @@ class PcbComponentInventoryCoverageReport(StrictModel):
                 raise ValueError("Complete PCB component inventory cannot include an issue")
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked PCB component inventory must explain the evidence gap")
-        if self.status != "COMPLETE" and self.missing_placements:
-            raise ValueError("Only complete PCB component inventory can report missing placements")
+        if self.status != "COMPLETE" and (self.missing_placements or self.footprint_mismatches):
+            raise ValueError("Only complete PCB component inventory can report comparison findings")
         return self

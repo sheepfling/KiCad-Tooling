@@ -30,7 +30,7 @@ from .models import (
     RegulatorFeedbackCoverageReport,
     SchematicGeometryCoverage,
     Stm32PinMapCoverageReport,
-    _register_design_lint_report,
+    register_design_lint_report,
 )
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -133,14 +133,14 @@ class DesignLintReport(StrictModel):
         ):
             raise ValueError("PCB component inventory must use this report's native netlist")
         if inventory.status == "COMPLETE":
-            expected_findings = len(inventory.missing_placements)
+            expected_findings = len(inventory.missing_placements) + len(
+                inventory.footprint_mismatches
+            )
             actual_findings = sum(
                 finding.rule_id == "pcb.schematic_component_inventory" for finding in self.findings
             )
             if actual_findings != expected_findings:
-                raise ValueError(
-                    "PCB component inventory findings must match its missing placements"
-                )
+                raise ValueError("PCB component inventory findings must match its comparison rows")
         if (
             self.netlist_sha256 is not None
             and self.control_input_bias_coverage.netlist_sha256 is not None
@@ -277,4 +277,4 @@ class DesignLintReport(StrictModel):
         return self
 
 
-_register_design_lint_report(DesignLintReport)
+register_design_lint_report(DesignLintReport)

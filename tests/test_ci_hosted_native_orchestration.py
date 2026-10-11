@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
+from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import DEFAULT, patch
 
@@ -44,47 +45,48 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         capture_output=True,
     )
     log = HostedLog(root, "native")
-    with (
-        patch.object(log, "run") as run,
-        patch(
-            "kicad_tooling.ci_hosted.connector_return_lint_fixture_lane"
-        ) as connector_return_fixture,
-        patch("kicad_tooling.ci_hosted.usb_data_path_fixture_lane") as usb_fixture,
-        patch("kicad_tooling.ci_hosted.power_path_fixture_lane") as power_path_fixture,
-        patch("kicad_tooling.ci_hosted.stm32_pin_map_fixture_lane") as stm32_fixture,
-        patch("kicad_tooling.ci_hosted.led_rail_fixture_lane") as led_fixture,
-        patch("kicad_tooling.ci_hosted.two_pin_component_fixture_lane") as component_fixture,
-        patch(
-            "kicad_tooling.ci_hosted.component_peer_power_output_fixture_lane"
-        ) as peer_power_fixture,
-        patch("kicad_tooling.ci_hosted.component_rating_fixtures_lane") as voltage_rating_fixture,
-        patch("kicad_tooling.ci_hosted.power_sequence_fixture_lane") as sequence_fixture,
-        patch("kicad_tooling.ci_hosted.ic_rail_capacitor_fixture_lane") as rail_cap_fixture,
-        patch.multiple(
-            "kicad_tooling.ci_hosted",
-            pcb_signal_path_drc_fixture_lane=DEFAULT,
-            component_peer_power_assignment_fixture_lane=DEFAULT,
-            component_peer_signal_input_fixture_lane=DEFAULT,
-            component_peer_signal_output_fixture_lane=DEFAULT,
-            component_peer_bidirectional_fixture_lane=DEFAULT,
-        ) as other_native_fixtures,
-        patch("kicad_tooling.ci_hosted.pcb_return_fixture_lane") as pcb_fixture,
-        patch("kicad_tooling.ci_hosted.pcb_access_fixture_lane") as access_fixture,
-        patch("kicad_tooling.ci_hosted.pcb_component_inventory_fixture_lane") as inventory_fixture,
-        patch("kicad_tooling.ci_hosted.pcb_decoupling_fixture_lane") as decoupling_fixture,
-        patch("kicad_tooling.ci_hosted.pcb_switching_loop_fixture_lane") as switching_loop_fixture,
-        patch(
-            "kicad_tooling.ci_hosted.pcb_reference_plane_via_fixture_lane"
-        ) as reference_plane_fixture,
-        patch(
-            "kicad_tooling.ci_hosted.pcb_reference_plane_narrow_void_fixture_lane"
-        ) as narrow_void_fixture,
-        patch(
-            "kicad_tooling.ci_hosted.electrical_lane",
-            side_effect=RuntimeError("Electrical measurement failed"),
-        ) as electrical,
-        pytest.raises(RuntimeError, match="Electrical measurement failed"),
-    ):
+    fixture_symbols = (
+        "connector_return_lint_fixture_lane",
+        "usb_data_path_fixture_lane",
+        "power_path_fixture_lane",
+        "stm32_pin_map_fixture_lane",
+        "led_rail_fixture_lane",
+        "two_pin_component_fixture_lane",
+        "component_peer_power_output_fixture_lane",
+        "component_rating_fixtures_lane",
+        "power_sequence_fixture_lane",
+        "ic_rail_capacitor_fixture_lane",
+        "pcb_return_fixture_lane",
+        "pcb_access_fixture_lane",
+        "pcb_component_inventory_fixture_lane",
+        "pcb_decoupling_fixture_lane",
+        "pcb_switching_loop_fixture_lane",
+        "pcb_reference_plane_via_fixture_lane",
+        "pcb_reference_plane_narrow_void_fixture_lane",
+    )
+    with ExitStack() as stack:
+        run = stack.enter_context(patch.object(log, "run"))
+        fixture_mocks = {
+            name: stack.enter_context(patch(f"kicad_tooling.ci_hosted.{name}"))
+            for name in fixture_symbols
+        }
+        other_native_fixtures = stack.enter_context(
+            patch.multiple(
+                "kicad_tooling.ci_hosted",
+                pcb_signal_path_drc_fixture_lane=DEFAULT,
+                component_peer_power_assignment_fixture_lane=DEFAULT,
+                component_peer_signal_input_fixture_lane=DEFAULT,
+                component_peer_signal_output_fixture_lane=DEFAULT,
+                component_peer_bidirectional_fixture_lane=DEFAULT,
+            )
+        )
+        electrical = stack.enter_context(
+            patch(
+                "kicad_tooling.ci_hosted.electrical_lane",
+                side_effect=RuntimeError("Electrical measurement failed"),
+            )
+        )
+        stack.enter_context(pytest.raises(RuntimeError, match="Electrical measurement failed"))
         native_lane(
             root,
             project="controller",
@@ -102,27 +104,11 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         root, "controller", log, native_summary="build/review/controller/summary.json"
     )
     for fixture in (
-        connector_return_fixture,
-        usb_fixture,
-        power_path_fixture,
-        stm32_fixture,
-        led_fixture,
-        component_fixture,
-        peer_power_fixture,
+        *fixture_mocks.values(),
         other_native_fixtures["component_peer_power_assignment_fixture_lane"],
         other_native_fixtures["component_peer_signal_output_fixture_lane"],
         other_native_fixtures["component_peer_signal_input_fixture_lane"],
         other_native_fixtures["component_peer_bidirectional_fixture_lane"],
-        voltage_rating_fixture,
-        sequence_fixture,
-        rail_cap_fixture,
-        pcb_fixture,
-        access_fixture,
-        inventory_fixture,
-        decoupling_fixture,
-        switching_loop_fixture,
-        reference_plane_fixture,
-        narrow_void_fixture,
     ):
         fixture.assert_called_once_with(root, **expected_kwargs)
     stages = [call.args[0] for call in run.call_args_list]

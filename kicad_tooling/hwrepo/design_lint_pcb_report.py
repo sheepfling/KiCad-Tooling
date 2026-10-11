@@ -451,6 +451,11 @@ def pcb_coverage_report_lines(report: DesignLintReport) -> list[str]:
             )
         for item in inventory.missing_placements:
             lines.append(f"  Missing board footprint: {item.reference} ({item.assigned_footprint})")
+        for item in inventory.footprint_mismatches:
+            lines.append(
+                f"  Footprint identity mismatch: {item.reference}; schematic "
+                f"{item.assigned_footprint}; PCB {item.placed_footprint}"
+            )
         if inventory.issue is not None:
             lines.append(f"  Coverage issue: {inventory.issue}")
     return lines

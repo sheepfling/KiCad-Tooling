@@ -5306,7 +5306,7 @@ class CadSourcingReview(StrictModel):
     review_id: str
 
 
-def _register_design_lint_report(report_type: type[StrictModel]) -> None:
+def register_design_lint_report(report_type: type[StrictModel]) -> None:
     """Re-export the moved report and resolve the forward model reference."""
     globals()["DesignLintReport"] = report_type
     ProjectVerificationReport.model_rebuild(_types_namespace={"DesignLintReport": report_type})
@@ -5318,4 +5318,4 @@ _report_module = _sys.modules.get(f"{__package__}.design_lint_report_models")
 if _report_module is None or hasattr(_report_module, "DesignLintReport"):
     from .design_lint_report_models import DesignLintReport
 
-    _register_design_lint_report(DesignLintReport)
+    register_design_lint_report(DesignLintReport)

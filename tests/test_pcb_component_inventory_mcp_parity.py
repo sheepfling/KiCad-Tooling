@@ -22,6 +22,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
+    PcbFootprintIdentityMismatch,
     PcbMissingFootprintPlacement,
 )
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -35,7 +36,7 @@ from tests.synthetic_design_lint_project import synthetic_design_lint_project
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
 
 
-def test_missing_footprint_inventory_finding_matches_cli_and_mcp(
+def test_component_inventory_findings_match_cli_and_mcp(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -69,6 +70,13 @@ def test_missing_footprint_inventory_finding_matches_cli_and_mcp(
                     PcbMissingFootprintPlacement(
                         reference="U2",
                         assigned_footprint="Package_SO:SOIC-8",
+                    ),
+                ),
+                footprint_mismatches=(
+                    PcbFootprintIdentityMismatch(
+                        reference="U3",
+                        assigned_footprint="Package_SO:SOIC-8",
+                        placed_footprint="Package_TSSOP:TSSOP-8",
                     ),
                 ),
             ),
@@ -115,10 +123,13 @@ def test_missing_footprint_inventory_finding_matches_cli_and_mcp(
 
     assert cli_returncode == 1
     assert cli_report == mcp_report
-    (finding,) = tuple(
-        item
-        for item in mcp_report.findings
-        if item.rule_id == "pcb.schematic_component_inventory"
+    findings = tuple(
+        item for item in mcp_report.findings if item.rule_id == "pcb.schematic_component_inventory"
     )
-    assert finding.subject == "U2: schematic footprint absent from PCB"
-    assert finding.evidence["snapshot_schema"] == ("12",)
+    assert tuple(item.subject for item in findings) == (
+        "U2: schematic footprint absent from PCB",
+        "U3: schematic and PCB footprint identities differ",
+    )
+    assert findings[0].evidence["snapshot_schema"] == ("12",)
+    assert findings[1].evidence["assigned_footprint"] == ("Package_SO:SOIC-8",)
+    assert findings[1].evidence["placed_footprint"] == ("Package_TSSOP:TSSOP-8",)
