@@ -74,6 +74,7 @@ from .schematic_geometry import (
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_types import SerialPeerReferenceScan
 from .spi_participants import SpiRosterContext
+from .spi_peer_reference_scan import SpiPeerReferenceScan
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_types import UsbPeerReferenceScan
@@ -131,6 +132,7 @@ def candidates(
     peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None = None,
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
+    spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -183,6 +185,7 @@ def candidates(
             i2c_address_map=i2c_address_map,
             i2c_pullup_heuristic_coverage=i2c_pullup_heuristic_coverage,
             i2c_peer_reference_scan=i2c_peer_reference_scan,
+            spi_peer_reference_scan=spi_peer_reference_scan,
             component_peer_findings=component_peer_findings,
             pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
         )

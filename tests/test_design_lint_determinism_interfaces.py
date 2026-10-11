@@ -95,6 +95,15 @@ def test_interface_reports_remain_deterministic() -> None:
     assert i2c_peer_fault["i2c_peer_reference_coverage"]["candidate_group_count"] == 1
     assert i2c_peer_control["i2c_peer_reference_coverage"]["candidate_group_count"] == 0
 
+    spi_peer_fault = reports["spi_peer_reference_fault"]
+    spi_peer_control = reports["spi_peer_reference_control"]
+    spi_peer_fault_rules = {item["rule_id"] for item in spi_peer_fault["findings"]}
+    spi_peer_control_rules = {item["rule_id"] for item in spi_peer_control["findings"]}
+    assert "bus.spi_peer_reference_review" in spi_peer_fault_rules
+    assert "bus.spi_peer_reference_review" not in spi_peer_control_rules
+    assert spi_peer_fault["spi_peer_reference_coverage"]["candidate_group_count"] == 1
+    assert spi_peer_control["spi_peer_reference_coverage"]["candidate_group_count"] == 0
+
     protection_fault_case = reports["external_protection_fault"]
     protection_control_case = reports["external_protection_control"]
     assert (

@@ -457,6 +457,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     assert [name for _, name in calls] == [
         "i2c_pullup_candidates",
         "i2c_peer_reference_candidates",
+        "spi_peer_reference_candidates",
         "spi_bias_candidates",
         "unconnected_interface_candidates",
         "can_candidates",

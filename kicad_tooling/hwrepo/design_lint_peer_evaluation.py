@@ -32,6 +32,7 @@ from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .serial_peer_reference_scan import scan_serial_peer_reference_reviews
 from .serial_peer_reference_types import SerialPeerReferenceScan
+from .spi_peer_reference_scan import SpiPeerReferenceScan, scan_spi_peer_references
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 from .usb_peer_reference_scan import scan_usb_peer_reference_reviews
@@ -52,6 +53,7 @@ class PeerDesignLintEvidence:
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
     i2c_peer_reference_scan: I2cPeerReferenceScan
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
+    spi_peer_reference_scan: SpiPeerReferenceScan
 
 
 def scan_peer_design_lint_evidence(
@@ -125,6 +127,7 @@ def scan_peer_design_lint_evidence(
         )
     )
     i2c_scan = scan_i2c_peer_references(observed)
+    spi_scan = scan_spi_peer_references(observed)
     i2c_coverage = (
         None
         if netlist_sha256 is None
@@ -146,4 +149,5 @@ def scan_peer_design_lint_evidence(
         serial_peer_reference_coverage=serial_coverage,
         i2c_peer_reference_scan=i2c_scan,
         i2c_peer_reference_coverage=i2c_coverage,
+        spi_peer_reference_scan=spi_scan,
     )

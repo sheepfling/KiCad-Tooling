@@ -287,7 +287,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 88 rules are implemented with synthetic regression coverage.
+The following 89 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -334,6 +334,7 @@ Their actual recognition limits are documented in
 - `bus.i2c_unmapped_responder`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
+- `bus.spi_peer_reference_review`
 - `bus.spi_peer_voltage_review`
 - `bus.serial_peer_voltage_review`
 - `bus.serial_peer_reference_review`
@@ -1898,7 +1899,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 88 active rules; CI requires every new
+- **Status:** Baseline complete for all 89 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -1907,7 +1908,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 88 covered, 0 not applicable, 0 unreviewed.
+  audit: 89 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -4834,7 +4835,9 @@ is not a reason by itself to expand its scope or change its default policy.
   snapshot model rejects case-insensitive duplicate placed references before
   comparison. A separate hash-seed suite compares missing-placement and
   footprint-mismatch faults with an exact-footprint control across three
-  randomized Python processes. The focused selector passed 12 tests on
+  randomized Python processes. See the
+  [fixture notes](../tests/fixtures/design_lint/component-inventory-footprint-identity/README.md).
+  The focused selector passed 12 tests on
   2026-10-11; exact native
   execution remains delegated to the hosted acceptance lane because this
   workspace has no `kicad-cli` or running Docker daemon.
@@ -4884,7 +4887,8 @@ is not a reason by itself to expand its scope or change its default policy.
   and common-reference cases. Synthetic schematic fault/control fixtures feed
   a digest-pinned exact-version KiCad export lane for KiCad 10.0.0 and 10.0.5;
   local exact-native execution remains unavailable until the configured
-  container runtime is available.
+  container runtime is available. See the
+  [fixture notes](../tests/fixtures/design_lint/i2c-peer-reference-native/README.md).
 - **Incremental value:** LINT-070 already prompts on split return pins across
   comparable repeated components. LINT-103 adds the direct-I2C-bus relation
   between heterogeneous devices when that repeated-component comparison has no
@@ -4900,6 +4904,67 @@ is not a reason by itself to expand its scope or change its default policy.
   lane passes on both supported versions. Do not promote the heuristic to a
   blocking requirement without an independent project-authored pinout or
   grounding contract.
+
+#### LINT-104 — SPI peers share a clock but have split explicit references
+
+- **Status:** Implemented as `bus.spi_peer_reference_review`, defaulting to
+  `REVIEW`, with source-netlist-bound applicability coverage, project mode and
+  exact-ignore lifecycle, a synthetic fault/control suite, and focused
+  CLI/MCP parity. The exact-native lane is registered for digest-pinned KiCad
+  10.0.0 and 10.0.5, but hosted execution has not yet been observed.
+- **Priority:** P1 interface-reference review. A direct shared SPI clock can
+  connect heterogeneous ICs whose explicit return pins are assigned to
+  separate schematic nets. Existing component-peer checks need a comparable
+  part identity, and the SPI voltage heuristic addresses unequal
+  voltage-named supply rails; neither necessarily surfaces this equal-supply,
+  different-reference case.
+- **Predicate:** For fitted U/IC components, recognize exactly one assigned
+  native SCK/SCLK pin with input/output-compatible type and complete native
+  pin-number, pin-function, and pin-type inventories. Group only exact shared
+  clock-net assignments with at least one output-capable and one input-capable
+  endpoint. Emit one grouped review when the explicit passive or `power_in`
+  return-like pin assignments span multiple native nets. Preserve a known
+  split as a candidate when another endpoint's reference evidence is
+  incomplete. Suppress a complete-group prompt only when the existing
+  component-peer return findings cover every explicit reference-pin
+  assignment in that group.
+- **Boundary:** This is a deterministic review heuristic; it does not require
+  common grounding, infer SPI membership from MOSI/MISO/chip-select names,
+  discover all peers, trace buffers or isolators, judge power or logic
+  compatibility, establish that separate references are erroneous, or prove
+  a PCB copper or physical return path. Multiple clock ports, ambiguous clock
+  directions, DNP endpoints, missing native pin metadata, multiple reference
+  nets on one endpoint, shield/chassis-only functions, and unmatched clock
+  segments do not become positive split-reference evidence. An independently
+  authored interface/grounding contract remains the source of required
+  common, bonded, or isolated topology.
+- **Fixtures and verification:** Synthetic cases cover a shared SCK with
+  `+3V3` on both peers and `GND_A`/`GND_B` on the explicit returns, common
+  references, different clock segments, DNP, incomplete metadata, shield-only
+  pins, unclear clock direction, partial split with an incomplete peer,
+  duplicate suppression, exact evidence, mapping-order stability, policy,
+  ignore, and typed coverage. A fault assertion confirms the existing
+  `bus.spi_peer_voltage_review` remains quiet on the equal-supply case. A
+  parity case compares complete CLI/MCP finding and coverage records. Two
+  standalone synthetic KiCad schematics bind source hashes and are configured
+  for repeated exact-version native exports on KiCad 10.0.0 and 10.0.5; see
+  [the fixture notes](../tests/fixtures/design_lint/spi-peer-reference-native/README.md).
+- **Incremental value:** The equal `+3V3` control/fault pair isolates return
+  assignments as the changed variable. The split case has distinct symbol
+  identities and no component-peer assignment finding, while the existing SPI
+  voltage heuristic emits no candidate. This demonstrates a new deterministic
+  candidate class within the synthetic baseline, not a confirmed defect or
+  measured field detection rate.
+- **Applicability evidence:** No additional project examples are needed to
+  implement or regression-test this bounded predicate. Public, nonconfidential
+  schematics may help estimate how often the pattern occurs, but cannot
+  substitute for a reviewer disposition or time measurement. No independent
+  board dispositions or reviewer-time measurements are available; precision,
+  false-prompt rate, and review-time benefit remain unmeasured.
+- **Next:** Run the hosted digest-pinned native lane on both supported KiCad
+  versions and record the resulting hashes before claiming exact-native
+  acceptance. Keep default `REVIEW`; only a project-authored contract can
+  establish that its peers must share, bond, or isolate their references.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -7735,7 +7800,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 88 active rules. Each entry has a deterministic predicate, evidence
+contains 89 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

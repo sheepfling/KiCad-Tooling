@@ -20,6 +20,8 @@ REPORT_ORDER = (
     "i2c_address_map_control",
     "i2c_peer_reference_fault",
     "i2c_peer_reference_control",
+    "spi_peer_reference_fault",
+    "spi_peer_reference_control",
     "external_protection_fault",
     "external_protection_control",
     "parsed_netlist_pin_metadata",

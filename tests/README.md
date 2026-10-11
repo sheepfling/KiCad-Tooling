@@ -45,13 +45,19 @@ python -I -B -m pytest -q -m "design_lint and interface_lint" \
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_electrical_i2c_contracts.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
-  tests/test_i2c_peer_reference_review.py
+  tests/test_i2c_peer_reference_review.py tests/test_spi_peer_reference_review.py
+python -I -B -m pytest -q -m "architecture and design_lint and interface_lint" \
+  tests/test_spi_peer_reference_architecture.py
 KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES=1 python -I -B -m pytest -q \
   -m "design_lint and interface_lint and native_kicad" \
   tests/test_i2c_peer_reference_native_fixture_lane.py
+KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES=1 python -I -B -m pytest -q \
+  -m "design_lint and interface_lint and native_kicad" \
+  tests/test_spi_peer_reference_native_fixture_lane.py
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
   python -I -B -m pytest -q -m "design_lint and interface_lint and parity_lint" \
-  tests/test_design_lint_mcp_parity_i2c.py::test_i2c_peer_reference_review_cli_mcp_parity
+  tests/test_design_lint_mcp_parity_i2c.py::test_i2c_peer_reference_review_cli_mcp_parity \
+  tests/test_design_lint_mcp_parity_spi_reference.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_electrical_spi_contracts.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \

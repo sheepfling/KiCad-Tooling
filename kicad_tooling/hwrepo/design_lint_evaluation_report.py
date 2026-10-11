@@ -55,6 +55,7 @@ def assemble_design_lint_report(
     usb_peer_reference_coverage = context.usb_peer_reference_coverage
     serial_peer_reference_coverage = context.serial_peer_reference_coverage
     i2c_peer_reference_coverage = context.i2c_peer_reference_coverage
+    spi_peer_reference_coverage = context.spi_peer_reference_coverage
     control_input_bias_coverage = context.control_input_bias_coverage
     i2c_pullup_heuristic_coverage = context.i2c_pullup_heuristic_coverage
 
@@ -369,6 +370,7 @@ def assemble_design_lint_report(
         usb_peer_reference_coverage=usb_peer_reference_coverage,
         serial_peer_reference_coverage=serial_peer_reference_coverage,
         i2c_peer_reference_coverage=i2c_peer_reference_coverage,
+        spi_peer_reference_coverage=spi_peer_reference_coverage,
         connector_peer_pin_coverage=connector_peer_pin_coverage,
         component_peer_pin_coverage=component_peer_pin_coverage,
         connector_coverage=connector_coverage,

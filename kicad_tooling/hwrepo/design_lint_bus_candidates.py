@@ -14,7 +14,7 @@ from .design_lint_signal_pair_candidates import (
     complementary_signal_candidates,
     named_differential_pair_candidates,
 )
-from .design_lint_spi_candidates import spi_bias_candidates
+from .design_lint_spi_candidates import spi_bias_candidates, spi_peer_reference_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
 from .i2c_address_models import (
@@ -25,6 +25,7 @@ from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
+from .spi_peer_reference_scan import SpiPeerReferenceScan
 
 
 def bus_candidates(
@@ -35,6 +36,7 @@ def bus_candidates(
     i2c_address_map: I2cAddressMap | None = None,
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None = None,
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
+    spi_peer_reference_scan: SpiPeerReferenceScan | None = None,
     component_peer_findings: tuple[Candidate, ...] = (),
     pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None,
 ) -> tuple[Candidate, ...]:
@@ -44,6 +46,11 @@ def bus_candidates(
         *i2c_peer_reference_candidates(
             observed,
             i2c_peer_reference_scan,
+            component_peer_findings,
+        ),
+        *spi_peer_reference_candidates(
+            observed,
+            spi_peer_reference_scan,
             component_peer_findings,
         ),
         *spi_bias_candidates(observed),

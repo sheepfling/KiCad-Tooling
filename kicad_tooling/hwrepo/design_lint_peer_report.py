@@ -232,4 +232,45 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                 f"reference nets {references}{incomplete}: {entry.disposition}"
             )
         lines.append(f"    Native netlist SHA-256: {i2c_peer_coverage.netlist_sha256}")
+    spi_peer_coverage = report.spi_peer_reference_coverage
+    if spi_peer_coverage is not None:
+        lines.append("SPI peer-reference heuristic coverage:")
+        lines.append(
+            f"  {spi_peer_coverage.rule_id}: {spi_peer_coverage.status} "
+            f"(mode: {spi_peer_coverage.mode}; "
+            f"{spi_peer_coverage.recognized_endpoint_count} recognized endpoint(s), "
+            f"{spi_peer_coverage.shared_clock_bus_count} shared clock group(s), "
+            f"{spi_peer_coverage.common_reference_bus_count} common-reference, "
+            f"{spi_peer_coverage.incomplete_reference_bus_count} incomplete, "
+            f"{spi_peer_coverage.split_reference_bus_count} split-reference "
+            f"({spi_peer_coverage.candidate_group_count} review candidate(s); "
+            f"{spi_peer_coverage.component_peer_covered_bus_count} covered by component-peer "
+            "review)"
+        )
+        status_explanation = {
+            "NO_SHARED_CLOCK_PEERS": (
+                "Fewer than two supported fitted IC endpoints share one exact native SCK/SCLK net."
+            ),
+            "INCOMPLETE": (
+                "At least one shared-clock group lacks complete explicit reference-pin evidence."
+            ),
+            "EVALUATED": (
+                "Every discovered shared-clock group has complete explicit reference-pin evidence; "
+                "split references already covered by component-peer review are not duplicated."
+            ),
+        }[spi_peer_coverage.status]
+        lines.append(f"    Applicability: {status_explanation}")
+        for entry in spi_peer_coverage.entries:
+            participants = ", ".join(entry.participants)
+            references = ", ".join(entry.reference_nets) or "none recognized"
+            incomplete = (
+                f"; incomplete: {', '.join(entry.incomplete_references)}"
+                if entry.incomplete_references
+                else ""
+            )
+            lines.append(
+                f"    SCK {entry.clock_net}: {participants}; reference nets {references}"
+                f"{incomplete}: {entry.disposition}"
+            )
+        lines.append(f"    Native netlist SHA-256: {spi_peer_coverage.netlist_sha256}")
     return lines

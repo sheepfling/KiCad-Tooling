@@ -62,6 +62,7 @@ from .schematic_geometry import SchematicGeometryScan
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .spi_participants import SpiRosterContext
+from .spi_peer_reference_models import SpiPeerReferenceCoverageReport
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 
@@ -163,6 +164,7 @@ class DesignLintEvaluationCandidates:
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
+    spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...]
 
 
@@ -214,5 +216,6 @@ class DesignLintEvaluationReportInput:
     usb_peer_reference_coverage: UsbPeerReferenceCoverageReport | None
     serial_peer_reference_coverage: SerialPeerReferenceCoverageReport | None
     i2c_peer_reference_coverage: I2cPeerReferenceCoverageReport | None
+    spi_peer_reference_coverage: SpiPeerReferenceCoverageReport | None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None

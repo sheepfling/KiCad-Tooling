@@ -63,6 +63,7 @@ from .ci_hosted_serial_peer_net_labels import serial_peer_net_label_fixture_lane
 from .ci_hosted_serial_peer_reference_bonds import (
     serial_peer_reference_bond_fixture_lane,
 )
+from .ci_hosted_spi_peer_reference_fixtures import spi_peer_reference_native_fixture_lane
 from .ci_hosted_stm32_pin_map import stm32_pin_map_fixture_lane
 from .ci_hosted_two_pin_components import (
     TWO_PIN_COMPONENT_FIXTURE_CASES,
@@ -138,6 +139,7 @@ __all__ = (
     "serial_peer_fixture_lane",
     "serial_peer_net_label_fixture_lane",
     "serial_peer_reference_bond_fixture_lane",
+    "spi_peer_reference_native_fixture_lane",
     "stm32_pin_map_fixture_lane",
     "two_pin_component_fixture_lane",
     "usb_c_port_fixture_lane",

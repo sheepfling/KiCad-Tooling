@@ -1223,6 +1223,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_peer_reference_scan.py#scan_i2c_peer_reference_reviews"
     },
     {
+      "rule_id": "bus.spi_peer_reference_review",
+      "title": "SPI clock peers use different explicit reference nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For fitted U/IC components with exactly one assigned native SCK/SCLK pin and complete native pin-number, pin-function, and pin-type inventories, group endpoints by exact exported clock net. Require at least one output-capable and one input-capable clock endpoint. Emit one REVIEW candidate when explicit passive or power_in return-like pin assignments span different nets; retain incomplete reference evidence in coverage without inferring its domain.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A split reference is a review cue only; the check does not require a common return, prove electrical compatibility, or establish a physical return path or bond.",
+        "Only one unambiguous assigned SCK/SCLK pin per fitted U/IC and native input/output-compatible types on the shared clock are supported. Multi-port parts, incomplete metadata, multiple reference domains on one endpoint, unrecognized return functions, DNP endpoints, and ambiguous clock directions are outside the positive predicate.",
+        "Endpoints are grouped only by one exact native SCK/SCLK net. The rule does not infer SPI membership from data or chip-select names, trace translators or isolators, inspect off-board endpoints, or establish PCB copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_peer_reference_review.test_shared_sck_with_split_references_emits_review_and_exact_evidence",
+        "tests.test_spi_peer_reference_review.test_known_split_remains_reviewable_when_another_peer_is_incomplete",
+        "tests.test_spi_peer_reference_review.test_component_peer_review_must_cover_every_reference_pin_to_suppress"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_peer_reference_review.test_common_reference_is_a_valid_control",
+        "tests.test_spi_peer_reference_review.test_distinct_clock_segments_are_not_compared",
+        "tests.test_spi_peer_reference_review.test_dnp_incomplete_and_shield_only_endpoints_are_not_ground_evidence",
+        "tests.test_spi_peer_reference_review.test_only_directed_clock_peers_are_covered"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_spi_peer_reference_review.test_split_candidate_is_stable_under_mapping_order",
+        "tests.test_spi_peer_reference_review.test_report_coverage_tracks_candidate_and_policy_disposition"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_peer_reference_scan.py#scan_spi_peer_references",
+        "kicad_tooling/hwrepo/design_lint_spi_candidates.py#spi_peer_reference_candidates",
+        "kicad_tooling/hwrepo/spi_peer_reference_coverage.py#spi_peer_reference_coverage"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_peer_reference_scan.py#scan_spi_peer_references"
+    },
+    {
       "rule_id": "bus.spi_unconnected_chip_select",
       "title": "Recognized SPI chip-select pin is unassigned",
       "status": "active",

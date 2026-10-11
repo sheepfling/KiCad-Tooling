@@ -909,7 +909,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 88 active rules. They
+`synthetic_validated`; the catalog currently contains 89 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow
@@ -3343,6 +3343,35 @@ maps, missing limits, stale identity, or changed assignments leave the review
 prompt open. Project lint policy can set the rule to `off` or `block`, and an
 exact finding can be ignored through the normal fingerprint workflow. Keep it
 at `review` unless a project owner explicitly chooses a stricter policy.
+
+## Review SPI peer reference domains
+
+`bus.spi_peer_reference_review` is a default-`review` prompt for fitted ICs
+with one unambiguous native SCK/SCLK pin each on the exact same exported clock
+net, at least one output-capable clock endpoint and one input-capable endpoint,
+and explicit passive/`power_in` return-like pin assignments spanning multiple
+schematic nets. It reports one finding for the direct clock group. A documented
+control keeps both endpoints on `+3V3` and uses a common return; the fault
+changes only the return pins to `GND_A` and `GND_B`. The separate
+`bus.spi_peer_voltage_review` rule remains quiet on that equal-supply case,
+showing the additional coverage is reference-domain review rather than a
+duplicate voltage prompt.
+
+The rule stays quiet for common references, separate clocks, DNP endpoints,
+shield-only pins, incomplete reference metadata without a known split, and
+clocks without a clear input/output relationship. A known split remains
+reviewable when another peer's reference evidence is incomplete. Existing
+component-peer return findings suppress this prompt only when they cover every
+explicit return-pin assignment in a complete group. The heuristic does not
+require a common return, identify every SPI endpoint from data or chip-select
+pins, interpret translated or isolated clock paths, establish electrical
+compatibility, or prove a PCB copper or physical return path. Project policy
+can set `block`, `off`, or an exact ignore. Synthetic fault, control, boundary,
+policy, duplicate-suppression, coverage, ordering, and CLI/MCP parity cases are
+under `tests/test_spi_peer_reference_review.py` and
+`tests/test_design_lint_mcp_parity_spi_reference.py`. Exact native fixture
+exports repeat on digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+[SPI reference fixture notes](../tests/fixtures/design_lint/spi-peer-reference-native/README.md).
 
 ## Review UART peers across voltage-named rails
 
