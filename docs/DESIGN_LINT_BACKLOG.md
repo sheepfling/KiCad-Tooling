@@ -487,6 +487,12 @@ and optional ecosystem adapters are `P3`.
   binding, and CLI/MCP report comparison for the connector-return, serial-peer,
   and digital-peer voltage suites. This removes another 104 lines from the
   mixed legacy suite.
+  Component voltage-rating, power-rating, and MOSFET stress parity now live in
+  `tests/test_electrical_component_rating_parity.py`, selected with
+  `component_lint` and `parity_lint`. Those pytest cases reuse the existing
+  typed component builders and the shared source-bound harness; the electrical
+  surface map now includes all three. The mixed legacy suite shrank by another
+  331 lines.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

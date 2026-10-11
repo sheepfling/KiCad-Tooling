@@ -1770,7 +1770,7 @@
         "analyze_electrical"
       ],
       "alignment": "aligned",
-      "reason": "Both run reviewed grounding, exact PCB return-pad copper connectivity and net-tie requirements, connected copper-zone identities, filled-island counts, per-pad island indexes and islands without observed pad anchors, geometry-derived via identities with layer spans, positions, dimensions, types, multiplicities and per-pad component membership, and retain native track segment/arc kind plus pad/via copper contacts at each endpoint. They also check connector pin relationships and per-contact current-rating requirements, I2C direct resistor and explicitly mapped array channel requirements, CAN, USB-C, SPI, UART peer reference policies including exact passive bond components between distinct reference nets, mapped direct digital-peer voltage limits, exact component voltage-rating and stress requirements, state-aware exact three-pin MOSFET VDS/VGS intervals, RS-485 topology, power source/load membership contracts, numbered return-net coverage, and power/frequency using source-bound native evidence. A mapped bond checks schematic component and pin-to-net assignments; it does not prove physical conduction or PCB copper continuity.",
+      "reason": "Both run reviewed grounding, exact PCB return-pad copper connectivity and net-tie requirements, connected copper-zone identities, filled-island counts, per-pad island indexes and islands without observed pad anchors, geometry-derived via identities with layer spans, positions, dimensions, types, multiplicities and per-pad component membership, and retain native track segment/arc kind plus pad/via copper contacts at each endpoint. They also check connector pin relationships and per-contact current-rating requirements, I2C direct resistor and explicitly mapped array channel requirements, CAN, USB-C, SPI, UART peer reference policies including exact passive bond components between distinct reference nets, mapped direct digital-peer voltage limits, exact component voltage-rating, power-rating, and stress requirements, state-aware exact three-pin MOSFET VDS/VGS intervals, RS-485 topology, power source/load membership contracts, numbered return-net coverage, and power/frequency using source-bound native evidence. A mapped bond checks schematic component and pin-to-net assignments; it does not prove physical conduction or PCB copper continuity.",
       "scope": "core",
       "gaps": [],
       "constraints": [
@@ -1789,9 +1789,10 @@
         "tests.test_electrical_serial_peer_parity.test_serial_peer_requirements_match_cli_and_mcp",
         "tests.test_electrical_serial_peer_parity.test_serial_peer_bonded_reference_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_digital_peer_voltage_parity.test_digital_peer_voltage_requirements_match_cli_and_mcp",
-        "tests.test_electrical_parity.ElectricalParityTests.test_component_voltage_rating_requirement_matches_cli_and_mcp",
+        "tests.test_electrical_component_rating_parity.test_component_voltage_rating_requirement_matches_cli_and_mcp",
+        "tests.test_electrical_component_rating_parity.test_component_power_rating_requirement_matches_cli_and_mcp",
         "tests.test_electrical_parity.ElectricalParityTests.test_connector_contact_rating_requirement_matches_cli_and_mcp",
-        "tests.test_electrical_parity.ElectricalParityTests.test_mosfet_state_stress_requirement_matches_cli_and_mcp",
+        "tests.test_electrical_component_rating_parity.test_mosfet_state_stress_requirement_matches_cli_and_mcp",
         "tests.test_electrical_parity.ElectricalParityTests.test_rs485_contract_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_parity.ElectricalParityTests.test_power_connectivity_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_parity.ElectricalParityTests.test_external_fixed_simulator_success_and_wrong_version_match_cli"
