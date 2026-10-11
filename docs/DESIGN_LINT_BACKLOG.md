@@ -10349,6 +10349,16 @@ it does not claim field validation or effectiveness against private boards.
   Native output and typed analysis remain under ignored
   `build/ci/public-demo-lint-screen/output/halpi2/`; no source was copied into
   Tooling.
+- **Public optical-isolation boundary screen (2026-10-11):** ST's
+  [STEVAL-PCC020V2 manual, UM2945 Rev 2][st-usb-uart-isolation] describes a
+  PC/USB domain and an isolated target domain, and explains that galvanic
+  isolation protects the host PC. Its schematic labels `GND_USB` and
+  `GND_STM`, places the CP2102 on the USB side, and carries the UART signals
+  through two ACPL-M61L optocouplers. A tooling-owned synthetic two-direction
+  optocoupled UART control confirms that LINT-074 does not bridge those grounds
+  or report them as directly linked peers. The manual is contextual evidence
+  only: no source-bound KiCad export or reviewer measurement was made from it,
+  and no manual or project files were copied into Tooling.
 - **Applicability report extension (2026-10-07):** LINT-074 now returns
   source-bound coverage for discovered native-function and numbered-label
   UART links. It distinguishes no direct peers, incomplete explicit reference
@@ -10970,5 +10980,6 @@ quality, or first-article continuity.
 [usb-sleuth]: https://github.com/smaroukis/usb-sleuth/tree/6ecdcfdd4bbb30c7d143cdca862ee048d6409ab1
 [usb-sleuth-readme]: https://github.com/smaroukis/usb-sleuth/blob/6ecdcfdd4bbb30c7d143cdca862ee048d6409ab1/README.md
 [usb-sleuth-license]: https://github.com/smaroukis/usb-sleuth/blob/6ecdcfdd4bbb30c7d143cdca862ee048d6409ab1/LICENSE
+[st-usb-uart-isolation]: https://www.st.com/resource/en/user_manual/um2945-getting-started-with-the-stevalpcc020v2-usb-to-ic-uart-interface-board-for-stnrg01x-products-stmicroelectronics.pdf
 [dstat-pcb]: https://microfluidics.utoronto.ca/gitlab/mdryden/dstat-hardware/-/raw/b6b2bbfdb7f8b2997d3035b083edbab2348333dc/dstat-mainboard.kicad_pcb
 [happy-cross-analysis]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/cross_analysis.py>

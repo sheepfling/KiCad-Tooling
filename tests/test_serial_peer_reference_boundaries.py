@@ -9,6 +9,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
+    NetlistContract,
 )
 from kicad_tooling.hwrepo.serial_peer_reference_review import (
     unmapped_serial_peer_reference_reviews,
@@ -23,7 +24,68 @@ from tests.serial_peer_reference_support import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
 
+def optically_isolated_uart_netlist() -> NetlistContract:
+    """Model two UART directions crossing optocouplers between local grounds."""
+    source = serial_reference_netlist()
+    direct_nets = {"UART_A", "UART_B", "+3V3", "GND_A", "GND_B"}
+    nets = {name: pins for name, pins in source.nets.items() if name not in direct_nets}
+    nets.update(
+        {
+            "VDD_A": ("U1.8",),
+            "VDD_B": ("U2.8",),
+            "GND_A": ("U1.9", "U3.2", "U4.4"),
+            "GND_B": ("U2.9", "U3.4", "U4.2"),
+            "UART_A_TO_B_LED": ("U1.1", "U3.1"),
+            "UART_A_TO_B_OUTPUT": ("U3.3", "U2.1"),
+            "UART_B_TO_A_LED": ("U2.2", "U4.1"),
+            "UART_B_TO_A_OUTPUT": ("U4.3", "U1.2"),
+        }
+    )
+    optocoupler_functions = {
+        f"{reference}.{pin}": function
+        for reference in ("U3", "U4")
+        for pin, function in (
+            ("1", "LED_A"),
+            ("2", "LED_K"),
+            ("3", "COLLECTOR"),
+            ("4", "EMITTER"),
+        )
+    }
+    optocoupler_components = {
+        reference: ComponentContract(
+            value="Synthetic optical isolator", footprint="Package:Optocoupler"
+        )
+        for reference in ("U3", "U4")
+    }
+    optocoupler_types = {pin: "passive" for pin in optocoupler_functions}
+    return source.model_copy(
+        update={
+            "components": {**source.components, **optocoupler_components},
+            "nets": nets,
+            "component_symbols": {
+                **source.component_symbols,
+                "U3": "Synthetic:Optocoupler",
+                "U4": "Synthetic:Optocoupler",
+            },
+            "component_pin_numbers": {
+                **source.component_pin_numbers,
+                "U3": ("1", "2", "3", "4"),
+                "U4": ("1", "2", "3", "4"),
+            },
+            "pin_functions": {**source.pin_functions, **optocoupler_functions},
+            "pin_electrical_types": {**source.pin_electrical_types, **optocoupler_types},
+        }
+    )
+
+
 class SerialPeerReferenceBoundaryTests:
+    def test_optically_isolated_uart_pair_is_not_treated_as_direct_peers(self) -> None:
+        observed = optically_isolated_uart_netlist()
+
+        assert observed.nets["GND_A"] != observed.nets["GND_B"]
+        assert not unmapped_serial_peer_reference_reviews(observed)
+        assert RULE_ID not in {finding.rule_id for finding in report(observed).findings}
+
     def test_channel_label_candidate_skips_ambiguous_or_incomplete_cases(self) -> None:
         source = labelled_serial_reference_netlist()
         tx_net = "Compute module/UART.0.TX"

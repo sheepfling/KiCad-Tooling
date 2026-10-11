@@ -2723,7 +2723,8 @@
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_channel_labelled_generic_ic_pair_with_common_reference_is_quiet",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_exact_channel_label_map_suppresses_but_stale_map_does_not",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_skips_ambiguous_or_incomplete_cases",
-        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_obeys_rule_override_and_exact_ignore"
+        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_obeys_rule_override_and_exact_ignore",
+        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_optically_isolated_uart_pair_is_not_treated_as_direct_peers"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
