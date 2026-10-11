@@ -10,9 +10,9 @@ with one fitted component and a generic native `power_out` pin.
 
 SHA-256:
 
-| Fixture | SHA-256 |
-| --- | --- |
-| `fault.kicad_sch` | `9d05db034caed6a56eb7fe3de13a06fd414969f39e9e4c57b9deee76edb828eb` |
+| Fixture             | SHA-256                                                            |
+| ------------------- | ------------------------------------------------------------------ |
+| `fault.kicad_sch`   | `9d05db034caed6a56eb7fe3de13a06fd414969f39e9e4c57b9deee76edb828eb` |
 | `control.kicad_sch` | `cd7494eaac52d82d32e123be5740e2f88c8d6753e4f11a197c3452df0a5951cf` |
 
 The rule defaults to review because native electrical type alone does not
