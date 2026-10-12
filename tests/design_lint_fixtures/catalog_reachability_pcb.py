@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbMissingFootprintPlacement,
     PcbPopulationMismatch,
 )
+from kicad_tooling.hwrepo.pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
 
 def pcb_component_inventory_rule_ids() -> set[str]:
@@ -53,6 +54,16 @@ def pcb_component_inventory_rule_ids() -> set[str]:
                 reference="U3",
                 schematic_value="Synthetic schematic value",
                 board_value="Synthetic board value",
+            ),
+        ),
+        pad_net_comparison_status="COMPLETE",
+        pad_net_mismatches=(
+            PcbSchematicBoardPadNetMismatch(
+                reference="U4",
+                pin="1",
+                mismatch="net_assignment_differs",
+                schematic_net="SYNTHETIC_SIGNAL",
+                board_net="SYNTHETIC_OTHER",
             ),
         ),
     )

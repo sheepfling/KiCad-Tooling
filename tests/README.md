@@ -12,6 +12,10 @@ supported while we migrate the suite incrementally, prioritizing lint and
 verification coverage. Convert the touched regression tests to pytest functions
 when extending a legacy suite. `unittest.mock` remains useful with pytest.
 
+The schematic-to-PCB pad-net native fault and control are synthetic tooling
+fixtures; their source boundary and pinned hashes are recorded in the
+[fixture README](fixtures/design_lint/schematic-pcb-pad-net/README.md).
+
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:
 
@@ -73,10 +77,16 @@ python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
 .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and pcb_lint" \
   tests/test_pcb_population_mismatch.py tests/test_pcb_component_inventory_mcp_parity.py
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.schematic_pcb_pad_net_mismatch")'
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
   .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and pcb_lint and native_kicad" \
   tests/test_pcb_component_inventory_native_fixture_lane.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.schematic_pcb_pad_net_mismatch")' \
+  tests/test_pcb_schematic_pad_net_native_fixture_lane.py
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and pcb_lint" \
   tests/test_pcb_access_fixture_lane.py tests/test_ci_hosted_pcb_fixture_schedule.py

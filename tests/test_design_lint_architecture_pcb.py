@@ -14,6 +14,8 @@ from kicad_tooling.hwrepo import (
     pcb_component_values,
     pcb_decoupling_models,
     pcb_drc_models,
+    pcb_pad_net_comparison,
+    pcb_pad_net_models,
     pcb_reference_plane_models,
     pcb_return_path_capture,
     pcb_return_path_checks,
@@ -426,6 +428,43 @@ def test_pcb_value_review_keeps_its_predicate_in_a_focused_pcb_module() -> None:
         '"implementation_owner": "kicad_tooling/hwrepo/pcb_component_values.py#'
         'compare_schematic_pcb_values"'
     ) in catalog
+
+
+def test_pcb_pad_net_review_keeps_its_predicate_and_model_in_thematic_modules() -> None:
+    model = pcb_pad_net_models.PcbSchematicBoardPadNetMismatch
+    owner = pcb_pad_net_comparison
+
+    assert model.__module__.endswith("pcb_pad_net_models")
+    assert not hasattr(shared_models, "PcbSchematicBoardPadNetMismatch")
+    assert _line_count(HWREPO / "pcb_pad_net_models.py") < IMPLEMENTATION_MAX_LINES
+    assert _line_count(HWREPO / "pcb_pad_net_comparison.py") < IMPLEMENTATION_MAX_LINES
+    assert callable(owner.compare_schematic_pcb_pad_nets)
+
+    catalog = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
+    assert (
+        '"implementation_owner": "kicad_tooling/hwrepo/pcb_pad_net_comparison.py#'
+        'compare_schematic_pcb_pad_nets"'
+    ) in catalog
+
+
+def test_internal_pcb_pad_net_services_import_models_from_the_theme_owner() -> None:
+    legacy_imports: list[str] = []
+    for path in sorted(HWREPO.glob("*.py")):
+        if path.name == "models.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.level == 1
+                and node.module == "models"
+                and any(alias.name == "PcbSchematicBoardPadNetMismatch" for alias in node.names)
+            ):
+                legacy_imports.append(path.name)
+    assert not legacy_imports, (
+        "Internal PCB services should import pad net models from their theme owner; "
+        f"legacy imports: {sorted(set(legacy_imports))}"
+    )
 
 
 def test_pcb_services_import_rf_models_from_the_theme_owner() -> None:

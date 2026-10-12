@@ -3574,6 +3574,52 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_component_values.py#compare_schematic_pcb_values"
     },
     {
+      "rule_id": "pcb.schematic_pcb_pad_net_mismatch",
+      "title": "Schematic pin and PCB pad net assignments differ",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Source-bound native schematic netlist pin assignments compared with native PCB pad assignments in snapshot schema 12 or 13",
+      "predicate": "For each pin with an assigned schematic net or an explicit native unconnected-net assignment, compare the case-insensitive reference and exact pin number with the same-numbered native PCB pad when the schematic footprint assignment is nonempty, the PCB reference is placed, and both footprint IDs match after trimming. Report a missing board pad, an unassigned board pad, a different exact net name, or a PCB net assigned to a schematic-unconnected pin.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
+      ],
+      "limitations": [
+        "This compares CAD net assignments by reference and pad number. It does not infer that repeated connector pins, USB/serial returns, or similarly named nets must be bonded, and it does not establish routed copper continuity or physical conduction.",
+        "A schematic pin number may not map one-to-one to a physical pad in a custom symbol or footprint. Alternate pin-to-pad mappings, schematic-only symbols, board-only pads, and mismatched footprint identities are outside this comparison; confirm prompts against the part's approved mapping.",
+        "DNP placements are compared when present in both sources because this is a CAD assignment check; the result does not establish physical population or a named variant's effective pin assignment.",
+        "Exact net names are compared after native netlist normalization. Intentional aliases or board-side net naming differences may need project review, an exact finding ignore, or rule mode override.",
+        "The check requires source-bound schematic assignments and native PCB footprint/pad snapshot schema 12 or 13. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_schematic_pad_net_mismatch.test_connected_pin_board_pad_net_differences_are_reviewable_and_configurable",
+        "tests.test_pcb_schematic_pad_net_mismatch.test_board_assignment_on_schematic_unconnected_pin_is_reviewable",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_schematic_pad_net_native_fixture_lane.test_native_schematic_pcb_pad_net_fault_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_schematic_pad_net_mismatch.test_matching_assignments_and_noncomparable_components_are_controls",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_schematic_pad_net_native_fixture_lane.test_native_schematic_pcb_pad_net_fault_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_schematic_pad_net_mismatch.test_pad_net_comparison_is_order_independent_and_net_names_are_exact"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_pad_net_comparison.py#compare_schematic_pcb_pad_nets",
+        "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
+        "kicad_tooling/hwrepo/design_lint_pcb_pad_net_candidates.py#pcb_pad_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
+        "kicad_tooling/ci_hosted_pcb_pad_net_fixture.py#pcb_schematic_pcb_pad_net_fixture_lane"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_pad_net_comparison.py#compare_schematic_pcb_pad_nets"
+    },
+    {
       "rule_id": "component.led_directly_across_supply_and_return",
       "title": "Supported two-pin LED directly spans a positive rail and return",
       "status": "active",

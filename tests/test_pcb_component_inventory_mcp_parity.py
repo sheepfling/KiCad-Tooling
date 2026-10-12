@@ -29,6 +29,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
 )
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
 from kicad_tooling.hwrepo.pcb_drc_models import PcbSignalPathRuleCoverageReport
+from kicad_tooling.hwrepo.pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 from kicad_tooling.hwrepo.pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from kicad_tooling.hwrepo.pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from kicad_tooling.hwrepo.pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
@@ -97,6 +98,16 @@ def test_component_inventory_findings_match_cli_and_mcp(
                         board_value="100k",
                     ),
                 ),
+                pad_net_comparison_status="COMPLETE",
+                pad_net_mismatches=(
+                    PcbSchematicBoardPadNetMismatch(
+                        reference="U5",
+                        pin="4",
+                        mismatch="net_assignment_differs",
+                        schematic_net="SYNTHETIC_RETURN",
+                        board_net="SYNTHETIC_RETURN_2",
+                    ),
+                ),
             ),
         )
 
@@ -163,3 +174,9 @@ def test_component_inventory_findings_match_cli_and_mcp(
     assert value_finding.subject == "R4: schematic and PCB value fields differ"
     assert value_finding.evidence["schematic_value"] == ("10k",)
     assert value_finding.evidence["board_value"] == ("100k",)
+    (pad_net_finding,) = tuple(
+        item for item in mcp_report.findings if item.rule_id == "pcb.schematic_pcb_pad_net_mismatch"
+    )
+    assert pad_net_finding.subject == ("U5.4: schematic and PCB net assignments differ")
+    assert pad_net_finding.evidence["schematic_net"] == ("SYNTHETIC_RETURN",)
+    assert pad_net_finding.evidence["board_net"] == ("SYNTHETIC_RETURN_2",)

@@ -273,6 +273,8 @@ _LINT_AREA_MODULES = {
             "tests/test_electrical_test_access_evidence.py",
             "tests/test_pcb_component_inventory.py",
             "tests/test_pcb_population_mismatch.py",
+            "tests/test_pcb_schematic_pad_net_mismatch.py",
+            "tests/test_pcb_schematic_pad_net_native_fixture_lane.py",
             "tests/test_pcb_component_inventory_mcp_parity.py",
             "tests/test_pcb_component_inventory_native_fixture_lane.py",
             "tests/test_design_lint_determinism_pcb_component_inventory.py",

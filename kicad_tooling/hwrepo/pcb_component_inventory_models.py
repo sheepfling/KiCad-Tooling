@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import model_validator
 
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
+from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
 
 class PcbMissingFootprintPlacement(StrictModel):
@@ -79,6 +80,11 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     )
     value_mismatches: tuple[PcbComponentValueMismatch, ...] = ()
     value_comparison_issue: NonEmptyText | None = None
+    pad_net_comparison_status: Literal["NOT_APPLICABLE", "COMPLETE", "BLOCKED", "DISABLED"] = (
+        "NOT_APPLICABLE"
+    )
+    pad_net_mismatches: tuple[PcbSchematicBoardPadNetMismatch, ...] = ()
+    pad_net_comparison_issue: NonEmptyText | None = None
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
@@ -103,6 +109,18 @@ class PcbComponentInventoryCoverageReport(StrictModel):
             raise ValueError("Only blocked PCB value comparison may include an issue")
         if self.value_comparison_status != "COMPLETE" and self.value_mismatches:
             raise ValueError("Only complete PCB value comparison can report mismatch rows")
+        pad_keys = [(item.reference.casefold(), item.pin) for item in self.pad_net_mismatches]
+        if len(pad_keys) != len(set(pad_keys)):
+            raise ValueError("PCB pad net mismatch pins must be unique")
+        if self.pad_net_comparison_status == "BLOCKED" and self.pad_net_comparison_issue is None:
+            raise ValueError("Blocked PCB pad net comparison must explain the evidence gap")
+        if (
+            self.pad_net_comparison_status != "BLOCKED"
+            and self.pad_net_comparison_issue is not None
+        ):
+            raise ValueError("Only blocked PCB pad net comparison may include an issue")
+        if self.pad_net_comparison_status != "COMPLETE" and self.pad_net_mismatches:
+            raise ValueError("Only complete PCB pad net comparison can report mismatch rows")
         if self.status == "COMPLETE":
             if any(
                 value is None
@@ -131,6 +149,7 @@ class PcbComponentInventoryCoverageReport(StrictModel):
             or self.footprint_mismatches
             or self.population_mismatches
             or self.value_comparison_status == "COMPLETE"
+            or self.pad_net_comparison_status == "COMPLETE"
         ):
             raise ValueError("Only complete PCB component inventory can report comparison findings")
         return self

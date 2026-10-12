@@ -10,6 +10,7 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     PcbConnectivitySnapshot,
     PcbFootprintPlacementObservation,
+    PcbPadConnectivityObservation,
 )
 from kicad_tooling.hwrepo.pcb_component_inventory import compare_fitted_schematic_pcb_inventory
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
@@ -32,6 +33,9 @@ def netlist(
     components: dict[str, str] | None = None,
     values: dict[str, str] | None = None,
     dnp: tuple[str, ...] = (),
+    nets: dict[str, tuple[str, ...]] | None = None,
+    unconnected_nets: dict[str, tuple[str, ...]] | None = None,
+    component_pin_numbers: dict[str, tuple[str, ...]] | None = None,
 ) -> NetlistContract:
     assignments = components or {"U1": "Package_QFP:TQFP-48", "J1": "Connector:USB_B"}
     return NetlistContract(
@@ -42,8 +46,10 @@ def netlist(
             )
             for reference, footprint in assignments.items()
         },
-        nets={},
+        nets=nets or {},
+        unconnected_nets=unconnected_nets or {},
         dnp_components=dnp,
+        component_pin_numbers=component_pin_numbers or {},
     )
 
 
@@ -53,6 +59,7 @@ def snapshot(
     footprint_by_reference: dict[str, str] | None = None,
     dnp_by_reference: dict[str, bool] | None = None,
     value_by_reference: dict[str, str] | None = None,
+    pad_net_by_reference: dict[str, str | None] | None = None,
 ) -> PcbConnectivitySnapshot:
     identity_by_reference = {
         reference.casefold(): footprint
@@ -62,6 +69,7 @@ def snapshot(
     value_by_key = {
         reference.casefold(): value for reference, value in (value_by_reference or {}).items()
     }
+    pad_net_values = pad_net_by_reference or {}
     return PcbConnectivitySnapshot(
         schema_version=schema_version,
         board_sha256=BOARD_SHA256,
@@ -69,7 +77,22 @@ def snapshot(
         image=IMAGE,
         probe_sha256=PROBE_SHA256,
         zones_refilled=True,
-        pads=(),
+        pads=tuple(
+            PcbPadConnectivityObservation(
+                pad=pad_reference,
+                net=net_name,
+                footprint=identity_by_reference.get(
+                    pad_reference.rsplit(".", 1)[0].casefold(), "Synthetic:Footprint"
+                ),
+                dnp=dnp_by_key.get(pad_reference.rsplit(".", 1)[0].casefold(), False),
+                connected_pads=(pad_reference,),
+                connected_zones=(),
+                connected_islands=(),
+                connected_vias=(),
+                positions_nm=((0, 0),),
+            )
+            for pad_reference, net_name in pad_net_values.items()
+        ),
         net_ties=(),
         zones=(),
         vias=(),

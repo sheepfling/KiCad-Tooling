@@ -16,6 +16,8 @@ from .pcb_component_inventory_models import (
 from .pcb_component_population import compare_schematic_pcb_population
 from .pcb_component_values import compare_schematic_pcb_values
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_pad_net_comparison import compare_schematic_pcb_pad_nets
+from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
 
 def compare_fitted_schematic_pcb_inventory(
@@ -93,10 +95,16 @@ def evaluate_native_component_inventory_coverage(
     snapshot_sha256: Digest,
     probe_sha256: Digest,
     value_mode: Literal["review", "block", "off"] = "off",
+    pad_net_mode: Literal["review", "block", "off"] = "off",
 ) -> PcbComponentInventoryCoverageReport:
     """Build complete inventory coverage or retain the precise comparison gap."""
-    if mode == "off":
+    if mode == "off" and value_mode == "off" and pad_net_mode == "off":
         return PcbComponentInventoryCoverageReport(status="DISABLED", mode=mode)
+
+    coverage_mode: Literal["review", "block", "off"] = cast(
+        Literal["review", "block", "off"],
+        next((value for value in (mode, value_mode, pad_net_mode) if value != "off"), "off"),
+    )
 
     issue: str | None = None
     comparison = PcbComponentInventoryComparison()
@@ -106,6 +114,11 @@ def evaluate_native_component_inventory_coverage(
         "DISABLED" if value_mode == "off" else "BLOCKED"
     )
     value_comparison_issue: str | None = None
+    pad_net_mismatches: tuple[PcbSchematicBoardPadNetMismatch, ...] = ()
+    pad_net_comparison_status: Literal["NOT_APPLICABLE", "COMPLETE", "BLOCKED", "DISABLED"] = (
+        "DISABLED" if pad_net_mode == "off" else "BLOCKED"
+    )
+    pad_net_comparison_issue: str | None = None
     if netlist is None:
         issue = "Source-bound native schematic netlist is unavailable"
     elif netlist_sha256 is None:
@@ -134,10 +147,21 @@ def evaluate_native_component_inventory_coverage(
     ):
         value_comparison_issue = issue or "Source-bound PCB component value evidence is unavailable"
 
+    if pad_net_mode != "off":
+        if issue is not None:
+            pad_net_comparison_issue = issue
+        else:
+            try:
+                assert netlist is not None
+                pad_net_mismatches = compare_schematic_pcb_pad_nets(netlist, snapshot)
+                pad_net_comparison_status = "COMPLETE"
+            except ValueError as exc:
+                pad_net_comparison_issue = str(exc)
+
     if issue is not None:
         return PcbComponentInventoryCoverageReport(
             status="BLOCKED",
-            mode=mode,
+            mode=coverage_mode,
             netlist_sha256=netlist_sha256,
             board_path=board_path,
             board_sha256=board_sha256,
@@ -148,6 +172,8 @@ def evaluate_native_component_inventory_coverage(
             probe_sha256=probe_sha256,
             value_comparison_status=value_comparison_status,
             value_comparison_issue=value_comparison_issue,
+            pad_net_comparison_status=pad_net_comparison_status,
+            pad_net_comparison_issue=pad_net_comparison_issue,
             issue=issue,
         )
 
@@ -157,7 +183,7 @@ def evaluate_native_component_inventory_coverage(
         )
     return PcbComponentInventoryCoverageReport(
         status="COMPLETE",
-        mode=mode,
+        mode=coverage_mode,
         netlist_sha256=netlist_sha256,
         board_path=board_path,
         board_sha256=board_sha256,
@@ -173,4 +199,7 @@ def evaluate_native_component_inventory_coverage(
         value_comparison_status=value_comparison_status,
         value_mismatches=value_mismatches,
         value_comparison_issue=value_comparison_issue,
+        pad_net_comparison_status=pad_net_comparison_status,
+        pad_net_mismatches=pad_net_mismatches,
+        pad_net_comparison_issue=pad_net_comparison_issue,
     )

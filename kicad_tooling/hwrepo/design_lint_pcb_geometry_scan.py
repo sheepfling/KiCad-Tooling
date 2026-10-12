@@ -88,14 +88,21 @@ def scan_pcb_geometry(
     )
     value_override = overrides.get("pcb.schematic_pcb_value_mismatch")
     value_mode: PcbRuleMode = "review" if value_override is None else value_override.mode
+    pad_net_override = overrides.get("pcb.schematic_pcb_pad_net_mismatch")
+    pad_net_mode: PcbRuleMode = "review" if pad_net_override is None else pad_net_override.mode
     active_inventory_modes: tuple[PcbRuleMode, ...] = tuple(
-        mode for mode in (inventory_mode, population_mode, value_mode) if mode != "off"
+        mode
+        for mode in (inventory_mode, population_mode, value_mode, pad_net_mode)
+        if mode != "off"
     )
     inventory_scan_mode: PcbRuleMode = (
         active_inventory_modes[0] if active_inventory_modes else "off"
     )
     inventory_required = config.kind is ProjectKind.PCB and (
-        inventory_mode != "off" or population_mode != "off" or value_mode != "off"
+        inventory_mode != "off"
+        or population_mode != "off"
+        or value_mode != "off"
+        or pad_net_mode != "off"
     )
     if (
         decoupling_map is None
@@ -265,6 +272,7 @@ def scan_pcb_geometry(
                 snapshot_sha256=evidence.snapshot_sha256,
                 probe_sha256=evidence.probe_sha256,
                 value_mode=value_mode,
+                pad_net_mode=pad_net_mode,
             )
         modes: dict[str, PcbRuleMode] = {
             "pcb.decoupling_proximity": decoupling_mode,
@@ -278,6 +286,7 @@ def scan_pcb_geometry(
             "pcb.schematic_component_inventory": inventory_mode,
             "pcb.schematic_pcb_dnp_mismatch": population_mode,
             "pcb.schematic_pcb_value_mismatch": value_mode,
+            "pcb.schematic_pcb_pad_net_mismatch": pad_net_mode,
         }
         (
             decoupling_report,
@@ -441,10 +450,14 @@ def scan_pcb_geometry(
         inventory_report = (
             PcbComponentInventoryCoverageReport(
                 status="BLOCKED",
-                mode=inventory_mode,
+                mode=inventory_scan_mode,
                 netlist_sha256=coach.netlist_sha256,
                 board_path=board_relative,
                 board_sha256=board_hash,
+                pad_net_comparison_status=(
+                    "BLOCKED" if pad_net_mode != "off" else "NOT_APPLICABLE"
+                ),
+                pad_net_comparison_issue=issue if pad_net_mode != "off" else None,
                 issue=issue,
             )
             if inventory_required

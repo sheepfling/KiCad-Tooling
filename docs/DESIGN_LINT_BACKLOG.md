@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 97 rules are implemented with synthetic regression coverage.
+The following 98 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -395,6 +395,7 @@ Their actual recognition limits are documented in
 - `pcb.schematic_component_inventory`
 - `pcb.schematic_pcb_dnp_mismatch`
 - `pcb.schematic_pcb_value_mismatch`
+- `pcb.schematic_pcb_pad_net_mismatch`
 - `connector.return_distribution`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
@@ -2178,7 +2179,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 97 active rules; CI requires every new
+- **Status:** Baseline complete for all 98 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2187,7 +2188,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 97 covered, 0 not applicable, 0 unreviewed.
+  audit: 98 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5705,6 +5706,47 @@ is not a reason by itself to expand its scope or change its default policy.
   motivated the audit. The local predicate is first-party and uses native
   KiCad evidence; no cohort implementation was copied or executed.
 
+#### LINT-113 — Schematic pin and PCB pad net assignments differ
+
+- **Status:** Implemented as `pcb.schematic_pcb_pad_net_mismatch`, default
+  `REVIEW`, using the native schematic netlist and PCB pad snapshot schema 12
+  or 13. Project policy can choose `block` or `off`; exact reviewed findings
+  use the existing ignore lifecycle.
+- **Priority:** P1 source consistency. Separate schematic and board edits can
+  leave a connected schematic pin's same-numbered PCB pad unassigned or on a
+  different net, or assign a PCB net to a pin the schematic exports as
+  unconnected.
+- **Predicate:** For each assigned or explicitly unconnected schematic pin,
+  compare the case-insensitive component reference and exact pin number with
+  the same-numbered native PCB pad when both sources contain that reference,
+  the schematic has an assigned footprint, and the assigned and placed
+  footprint IDs match after trimming. Report missing pads, unassigned board
+  pads, exact net-name differences, and board assignments on schematic-
+  unconnected pins. Evaluate each placed footprint even when marked DNP; this
+  compares source assignments only and does not infer assembly population.
+- **Boundary:** This is an exact source-consistency prompt. It does not infer
+  that repeated connector pins, USB/serial returns, or similarly named nets
+  must be bonded; that requirement must come from reviewed project intent. It
+  does not prove routed copper continuity or physical conduction. A custom
+  symbol's pin numbers may not map one-to-one to footprint pads, so alternate
+  pin maps and mismatched footprint identities remain out of scope or require
+  review. Missing, stale, or unsupported source evidence blocks coverage.
+- **Fixtures:** Synthetic pytest cases cover missing, unassigned, different,
+  and matched pad nets; a board assignment on an unconnected schematic pin;
+  alternate-footprint and off-board controls; stable ordering; exact net-name
+  comparison; policy, ignore, and stale-ignore behavior; blocked coverage;
+  and pad-net-only policy selection. CLI/MCP parity carries the typed finding.
+  Tooling-owned native fault/control sources are pinned and repeated on exact
+  KiCad 10.0.0 and 10.0.5 in the `KICAD_RUN_NATIVE_PCB_FIXTURES` lane. The
+  local exact-version lane passed both cases on 2026-10-12; hosted prerelease
+  acceptance is still required. The fixture contains no project/customer
+  source.
+- **Incremental value:** This check catches cross-artifact assignment drift
+  that same-source ERC cannot establish. It does not detect a missing
+  common-ground requirement when both schematic and PCB consistently encode
+  separate grounds; connector/interface peer heuristics and project-authored
+  grounding contracts address that different question.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8560,7 +8602,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 97 active rules. Each entry has a deterministic predicate, evidence
+contains 98 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

@@ -87,6 +87,7 @@ DesignLintRuleId = Literal[
     "pcb.schematic_component_inventory",
     "pcb.schematic_pcb_dnp_mismatch",
     "pcb.schematic_pcb_value_mismatch",
+    "pcb.schematic_pcb_pad_net_mismatch",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",
