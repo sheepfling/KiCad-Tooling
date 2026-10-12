@@ -10009,6 +10009,11 @@ it does not claim field validation or effectiveness against private boards.
   2026-10-11 (GitHub Actions run `38133015752`) with
   `KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES=1`. Hosted native fixtures passed
   under the pinned KiCad 10.0.0 and 10.0.5 images.
+- **Pytest gate revalidation (2026-10-11):** `v0.5.0rc124` (commit
+  `c12c004`, GitHub Actions run `38205612152`) passed its scoped
+  `power_lint` gate with the native fixture switch enabled. The split native
+  suite ran separate parameterized checks for KiCad 10.0.0 and 10.0.5; mocked
+  lane orchestration remains a separately selectable synthetic test.
 
 #### LINT-063 — Output-driven LED series-path review
 

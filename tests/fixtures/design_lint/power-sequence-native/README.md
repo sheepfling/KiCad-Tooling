@@ -53,3 +53,8 @@ therefore asserted on the fully parsed, normalized `NetlistContract`.
 The control reports lint `PASS` with no sequence finding on both versions. The
 open-enable fault reports `REVIEW` with the mapped endpoint mismatch, and the
 cycle case reports `REVIEW` with the output-to-enable cycle, on both versions.
+The exact-native cases are parameterized in
+`tests/test_power_sequence_native_fixture_lane.py`; the mocked orchestration
+test remains in `tests/test_power_sequence_fixture_lane.py`. Both selectors
+were validated by the focused `power_lint` prerelease gate `v0.5.0rc124`
+(commit `c12c004`, GitHub Actions run `38205612152`).
