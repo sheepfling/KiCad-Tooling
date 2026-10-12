@@ -24,5 +24,8 @@ connected. Named VCC/GND pins remain with the more specific named-pin checks;
 connector candidates remain with `connector.unconnected_power_input`.
 
 All source is tooling-owned synthetic test data and is not a manufacturing
-design. The native fixture lane exports each schematic twice with the pinned
-KiCad 10.0.0 and 10.0.5 images and compares canonical typed netlist evidence.
+design. The focused native lane in
+`tests/test_component_power_input_native_fixture_lane.py` exports only these
+four schematics twice with the pinned KiCad 10.0.0 and 10.0.5 images and
+compares canonical typed netlist evidence. Its exact-version hosted rerun is
+pending acceptance; the earlier accepted run used the broader connector lane.

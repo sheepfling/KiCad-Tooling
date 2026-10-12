@@ -32,6 +32,7 @@ class ConnectorReturnFixtureContext:
     config: ProjectConfig
     pinned: str
     log: ConnectorReturnLog
+    stage_prefix: str
     scratch: Path
     cases: tuple[str, ...]
     source_hashes: dict[str, str]
@@ -48,6 +49,7 @@ def prepare_connector_return_fixture_context(
     log: ConnectorReturnLog,
     *,
     case_names: tuple[str, ...] | None = None,
+    stage_prefix: str = "connector-return-fixture",
 ) -> ConnectorReturnFixtureContext:
     """Prepare digest-pinned synthetic inputs and repeated native netlist reports."""
     import hashlib
@@ -158,6 +160,8 @@ def prepare_connector_return_fixture_context(
     cases = tuple(fixture_sources) if case_names is None else tuple(case_names)
     if not cases or len(set(cases)) != len(cases):
         raise ValueError("Connector-return fixture cases must be a non-empty unique sequence")
+    if not stage_prefix or stage_prefix.startswith("/") or stage_prefix.endswith("/"):
+        raise ValueError("Connector-return fixture stage prefix must be a non-empty relative name")
     unknown_cases = tuple(case for case in cases if case not in fixture_sources)
     if unknown_cases:
         raise ValueError(f"Unknown connector-return fixture cases: {unknown_cases}")
@@ -256,7 +260,7 @@ def prepare_connector_return_fixture_context(
         script,
     )
     log.event(
-        "connector-return-fixture/native-export",
+        f"{stage_prefix}/native-export",
         "START",
         project=project,
         kicad_version=config.kicad_version,
@@ -266,7 +270,7 @@ def prepare_connector_return_fixture_context(
     write_model(scratch / "native.command.json", command)
     if command.returncode != 0 or command.error is not None:
         log.event(
-            "connector-return-fixture/native-export",
+            f"{stage_prefix}/native-export",
             "FAIL",
             project=project,
             kicad_version=config.kicad_version,
@@ -278,7 +282,7 @@ def prepare_connector_return_fixture_context(
             f"Native connector fixture command failed: {command.stderr or command.error}"
         )
     log.event(
-        "connector-return-fixture/native-export",
+        f"{stage_prefix}/native-export",
         "PASS",
         project=project,
         kicad_version=config.kicad_version,
@@ -344,6 +348,7 @@ def prepare_connector_return_fixture_context(
         config=config,
         pinned=pinned,
         log=log,
+        stage_prefix=stage_prefix,
         scratch=scratch,
         cases=cases,
         source_hashes=source_hashes,

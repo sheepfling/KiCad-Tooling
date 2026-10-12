@@ -1046,12 +1046,15 @@ and optional ecosystem adapters are `P3`.
    place. Tagged acceptance `v0.5.0rc17` (GitHub run `37863872527`) confirmed
    exact KiCad 10.0.0/10.0.5 behavior, with repeatable exports for the mapped
    control and wrong-return fault. This adds custom-symbol applicability to an
-   existing REVIEW heuristic, not a new electrical conclusion. LINT-092 extends LINT-089's native
-   `power_in` evidence to non-connector components whose pin functions are
-   generic or absent. The synthetic lane checks open and explicit no-connect
-   faults, connected and DNP controls, connector exclusion, and CLI/MCP parity.
-   It remains REVIEW-only and does not infer the pin's positive-supply or
-   reference role.
+   existing REVIEW heuristic, not a new electrical conclusion. LINT-092
+   extends LINT-089's native `power_in` evidence to non-connector components
+   with generic or absent pin functions. The synthetic lane checks open and
+   explicit no-connect faults, connected and DNP controls, connector exclusion,
+   and CLI/MCP parity.
+   Its focused native regression now mounts only those four synthetic
+   component-pin schematics and records a component-specific receipt. The
+   exact-version hosted rerun for that narrower selector is pending. It remains
+   REVIEW-only and does not infer the pin's positive-supply or reference role.
 3. **Measure the value of existing REVIEW rules.** Continue with public
    geometry, LED, and peer-connector cases that have applicability signals.
    The public STM32 USB-to-triple-UART sample already recorded under LINT-031
@@ -4811,7 +4814,10 @@ is not a reason by itself to expand its scope or change its default policy.
   blocking, exact ignore, and input-order stability. CLI/MCP parity checks the
   fault and connected control. The digest-pinned KiCad 10.0.0/10.0.5 native
   lane records repeated netlist exports and checks the fault, no-connect,
-  connected, and DNP outcomes. No board or project-owned requirement is used.
+  connected, and DNP outcomes. The focused lane is
+  `tests/test_component_power_input_native_fixture_lane.py`; its synthetic
+  orchestration test verifies that only those four schematics are mounted.
+  No board or project-owned requirement is used.
 - **Incremental value:** This closes the generic non-connector edge left by
   LINT-089. It does not duplicate the cohort's broad singleton-net finding;
   independent fault/control tests show the trigger is the native electrical
@@ -4819,7 +4825,8 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Acceptance:** GitHub run `37777586540` for `v0.5.0rc9` passed the pinned
   KiCad 10.0.0 and 10.0.5 fixture lanes. Both versions repeated native exports
   and produced REVIEW for the fault and no-connect cases, with PASS for the
-  connected and DNP controls.
+  connected and DNP controls. The original run used the broad connector fixture
+  lane; the new component-only selector awaits its next tagged acceptance.
 
 #### LINT-093 — Exact two-pin SPST switch is bypassed by one net
 

@@ -306,7 +306,7 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },
         "component.unconnected_power_input": {
-            "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+            "tests.test_component_power_input_native_fixture_lane.test_native_generic_component_power_input_cases_are_focused_and_repeatable",
         },
         "net.numbered_power_rails": {
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",

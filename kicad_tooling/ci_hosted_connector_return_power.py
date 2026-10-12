@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .ci_hosted_component_power_input import verify_generic_component_power_input_cases
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 
 
@@ -37,60 +38,7 @@ def verify_connector_power_inputs(ctx: ConnectorReturnFixtureContext):
         raise ValueError(
             "Generic connector power-input fixture lost its exact native fault/control result"
         )
-    generic_component_fault = ctx.reports[
-        "unconnected-generic-component-power-input-fault", "first"
-    ]
-    generic_component_control = ctx.reports[
-        "unconnected-generic-component-power-input-control", "first"
-    ]
-    generic_component_no_connect = ctx.reports[
-        "unconnected-generic-component-power-input-no-connect-fault", "first"
-    ]
-    generic_component_dnp = ctx.reports[
-        "unconnected-generic-component-power-input-dnp-control", "first"
-    ]
-    expected_component_subject = "U1.1: generic native power-input pin is unassigned"
-    if (
-        generic_component_fault.status != "REVIEW"
-        or {item.rule_id for item in generic_component_fault.findings}
-        != {"component.unconnected_power_input"}
-        or {item.subject for item in generic_component_fault.findings}
-        != {expected_component_subject}
-        or (generic_component_no_connect.status != "REVIEW")
-        or (
-            {item.rule_id for item in generic_component_no_connect.findings}
-            != {"component.unconnected_power_input"}
-        )
-        or (
-            {item.subject for item in generic_component_no_connect.findings}
-            != {expected_component_subject}
-        )
-        or (generic_component_control.status != "PASS")
-        or generic_component_control.findings
-        or (generic_component_dnp.status != "PASS")
-        or generic_component_dnp.findings
-        or (
-            ctx.observed_contracts[
-                "unconnected-generic-component-power-input-fault", "first"
-            ].pin_electrical_types
-            != {"U1.1": "power_in", "U1.2": "passive"}
-        )
-        or (
-            ctx.observed_contracts[
-                "unconnected-generic-component-power-input-control", "first"
-            ].nets.get("POWER_INPUT_TEST")
-            != ("U1.1",)
-        )
-        or (
-            "U1"
-            not in ctx.observed_contracts[
-                "unconnected-generic-component-power-input-dnp-control", "first"
-            ].dnp_components
-        )
-    ):
-        raise ValueError(
-            "Generic component power-input fixture lost its exact native fault/control result"
-        )
+    verify_generic_component_power_input_cases(ctx)
     channel_fault = ctx.reports["channel-power-fault", "first"]
     channel_fault_rails = next(
         (

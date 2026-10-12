@@ -20,7 +20,7 @@ def emit_connector_return_receipts(
             )
         report = ctx.reports[case, "first"]
         ctx.log.event(
-            f"connector-return-fixture/{case}",
+            f"{ctx.stage_prefix}/{case}",
             "PASS",
             project=ctx.project,
             kicad_version=ctx.config.kicad_version,

@@ -1108,13 +1108,13 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_component_power_pins.test_unconnected_generic_component_power_input_is_reviewable",
-        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
+        "tests.test_component_power_input_native_fixture_lane.test_native_generic_component_power_input_cases_are_focused_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_component_power_pins.test_generic_component_power_input_valid_controls_are_suppressed",
         "tests.test_design_lint_component_power_pins.test_generic_component_power_input_keeps_specific_supply_and_connector_rules",
         "tests.test_design_lint_component_power_pins.test_generic_component_power_input_supports_policy_block_ignore_and_off",
-        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
+        "tests.test_component_power_input_native_fixture_lane.test_native_generic_component_power_input_cases_are_focused_and_repeatable"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_component_power_pins.test_generic_component_power_input_is_order_stable"
