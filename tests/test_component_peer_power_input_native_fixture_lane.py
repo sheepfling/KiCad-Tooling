@@ -51,7 +51,7 @@ def test_named_peer_power_input_open_fixture_sources_match_reviewed_digests() ->
         Path(__file__).resolve().parent / "fixtures/design_lint/named-peer-power-input-open"
     )
     expected = {
-        "fault.kicad_sch": "bbf389425f8f86e1375c6265768a38d1a52c54efd4b80b4c849fd5593cdc0d13",
+        "fault.kicad_sch": "1c9d102a0cac31c7518e52decfd8860fe1d9b39165f27049a6977a21cd92e408",
         "control.kicad_sch": "ce5553c0a40d57bcc5719089d607ddec91398e20155cbe3cb2edae2d2ee49ed3",
     }
 

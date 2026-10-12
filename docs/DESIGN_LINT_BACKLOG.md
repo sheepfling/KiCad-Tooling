@@ -6123,6 +6123,10 @@ is not a reason by itself to expand its scope or change its default policy.
   CLI/MCP parity. Minimal digest-pinned schematic fault/control sources are
   configured for exact KiCad 10.0.0 and 10.0.5 images. The native acceptance
   lane requires repeated normalized exports to match exactly.
+- **Fixture correction:** Hosted run `38275613814` for `v0.5.0rc167` exposed
+  that the synthetic fault still assigned both peers to separate nets. It did
+  not represent an open pin. The U2 rail wire has been removed and the exact
+  native fault/control lane now passes locally on KiCad 10.0.0 and 10.0.5.
 
 ### P2 — PCB geometry and schematic review assistance
 

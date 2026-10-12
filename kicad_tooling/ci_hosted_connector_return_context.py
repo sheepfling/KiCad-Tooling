@@ -246,7 +246,7 @@ def prepare_connector_return_fixture_context(
         "unconnected-generic-component-power-input-dnp-control": "3be52ef83ba54bf0f43bede043095afe42583319e9fd6fa19f17aba250cc3c81",
         "peer-generic-power-input-fault": "594736519e5c2e3bde88af27d9f059749060014a71f6447aeeceeb8767e7bdae",
         "peer-generic-power-input-control": "9242ac4bf9c466ea0e5a4b41a616c6de881283fdac697ef3e55618040ea6746d",
-        "peer-named-power-input-open-fault": "bbf389425f8f86e1375c6265768a38d1a52c54efd4b80b4c849fd5593cdc0d13",
+        "peer-named-power-input-open-fault": "1c9d102a0cac31c7518e52decfd8860fe1d9b39165f27049a6977a21cd92e408",
         "peer-named-power-input-open-control": "ce5553c0a40d57bcc5719089d607ddec91398e20155cbe3cb2edae2d2ee49ed3",
         "component-peer-assignment-outlier-fault": "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
         "component-peer-assignment-outlier-control": "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
