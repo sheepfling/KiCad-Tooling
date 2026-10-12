@@ -277,6 +277,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_design_lint_led_topology.py::test_led_non_matching_topologies_remain_valid_controls[series-resistor]",
         ),
         (
+            "component.peer_power_input_named_assignment_divergence",
+            "tests/test_component_named_peer_power_input_divergence.py::test_named_peer_power_input_split_is_reviewed_with_controls",
+        ),
+        (
             "bus.spi_peer_voltage_review",
             "tests/test_design_lint_peer_voltage.py::test_spi_peer_voltage_prompt_requires_unambiguous_native_evidence",
         ),

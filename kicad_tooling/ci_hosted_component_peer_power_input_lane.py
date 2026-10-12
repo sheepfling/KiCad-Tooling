@@ -6,8 +6,10 @@ from pathlib import Path
 
 from .ci_hosted_component_peer_power_input import (
     COMPONENT_PEER_POWER_INPUT_CASES,
+    NAMED_COMPONENT_PEER_POWER_INPUT_DIVERGENCE_CASES,
     NAMED_COMPONENT_PEER_POWER_INPUT_OPEN_CASES,
     verify_component_peer_power_input_cases,
+    verify_named_component_peer_power_input_divergence_cases,
     verify_named_component_peer_power_input_open_cases,
 )
 from .ci_hosted_connector_return_context import (
@@ -46,4 +48,20 @@ def named_component_peer_power_input_open_fixture_lane(
         stage_prefix="named-component-peer-power-input-open-fixture",
     )
     verify_named_component_peer_power_input_open_cases(context)
+    emit_connector_return_receipts(context, {})
+
+
+def named_component_peer_power_input_divergence_fixture_lane(
+    root: Path, *, project: str, image: str, log: ConnectorReturnLog
+) -> None:
+    """Export only the named split-net fault and common-net control."""
+    context = prepare_connector_return_fixture_context(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        case_names=NAMED_COMPONENT_PEER_POWER_INPUT_DIVERGENCE_CASES,
+        stage_prefix="named-component-peer-power-input-divergence-fixture",
+    )
+    verify_named_component_peer_power_input_divergence_cases(context)
     emit_connector_return_receipts(context, {})

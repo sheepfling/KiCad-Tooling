@@ -12,6 +12,7 @@ from .component_peer_pin_scan import (
     scan_component_peer_pin_assignments,
 )
 from .component_power_input_peer_scan import (
+    scan_component_peer_named_power_input_assignment_divergences,
     scan_component_peer_power_input_assignments,
     scan_component_peer_power_input_open_assignments,
 )
@@ -75,5 +76,11 @@ def component_peer_pin_assignment_scans(
         power_input_open_assignment=scan_component_peer_power_input_open_assignments(
             observed,
             declared_references,
+        ),
+        named_power_input_assignment_divergence=(
+            scan_component_peer_named_power_input_assignment_divergences(
+                observed,
+                declared_references,
+            )
         ),
     )

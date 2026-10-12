@@ -176,6 +176,10 @@ def prepare_connector_return_fixture_context(
         / "named-peer-power-input-open/fault.kicad_sch",
         "peer-named-power-input-open-control": fixture_root
         / "named-peer-power-input-open/control.kicad_sch",
+        "peer-named-power-input-divergence-fault": fixture_root
+        / "named-peer-power-input-divergence/fault.kicad_sch",
+        "peer-named-power-input-divergence-control": fixture_root
+        / "named-peer-power-input-divergence/control.kicad_sch",
         "component-peer-assignment-outlier-fault": fixture_root
         / "generic-component-peer-pin-assignment-outlier/fault.kicad_sch",
         "component-peer-assignment-outlier-control": fixture_root
@@ -248,6 +252,8 @@ def prepare_connector_return_fixture_context(
         "peer-generic-power-input-control": "9242ac4bf9c466ea0e5a4b41a616c6de881283fdac697ef3e55618040ea6746d",
         "peer-named-power-input-open-fault": "1c9d102a0cac31c7518e52decfd8860fe1d9b39165f27049a6977a21cd92e408",
         "peer-named-power-input-open-control": "ce5553c0a40d57bcc5719089d607ddec91398e20155cbe3cb2edae2d2ee49ed3",
+        "peer-named-power-input-divergence-fault": "0adf95fd2320f084c9475d896db2362c2b89123b303c01f3d83b2ebdffabe832",
+        "peer-named-power-input-divergence-control": "89842c056127f07240df3e8dc812c8d89e04c1703a07dd247b450886d3b6c727",
         "component-peer-assignment-outlier-fault": "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
         "component-peer-assignment-outlier-control": "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
     }

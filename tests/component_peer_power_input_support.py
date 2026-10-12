@@ -6,12 +6,16 @@ from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 GENERIC_PEER_POWER_INPUT_RULE_ID = "component.peer_power_input_assignment_divergence"
 NAMED_PEER_POWER_INPUT_OPEN_RULE_ID = "component.peer_power_input_open_assignment"
+NAMED_PEER_POWER_INPUT_DIVERGENCE_RULE_ID = "component.peer_power_input_named_assignment_divergence"
 
 
 def generic_peer_power_input_netlist(
     *,
     references: tuple[str, ...] = ("U1", "U2"),
     symbols: dict[str, str] | None = None,
+    part_ids: dict[str, str | None] | None = None,
+    values: dict[str, str] | None = None,
+    footprints: dict[str, str] | None = None,
     assignments: tuple[str | None, ...] = ("SYNTHETIC_RAIL_A", "SYNTHETIC_RAIL_B"),
     functions: dict[str, str | None] | None = None,
     electrical_types: dict[str, str] | None = None,
@@ -22,6 +26,9 @@ def generic_peer_power_input_netlist(
     if len(references) != len(assignments):
         raise ValueError("Each synthetic component needs one power-input assignment")
     symbols = symbols or {reference: "Lint:GenericPowerInputPeer" for reference in references}
+    part_ids = part_ids or {}
+    values = values or {}
+    footprints = footprints or {}
     functions = functions or {}
     electrical_types = electrical_types or {}
     nets: dict[str, tuple[str, ...]] = {"SIGNAL": tuple(f"{ref}.2" for ref in references)}
@@ -31,7 +38,11 @@ def generic_peer_power_input_netlist(
 
     return NetlistContract(
         components={
-            reference: ComponentContract(value="Synthetic IC", footprint="Synthetic:Package")
+            reference: ComponentContract(
+                value=values.get(reference, "Synthetic IC"),
+                footprint=footprints.get(reference, "Synthetic:Package"),
+                part_id=part_ids.get(reference),
+            )
             for reference in references
         },
         nets=nets,
@@ -65,6 +76,9 @@ def named_peer_power_input_netlist(
     *,
     references: tuple[str, ...] = ("U1", "U2"),
     symbols: dict[str, str] | None = None,
+    part_ids: dict[str, str | None] | None = None,
+    values: dict[str, str] | None = None,
+    footprints: dict[str, str] | None = None,
     assignments: tuple[str | None, ...] = ("SYNTHETIC_RAIL_A", None),
     functions: dict[str, str | None] | None = None,
     electrical_types: dict[str, str] | None = None,
@@ -75,6 +89,9 @@ def named_peer_power_input_netlist(
     return generic_peer_power_input_netlist(
         references=references,
         symbols=symbols or {reference: "Lint:NamedPeerPowerInput" for reference in references},
+        part_ids=part_ids,
+        values=values,
+        footprints=footprints,
         assignments=assignments,
         functions=functions or {reference: "BIAS_IN" for reference in references},
         electrical_types=electrical_types,

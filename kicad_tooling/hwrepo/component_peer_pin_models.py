@@ -8,6 +8,13 @@ from pydantic import model_validator
 
 from .model_primitives import Digest, NonNegativeCount, Reference, StrictModel
 
+POWER_INPUT_DIVERGENCE_RULE_IDS = frozenset(
+    {
+        "component.peer_power_input_assignment_divergence",
+        "component.peer_power_input_named_assignment_divergence",
+    }
+)
+
 
 class ComponentPeerPinRuleCoverage(StrictModel):
     """Source-bound applicability counts for one typed component-peer pin rule."""
@@ -18,6 +25,7 @@ class ComponentPeerPinRuleCoverage(StrictModel):
         "component.peer_signal_input_unconnected",
         "component.peer_bidirectional_pin_unconnected",
         "component.peer_power_input_assignment_divergence",
+        "component.peer_power_input_named_assignment_divergence",
         "component.peer_power_input_open_assignment",
         "component.generic_peer_pin_mixed_open",
         "component.generic_peer_pin_all_open",
@@ -135,7 +143,7 @@ class ComponentPeerPinRuleCoverage(StrictModel):
             if self.unambiguous_assignment_pin_group_count == 0
             else "NO_COMPLETE_ASSIGNMENTS"
             if (
-                self.rule_id == "component.peer_power_input_assignment_divergence"
+                self.rule_id in POWER_INPUT_DIVERGENCE_RULE_IDS
                 and self.open_assignment_pin_group_count
                 == self.unambiguous_assignment_pin_group_count
             )
@@ -144,7 +152,7 @@ class ComponentPeerPinRuleCoverage(StrictModel):
                 self.incomplete_pin_inventory_group_count > 0
                 or self.part_id_incomplete_component_identity_group_count > 0
                 or (
-                    self.rule_id == "component.peer_power_input_assignment_divergence"
+                    self.rule_id in POWER_INPUT_DIVERGENCE_RULE_IDS
                     and self.open_assignment_pin_group_count > 0
                 )
             )

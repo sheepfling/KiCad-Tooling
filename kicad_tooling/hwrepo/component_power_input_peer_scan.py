@@ -1,4 +1,4 @@
-"""Source-bound peer scan for generic component power-input pins."""
+"""Source-bound peer scans for component power-input pins."""
 
 from __future__ import annotations
 
@@ -203,5 +203,26 @@ def scan_component_peer_power_input_open_assignments(
         require_pin_functions=True,
         pin_function_selector=_unrecognized_non_generic_power_input_function,
         assignment_pattern="partial_open",
+        minimum_peer_count=2,
+    )
+
+
+def scan_component_peer_named_power_input_assignment_divergences(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> PeerPinAssignmentScan:
+    """Compare assignments for matching named power-input peer pins.
+
+    Generic functions and recognized supply/return names remain with their
+    more specific checks. A differing assignment is a review candidate only;
+    the peer identity and named function do not prove that the nets must match.
+    """
+    return scan_component_peer_pin_assignments(
+        observed,
+        declared_references,
+        electrical_types=frozenset({"power_in"}),
+        require_pin_functions=True,
+        pin_function_selector=_unrecognized_non_generic_power_input_function,
+        assignment_pattern="different_assigned_nets",
         minimum_peer_count=2,
     )

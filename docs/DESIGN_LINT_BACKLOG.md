@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 104 rules are implemented with synthetic regression coverage.
+The following 105 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -308,6 +308,7 @@ Their actual recognition limits are documented in
 - `component.repeated_supply_pin_function`
 - `component.peer_power_pin_assignment_divergence`
 - `component.peer_power_input_assignment_divergence`
+- `component.peer_power_input_named_assignment_divergence`
 - `component.peer_power_input_open_assignment`
 - `component.peer_power_output_unconnected`
 - `component.peer_signal_input_unconnected`
@@ -2282,7 +2283,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 104 active rules; CI requires every new
+- **Status:** Baseline complete for all 105 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2291,7 +2292,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 104 covered, 0 not applicable, 0 unreviewed.
+  audit: 105 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -6128,6 +6129,39 @@ is not a reason by itself to expand its scope or change its default policy.
   not represent an open pin. The U2 rail wire has been removed and the exact
   native fault/control lane now passes locally on KiCad 10.0.0 and 10.0.5.
 
+#### LINT-120 — Named power-input assignments diverge across comparable peers
+
+- **Status:** Implemented as the default-`REVIEW` rule
+  `component.peer_power_input_named_assignment_divergence` with synthetic,
+  CLI/MCP parity, policy-lifecycle, and exact-version native fixtures.
+- **Priority:** P1 component power-connectivity review. A repeated interface or
+  controller component can use the same explicit `power_in` pin function on
+  two different nets while native ERC accepts each assignment independently.
+- **Predicate:** Compare fitted non-connector peers by exact native symbol or
+  guarded shared `PART_ID`. Require complete matching pin inventories, the same
+  native `power_in` type, identical explicit non-generic function text not
+  recognized as a supply or return, and exactly one net per peer. Prompt when
+  those assignments include at least two distinct nets.
+- **Boundary:** A split is a review question, not a connectivity requirement.
+  Matching symbol or guarded part identity, pin function, and electrical type
+  do not establish that the nets should be common. Generic functions, known
+  supply/return roles, and open pins remain with their specific rules. The
+  check does not interpret net names, validate off-board power, or establish
+  PCB continuity, voltage, current capacity, or component behavior. Projects
+  can review, block, disable, or fingerprint-ignore a finding; required net
+  relationships belong in project-authored contracts.
+- **Evidence:** Synthetic cases cover a split fault, a common-net control,
+  open and all-open peers, generic and recognized supply functions, function
+  and type mismatches, DNP and connector exclusions, incomplete inventories,
+  ambiguous assignments, exact-symbol grouping, guarded `PART_ID` grouping,
+  value-mismatch exclusion, deterministic mapping order, disposition and
+  ignore lifecycle, and CLI/MCP parity. Digest-pinned minimal KiCad fault and
+  control sources use native `power_in` metadata; the exact-version lane
+  repeats normalized netlist exports on KiCad 10.0.0 and 10.0.5.
+- **Cohort input:** This is a deterministic peer-comparison hypothesis. No
+  cohort implementation, private project source, board, or product expectation
+  was imported.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8983,7 +9017,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 104 active rules. Each entry has a deterministic predicate, evidence
+contains 105 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

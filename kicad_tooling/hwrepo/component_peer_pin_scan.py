@@ -93,6 +93,7 @@ class ComponentPeerPinAssignmentScans:
     generic_all_open: PeerPinAssignmentScan
     power_input_assignment_divergence: PeerPinAssignmentScan
     power_input_open_assignment: PeerPinAssignmentScan
+    named_power_input_assignment_divergence: PeerPinAssignmentScan
 
 
 def scan_component_peer_pin_assignments(
@@ -103,7 +104,9 @@ def scan_component_peer_pin_assignments(
     require_pin_functions: bool = False,
     require_generic_pin_functions: bool = False,
     pin_function_selector: PeerPinFunctionSelector | None = None,
-    assignment_pattern: Literal["partial_open", "all_open"] = "partial_open",
+    assignment_pattern: Literal[
+        "partial_open", "all_open", "different_assigned_nets"
+    ] = "partial_open",
     assignment_outlier_selector: AssignmentOutlierSelector | None = None,
     require_shared_anchor: bool = False,
     minimum_peer_count: int = 2,
@@ -118,9 +121,10 @@ def scan_component_peer_pin_assignments(
     footprint, complete pin inventories, native types, and present, identical
     per-pin function metadata. Identical generic placeholders are accepted as
     a structural match only; they do not identify the pin's electrical role.
-    ``assignment_pattern`` selects mixed open/assigned peers or all-open peers.
-    A theme-owned selector may classify fully assigned peers without placing
-    its rule-specific predicate in this shared scan.
+    ``assignment_pattern`` selects mixed open/assigned peers, all-open peers,
+    or fully assigned peers whose nets differ. A theme-owned selector may
+    classify fully assigned peers without placing its rule-specific predicate
+    in this shared scan.
     The generic pin rules also require one separate exact-net anchor shared by
     every peer; this establishes comparison context without asserting intent.
     Mixed-open rules can additionally require a larger peer group and assigned
@@ -300,6 +304,13 @@ def scan_component_peer_pin_assignments(
             elif assignment_pattern == "all_open":
                 if not all_open:
                     continue
+            elif assignment_pattern == "different_assigned_nets":
+                if (
+                    open_pins
+                    or len(peers) < minimum_peer_count
+                    or len(set(assignments.values())) < 2
+                ):
+                    continue
             elif not open_pins or not assigned_pins:
                 continue
             if assignment_pattern == "partial_open" and len(peers) < minimum_peer_count:
@@ -344,6 +355,7 @@ def scan_component_peer_pin_assignments(
             assignment_signature = (
                 tuple(sorted((pin.casefold(), nets) for pin, nets in assignments.items()))
                 if assignment_outlier_selector is not None
+                or assignment_pattern == "different_assigned_nets"
                 else ()
             )
             candidate_key = (

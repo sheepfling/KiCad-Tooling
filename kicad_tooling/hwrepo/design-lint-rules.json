@@ -425,6 +425,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_power_input_open_assignments"
     },
     {
+      "rule_id": "component.peer_power_input_named_assignment_divergence",
+      "title": "Named peer power-input pins use different nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted non-connector components comparable by exact native symbol or guarded shared PART_ID, compare the same pin number only when every peer has a complete matching native pin inventory, the target pins have matching native power_in types and identical explicit non-generic function text that is not a recognized supply or return, and every target has exactly one net assignment. Emit a REVIEW candidate when the assignments use different nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching symbol or guarded PART_ID identity, explicit function text, and power_in type provide a review clue only; they do not establish that the nets must be common or that an apparent split is a defect.",
+        "Generic functions and recognized supply or return names remain with their specific checks. DNP peers, connectors, incomplete or mismatched inventories, inconsistent functions or types, open assignments, and assignments ambiguous across nets are excluded.",
+        "The rule does not infer intent from net names, join nets, validate off-board power, establish PCB copper continuity, or prove voltage, current capacity, population, or component behavior."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_named_peer_power_input_divergence.test_named_peer_power_input_split_is_reviewed_with_controls",
+        "tests.test_peer_power_assignment_cli_mcp.test_named_peer_power_input_divergence_matches_between_cli_and_mcp",
+        "tests.test_component_peer_power_input_native_fixture_lane.test_named_component_peer_power_input_divergence_lane_exports_only_fault_and_control",
+        "tests.test_component_peer_power_input_native_fixture_lane.test_native_named_peer_power_input_divergence_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_named_peer_power_input_divergence.test_named_peer_power_input_split_is_reviewed_with_controls",
+        "tests.test_component_named_peer_power_input_divergence.test_named_peer_power_input_identity_is_guarded",
+        "tests.test_peer_power_assignment_cli_mcp.test_named_peer_power_input_divergence_matches_between_cli_and_mcp",
+        "tests.test_component_peer_power_input_native_fixture_lane.test_native_named_peer_power_input_divergence_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_named_peer_power_input_divergence.test_named_peer_power_input_split_is_stable_under_mapping_order",
+        "tests.test_component_peer_power_input_native_fixture_lane.test_named_peer_power_input_divergence_fixture_sources_match_reviewed_digests",
+        "tests.test_component_peer_power_input_native_fixture_lane.test_native_named_peer_power_input_divergence_fault_and_control_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_named_power_input_assignment_divergences",
+        "kicad_tooling/hwrepo/design_lint_component_peer_candidates.py#component_peer_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_named_power_input_assignment_divergences"
+    },
+    {
       "rule_id": "component.peer_power_output_unconnected",
       "title": "Power-output pin is unassigned on one fitted peer",
       "status": "active",

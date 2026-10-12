@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-from .component_peer_pin_models import ComponentPeerPinRuleCoverage
+from .component_peer_pin_models import (
+    POWER_INPUT_DIVERGENCE_RULE_IDS,
+    ComponentPeerPinRuleCoverage,
+)
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans, PeerPinAssignmentScan
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
@@ -34,6 +37,10 @@ def component_peer_pin_rule_coverage(
             scans.power_input_assignment_divergence,
         ),
         (
+            "component.peer_power_input_named_assignment_divergence",
+            scans.named_power_input_assignment_divergence,
+        ),
+        (
             "component.peer_power_input_open_assignment",
             scans.power_input_open_assignment,
         ),
@@ -58,7 +65,7 @@ def component_peer_pin_rule_coverage(
         elif scan.unambiguous_assignment_pin_group_count == 0:
             status = "NO_UNAMBIGUOUS_ASSIGNMENTS"
         elif (
-            rule_id == "component.peer_power_input_assignment_divergence"
+            rule_id in POWER_INPUT_DIVERGENCE_RULE_IDS
             and scan.open_assignment_pin_group_count == scan.unambiguous_assignment_pin_group_count
         ):
             status = "NO_COMPLETE_ASSIGNMENTS"
@@ -66,7 +73,7 @@ def component_peer_pin_rule_coverage(
             scan.incomplete_pin_inventory_group_count > 0
             or scan.part_id_incomplete_component_identity_group_count > 0
             or (
-                rule_id == "component.peer_power_input_assignment_divergence"
+                rule_id in POWER_INPUT_DIVERGENCE_RULE_IDS
                 and scan.open_assignment_pin_group_count > 0
             )
         ):

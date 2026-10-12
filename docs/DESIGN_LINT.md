@@ -166,6 +166,14 @@ The first rules are:
   The matching symbol and `power_in` type do not establish that the rails must
   be common; connectors, DNP components, named pins, open assignments, and
   incomplete inventories are handled elsewhere or excluded.
+- `component.peer_power_input_named_assignment_divergence` reviews comparable
+  fitted non-connector peers when the same explicit, unrecognized native
+  `power_in` function is assigned to different single nets. Peers must have
+  complete matching pin inventories and identical function text; they may
+  match by exact symbol or a guarded shared `PART_ID` with matching value and
+  footprint. A split may be intentional, so this prompt does not establish
+  that the nets should be common. Generic functions, recognized supply/return
+  roles, and open assignments remain with their specific checks.
 - `component.peer_power_input_open_assignment` prompts when an explicit,
   otherwise unrecognized native `power_in` pin is assigned on some comparable
   fitted non-connector peers and left open on another. It requires complete
@@ -1045,7 +1053,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 104 active rules. They
+`synthetic_validated`; the catalog currently contains 105 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and

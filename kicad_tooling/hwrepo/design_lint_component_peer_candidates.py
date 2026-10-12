@@ -50,6 +50,44 @@ def component_peer_candidates(
             )
         )
 
+    for group in peer_pin_scans.named_power_input_assignment_divergence.outliers:
+        peer_identity = (
+            group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
+        )
+        identity_evidence = (
+            {
+                "peer_identity_basis": (group.peer_identity_basis,),
+                "peer_identity": (group.peer_identity,),
+                "peer_symbols": group.peer_symbols,
+            }
+            if group.peer_identity_basis == "part_id"
+            else {}
+        )
+        found.append(
+            Candidate(
+                rule_id="component.peer_power_input_named_assignment_divergence",
+                subject=(
+                    f"{peer_identity} pin {group.pin_number} ({group.pin_function}): "
+                    "named power-input peer assignments differ"
+                ),
+                message=(
+                    "Comparable fitted non-connector components use the same explicit, "
+                    "unrecognized native power_in pin function but assign it to different nets. "
+                    "Review whether the separate domains are intentional or a connection is "
+                    "missing; matching peer metadata does not establish that the nets must be "
+                    "common."
+                ),
+                evidence={
+                    **group.assignments,
+                    **identity_evidence,
+                    "symbol": (group.symbol,),
+                    "pin_number": (group.pin_number,),
+                    "pin_function": (group.pin_function or "",),
+                    "pin_electrical_type": ("power_in",),
+                },
+            )
+        )
+
     for group in peer_pin_scans.power_input_open_assignment.outliers:
         peer_identity = (
             group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol

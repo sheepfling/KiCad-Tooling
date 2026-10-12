@@ -126,6 +126,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.repeated_component_supply_pins(),
         _tests_design_lint_fixtures.peer_component_power_pins(),
         _component_peer_power_input_support.generic_peer_power_input_netlist(),
+        _component_peer_power_input_support.named_peer_power_input_netlist(),
+        _component_peer_power_input_support.named_peer_power_input_netlist(
+            assignments=("SYNTHETIC_RAIL_A", "SYNTHETIC_RAIL_B")
+        ),
         _power_pin_net_roles.positive_supply_on_return_netlist(),
         _tests_design_lint_fixtures.control_input_pins(),
         _tests_design_lint_fixtures.control_input_pins(connected=True, visible_bias=False),

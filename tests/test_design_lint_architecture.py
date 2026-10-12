@@ -144,6 +144,7 @@ NATIVE_INTERFACE_THEME_SUITES = (
 )
 COMPONENT_PEER_POWER_THEME_SUITES = (
     "test_component_peer_power_input_divergence.py",
+    "test_component_named_peer_power_input_divergence.py",
     "test_component_peer_power_input_native_fixture_lane.py",
     "test_component_peer_power_fixture_lane.py",
     "test_peer_power_assignment_symbol_groups.py",
