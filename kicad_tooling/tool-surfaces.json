@@ -1228,7 +1228,7 @@
         "tests.test_design_lint_mcp_parity_analog.test_rc_filter_map_parity",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_data_path_map_parity",
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
-        "tests.test_design_lint_mcp_parity_usb_can.test_usb_peer_reference_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_usb_reference.test_usb_peer_reference_lint_cli_mcp_parity",
         "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_dual_uart_split_reference_localizes_one_header_on_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_power_paths.test_power_path_map_parity",
         "tests.test_design_lint_mcp_parity_power_paths.test_power_sequence_map_parity",
