@@ -6505,6 +6505,8 @@ is not a reason by itself to expand its scope or change its default policy.
   ignore behavior, and CLI/MCP parity. Minimal digest-pinned synthetic
   schematic fault/control sources are registered for exact KiCad 10.0.0 and
   10.0.5 native exports, including repeated normalized netlist comparison.
+  The sources and their review boundary are recorded in the [synthetic alias
+  fixture README](../tests/fixtures/design_lint/connector-named-power-input-peer-native/README.md).
   Hosted tagged acceptance remains pending.
 - **Cohort input:** The rule adds first-party deterministic review coverage
   based on a peer-comparison hypothesis. No cohort code, private project
