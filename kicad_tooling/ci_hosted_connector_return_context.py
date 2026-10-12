@@ -54,6 +54,7 @@ def prepare_connector_return_fixture_context(
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
+        DesignLintRuleOverride,
     )
     from .validate import read_netlist
 
@@ -118,6 +119,10 @@ def prepare_connector_return_fixture_context(
         / "generic-peer-pin-assignment-native/two-peer-no-connect-fault.kicad_sch",
         "two-peer-common-control": fixture_root
         / "generic-peer-pin-assignment-native/two-peer-common-control.kicad_sch",
+        "all-open-generic-peer-fault": fixture_root
+        / "generic-peer-pin-all-open-native/fault.kicad_sch",
+        "all-open-generic-peer-control": fixture_root
+        / "generic-peer-pin-all-open-native/control.kicad_sch",
         "single-offboard-port-control": fixture_root
         / "generic-peer-pin-assignment-native/single-offboard-port-control.kicad_sch",
         "unconnected-generic-power-input-fault": fixture_root
@@ -166,6 +171,8 @@ def prepare_connector_return_fixture_context(
         "two-peer-open-fault": "3de502ac74b394afb21cdaef8130026f11f7aa6050018a571dc65b10ae864350",
         "two-peer-no-connect-fault": "8801b0ff24e9f012e6f2df10247cdc04668db40d3233eb5d2111d279cfdf7256",
         "two-peer-common-control": "ae23ddb802c9a0f5cf30e89699a2cf6f48b3d15b6e18967387e756dcdf6fa3df",
+        "all-open-generic-peer-fault": "ef324858a679dd53b4207be2abc9a2d2cf90517af9c86a845c52d4604bcdc9cf",
+        "all-open-generic-peer-control": "c0cb38abf69437308aba70428c2ef05ae83a51aeb9fab592fe6fef33fb3a0713",
         "single-offboard-port-control": "ceaa7038e372ec74a00f7e7c2cb5311377df01624760ab555adb413c4e02d8e9",
         "unconnected-generic-power-input-fault": "2e16c602d6ba0068360b3f8b493351f6d7e4d7adbe94946d17db883587f0528f",
         "unconnected-generic-power-input-control": "b05c1a3994a4f26f07e18bdfe28c8caaf4a298cbb66b6d1814b20c9a7dce2c13",
@@ -280,7 +287,18 @@ def prepare_connector_return_fixture_context(
                 observed=observed,
                 netlist_sha256=netlist_hashes[case, run],
             )
-            reports[case, run] = evaluate(project_id, coach, DesignLintPolicy())
+            policy = DesignLintPolicy()
+            if case in {"all-open-generic-peer-fault", "all-open-generic-peer-control"}:
+                policy = DesignLintPolicy(
+                    rules=(
+                        DesignLintRuleOverride(
+                            rule_id="connector.generic_peer_pin_all_open",
+                            mode="review",
+                            reason="Synthetic native fixture explicitly enables the opt-in heuristic",
+                        ),
+                    )
+                )
+            reports[case, run] = evaluate(project_id, coach, policy)
     return ConnectorReturnFixtureContext(
         root=root,
         project=project,

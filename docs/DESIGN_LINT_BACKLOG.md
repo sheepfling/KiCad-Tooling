@@ -297,13 +297,14 @@ intended requirement.
 
 ## Existing baseline
 
-The following 98 rules are implemented with synthetic regression coverage.
+The following 99 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
 - `connector.repeated_pin_function`
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
+- `connector.generic_peer_pin_all_open`
 - `component.repeated_supply_pin_function`
 - `component.peer_power_pin_assignment_divergence`
 - `component.peer_power_output_unconnected`
@@ -2199,7 +2200,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 98 active rules; CI requires every new
+- **Status:** Baseline complete for all 99 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2208,7 +2209,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 98 covered, 0 not applicable, 0 unreviewed.
+  audit: 99 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5767,6 +5768,43 @@ is not a reason by itself to expand its scope or change its default policy.
   separate grounds; connector/interface peer heuristics and project-authored
   grounding contracts address that different question.
 
+#### LINT-114 — All generic passive connector peers leave a contact open
+
+- **Status:** Implemented as the opt-in, default-off rule
+  `connector.generic_peer_pin_all_open`.
+- **Priority:** P1 connector interface review. Similar connector instances can
+  repeat an accidentally omitted contact even when its generic passive symbol
+  metadata gives ERC no reason to require a connection.
+- **Predicate:** Compare at least two fitted instances of one exact native
+  connector symbol only when their complete pin inventories match. Prompt when
+  a target pin is unassigned on every peer, has absent or generic `Pin_N`
+  function metadata and native `passive` electrical type, and at least one
+  different pin has the same exact single net assignment on every peer. Current
+  source-matched `peer_assignment_group` evidence partitions the comparison.
+- **Boundary:** This pattern does not identify the open pin as signal, return,
+  or power and does not establish that it must connect. The shared assignment
+  is context for review only. DNP peers, incomplete inventories, named or
+  mapped roles, non-passive pins, and cross-symbol aliases are outside this
+  rule. The result covers schematic assignments, not PCB copper continuity or
+  off-board wiring. Project policy can select `review`, `block`, or `off`; the
+  default remains `off` until each project decides whether this prompt is
+  useful.
+- **Fixtures:** Synthetic typed-netlist cases cover the all-open fault, a
+  common-net control, no shared-anchor control, distinct peer groups, DNP and
+  specific-role exclusions, stable fingerprint under input reordering, policy
+  modes, exact ignores, and CLI/MCP parity. Digest-pinned native schematics
+  verify fault/control behavior on KiCad 10.0.0 and 10.0.5 through
+  `tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope`.
+  The local exact-version lane passed both versions on 2026-10-12; annotated-tag
+  acceptance is still required. These sources are tooling-owned and contain no
+  project board data.
+- **Applicability evidence:** More examples can test boundary diversity, but
+  do not establish precision or reviewer value without an independent pinout
+  disposition. No field-review time or false-positive rate is claimed.
+- **Next:** Keep the heuristic opt-in. Collect sanitized, independently
+  reviewed public or synthetic boundary cases before considering broader
+  connector identities or a different default.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8622,11 +8660,11 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 98 active rules. Each entry has a deterministic predicate, evidence
+contains 99 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-The schematic geometry rules default to `off`; other active rules default to
-`review`.
+The schematic geometry rules and `connector.generic_peer_pin_all_open` default
+to `off`; other active rules default to `review`.
 The report carries this catalog and a SHA-256 digest of its packaged bytes.
 Tests assert that catalog IDs match the closed policy type, each active rule is
 reachable from a synthetic fault case, and every named fixture still exists and

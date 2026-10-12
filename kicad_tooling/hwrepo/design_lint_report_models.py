@@ -291,6 +291,10 @@ class DesignLintReport(StrictModel):
                     "connector.peer_pin_assignment_divergence",
                     item.peer_pin_divergence_finding_count,
                 ),
+                (
+                    "connector.generic_peer_pin_all_open",
+                    item.generic_peer_pin_all_open_finding_count,
+                ),
             )
             for rule_id, expected_count in expected_counts:
                 actual_count = sum(finding.rule_id == rule_id for finding in self.findings)

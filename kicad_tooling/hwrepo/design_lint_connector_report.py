@@ -102,7 +102,8 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             "  Review findings: repeated-function "
             f"{peer_coverage.repeated_function_finding_count}; peer outliers "
             f"{peer_coverage.peer_pin_outlier_finding_count}; peer divergences "
-            f"{peer_coverage.peer_pin_divergence_finding_count}"
+            f"{peer_coverage.peer_pin_divergence_finding_count}; all-open generic peer pins "
+            f"{peer_coverage.generic_peer_pin_all_open_finding_count}"
         )
         lines.append(f"  Scope: {peer_coverage.scope}")
         for reference in peer_coverage.incomplete_pin_inventory_references:

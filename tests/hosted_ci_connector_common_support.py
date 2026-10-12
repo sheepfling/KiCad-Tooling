@@ -28,6 +28,8 @@ def normalized_connector_return_patterns(results):
         "two-peer-open-fault",
         "two-peer-no-connect-fault",
         "two-peer-common-control",
+        "all-open-generic-peer-fault",
+        "all-open-generic-peer-control",
         "single-offboard-port-control",
         "peer-pin-minority-fault",
         "peer-pin-divergence-fault",

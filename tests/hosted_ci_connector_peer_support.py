@@ -101,6 +101,18 @@ def assert_connector_peer_pin_cases(results, version):
     assert two_peer_control["status"] == "PASS"
     assert two_peer_control["lint_status"] == "PASS"
     assert two_peer_control["findings"] == "none"
+    all_open_fault = results["connector-return-fixture/all-open-generic-peer-fault"]
+    all_open_control = results["connector-return-fixture/all-open-generic-peer-control"]
+    assert all_open_fault["status"] == "PASS"
+    assert all_open_fault["lint_status"] == "REVIEW"
+    assert all_open_fault["findings"] == "connector.generic_peer_pin_all_open"
+    assert all_open_fault["subjects"] == (
+        "Lint:PeerPowerPort pin 2: generic passive contact is open on every peer"
+    )
+    assert all_open_fault["pin_functions"] == "J1.2=Pin_2;J2.2=Pin_2"
+    assert all_open_control["status"] == "PASS"
+    assert all_open_control["lint_status"] == "PASS"
+    assert all_open_control["findings"] == "none"
     offboard_control = results["connector-return-fixture/offboard-interface-control"]
     assert offboard_control["status"] == "PASS"
     assert offboard_control["coverage_status"] == "COMPLETE"
@@ -168,6 +180,8 @@ def assert_connector_peer_pin_cases(results, version):
             "two-peer-open-fault",
             "two-peer-no-connect-fault",
             "two-peer-common-control",
+            "all-open-generic-peer-fault",
+            "all-open-generic-peer-control",
             "single-offboard-port-control",
             "offboard-inventory-unreviewed",
             "offboard-interface-control",

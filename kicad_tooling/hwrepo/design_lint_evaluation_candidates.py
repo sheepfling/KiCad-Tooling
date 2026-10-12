@@ -184,6 +184,9 @@ def scan_evaluation_candidates(
             peer_pin_divergence_finding_count=sum(
                 item.rule_id == "connector.peer_pin_assignment_divergence" for item in items
             ),
+            generic_peer_pin_all_open_finding_count=sum(
+                item.rule_id == "connector.generic_peer_pin_all_open" for item in items
+            ),
             part_id_peer_pin_outlier_finding_count=sum(
                 item.rule_id == "connector.peer_pin_assignment_outlier"
                 and item.evidence.get("peer_identity_basis") == ("part_id",)

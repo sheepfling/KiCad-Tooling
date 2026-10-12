@@ -33,6 +33,7 @@ def connector_peer_pin_heuristic_coverage(
     repeated_function_finding_count: int,
     peer_pin_outlier_finding_count: int,
     peer_pin_divergence_finding_count: int,
+    generic_peer_pin_all_open_finding_count: int = 0,
     part_id_peer_pin_outlier_finding_count: int = 0,
     part_id_peer_pin_divergence_finding_count: int = 0,
 ) -> ConnectorPeerPinHeuristicCoverage:
@@ -316,4 +317,5 @@ def connector_peer_pin_heuristic_coverage(
         repeated_function_finding_count=repeated_function_finding_count,
         peer_pin_outlier_finding_count=peer_pin_outlier_finding_count,
         peer_pin_divergence_finding_count=peer_pin_divergence_finding_count,
+        generic_peer_pin_all_open_finding_count=generic_peer_pin_all_open_finding_count,
     )

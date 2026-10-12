@@ -9,6 +9,7 @@ from .connector_coverage import (
     source_matched_connector_pin_evidence,
 )
 from .connector_identity import power_function_key, similar_connector_pin_groups
+from .connector_peer_pin_all_open import all_open_generic_connector_peer_pin_candidates
 from .connector_peer_pin_findings import (
     connector_peer_pin_assignment_divergences,
     connector_peer_pin_assignment_outliers,
@@ -413,5 +414,14 @@ def connector_pin_candidates(
                 },
             )
         )
+
+    found.extend(
+        all_open_generic_connector_peer_pin_candidates(
+            observed,
+            reviewed_connector_references,
+            reviewed_connector_pins,
+            reviewed_connector_peer_assignment_groups,
+        )
+    )
 
     return tuple(found)

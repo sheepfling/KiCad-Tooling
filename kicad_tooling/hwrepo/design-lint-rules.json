@@ -192,6 +192,50 @@
       ]
     },
     {
+      "rule_id": "connector.generic_peer_pin_all_open",
+      "title": "Generic passive peer connector contact is open everywhere",
+      "theme": "connectors",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among at least two fitted connector instances using one exact native library symbol, require complete identical pin inventories, a target pin with absent or generic Pin_N function metadata and native passive electrical type, no assigned net on that pin for every peer in the comparison group, and at least one other pin assigned to the same exact single net on every peer. Current source-matched peer_assignment_group evidence partitions the comparison; stale or incomplete group evidence retains the unscoped comparison.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The prompt is default-off because an all-open generic contact may be intentionally unused; project owners must review an approved pinout before treating it as a defect.",
+        "A shared assignment on another pin provides peer context only. It does not identify the open contact as signal, return, or power, or establish that the contact must be connected.",
+        "Only exact-symbol connector groups with complete matching pin inventories and the bounded connector candidate identities participate; cross-symbol PART_ID aliases, incomplete inventories, DNP instances, and contacts with non-generic functions are outside this rule.",
+        "Only native passive pins participate. Native power_in/power_out contacts and named or source-mapped supply/return roles stay with their more specific rules.",
+        "The result concerns schematic net assignments only; it does not establish PCB copper continuity or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_peer_pin_all_open.test_all_open_generic_passive_peer_pin_is_opt_in_review",
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_peer_pin_all_open.test_common_assignment_clears_the_all_open_prompt",
+        "tests.test_connector_peer_pin_all_open.test_unassigned_peers_without_a_shared_anchor_are_quiet",
+        "tests.test_connector_peer_pin_all_open.test_distinct_reviewed_peer_groups_are_not_compared",
+        "tests.test_connector_peer_pin_all_open.test_specific_roles_and_population_controls_stay_out_of_generic_rule",
+        "tests.test_connector_peer_pin_all_open.test_rule_supports_block_off_and_exact_ignore_policy",
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_peer_pin_all_open.test_candidate_fingerprint_is_stable_under_input_reordering"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_peer_pin_all_open.py#all_open_generic_connector_peer_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_pin_all_open.py#all_open_generic_connector_peer_pin_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "component.repeated_supply_pin_function",
       "title": "Repeated component supply pins use different nets",
       "status": "active",

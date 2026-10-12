@@ -240,6 +240,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_design_lint_power_pin_patterns.py::TestDesignLintPowerPinPatterns::test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
         ),
         (
+            "connector.generic_peer_pin_all_open",
+            "tests/test_connector_peer_pin_all_open.py::test_all_open_generic_passive_peer_pin_is_opt_in_review",
+        ),
+        (
             "bus.i2c_missing_pullup",
             "tests/test_design_lint_i2c_missing_pullups.py::test_connecting_one_line_leaves_only_the_other_pullup_missing",
         ),

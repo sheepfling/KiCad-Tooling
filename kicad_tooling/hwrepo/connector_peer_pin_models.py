@@ -127,6 +127,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
     repeated_function_finding_count: NonNegativeCount
     peer_pin_outlier_finding_count: NonNegativeCount
     peer_pin_divergence_finding_count: NonNegativeCount
+    generic_peer_pin_all_open_finding_count: NonNegativeCount = 0
 
     @model_validator(mode="after")
     def consistent_connector_peer_coverage(self) -> ConnectorPeerPinHeuristicCoverage:
@@ -179,6 +180,10 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             + self.part_id_alias_coverage.compared_pin_group_count
         ):
             raise ValueError("Peer-pin findings cannot exceed compared connector pin groups")
+        if self.generic_peer_pin_all_open_finding_count > (
+            self.exact_symbol_pin_groups_all_unassigned_count
+        ):
+            raise ValueError("All-open generic findings cannot exceed all-unassigned peer groups")
         if self.status == "NO_CONNECTOR_CANDIDATES" and self.connector_candidate_count:
             raise ValueError("No-connector coverage cannot contain connector candidates")
         if self.status == "NO_FITTED_CONNECTORS" and (
