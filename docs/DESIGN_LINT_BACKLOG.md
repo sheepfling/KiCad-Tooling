@@ -1374,9 +1374,12 @@ is not a reason by itself to expand its scope or change its default policy.
   references shared a module-scoped fixture that exported the complete
   connector matrix. A dedicated focused native lane now selects only the PWM
   fault/control pair for this rule; the full connector lane retains the broader
-  matrix. The exact-version native run for this narrowed selector is pending
-  hosted acceptance. The installed-wheel check against a separate project
-  checkout and Ubuntu, macOS, and Windows preview jobs passed on rc147.
+  matrix. Tagged hosted acceptance for `v0.5.0rc148` (commit `5268a7f`, GitHub
+  Actions run `38245516011`) passed the focused exact-version fault/control
+  lane with the scoped pytest selector and native-fixture flag. The installed-
+  wheel check against a separate project checkout and Ubuntu, macOS, and
+  Windows preview jobs also passed; the package job was skipped by the
+  prerelease workflow.
   The project-policy regression also keeps the default at `REVIEW` while proving
   an explicitly configured `block` override changes the report to `FAIL`
   without changing the finding fingerprint or evidence. A

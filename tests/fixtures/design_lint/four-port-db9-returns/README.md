@@ -112,6 +112,10 @@ run `38243428425`) passed the `net.numbered_returns` pytest scope. At that point
 the referenced native tests shared a module-scoped fixture that exported the
 entire connector matrix. The focused native lane now maps this rule to the two
 PWM schematics only; full connector acceptance still runs the complete matrix.
+Tagged hosted acceptance for `v0.5.0rc148` (commit `5268a7f`, GitHub Actions run
+`38245516011`) passed the focused native lane with the scoped pytest selector
+and native-fixture flag, and passed the installed-wheel check against a separate
+project checkout.
 
 Run the focused exact-version fault/control pair with:
 
