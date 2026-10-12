@@ -43,6 +43,7 @@ PIN_ANALYSIS_MODULES = (
     "connector_pins.py",
     "connector_return_pins.py",
     "component_peer_pin_findings.py",
+    "component_power_input_peer_findings.py",
     "component_peer_pin_all_open.py",
     "component_peer_pin_mixed_open.py",
     "component_peer_pin_identity.py",
@@ -140,6 +141,8 @@ NATIVE_INTERFACE_THEME_SUITES = (
     "test_ci_hosted_control_inputs.py",
 )
 COMPONENT_PEER_POWER_THEME_SUITES = (
+    "test_component_peer_power_input_divergence.py",
+    "test_component_peer_power_input_native_fixture_lane.py",
     "test_component_peer_power_fixture_lane.py",
     "test_peer_power_assignment_symbol_groups.py",
     "test_peer_power_assignment_part_id_groups.py",

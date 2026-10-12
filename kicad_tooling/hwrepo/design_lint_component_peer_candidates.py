@@ -7,6 +7,9 @@ from .component_peer_pin_findings import component_peer_power_pin_assignment_div
 from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_mixed_open import mixed_open_generic_component_peer_pin_candidates
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
+from .component_power_input_peer_findings import (
+    component_peer_power_input_assignment_divergences,
+)
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
@@ -20,6 +23,34 @@ def component_peer_candidates(
 ) -> tuple[Candidate, ...]:
     """Build review prompts for comparable components with divergent peer pins."""
     found: list[Candidate] = []
+    for group in component_peer_power_input_assignment_divergences(
+        observed, reviewed_connector_references
+    ):
+        found.append(
+            Candidate(
+                rule_id="component.peer_power_input_assignment_divergence",
+                subject=(
+                    f"{group.symbol} pin {group.pin_number}: generic peer power-input "
+                    "assignments differ"
+                ),
+                message=(
+                    "Fitted non-connector components with this exact native symbol assign the "
+                    "same generic power_in pin to different nets. Review whether these supply "
+                    "domains are intentionally separate or a connection is missing; matching "
+                    "symbol identity and electrical type do not prove that the rails must be common."
+                ),
+                evidence={
+                    **group.assignments,
+                    "symbol": (group.symbol,),
+                    "pin_number": (group.pin_number,),
+                    "pin_electrical_type": ("power_in",),
+                    "pin_functions": tuple(
+                        f"{pin}={function}" for pin, function in group.functions.items()
+                    ),
+                },
+            )
+        )
+
     for group in component_peer_power_pin_assignment_divergences(
         observed, reviewed_connector_references
     ):

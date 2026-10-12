@@ -56,6 +56,8 @@ _LINT_AREA_MODULES = {
             "tests/test_peer_power_assignment_part_id_groups.py",
             "tests/test_peer_power_assignment_cli_mcp.py",
             "tests/test_peer_power_assignment_native.py",
+            "tests/test_component_peer_power_input_divergence.py",
+            "tests/test_component_peer_power_input_native_fixture_lane.py",
             "tests/test_control_inputs.py",
             "tests/test_electrical_control_input_parity.py",
             "tests/test_electrical_rs485_parity.py",

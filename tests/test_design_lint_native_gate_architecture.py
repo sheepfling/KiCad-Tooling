@@ -320,6 +320,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "component.unconnected_return_pin": {
             "tests.test_component_named_return_pin_native_fixture_lane.test_native_named_component_return_pin_fault_and_control_are_focused_and_repeatable",
         },
+        "component.peer_power_input_assignment_divergence": {
+            "tests.test_component_peer_power_input_native_fixture_lane.test_native_generic_peer_power_input_fault_and_control_are_repeatable",
+        },
         "net.numbered_power_rails": {
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },
@@ -333,6 +336,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
     )
     native_fixture_by_rule["component.unconnected_return_pin"] = (
         "KICAD_RUN_NATIVE_COMPONENT_NAMED_RETURN_PIN_FIXTURES"
+    )
+    native_fixture_by_rule["component.peer_power_input_assignment_divergence"] = (
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES"
     )
     for rule_id, expected_cases in expected_cases_by_rule.items():
         rule = rules[rule_id]

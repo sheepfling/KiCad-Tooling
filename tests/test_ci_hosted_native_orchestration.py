@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 import subprocess
 import sys
 from contextlib import ExitStack
@@ -12,20 +11,21 @@ from unittest.mock import DEFAULT, patch
 import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, native_lane
-from tests.support import initialize_git, reference_root
+from kicad_tooling.hwrepo.models import DesignLintPolicy
+from tests.support import initialize_git
+from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
-pytestmark = [pytest.mark.template_checkout, pytest.mark.design_lint]
+pytestmark = pytest.mark.design_lint
 
 
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Hosted native orchestration uses a Unix runner"
 )
 def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) -> None:
-    root = tmp_path / "repository"
-    shutil.copytree(
-        reference_root(),
-        root,
-        ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
+    root, _ = synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(),
+        image="fixture@sha256:" + "a" * 64,
     )
     initialize_git(root)
     subprocess.run(
@@ -53,6 +53,8 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         "led_rail_fixture_lane",
         "two_pin_component_fixture_lane",
         "component_peer_power_output_fixture_lane",
+        "component_peer_generic_all_open_fixture_lane",
+        "component_peer_generic_mixed_open_fixture_lane",
         "component_rating_fixtures_lane",
         "power_sequence_fixture_lane",
         "ic_rail_capacitor_fixture_lane",
@@ -76,6 +78,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
                 "kicad_tooling.ci_hosted",
                 pcb_signal_path_drc_fixture_lane=DEFAULT,
                 component_peer_power_assignment_fixture_lane=DEFAULT,
+                component_peer_power_input_fixture_lane=DEFAULT,
                 component_peer_signal_input_fixture_lane=DEFAULT,
                 component_peer_signal_output_fixture_lane=DEFAULT,
                 component_peer_bidirectional_fixture_lane=DEFAULT,
@@ -107,6 +110,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
     for fixture in (
         *fixture_mocks.values(),
         other_native_fixtures["component_peer_power_assignment_fixture_lane"],
+        other_native_fixtures["component_peer_power_input_fixture_lane"],
         other_native_fixtures["component_peer_signal_output_fixture_lane"],
         other_native_fixtures["component_peer_signal_input_fixture_lane"],
         other_native_fixtures["component_peer_bidirectional_fixture_lane"],

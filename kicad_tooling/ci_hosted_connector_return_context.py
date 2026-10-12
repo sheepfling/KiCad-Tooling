@@ -168,6 +168,10 @@ def prepare_connector_return_fixture_context(
         / "generic-component-power-input/no-connect-fault.kicad_sch",
         "unconnected-generic-component-power-input-dnp-control": fixture_root
         / "generic-component-power-input/dnp-control.kicad_sch",
+        "peer-generic-power-input-fault": fixture_root
+        / "generic-peer-power-input-assignment/fault.kicad_sch",
+        "peer-generic-power-input-control": fixture_root
+        / "generic-peer-power-input-assignment/control.kicad_sch",
     }
     cases = tuple(fixture_sources) if case_names is None else tuple(case_names)
     if not cases or len(set(cases)) != len(cases):
@@ -232,6 +236,8 @@ def prepare_connector_return_fixture_context(
         "unconnected-generic-component-power-input-control": "67d6ad249e1caa2095b3a408457e6a1710fb9bb6ef7d8e5cb1fdcdd7710b43ec",
         "unconnected-generic-component-power-input-no-connect-fault": "664e619ceaba71c27bd7acfaa0bb4563ab3203b33a03c564b2a8f7c6bdf4c4bd",
         "unconnected-generic-component-power-input-dnp-control": "3be52ef83ba54bf0f43bede043095afe42583319e9fd6fa19f17aba250cc3c81",
+        "peer-generic-power-input-fault": "594736519e5c2e3bde88af27d9f059749060014a71f6447aeeceeb8767e7bdae",
+        "peer-generic-power-input-control": "9242ac4bf9c466ea0e5a4b41a616c6de881283fdac697ef3e55618040ea6746d",
     }
     reviewed_source_hashes = {case: expected_source_hashes[case] for case in cases}
     if source_hashes != reviewed_source_hashes:

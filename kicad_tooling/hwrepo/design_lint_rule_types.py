@@ -12,6 +12,7 @@ DesignLintRuleId = Literal[
     "component.repeated_supply_pin_function",
     "power.pin_function_net_role_conflict",
     "component.peer_power_pin_assignment_divergence",
+    "component.peer_power_input_assignment_divergence",
     "component.peer_power_output_unconnected",
     "component.peer_signal_output_unconnected",
     "component.peer_signal_input_unconnected",

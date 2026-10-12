@@ -25,6 +25,7 @@ from .ci_hosted_component_peer_pins import (
     component_peer_signal_output_fixture_lane,
 )
 from .ci_hosted_component_peer_power_assignment import component_peer_power_assignment_fixture_lane
+from .ci_hosted_component_peer_power_input_lane import component_peer_power_input_fixture_lane
 from .ci_hosted_component_rating_lane import component_rating_fixtures_lane
 from .ci_hosted_component_unconnected_power_output import (
     component_unconnected_power_output_fixture_lane,
@@ -104,6 +105,7 @@ __all__ = (
     "component_peer_generic_all_open_fixture_lane",
     "component_peer_generic_mixed_open_fixture_lane",
     "component_peer_power_assignment_fixture_lane",
+    "component_peer_power_input_fixture_lane",
     "component_peer_power_output_fixture_lane",
     "component_peer_signal_input_fixture_lane",
     "component_peer_signal_output_fixture_lane",
@@ -394,6 +396,7 @@ def native_lane(
         two_pin_component_fixture_lane(root, project=project, image=image, log=log)
         component_peer_power_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_power_assignment_fixture_lane(root, project=project, image=image, log=log)
+        component_peer_power_input_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_input_fixture_lane(root, project=project, image=image, log=log)
         component_peer_bidirectional_fixture_lane(root, project=project, image=image, log=log)

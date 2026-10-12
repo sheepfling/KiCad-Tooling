@@ -93,6 +93,11 @@ KICAD_RUN_NATIVE_COMPONENT_NAMED_RETURN_PIN_FIXTURES=1 \
   .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="component.unconnected_return_pin")' \
   tests/test_component_named_return_pin_native_fixture_lane.py
+python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="component.peer_power_input_assignment_divergence")' \
+  tests/test_component_peer_power_input_divergence.py \
+  tests/test_component_peer_power_input_native_fixture_lane.py \
+  tests/test_peer_power_assignment_cli_mcp.py
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="net.numbered_returns")' \
   tests/test_numbered_return_native_fixture_lane.py

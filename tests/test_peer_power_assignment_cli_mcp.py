@@ -26,7 +26,39 @@ pytestmark = [
 ]
 
 
-def test_shared_part_id_power_assignment_matches_between_cli_and_mcp(tmp_path: Path) -> None:
+def _synthetic_parity_project(tmp_path: Path) -> tuple[Path, Path]:
+    from tests.synthetic_design_lint_project import synthetic_design_lint_project
+
+    return synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_component_inventory",
+                    mode="off",
+                    reason="Synthetic parity case has no native PCB snapshot",
+                ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_dnp_mismatch",
+                    mode="off",
+                    reason="Synthetic parity case has no native PCB snapshot",
+                ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_value_mismatch",
+                    mode="off",
+                    reason="Synthetic parity case has no native PCB snapshot",
+                ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_pad_net_mismatch",
+                    mode="off",
+                    reason="Synthetic parity case has no native PCB snapshot",
+                ),
+            )
+        ),
+    )
+
+
+def _run_cli_and_mcp(tmp_path: Path, root: Path, summary_path: Path, observed) -> DesignLintReport:
     import asyncio
     import json
 
@@ -36,35 +68,47 @@ def test_shared_part_id_power_assignment_matches_between_cli_and_mcp(tmp_path: P
     from kicad_tooling.hwrepo.evidence import digest
     from kicad_tooling.hwrepo.mcp_server import create_server
     from kicad_tooling.hwrepo.models import ValidationSummary
-    from tests.synthetic_design_lint_project import (
-        run_design_lint_cli,
-        synthetic_design_lint_project,
-    )
+    from tests.synthetic_design_lint_project import run_design_lint_cli
 
-    root, summary_path = synthetic_design_lint_project(
-        tmp_path,
-        DesignLintPolicy(
-            rules=(
-                DesignLintRuleOverride(
-                    rule_id="pcb.schematic_component_inventory",
-                    mode="off",
-                    reason="Synthetic power-peer parity case isolates net assignment review",
-                ),
-                DesignLintRuleOverride(
-                    rule_id="pcb.schematic_pcb_dnp_mismatch",
-                    mode="off",
-                    reason="Synthetic power-peer parity case has no native PCB snapshot",
-                ),
-                DesignLintRuleOverride(
-                    rule_id="pcb.schematic_pcb_value_mismatch",
-                    mode="off",
-                    reason="Synthetic power-peer parity case has no native PCB value snapshot",
-                ),
-            )
+    netlist_path = summary_path.parent / "netlist.xml"
+    netlist_path.write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
+    summary = read_model(summary_path, ValidationSummary)
+    write_model(
+        summary_path,
+        summary.model_copy(
+            update={
+                "artifacts_sha256": {
+                    **summary.artifacts_sha256,
+                    "netlist.xml": digest(netlist_path),
+                }
+            }
         ),
     )
-    netlist_path = summary_path.parent / "netlist.xml"
-    summary = read_model(summary_path, ValidationSummary)
+
+    process = run_design_lint_cli(tmp_path, root, summary_path)
+    assert process.returncode == 1, process.stderr + process.stdout
+    cli_report = DesignLintReport.model_validate_json(process.stdout)
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": summary_path.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp_report = asyncio.run(inspect_mcp())
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    return cli_report
+
+
+def test_shared_part_id_power_assignment_matches_between_cli_and_mcp(tmp_path: Path) -> None:
+    root, summary_path = _synthetic_parity_project(tmp_path)
     part_ids = {"U1": "SYNTHETIC-POWER-001", "U2": "synthetic-power-001"}
 
     for split_domains, expected_roles in (
@@ -76,38 +120,37 @@ def test_shared_part_id_power_assignment_matches_between_cli_and_mcp(tmp_path: P
             supply_nets=("+3V3", "+5V") if split_domains else ("+3V3", "+3V3"),
             return_nets=("GND", "AGND") if split_domains else ("GND", "GND"),
         )
-        netlist_path.write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
-        write_model(
-            summary_path,
-            summary.model_copy(
-                update={
-                    "artifacts_sha256": {
-                        **summary.artifacts_sha256,
-                        "netlist.xml": digest(netlist_path),
-                    }
-                }
-            ),
-        )
-
-        process = run_design_lint_cli(tmp_path, root, summary_path)
-        assert process.returncode == 1, process.stderr + process.stdout
-        cli_report = DesignLintReport.model_validate_json(process.stdout)
-
-        async def inspect_mcp() -> DesignLintReport:
-            async with Client(create_server(root), mode="legacy") as client:
-                result = await client.call_tool(
-                    "inspect_design_lint",
-                    {
-                        "project_id": "controller",
-                        "native_summary": summary_path.relative_to(root).as_posix(),
-                    },
-                )
-                assert not result.is_error, result.content
-                assert result.structured_content is not None
-                return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
-
-        mcp_report = asyncio.run(inspect_mcp())
-        assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
-        assert cli_report.status == "REVIEW"
+        cli_report = _run_cli_and_mcp(tmp_path, root, summary_path, observed)
+        assert cli_report.status == "REVIEW", cli_report.model_dump_json(indent=2)
         findings = [item for item in cli_report.findings if item.rule_id == RULE_ID]
         assert {item.evidence["peer_role"][0] for item in findings} == expected_roles
+
+
+def test_generic_power_input_peer_assignment_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    root, summary_path = _synthetic_parity_project(tmp_path)
+    symbols = {"U1": "Synthetic:GenericPowerInputPeer", "U2": "Synthetic:GenericPowerInputPeer"}
+    pin_functions = {reference: ("1", "2") for reference in symbols}
+    pin_types = {reference: ("power_in", "passive") for reference in symbols}
+    for supplies, expected in ((("+5V", "+3V3"), True), (("+3V3", "+3V3"), False)):
+        observed = peer_power_netlist(
+            symbols=symbols,
+            supply_nets=supplies,
+            return_nets=("SIGNAL", "SIGNAL"),
+            pin_functions=pin_functions,
+            pin_types=pin_types,
+        )
+        report = _run_cli_and_mcp(
+            tmp_path,
+            root,
+            summary_path,
+            observed,
+        )
+        findings = [
+            item
+            for item in report.findings
+            if item.rule_id == "component.peer_power_input_assignment_divergence"
+        ]
+        assert bool(findings) is expected
+        assert report.status == "REVIEW", report.model_dump_json(indent=2)

@@ -9,6 +9,7 @@ import pytest
 
 import tests.can_peer_reference_support as _can_peer_reference_support
 import tests.component_peer_pin_support as _component_peer_pin_support
+import tests.component_peer_power_input_support as _component_peer_power_input_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
@@ -117,6 +118,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_led_output_heuristics.output_led_netlist(),
         _tests_design_lint_fixtures.repeated_component_supply_pins(),
         _tests_design_lint_fixtures.peer_component_power_pins(),
+        _component_peer_power_input_support.generic_peer_power_input_netlist(),
         _power_pin_net_roles.positive_supply_on_return_netlist(),
         _tests_design_lint_fixtures.control_input_pins(),
         _tests_design_lint_fixtures.control_input_pins(connected=True, visible_bias=False),

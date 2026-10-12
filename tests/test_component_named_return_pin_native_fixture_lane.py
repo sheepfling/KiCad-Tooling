@@ -10,9 +10,9 @@ import pytest
 from kicad_tooling.ci_hosted_component_named_return_pin import COMPONENT_NAMED_RETURN_PIN_CASES
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import DesignLintPolicy
-from tests.component_named_power_pin_native_support import (
-    assert_mocked_named_component_power_pin_lane,
-    named_component_power_pin_lane_results,
+from tests.component_power_pin_native_support import (
+    assert_mocked_component_power_pin_lane,
+    component_power_pin_lane_results,
 )
 from tests.design_lint_fixtures.named_component_power_pins import named_component_return_pin_cases
 from tests.native_fixture_support import assert_native_fixture_mounts
@@ -31,7 +31,7 @@ def test_component_named_return_pin_lane_exports_only_its_fault_and_control(
         component_named_return_pin_fixture_lane,
     )
 
-    assert_mocked_named_component_power_pin_lane(
+    assert_mocked_component_power_pin_lane(
         tmp_path,
         monkeypatch,
         lane=component_named_return_pin_fixture_lane,
@@ -76,7 +76,7 @@ def test_native_named_component_return_pin_fault_and_control_are_focused_and_rep
 
     log = HostedLog(root, f"native-component-named-return-pin-{project}")
     component_named_return_pin_fixture_lane(root, project=project, image=config.image, log=log)
-    results = named_component_power_pin_lane_results(
+    results = component_power_pin_lane_results(
         log, stage_prefix="component-named-return-pin-fixture"
     )
     native_export = results["component-named-return-pin-fixture/native-export"]

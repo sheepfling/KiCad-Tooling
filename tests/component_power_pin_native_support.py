@@ -1,4 +1,4 @@
-"""Shared orchestration assertions for named component power-pin fixture lanes."""
+"""Shared orchestration assertions for component power-pin fixture lanes."""
 
 from __future__ import annotations
 
@@ -16,32 +16,34 @@ from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 
 
-class ComponentNamedPinLane(Protocol):
-    """Native fixture lane signature shared by the supply and return checks."""
+class ComponentPowerPinLane(Protocol):
+    """Native fixture lane signature shared by component power-pin checks."""
 
     def __call__(self, root: Path, *, project: str, image: str, log: HostedLog) -> None: ...
 
 
-def named_component_power_pin_lane_results(
+def component_power_pin_lane_results(
     log: HostedLog, *, stage_prefix: str
 ) -> dict[str, dict[str, object]]:
-    """Select result events emitted by one named component power-pin lane."""
+    """Select result events emitted by one component power-pin lane."""
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     prefix = f"{stage_prefix}/"
     return {item["stage"]: item for item in events if item.get("stage", "").startswith(prefix)}
 
 
-def assert_mocked_named_component_power_pin_lane(
+def assert_mocked_component_power_pin_lane(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     *,
-    lane: ComponentNamedPinLane,
+    lane: ComponentPowerPinLane,
     cases: tuple[str, ...],
     observed_contracts: Mapping[str, NetlistContract],
     stage_prefix: str,
     fault_case: str,
     expected_rule_id: str,
     expected_subject: str,
+    expected_control_status: str = "PASS",
+    expected_control_findings: str = "none",
 ) -> None:
     """Verify one isolated fault/control export through the shared native adapter."""
     root = tmp_path.resolve()
@@ -92,7 +94,7 @@ def assert_mocked_named_component_power_pin_lane(
 
     log = HostedLog(root, f"{stage_prefix}-unit")
     lane(root, project="synthetic", image=image, log=log)
-    results = named_component_power_pin_lane_results(log, stage_prefix=stage_prefix)
+    results = component_power_pin_lane_results(log, stage_prefix=stage_prefix)
     expected_stages = {
         f"{stage_prefix}/native-export",
         *(f"{stage_prefix}/{case}" for case in cases),
@@ -101,12 +103,12 @@ def assert_mocked_named_component_power_pin_lane(
 
     fault = results[f"{stage_prefix}/{fault_case}"]
     assert fault["lint_status"] == "REVIEW"
-    assert fault["findings"] == expected_rule_id
-    assert fault["subjects"] == expected_subject
+    assert expected_rule_id in fault["findings"].split(",")
+    assert expected_subject in fault["subjects"].split(";")
     control_case = next(case for case in cases if case != fault_case)
     control = results[f"{stage_prefix}/{control_case}"]
-    assert control["lint_status"] == "PASS"
-    assert control["findings"] == "none"
+    assert control["lint_status"] == expected_control_status
+    assert control["findings"] == expected_control_findings
     assert_native_fixture_mounts(
         root, cast(str, results[f"{stage_prefix}/native-export"]["command_receipt"])
     )
