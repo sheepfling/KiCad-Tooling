@@ -1913,7 +1913,8 @@ is not a reason by itself to expand its scope or change its default policy.
   silently skipping this shared fixture lane.
 - **Two-pin selector follow-up (2026-10-12):** The shared exact-version lane
   already exercises 16 passive, diode, crystal, fuse, ferrite, and switch
-  fault/control sources, but only the passive rule catalogued its native test.
+  fault/control sources; the initial selector audit found that only the passive
+  rule catalogued its native test.
   The runner now accepts rule IDs and filters the native exports to the
   selected rule. The fuse rule now catalogs a fuse/polyfuse fault/control test
   and requires `KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES`; the passive
@@ -1933,9 +1934,12 @@ is not a reason by itself to expand its scope or change its default policy.
   ferrite gate, its installed-wheel check against the external template, and
   all three portability previews. The tag enabled the native switch and
   selected only the ferrite fault/control source pair on the exact pinned
-  versions. Its full `package` job was skipped by RC policy. Diode, crystal,
-  and switch remain to be registered as separately selectable native gates.
-  The full package lane continues to run all 16 cases.
+  versions. Its full `package` job was skipped by RC policy.
+  The diode rule now catalogs its fault/control test and selects only its two
+  sources. Its local selector passed seven tests with two exact-native cases
+  skipped and 3,101 unrelated tests deselected; its hosted tag run is pending.
+  Crystal and switch remain to be registered as separately selectable native
+  gates. The full package lane continues to run all 16 cases.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
