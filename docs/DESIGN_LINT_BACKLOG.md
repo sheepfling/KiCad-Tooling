@@ -1954,13 +1954,16 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Rule-scoped native fixture inventory (2026-10-12):** An initial source-based
   comparison of the 17 modules assigned both `native_kicad` and `design_lint`
   markers found 13 native test functions across 11 modules without an active
-  rule-catalog fixture reference. The I2C, SPI, and CAN peer-reference native
-  fault/control tests are now linked to LINT-103 through LINT-105 and require
-  their existing native switches; scoped hosted results are pending. The
-  remaining 10 test functions across 9 modules cover CAN termination and peer
-  assignment, component ratings, empty-netlist evidence, I2C pull-up arrays,
-  connector return domains, PCB test access, return paths and signal paths, and
-  a mapped power path.
+  rule-catalog fixture reference. The I2C peer-reference, SPI peer-reference,
+  CAN peer-reference, and CAN peer-assignment native fault/control tests are
+  now linked to active rules and require their existing switches. Hosted runs
+  `38294501510` (`v0.5.0rc182`), `38294866007` (`v0.5.0rc183`), and
+  `38295223564` (`v0.5.0rc184`) passed the scoped lint and installed-wheel
+  steps plus all three portability previews; each package job was skipped by
+  RC policy. The CAN peer-assignment run `v0.5.0rc185` is pending. The remaining
+  9 test functions across 9 modules cover CAN termination, component ratings,
+  empty-netlist evidence, I2C pull-up arrays, connector return domains, PCB test
+  access, return paths and signal paths, and a mapped power path.
   Review each test against a rule predicate before indexing it; the inventory
   identifies selection gaps, not proof that every test belongs to a lint rule.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
@@ -5496,7 +5499,9 @@ is not a reason by itself to expand its scope or change its default policy.
   therefore did not select its native split/common-reference pair. The catalog
   now links the test as both fault and valid control and requires
   `KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES`; the architecture suite guards
-  that association. The new rule-scoped hosted result is pending.
+  that association. The rule-scoped `v0.5.0rc182` run `38294501510` passed the
+  lint and installed-wheel steps plus all three portability previews; the full
+  package job was skipped by RC policy.
 - **Incremental value:** LINT-070 already prompts on split return pins across
   comparable repeated components. LINT-103 adds the direct-I2C-bus relation
   between heterogeneous devices when that repeated-component comparison has no
@@ -5571,7 +5576,9 @@ is not a reason by itself to expand its scope or change its default policy.
   tag therefore could not select it. The catalog now links the test as both
   fault and valid control, requires
   `KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES`, and the architecture suite
-  guards that association. The new rule-scoped hosted result is pending.
+  guards that association. The rule-scoped `v0.5.0rc183` run `38294866007`
+  passed the lint and installed-wheel steps plus all three portability
+  previews; the full package job was skipped by RC policy.
 - **Incremental value:** The equal `+3V3` control/fault pair isolates return
   assignments as the changed variable. The split case has distinct symbol
   identities and no component-peer assignment finding, while the existing SPI
@@ -5643,7 +5650,9 @@ is not a reason by itself to expand its scope or change its default policy.
   therefore could not select it. The catalog now links the test as both fault
   and valid control, requires
   `KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES`, and the architecture suite
-  guards that association. The new rule-scoped hosted result is pending.
+  guards that association. The rule-scoped `v0.5.0rc184` run `38295223564`
+  passed the lint and installed-wheel steps plus all three portability
+  previews; the full package job was skipped by RC policy.
 - **Incremental value:** The expected pin-to-net maps differ only at U3's
   reference assignment. U1/U2 share one symbol identity and have equal return/supply
   assignments; U3 has a distinct symbol identity, so component-peer comparison
@@ -10652,6 +10661,13 @@ it does not claim field validation or effectiveness against private boards.
   isolated-library warnings are recorded in the native fixture README. The
   CLI and MCP return the same source-bound finding from a synthetic native
   netlist.
+- **Rule-scoped gate registration (2026-10-12):** The native fault/control
+  test ran under the broad interface-area gate, but its active rule did not
+  catalog that test, so a `Lint-Rule: bus.can_peer_assignment_divergence` tag
+  could not select it. The catalog now links the test as both fault and valid
+  control, requires `KICAD_RUN_NATIVE_CAN_PEER_FIXTURES`, and the architecture
+  suite guards the association. The rule-scoped hosted run for `v0.5.0rc185`
+  is pending.
 - **Remaining:** This is a review-localization gain, not proof the asymmetric
   peer is defective. Reviewer effort and false-positive frequency on approved
   non-proprietary projects remain unmeasured.

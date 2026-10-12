@@ -2197,14 +2197,19 @@
         "The rule checks schematic net assignments only. It does not establish termination, transceiver behavior, off-board wiring, PCB copper continuity, or physical connectivity."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_can.test_can_peer_pair_divergence_is_a_configurable_review_hint"
+        "tests.test_design_lint_can.test_can_peer_pair_divergence_is_a_configurable_review_hint",
+        "tests.test_can_native_fixture_lanes.test_native_can_peer_assignment_fault_and_control"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_can.test_can_peer_pair_divergence_is_a_configurable_review_hint"
+        "tests.test_design_lint_can.test_can_peer_pair_divergence_is_a_configurable_review_hint",
+        "tests.test_can_native_fixture_lanes.test_native_can_peer_assignment_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_design_lint_can.test_can_peer_pair_divergence_is_order_stable_and_dnp_aware"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_PEER_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_peer_heuristics.py#can_peer_assignment_divergences",
