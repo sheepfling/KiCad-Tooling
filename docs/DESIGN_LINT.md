@@ -166,6 +166,15 @@ The first rules are:
   The matching symbol and `power_in` type do not establish that the rails must
   be common; connectors, DNP components, named pins, open assignments, and
   incomplete inventories are handled elsewhere or excluded.
+- `component.peer_power_input_open_assignment` prompts when an explicit,
+  otherwise unrecognized native `power_in` pin is assigned on some comparable
+  fitted non-connector peers and left open on another. It requires complete
+  matching pin inventories, identical function text, and unambiguous
+  assignments. Peers may match by exact native symbol or a guarded shared
+  `PART_ID` with matching value and footprint. Generic functions and recognized
+  supply/return names stay with their existing checks. The default mode is
+  REVIEW because an open pin may be intentional; peer identity does not
+  establish that pins must share a net.
 - `component.peer_power_output_unconnected` prompts when one fitted
   non-connector has an unassigned native `power_out` pin while a comparable
   fitted peer has one unambiguous net assignment. Peers may share an exact
@@ -260,7 +269,7 @@ The first rules are:
   [synthetic fixture record](../tests/fixtures/design_lint/generic-component-peer-pin-assignment-outlier/README.md)
   documents the digest-pinned fault and control. The native netlist does not establish PCB copper
   continuity, off-board wiring, or physical population.
-- The report gives each of these eight rules a bounded `component_peer_pin_coverage` entry
+- The report gives each of these nine rules a bounded `component_peer_pin_coverage` entry
   tied to the native netlist digest. It counts exact-symbol groups, cross-symbol shared-`PART_ID`
   candidates and eligible groups, shared-identity groups excluded by value or footprint mismatch,
   inventory completeness, comparable and type/function-compatible pins, ambiguous assignments,
@@ -268,7 +277,9 @@ The first rules are:
   references in identity-incomplete groups and distinguishes that state from having no comparable
   peers. For `component.peer_power_input_assignment_divergence`, status distinguishes no eligible
   peers, incomplete inventories, unsupported pin types or functions, open assignments, and a
-  completed comparison. Status explains why a rule could not evaluate a group; it does not claim
+  completed comparison. The named power-input open-assignment rule also reports whether each
+  comparable group has complete inventories, matching `power_in` types and explicit functions,
+  and a mix of assigned and open peers. Status explains why a rule could not evaluate a group; it does not claim
   that every component or interface was recognized, or that matching peer pins must share a net.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
@@ -1032,7 +1043,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 103 active rules. They
+`synthetic_validated`; the catalog currently contains 104 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and

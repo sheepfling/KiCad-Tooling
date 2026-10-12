@@ -50,6 +50,47 @@ def component_peer_candidates(
             )
         )
 
+    for group in peer_pin_scans.power_input_open_assignment.outliers:
+        peer_identity = (
+            group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
+        )
+        identity_evidence = (
+            {
+                "peer_identity_basis": (group.peer_identity_basis,),
+                "peer_identity": (group.peer_identity,),
+                "peer_symbols": group.peer_symbols,
+            }
+            if group.peer_identity_basis == "part_id"
+            else {}
+        )
+        found.append(
+            Candidate(
+                rule_id="component.peer_power_input_open_assignment",
+                subject=(
+                    f"{peer_identity} pin {group.pin_number} ({group.pin_function}): "
+                    "power-input peer assignment is open"
+                ),
+                message=(
+                    "Comparable fitted non-connector components use this same, unrecognized native "
+                    "power_in pin function, but at least one peer has no net assignment. Review "
+                    "whether the open pin is intentionally unused or a supply connection is "
+                    "missing; matching part metadata is a review clue and does not establish that "
+                    "peer pins must share a net."
+                ),
+                evidence={
+                    **group.assignments,
+                    **identity_evidence,
+                    "symbol": (group.symbol,),
+                    "pin_number": (group.pin_number,),
+                    "pin_function": (group.pin_function or "",),
+                    "pin_electrical_type": ("power_in",),
+                    "open_peer_pins": tuple(
+                        pin for pin, nets in group.assignments.items() if not nets
+                    ),
+                },
+            )
+        )
+
     for group in component_peer_power_pin_assignment_divergences(
         observed, reviewed_connector_references
     ):

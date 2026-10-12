@@ -4,8 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .component_peer_pin_scan import PeerPinAssignmentOutlier, PeerPinAssignmentScan
-from .connector_identity import connector_candidate_references, pin_function_is_generic
+from .component_peer_pin_scan import (
+    PeerPinAssignmentOutlier,
+    PeerPinAssignmentScan,
+    scan_component_peer_pin_assignments,
+)
+from .connector_identity import (
+    connector_candidate_references,
+    is_named_supply_function,
+    is_return_function,
+    pin_function_is_generic,
+)
 from .models import NetlistContract
 
 
@@ -159,4 +168,40 @@ def scan_component_peer_power_input_assignments(
                 key=lambda item: (item.symbol.casefold(), item.pin_number.casefold()),
             )
         ),
+    )
+
+
+def _unrecognized_non_generic_power_input_function(
+    functions: tuple[str | None, ...],
+) -> bool:
+    """Select matching native functions not covered by generic or named-pin checks."""
+    if not functions or functions[0] is None:
+        return False
+    function = functions[0]
+    return not (
+        pin_function_is_generic(function)
+        or is_named_supply_function(function)
+        or is_return_function(function)
+    )
+
+
+def scan_component_peer_power_input_open_assignments(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> PeerPinAssignmentScan:
+    """Find named native power-input pins open on only some comparable peers.
+
+    Generic pin functions and recognized supply/return names remain with their
+    existing unconnected-pin rules. This scan asks for review when an otherwise
+    unrecognized, matching ``power_in`` function is assigned on at least one
+    peer and open on another.
+    """
+    return scan_component_peer_pin_assignments(
+        observed,
+        declared_references,
+        electrical_types=frozenset({"power_in"}),
+        require_pin_functions=True,
+        pin_function_selector=_unrecognized_non_generic_power_input_function,
+        assignment_pattern="partial_open",
+        minimum_peer_count=2,
     )

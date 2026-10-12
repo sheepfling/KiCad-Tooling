@@ -98,6 +98,11 @@ python -I -B -m pytest -q \
   tests/test_component_peer_power_input_divergence.py \
   tests/test_component_peer_power_input_native_fixture_lane.py \
   tests/test_peer_power_assignment_cli_mcp.py
+python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="component.peer_power_input_open_assignment")' \
+  tests/test_component_peer_power_input_divergence.py \
+  tests/test_component_peer_power_input_native_fixture_lane.py \
+  tests/test_peer_power_assignment_cli_mcp.py
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="net.numbered_returns")' \
   tests/test_numbered_return_native_fixture_lane.py

@@ -5,6 +5,7 @@ from __future__ import annotations
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 GENERIC_PEER_POWER_INPUT_RULE_ID = "component.peer_power_input_assignment_divergence"
+NAMED_PEER_POWER_INPUT_OPEN_RULE_ID = "component.peer_power_input_open_assignment"
 
 
 def generic_peer_power_input_netlist(
@@ -57,4 +58,26 @@ def generic_peer_power_input_netlist(
             },
             **{f"{reference}.2": "passive" for reference in references},
         },
+    )
+
+
+def named_peer_power_input_netlist(
+    *,
+    references: tuple[str, ...] = ("U1", "U2"),
+    symbols: dict[str, str] | None = None,
+    assignments: tuple[str | None, ...] = ("SYNTHETIC_RAIL_A", None),
+    functions: dict[str, str | None] | None = None,
+    electrical_types: dict[str, str] | None = None,
+    incomplete_inventory: tuple[str, ...] = (),
+    dnp: tuple[str, ...] = (),
+) -> NetlistContract:
+    """Build comparable peers with an explicit, non-supply power-input name."""
+    return generic_peer_power_input_netlist(
+        references=references,
+        symbols=symbols or {reference: "Lint:NamedPeerPowerInput" for reference in references},
+        assignments=assignments,
+        functions=functions or {reference: "BIAS_IN" for reference in references},
+        electrical_types=electrical_types,
+        incomplete_inventory=incomplete_inventory,
+        dnp=dnp,
     )

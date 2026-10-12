@@ -16,6 +16,10 @@ from tests.component_peer_power_assignment_support import (
     peer_pin_netlist_xml,
     peer_power_netlist,
 )
+from tests.component_peer_power_input_support import (
+    NAMED_PEER_POWER_INPUT_OPEN_RULE_ID,
+    named_peer_power_input_netlist,
+)
 from tests.mcp_parity_support import semantic_design_lint_report
 
 pytestmark = [
@@ -166,3 +170,29 @@ def test_generic_power_input_peer_assignment_matches_between_cli_and_mcp(
         if supplies[1] is None:
             assert coverage.open_assignment_pin_group_count == 1
         assert report.status == "REVIEW", report.model_dump_json(indent=2)
+
+
+def test_non_generic_peer_power_input_open_assignment_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    root, summary_path = _synthetic_parity_project(tmp_path)
+    report = _run_cli_and_mcp(
+        tmp_path,
+        root,
+        summary_path,
+        named_peer_power_input_netlist(),
+    )
+    findings = [
+        item for item in report.findings if item.rule_id == NAMED_PEER_POWER_INPUT_OPEN_RULE_ID
+    ]
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].evidence["open_peer_pins"] == ("U2.1",)
+    coverage = next(
+        item
+        for item in report.component_peer_pin_coverage
+        if item.rule_id == NAMED_PEER_POWER_INPUT_OPEN_RULE_ID
+    )
+    assert coverage.status == "EVALUATED"
+    assert coverage.finding_count == 1

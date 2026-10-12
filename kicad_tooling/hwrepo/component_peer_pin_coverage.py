@@ -33,6 +33,10 @@ def component_peer_pin_rule_coverage(
             "component.peer_power_input_assignment_divergence",
             scans.power_input_assignment_divergence,
         ),
+        (
+            "component.peer_power_input_open_assignment",
+            scans.power_input_open_assignment,
+        ),
         ("component.generic_peer_pin_mixed_open", scans.generic_partial_open),
         ("component.generic_peer_pin_all_open", scans.generic_all_open),
     )

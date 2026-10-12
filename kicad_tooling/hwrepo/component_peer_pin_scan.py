@@ -32,6 +32,7 @@ AssignmentOutlierSelector = Callable[
     [dict[str, tuple[str, ...]], tuple[str, ...]],
     tuple[str, tuple[str, ...]] | None,
 ]
+PeerPinFunctionSelector = Callable[[tuple[str | None, ...]], bool]
 
 
 @dataclass(frozen=True)
@@ -91,6 +92,7 @@ class ComponentPeerPinAssignmentScans:
     generic_partial_open: PeerPinAssignmentScan
     generic_all_open: PeerPinAssignmentScan
     power_input_assignment_divergence: PeerPinAssignmentScan
+    power_input_open_assignment: PeerPinAssignmentScan
 
 
 def scan_component_peer_pin_assignments(
@@ -100,6 +102,7 @@ def scan_component_peer_pin_assignments(
     electrical_types: frozenset[str],
     require_pin_functions: bool = False,
     require_generic_pin_functions: bool = False,
+    pin_function_selector: PeerPinFunctionSelector | None = None,
     assignment_pattern: Literal["partial_open", "all_open"] = "partial_open",
     assignment_outlier_selector: AssignmentOutlierSelector | None = None,
     require_shared_anchor: bool = False,
@@ -268,6 +271,8 @@ def scan_component_peer_pin_assignments(
             if require_generic_pin_functions and any(
                 not pin_function_is_generic(function) for function in peer_functions
             ):
+                continue
+            if pin_function_selector is not None and not pin_function_selector(peer_functions):
                 continue
             compatible_function_pin_group_count += 1
             assignments = {
