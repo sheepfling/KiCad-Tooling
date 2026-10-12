@@ -3026,7 +3026,12 @@ is not a reason by itself to expand its scope or change its default policy.
   randomized Python processes. The complete inventory test exposed that its
   previous expected count was two reports behind the actual baseline; the
   pinned inventory is now 165 and both focused tests pass. This adds no lint
-  rule, native export, or electrical-intent claim.
+  rule, native export, or electrical-intent claim. Tagged acceptance for
+  `v0.5.0rc190` passed on 2026-10-12 (GitHub Actions run `38303019793`), with
+  the scoped unit gate and `KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES`
+  enabled, installed-wheel verification against a separate public project
+  checkout, and Ubuntu, macOS, and Windows previews. The package-publish job
+  was skipped for this prerelease tag.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
