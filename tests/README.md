@@ -176,6 +176,7 @@ the [parity fixture record](fixtures/design_lint/mcp-parity/README.md).
 
 These notes identify the separate fixture inputs used by focused suites:
 
+- [SuperSpeed fixture record](fixtures/design_lint/usb-superspeed-peer-reference-native/README.md)
 - [Power-pin net-role native fault and control](fixtures/design_lint/power-pin-net-role-native/README.md)
 - [Multi-bus contract parity netlist](fixtures/electrical/multi-bus-contract-parity/README.md)
 - [Release-contract evidence netlist](fixtures/electrical/release-contract-evidence/README.md)
