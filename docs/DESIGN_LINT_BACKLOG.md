@@ -425,8 +425,11 @@ and optional ecosystem adapters are `P3`.
   gate with one open named contact and a fully assigned control, selectable by
   its own rule ID. The source fixtures are synthetic and test native pin/net
   extraction; they do not decide whether a connector contact should be used,
-  bonded, common, or isolated. The tagged KiCad 10.0.0/10.0.5 hosted runs are
-  pending.
+  bonded, common, or isolated. Exact KiCad 10.0.0/10.0.5 hosted acceptance
+  passed on supply tag `v0.5.0rc156` (run 38250769875) and return tag
+  `v0.5.0rc157` (run 38250769672). Earlier runs exposed and corrected a
+  native fixture-load issue, a Ruff format issue, and an unreachable fixture
+  guide in the Markdown documentation graph.
 
 - **Test architecture — Keep native fixture acceptance selectable by theme.**
   The exact-version empty-netlist fault and nonempty control now live in the
