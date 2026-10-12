@@ -246,7 +246,21 @@ The first rules are:
   documents the digest-pinned native fault and control. Coverage is source-bound to the native
   netlist; the result does not establish PCB copper continuity or physical population. Native
   `input`, `output`, and `bidirectional` pins remain with their existing peer checks.
-- The report gives each of these six rules a bounded `component_peer_pin_coverage` entry
+- `component.generic_peer_pin_assignment_outlier` is an opt-in, default-off review prompt for a
+  generic `passive`, `tri_state`, `open_collector`, or `open_emitter` pin with exactly one net on
+  each of at least three fitted non-connector peers. It requires complete matching inventories,
+  consistent native function/type metadata, and a separate pin with the same exact single-net
+  assignment across every peer. A target net must have a strict unique majority greater than half
+  the peer group, with at least one differing assignment. Peers must use the exact same native
+  symbol or share a native `PART_ID` with matching nonempty value and footprint and identical
+  per-pin function and electrical-type metadata. Named functions, open or ambiguous assignments,
+  DNP instances, connectors, and incomplete inventories are excluded. A majority and shared anchor
+  are comparison clues only; they do not identify the pin's role or required net. Review the
+  approved component requirements before treating a finding as a defect. The
+  [synthetic fixture record](../tests/fixtures/design_lint/generic-component-peer-pin-assignment-outlier/README.md)
+  documents the digest-pinned fault and control. The native netlist does not establish PCB copper
+  continuity, off-board wiring, or physical population.
+- The report gives each of these seven rules a bounded `component_peer_pin_coverage` entry
   tied to the native netlist digest. It counts exact-symbol groups, cross-symbol shared-`PART_ID`
   candidates and eligible groups, shared-identity groups excluded by value or footprint mismatch,
   inventory completeness, comparable and type/function-compatible pins, ambiguous assignments,
@@ -1016,13 +1030,14 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 102 active rules. They
+`synthetic_validated`; the catalog currently contains 103 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and
 component peer heuristics default to `off`. These prompts need project-specific
 review because a generic contact may be intentionally unused. Both connector
-and component generic-peer heuristics remain default-off.
+and component generic-peer heuristics remain default-off, including the
+strict-majority peer-assignment outlier prompt.
 
 ## Compare STM32 CubeMX and KiCad pin assignments
 

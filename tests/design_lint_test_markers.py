@@ -58,6 +58,9 @@ _LINT_AREA_MODULES = {
             "tests/test_peer_power_assignment_native.py",
             "tests/test_component_peer_power_input_divergence.py",
             "tests/test_component_peer_power_input_native_fixture_lane.py",
+            "tests/test_component_peer_pin_assignment_outlier.py",
+            "tests/test_component_peer_pin_assignment_native_fixture_lane.py",
+            "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",
             "tests/test_control_inputs.py",
             "tests/test_electrical_control_input_parity.py",
             "tests/test_electrical_rs485_parity.py",
@@ -392,6 +395,7 @@ _LINT_AREA_MODULES = {
     ),
     "parity_lint": frozenset(
         {
+            "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",
             "tests/test_design_lint_mcp_parity_peer_pins.py",
             "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
             "tests/test_design_lint_i2c_parity.py",

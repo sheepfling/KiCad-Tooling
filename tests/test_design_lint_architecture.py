@@ -48,6 +48,8 @@ PIN_ANALYSIS_MODULES = (
     "component_peer_pin_mixed_open.py",
     "component_peer_pin_identity.py",
     "component_peer_pin_scan.py",
+    "component_peer_pin_assignment_outlier.py",
+    "component_peer_pin_evaluation.py",
     "component_pin_patterns.py",
 )
 ROLE_MAPPING_MODULES = ("component_roles.py",)

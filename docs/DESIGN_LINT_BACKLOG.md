@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 102 rules are implemented with synthetic regression coverage.
+The following 103 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -313,6 +313,7 @@ Their actual recognition limits are documented in
 - `component.peer_bidirectional_pin_unconnected`
 - `component.generic_peer_pin_all_open`
 - `component.generic_peer_pin_mixed_open`
+- `component.generic_peer_pin_assignment_outlier`
 - `component.peer_signal_output_unconnected`
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
@@ -2255,7 +2256,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 102 active rules; CI requires every new
+- **Status:** Baseline complete for all 103 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2264,7 +2265,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 102 covered, 0 not applicable, 0 unreviewed.
+  audit: 103 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -6024,6 +6025,44 @@ is not a reason by itself to expand its scope or change its default policy.
   installed-wheel check against a separate project checkout, static/type/docs
   checks, and Ubuntu, macOS, and Windows preview jobs also passed.
 
+#### LINT-118 — Generic component peer pin differs from its strict majority
+
+- **Status:** Implemented as the default-`off` rule
+  `component.generic_peer_pin_assignment_outlier`; tagged hosted acceptance is
+  pending.
+- **Priority:** P1 component wiring review. Repeated modules or components can
+  have one generic pin assigned to a different net than comparable peers, while
+  ERC treats each assignment as valid.
+- **Predicate:** Compare at least three fitted non-connector peers with the
+  exact same native symbol, or a guarded shared PART_ID group with matching
+  value, footprint, complete inventories, and per-pin function/type metadata.
+  The target pin must have a generic function and one matching passive,
+  tri_state, open_collector, or open_emitter type. Require one exact net per
+  peer, a strict unique majority greater than half the group, at least one
+  differing peer, and a separate pin assigned to the same exact net on every
+  peer. Open, ambiguous, incomplete, DNP, connector, and non-generic cases are
+  excluded.
+- **Boundary:** This is a deterministic review heuristic, not an inferred
+  connection requirement. A strict majority and shared anchor are comparison
+  clues; they do not establish the target pin's function or required net.
+  Projects may enable review, block, disable, or ignore a finding. Required
+  relationships belong in an independently authored project contract.
+  Netlist evidence does not prove PCB continuity, off-board wiring, population,
+  or component behavior.
+- **Evidence:** Typed synthetic cases cover a 2:1 fault and consistent,
+  distinct, tied, and non-majority controls; two-peer, no-anchor, DNP,
+  incomplete, ambiguous, named-function, type, symbol, and connector controls;
+  project policy and ignore lifecycle; and deterministic output under mapping
+  order changes. CLI/MCP parity uses synthetic assignments and a consistent
+  control. Digest-pinned synthetic fault/control schematics are recorded in
+  [the fixture README](../tests/fixtures/design_lint/generic-component-peer-pin-assignment-outlier/README.md).
+  Exact native exports are configured for KiCad 10.0.0 and 10.0.5; local
+  hardware-independent tests pass, while the hosted exact-version gate remains
+  pending.
+- **Cohort input:** This rule follows the cohort lesson to emit suspicious
+  groups as review candidates. No cohort implementation, private project
+  source, board, or product expectation was imported.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8879,7 +8918,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 102 active rules. Each entry has a deterministic predicate, evidence
+contains 103 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

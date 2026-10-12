@@ -106,6 +106,13 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _connector_peer_pin_all_open.generic_open_peer_netlist(),
         _component_peer_pin_all_open.generic_component_peer_netlist(),
         _component_peer_pin_all_open.generic_component_peer_mixed_netlist(),
+        _component_peer_pin_support.peer_component_pin_netlist(
+            references=("U1", "U2", "U3"),
+            pin_nets=("DATA_A", "DATA_A", "DATA_B"),
+            default_symbol="Synthetic:GenericPeer",
+            pin_electrical_types=("passive", "passive", "passive"),
+            pin_function="Pin_2",
+        ),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(("PORT_A", "PORT_B")),
         unroled_return_labels,
         numbered_power_rails,

@@ -244,6 +244,39 @@ def component_peer_candidates(
                 },
             )
         )
+    for group in peer_pin_scans.generic_assignment_outlier.outliers:
+        (
+            subject_identity,
+            identity_text,
+            independent_net_text,
+            identity_evidence,
+        ) = component_peer_pin_identity_context(group)
+        found.append(
+            Candidate(
+                rule_id="component.generic_peer_pin_assignment_outlier",
+                subject=(
+                    f"{subject_identity} pin {group.pin_number}: generic peer assignment "
+                    "differs from its strict majority"
+                ),
+                message=(
+                    f"Fitted components with {identity_text} share another exact-net anchor, "
+                    f"but this generic {group.electrical_type} pin has a strict majority "
+                    "assignment and one or more different peer assignments. Review whether "
+                    "the outlier is intentional; the shared anchor and repeated identity are "
+                    f"comparison clues only, and {independent_net_text}."
+                ),
+                evidence={
+                    **group.assignments,
+                    **identity_evidence,
+                    "pin_number": (group.pin_number,),
+                    "pin_function": (group.pin_function or "",),
+                    "pin_electrical_type": (group.electrical_type,),
+                    "majority_net": (group.majority_net or "",),
+                    "outlier_pins": group.outlier_pins,
+                    "shared_anchor_contacts": group.shared_anchor_contacts,
+                },
+            )
+        )
     found.extend(
         mixed_open_generic_component_peer_pin_candidates(peer_pin_scans.generic_partial_open)
     )

@@ -9,10 +9,8 @@ from .bus_signal_pairs import (
     ComplementaryPinFunctionAliasResolution,
 )
 from .can_peer_reference_scan import CanPeerReferenceScan
-from .component_peer_pin_scan import (
-    ComponentPeerPinAssignmentScans,
-    component_peer_pin_assignment_scans,
-)
+from .component_peer_pin_evaluation import component_peer_pin_assignment_scans
+from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .component_role_models import ComponentRoleMap
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_bus_candidates import bus_candidates

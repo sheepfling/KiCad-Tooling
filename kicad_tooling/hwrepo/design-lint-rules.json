@@ -664,6 +664,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/component_peer_pin_mixed_open.py#mixed_open_generic_component_peer_pin_candidates"
     },
     {
+      "rule_id": "component.generic_peer_pin_assignment_outlier",
+      "title": "Generic component peer pin differs from its strict majority",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among at least three fitted non-connector component peers, compare exact native-symbol peers or cross-symbol peers only when they share a nonempty native PART_ID plus matching nonempty value, footprint, complete pin inventory, and identical per-pin function and electrical-type metadata. Require a target pin with absent or generic native function metadata, matching passive, tri_state, open_collector, or open_emitter electrical type, exactly one assigned net per peer, and a separate pin with the same exact single-net assignment across every peer. Report target-pin assignments when one exact net has a strict unique majority (more than half of peers, at least two) and at least one peer differs. Require complete inventories; exclude connectors, DNP, open or ambiguous assignments, non-generic functions, and nonmatching native types.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule defaults off because generic pins on repeated components often serve separate channels; enable it only for projects where this review question is useful.",
+        "A strict unique majority and a shared anchor provide a deterministic comparison context only. They do not establish the target pin's role, a required connection, or an electrical defect.",
+        "Cross-symbol comparisons require shared nonempty PART_ID plus matching nonempty value and footprint, complete pin inventories, and identical per-pin native function and type metadata; PART_ID remains project-entered metadata and can be wrong.",
+        "The netlist does not establish PCB copper continuity, off-board wiring, physical population, or component behavior."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_peer_pin_assignment_outlier.test_generic_peer_assignment_outlier_is_default_off_and_source_bound",
+        "tests.test_component_peer_pin_assignment_outlier.test_generic_peer_assignment_outlier_obeys_project_policy_and_ignore_lifecycle",
+        "tests.test_component_peer_pin_assignment_native_fixture_lane.test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_peer_pin_assignment_outlier.test_generic_peer_assignment_outlier_matches_between_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_peer_pin_assignment_outlier.test_generic_peer_assignment_outlier_requires_a_unique_majority_and_shared_anchor",
+        "tests.test_component_peer_pin_assignment_native_fixture_lane.test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_peer_pin_assignment_outlier.test_generic_peer_assignment_outlier_matches_between_cli_and_mcp"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_component_peer_pin_assignment_outlier.test_generic_peer_assignment_outlier_is_stable_under_mapping_order",
+        "tests.test_component_peer_pin_assignment_native_fixture_lane.test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_peer_pin_assignment_outlier.py#scan_generic_component_peer_pin_assignment_outliers",
+        "kicad_tooling/hwrepo/component_peer_pin_assignment_outlier.py#_strict_majority_assignment_outlier",
+        "kicad_tooling/hwrepo/component_peer_pin_scan.py#scan_component_peer_pin_assignments",
+        "kicad_tooling/hwrepo/design_lint_component_peer_candidates.py#component_peer_candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_peer_pin_assignment_outlier.py#scan_generic_component_peer_pin_assignment_outliers"
+    },
+    {
       "rule_id": "component.two_pin_passive_same_net",
       "title": "Supported two-pin passive is bypassed by one net",
       "status": "active",

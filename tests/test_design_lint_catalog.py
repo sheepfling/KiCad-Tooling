@@ -57,6 +57,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "connector.generic_peer_pin_all_open",
             "component.generic_peer_pin_all_open",
             "component.generic_peer_pin_mixed_open",
+            "component.generic_peer_pin_assignment_outlier",
         }
     )
     assert all(
@@ -78,6 +79,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "connector.generic_peer_pin_all_open",
             "component.generic_peer_pin_all_open",
             "component.generic_peer_pin_mixed_open",
+            "component.generic_peer_pin_assignment_outlier",
         }
     )
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)

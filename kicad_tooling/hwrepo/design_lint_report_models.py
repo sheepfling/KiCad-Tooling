@@ -215,6 +215,7 @@ class DesignLintReport(StrictModel):
             "component.peer_signal_output_unconnected",
             "component.peer_signal_input_unconnected",
             "component.peer_bidirectional_pin_unconnected",
+            "component.generic_peer_pin_assignment_outlier",
             "component.generic_peer_pin_mixed_open",
             "component.generic_peer_pin_all_open",
         }

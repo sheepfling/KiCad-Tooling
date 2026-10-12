@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_peer_pin_evaluation import component_peer_pin_assignment_scans
 from .component_peer_pin_findings import (
     component_peer_bidirectional_pin_outliers,
     component_peer_power_output_pin_outliers,
@@ -14,7 +15,6 @@ from .component_peer_pin_scan import (
     PeerPinAssignmentOutlier,
     PeerPinAssignmentScan,
     PeerPowerPinAssignmentDivergence,
-    component_peer_pin_assignment_scans,
 )
 from .component_pin_patterns import (
     RepeatedComponentSupplyPins,

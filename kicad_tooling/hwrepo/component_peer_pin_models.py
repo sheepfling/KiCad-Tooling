@@ -19,6 +19,7 @@ class ComponentPeerPinRuleCoverage(StrictModel):
         "component.peer_bidirectional_pin_unconnected",
         "component.generic_peer_pin_mixed_open",
         "component.generic_peer_pin_all_open",
+        "component.generic_peer_pin_assignment_outlier",
     ]
     status: Literal[
         "NO_COMPARABLE_PEERS",

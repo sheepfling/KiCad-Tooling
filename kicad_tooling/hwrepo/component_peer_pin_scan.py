@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
 
@@ -13,7 +14,7 @@ from .connector_identity import (
 )
 from .models import NetlistContract
 
-_GENERIC_COMPONENT_PIN_TYPES = frozenset(
+GENERIC_COMPONENT_PIN_TYPES = frozenset(
     {
         "passive",
         "input",
@@ -24,9 +25,13 @@ _GENERIC_COMPONENT_PIN_TYPES = frozenset(
         "open_emitter",
     }
 )
-_GENERIC_COMPONENT_MIXED_PIN_TYPES = frozenset(
+GENERIC_COMPONENT_MIXED_PIN_TYPES = frozenset(
     {"passive", "tri_state", "open_collector", "open_emitter"}
 )
+AssignmentOutlierSelector = Callable[
+    [dict[str, tuple[str, ...]], tuple[str, ...]],
+    tuple[str, tuple[str, ...]] | None,
+]
 
 
 @dataclass(frozen=True)
@@ -52,6 +57,8 @@ class PeerPinAssignmentOutlier:
     peer_identity: str = ""
     peer_symbols: tuple[str, ...] = ()
     shared_anchor_contacts: tuple[str, ...] = ()
+    majority_net: str | None = None
+    outlier_pins: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -79,6 +86,7 @@ class ComponentPeerPinAssignmentScans:
     signal_output: PeerPinAssignmentScan
     signal_input: PeerPinAssignmentScan
     bidirectional: PeerPinAssignmentScan
+    generic_assignment_outlier: PeerPinAssignmentScan
     generic_partial_open: PeerPinAssignmentScan
     generic_all_open: PeerPinAssignmentScan
 
@@ -91,6 +99,7 @@ def scan_component_peer_pin_assignments(
     require_pin_functions: bool = False,
     require_generic_pin_functions: bool = False,
     assignment_pattern: Literal["partial_open", "all_open"] = "partial_open",
+    assignment_outlier_selector: AssignmentOutlierSelector | None = None,
     require_shared_anchor: bool = False,
     minimum_peer_count: int = 2,
     minimum_assigned_peer_count: int = 1,
@@ -105,6 +114,8 @@ def scan_component_peer_pin_assignments(
     per-pin function metadata. Identical generic placeholders are accepted as
     a structural match only; they do not identify the pin's electrical role.
     ``assignment_pattern`` selects mixed open/assigned peers or all-open peers.
+    A theme-owned selector may classify fully assigned peers without placing
+    its rule-specific predicate in this shared scan.
     The generic pin rules also require one separate exact-net anchor shared by
     every peer; this establishes comparison context without asserting intent.
     Mixed-open rules can additionally require a larger peer group and assigned
@@ -204,7 +215,9 @@ def scan_component_peer_pin_assignments(
     ambiguous_assignment_pin_group_count = 0
     unambiguous_assignment_pin_group_count = 0
     deduplicated_candidate_group_count = 0
-    candidate_keys: set[tuple[str, tuple[str, ...]]] = set()
+    candidate_keys: set[tuple[str, tuple[str, ...], tuple[tuple[str, tuple[str, ...]], ...]]] = (
+        set()
+    )
     peer_groups.sort(key=lambda item: (item[0], item[1].casefold(), item[1]))
     for peer_identity_basis, peer_identity, peers in peer_groups:
         if peer_identity_basis == "exact_symbol":
@@ -265,7 +278,16 @@ def scan_component_peer_pin_assignments(
             open_pins = tuple(pin for pin, nets in assignments.items() if not nets)
             assigned_pins = tuple(pin for pin, nets in assignments.items() if nets)
             all_open = bool(open_pins) and not assigned_pins
-            if assignment_pattern == "all_open":
+            majority_net: str | None = None
+            outlier_pins: tuple[str, ...] = ()
+            if assignment_outlier_selector is not None:
+                if open_pins or len(peers) < minimum_peer_count:
+                    continue
+                selected_outlier = assignment_outlier_selector(assignments, peers)
+                if selected_outlier is None:
+                    continue
+                majority_net, outlier_pins = selected_outlier
+            elif assignment_pattern == "all_open":
                 if not all_open:
                     continue
             elif not open_pins or not assigned_pins:
@@ -309,9 +331,15 @@ def scan_component_peer_pin_assignments(
                         )
                 if not shared_anchors:
                     continue
+            assignment_signature = (
+                tuple(sorted((pin.casefold(), nets) for pin, nets in assignments.items()))
+                if assignment_outlier_selector is not None
+                else ()
+            )
             candidate_key = (
                 pin_number.casefold(),
                 tuple(sorted(open_pins, key=lambda pin: (pin.casefold(), pin))),
+                assignment_signature,
             )
             if candidate_key in candidate_keys:
                 deduplicated_candidate_group_count += 1
@@ -340,6 +368,8 @@ def scan_component_peer_pin_assignments(
                     shared_anchor_contacts=tuple(
                         sorted(shared_anchors, key=lambda item: (item.casefold(), item))
                     ),
+                    majority_net=majority_net,
+                    outlier_pins=outlier_pins,
                 )
             )
     outliers = tuple(
@@ -374,53 +404,4 @@ def scan_component_peer_pin_assignments(
         unambiguous_assignment_pin_group_count=unambiguous_assignment_pin_group_count,
         deduplicated_candidate_group_count=deduplicated_candidate_group_count,
         outliers=outliers,
-    )
-
-
-def component_peer_pin_assignment_scans(
-    observed: NetlistContract,
-    declared_references: tuple[str, ...] = (),
-) -> ComponentPeerPinAssignmentScans:
-    """Return bounded applicability scans for all native peer-pin checks."""
-    return ComponentPeerPinAssignmentScans(
-        power_output=scan_component_peer_pin_assignments(
-            observed,
-            declared_references,
-            electrical_types=frozenset({"power_out"}),
-        ),
-        signal_output=scan_component_peer_pin_assignments(
-            observed,
-            declared_references,
-            electrical_types=frozenset({"output"}),
-        ),
-        signal_input=scan_component_peer_pin_assignments(
-            observed,
-            declared_references,
-            electrical_types=frozenset({"input", "input_low"}),
-            require_pin_functions=True,
-        ),
-        bidirectional=scan_component_peer_pin_assignments(
-            observed,
-            declared_references,
-            electrical_types=frozenset({"bidirectional"}),
-            require_pin_functions=True,
-        ),
-        generic_all_open=scan_component_peer_pin_assignments(
-            observed,
-            declared_references,
-            electrical_types=_GENERIC_COMPONENT_PIN_TYPES,
-            require_generic_pin_functions=True,
-            assignment_pattern="all_open",
-            require_shared_anchor=True,
-        ),
-        generic_partial_open=scan_component_peer_pin_assignments(
-            observed,
-            declared_references,
-            electrical_types=_GENERIC_COMPONENT_MIXED_PIN_TYPES,
-            require_generic_pin_functions=True,
-            require_shared_anchor=True,
-            minimum_peer_count=3,
-            minimum_assigned_peer_count=2,
-            require_assigned_peers_on_same_net=True,
-        ),
     )
