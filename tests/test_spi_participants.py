@@ -8,12 +8,12 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisPending
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_project_contexts import spi_roster_context
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
-    AnalysisPending,
     ComponentContract,
     ComponentIdentity,
     ContractCoachReport,

@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from ..validate import hashes
+from .analysis_state_models import AnalysisPending
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry
@@ -19,7 +20,6 @@ from .electrical import (
     simulation_cases,
 )
 from .models import (
-    AnalysisPending,
     ElectricalAnalysisContract,
     ElectricalInputInventory,
     ElectricalSetupReport,

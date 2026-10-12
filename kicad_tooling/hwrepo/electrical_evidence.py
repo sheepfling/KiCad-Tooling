@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .analysis_state_models import AnalysisNotApplicable
 from .can_termination_contract import (
     can_termination_checks,
 )
@@ -38,7 +39,6 @@ from .i2c_pullup_contract import (
 )
 from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
-    AnalysisNotApplicable,
     CommandEvidence,
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
@@ -51,7 +51,6 @@ from .models import (
     ReleaseClass,
     SourceState,
     TestAccessAnalysis,
-    UsbCAnalysis,
 )
 from .mosfet_stress import mosfet_stress_checks
 from .mosfet_stress_models import MosfetStressAnalysis
@@ -80,6 +79,7 @@ from .test_access import (
 from .usb_c_contract import (
     usb_c_checks,
 )
+from .usb_c_models import UsbCAnalysis
 
 
 def required_projects(

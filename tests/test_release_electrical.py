@@ -12,11 +12,11 @@ from unittest.mock import patch
 
 from kicad_tooling import release as cli
 from kicad_tooling.hwrepo import mcp_workflow as workflow
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.electrical_setup import initialize
 from kicad_tooling.hwrepo.evidence import digest, source_state
 from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
     CheckEvidence,
     ElectricalAnalysisContract,
     ReleaseManifest,

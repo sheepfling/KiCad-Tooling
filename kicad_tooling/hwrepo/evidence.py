@@ -289,6 +289,7 @@ def verify_native(
 
     if config.electrical is not None:
         from ..validate import read_netlist
+        from .analysis_state_models import AnalysisPending
         from .can_termination_contract import (
             can_termination_checks,
         )
@@ -301,7 +302,6 @@ def verify_native(
         )
         from .i2c_pullup_models import I2cPullupAnalysis
         from .models import (
-            AnalysisPending,
             PcbAccessAnalysis,
             TestAccessAnalysis,
         )

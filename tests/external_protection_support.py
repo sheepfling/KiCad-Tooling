@@ -5,10 +5,10 @@ from __future__ import annotations
 import hashlib
 from typing import Literal
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
 from kicad_tooling.hwrepo.external_protection import evaluate
 from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
     ComponentContract,
     ConnectorCoverageEntry,
     ConnectorCoverageReport,
@@ -21,6 +21,8 @@ from kicad_tooling.hwrepo.models import (
     ExternalProtectionInterfaceRequirement,
     ExternalProtectionMap,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.usb_c_models import (
     UsbCAnalysis,
     UsbCcLineRequirement,
     UsbCcResistorAttachment,

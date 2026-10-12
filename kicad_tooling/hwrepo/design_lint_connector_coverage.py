@@ -17,6 +17,8 @@ from .models import (
     InterfaceRecord,
     InterfacesCatalog,
     NetlistContract,
+)
+from .usb_c_models import (
     UsbCAnalysis,
     UsbCProtectionAnalysis,
 )

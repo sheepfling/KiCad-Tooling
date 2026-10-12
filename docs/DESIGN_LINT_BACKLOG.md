@@ -647,7 +647,12 @@ and optional ecosystem adapters are `P3`.
   identity-compatible exports. The architecture and package-asset checks cover
   the new owner, and the shared registry shrank from 5,022 to 4,919 lines. This
   extraction does not change the authored connectivity predicate or its
-  evidence boundary.
+  evidence boundary. USB-C contract records now live in `usb_c_models.py`, and
+  shared pending/not-applicable states live in `analysis_state_models.py`.
+  Services and regression builders import those owners directly while
+  `models.py` preserves identity-compatible exports. Architecture and wheel
+  checks cover the new boundaries; the registry shrank from 4,919 to 4,554
+  lines. This extraction adds no lint rule or behavior change.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in
@@ -694,7 +699,14 @@ and optional ecosystem adapters are `P3`.
   cross-version reproducibility, and seeded-fault sensitivity; it does not
   establish field precision or reviewer value. Independent author dispositions
   and review times are optional follow-up evidence, not prerequisites for using
-  the rule or continuing lint development. Do not ask reviewers to label a
+  the rule or continuing lint development. No additional example project is
+  needed to continue the rule's implementation. New public or sanitized
+  examples would help test applicability boundaries, especially intentional or
+  switchable return isolation and unsupported multi-device topologies; they do
+  not substitute for independent field dispositions or reviewer-time evidence.
+  Keep public source checkouts and raw exports outside this repository, and add
+  only minimal tooling-owned synthetic fault/control fixtures with provenance.
+  Do not ask reviewers to label a
   synthetic split as a defect: the heuristic detects a review-worthy difference
   and cannot infer whether common reference was intended. Keep the rule at
   default `REVIEW` while field dispositions are unavailable. The prior receipt

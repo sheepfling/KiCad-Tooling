@@ -14,11 +14,11 @@ pytestmark = [
 
 from mcp import Client
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisPending
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
-    AnalysisPending,
     DesignLintReport,
     ElectricalAnalysisContract,
     ProjectTestContract,

@@ -7,8 +7,8 @@ from typing import Literal
 
 import pytest
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
 from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
     ElectricalAnalysisContract,
     ElectricalCheck,
     PowerAnalysis,

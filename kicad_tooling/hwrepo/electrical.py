@@ -8,12 +8,14 @@ import stat
 from pathlib import Path
 
 from ..validate import hashes
+from .analysis_state_models import (
+    AnalysisNotApplicable,
+    AnalysisPending,
+)
 from .contracts import parse_model_text, read_model, repo_path
 from .discovery import load_config, load_registry
 from .grounding_models import GroundingAnalysis
 from .models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
     ElectricalAnalysisContract,
     ElectricalCheck,
     FrequencyAnalysis,

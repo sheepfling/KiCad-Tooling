@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import Literal
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
 from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
     ComponentContract,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.usb_c_models import (
     UsbCAnalysis,
     UsbCcControllerAttachment,
     UsbCcLineRequirement,

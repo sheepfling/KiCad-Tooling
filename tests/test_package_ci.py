@@ -33,6 +33,8 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/power_path_models.py",
         "kicad_tooling/hwrepo/power_sequence_models.py",
         "kicad_tooling/hwrepo/power_connectivity_models.py",
+        "kicad_tooling/hwrepo/analysis_state_models.py",
+        "kicad_tooling/hwrepo/usb_c_models.py",
     ),
     ids=(
         "rule-catalog",
@@ -41,6 +43,8 @@ from scripts.lint_gate_scope import (
         "power-path-models",
         "power-sequence-models",
         "power-connectivity-models",
+        "analysis-state-models",
+        "usb-c-models",
     ),
 )
 def test_wheel_requires_rule_catalog_and_theme_owned_models(

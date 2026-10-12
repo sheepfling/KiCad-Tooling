@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+from .analysis_state_models import AnalysisPending
 from .models import (
-    AnalysisPending,
     ElectricalCheck,
     NetlistContract,
+)
+from .resistor_paths import direct_resistors
+from .usb_c_models import (
     UsbCAnalysis,
     UsbCcResistorAttachment,
     UsbCProtectionAnalysis,
     UsbCVbusCapacitanceRequirement,
 )
-from .resistor_paths import direct_resistors
 from .usb_c_vbus import (
     usb_c_vbus_capacitance_check,
     usb_c_vbus_path_check,

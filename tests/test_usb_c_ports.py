@@ -8,6 +8,10 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+from kicad_tooling.hwrepo.analysis_state_models import (
+    AnalysisNotApplicable,
+    AnalysisPending,
+)
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.design_lint import (
     evaluate,
@@ -15,8 +19,6 @@ from kicad_tooling.hwrepo.design_lint import (
 from kicad_tooling.hwrepo.design_lint_project_contexts import usb_c_port_roster_context
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
     ComponentContract,
     ComponentIdentity,
     ContractCoachReport,
@@ -30,6 +32,8 @@ from kicad_tooling.hwrepo.models import (
     ProjectConfig,
     ProjectKind,
     SchematicValidationContract,
+)
+from kicad_tooling.hwrepo.usb_c_models import (
     UsbCAnalysis,
     UsbCcLineRequirement,
     UsbCcResistorAttachment,

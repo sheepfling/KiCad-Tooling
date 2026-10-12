@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisPending
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_project_contexts import serial_peer_roster_context
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
-    AnalysisPending,
     ComponentIdentity,
     DesignLintIgnore,
     DesignLintPolicy,

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisPending
 from kicad_tooling.hwrepo.electrical import grounding_checks
 from kicad_tooling.hwrepo.models import (
-    AnalysisPending,
     ComponentContract,
     GroundDomain,
     GroundingAnalysis,

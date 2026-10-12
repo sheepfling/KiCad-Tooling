@@ -6,6 +6,10 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
+from .analysis_state_models import (
+    AnalysisNotApplicable,
+    AnalysisPending,
+)
 from .can_termination_contract import can_termination_checks
 from .can_termination_models import CanTerminationAnalysis
 from .component_power_ratings import component_power_rating_checks
@@ -42,8 +46,6 @@ from .grounding_models import GroundingAnalysis
 from .i2c_pullup_contract import i2c_pullup_checks
 from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
     CommandEvidence,
     ElectricalAnalysisReport,
     ElectricalCheck,
@@ -51,7 +53,6 @@ from .models import (
     PcbAccessAnalysis,
     ProjectKind,
     TestAccessAnalysis,
-    UsbCAnalysis,
 )
 from .mosfet_stress import mosfet_stress_checks
 from .mosfet_stress_models import MosfetStressAnalysis
@@ -76,6 +77,7 @@ from .test_access import (
     pcb_probe_envelope_checks,
 )
 from .usb_c_contract import usb_c_checks
+from .usb_c_models import UsbCAnalysis
 
 
 def analyze(

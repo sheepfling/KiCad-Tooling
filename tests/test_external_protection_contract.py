@@ -13,6 +13,8 @@ from kicad_tooling.hwrepo.models import (
     ConnectorMappedPinEvidence,
     ExternalProtectionChannelRequirement,
     ExternalProtectionMap,
+)
+from kicad_tooling.hwrepo.usb_c_models import (
     UsbCNetPinAssignment,
     UsbCProtectionAnalysis,
 )

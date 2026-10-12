@@ -9,6 +9,8 @@ from .models import (
     ComponentContract,
     ElectricalCheck,
     NetlistContract,
+)
+from .usb_c_models import (
     UsbCVbusCapacitanceRequirement,
     UsbCVbusPathRequirement,
 )

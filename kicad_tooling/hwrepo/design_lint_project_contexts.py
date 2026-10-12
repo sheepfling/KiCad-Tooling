@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .analysis_state_models import (
+    AnalysisNotApplicable,
+    AnalysisPending,
+)
 from .contracts import repo_path
 from .control_input_bias import control_input_bias_heuristic_coverage
 from .control_input_models import (
@@ -22,18 +26,14 @@ from .i2c_pullup_models import (
     I2cPullupAnalysis,
     I2cPullupHeuristicCoverage,
 )
-from .models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
-    NetlistContract,
-    UsbCAnalysis,
-)
+from .models import NetlistContract
 from .rs485_models import Rs485Analysis
 from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_models import SerialPeerAnalysis
 from .spi_models import SpiAnalysis
 from .spi_participants import SpiRosterContext
+from .usb_c_models import UsbCAnalysis
 from .usb_c_ports import UsbCPortRosterContext
 
 

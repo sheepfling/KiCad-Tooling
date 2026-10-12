@@ -26,15 +26,13 @@ from kicad_tooling.ci_hosted import (
     release_fixture,
     release_lane,
 )
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.discovery import load_registry
 from kicad_tooling.hwrepo.electrical_setup import initialize as init_electrical
 from kicad_tooling.hwrepo.initialization import initialize
 from kicad_tooling.hwrepo.layout import RepositoryLayout, layout
-from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
-    ElectricalAnalysisContract,
-)
+from kicad_tooling.hwrepo.models import ElectricalAnalysisContract
 from kicad_tooling.hwrepo.sharding import ProjectShard, shard_projects
 from kicad_tooling.hwrepo.template import preflight
 from tests.hosted_ci_support import HostedRepoTestCase

@@ -7,10 +7,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable, AnalysisPending
 from kicad_tooling.hwrepo.electrical import pending_sections
 from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
-    AnalysisPending,
     ElectricalAnalysisContract,
     ExcludedTestAccess,
     PcbAccessAnalysis,

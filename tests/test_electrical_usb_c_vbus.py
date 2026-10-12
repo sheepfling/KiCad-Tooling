@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisPending
 from kicad_tooling.hwrepo.bus_heuristics import usb_c_checks
 from kicad_tooling.hwrepo.models import (
-    AnalysisPending,
     ComponentContract,
     NetlistContract,
-    UsbCAnalysis,
 )
+from kicad_tooling.hwrepo.usb_c_models import UsbCAnalysis
 from tests.electrical_usb_c_support import usb_c_netlist, usb_c_requirement
 
 pytestmark = [pytest.mark.interface_lint, pytest.mark.power_lint]

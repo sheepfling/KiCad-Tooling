@@ -6,11 +6,11 @@ import json
 import shutil
 from pathlib import Path
 
+from kicad_tooling.hwrepo.analysis_state_models import AnalysisNotApplicable
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
-    AnalysisNotApplicable,
     ElectricalAnalysisContract,
     FrequencyAnalysis,
     GroundDomain,
