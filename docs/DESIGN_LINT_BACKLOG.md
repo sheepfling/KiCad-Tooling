@@ -5873,7 +5873,9 @@ is not a reason by itself to expand its scope or change its default policy.
   schematics are recorded in
   [the component peer fixture README](../tests/fixtures/design_lint/component-peer-generic-all-open-native/README.md);
   the local exact-version lane passed on KiCad 10.0.0 and 10.0.5 on
-  2026-10-12; tagged hosted acceptance is pending.
+  2026-10-12. Tagged `v0.5.0rc145` acceptance also passed (run `38238425868`),
+  including the exact-version native fixture lane, installed-wheel check against
+  a separate project checkout, and preview jobs on Ubuntu, macOS, and Windows.
 - **Next:** Keep the rule opt-in. Use independent, sanitized pinout
   dispositions to measure reviewer value and false positives before changing
   its default or relaxing its identity and shared-anchor requirements.
