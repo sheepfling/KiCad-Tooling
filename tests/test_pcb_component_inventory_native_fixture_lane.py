@@ -103,4 +103,11 @@ def test_native_component_inventory_fault_and_control_are_source_bound(
     assert values["control_schematic_value"] == "Synthetic identity probe"
     assert values["control_board_value"] == "Synthetic identity probe"
     assert values["repeated_native_evidence"] == "stable"
-    assert all(len(value) == 64 for value in values["source_hashes"].values())
+    value_source_hashes = json.loads(values["source_hashes"])
+    assert set(value_source_hashes) == {
+        "control.board",
+        "control.schematic",
+        "fault.board",
+        "fault.schematic",
+    }
+    assert all(len(value) == 64 for value in value_source_hashes.values())
