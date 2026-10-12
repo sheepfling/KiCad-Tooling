@@ -1495,6 +1495,12 @@ is not a reason by itself to expand its scope or change its default policy.
   pytest item and two version subtests. The test revalidated repeated native
   exports and the expected split-return review and common-return control.
   Hosted acceptance for the current branch is not recorded.
+- **Hosted scoped-gate confirmation (2026-10-11):** The connector-focused
+  prerelease tag `v0.5.0rc123` (commit `371dc42`, GitHub Actions run
+  `38205232934`) passed with `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Its
+  pinned KiCad 10.0.0/10.0.5 lane covered the DB9 split/common fault-control
+  pair, neutral-name controls, and the explicit common/isolated grounding and
+  pin-connectivity contracts. Only tooling-owned synthetic fixtures ran.
 - **Supplemental local native screen (2026-10-07):** The KiCad 10.0.6 CLI
   bundled with the installed application exported the DB9 split-return fault,
   common-return control, and both numeric-function/neutral-label variants

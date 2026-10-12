@@ -33,8 +33,9 @@ common contract and fail the isolated contract. This verifies that the
 requirement—not the heuristic—decides which topology is acceptable. Each
 receipt includes the schematic, native netlist, and requirement digests. These
 are test-owned values, not a project contract file or production approval. The
-matrix is enabled for KiCad 10.0.0 and 10.0.5; the next hosted native run is
-still needed to confirm this extension on those executables.
+matrix is enabled for KiCad 10.0.0 and 10.0.5. The hosted prerelease gate for
+`v0.5.0rc123` (commit `371dc42`, GitHub Actions run `38205232934`) passed,
+including these synthetic common/isolated contract cases on both executables.
 
 The electrical service CLI/MCP parity test separately serializes synthetic
 common-return and isolated-return netlists as XML and checks all four
