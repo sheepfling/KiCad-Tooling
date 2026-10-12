@@ -108,6 +108,10 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
             "component.generic_peer_pin_mixed_open",
             "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
         ),
+        (
+            "bus.i2c_missing_pullup",
+            "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES",
+        ),
     ),
 )
 def test_lint_tag_selects_one_active_rule_and_its_configured_native_fixture(

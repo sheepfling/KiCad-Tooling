@@ -77,11 +77,21 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
         }
         assert (control["sda"], control["scl"]) == ("PASS", "PASS")
         assert (fault["sda"], fault["scl"]) == ("FAIL", "PASS")
+        assert control["baseline_missing_pullup"] == "OPEN"
+        assert control["heuristic_coverage"] == "COMPLETE"
+        assert control["heuristic_findings"] == "none"
+        assert fault["baseline_missing_pullup"] == "OPEN"
+        assert fault["heuristic_coverage"] == "OPEN"
+        assert fault["heuristic_findings"] == "bus.i2c_missing_pullup"
+        assert control["contract_path"] == "projects/synthetic-i2c-array/electrical.json"
+        assert control["contract_sha256"] == fault["contract_sha256"]
         for result in (control, fault):
             assert result["status"] == "PASS"
             assert result["kicad_version"] == version
             assert result["repeatable"] == "true"
             assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+            assert result["heuristic_coverage"] in {"COMPLETE", "OPEN"}
+            assert len(result["contract_sha256"]) == 64
             digests = (result["source_sha256"], result["normalized_netlist_sha256"])
             assert all(len(digest) == 64 for digest in digests)
             assert all(

@@ -4,6 +4,12 @@ These schematics exercise the project-authored LINT-010 mapped-array check
 after KiCad exports a native XML netlist. They contain only synthetic symbols,
 part identities, pin maps, and values.
 
+The synthetic project requirement is stored separately in `pullups.json`
+(SHA-256 `fca70e7c1200d0f2b7acfb4d9609ac5f68b67b75d9ef4e08f5fc82dda1630e65`).
+The native lane copies it into a temporary project-relative path, validates it
+through the shared contract reader, and binds its digest and path to lint
+coverage.
+
 | Fixture             | RN1.1       | Expected line checks                                  |
 | ------------------- | ----------- | ----------------------------------------------------- |
 | `control.kicad_sch` | `I2C_SDA`   | SDA and SCL pass                                      |
@@ -14,6 +20,11 @@ SDA/SCL and +3V3. The native export must retain the symbol ID, footprint,
 value, all four pins, and exact net assignments. Each source is exported twice
 and compared after parsing to the normalized typed-netlist contract; raw XML
 hashes are retained because KiCad may vary metadata between exports.
+The same native-derived contracts also exercise `bus.i2c_missing_pullup`:
+without the authored requirement, both fixtures remain review candidates. The
+control's passing SDA and SCL array checks resolve that hint; the wrong-SDA
+fault keeps it open even though SCL passes. This proves the contract-to-lint
+integration on the exported netlist, not the array's internal construction.
 
 Run the optional native lane from an installed editable Tooling checkout with
 the public reference-template checkout available:
@@ -28,6 +39,6 @@ python -I -B -m pytest -q -m "interface_lint and native_kicad" \
 The lane uses the template's digest-pinned KiCad 10.0.0 and 10.0.5 images,
 mounts this fixture directory read-only, disables network access, and writes
 receipts only below the Tooling checkout's ignored `build/` directory. It tests
-native netlist parsing and the authored schematic contract; it does not run
-ERC/DRC or prove the resistor array's internal construction or physical
-behavior.
+native netlist parsing, the authored schematic contract, and the mapped-array
+coverage interaction with the review heuristic. It does not run ERC/DRC or
+prove the resistor array's internal construction or physical behavior.

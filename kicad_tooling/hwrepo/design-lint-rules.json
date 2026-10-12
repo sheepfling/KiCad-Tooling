@@ -1733,7 +1733,9 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_requirement_for_a_different_ordered_bus_does_not_resolve_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing",
-        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp"
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
+        "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
@@ -1741,7 +1743,9 @@
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
         "tests.test_i2c_pullup_heuristic_coverage.test_valid_mapped_array_resolves_only_its_exact_missing_path_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control",
-        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp"
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
+        "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -1754,7 +1758,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups"
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES"
+      ]
     },
     {
       "rule_id": "bus.i2c_low_equivalent_resistance",

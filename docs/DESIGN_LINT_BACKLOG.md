@@ -3555,7 +3555,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v6. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v7. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
@@ -3655,6 +3655,18 @@ is not a reason by itself to expand its scope or change its default policy.
   optional lane exports and parses native netlists; it does not run ERC/DRC.
   See the [native fixture notes](../tests/fixtures/design_lint/i2c-array-native/README.md)
   for the reproducible command and image pins.
+- **Native heuristic integration (2026-10-12):** The mapped-array native lane
+  now runs the active `bus.i2c_missing_pullup` rule on the same parsed export,
+  using the shared source-bound coverage service and a separate synthetic
+  project contract. Both exports start with an open heuristic prompt. The
+  all-passing array control resolves it; the wrong-SDA fault keeps the prompt
+  open while its SCL channel still passes. The native test is indexed as both
+  fault and valid control for the rule and requires
+  `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES`; a synthetic orchestration regression
+  checks the same integration without invoking KiCad. Exact-version hosted
+  acceptance is pending for this change. The fixture proves contract-to-lint
+  behavior on native-derived connectivity, not array internals or physical
+  resistor behavior.
 - **Remaining:** Rail ceiling and pin-voltage limits remain reviewed inputs;
   the checker does not verify cited source documents or whether the authored
   resistor-tolerance bound covers every element. Actual bus capacitance and

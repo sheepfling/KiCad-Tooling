@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .hwrepo.contracts import write_model
+from .hwrepo.contracts import read_model, write_model
 
 if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog
@@ -21,19 +21,18 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     import hashlib
 
     from .hwrepo.contract_coach import pinned_image, run_command
+    from .hwrepo.design_lint import evaluate
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.i2c_pullup_contract import (
-        i2c_pullup_checks,
+    from .hwrepo.i2c_pullup_contract import i2c_pullup_checks
+    from .hwrepo.i2c_pullup_heuristics import i2c_pullup_heuristic_coverage
+    from .hwrepo.i2c_pullup_models import I2cPullupAnalysis
+    from .hwrepo.models import (
+        ContractCoachReport,
+        DesignLintPolicy,
+        ElectricalCheck,
+        NetlistContract,
     )
-    from .hwrepo.i2c_pullup_models import (
-        I2cPullupAnalysis,
-        I2cPullupArrayChannelRequirement,
-        I2cPullupArrayRequirement,
-        I2cPullupBusRequirement,
-        I2cPullupLineRequirement,
-    )
-    from .hwrepo.models import ElectricalCheck, NetlistContract
     from .validate import read_netlist
 
     root = root.resolve()
@@ -55,6 +54,19 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("I2C pull-up fixture sources differ from the reviewed hashes")
+
+    contract_fixture = fixture_root / "pullups.json"
+    expected_contract_sha256 = "fca70e7c1200d0f2b7acfb4d9609ac5f68b67b75d9ef4e08f5fc82dda1630e65"
+    if digest(contract_fixture) != expected_contract_sha256:
+        raise ValueError("I2C pull-up requirement fixture differs from the reviewed hash")
+    project_contract = root / "projects/synthetic-i2c-array/electrical.json"
+    project_contract.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(contract_fixture, project_contract)
+    contract_sha256 = digest(project_contract)
+    if contract_sha256 != expected_contract_sha256:
+        raise ValueError("I2C pull-up requirement changed while preparing the native fixture")
+    contract_path = project_contract.relative_to(root).as_posix()
+    requirement = read_model(project_contract, I2cPullupAnalysis)
 
     scratch = Path(
         tempfile.mkdtemp(prefix=f"native-i2c-pullup-{project}-", dir=log.directory.resolve())
@@ -139,51 +151,6 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
     )
 
-    requirement = I2cPullupAnalysis(
-        basis="Synthetic reviewed resistor-array and local I2C bus requirements",
-        buses=(
-            I2cPullupBusRequirement(
-                id="array-bus",
-                basis="Synthetic two-line bus",
-                sda=I2cPullupLineRequirement(
-                    net="I2C_SDA", rail="+3V3", minimum_ohms=4_000, maximum_ohms=5_000
-                ),
-                scl=I2cPullupLineRequirement(
-                    net="I2C_SCL", rail="+3V3", minimum_ohms=4_000, maximum_ohms=5_000
-                ),
-            ),
-        ),
-        arrays=(
-            I2cPullupArrayRequirement(
-                reference="RN1",
-                expected_symbol="Synthetic:ResistorArray",
-                expected_footprint="Synthetic:RA4",
-                expected_value="4x4.7k",
-                basis="Synthetic array pin map and nominal channel values",
-                channels=(
-                    I2cPullupArrayChannelRequirement(
-                        id="sda",
-                        signal_pin="RN1.1",
-                        rail_pin="RN1.2",
-                        signal_net="I2C_SDA",
-                        rail_net="+3V3",
-                        resistance_ohms=4_700,
-                        basis="Synthetic SDA resistor-array channel",
-                    ),
-                    I2cPullupArrayChannelRequirement(
-                        id="scl",
-                        signal_pin="RN1.3",
-                        rail_pin="RN1.4",
-                        signal_net="I2C_SCL",
-                        rail_net="+3V3",
-                        resistance_ohms=4_700,
-                        basis="Synthetic SCL resistor-array channel",
-                    ),
-                ),
-            ),
-        ),
-    )
-
     normalized_hashes: dict[tuple[str, str], str] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
     observations: dict[tuple[str, str], NetlistContract] = {}
@@ -247,6 +214,51 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         if first_hash != repeat_hash:
             raise ValueError(f"Native I2C {case} exports differ after typed normalization")
         checks = {item.id: item for item in reports[(case, "first")]}
+        observed = observations[(case, "first")]
+        netlist_sha256 = raw_hashes[(case, "first")]
+        coach = ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id=f"synthetic-i2c-array-{case}",
+            observed=observed,
+            netlist_sha256=netlist_sha256,
+        )
+        baseline = evaluate(coach.project_id, coach, DesignLintPolicy())
+        baseline_has_hint = any(
+            item.rule_id == "bus.i2c_missing_pullup" for item in baseline.findings
+        )
+        coverage = i2c_pullup_heuristic_coverage(
+            observed,
+            netlist_sha256=netlist_sha256,
+            source_path=contract_path,
+            source_sha256=contract_sha256,
+            state="required",
+            spec=requirement,
+        )
+        lint_report = evaluate(
+            coach.project_id,
+            coach,
+            DesignLintPolicy(),
+            i2c_pullup_heuristic_coverage=coverage,
+        )
+        lint_rule_findings = tuple(
+            sorted(
+                {
+                    item.rule_id
+                    for item in lint_report.findings
+                    if item.rule_id == "bus.i2c_missing_pullup"
+                }
+            )
+        )
+        expected_coverage = "COMPLETE" if case == "control" else "OPEN"
+        expected_rule_findings = () if case == "control" else ("bus.i2c_missing_pullup",)
+        if (
+            not baseline_has_hint
+            or coverage.status != expected_coverage
+            or lint_rule_findings != expected_rule_findings
+        ):
+            raise ValueError(
+                f"Native I2C {case} heuristic/contract result differs from its reviewed expectation"
+            )
         log.event(
             f"i2c-pullup-fixture/{case}",
             "PASS",
@@ -258,6 +270,11 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
             repeat_netlist_sha256=raw_hashes[(case, "repeat")],
             normalized_netlist_sha256=first_hash,
             repeat_normalized_netlist_sha256=repeat_hash,
+            contract_path=contract_path,
+            contract_sha256=contract_sha256,
+            baseline_missing_pullup="OPEN" if baseline_has_hint else "QUIET",
+            heuristic_coverage=coverage.status,
+            heuristic_findings=",".join(lint_rule_findings) or "none",
             sda=checks["i2c-pullup/array-bus/sda"].status,
             scl=checks["i2c-pullup/array-bus/scl"].status,
             repeatable="true",
