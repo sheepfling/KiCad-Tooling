@@ -247,6 +247,7 @@ _LINT_AREA_MODULES = {
             "tests/test_power_input_source_anchors.py",
             "tests/test_power_input_policy.py",
             "tests/test_power_sequence_fixture_lane.py",
+            "tests/test_power_sequence_native_fixture_lane.py",
             "tests/test_power_sequence_cycles.py",
             "tests/test_ic_rail_capacitor_native_fixture_lane.py",
             "tests/test_power_sequences.py",

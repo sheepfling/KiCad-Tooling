@@ -18,6 +18,7 @@ _NATIVE_KICAD_MODULES = frozenset(
         "tests/test_pcb_return_path_native_fixture_lane.py",
         "tests/test_pcb_component_inventory_native_fixture_lane.py",
         "tests/test_power_path_native_fixture_lane.py",
+        "tests/test_power_sequence_native_fixture_lane.py",
         "tests/test_pcb_keepouts_native.py",
         "tests/test_pcb_signal_path_native.py",
     }
@@ -52,6 +53,7 @@ _SLOW_MODULES = frozenset(
         "tests/test_pcb_return_path_native_fixture_lane.py",
         "tests/test_pcb_component_inventory_native_fixture_lane.py",
         "tests/test_power_path_native_fixture_lane.py",
+        "tests/test_power_sequence_native_fixture_lane.py",
     }
 )
 

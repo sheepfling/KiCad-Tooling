@@ -52,6 +52,10 @@ python -I -B -m pytest -q -m \
 .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and power_lint and component_lint and not slow" \
   tests/test_power_pin_net_roles.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and power_lint and native_kicad" \
+  tests/test_power_sequence_native_fixture_lane.py
 .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and power_lint and parity_lint and slow" \
   tests/test_design_lint_mcp_parity_power_pin_roles.py
