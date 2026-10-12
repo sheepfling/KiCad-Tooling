@@ -30,8 +30,7 @@ def verify_connector_named_power_output_cases(ctx: ConnectorReturnFixtureContext
             "J2": "Lint:NamedPeerPowerOutputB",
         }
         or any(
-            observed_fault.components[reference].part_id
-            != "SYNTHETIC-CONNECTOR-NAMED-OUTPUT-001"
+            observed_fault.components[reference].part_id != "SYNTHETIC-CONNECTOR-NAMED-OUTPUT-001"
             for reference in ("J1", "J2")
         )
         or observed_fault.component_pin_numbers != {"J1": ("1", "2"), "J2": ("1", "2")}
