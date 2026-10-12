@@ -5080,6 +5080,17 @@ is not a reason by itself to expand its scope or change its default policy.
   instance, and GitHub reports no recognized repository license; it is not an
   eligible connector example. No project files were copied. This bounded
   search found no qualified sample and is not evidence of precision.
+- **PCBDraft near-miss detail (2026-10-11):** Read-only inspection of the three
+  indexed generated schematics at the pinned revision found `Part_ID` (mixed
+  case), which the tooling's native CAD reader does not treat as the canonical
+  `PART_ID` field. The RC and I²C examples assign that field to J1/J2, but each
+  pair uses one exact native symbol ID and distinct `Value` labels; the LED
+  example has only one connector. These fixtures therefore do not exercise
+  cross-symbol alias eligibility or provide an independent connector pinout
+  disposition. See the pinned [RC fixture][pcbdraft-rc-fixture], [I²C
+  fixture][pcbdraft-i2c-fixture], and [LED fixture][pcbdraft-led-fixture]. No
+  source file was copied; this confirms a non-applicable search result, not
+  detection precision.
 - **Next:** Find another approved, nonconfidential public example whose fitted
   connector aliases have distinct native symbols and a shared `PART_ID` to
   exercise the added predicate. Collect an independent pinout disposition
@@ -11197,3 +11208,6 @@ quality, or first-article continuity.
 [st-usb-uart-isolation]: https://www.st.com/resource/en/user_manual/um2945-getting-started-with-the-stevalpcc020v2-usb-to-ic-uart-interface-board-for-stnrg01x-products-stmicroelectronics.pdf
 [dstat-pcb]: https://microfluidics.utoronto.ca/gitlab/mdryden/dstat-hardware/-/raw/b6b2bbfdb7f8b2997d3035b083edbab2348333dc/dstat-mainboard.kicad_pcb
 [happy-cross-analysis]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/cross_analysis.py>
+[pcbdraft-rc-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/rc-1k-100nf/native/rc-1k-100nf-9e558fd9.kicad_sch
+[pcbdraft-i2c-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/i2c-3v3-pullups/native/i2c-3v3-pullups-a844fc2a.kicad_sch
+[pcbdraft-led-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/led-3v3-330r/native/led-3v3-330r-308123ef.kicad_sch
