@@ -873,12 +873,14 @@
       "fault_fixtures": [
         "tests.test_two_pin_passives.test_detects_resistor_capacitor_and_inductor_on_their_same_net",
         "tests.test_two_pin_passives.test_custom_capacitor_requires_exact_role_map_for_same_net_review",
+        "tests.test_two_pin_component_native_fixture_lane.test_passive_native_fixture_scope_contains_only_passive_faults_and_controls",
         "tests.test_two_pin_component_native_fixture_lane.test_native_custom_mapped_capacitor_same_net_fault_and_control",
         "tests.test_design_lint_mcp_parity_mapped_custom_passive.test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_passives.test_distinct_pin_nets_are_the_no_finding_control",
         "tests.test_two_pin_passives.test_mapped_custom_capacitor_distinct_net_and_dnp_controls_stay_quiet",
+        "tests.test_two_pin_component_native_fixture_lane.test_passive_native_fixture_scope_contains_only_passive_faults_and_controls",
         "tests.test_two_pin_component_native_fixture_lane.test_native_custom_mapped_capacitor_same_net_fault_and_control",
         "tests.test_two_pin_passives.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
         "tests.test_two_pin_passives.test_override_exact_ignore_and_stale_fingerprint_lifecycle",
@@ -991,16 +993,23 @@
       ],
       "fault_fixtures": [
         "tests.test_two_pin_fuses.test_detects_exact_fuse_and_polyfuse_families_on_one_net",
-        "tests.test_two_pin_fuses.test_exact_fuse_symbol_is_not_limited_to_f_reference_prefix"
+        "tests.test_two_pin_fuses.test_exact_fuse_symbol_is_not_limited_to_f_reference_prefix",
+        "tests.test_two_pin_component_native_fixture_lane.test_fuse_native_fixture_scope_contains_only_fuse_faults_and_controls",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_fuse_same_net_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_fuses.test_distinct_pin_nets_are_the_no_finding_control",
         "tests.test_two_pin_fuses.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_fuses.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_fuses.test_rule_policy_and_exact_ignore_are_project_configurable",
+        "tests.test_two_pin_component_native_fixture_lane.test_fuse_native_fixture_scope_contains_only_fuse_faults_and_controls",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_fuse_same_net_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_two_pin_fuses.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_fuses.py#two_pin_fuses_on_same_net",

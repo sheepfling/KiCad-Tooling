@@ -1911,6 +1911,19 @@ is not a reason by itself to expand its scope or change its default policy.
   valid-control fixture and requires `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES`.
   Rule-scoped tags therefore collect the relevant native cases instead of
   silently skipping this shared fixture lane.
+- **Two-pin selector follow-up (2026-10-12):** The shared exact-version lane
+  already exercises 16 passive, diode, crystal, fuse, ferrite, and switch
+  fault/control sources, but only the passive rule catalogued its native test.
+  The runner now accepts rule IDs and filters the native exports to the
+  selected rule. The fuse rule now catalogs a fuse/polyfuse fault/control test
+  and requires `KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES`; the passive
+  rule's existing native test is now filtered to its own four cases. Direct
+  pytest rule selection passes for both gates (`7 passed, 2 native skips` for
+  fuse and `9 passed, 2 native skips` for passives; over 3,000 unrelated tests
+  deselected). The local Docker socket denied access, so the changed exact
+  KiCad lane still needs its hosted tagged run. Diode, crystal, ferrite, and
+  switch remain to be registered as separately selectable native gates. The
+  full package lane continues to run all 16 cases.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
@@ -4125,9 +4138,19 @@ is not a reason by itself to expand its scope or change its default policy.
   controls passed. Every export repeated with the expected normalized
   netlist. The corrected crystal fault/control, ferrite fault/control, and
   switch fault/control also passed in the same lane.
-- **Remaining:** The current dirty branch still needs hosted package acceptance
-  before release. RC5's earlier native lane passed, but its package job stopped
-  at Ruff; RC6 must pass the complete package workflow.
+- **Hosted acceptance status (2026-10-12):** Tagged run `38288390151` on
+  `v0.5.0rc176` passed its focused prerelease lint gate, but the workflow's
+  full `package` job was skipped. The earlier RC5 native lane passed, while
+  its package job stopped at Ruff; no later full-package result is recorded
+  in this entry.
+- **Rule-scoped selector (2026-10-12):** `component.two_pin_fuse_same_net`
+  now points to a native test that selects only the fuse/polyfuse same-net
+  faults and distinct-net controls. The local rule selector passed seven
+  tests with two exact-native cases skipped because Docker socket access was
+  denied; hosted exact-version results remain pending.
+- **Remaining:** Complete the tagged exact-native run on KiCad 10.0.0 and
+  10.0.5, then complete package acceptance. The focused tagged lint gate does
+  not replace that acceptance.
 
 #### LINT-085 — Fitted two-pin ferrite bead bypassed by one net
 
@@ -4177,8 +4200,13 @@ is not a reason by itself to expand its scope or change its default policy.
   both digest-pinned images. The same-net fault reported one
   `component.two_pin_ferrite_same_net` review and the distinct-net control
   reported none. Repeated normalized netlists matched.
-- **Remaining:** The exact-version native lane is enabled in GitHub CI, but the
-  current dirty branch has no hosted package result.
+- **Hosted acceptance status (2026-10-12):** Tagged run `38288390151` on
+  `v0.5.0rc176` passed its focused prerelease lint gate, but the workflow's
+  full `package` job was skipped. The exact-version ferrite native cases have
+  local pinned-version evidence; this tagged run supplies no hosted full-package
+  result for them.
+- **Remaining:** Run the complete package acceptance with the ferrite native
+  fixtures enabled on the pinned KiCad 10.0.0 and 10.0.5 images.
 - **Cohort boundary:** This is a first-party deterministic extension prompted
   by the inspected series-path concept. No third-party source, board, fixture,
   or install workflow was copied.
@@ -5291,11 +5319,20 @@ is not a reason by itself to expand its scope or change its default policy.
   fixture][pcbdraft-i2c-fixture], and [LED fixture][pcbdraft-led-fixture]. No
   source file was copied; this confirms a non-applicable search result, not
   detection precision.
-- **Next:** Find another approved, nonconfidential public example whose fitted
-  connector aliases have distinct native symbols and a shared `PART_ID` to
-  exercise the added predicate. Collect an independent pinout disposition
-  and reviewer time before claiming review value. Keep the predicate and
-  default `REVIEW` unchanged while that evidence is absent.
+- **Exact property-name search (2026-10-12):** A read-only GitHub code search
+  for the phrase `property "PART_ID"` in `.kicad_sch` files returned four
+  indexed files from two repositories: the three PCBDraft generated fixtures
+  above and the previously screened AxxSolder schematic. The AxxSolder field
+  is on a resistor and its repository has no recognized license; none of the
+  four files is an eligible fitted connector-alias sample. This bounded index
+  search found no new candidate and does not claim complete GitHub coverage.
+- **Next:** Keep the predicate, default `REVIEW`, and synthetic native
+  fault/control lane. More public projects are not required to continue
+  implementation. Reopen applicability research only for a specifically
+  identified, licensed, nonconfidential project with fitted connector aliases
+  using distinct native symbols and one shared `PART_ID`. Independent pinout
+  dispositions and reviewer time remain unmeasured; do not claim field
+  precision or reviewer-value results without them.
 
 #### LINT-102 — Schematic and native PCB component-inventory differences
 

@@ -369,3 +369,25 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         assert native_fixture_by_rule[rule_id] in rule.required_native_fixtures
         assert expected_cases <= set(rule.fault_fixtures)
         assert expected_cases <= set(rule.valid_control_fixtures)
+
+
+def test_two_pin_native_fault_control_cases_are_selectable_by_rule() -> None:
+    rules = {rule.rule_id: rule for rule in rule_catalog().rules}
+    native_fixture = "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
+    fixture_module = "tests.test_two_pin_component_native_fixture_lane"
+    test_refs = {
+        "component.two_pin_passive_same_net": (
+            f"{fixture_module}.test_native_custom_mapped_capacitor_same_net_fault_and_control",
+            f"{fixture_module}.test_passive_native_fixture_scope_contains_only_passive_faults_and_controls",
+        ),
+        "component.two_pin_fuse_same_net": (
+            f"{fixture_module}.test_native_two_pin_fuse_same_net_fault_and_control",
+            f"{fixture_module}.test_fuse_native_fixture_scope_contains_only_fuse_faults_and_controls",
+        ),
+    }
+    for rule_id, (native_test_ref, scope_test_ref) in test_refs.items():
+        rule = rules[rule_id]
+        assert native_fixture in rule.required_native_fixtures
+        for test_ref in (native_test_ref, scope_test_ref):
+            assert test_ref in rule.fault_fixtures
+            assert test_ref in rule.valid_control_fixtures

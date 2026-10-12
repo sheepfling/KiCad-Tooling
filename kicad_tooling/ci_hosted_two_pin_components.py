@@ -98,7 +98,37 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
 }
 
 
-def two_pin_component_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
+def two_pin_component_fixture_cases_for_rules(
+    rule_ids: tuple[str, ...] | None,
+) -> dict[str, tuple[str, str, set[str]]]:
+    """Select native fault/control fixtures for rule-scoped gates."""
+    if rule_ids is None:
+        return dict(TWO_PIN_COMPONENT_FIXTURE_CASES)
+
+    requested = frozenset(rule_ids)
+    known = frozenset(rule_id for _, rule_id, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values())
+    unknown = requested - known
+    if unknown:
+        raise ValueError(f"Unknown two-pin component rule IDs: {sorted(unknown)}")
+    if not requested:
+        raise ValueError("At least one two-pin component rule ID is required")
+
+    selected = {
+        name: case for name, case in TWO_PIN_COMPONENT_FIXTURE_CASES.items() if case[1] in requested
+    }
+    if not selected:
+        raise ValueError(f"No native fixture cases found for rules: {sorted(requested)}")
+    return selected
+
+
+def two_pin_component_fixture_lane(
+    root: Path,
+    *,
+    project: str,
+    image: str,
+    log: HostedLog,
+    rule_ids: tuple[str, ...] | None = None,
+) -> None:
     """Verify same-net component rules against repeated pinned native exports."""
     import hashlib
     import os
@@ -126,7 +156,7 @@ def two_pin_component_fixture_lane(root: Path, *, project: str, image: str, log:
     pinned = pinned_image(config.image)
 
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
-    cases = TWO_PIN_COMPONENT_FIXTURE_CASES
+    cases = two_pin_component_fixture_cases_for_rules(rule_ids)
     source_hashes = {
         case: digest(fixture_root / filename) for case, (filename, _, _) in cases.items()
     }

@@ -14,6 +14,7 @@ from kicad_tooling.ci_hosted import (
     HostedLog,
     two_pin_component_fixture_lane,
 )
+from kicad_tooling.ci_hosted_two_pin_components import two_pin_component_fixture_cases_for_rules
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.synthetic_design_lint_project import (
@@ -55,16 +56,46 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
         assert hashlib.sha256(source.read_bytes()).hexdigest() == expected_digest
 
 
-@pytest.mark.native_kicad
-@pytest.mark.slow
-@pytest.mark.skipif(
-    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
-    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
-)
-@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
-def test_native_custom_mapped_capacitor_same_net_fault_and_control(
-    tmp_path: Path, kicad_version: str
-) -> None:
+def test_passive_native_fixture_scope_contains_only_passive_faults_and_controls() -> None:
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_passive_same_net",))
+    assert set(selected) == {
+        "same-net-passive",
+        "distinct-nets-passive",
+        "same-net-mapped-capacitor",
+        "distinct-nets-mapped-capacitor",
+    }
+    assert {rule_id for _, rule_id, _ in selected.values()} == {
+        "component.two_pin_passive_same_net"
+    }
+    assert any(subjects for _, _, subjects in selected.values())
+    assert any(not subjects for _, _, subjects in selected.values())
+
+
+def test_fuse_native_fixture_scope_contains_only_fuse_faults_and_controls() -> None:
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_fuse_same_net",))
+    assert set(selected) == {
+        "same-net-fuse",
+        "distinct-nets-fuse",
+        "same-net-polyfuse",
+        "distinct-nets-polyfuse",
+    }
+    assert {rule_id for _, rule_id, _ in selected.values()} == {"component.two_pin_fuse_same_net"}
+    assert any(subjects for _, _, subjects in selected.values())
+    assert any(not subjects for _, _, subjects in selected.values())
+
+
+def _run_native_rule_fixture(
+    tmp_path: Path,
+    *,
+    kicad_version: str,
+    rule_id: str,
+) -> dict[str, dict[str, str]]:
+    selected_cases = two_pin_component_fixture_cases_for_rules((rule_id,))
+    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    for filename, _, _ in selected_cases.values():
+        source = fixture_root / filename
+        assert hashlib.sha256(source.read_bytes()).hexdigest() == _EXPECTED_SOURCE_HASHES[filename]
+
     root, _ = synthetic_design_lint_project(
         tmp_path,
         DesignLintPolicy(),
@@ -76,7 +107,13 @@ def test_native_custom_mapped_capacitor_same_net_fault_and_control(
     assert config.image == PINNED_NATIVE_KICAD_IMAGES[kicad_version]
 
     log = HostedLog(root, f"native-two-pin-component-{kicad_version}")
-    two_pin_component_fixture_lane(root, project="controller", image=config.image, log=log)
+    two_pin_component_fixture_lane(
+        root,
+        project="controller",
+        image=config.image,
+        log=log,
+        rule_ids=(rule_id,),
+    )
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     results = {
         item["stage"]: item
@@ -84,8 +121,7 @@ def test_native_custom_mapped_capacitor_same_net_fault_and_control(
         if item.get("stage", "").startswith("two-pin-component-fixture/")
     }
     expected_cases = {
-        f"two-pin-component-fixture/{name}"
-        for name in ("native-export", *TWO_PIN_COMPONENT_FIXTURE_CASES)
+        f"two-pin-component-fixture/{name}" for name in ("native-export", *selected_cases)
     }
     assert set(results) == expected_cases
     native_export = results["two-pin-component-fixture/native-export"]
@@ -101,25 +137,47 @@ def test_native_custom_mapped_capacitor_same_net_fault_and_control(
     assert sum(mount.endswith(":/fixtures:ro") for mount in mounts) == 1
     assert sum(mount.endswith(":/output:rw") for mount in mounts) == 1
 
-    fault = results["two-pin-component-fixture/same-net-mapped-capacitor"]
-    assert fault["status"] == "PASS"
-    assert fault["lint_status"] == "REVIEW"
-    assert fault["component_rule"] == "component.two_pin_passive_same_net"
-    assert fault["component_findings"] == "C1 (100nF capacitor) has both pins on one net"
-    assert (
-        fault["source_sha256"]
-        == _EXPECTED_SOURCE_HASHES["two-pin-components/custom-capacitor-same-net.kicad_sch"]
-    )
-    assert fault["repeatable"] == "true"
-    assert fault["normalized_netlist_sha256"] == fault["repeat_normalized_netlist_sha256"]
+    for case, (filename, case_rule_id, expected_subjects) in selected_cases.items():
+        result = results[f"two-pin-component-fixture/{case}"]
+        assert result["status"] == "PASS"
+        assert result["component_rule"] == case_rule_id == rule_id
+        assert result["source_sha256"] == _EXPECTED_SOURCE_HASHES[filename]
+        expected_findings = ";".join(sorted(expected_subjects)) or "none"
+        assert result["component_findings"] == expected_findings
+        assert result["lint_status"] == ("REVIEW" if expected_subjects else "PASS")
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
 
-    control = results["two-pin-component-fixture/distinct-nets-mapped-capacitor"]
-    assert control["status"] == "PASS"
-    assert control["lint_status"] == "PASS"
-    assert control["component_findings"] == "none"
-    assert (
-        control["source_sha256"]
-        == _EXPECTED_SOURCE_HASHES["cohort-power-pin-dc/custom-capacitor-role-control.kicad_sch"]
+    return results
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
+    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
+def test_native_custom_mapped_capacitor_same_net_fault_and_control(
+    tmp_path: Path, kicad_version: str
+) -> None:
+    _run_native_rule_fixture(
+        tmp_path,
+        kicad_version=kicad_version,
+        rule_id="component.two_pin_passive_same_net",
     )
-    assert control["repeatable"] == "true"
-    assert control["normalized_netlist_sha256"] == control["repeat_normalized_netlist_sha256"]
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
+    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
+def test_native_two_pin_fuse_same_net_fault_and_control(tmp_path: Path, kicad_version: str) -> None:
+    _run_native_rule_fixture(
+        tmp_path,
+        kicad_version=kicad_version,
+        rule_id="component.two_pin_fuse_same_net",
+    )
