@@ -11,16 +11,7 @@ import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, connector_return_lint_fixture_lane
 from kicad_tooling.hwrepo.models import CommandEvidence, NetlistContract
-from tests.design_lint_fixtures.connector_peer_pin_cases import peer_pin_case_contracts
-from tests.design_lint_fixtures.connector_power_cases import (
-    connector_power_case_contracts,
-    generic_component_power_input_cases,
-)
-from tests.design_lint_fixtures.connector_return_cases import (
-    pwm_return_case_contracts,
-    return_case_contracts,
-    return_positive_rail_case_contracts,
-)
+from tests.connector_return_fixture_support import connector_return_fixture_contracts
 
 pytestmark = [
     pytest.mark.connector_lint,
@@ -34,13 +25,7 @@ def connector_return_fixture_lane_context(tmp_path: Path) -> SimpleNamespace:
     root = tmp_path
     image = "fixture.invalid/kicad@sha256:" + "a" * 64
     config = SimpleNamespace(image=image, kicad_version="10.0.0")
-    observed: dict[str, NetlistContract] = {}
-    observed.update(return_case_contracts())
-    observed.update(pwm_return_case_contracts())
-    observed.update(return_positive_rail_case_contracts())
-    observed.update(peer_pin_case_contracts())
-    observed.update(connector_power_case_contracts())
-    observed.update(generic_component_power_input_cases())
+    observed = connector_return_fixture_contracts()
     return SimpleNamespace(root=root, image=image, config=config, observed=observed)
 
 

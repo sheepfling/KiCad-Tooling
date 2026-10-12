@@ -2,30 +2,114 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Mapping
+from typing import Any
 
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 
 
-def verify_connector_grounding_contracts(
-    ctx: ConnectorReturnFixtureContext, db9_control_nets: Mapping[str, tuple[str, ...]]
-):
-    """Verify authored return-domain and pin-connectivity contracts."""
-    import hashlib
+def _record_grounding_contract(
+    ctx: ConnectorReturnFixtureContext,
+    *,
+    case: str,
+    spec: Any,
+    source_case: str,
+    relationship: str,
+    checks: Mapping[str, str],
+) -> None:
+    spec_digest = hashlib.sha256(
+        json.dumps(
+            spec.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    ctx.log.event(
+        f"connector-return-fixture/ground-contract-{case}",
+        "PASS",
+        project=ctx.project,
+        kicad_version=ctx.config.kicad_version,
+        image=ctx.pinned,
+        source_sha256=ctx.source_hashes[source_case],
+        netlist_sha256=ctx.netlist_hashes[source_case, "first"],
+        repeat_netlist_sha256=ctx.netlist_hashes[source_case, "repeat"],
+        normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "first"],
+        repeat_normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "repeat"],
+        grounding_contract_sha256=spec_digest,
+        relationship=relationship,
+        contract_status="FAIL" if "FAIL" in checks.values() else "PASS",
+        checks=";".join(f"{key}={value}" for key, value in sorted(checks.items())),
+        repeatable="true"
+        if ctx.normalized_netlist_hashes[source_case, "first"]
+        == ctx.normalized_netlist_hashes[source_case, "repeat"]
+        else "false",
+        command_receipt=(ctx.scratch / "native.command.json").relative_to(ctx.root).as_posix(),
+    )
 
+
+def _record_pin_connectivity_contract(
+    ctx: ConnectorReturnFixtureContext,
+    *,
+    case: str,
+    spec: Any,
+    source_case: str,
+    relationship: str,
+    check_results: tuple[Any, ...],
+) -> None:
+    checks = {item.id: item.status for item in check_results}
+    details = {item.id: item.detail for item in check_results}
+    spec_digest = hashlib.sha256(
+        json.dumps(
+            spec.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    ctx.log.event(
+        f"connector-return-fixture/pin-connectivity-contract-{case}",
+        "PASS",
+        project=ctx.project,
+        kicad_version=ctx.config.kicad_version,
+        image=ctx.pinned,
+        source_sha256=ctx.source_hashes[source_case],
+        netlist_sha256=ctx.netlist_hashes[source_case, "first"],
+        repeat_netlist_sha256=ctx.netlist_hashes[source_case, "repeat"],
+        normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "first"],
+        repeat_normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "repeat"],
+        pin_connectivity_contract_sha256=spec_digest,
+        relationship=relationship,
+        check_details=json.dumps(
+            details, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ),
+        contract_status="FAIL" if "FAIL" in checks.values() else "PASS",
+        checks=";".join(f"{key}={value}" for key, value in sorted(checks.items())),
+        repeatable="true"
+        if ctx.normalized_netlist_hashes[source_case, "first"]
+        == ctx.normalized_netlist_hashes[source_case, "repeat"]
+        else "false",
+        command_receipt=(ctx.scratch / "native.command.json").relative_to(ctx.root).as_posix(),
+    )
+
+
+def verify_db9_return_contracts(
+    ctx: ConnectorReturnFixtureContext, db9_control_nets: Mapping[str, tuple[str, ...]]
+) -> None:
+    """Check common and isolated DB9 requirements against only DB9 native fixtures."""
     from .hwrepo.electrical import grounding_checks, pin_relationship_checks
     from .hwrepo.grounding_models import GroundDomain, GroundingAnalysis
     from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis, PinRelationshipRule
 
-    if db9_control_nets.get("COMMON_RETURN") != tuple(
-        f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
-    ):
+    expected_pins = tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))
+    if db9_control_nets.get("COMMON_RETURN") != expected_pins:
         raise ValueError("Common four-port DB9 control lost its eight native pin assignments")
-    db9_return_pins = tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))
+
     common_grounding = GroundingAnalysis(
         basis="Synthetic approved DB9 pinout requires all return contacts on one domain",
-        domains=(GroundDomain(net="COMMON_RETURN", pins=db9_return_pins),),
+        domains=(GroundDomain(net="COMMON_RETURN", pins=expected_pins),),
     )
     isolated_grounding = GroundingAnalysis(
         basis="Synthetic approved DB9 pinout requires one isolated return domain per connector",
@@ -36,85 +120,79 @@ def verify_connector_grounding_contracts(
             for reference in range(1, 5)
         ),
     )
-    expected_grounding_results = {
-        "common-fault": {
-            "grounding/COMMON_RETURN": "FAIL",
-            "grounding/component-coverage": "PASS",
-            "grounding/return-net-review": "FAIL",
-        },
-        "common-control": {
-            "grounding/COMMON_RETURN": "PASS",
-            "grounding/component-coverage": "PASS",
-        },
-        "isolated-fault": {
-            **{f"grounding/RETURN_PORT_{reference}": "PASS" for reference in range(1, 5)},
-            "grounding/component-coverage": "PASS",
-            "grounding/return-net-review": "PASS",
-        },
-        "isolated-control": {
-            **{f"grounding/RETURN_PORT_{reference}": "FAIL" for reference in range(1, 5)},
-            "grounding/component-coverage": "PASS",
-        },
-    }
-    grounding_cases = {
-        "common-fault": (common_grounding, "four-db9-fault", "common-net"),
-        "common-control": (common_grounding, "four-db9-control", "common-net"),
-        "isolated-fault": (isolated_grounding, "four-db9-fault", "separate-per-port"),
-        "isolated-control": (isolated_grounding, "four-db9-control", "separate-per-port"),
-    }
-    for case, (spec, source_case, relationship) in grounding_cases.items():
+    grounding_cases = (
+        (
+            "common-fault",
+            common_grounding,
+            "four-db9-fault",
+            "common-net",
+            {
+                "grounding/COMMON_RETURN": "FAIL",
+                "grounding/component-coverage": "PASS",
+                "grounding/return-net-review": "FAIL",
+            },
+        ),
+        (
+            "common-control",
+            common_grounding,
+            "four-db9-control",
+            "common-net",
+            {
+                "grounding/COMMON_RETURN": "PASS",
+                "grounding/component-coverage": "PASS",
+            },
+        ),
+        (
+            "isolated-fault",
+            isolated_grounding,
+            "four-db9-fault",
+            "separate-per-port",
+            {
+                **{f"grounding/RETURN_PORT_{reference}": "PASS" for reference in range(1, 5)},
+                "grounding/component-coverage": "PASS",
+                "grounding/return-net-review": "PASS",
+            },
+        ),
+        (
+            "isolated-control",
+            isolated_grounding,
+            "four-db9-control",
+            "separate-per-port",
+            {
+                **{f"grounding/RETURN_PORT_{reference}": "FAIL" for reference in range(1, 5)},
+                "grounding/component-coverage": "PASS",
+            },
+        ),
+    )
+    for case, spec, source_case, relationship, expected in grounding_cases:
         checks = {
             item.id: item.status
             for item in grounding_checks(spec, ctx.observed_contracts[source_case, "first"])
         }
-        if checks != expected_grounding_results[case]:
+        if checks != expected:
             raise ValueError(f"Four-port DB9 {case} grounding requirement changed: {checks}")
-        spec_digest = hashlib.sha256(
-            json.dumps(
-                spec.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-        ).hexdigest()
-        ctx.log.event(
-            f"connector-return-fixture/ground-contract-{case}",
-            "PASS",
-            project=ctx.project,
-            kicad_version=ctx.config.kicad_version,
-            image=ctx.pinned,
-            source_sha256=ctx.source_hashes[source_case],
-            netlist_sha256=ctx.netlist_hashes[source_case, "first"],
-            repeat_netlist_sha256=ctx.netlist_hashes[source_case, "repeat"],
-            normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "repeat"],
-            grounding_contract_sha256=spec_digest,
+        _record_grounding_contract(
+            ctx,
+            case=case,
+            spec=spec,
+            source_case=source_case,
             relationship=relationship,
-            contract_status="FAIL"
-            if any(status == "FAIL" for status in checks.values())
-            else "PASS",
-            checks=";".join(
-                f"{check_id}={status}" for (check_id, status) in sorted(checks.items())
-            ),
-            repeatable="true"
-            if ctx.normalized_netlist_hashes[source_case, "first"]
-            == ctx.normalized_netlist_hashes[source_case, "repeat"]
-            else "false",
-            command_receipt=(ctx.scratch / "native.command.json").relative_to(ctx.root).as_posix(),
+            checks=checks,
         )
-    common_pin_connectivity = PinConnectivityAnalysis(
+
+    common_connectivity = PinConnectivityAnalysis(
         basis="Synthetic approved DB9 pinout requires all return contacts on one net",
         rules=(
             PinRelationshipRule(
                 id="db9-common-return",
                 basis="All DB9 return contacts share the approved return net",
                 topology="common_net",
-                pins=db9_return_pins,
+                pins=expected_pins,
                 net="COMMON_RETURN",
             ),
         ),
     )
-    isolated_pin_connectivity = PinConnectivityAnalysis(
+    isolated_connectivity = PinConnectivityAnalysis(
         basis="Synthetic approved DB9 pinout requires isolated per-connector return nets",
         rules=tuple(
             PinRelationshipRule(
@@ -127,6 +205,70 @@ def verify_connector_grounding_contracts(
             for reference in range(1, 5)
         ),
     )
+    pin_cases = (
+        (
+            "common-fault",
+            common_connectivity,
+            "four-db9-fault",
+            "common-net",
+            {
+                "pin-connectivity/db9-common-return": "FAIL",
+            },
+        ),
+        (
+            "common-control",
+            common_connectivity,
+            "four-db9-control",
+            "common-net",
+            {
+                "pin-connectivity/db9-common-return": "PASS",
+            },
+        ),
+        (
+            "isolated-fault",
+            isolated_connectivity,
+            "four-db9-fault",
+            "separate-per-port",
+            {
+                **{
+                    f"pin-connectivity/db9-{reference}-isolated-return": "PASS"
+                    for reference in range(1, 5)
+                },
+            },
+        ),
+        (
+            "isolated-control",
+            isolated_connectivity,
+            "four-db9-control",
+            "separate-per-port",
+            {
+                **{
+                    f"pin-connectivity/db9-{reference}-isolated-return": "FAIL"
+                    for reference in range(1, 5)
+                },
+            },
+        ),
+    )
+    for case, spec, source_case, relationship, expected in pin_cases:
+        results = pin_relationship_checks(spec, ctx.observed_contracts[source_case, "first"])
+        checks = {item.id: item.status for item in results}
+        if checks != expected:
+            raise ValueError(f"DB9 pin-connectivity requirement {case} changed: {checks}")
+        _record_pin_connectivity_contract(
+            ctx,
+            case=case,
+            spec=spec,
+            source_case=source_case,
+            relationship=relationship,
+            check_results=results,
+        )
+
+
+def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
+    """Check generic peer-power and stale-pin contract controls."""
+    from .hwrepo.electrical import pin_relationship_checks
+    from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis, PinRelationshipRule
+
     peer_common_power = PinConnectivityAnalysis(
         basis="Synthetic approved three-port pinout requires one shared +5V contact net",
         rules=(
@@ -167,91 +309,73 @@ def verify_connector_grounding_contracts(
             ),
         ),
     )
-    expected_pin_connectivity_results = {
-        "common-fault": {"pin-connectivity/db9-common-return": "FAIL"},
-        "common-control": {"pin-connectivity/db9-common-return": "PASS"},
-        "isolated-fault": {
-            **{
-                f"pin-connectivity/db9-{reference}-isolated-return": "PASS"
-                for reference in range(1, 5)
-            }
-        },
-        "isolated-control": {
-            **{
-                f"pin-connectivity/db9-{reference}-isolated-return": "FAIL"
-                for reference in range(1, 5)
-            }
-        },
-        "peer-common-open-fault": {"pin-connectivity/peer-common-power": "FAIL"},
-        "peer-common-control": {"pin-connectivity/peer-common-power": "PASS"},
-        "peer-independent-control": {
-            "pin-connectivity/peer-independent-power-outputs": "PASS",
-            "pin-connectivity/peer-j3-power-unused": "PASS",
-        },
-        "peer-independent-common-net-mismatch": {
-            "pin-connectivity/peer-independent-power-outputs": "FAIL",
-            "pin-connectivity/peer-j3-power-unused": "FAIL",
-        },
-        "stale-pin-reference": {"pin-connectivity/stale-pin-reference": "FAIL"},
-    }
-    pin_connectivity_cases = {
-        "common-fault": (common_pin_connectivity, "four-db9-fault", "common-net"),
-        "common-control": (common_pin_connectivity, "four-db9-control", "common-net"),
-        "isolated-fault": (isolated_pin_connectivity, "four-db9-fault", "separate-per-port"),
-        "isolated-control": (isolated_pin_connectivity, "four-db9-control", "separate-per-port"),
-        "peer-common-open-fault": (peer_common_power, "peer-pin-outlier-fault", "common-net"),
-        "peer-common-control": (peer_common_power, "peer-pin-outlier-control", "common-net"),
-        "peer-independent-control": (
+    cases = (
+        (
+            "peer-common-open-fault",
+            peer_common_power,
+            "peer-pin-outlier-fault",
+            "common-net",
+            {
+                "pin-connectivity/peer-common-power": "FAIL",
+            },
+        ),
+        (
+            "peer-common-control",
+            peer_common_power,
+            "peer-pin-outlier-control",
+            "common-net",
+            {
+                "pin-connectivity/peer-common-power": "PASS",
+            },
+        ),
+        (
+            "peer-independent-control",
             peer_independent_power,
             "peer-power-fault",
             "independent-outputs-plus-unused-contact",
+            {
+                "pin-connectivity/peer-independent-power-outputs": "PASS",
+                "pin-connectivity/peer-j3-power-unused": "PASS",
+            },
         ),
-        "peer-independent-common-net-mismatch": (
+        (
+            "peer-independent-common-net-mismatch",
             peer_independent_power,
             "peer-power-control",
             "independent-outputs-plus-unused-contact",
+            {
+                "pin-connectivity/peer-independent-power-outputs": "FAIL",
+                "pin-connectivity/peer-j3-power-unused": "FAIL",
+            },
         ),
-        "stale-pin-reference": (stale_pin_reference, "four-db9-control", "stale-symbol-pin"),
-    }
-    for case, (spec, source_case, relationship) in pin_connectivity_cases.items():
-        check_results = pin_relationship_checks(spec, ctx.observed_contracts[source_case, "first"])
-        checks = {item.id: item.status for item in check_results}
-        check_details = {item.id: item.detail for item in check_results}
-        if checks != expected_pin_connectivity_results[case]:
+        (
+            "stale-pin-reference",
+            stale_pin_reference,
+            "four-db9-control",
+            "stale-symbol-pin",
+            {
+                "pin-connectivity/stale-pin-reference": "FAIL",
+            },
+        ),
+    )
+    for case, spec, source_case, relationship, expected in cases:
+        results = pin_relationship_checks(spec, ctx.observed_contracts[source_case, "first"])
+        checks = {item.id: item.status for item in results}
+        if checks != expected:
             raise ValueError(f"Pin-connectivity requirement {case} changed: {checks}")
-        spec_digest = hashlib.sha256(
-            json.dumps(
-                spec.model_dump(mode="json"),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            ).encode("utf-8")
-        ).hexdigest()
-        ctx.log.event(
-            f"connector-return-fixture/pin-connectivity-contract-{case}",
-            "PASS",
-            project=ctx.project,
-            kicad_version=ctx.config.kicad_version,
-            image=ctx.pinned,
-            source_sha256=ctx.source_hashes[source_case],
-            netlist_sha256=ctx.netlist_hashes[source_case, "first"],
-            repeat_netlist_sha256=ctx.netlist_hashes[source_case, "repeat"],
-            normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "first"],
-            repeat_normalized_netlist_sha256=ctx.normalized_netlist_hashes[source_case, "repeat"],
-            pin_connectivity_contract_sha256=spec_digest,
+        _record_pin_connectivity_contract(
+            ctx,
+            case=case,
+            spec=spec,
+            source_case=source_case,
             relationship=relationship,
-            check_details=json.dumps(
-                check_details, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-            ),
-            contract_status="FAIL"
-            if any(status == "FAIL" for status in checks.values())
-            else "PASS",
-            checks=";".join(
-                f"{check_id}={status}" for (check_id, status) in sorted(checks.items())
-            ),
-            repeatable="true"
-            if ctx.normalized_netlist_hashes[source_case, "first"]
-            == ctx.normalized_netlist_hashes[source_case, "repeat"]
-            else "false",
-            command_receipt=(ctx.scratch / "native.command.json").relative_to(ctx.root).as_posix(),
+            check_results=results,
         )
+
+
+def verify_connector_grounding_contracts(
+    ctx: ConnectorReturnFixtureContext, db9_control_nets: Mapping[str, tuple[str, ...]]
+) -> None:
+    """Verify all return-domain and peer-power pin-connectivity contracts."""
+    verify_db9_return_contracts(ctx, db9_control_nets)
+    verify_peer_power_pin_contracts(ctx)

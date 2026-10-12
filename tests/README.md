@@ -125,6 +125,9 @@ python -I -B -m pytest -q \
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="net.numbered_returns")' \
   tests/test_numbered_return_native_fixture_lane.py
+KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and connector_lint and return_path_lint and design_lint_rule(rule_id="connector.repeated_pin_function")' \
+  tests/test_native_db9_return_contracts.py
 python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
 .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and pcb_lint" \

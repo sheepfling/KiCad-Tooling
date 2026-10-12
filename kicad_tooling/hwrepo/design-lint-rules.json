@@ -34,9 +34,8 @@
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
-        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
-        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
+        "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
+        "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
@@ -51,9 +50,8 @@
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
-        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
-        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
+        "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
+        "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_returns.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
@@ -63,7 +61,7 @@
         "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering"
       ],
       "required_native_fixtures": [
-        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+        "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",

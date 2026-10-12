@@ -83,6 +83,35 @@ def peer_component_pin_netlist(
     )
 
 
+def generic_component_peer_power_assignment_netlist(*, outlier_open: bool) -> NetlistContract:
+    """Build native-shaped power-pin peer evidence with one open or all shared contacts."""
+    references = ("U1", "U2", "U3")
+    assigned = ("+5V", "+5V", None if outlier_open else "+5V")
+    nets: dict[str, tuple[str, ...]] = {
+        "+5V": tuple(
+            f"{reference}.1" for reference, net in zip(references, assigned, strict=True) if net
+        ),
+        "GND": tuple(f"{reference}.2" for reference in references),
+    }
+    return NetlistContract(
+        components={
+            reference: ComponentContract(value="Synthetic component power peer", footprint="")
+            for reference in references
+        },
+        nets=nets,
+        component_symbols={reference: "Lint:GenericComponentPeer" for reference in references},
+        component_pin_numbers={reference: ("1", "2") for reference in references},
+        pin_functions={
+            **{f"{reference}.1": "Pin_1" for reference in references},
+            **{f"{reference}.2": "GND" for reference in references},
+        },
+        pin_electrical_types={
+            **{f"{reference}.1": "passive" for reference in references},
+            **{f"{reference}.2": "passive" for reference in references},
+        },
+    )
+
+
 def peer_power_output_netlist(
     *,
     references: tuple[str, ...] = ("U1", "U2"),

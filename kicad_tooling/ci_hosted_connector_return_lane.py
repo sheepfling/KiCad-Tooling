@@ -9,7 +9,10 @@ from .ci_hosted_connector_return_context import (
     prepare_connector_return_fixture_context,
 )
 from .ci_hosted_connector_return_db9_returns import verify_db9_neutral_return_cases
-from .ci_hosted_connector_return_grounding import verify_connector_grounding_contracts
+from .ci_hosted_connector_return_grounding import (
+    verify_connector_grounding_contracts,
+    verify_db9_return_contracts,
+)
 from .ci_hosted_connector_return_mapped_returns import verify_mapped_return_interfaces
 from .ci_hosted_connector_return_mapped_supplies import verify_mapped_supply_interfaces
 from .ci_hosted_connector_return_offboard import verify_offboard_connector_interfaces
@@ -58,4 +61,27 @@ def numbered_pwm_return_fixture_lane(
         case_names=("four-db9-pwm-fault", "four-db9-pwm-control"),
     )
     verify_numbered_pwm_return_cases(context)
+    emit_connector_return_receipts(context, {})
+
+
+def db9_return_contract_fixture_lane(
+    root: Path, *, project: str, image: str, log: ConnectorReturnLog
+) -> None:
+    """Run only the synthetic DB9 common-versus-isolated return contract pair."""
+    context = prepare_connector_return_fixture_context(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        case_names=("four-db9-fault", "four-db9-control"),
+    )
+    fault = context.reports["four-db9-fault", "first"]
+    control = context.reports["four-db9-control", "first"]
+    expected_findings = {"connector.repeated_pin_function", "net.numbered_returns"}
+    if fault.status != "REVIEW" or {item.rule_id for item in fault.findings} != expected_findings:
+        raise ValueError("Split DB9 return fixture lost the expected deterministic review")
+    if control.status != "PASS" or control.findings:
+        raise ValueError("Common-return DB9 control no longer passes without findings")
+    db9_control_nets = context.observed_contracts["four-db9-control", "first"].nets
+    verify_db9_return_contracts(context, db9_control_nets)
     emit_connector_return_receipts(context, {})
