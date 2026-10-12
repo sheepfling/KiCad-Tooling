@@ -7,6 +7,7 @@ from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 GENERIC_PEER_POWER_INPUT_RULE_ID = "component.peer_power_input_assignment_divergence"
 NAMED_PEER_POWER_INPUT_OPEN_RULE_ID = "component.peer_power_input_open_assignment"
 NAMED_PEER_POWER_INPUT_DIVERGENCE_RULE_ID = "component.peer_power_input_named_assignment_divergence"
+NAMED_PEER_POWER_INPUT_ALL_OPEN_RULE_ID = "component.peer_power_input_named_all_open"
 
 
 def generic_peer_power_input_netlist(

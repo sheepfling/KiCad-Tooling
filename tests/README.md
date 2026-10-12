@@ -24,6 +24,9 @@ a focused native lane per rule.
 The named peer power-input assignment-divergence fault and control are synthetic tooling
 fixtures; their source boundary and pinned hashes are recorded in the
 [peer power-input fixture README](fixtures/design_lint/named-peer-power-input-divergence/README.md).
+The all-open named peer power-input fault and control are separate synthetic tooling fixtures;
+their source boundary and pinned hashes are recorded in the
+[all-open peer power-input fixture README](fixtures/design_lint/named-peer-power-input-all-open/README.md).
 
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:
@@ -110,6 +113,11 @@ python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="component.peer_power_input_named_assignment_divergence")' \
   tests/test_component_named_peer_power_input_divergence.py \
   tests/test_component_peer_power_input_native_fixture_lane.py \
+  tests/test_peer_power_assignment_cli_mcp.py
+python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="component.peer_power_input_named_all_open")' \
+  tests/test_component_named_peer_power_input_all_open.py \
+  tests/test_component_named_peer_power_input_all_open_native.py \
   tests/test_peer_power_assignment_cli_mcp.py
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="net.numbered_returns")' \

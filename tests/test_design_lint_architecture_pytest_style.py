@@ -67,6 +67,11 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_component_peer_pin_mixed_open.py": {"component_lint"},
     "test_component_peer_pin_assignment_outlier.py": {"component_lint"},
     "test_component_peer_pin_assignment_native_fixture_lane.py": {"component_lint"},
+    "test_component_named_peer_power_input_all_open.py": {"component_lint", "power_lint"},
+    "test_component_named_peer_power_input_all_open_native.py": {
+        "component_lint",
+        "power_lint",
+    },
     "test_design_lint_determinism_component_peers.py": {"component_lint", "power_lint"},
     "test_design_lint_mcp_parity_peer_pin_assignment_outlier.py": {
         "component_lint",
@@ -279,6 +284,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
         (
             "component.peer_power_input_named_assignment_divergence",
             "tests/test_component_named_peer_power_input_divergence.py::test_named_peer_power_input_split_is_reviewed_with_controls",
+        ),
+        (
+            "component.peer_power_input_named_all_open",
+            "tests/test_component_named_peer_power_input_all_open.py::test_named_peer_power_input_open_on_every_peer_is_reviewed",
         ),
         (
             "bus.spi_peer_voltage_review",

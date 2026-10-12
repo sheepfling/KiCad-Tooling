@@ -184,6 +184,17 @@ The first rules are:
   REVIEW because an open pin may be intentional; peer identity does not
   establish that pins must share a net. The digest-pinned synthetic examples
   are documented in the [fixture README][peer-open-fixture].
+- `component.peer_power_input_named_all_open` prompts when the same explicit,
+  unrecognized native `power_in` function is open on every comparable fitted
+  non-connector peer. It requires complete matching pin inventories, matching
+  native electrical types, identical function text, and exact-symbol or guarded
+  `PART_ID` identity. Unlike a partially open group, it does not need an
+  assigned peer as an anchor; it reports only a review question and does not
+  establish that any pin must be connected. Generic functions, recognized
+  supply/return roles, DNP peers, connectors, ambiguous assignments, and
+  incomplete or mismatched groups remain excluded. The minimal synthetic
+  fault/control sources and their hashes are documented in the
+  [all-open fixture README][peer-all-open-fixture].
 - `component.peer_power_output_unconnected` prompts when one fitted
   non-connector has an unassigned native `power_out` pin while a comparable
   fitted peer has one unambiguous net assignment. Peers may share an exact
@@ -1053,7 +1064,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 105 active rules. They
+`synthetic_validated`; the catalog currently contains 106 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and
@@ -4731,3 +4742,4 @@ pad. Review the physical access path and first-article test separately.
 
 [chip-pro-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/25ef404b6a92de5a0cec203eb3270632136758e3/MCU_Module.kicad_sym
 [peer-open-fixture]: ../tests/fixtures/design_lint/named-peer-power-input-open/README.md
+[peer-all-open-fixture]: ../tests/fixtures/design_lint/named-peer-power-input-all-open/README.md

@@ -17,6 +17,7 @@ from tests.component_peer_power_assignment_support import (
     peer_power_netlist,
 )
 from tests.component_peer_power_input_support import (
+    NAMED_PEER_POWER_INPUT_ALL_OPEN_RULE_ID,
     NAMED_PEER_POWER_INPUT_DIVERGENCE_RULE_ID,
     NAMED_PEER_POWER_INPUT_OPEN_RULE_ID,
     named_peer_power_input_netlist,
@@ -224,6 +225,37 @@ def test_named_peer_power_input_divergence_matches_between_cli_and_mcp(
             item
             for item in report.component_peer_pin_coverage
             if item.rule_id == NAMED_PEER_POWER_INPUT_DIVERGENCE_RULE_ID
+        )
+        assert coverage.status == "EVALUATED"
+        assert coverage.finding_count == int(expected)
+        assert coverage.netlist_sha256 == report.netlist_sha256
+
+
+def test_named_peer_power_input_all_open_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    root, summary_path = _synthetic_parity_project(tmp_path)
+    for assignments, expected in (
+        ((None, None), True),
+        (("+3V3", "+3V3"), False),
+    ):
+        report = _run_cli_and_mcp(
+            tmp_path,
+            root,
+            summary_path,
+            named_peer_power_input_netlist(assignments=assignments),
+        )
+        findings = [
+            item
+            for item in report.findings
+            if item.rule_id == NAMED_PEER_POWER_INPUT_ALL_OPEN_RULE_ID
+        ]
+        assert bool(findings) is expected
+        assert report.status == "REVIEW"
+        coverage = next(
+            item
+            for item in report.component_peer_pin_coverage
+            if item.rule_id == NAMED_PEER_POWER_INPUT_ALL_OPEN_RULE_ID
         )
         assert coverage.status == "EVALUATED"
         assert coverage.finding_count == int(expected)

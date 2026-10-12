@@ -94,6 +94,7 @@ class ComponentPeerPinAssignmentScans:
     power_input_assignment_divergence: PeerPinAssignmentScan
     power_input_open_assignment: PeerPinAssignmentScan
     named_power_input_assignment_divergence: PeerPinAssignmentScan
+    named_power_input_all_open: PeerPinAssignmentScan
 
 
 def scan_component_peer_pin_assignments(

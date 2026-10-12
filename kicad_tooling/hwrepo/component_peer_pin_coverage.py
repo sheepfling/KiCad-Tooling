@@ -41,6 +41,10 @@ def component_peer_pin_rule_coverage(
             scans.named_power_input_assignment_divergence,
         ),
         (
+            "component.peer_power_input_named_all_open",
+            scans.named_power_input_all_open,
+        ),
+        (
             "component.peer_power_input_open_assignment",
             scans.power_input_open_assignment,
         ),

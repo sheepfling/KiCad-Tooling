@@ -470,6 +470,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_named_power_input_assignment_divergences"
     },
     {
+      "rule_id": "component.peer_power_input_named_all_open",
+      "title": "Named peer power-input pin is open on every peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted non-connector components comparable by exact native symbol or guarded shared PART_ID, compare the same pin number only when all peers have a complete matching pin inventory, matching native power_in types and identical explicit non-generic function text not recognized as a supply or return. Emit a REVIEW candidate when no peer has a net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching symbol or guarded PART_ID identity, explicit function text, and power_in type provide a peer-review clue only; they do not establish that the pin is required or must be connected.",
+        "Generic functions and recognized supply or return names remain with their specific checks. DNP peers, connectors, incomplete or mismatched inventories, inconsistent functions or types, ambiguous assignments, partially open groups, and assigned groups are excluded.",
+        "The rule does not infer intent from net names, assign a connection, validate off-board power, establish PCB copper continuity, or prove voltage, current capacity, population, or component behavior."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_named_peer_power_input_all_open.test_named_peer_power_input_open_on_every_peer_is_reviewed",
+        "tests.test_peer_power_assignment_cli_mcp.test_named_peer_power_input_all_open_matches_between_cli_and_mcp",
+        "tests.test_component_named_peer_power_input_all_open_native.test_named_component_peer_power_input_all_open_lane_exports_only_its_fault_and_control",
+        "tests.test_component_named_peer_power_input_all_open_native.test_native_named_peer_power_input_all_open_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_named_peer_power_input_all_open.test_common_assigned_named_peer_power_input_is_a_quiet_control",
+        "tests.test_component_named_peer_power_input_all_open.test_named_peer_power_input_all_open_guards_cross_symbol_part_identity",
+        "tests.test_peer_power_assignment_cli_mcp.test_named_peer_power_input_all_open_matches_between_cli_and_mcp",
+        "tests.test_component_named_peer_power_input_all_open_native.test_native_named_peer_power_input_all_open_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_named_peer_power_input_all_open.test_named_peer_power_input_all_open_is_stable_under_mapping_order",
+        "tests.test_component_named_peer_power_input_all_open_native.test_named_peer_power_input_all_open_fixture_sources_match_reviewed_digests",
+        "tests.test_component_named_peer_power_input_all_open_native.test_native_named_peer_power_input_all_open_fault_and_control_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_named_power_input_all_open",
+        "kicad_tooling/hwrepo/design_lint_component_peer_candidates.py#component_peer_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_named_power_input_all_open"
+    },
+    {
       "rule_id": "component.peer_power_output_unconnected",
       "title": "Power-output pin is unassigned on one fitted peer",
       "status": "active",

@@ -219,6 +219,7 @@ class DesignLintReport(StrictModel):
             "component.peer_bidirectional_pin_unconnected",
             "component.peer_power_input_assignment_divergence",
             "component.peer_power_input_named_assignment_divergence",
+            "component.peer_power_input_named_all_open",
             "component.peer_power_input_open_assignment",
             "component.generic_peer_pin_assignment_outlier",
             "component.generic_peer_pin_mixed_open",

@@ -226,3 +226,24 @@ def scan_component_peer_named_power_input_assignment_divergences(
         assignment_pattern="different_assigned_nets",
         minimum_peer_count=2,
     )
+
+
+def scan_component_peer_named_power_input_all_open(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+) -> PeerPinAssignmentScan:
+    """Find named native power-input pins left open on every comparable peer.
+
+    The all-open state is a review prompt because matching peer identity,
+    explicit pin function, and native ``power_in`` type do not prove that a
+    pin is required or intended to be connected.
+    """
+    return scan_component_peer_pin_assignments(
+        observed,
+        declared_references,
+        electrical_types=frozenset({"power_in"}),
+        require_pin_functions=True,
+        pin_function_selector=_unrecognized_non_generic_power_input_function,
+        assignment_pattern="all_open",
+        minimum_peer_count=2,
+    )

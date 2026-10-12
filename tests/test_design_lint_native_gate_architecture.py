@@ -329,6 +329,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "component.peer_power_input_named_assignment_divergence": {
             "tests.test_component_peer_power_input_native_fixture_lane.test_native_named_peer_power_input_divergence_fault_and_control_are_repeatable",
         },
+        "component.peer_power_input_named_all_open": {
+            "tests.test_component_named_peer_power_input_all_open_native.test_native_named_peer_power_input_all_open_fault_and_control_are_repeatable",
+        },
         "component.generic_peer_pin_assignment_outlier": {
             "tests.test_component_peer_pin_assignment_native_fixture_lane.test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable",
         },
@@ -353,6 +356,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES"
     )
     native_fixture_by_rule["component.peer_power_input_named_assignment_divergence"] = (
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES"
+    )
+    native_fixture_by_rule["component.peer_power_input_named_all_open"] = (
         "KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES"
     )
     native_fixture_by_rule["component.generic_peer_pin_assignment_outlier"] = (

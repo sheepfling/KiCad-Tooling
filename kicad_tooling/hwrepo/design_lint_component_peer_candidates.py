@@ -129,6 +129,46 @@ def component_peer_candidates(
             )
         )
 
+    for group in peer_pin_scans.named_power_input_all_open.outliers:
+        peer_identity = (
+            group.peer_identity if group.peer_identity_basis == "part_id" else group.symbol
+        )
+        identity_evidence = (
+            {
+                "peer_identity_basis": (group.peer_identity_basis,),
+                "peer_identity": (group.peer_identity,),
+                "peer_symbols": group.peer_symbols,
+            }
+            if group.peer_identity_basis == "part_id"
+            else {}
+        )
+        open_peer_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        found.append(
+            Candidate(
+                rule_id="component.peer_power_input_named_all_open",
+                subject=(
+                    f"{peer_identity} pin {group.pin_number} ({group.pin_function}): "
+                    "named power-input peer pin is open on every fitted peer"
+                ),
+                message=(
+                    "Comparable fitted non-connector components use the same explicit, "
+                    "unrecognized native power_in function, but every peer pin is open. "
+                    "Review the approved part requirements for an intentionally unused "
+                    "pin or a missing connection; matching peer metadata does not establish "
+                    "that the pin must be connected."
+                ),
+                evidence={
+                    **group.assignments,
+                    **identity_evidence,
+                    "symbol": (group.symbol,),
+                    "pin_number": (group.pin_number,),
+                    "pin_function": (group.pin_function or "",),
+                    "pin_electrical_type": ("power_in",),
+                    "open_peer_pins": open_peer_pins,
+                },
+            )
+        )
+
     for group in component_peer_power_pin_assignment_divergences(
         observed, reviewed_connector_references
     ):
