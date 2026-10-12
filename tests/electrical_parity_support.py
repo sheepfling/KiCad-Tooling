@@ -25,7 +25,7 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from tests import test_contract_coach as coach_fixture
-from tests.test_electrical import ISLAND, NA, PROJECT, install_fixture
+from tests.electrical_simulation_support import ISLAND, NA, PROJECT, install_fixture
 
 
 def contract_netlist_xml(observed: NetlistContract) -> str:

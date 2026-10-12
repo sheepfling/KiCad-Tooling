@@ -12,6 +12,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.electrical_charts import build_charts, build_suite
 from kicad_tooling.hwrepo.evidence import digest
@@ -21,8 +23,10 @@ from kicad_tooling.hwrepo.models import (
     ElectricalChartsSuiteReport,
     ElectricalSuiteReport,
 )
+from tests.electrical_simulation_support import PROJECT, install_fixture
 from tests.support import reference_root
-from tests.test_electrical import PROJECT, install_fixture
+
+pytestmark = [pytest.mark.template_checkout]
 
 
 class ElectricalChartsTests(unittest.TestCase):

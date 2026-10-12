@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.models import (
     ConnectorInventoryReview,
     DesignLintIgnore,
     DesignLintPolicy,
+    DesignLintRuleOverride,
     ProjectManifest,
     ProjectTestContract,
     ValidationSummary,
@@ -31,7 +32,26 @@ pytestmark = [
 
 @pytest.fixture
 def synthetic_project(tmp_path: Path) -> Path:
-    return create_reference_project(tmp_path / "repository")
+    root = create_reference_project(tmp_path / "repository")
+    contract_path = root / "examples/projects/controller/tests/contract.json"
+    contract = read_model(contract_path, ProjectTestContract)
+    write_model(
+        contract_path, contract.model_copy(update={"design_lint": _connector_lint_policy()})
+    )
+    return root
+
+
+def _connector_lint_policy(*, ignores: tuple[DesignLintIgnore, ...] = ()) -> DesignLintPolicy:
+    return DesignLintPolicy(
+        ignores=ignores,
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_component_inventory",
+                mode="off",
+                reason="Synthetic connector-verification tests isolate connector review from native PCB inventory",
+            ),
+        ),
+    )
 
 
 def test_unreviewed_connector_findings_fail_verify_and_ci(synthetic_project: Path) -> None:
@@ -66,7 +86,7 @@ def test_exact_ignores_do_not_clear_unreviewed_connector_coverage(
         contract_path,
         contract.model_copy(
             update={
-                "design_lint": DesignLintPolicy(
+                "design_lint": _connector_lint_policy(
                     ignores=tuple(
                         DesignLintIgnore(
                             rule_id=item.rule_id,
@@ -98,7 +118,7 @@ def test_reviewed_connector_inventory_clears_verify_and_ci_gate(synthetic_projec
         contract_path,
         contract.model_copy(
             update={
-                "design_lint": DesignLintPolicy(
+                "design_lint": _connector_lint_policy(
                     ignores=tuple(
                         DesignLintIgnore(
                             rule_id=item.rule_id,

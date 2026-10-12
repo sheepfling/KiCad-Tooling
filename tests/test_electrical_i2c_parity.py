@@ -21,7 +21,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests import electrical_i2c_support as i2c_support
 from tests.electrical_parity_support import contract_netlist_xml, parity_harness  # noqa: F401
-from tests.test_electrical import ISLAND, PROJECT
+from tests.electrical_simulation_support import ISLAND, PROJECT
 
 pytestmark = [
     pytest.mark.template_checkout,

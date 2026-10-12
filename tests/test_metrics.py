@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -17,9 +18,8 @@ from kicad_tooling.hwrepo.models import (
     TemplateMetricsReport,
 )
 from kicad_tooling.metrics import main as metrics_main
-from tests.support import reference_root
 
-ROOT = reference_root()
+ROOT = Path()
 
 
 def sample_metrics_report() -> TemplateMetricsReport:

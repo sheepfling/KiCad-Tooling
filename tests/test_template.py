@@ -16,9 +16,9 @@ from kicad_tooling.hwrepo.models import (
     TemplateUpgradesCatalog,
 )
 from kicad_tooling.hwrepo.template import bootstrap, plan_upgrade, preflight
-from tests.support import initialize_git, reference_root
+from tests.support import initialize_git
 
-ROOT = reference_root()
+ROOT = Path()
 
 
 @pytest.fixture

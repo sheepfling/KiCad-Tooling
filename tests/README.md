@@ -22,11 +22,19 @@ python -I -B -m pytest -q
 
 For PowerShell, set the variable with
 `$env:KICAD_TEMPLATE_ROOT = "C:\path\to\KiCad-Team-Workflow-Template"`.
+
+Pytest collection does not copy or resolve that checkout. A marker-filtered
+selection can therefore collect while the variable is unset; selected tests
+that use the shared reference root still require the public checkout.
 Run one module with `python -I -B -m pytest -q tests/test_product.py`.
 
-Focused runs use registered markers. `tests/conftest.py` assigns lint areas by
-test module; areas can overlap when a fixture checks more than one concern. It
-also marks exact-native fixture classes separately:
+Focused runs use registered markers. `tests/design_lint_test_markers.py`
+assigns lint areas by test module; areas can overlap when a fixture checks more
+than one concern. Active rule fixture references in the catalog also attach a
+`design_lint_rule(rule_id=...)` marker, so one rule's fault, control,
+metamorphic, CLI/MCP, and native cases can be selected together. Execution-cost
+markers live in `tests/execution_test_markers.py`; mixed modules mark only the
+test functions that actually run the exact native tool:
 
 ```sh
 python -I -B -m pytest -q -m \
@@ -39,9 +47,28 @@ python -I -B -m pytest -q tests/test_design_lint_numbered_returns.py \
   -m "design_lint and connector_lint and return_path_lint"
 python -I -B -m pytest -q -m "design_lint and connector_lint" \
   tests/test_electrical_connector_pin_contracts.py
+python -I -B -m pytest -q -m \
+  'design_lint_rule(rule_id="power.pin_function_net_role_conflict")'
+.venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and power_lint and component_lint and not slow" \
+  tests/test_power_pin_net_roles.py
+.venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and power_lint and parity_lint and slow" \
+  tests/test_design_lint_mcp_parity_power_pin_roles.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and power_lint and native_kicad" \
+  tests/test_power_pin_net_role_native_fixture_lane.py
 python -I -B -m pytest -q -m "design_lint and return_path_lint" \
   tests/test_electrical_return_contracts.py
 python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and pcb_lint" \
+  tests/test_pcb_access_fixture_lane.py tests/test_ci_hosted_pcb_fixture_schedule.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and pcb_lint and native_kicad" \
+  tests/test_pcb_access_native_fixture_lane.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_serial_participants.py tests/test_serial_participant_net_labels.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
@@ -79,6 +106,25 @@ python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_electrical_spi_contracts.py
 python -I -B -m pytest -q -m "design_lint and interface_lint" \
   tests/test_electrical_serial_contracts.py
+python -I -B -m pytest -q -m "design_lint and interface_lint" \
+  tests/test_electrical_can_termination.py tests/test_electrical_rs485_contract.py
+python -I -B -m pytest -q -m "design_lint and power_lint" \
+  tests/test_electrical_power_connectivity.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
+  python -I -B -m pytest -q -m "component_lint and evidence_lint and template_checkout" \
+  tests/test_electrical_component_evidence.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
+  python -I -B -m pytest -q -m "connector_lint and evidence_lint and template_checkout" \
+  tests/test_electrical_connector_evidence.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
+  python -I -B -m pytest -q -m "return_path_lint and evidence_lint and template_checkout" \
+  tests/test_electrical_pcb_return_evidence.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
+  python -I -B -m pytest -q -m "pcb_lint and evidence_lint and template_checkout" \
+  tests/test_electrical_test_access_evidence.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \
+  python -I -B -m pytest -q -m "evidence_lint and template_checkout" \
+  tests/test_electrical_evidence.py tests/test_electrical_digital_peer_evidence.py
 KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
   -m "design_lint and interface_lint and native_kicad" \
   tests/test_ci_hosted_digital_peer_spi.py tests/test_ci_hosted_digital_peer_serial.py
@@ -135,8 +181,9 @@ PCB, return-path, or parity regressions; combine them with `-k` to select a test
 parametrized fault/control case. `native_kicad` selects exact-version fixtures and still
 requires each fixture's documented version and environment settings. Markers
 narrow local runs; the package acceptance gate continues to run the complete
-suite. Add each new lint test module to its area in `tests/conftest.py`; this
-keeps it in both its focused area and the portable `design_lint` selection.
+suite. Add each new lint test module to its area in
+`tests/design_lint_test_markers.py`; `tests/conftest.py` applies those markers and
+keeps it in both the focused area and the portable `design_lint` selection.
 
 Hosted PCB geometry acceptance is split by theme; for example, run only the
 synthetic decoupling placement or return-via checks with:
@@ -166,6 +213,25 @@ The native decoupling fixture runs separately with:
 ```sh
 python -I -B -m pytest -q -m "design_lint and pcb_lint and native_kicad" \
   tests/test_pcb_decoupling_native_fixture_lane.py
+```
+
+Native PCB return evidence is split into focused switching-loop, reference-plane,
+and return-path suites. Select one theme without rerunning the other native
+geometry lanes:
+
+```sh
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and pcb_lint and return_path_lint and native_kicad" \
+  tests/test_pcb_reference_plane_native_fixture_lane.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and pcb_lint and native_kicad" \
+  tests/test_pcb_switching_loop_native_fixture_lane.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and pcb_lint and return_path_lint and native_kicad" \
+  tests/test_pcb_return_path_native_fixture_lane.py
 ```
 
 The hosted PCB return lane also has a focused orchestration test. It uses

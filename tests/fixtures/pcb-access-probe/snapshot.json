@@ -1,0 +1,40 @@
+{
+  "schema_version": "10",
+  "board_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "kicad_version": "10.0.0",
+  "image": "fixture.invalid/kicad@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "probe_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "zones_refilled": true,
+  "pads": [
+    {"pad": "J1.1", "net": "TARGET_ACCESS", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J1.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J2.1", "net": "TARGET_ACCESS", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J2.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J3.1", "net": "FOREIGN_DNP", "footprint": "Synthetic:AccessNeighbor", "dnp": true, "connected_pads": ["J3.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J4.1", "net": "FOREIGN_FRONT", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J4.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J5.1", "net": "FOREIGN_BACK", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J5.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J7.1", "net": "TARGET_NO_NET_NEIGHBOR", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J7.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J8.1", "net": null, "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J8.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J9.1", "net": "TARGET_FRONT_ONLY", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J9.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J10.1", "net": "FOREIGN_FRONT_ONLY", "footprint": "Synthetic:AccessNeighbor", "dnp": false, "connected_pads": ["J10.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J11.1", "net": "TARGET_APERTURE_SMALL", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J11.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J12.1", "net": "TARGET_APERTURE_BOUNDARY", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J12.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J13.1", "net": "TARGET_APERTURE_RECT", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J13.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]},
+    {"pad": "J14.1", "net": "TARGET_APERTURE_DRILLED", "footprint": "Synthetic:AccessTarget", "dnp": false, "connected_pads": ["J14.1"], "connected_zones": [], "connected_islands": [], "connected_vias": [], "positions_nm": [[0, 0]]}
+  ],
+  "net_ties": [],
+  "zones": [],
+  "vias": [],
+  "tracks": [],
+  "copper_layers": ["F.Cu", "B.Cu"],
+  "access_probe_observations": [
+    {"endpoint": "J1.1", "side": "front", "target_net": "TARGET_ACCESS", "target_exposed": true, "obstacle": "J4.1", "obstacle_net": "FOREIGN_FRONT", "distance_nm": 400000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 1200000},
+    {"endpoint": "J1.1", "side": "back", "target_net": "TARGET_ACCESS", "target_exposed": true, "obstacle": "J5.1", "obstacle_net": "FOREIGN_BACK", "distance_nm": 800000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 1200000},
+    {"endpoint": "J7.1", "side": "front", "target_net": "TARGET_NO_NET_NEIGHBOR", "target_exposed": true, "obstacle": "J8.1", "obstacle_net": null, "distance_nm": 400000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 800000},
+    {"endpoint": "J9.1", "side": "front", "target_net": "TARGET_FRONT_ONLY", "target_exposed": true, "obstacle": "J10.1", "obstacle_net": "FOREIGN_FRONT_ONLY", "distance_nm": 400000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 300000},
+    {"endpoint": "J9.1", "side": "back", "target_net": "TARGET_FRONT_ONLY", "target_exposed": false, "obstacle": null, "obstacle_net": null, "distance_nm": null, "target_aperture_shape": null, "target_aperture_diameter_nm": null},
+    {"endpoint": "J11.1", "side": "front", "target_net": "TARGET_APERTURE_SMALL", "target_exposed": true, "obstacle": "J12.1", "obstacle_net": "TARGET_APERTURE_BOUNDARY", "distance_nm": 9500001, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 400000},
+    {"endpoint": "J12.1", "side": "front", "target_net": "TARGET_APERTURE_BOUNDARY", "target_exposed": true, "obstacle": "J13.1", "obstacle_net": "TARGET_APERTURE_RECT", "distance_nm": 9500000, "target_aperture_shape": "circle", "target_aperture_diameter_nm": 800000},
+    {"endpoint": "J13.1", "side": "front", "target_net": "TARGET_APERTURE_RECT", "target_exposed": true, "obstacle": "J12.1", "obstacle_net": "TARGET_APERTURE_BOUNDARY", "distance_nm": 9500001, "target_aperture_shape": "unsupported", "target_aperture_diameter_nm": null},
+    {"endpoint": "J14.1", "side": "front", "target_net": "TARGET_APERTURE_DRILLED", "target_exposed": true, "obstacle": "J13.1", "obstacle_net": "TARGET_APERTURE_RECT", "distance_nm": 9500000, "target_aperture_shape": "unsupported", "target_aperture_diameter_nm": null}
+  ],
+  "access_probe_requests_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

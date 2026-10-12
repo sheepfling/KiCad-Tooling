@@ -65,6 +65,7 @@ python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
 markers = [
   "design_lint: deterministic design-lint rule, catalog, and parity behavior",
+  "design_lint_rule(rule_id): tests named by an active rule's catalog fixture references",
   "catalog_lint: design-lint catalog metadata, fixture reachability, and backlog consistency",
   "schematic_lint: schematic connectivity, geometry, and readability heuristics",
   "schematic_text_lint: schematic text, glyph, and symbol-body overlap checks",

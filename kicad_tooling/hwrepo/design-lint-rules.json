@@ -1182,14 +1182,14 @@
         "An unassigned pin may be intentionally unused or connected off-board."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins",
@@ -1215,21 +1215,23 @@
         "A resistor-array hint is resolved only by an exact project-authored I2C requirement whose SDA and SCL checks pass against this native netlist; missing, pending, not-applicable, mismatched, or failing requirements leave the review open."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
+        "tests.test_design_lint_i2c_missing_pullups.test_connecting_one_line_leaves_only_the_other_pullup_missing",
         "tests.test_i2c_pullup_heuristic_coverage.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_requirement_for_a_different_ordered_bus_does_not_resolve_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
         "tests.test_i2c_pullup_heuristic_coverage.test_valid_mapped_array_resolves_only_its_exact_missing_path_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path"
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups",
@@ -1257,16 +1259,16 @@
         "This heuristic uses nominal resistance only and does not establish resistor tolerance, sink-current margin, bus voltage compatibility, capacitance, rise time, or timing. A separate project-authored electrical-window check can optionally apply a maximum per-resistor tolerance bound, but does not verify its cited source or scope."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_low_equivalent_includes_series_pullup_paths"
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_low_equivalent_includes_series_pullup_paths"
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance"
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_with_low_equivalent_pullup_resistance",
@@ -1292,14 +1294,15 @@
         "Only fitted conventional resistor paths with each resistor and total path in the 1 kΩ–100 kΩ detection range are followed; this is not a universal I2C resistor requirement."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_pullups_to_distinct_rail_families_request_review"
+        "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_pullups_to_distinct_rail_families_request_review"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_pullups_to_distinct_rail_families_request_review"
+        "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_pullups_to_distinct_rail_families_request_review",
+        "tests.test_design_lint_i2c_pullup_rail_families.test_same_family_rails_remain_valid_controls"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_i2c.DesignLintI2cTests.test_i2c_pullup_rail_finding_is_order_stable"
+        "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_pullup_rail_finding_is_order_stable"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_with_multiple_pullup_rail_families",
@@ -1403,14 +1406,14 @@
         "An unassigned chip-select can be intentional or controlled through circuitry outside the board."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins",
@@ -1472,14 +1475,14 @@
         "Unusual library naming and off-board CC circuitry are outside the evidence."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins",
@@ -1609,7 +1612,7 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.DesignLintUnconnectedInterfaceTests.test_unconnected_can_lines_are_order_stable_and_each_assignment_clears_one"
+        "tests.test_design_lint_unconnected_interfaces.test_unconnected_can_lines_are_order_stable_and_each_assignment_clears_one"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins",
@@ -3101,6 +3104,8 @@
       ],
       "fault_fixtures": [
         "tests.test_pcb_reference_plane_lint.test_mapped_reference_plane_gap_is_reviewable",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_narrow_void_fault_control_repeats",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_via_antipad_fault_control_repeats",
         "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_narrow_midtrace_void_between_two_mm_samples_is_reviewed",
         "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_hole_is_subtracted_and_exact_threshold_control_passes",
         "tests.test_pcb_reference_plane_layers.PcbReferencePlaneLayerTests.test_only_immediately_adjacent_exact_reference_net_copper_counts",
@@ -3110,6 +3115,8 @@
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_reference_plane_lint.test_complete_reference_plane_control_is_quiet",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_narrow_void_fault_control_repeats",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_via_antipad_fault_control_repeats",
         "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_narrow_midtrace_void_between_two_mm_samples_is_reviewed",
         "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_hole_is_subtracted_and_exact_threshold_control_passes",
         "tests.test_pcb_reference_plane_layers.PcbReferencePlaneLayerTests.test_inner_route_needs_one_adjacent_layer_to_meet_threshold",
@@ -3158,6 +3165,7 @@
       ],
       "fault_fixtures": [
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_enlarged_loop_exceeds_project_area_limit",
+        "tests.test_pcb_switching_loop_native_fixture_lane.test_native_switching_loop_geometry_fixtures",
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_split_filled_return_plane_is_reported",
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_multiple_shared_plane_islands_are_reported_as_ambiguous",
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_schema_nine_requires_valid_contours_for_every_filled_island",
@@ -3169,6 +3177,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_compact_loop_and_shared_multilayer_plane_pass_authored_geometry_screen",
+        "tests.test_pcb_switching_loop_native_fixture_lane.test_native_switching_loop_geometry_fixtures",
         "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_detour_changes_trace_measurement_while_pad_center_proxy_stays_fixed",
         "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_schema_nine_plane_edge_reports_exact_filled_contour_area",
         "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_route_resolution_is_visible_in_review_finding_and_text_report",
@@ -3415,15 +3424,16 @@
         "Only the existing power_function_key and return-like net/function recognizers classify the two endpoints. Custom names without recognized native symbol pin functions can evade the candidate; ambiguous nets with both roles are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_led_topology.DesignLintLedTopologyTests.test_two_pin_led_directly_bridging_supply_and_return_is_configurable",
-        "tests.test_design_lint_led_topology.DesignLintLedTopologyTests.test_led_rail_bridge_predicate_uses_exact_topology_and_symbol_controls"
+        "tests.test_design_lint_led_topology.test_two_pin_led_directly_bridging_supply_and_return_is_configurable",
+        "tests.test_design_lint_led_topology.test_led_rail_bridge_predicate_uses_exact_topology_and_symbol_controls"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_led_topology.DesignLintLedTopologyTests.test_led_rail_bridge_predicate_uses_exact_topology_and_symbol_controls"
+        "tests.test_design_lint_led_topology.test_led_rail_bridge_predicate_uses_exact_topology_and_symbol_controls",
+        "tests.test_design_lint_led_topology.test_led_non_matching_topologies_remain_valid_controls"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_led_topology.DesignLintLedTopologyTests.test_led_bridge_is_order_stable_and_series_path_clears_it"
+        "tests.test_design_lint_led_topology.test_led_bridge_is_order_stable_and_series_path_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/led_heuristics.py#leds_directly_between_positive_and_return_nets",
@@ -3491,14 +3501,17 @@
       ],
       "fault_fixtures": [
         "tests.test_power_pin_net_roles.test_positive_supply_pin_on_return_net_is_reviewed_with_role_evidence",
+        "tests.test_power_pin_net_roles.test_return_label_precedence_prevents_duplicate_peer_role_finding",
         "tests.test_power_pin_net_roles.test_net_role_can_come_from_a_peer_pin_function_without_a_named_rail",
         "tests.test_power_pin_net_roles.test_return_pin_on_positive_rail_is_reported_and_connector_rule_owns_connector_returns",
+        "tests.test_power_pin_net_roles.test_positive_supply_connector_pin_on_return_net_remains_in_scope",
         "tests.test_design_lint_mcp_parity_power_pin_roles.test_named_power_pin_net_role_review_cli_mcp_parity",
         "tests.test_power_pin_net_role_native_fixture_lane.test_named_power_pin_fault_and_control_export_repeatably"
       ],
       "valid_control_fixtures": [
         "tests.test_power_pin_net_roles.test_common_negative_unrecognized_open_and_dnp_cases_are_controls",
         "tests.test_power_pin_net_roles.test_multi_assigned_pin_and_self_role_do_not_create_conflict_evidence",
+        "tests.test_power_pin_net_roles.test_positive_supply_connector_pin_on_positive_rail_is_a_valid_control",
         "tests.test_power_pin_net_roles.test_project_policy_can_block_turn_off_or_exactly_ignore_the_candidate",
         "tests.test_design_lint_mcp_parity_power_pin_roles.test_named_power_pin_net_role_review_cli_mcp_parity",
         "tests.test_power_pin_net_role_native_fixture_lane.test_named_power_pin_fault_and_control_export_repeatably"
@@ -3713,14 +3726,14 @@
         "Return-like nets and pins with return-like function names are excluded. Custom return names, external circuitry, internal pulls, resistor arrays, and component-internal paths are not modeled."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_dc_reference.DesignLintDcReferenceTests.test_connector_capacitor_only_net_requests_dc_reference_review"
+        "tests.test_design_lint_dc_reference.test_connector_capacitor_only_net_requests_dc_reference_review"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_dc_reference.DesignLintDcReferenceTests.test_connector_capacitor_only_prompt_requires_fitted_known_peer_pins",
-        "tests.test_design_lint_dc_reference.DesignLintDcReferenceTests.test_connector_capacitor_only_prompt_supports_project_policy_and_ignore"
+        "tests.test_design_lint_dc_reference.test_connector_capacitor_only_prompt_requires_fitted_known_peer_pins",
+        "tests.test_design_lint_dc_reference.test_connector_capacitor_only_prompt_supports_project_policy_and_ignore"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_dc_reference.DesignLintDcReferenceTests.test_connector_capacitor_only_finding_is_order_stable_and_extra_pin_clears_it"
+        "tests.test_design_lint_dc_reference.test_connector_capacitor_only_finding_is_order_stable_and_extra_pin_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/net_dc_reference.py#connector_capacitor_only_nets",

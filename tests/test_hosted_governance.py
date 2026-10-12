@@ -16,11 +16,13 @@ from kicad_tooling.governance_audit import main as audit_main
 from kicad_tooling.hwrepo.contracts import read_model
 from kicad_tooling.hwrepo.hosted_governance import ApiError, _gh, audit
 from kicad_tooling.hwrepo.models import TeamPolicy
-from tests.support import reference_root
 
-ROOT = reference_root()
+ROOT = Path()
 REPO = "example/hardware"
-REQUIRED_CHECKS = read_model(ROOT / "catalog/team-policy.json", TeamPolicy).required_status_checks
+
+
+def required_checks() -> tuple[str, ...]:
+    return read_model(ROOT / "catalog/team-policy.json", TeamPolicy).required_status_checks
 
 
 def api_response(root: Path, *args: str) -> object:
@@ -42,7 +44,7 @@ def api_response(root: Path, *args: str) -> object:
                 {
                     "type": "required_status_checks",
                     "parameters": {
-                        "required_status_checks": [{"context": name} for name in REQUIRED_CHECKS],
+                        "required_status_checks": [{"context": name} for name in required_checks()],
                         "strict_required_status_checks_policy": True,
                     },
                 },
@@ -342,7 +344,7 @@ class HostedGovernanceAuditTests(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertEqual(payload["lane"], "HOSTED_GOVERNANCE_AUDIT")
         self.assertEqual(payload["status"], "UNKNOWN")
-        self.assertEqual(payload["required_status_checks"], list(REQUIRED_CHECKS))
+        self.assertEqual(payload["required_status_checks"], list(required_checks()))
         with (
             patch("kicad_tooling.hwrepo.hosted_governance._gh", side_effect=api_response),
             patch.object(

@@ -55,9 +55,8 @@ from kicad_tooling.hwrepo.repository import (
     unmanaged_artifact,
 )
 from kicad_tooling.lint_registry import lint, reviewed_value
-from tests.support import reference_root
 
-ROOT = reference_root()
+ROOT = Path()
 
 
 class ProductTests(unittest.TestCase):
@@ -76,7 +75,7 @@ class ProductTests(unittest.TestCase):
         raw = self.data if data is None else data
         return ProductRecord.model_validate_json(json.dumps(raw))
 
-    def codes(self, data=None, root=ROOT, parts=None):
+    def codes(self, data=None, root=None, parts=None):
         raw = self.data if data is None else data
         try:
             product = self.model(raw)
@@ -86,7 +85,7 @@ class ProductTests(unittest.TestCase):
         return {
             issue.code
             for issue in validate_product(
-                root,
+                ROOT if root is None else root,
                 product,
                 active_parts,
                 self.interfaces,

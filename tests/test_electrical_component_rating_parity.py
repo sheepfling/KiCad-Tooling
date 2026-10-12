@@ -108,24 +108,16 @@ async def _run_component_power_rating_parity(parity) -> None:
         observed,
         {"component_power_ratings": component_power_requirement()},
     )
-    passed, _, pass_returncode = await parity.analyze_electrical(
-        "component-power-rating-pass"
-    )
+    passed, _, pass_returncode = await parity.analyze_electrical("component-power-rating-pass")
     assert pass_returncode == 0
     pass_checks = {row.id: row for row in passed.checks}
     assert pass_checks["component-power-rating/sense-resistor/utilization"].status == "PASS"
 
     parity.install_netlist_contract(
         observed,
-        {
-            "component_power_ratings": component_power_requirement(
-                maximum_expected_power_w=0.21
-            )
-        },
+        {"component_power_ratings": component_power_requirement(maximum_expected_power_w=0.21)},
     )
-    fault, _, fault_returncode = await parity.analyze_electrical(
-        "component-power-rating-fault"
-    )
+    fault, _, fault_returncode = await parity.analyze_electrical("component-power-rating-fault")
     assert fault_returncode == 1
     fault_checks = {row.id: row for row in fault.checks}
     assert fault_checks["component-power-rating/sense-resistor/utilization"].status == "FAIL"

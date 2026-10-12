@@ -17,9 +17,9 @@ from kicad_tooling.ci import main, project_static_pipeline, run_command, static_
 from kicad_tooling.ci_hosted import gate_result
 from kicad_tooling.hwrepo.documentation import check as documentation_check
 from kicad_tooling.hwrepo.models import CommandEvidence, StaticPipelineReport
-from tests.support import SOURCE_ROOT, reference_root
+from tests.support import SOURCE_ROOT
 
-ROOT = reference_root()
+ROOT = Path()
 
 
 def evidence(returncode: int) -> CommandEvidence:

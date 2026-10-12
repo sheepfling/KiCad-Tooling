@@ -26,9 +26,7 @@ pytestmark = [
 async def _run_digital_peer_voltage_parity(parity) -> None:
     parity.configured()
     observed = digital_peer_netlist()
-    parity.install_netlist_contract(
-        observed, {"digital_peer_voltages": digital_peer_requirement()}
-    )
+    parity.install_netlist_contract(observed, {"digital_peer_voltages": digital_peer_requirement()})
     passed, _, pass_returncode = await parity.analyze_electrical("digital-peer-pass")
     assert pass_returncode == 0
     pass_checks = {row.id: row for row in passed.checks}
@@ -36,11 +34,7 @@ async def _run_digital_peer_voltage_parity(parity) -> None:
 
     parity.install_netlist_contract(
         observed,
-        {
-            "digital_peer_voltages": digital_peer_requirement(
-                output_high_maximum_v=5.0
-            )
-        },
+        {"digital_peer_voltages": digital_peer_requirement(output_high_maximum_v=5.0)},
     )
     fault, _, fault_returncode = await parity.analyze_electrical("digital-peer-fault")
     assert fault_returncode == 1

@@ -1780,10 +1780,12 @@
       ],
       "parity_tests": [
         "tests.test_electrical_parity.ElectricalParityTests.test_saved_native_analysis_is_root_relative_and_preserves_native_failure",
-        "tests.test_electrical_parity.ElectricalParityTests.test_pcb_return_path_contract_matches_cli_and_mcp_for_pass_and_fault",
-        "tests.test_electrical_parity.ElectricalParityTests.test_connector_pin_relationships_match_cli_and_mcp_analysis",
+        "tests.test_electrical_pcb_return_path_parity.test_pcb_return_path_contract_matches_cli_and_mcp_for_pass_and_fault",
+        "tests.test_electrical_connector_pin_relationship_parity.test_connector_pin_relationships_match_cli_and_mcp_analysis",
+        "tests.test_electrical_control_input_parity.test_control_input_requirements_match_cli_mcp_and_retained_evidence",
         "tests.test_electrical_connector_return_parity.test_db9_grounding_requirement_matrix_matches_cli_and_mcp",
-        "tests.test_electrical_parity.ElectricalParityTests.test_bus_requirements_match_cli_and_mcp_analysis",
+        "tests.test_electrical_bus_contract_parity.test_bus_requirements_match_cli_and_mcp_analysis",
+        "tests.test_electrical_test_access_parity.test_test_access_schematic_and_board_stages_match_cli_and_mcp",
         "tests.test_electrical_i2c_parity.test_i2c_array_pullups_match_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_i2c_parity.test_i2c_voltage_compatibility_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_i2c_parity.test_i2c_pullup_electrical_window_matches_cli_and_mcp",
@@ -1795,9 +1797,9 @@
         "tests.test_electrical_component_rating_parity.test_component_power_rating_requirement_matches_cli_and_mcp",
         "tests.test_electrical_connector_rating_parity.test_connector_contact_rating_requirement_matches_cli_and_mcp",
         "tests.test_electrical_component_rating_parity.test_mosfet_state_stress_requirement_matches_cli_and_mcp",
-        "tests.test_electrical_parity.ElectricalParityTests.test_rs485_contract_matches_cli_and_mcp_for_pass_and_fault",
-        "tests.test_electrical_parity.ElectricalParityTests.test_power_connectivity_matches_cli_and_mcp_for_pass_and_fault",
-        "tests.test_electrical_parity.ElectricalParityTests.test_external_fixed_simulator_success_and_wrong_version_match_cli"
+        "tests.test_electrical_rs485_parity.test_rs485_contract_matches_cli_and_mcp_for_pass_and_fault",
+        "tests.test_electrical_power_connectivity_parity.test_power_connectivity_matches_cli_and_mcp_for_pass_and_fault",
+        "tests.test_electrical_simulator_parity.test_external_fixed_simulator_success_and_wrong_version_match_cli"
       ]
     },
     {
@@ -1999,12 +2001,15 @@
       "exception": "MCP does not schedule GitHub jobs, pull Docker images or run the release rehearsal. Its shared planning and check services expose the project, tag and shard decisions.",
       "parity_tests": [
         "tests.test_ci_hosted_native_orchestration.test_native_lane_cannot_pass_when_declared_electrical_fails",
-        "tests.test_ci_hosted_pcb_fixture_schedule.HostedPcbFixtureScheduleTests.test_pcb_access_fixture_checks_native_probe_faults_controls_and_repeatability",
-        "tests.test_ci_hosted_pcb_fixture_schedule.HostedPcbFixtureScheduleTests.test_pcb_access_fixture_rejects_an_untested_kicad_minor_before_native_execution",
+        "tests.test_pcb_access_fixture_lane.test_probe_envelope_fixture_uses_repeatable_source_bound_requests",
+        "tests.test_ci_hosted_pcb_fixture_schedule.test_pcb_access_fixture_rejects_an_untested_kicad_minor_before_native_execution",
         "tests.test_pcb_access_native_fixture_lane.test_native_probe_envelope_fixtures_on_supported_images",
-        "tests.test_ci_hosted_pcb_access.NativePcbAccessFixtureTests.test_pcb_geometry_probe_controls_on_supported_images",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_via_antipad_fault_control_repeats",
+        "tests.test_pcb_reference_plane_native_fixture_lane.test_native_narrow_void_fault_control_repeats",
+        "tests.test_pcb_switching_loop_native_fixture_lane.test_native_switching_loop_geometry_fixtures",
+        "tests.test_pcb_return_path_native_fixture_lane.test_native_return_path_fixture_cases_on_supported_kicad",
         "tests.test_ci_hosted_pcb_return_paths.test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evidence",
-        "tests.test_ci_hosted_pcb_fixture_schedule.HostedPcbFixtureScheduleTests.test_pcb_return_fixture_rejects_an_untested_kicad_minor_before_native_execution"
+        "tests.test_ci_hosted_pcb_fixture_schedule.test_pcb_return_fixture_rejects_an_untested_kicad_minor_before_native_execution"
       ]
     }
   ]

@@ -8,115 +8,21 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo.design_lint import (
-    rule_catalog,
-)
-from tests.test_design_lint_complementary_pairs import (
-    DesignLintComplementaryPairTests as ComplementaryPairCase,
-)
-from tests.test_design_lint_dc_reference import DesignLintDcReferenceTests as DcReferenceCase
-from tests.test_design_lint_decoupling import DesignLintDecouplingTests as DecouplingCase
-from tests.test_design_lint_i2c import DesignLintI2cTests as I2cCase
-from tests.test_design_lint_led_topology import DesignLintLedTopologyTests as LedTopologyCase
-from tests.test_design_lint_peer_voltage import DesignLintPeerVoltageTests as PeerVoltageCase
-from tests.test_design_lint_policy import DesignLintPolicyTests as PolicyCase
-from tests.test_design_lint_schematic_connectivity import (
-    DesignLintSchematicConnectivityTests as SchematicConnectivityCase,
-)
-from tests.test_design_lint_schematic_text import DesignLintSchematicTextTests as SchematicTextCase
-from tests.test_design_lint_serial_peer_voltage import (
-    DesignLintSerialPeerVoltageTests as SerialPeerVoltageCase,
-)
-from tests.test_design_lint_unconnected_interfaces import (
-    DesignLintUnconnectedInterfaceTests as UnconnectedInterfaceCase,
-)
-from tests.test_pcb_reference_plane_contract import (
-    PcbReferencePlaneContractTests as PcbReferencePlaneContractCase,
-)
-from tests.test_pcb_reference_plane_geometry import (
-    PcbReferencePlaneGeometryTests as PcbReferencePlaneGeometryCase,
-)
-from tests.test_pcb_reference_plane_layers import (
-    PcbReferencePlaneLayerTests as PcbReferencePlaneLayerCase,
-)
-from tests.test_pcb_switching_loop_geometry import (
-    PcbSwitchingLoopGeometryTests as PcbSwitchingLoopGeometryCase,
-)
-from tests.test_pcb_switching_loop_routes import (
-    PcbSwitchingLoopRouteTests as PcbSwitchingLoopRouteCase,
-)
-from tests.test_power_paths import (
-    PowerPathTests as PowerPathCase,
-)
-from tests.test_power_sequences import (
-    PowerSequenceTests as PowerSequenceCase,
-)
-from tests.test_regulator_feedback import (
-    RegulatorFeedbackTests as RegulatorFeedbackCase,
-)
-from tests.test_schematic_geometry_hierarchy import (
-    SchematicGeometryHierarchyTests as SchematicGeometryHierarchyCase,
-)
-from tests.test_schematic_geometry_pin_proximity import (
-    SchematicGeometryPinProximityTests as SchematicGeometryPinProximityCase,
-)
-from tests.test_schematic_geometry_symbol_body import (
-    SchematicGeometrySymbolBodyTests as SchematicGeometrySymbolBodyCase,
-)
-from tests.test_schematic_geometry_text import (
-    SchematicGeometryTextTests as SchematicGeometryTextCase,
-)
-from tests.test_schematic_geometry_wire_topology import (
-    SchematicGeometryWireTopologyTests as SchematicGeometryWireTopologyCase,
-)
-from tests.test_serial_peer_reference_boundaries import (
-    SerialPeerReferenceBoundaryTests as SerialPeerReferenceBoundaryCase,
-)
-from tests.test_serial_peer_reference_coverage import (
-    SerialPeerReferenceCoverageTests as SerialPeerReferenceCoverageCase,
-)
-from tests.test_serial_peer_reference_maps import (
-    SerialPeerReferenceMapTests as SerialPeerReferenceMapCase,
-)
-from tests.test_serial_peer_reference_review import (
-    SerialPeerReferenceReviewTests as SerialPeerReferenceReviewCase,
-)
+from kicad_tooling.hwrepo.design_lint import rule_catalog
 
 pytestmark = pytest.mark.design_lint
 
 
+def _pytest_collects_class(owner: type) -> bool:
+    return owner.__name__.startswith("Test") or any(
+        base.__module__ == "unittest.case" and base.__name__ == "TestCase" for base in owner.__mro__
+    )
+
+
 def test_active_rules_reference_existing_regression_fixtures() -> None:
-    instances = {
-        PeerVoltageCase: PeerVoltageCase(),
-        SerialPeerVoltageCase: SerialPeerVoltageCase(),
-        SchematicTextCase: SchematicTextCase(),
-        DcReferenceCase: DcReferenceCase(),
-        DecouplingCase: DecouplingCase(),
-        SchematicConnectivityCase: SchematicConnectivityCase(),
-        LedTopologyCase: LedTopologyCase(),
-        I2cCase: I2cCase(),
-        ComplementaryPairCase: ComplementaryPairCase(),
-        UnconnectedInterfaceCase: UnconnectedInterfaceCase(),
-        PolicyCase: PolicyCase(),
-        SchematicGeometryHierarchyCase: SchematicGeometryHierarchyCase(),
-        SchematicGeometryPinProximityCase: SchematicGeometryPinProximityCase(),
-        SchematicGeometrySymbolBodyCase: SchematicGeometrySymbolBodyCase(),
-        SchematicGeometryTextCase: SchematicGeometryTextCase(),
-        SchematicGeometryWireTopologyCase: SchematicGeometryWireTopologyCase(),
-        RegulatorFeedbackCase: RegulatorFeedbackCase(),
-        PcbReferencePlaneContractCase: PcbReferencePlaneContractCase(),
-        PcbReferencePlaneGeometryCase: PcbReferencePlaneGeometryCase(),
-        PcbReferencePlaneLayerCase: PcbReferencePlaneLayerCase(),
-        PcbSwitchingLoopGeometryCase: PcbSwitchingLoopGeometryCase(),
-        PcbSwitchingLoopRouteCase: PcbSwitchingLoopRouteCase(),
-        SerialPeerReferenceReviewCase: SerialPeerReferenceReviewCase(),
-        SerialPeerReferenceCoverageCase: SerialPeerReferenceCoverageCase(),
-        SerialPeerReferenceMapCase: SerialPeerReferenceMapCase(),
-        SerialPeerReferenceBoundaryCase: SerialPeerReferenceBoundaryCase(),
-        PowerPathCase: PowerPathCase(),
-        PowerSequenceCase: PowerSequenceCase(),
-    }
-    fixtures: set[tuple[type, str]] = set()
+    """Validate locators and exercise only class cases pytest cannot collect."""
+    pytest_class_tests: set[str] = set()
+    legacy_class_tests: set[tuple[type, str]] = set()
     pytest_fixtures: set[str] = set()
     metamorphic_rules: set[str] = set()
     for entry in rule_catalog().rules:
@@ -146,24 +52,25 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
                 owner = getattr(owner, attribute)
             target = getattr(owner, attributes[-1])
             assert callable(target), name
-            if isinstance(owner, type) and owner in instances:
-                assert owner in instances, name
-                fixtures.add((owner, attributes[-1]))
-            else:
-                if isinstance(owner, type):
-                    assert owner.__name__.startswith("Test"), name
+            if isinstance(owner, type):
+                assert target.__name__.startswith("test_"), name
+                if _pytest_collects_class(owner):
+                    pytest_class_tests.add(name)
                 else:
-                    assert len(attributes) == 1, name
+                    legacy_class_tests.add((owner, attributes[-1]))
+            else:
+                assert len(attributes) == 1, name
                 assert target.__name__.startswith("test_"), name
                 pytest_fixtures.add(name)
 
     assert len(metamorphic_rules) >= 2
+    assert pytest_class_tests, "catalog should support pytest-collected class methods"
     assert pytest_fixtures, "catalog should support pytest function fixtures"
-
-    for test_case, method_name in sorted(
-        fixtures, key=lambda fixture: (fixture[0].__name__, fixture[1])
+    for owner, method_name in sorted(
+        legacy_class_tests,
+        key=lambda item: (item[0].__module__, item[0].__qualname__, item[1]),
     ):
-        getattr(instances[test_case], method_name)()
+        getattr(owner(), method_name)()
 
 
 def test_catalog_implementation_references_resolve_to_sources_or_fixtures() -> None:

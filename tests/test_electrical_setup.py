@@ -13,6 +13,8 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from kicad_tooling.ci import project_static_pipeline
 from kicad_tooling.electrical import main as electrical_main
 from kicad_tooling.hwrepo.cli_output import summary
@@ -34,8 +36,10 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.template import main as template_main
 from kicad_tooling.verify import verify
 from tests import test_verify
+from tests.electrical_simulation_support import ISLAND, NA, PROJECT, install_fixture
 from tests.support import SOURCE_ROOT, reference_root, template_root
-from tests.test_electrical import ISLAND, NA, PROJECT, install_fixture
+
+pytestmark = [pytest.mark.template_checkout]
 
 
 class ElectricalSetupTests(unittest.TestCase):

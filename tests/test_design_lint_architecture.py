@@ -150,7 +150,9 @@ COMPLEMENTARY_PAIR_NATIVE_THEME_SUITES = ("test_complementary_pair_native_fixtur
 DC_REFERENCE_NATIVE_THEME_SUITES = ("test_net_dc_reference_native_fixture_lane.py",)
 PCB_THEME_SUITES = (
     "test_ci_hosted_pcb_fixture_schedule.py",
-    "test_ci_hosted_pcb_access.py",
+    "test_pcb_reference_plane_native_fixture_lane.py",
+    "test_pcb_switching_loop_native_fixture_lane.py",
+    "test_pcb_return_path_native_fixture_lane.py",
     "test_pcb_decoupling_native_fixture_lane.py",
     "test_pcb_protection_path_native_fixture_lane.py",
     "test_pcb_track_width_native_fixture_lane.py",

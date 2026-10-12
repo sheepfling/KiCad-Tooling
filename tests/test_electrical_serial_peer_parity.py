@@ -34,9 +34,7 @@ async def _run_serial_peer_requirements(parity) -> None:
 
     voltage_requirement = serial_peer_requirement(peer_output_high_maximum_v=5.0)
     parity.install_netlist_contract(observed, {"serial_peers": voltage_requirement})
-    voltage_fault, _, voltage_returncode = await parity.analyze_electrical(
-        "serial-voltage-fault"
-    )
+    voltage_fault, _, voltage_returncode = await parity.analyze_electrical("serial-voltage-fault")
     assert voltage_returncode == 1
     voltage_checks = {row.id: row for row in voltage_fault.checks}
     assert voltage_checks["serial/console-link/logic-voltage/b_tx_to_a_rx"].status == "FAIL"
@@ -58,9 +56,7 @@ async def _run_serial_bonded_reference(parity) -> None:
     parity.configured()
     requirement = serial_peer_requirement(reference_policy="bonded")
 
-    parity.install_netlist_contract(
-        serial_peer_netlist(requirement), {"serial_peers": requirement}
-    )
+    parity.install_netlist_contract(serial_peer_netlist(requirement), {"serial_peers": requirement})
     control, _, control_returncode = await parity.analyze_electrical("serial-bond-control")
     assert control_returncode == 0
     control_checks = {item.id: item for item in control.checks}

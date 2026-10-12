@@ -275,8 +275,13 @@ intended requirement.
   fixture builders in bounded support modules. The catalog architecture test
   resolves active fault, control, and metamorphic fixture references and
   requires each owning test module to carry `design_lint`, so focused runs do
-  not silently omit catalogued evidence. Avoid a generic checker that
-  accumulates unrelated predicates or duplicate copies of shared utilities.
+  not silently omit catalogued evidence. The same references attach a
+  `design_lint_rule(rule_id=...)` marker, allowing the rule's fault, control,
+  metamorphic, parity, and native tests to be selected as one slice. For
+  example, run
+  `python -I -m pytest -m 'design_lint_rule(rule_id="power.pin_function_net_role_conflict")'`.
+  Avoid a generic checker that accumulates unrelated predicates or duplicate
+  copies of shared utilities.
 - Use `catalog_lint` to run catalog metadata, implementation-owner, fixture
   reachability, and backlog-synchronization regressions without executing every
   lint theme: `python -I -m pytest -m 'design_lint and catalog_lint'`. Annotated
@@ -413,8 +418,8 @@ and optional ecosystem adapters are `P3`.
   pytest module `tests/test_empty_netlist_evidence_native_fixture_lane.py`,
   tagged `design_lint`, `evidence_lint`, `native_kicad`, and `slow`. This keeps
   the native evidence boundary selectable without importing another lint
-  theme into the broad hosted acceptance module. The legacy
-  The former `tests/test_ci_hosted.py` has been retired. Serial roster,
+  theme into the broad hosted acceptance module. The former
+  `tests/test_ci_hosted.py` has been retired. Serial roster,
   net-label fallback, and reference-bond fixtures live in the focused pytest
   modules `tests/test_serial_peer_native_fixture_lane.py` and
   `tests/test_serial_reference_bond_native_fixture_lane.py`. Native
@@ -454,7 +459,13 @@ and optional ecosystem adapters are `P3`.
   `tests/electrical_spi_support.py`. Serial peer contracts now use their own
   focused suite and support module as well; these moves continue to shrink the
   old electrical test file without adding rules or changing electrical
-  behavior. STM32/CubeMX fault, control, and source-binding regressions now
+  behavior. The previous mixed I2C heuristic suite is now split into bounded
+  pytest modules for missing pull-ups, equivalent resistance, and rail-family
+  review; parameterized fault/control cases and catalog references are kept
+  rule-specific. LED bridge cases also use pytest functions with separately
+  selectable topology controls. These are test-organization changes only.
+  STM32/CubeMX fault,
+  control, and source-binding regressions now
   use top-level pytest functions with their existing `design_lint`,
   `component_lint`, and `interface_lint` markers; catalog references point to
   those functions. This improves selection without changing LINT-050. Four
@@ -488,6 +499,27 @@ and optional ecosystem adapters are `P3`.
   binding, and CLI/MCP report comparison for the connector-return, serial-peer,
   and digital-peer voltage suites. This removes another 104 lines from the
   mixed legacy suite.
+  PCB return-path requirement parity now lives in the focused pytest suite
+  `tests/test_electrical_pcb_return_path_parity.py`, selected with
+  `return_path_lint` and `parity_lint`. It keeps the synthetic fake-PCB
+  connectivity fault/control and CLI/MCP comparison together; the shared
+  `ElectricalParityHarness` remains the owner of disposable project setup.
+  The surface map follows the move, and the legacy parity suite shrank by
+  115 lines without changing return-path checks.
+  Connector pin-relationship parity now lives in
+  `tests/test_electrical_connector_pin_relationship_parity.py`, selectable by
+  `connector_lint`, `return_path_lint`, and `parity_lint`. It exercises the
+  authored common-return and common-supply requirements, an intentional
+  unconnected pin, and CLI/MCP report parity from the same synthetic netlist.
+  The legacy parity suite shrank by another 120 lines; no contract behavior
+  changed.
+  Combined I2C, CAN, USB-C, and SPI contract parity now lives in the focused
+  pytest module `tests/test_electrical_bus_contract_parity.py`, selected with
+  `interface_lint` and `parity_lint`. Its 6.7 KB synthetic XML netlist is a
+  separate fixture under `tests/fixtures/electrical/`; the passing baseline and
+  structured fault mutation still exercise all four authored contracts through
+  CLI and MCP. The surface map follows the move, and the legacy suite shrank by
+  338 lines without changing contract behavior.
   Component voltage-rating, power-rating, and MOSFET stress parity now live in
   `tests/test_electrical_component_rating_parity.py`, selected with
   `component_lint` and `parity_lint`. Those pytest cases reuse the existing
@@ -498,7 +530,45 @@ and optional ecosystem adapters are `P3`.
   `connector_lint` and `parity_lint`; it uses the same typed harness and the
   shared contact-rating builders. The surface map follows the move, and the
   mixed legacy suite shrank by another 119 lines. This changes test selection
-  only, not the lint predicate or its default disposition.
+  only, not the lint predicate or its default disposition. On 2026-10-11,
+  RS-485 authored-contract fault and control tests moved into the focused pytest
+  module `tests/test_electrical_rs485_contract.py`, selectable with
+  `design_lint` and `interface_lint`. Reusable builders now live in
+  `tests/electrical_rs485_support.py` and are shared by parity and retained-
+  evidence suites. The CAN termination and power-connectivity regressions now
+  live in `tests/test_electrical_can_termination.py` and
+  `tests/test_electrical_power_connectivity.py`, with reusable synthetic
+  builders in their theme-owned support modules. Their focused pytest markers
+  are `interface_lint` and `power_lint`; neither test theme needs a project
+  checkout. Together these extractions shrink `tests/test_electrical.py` from
+  1,831 to 385 lines. Its shared synthetic power/simulation contract installer
+  now lives in `tests/electrical_simulation_support.py`, and parity/evidence
+  consumers import that support module rather than a test module. Contract
+  behavior is unchanged. Electrical setup and chart suites now carry the
+  `template_checkout` marker, and an architecture check guards external
+  electrical fixture consumers against missing that marker. The remaining legacy
+  module is below 1,000 lines but stays on the incremental decomposition list
+  until it is below the 500-line review threshold. Release evidence replay
+  regressions also moved into pytest suites for component ratings, connector
+  contacts, PCB return pads, and PCB test access. A shared synthetic
+  `ElectricalEvidenceWorkspace` now owns the disposable source-bound report
+  setup and omission replay helper. The legacy
+  `tests/test_electrical_evidence.py` is now 406 lines and pytest-native. Its
+  combined synthetic netlist lives in
+  `tests/fixtures/electrical/release-contract-evidence/netlist.xml`; digital-
+  peer voltage replay is isolated in the 115-line
+  `tests/test_electrical_digital_peer_evidence.py`. Both suites select through
+  `evidence_lint`, with the digital-peer suite also marked `interface_lint`.
+  This is test architecture work; the evidence rules and release policy did not
+  change. On 2026-10-11, the synthetic DC-reference regressions moved from a
+  `unittest.TestCase` to top-level pytest functions, with six named
+  parameterized controls. Rule-catalog locators now point directly to those
+  functions, and the architecture suite verifies both theme scope and
+  rule-specific collection. The candidate behavior and default REVIEW policy
+  did not change. Connector-verification integration tests also set an
+  explicit reasoned `off` override for PCB component inventory, since they do
+  not supply that check's exact native board evidence; LINT-102 remains covered
+  by its dedicated fixture and acceptance lane.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary
@@ -506,9 +576,10 @@ and optional ecosystem adapters are `P3`.
   `scripts/`, and `tests/`. New modules must stay below 500 lines; the 42
   existing modules at or above that size have no-growth ceilings in
   `tests/python_module_line_ceilings.json`. Remove each ceiling when its module
-  is split below 500 lines. The current inventory has six modules above 1,000
-  lines, including the shrink-only `hwrepo/models.py`; these remain open
-  decomposition work, not accepted target sizes. The focused architecture
+  is split below 500 lines. The current inventory has 38 modules at or above
+  500 lines and three above 1,000: `hwrepo/models.py`, `hwrepo/mcp_server.py`,
+  and `tests/test_mcp.py`. These remain open decomposition work, not accepted
+  target sizes; `hwrepo/models.py` remains shrink-only. The focused architecture
   slice passes with `-m architecture` and the documented public template root.
   On 2026-10-10, the five USB connector-to-PHY path contract types moved into
   `hwrepo/usb_data_path_models.py`. Internal services and fixture builders now
@@ -4345,7 +4416,12 @@ is not a reason by itself to expand its scope or change its default policy.
   prompts on approved nonconfidential boards. Do not make common reference a
   universal USB rule. Reviewer effort, false-positive rate, multi-pin
   protection arrays, multiple series components, and indirect-path cases
-  remain unmeasured. See the
+  remain unmeasured. The synthetic fault/control suite is enough to maintain
+  the bounded predicate; more project examples are not required to decide how
+  the rule works. Public examples help measure applicability or reviewer value
+  only when their relevant reference-pin intent has an independent disposition.
+  If that disposition or review-time measurement is unavailable, leave it
+  unmeasured rather than infer a defect or false positive. See the
   [USB-A fixture record](../tests/fixtures/design_lint/usb-peer-reference-native/README.md)
   and [USB-C fixture record](../tests/fixtures/design_lint/usb-c-peer-reference-native/README.md).
 
@@ -5461,12 +5537,16 @@ is not a reason by itself to expand its scope or change its default policy.
   source or receipts were copied into this repository.
 - **Acceptance:** Local synthetic, CLI/MCP parity, catalog, architecture, and
   style checks passed. The focused `design_lint and power_lint and not
-  native_kicad` selection passed 17 tests; catalog reachability and
-  architecture checks passed 29 tests, and focused Ruff checks passed. The
-  recorded digest-pinned native fixture lane passed on KiCad 10.0.0 and 10.0.5:
-  both exports reproduced the named-pin fault as `REVIEW`, kept the valid
-  control at `PASS`, and matched across repeat exports (2 passed). The
-  GitHub-hosted workflow run remains pending publication of this branch.
+  native_kicad` selection passed 352 tests with the public template checkout;
+  the architecture slice passed 161 tests. Catalog reachability, rule-specific
+  collection, and the exact verify-fixture scope passed. Ruff check and format
+  passed. The recorded digest-pinned native fixture lane passed on KiCad 10.0.0
+  and 10.0.5: both exports reproduced the named-pin fault as `REVIEW`, kept the
+  valid control at `PASS`, and matched across repeat exports (2 passed).
+  GitHub run `38190696668` for `v0.5.0rc109` passed its unit gate and all three
+  preview jobs; the prerelease gate failed in `ruff-format` on moved parity
+  suites. The current test-organization changes include the formatter output;
+  a fresh tagged run is required to record hosted acceptance.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -9300,7 +9380,10 @@ it does not claim field validation or effectiveness against private boards.
   narrow-void pair uses a 0.65 fixture threshold to distinguish its continuous
   control from a 0.2 mm midpoint notch. Installed KiCad 10.0.6 compatibility
   evidence measured `2799/4000` and `2399/4000`, respectively; the hosted
-  10.0.0/10.0.5 repeat lane is added and awaiting execution.
+  10.0.0/10.0.5 repeat lane is now split into pytest suites for reference
+  plane, switching-loop, and return-path fixtures. On 2026-10-11, the
+  digest-pinned native run passed all eight parametrized cases across KiCad
+  10.0.0 and 10.0.5 in 42.67 seconds.
 - **Cohort input:** pcb-inspector documents `HEUR-GND-001` as a configurable
   track-to-reference-plane screen with a minimum track length and covered
   fraction. Its manual examples use 5 mm and 0.9; these are not copied as
@@ -9363,11 +9446,14 @@ it does not claim field validation or effectiveness against private boards.
   block controls and CLI/MCP parity cover both choices. Tagged hosted
   acceptance passed in `v0.5.0rc72` (GitHub Actions run `38133685685`) with
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, including the digest-pinned KiCad
-  10.0.0/10.0.5 narrow-void fault/control lane. The focused local non-native
-  PCB lint slice passed 216 tests; the local 10.0.6 compatibility run remains
-  supplementary and is not used as a substitute for the pinned versions.
-  The tagged gate also passed the package, installed-wheel external-project,
-  typing, lint, documentation, and playtest stages.
+  10.0.0/10.0.5 narrow-void fault/control lane. That tagged run used the former
+  combined native wrapper. The 2026-10-11 pytest split was re-run locally on
+  those exact pinned versions; the new split suites still need a hosted repeat
+  before a release tag. The focused local non-native PCB lint slice passed 216
+  tests; the local 10.0.6 compatibility run remains supplementary and is not
+  used as a substitute for the pinned versions. The tagged gate also passed the
+  package, installed-wheel external-project, typing, lint, documentation, and
+  playtest stages.
 
 #### LINT-059 — I2C pull-up rail-family review
 

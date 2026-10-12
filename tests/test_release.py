@@ -42,9 +42,8 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.release import check, load_release_repository, selected_project_records
 from kicad_tooling.hwrepo.scaffold import new_project
 from kicad_tooling.release import main as release_main
-from tests.support import reference_root
 
-ROOT = reference_root()
+ROOT = Path()
 COMMIT = "a" * 40
 
 

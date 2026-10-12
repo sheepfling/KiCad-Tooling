@@ -18,8 +18,8 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from tests.electrical_parity_support import contract_netlist_xml, parity_harness  # noqa: F401
+from tests.electrical_simulation_support import ISLAND, PROJECT
 from tests.electrical_usb_c_support import usb_c_netlist, usb_c_requirement
-from tests.test_electrical import ISLAND, PROJECT
 
 pytestmark = [
     pytest.mark.template_checkout,

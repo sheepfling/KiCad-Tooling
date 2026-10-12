@@ -11,9 +11,8 @@ from typing import TypedDict
 
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.validate import check_report, hashes, svg_files
-from tests.support import reference_root
 
-ROOT: Path = reference_root()
+ROOT: Path = Path()
 
 
 class IgnoredCheck(TypedDict):

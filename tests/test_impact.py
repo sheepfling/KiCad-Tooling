@@ -18,9 +18,8 @@ from kicad_tooling.hwrepo.models import (
     ProductRecord,
     ProjectManifest,
 )
-from tests.support import reference_root
 
-ROOT: Path = reference_root()
+ROOT: Path = Path()
 ALL_IDS = (
     "arduino-uno-status-led",
     "controller",

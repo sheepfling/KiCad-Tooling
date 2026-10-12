@@ -31,9 +31,8 @@ from kicad_tooling.hwrepo.models import (
     TeamPolicy,
 )
 from kicad_tooling.hwrepo.product import check, load_repository, validate_product
-from tests.support import reference_root
 
-ROOT = reference_root()
+ROOT = Path()
 
 
 class TypedContractsTests(unittest.TestCase):

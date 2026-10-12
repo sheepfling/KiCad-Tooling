@@ -8,9 +8,8 @@ from pathlib import Path
 
 from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.model_inventory import ModelInventoryReport, inspect_models
-from tests.support import reference_root
 
-ROOT = reference_root()
+ROOT = Path()
 
 
 class ModelInventoryTests(unittest.TestCase):

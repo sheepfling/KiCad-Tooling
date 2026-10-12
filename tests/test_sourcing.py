@@ -7,14 +7,14 @@ import sys
 import unittest
 from datetime import UTC, datetime
 from io import StringIO
+from pathlib import Path
 from unittest.mock import patch
 
 from kicad_tooling.hwrepo.models import SourcingSnapshot, SupplierOffer
 from kicad_tooling.hwrepo.sourcing import check
 from kicad_tooling.sourcing import main as sourcing_main
-from tests.support import reference_root
 
-ROOT = reference_root()
+ROOT = Path()
 
 
 class SourcingSnapshotTests(unittest.TestCase):

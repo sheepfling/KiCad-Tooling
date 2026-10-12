@@ -48,13 +48,9 @@ async def _run_db9_grounding_requirement_matrix(parity) -> None:
 
     for case_id, isolated_returns, requirement_id, expected_status in cases:
         observed = netlists["four-db9-fault" if isolated_returns else "four-db9-control"]
-        parity.install_netlist_contract(
-            observed, {"grounding": requirements[requirement_id]}
-        )
+        parity.install_netlist_contract(observed, {"grounding": requirements[requirement_id]})
 
-        cli_report, mcp_report, returncode = await parity.analyze_electrical(
-            f"db9-{case_id}"
-        )
+        cli_report, mcp_report, returncode = await parity.analyze_electrical(f"db9-{case_id}")
         expected_returncode = 0 if expected_status == "PASS" else 1
         assert returncode == expected_returncode
         for report in (cli_report, mcp_report):

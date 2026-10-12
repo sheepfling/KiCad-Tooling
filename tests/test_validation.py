@@ -30,9 +30,9 @@ from kicad_tooling.validate import (
     read_netlist,
     validate,
 )
-from tests.support import initialize_git, reference_root
+from tests.support import initialize_git
 
-ROOT: Path = reference_root()
+ROOT: Path = Path()
 JsonScalar = str | int | float | bool | None
 JsonValue = JsonScalar | list["JsonValue"] | dict[str, "JsonValue"]
 JsonObject = dict[str, JsonValue]

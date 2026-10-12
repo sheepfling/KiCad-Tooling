@@ -22,9 +22,8 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.selection import ProjectSelector, resolve_project_ids, select_projects
 from kicad_tooling.lint_registry import lint, lint_governance_record
-from tests.support import reference_root
 
-ROOT: Path = reference_root()
+ROOT: Path = Path()
 
 
 class GovernanceLintTests(unittest.TestCase):
