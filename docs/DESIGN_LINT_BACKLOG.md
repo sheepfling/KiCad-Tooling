@@ -1956,14 +1956,17 @@ is not a reason by itself to expand its scope or change its default policy.
   markers found 13 native test functions across 11 modules without an active
   rule-catalog fixture reference. The I2C peer-reference, SPI peer-reference,
   CAN peer-reference, and CAN peer-assignment native fault/control tests are
-  now linked to active rules and require their existing switches. Hosted runs
+  now linked to active rules and require their existing switches. The PCB
+  signal-path native fault/control test is also now linked to LINT-095 and
+  requires its existing switch. Hosted runs
   `38294501510` (`v0.5.0rc182`), `38294866007` (`v0.5.0rc183`), and
   `38295223564` (`v0.5.0rc184`) passed the scoped lint and installed-wheel
   steps plus all three portability previews; each package job was skipped by
-  RC policy. The CAN peer-assignment run `v0.5.0rc185` is pending. The remaining
-  9 test functions across 9 modules cover CAN termination, component ratings,
-  empty-netlist evidence, I2C pull-up arrays, connector return domains, PCB test
-  access, return paths and signal paths, and a mapped power path.
+  RC policy. The CAN peer-assignment run `v0.5.0rc185` and PCB signal-path run
+  `v0.5.0rc186` are pending. The remaining 8 test functions across 8 modules
+  cover CAN termination, component ratings, empty-netlist evidence, I2C
+  pull-up arrays, connector return domains, PCB test access and return paths,
+  and a mapped power path.
   Review each test against a rule predicate before indexing it; the inventory
   identifies selection gaps, not proof that every test belongs to a lint rule.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
@@ -6399,6 +6402,12 @@ is not a reason by itself to expand its scope or change its default policy.
   and that its endpoints match source and copper evidence. It does not select
   an electrically appropriate length or skew limit, evaluate off-board
   wiring, or establish physical continuity.
+- **Rule-scoped native gate registration (2026-10-12):** The exact-version DRC
+  fault/control test was included in broad PCB acceptance but absent from this
+  rule's fixture catalog, so `Lint-Rule: pcb.signal_path_rule_coverage` could
+  not select it. The catalog now links the test as both fault and valid control,
+  requires `KICAD_RUN_NATIVE_PCB_FIXTURES`, and the architecture suite guards
+  that association. The new rule-scoped hosted result is pending.
 - **Privacy:** Tooling-owned synthetic data only. No project-specific source,
   observed pinout, contract, or candidate implementation is retained.
 

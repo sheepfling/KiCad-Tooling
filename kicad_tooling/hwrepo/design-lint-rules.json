@@ -3861,17 +3861,22 @@
       "fault_fixtures": [
         "tests.test_pcb_signal_path_coverage.test_missing_wrong_duplicate_and_ignored_native_rules_are_incomplete",
         "tests.test_pcb_signal_path_coverage.test_source_net_and_copper_faults_remain_incomplete",
-        "tests.test_pcb_signal_path_coverage.test_bundle_selector_must_not_include_unmapped_pads"
+        "tests.test_pcb_signal_path_coverage.test_bundle_selector_must_not_include_unmapped_pads",
+        "tests.test_pcb_signal_path_native.test_native_from_to_length_and_skew_faults_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_signal_path_coverage.test_exact_path_and_bundle_rules_cover_reviewed_map",
         "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
-        "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp"
+        "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp",
+        "tests.test_pcb_signal_path_native.test_native_from_to_length_and_skew_faults_are_repeatable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
         "tests.test_pcb_signal_path_coverage.test_wrong_bound_and_wildcard_expansion_mutations_are_detected"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_rule_coverage.py#compare_native_signal_path_rules",
