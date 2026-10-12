@@ -102,6 +102,16 @@ def test_diode_native_fixture_scope_contains_only_diode_fault_and_control() -> N
     assert any(not subjects for _, _, subjects in selected.values())
 
 
+def test_crystal_native_fixture_scope_contains_only_crystal_fault_and_control() -> None:
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_crystal_same_net",))
+    assert set(selected) == {"same-net-crystal", "distinct-nets-crystal"}
+    assert {rule_id for _, rule_id, _ in selected.values()} == {
+        "component.two_pin_crystal_same_net"
+    }
+    assert any(subjects for _, _, subjects in selected.values())
+    assert any(not subjects for _, _, subjects in selected.values())
+
+
 def _run_native_rule_fixture(
     tmp_path: Path,
     *,
@@ -232,4 +242,21 @@ def test_native_two_pin_diode_same_net_fault_and_control(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_diode_same_net",
+    )
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
+    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
+def test_native_two_pin_crystal_same_net_fault_and_control(
+    tmp_path: Path, kicad_version: str
+) -> None:
+    _run_native_rule_fixture(
+        tmp_path,
+        kicad_version=kicad_version,
+        rule_id="component.two_pin_crystal_same_net",
     )

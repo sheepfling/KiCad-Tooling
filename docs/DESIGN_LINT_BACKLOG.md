@@ -1938,8 +1938,11 @@ is not a reason by itself to expand its scope or change its default policy.
   The diode rule now catalogs its fault/control test and selects only its two
   sources. Its local selector passed seven tests with two exact-native cases
   skipped and 3,101 unrelated tests deselected; its hosted tag run is pending.
-  Crystal and switch remain to be registered as separately selectable native
-  gates. The full package lane continues to run all 16 cases.
+  The crystal rule now catalogs its fault/control test and selects only its two
+  sources. Its local selector passed seven tests with two exact-native cases
+  skipped and 3,104 unrelated tests deselected; its hosted tag run is pending.
+  Switch remains to be registered as a separately selectable native gate. The
+  full package lane continues to run all 16 cases.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and

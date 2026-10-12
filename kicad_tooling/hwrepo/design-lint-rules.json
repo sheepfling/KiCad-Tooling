@@ -962,17 +962,24 @@
         "The schematic netlist does not prove crystal operation, frequency suitability, footprint pin mapping, physical population, or PCB copper connectivity."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_crystals.test_detects_exact_device_crystal_families_on_one_net"
+        "tests.test_two_pin_crystals.test_detects_exact_device_crystal_families_on_one_net",
+        "tests.test_two_pin_component_native_fixture_lane.test_crystal_native_fixture_scope_contains_only_crystal_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_crystal_same_net_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_crystals.test_native_schematic_sources_match_reviewed_hashes",
         "tests.test_two_pin_crystals.test_distinct_pin_nets_are_the_no_finding_control",
         "tests.test_two_pin_crystals.test_skips_dnp_incomplete_ambiguous_multi_pin_open_and_custom_symbols",
-        "tests.test_two_pin_crystals.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_crystals.test_rule_policy_and_exact_ignore_are_project_configurable",
+        "tests.test_two_pin_component_native_fixture_lane.test_crystal_native_fixture_scope_contains_only_crystal_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_crystal_same_net_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_two_pin_crystals.test_order_is_stable_and_splitting_one_crystal_clears_only_its_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_crystals.py#two_pin_crystals_on_same_net",
