@@ -35,6 +35,7 @@ from .ci_hosted_connector_power_output import connector_unconnected_power_output
 from .ci_hosted_connector_return_lane import connector_return_lint_fixture_lane
 from .ci_hosted_control_inputs import native_control_input_demo_lane
 from .ci_hosted_digital_peer_lane import digital_peer_fixture_lane as _digital_peer_fixture_lane
+from .ci_hosted_electrical_lane import electrical_lane, project_simulator
 from .ci_hosted_empty_netlist_evidence import empty_netlist_evidence_fixture_lane
 from .ci_hosted_i2c_peer_reference_fixtures import i2c_peer_reference_native_fixture_lane
 from .ci_hosted_i2c_pullup_fixtures import i2c_pullup_native_fixture_lane
@@ -437,99 +438,6 @@ def native_lane(
             )
     finally:
         checked_source(root, log)
-
-
-def project_simulator(root: Path, project: str, log: HostedLog) -> str:
-    from .hwrepo.electrical import load_analysis, policy_issues, selected_config, simulation_cases
-    from .hwrepo.simulator_setup import ensure
-
-    config = selected_config(root, project)
-    contract = load_analysis(root, config)
-    if contract is None:
-        return "ngspice"
-    issues = policy_issues(root, config)
-    if issues:
-        raise ValueError(f"{project}: unresolved electrical requirements: {issues}")
-    return (
-        ensure(root, contract.ngspice_version, contract.ngspice_source_sha256, log)
-        if simulation_cases(contract)
-        else "ngspice"
-    )
-
-
-def electrical_lane(
-    root: Path,
-    project: str,
-    log: HostedLog,
-    native_summary: str | None = None,
-    required: bool = False,
-) -> None:
-    from .hwrepo.electrical import selected_config
-    from .hwrepo.models import ElectricalAnalysisReport
-
-    if selected_config(root, project).electrical is None:
-        if required:
-            raise ValueError(
-                f"{project}: no electrical contract; run kicad-team electrical --project {project} --init"
-            )
-        log.event("electrical", "NOT_CONFIGURED", project=project)
-        return
-    simulator = project_simulator(root, project, log)
-    report = root / "build" / f"electrical-{project}.json"
-    summary_args = (
-        ("--native-summary", native_summary) if native_summary else ("--runner", "container")
-    )
-
-    def charts() -> None:
-        analysis = read_model(report, ElectricalAnalysisReport)
-        log.run(
-            "electrical-charts",
-            (
-                sys.executable,
-                "-I",
-                "-B",
-                "-m",
-                "kicad_tooling.electrical_charts",
-                "--root",
-                str(root),
-                "--receipt",
-                analysis.run_directory,
-                "--format",
-                "json",
-            ),
-            cwd=root,
-        )
-
-    try:
-        log.run(
-            "electrical-check",
-            (
-                sys.executable,
-                "-I",
-                "-B",
-                "-m",
-                "kicad_tooling.electrical",
-                "--root",
-                str(root),
-                "--project",
-                project,
-                *summary_args,
-                "--ngspice",
-                simulator,
-                "--format",
-                "json",
-            ),
-            cwd=root,
-            stdout_path=report,
-        )
-    except RuntimeError:
-        # Keep plots from measured failures, while preserving the original gate failure.
-        try:
-            charts()
-        except (OSError, ValueError, RuntimeError) as exc:
-            log.event("electrical-charts", "UNAVAILABLE", error=str(exc))
-        raise
-    charts()
 
 
 def candidate_lane(root: Path, project: str, release_id: str, log: HostedLog) -> None:

@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import kicad_tooling.ci_hosted as hosted_coordinator
+import kicad_tooling.ci_hosted_electrical_lane as hosted_electrical_lane
 import kicad_tooling.ci_hosted_planning as hosted_planning
 import kicad_tooling.ci_hosted_support as hosted_support
 
@@ -273,3 +274,26 @@ def test_hosted_planning_has_one_owner_and_compatible_coordinator_exports() -> N
     assert planning_imports == owner_functions
     assert hosted_coordinator.plan_scope is hosted_planning.plan_scope
     assert hosted_coordinator.write_action_outputs is hosted_planning.write_action_outputs
+
+
+def test_hosted_electrical_lane_has_one_owner_and_compatible_coordinator_exports() -> None:
+    lane_path = REPO_ROOT / "kicad_tooling" / "ci_hosted_electrical_lane.py"
+    lane_tree = ast.parse(lane_path.read_text(encoding="utf-8"), filename=lane_path.name)
+    coordinator_tree = ast.parse(COORDINATOR.read_text(encoding="utf-8"), filename=COORDINATOR.name)
+    owner_functions = {node.name for node in lane_tree.body if isinstance(node, ast.FunctionDef)}
+    coordinator_functions = {
+        node.name for node in coordinator_tree.body if isinstance(node, ast.FunctionDef)
+    }
+    lane_imports = {
+        alias.name
+        for node in coordinator_tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "ci_hosted_electrical_lane"
+        for alias in node.names
+    }
+
+    assert len(lane_path.read_text(encoding="utf-8").splitlines()) < FUNCTION_LIMIT
+    assert owner_functions == {"electrical_lane", "project_simulator"}
+    assert not owner_functions & coordinator_functions
+    assert lane_imports == owner_functions
+    assert hosted_coordinator.electrical_lane is hosted_electrical_lane.electrical_lane
+    assert hosted_coordinator.project_simulator is hosted_electrical_lane.project_simulator

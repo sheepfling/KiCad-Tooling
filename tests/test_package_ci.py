@@ -354,7 +354,8 @@ def test_distribution_build_clears_stale_staging_without_removing_receipts(
     assert native_receipt.read_text(encoding="utf-8") == "generated"
 
 
-def test_ci_driver_applies_only_the_requested_pytest_marker(
+@pytest.mark.architecture
+def test_ci_driver_applies_only_the_requested_pytest_marker_and_reports_durations(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(ci, "ROOT", tmp_path)
@@ -384,6 +385,7 @@ def test_ci_driver_applies_only_the_requested_pytest_marker(
         "-m",
         "pytest",
         "-q",
+        "--durations=10",
         "-m",
         "design_lint and interface_lint",
     )

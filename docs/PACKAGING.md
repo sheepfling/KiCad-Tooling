@@ -30,7 +30,9 @@ python3.11 scripts/ci.py --project-root /path/to/populated-project-checkout
 ```
 
 The Python CI driver records each stage's output and timing under ignored
-`build/ci/`. It runs unit tests, Ruff, strict Pyright, markdown checks, and packaging.
+`build/ci/`. Its pytest stage reports the ten slowest selected test cases along
+with pass, skip, and deselection counts. It runs unit tests, Ruff, strict
+Pyright, markdown checks, and packaging.
 It builds a wheel and source distribution, rebuilds the wheel from that source
 distribution outside any Git tree, compares metadata and package contents, then
 installs the rebuilt wheel in a fresh environment. The installed command must

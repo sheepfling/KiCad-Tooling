@@ -245,7 +245,15 @@ def main() -> int:
         unit_environment = os.environ.copy()
         unit_environment.pop("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", None)
         unit_environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
-        unit_command = (sys.executable, "-B", "-I", "-m", "pytest", "-q")
+        unit_command = (
+            sys.executable,
+            "-B",
+            "-I",
+            "-m",
+            "pytest",
+            "-q",
+            "--durations=10",
+        )
         if args.pytest_markexpr:
             unit_command += ("-m", args.pytest_markexpr)
         stage(
