@@ -10344,13 +10344,15 @@ it does not claim field validation or effectiveness against private boards.
   acceptance passed in `v0.5.0rc72` (GitHub Actions run `38133685685`) with
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, including the digest-pinned KiCad
   10.0.0/10.0.5 narrow-void fault/control lane. That tagged run used the former
-  combined native wrapper. The 2026-10-11 pytest split was re-run locally on
-  those exact pinned versions; the new split suites still need a hosted repeat
-  before a release tag. The focused local non-native PCB lint slice passed 216
-  tests; the local 10.0.6 compatibility run remains supplementary and is not
-  used as a substitute for the pinned versions. The tagged gate also passed the
-  package, installed-wheel external-project, typing, lint, documentation, and
-  playtest stages.
+  combined native wrapper. The focused hosted repeat of the pytest split passed
+  in `v0.5.0rc193` (GitHub Actions run `38308617935`): its rule selector ran
+  the via-antipad and narrow-void native fault/control cases on the pinned
+  KiCad 10.0.0 and 10.0.5 images. The run also passed the scoped package checks
+  and installed-wheel external-project inventory, surface, verification, and
+  playtest stages; the three portable preview jobs passed. The focused local
+  non-native PCB lint slice passed 216 tests. The local 10.0.6 compatibility
+  run remains supplementary and is not used as a substitute for the pinned
+  versions.
 
 #### LINT-059 — I2C pull-up rail-family review
 
