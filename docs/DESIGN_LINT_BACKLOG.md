@@ -1796,6 +1796,14 @@ is not a reason by itself to expand its scope or change its default policy.
   regressions depend on the shared native digital-peer fixture. These checks
   keep focused annotated tags from silently skipping an exact-native regression.
   They govern test selection only; a passing fixture is not electrical approval.
+- **Focused return-rule tags (2026-10-12):** The connector native fixture
+  suite includes split/common return and four-connector DB9 fault/control
+  sources, repeated through the exact KiCad 10.0.0 and 10.0.5 images. The
+  `connector.repeated_pin_function` and `net.numbered_returns` catalog entries
+  now name those tests as fault and control fixtures and require
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES`. A rule-scoped tag collects both native
+  tests for both versions, so these return checks cannot pass a focused release
+  gate while skipping their native fixture lane.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and

@@ -33,7 +33,9 @@
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
+        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
@@ -47,7 +49,9 @@
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
+        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_returns.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
@@ -55,6 +59,9 @@
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
@@ -1958,19 +1965,26 @@
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_design_lint_numbered_returns.test_four_db9_numbered_pwm_return_names_are_reviewed",
         "tests.test_design_lint_numbered_returns.test_project_can_block_numbered_return_review",
-        "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review"
+        "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review",
+        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
+        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_return_control_clears_review_findings",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_pwm_return_name_is_a_valid_control",
-        "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt"
+        "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
+        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
+        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_numbered_returns.test_numbered_return_fingerprint_is_stable_under_mapping_reordering",
         "tests.test_design_lint_numbered_returns.test_unrelated_component_does_not_change_numbered_return_fingerprint",
         "tests.test_design_lint_numbered_returns.test_numbered_return_ignore_keeps_exact_scope",
         "tests.test_design_lint_numbered_returns.test_repeated_pin_ignore_does_not_hide_numbered_return_review"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/return_nets.py#return_net_groups",

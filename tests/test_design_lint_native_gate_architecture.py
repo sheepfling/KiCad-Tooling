@@ -281,3 +281,16 @@ def test_workflow_enables_every_native_fixture_regression() -> None:
             native_fixtures_by_rule,
         )
         assert set(scope.native_fixtures) == set(required), rule_id
+
+
+def test_connector_return_rules_catalogue_the_exact_native_fault_control_cases() -> None:
+    expected_cases = {
+        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
+        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
+    }
+    rules = {rule.rule_id: rule for rule in rule_catalog().rules}
+    for rule_id in ("connector.repeated_pin_function", "net.numbered_returns"):
+        rule = rules[rule_id]
+        assert "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES" in rule.required_native_fixtures
+        assert expected_cases <= set(rule.fault_fixtures)
+        assert expected_cases <= set(rule.valid_control_fixtures)

@@ -24,7 +24,9 @@ from tests.support import reference_root
 pytestmark = [
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
+    pytest.mark.connector_lint,
     pytest.mark.native_kicad,
+    pytest.mark.return_path_lint,
     pytest.mark.slow,
     pytest.mark.skipif(
         os.environ.get("KICAD_RUN_NATIVE_CONNECTOR_FIXTURES") != "1",
