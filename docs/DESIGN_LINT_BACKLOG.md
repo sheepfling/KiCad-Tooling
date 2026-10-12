@@ -4400,8 +4400,9 @@ is not a reason by itself to expand its scope or change its default policy.
   pin/net/no-connect maps, an unmapped array, and unexplained extra peers.
   Three source-hashed synthetic schematics for split-reference review,
   common-reference control, and a wrong shunt-pin assignment are now registered
-  in the digest-pinned KiCad 10.0.0/10.0.5 lane. The native lane has not run in
-  the current local environment, so these fixtures provide no native result yet.
+  in the digest-pinned KiCad 10.0.0/10.0.5 lane. Exact local native execution
+  is unavailable in the current environment; the hosted result is recorded in
+  Evidence history below.
 - **Evidence history:**
 
   The predicate, tests, and native fixture sources were already in this branch
@@ -4722,6 +4723,17 @@ is not a reason by itself to expand its scope or change its default policy.
   passed 2,371 tests, skipped 60, and passed 1,893 subtests. Its wheel and
   source distribution rebuilds, fresh installation, external and adapted
   project checks, and playtest all passed.
+- **Expanded native fixture gate (2026-10-12):** The focused
+  `bus.usb_peer_reference_review` gate passed in `v0.5.0rc194` (GitHub Actions
+  run `38309295549`) with `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`. The
+  48-test rule selection ran both the USB data-path and SuperSpeed native
+  fixture modules on the digest-pinned KiCad 10.0.0 and 10.0.5 images. The
+  expanded data-path fixtures include split-reference and common-reference
+  protection-shunt cases plus a wrong shunt-pin assignment; SuperSpeed fault
+  and common-reference control results also passed. The scoped package checks,
+  installed-wheel external-project checks and playtest, and three portable
+  preview jobs passed. This verifies synthetic native-export behavior; it does
+  not establish a real board's grounding policy or physical continuity.
 - **Reviewer-value measurement protocol:** Use one row per uniquely matched
   connector-to-IC path, plus a run header. Freeze the tooling commit, public or
   approved source URL and immutable revision, license/permission basis, source

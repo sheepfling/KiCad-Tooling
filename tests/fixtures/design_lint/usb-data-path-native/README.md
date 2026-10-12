@@ -108,8 +108,11 @@ exercise LINT-086's review and control paths while LINT-049 validates the
 complete component identity and pin map. The pin-fault variant moves U6.2 onto
 USB_DP and checks that LINT-049 reports that exact mismatch without a duplicate
 peer-reference finding. These source fixtures are registered in the
-digest-pinned native lane; exact KiCad execution has not been performed in the
-current local environment.
+digest-pinned native lane. Exact local native execution is unavailable in the
+current environment. Hosted acceptance for `v0.5.0rc194` (GitHub Actions run
+`38309295549`) passed the source-hashed split-reference, common-reference, and
+pin-fault cases on both KiCad 10.0.0 and 10.0.5. The same rule-scoped run
+passed the SuperSpeed fault and common-reference control lane.
 
 This is source-to-netlist regression evidence only. The lane does not run ERC,
 DRC, PCB copper continuity, component placement, signal-integrity analysis,
