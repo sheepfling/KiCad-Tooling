@@ -1446,6 +1446,11 @@ is not a reason by itself to expand its scope or change its default policy.
   mismatch and rail-name candidates identify it. No project board source is
   used. The native DB9 fault/control schematic pair is documented in the
   [four-port DB9 fixture README](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
+  A typed synthetic case also leaves a meaningful but unrecognized `BIAS_IN`
+  function, with native `power_in` type, open on two exact-symbol connector
+  peers. It produces the existing pin-function review; a shared-net assignment
+  is the quiet control. The electrical type does not establish a required
+  connection.
   The native generic-power-pin omission pair is documented in the
   [peer power-pin fixture README](../tests/fixtures/design_lint/generic-peer-power-pin/README.md).
 - A synthetic exact-symbol connector group with incomplete pin-function

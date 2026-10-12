@@ -62,6 +62,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_schematic_connectivity.py": {"schematic_lint"},
     "test_design_lint_schematic_text.py": {"schematic_lint"},
     "test_connector_peer_pin_all_open.py": {"connector_lint"},
+    "test_design_lint_connector_power_pins.py": {"connector_lint", "power_lint"},
     "test_native_db9_return_contracts.py": {"connector_lint", "return_path_lint"},
     "test_connector_signal_peer_pin_all_open.py": {"connector_lint", "interface_lint"},
     "test_component_peer_pin_all_open.py": {"component_lint"},

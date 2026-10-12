@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, fingerprint
-from kicad_tooling.hwrepo.models import DesignLintIgnore, DesignLintPolicy
+from kicad_tooling.hwrepo.models import DesignLintIgnore, DesignLintPolicy, NetlistContract
 from tests.design_lint_fixtures import (
     coach,
     cross_symbol_power,
@@ -81,3 +81,53 @@ def test_three_generic_power_pins_report_different_and_missing_sibling_assignmen
     )
     assert common.status == "PASS"
     assert not common.findings
+
+
+def _named_power_input_peer_netlist(*, connected: bool) -> NetlistContract:
+    references = ("J1", "J2")
+    nets = {"SYNTHETIC_SIGNAL": ("J1.1", "J2.1")}
+    if connected:
+        nets["SYNTHETIC_BIAS"] = ("J1.2", "J2.2")
+    return NetlistContract(
+        components={},
+        nets=nets,
+        component_symbols={reference: "Synthetic:NamedPowerConnector" for reference in references},
+        component_pin_numbers={reference: ("1", "2") for reference in references},
+        pin_functions={
+            **{f"{reference}.1": "Pin_1" for reference in references},
+            **{f"{reference}.2": "BIAS_IN" for reference in references},
+        },
+        pin_electrical_types={
+            **{f"{reference}.1": "passive" for reference in references},
+            **{f"{reference}.2": "power_in" for reference in references},
+        },
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_named_power_input_open_on_all_connector_peers_needs_review() -> None:
+    report = evaluate(
+        "synthetic-named-power-input-peers-open",
+        coach(_named_power_input_peer_netlist(connected=False)),
+        DesignLintPolicy(),
+    )
+    findings = [
+        item for item in report.findings if item.rule_id == "connector.repeated_pin_function"
+    ]
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].evidence == {"J1.2": (), "J2.2": ()}
+    assert "intended pinout" in findings[0].message
+    assert "connector.unconnected_power_input" not in {item.rule_id for item in report.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_common_named_power_input_connector_peer_assignment_is_quiet() -> None:
+    report = evaluate(
+        "synthetic-named-power-input-peers-common",
+        coach(_named_power_input_peer_netlist(connected=True)),
+        DesignLintPolicy(),
+    )
+
+    assert "connector.repeated_pin_function" not in {item.rule_id for item in report.findings}
