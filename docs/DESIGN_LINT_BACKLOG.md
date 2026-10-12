@@ -5795,9 +5795,11 @@ is not a reason by itself to expand its scope or change its default policy.
   modes, exact ignores, and CLI/MCP parity. Digest-pinned native schematics
   verify fault/control behavior on KiCad 10.0.0 and 10.0.5 through
   `tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope`.
-  The local exact-version lane passed both versions on 2026-10-12; annotated-tag
-  acceptance is still required. These sources are tooling-owned and contain no
-  project board data.
+  The local exact-version lane passed both versions on 2026-10-12. The focused
+  `v0.5.0rc139` annotated-tag acceptance passed on the same date (run
+  `38226360094`), including exact-version native fixtures and the installed
+  wheel against a separate public template checkout. These sources are
+  tooling-owned and contain no project board data.
 - **Applicability evidence:** More examples can test boundary diversity, but
   do not establish precision or reviewer value without an independent pinout
   disposition. No field-review time or false-positive rate is claimed.
