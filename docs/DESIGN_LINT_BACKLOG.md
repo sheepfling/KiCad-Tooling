@@ -6017,6 +6017,12 @@ is not a reason by itself to expand its scope or change its default policy.
   The separate `power.ic_rail_without_fitted_capacitor` review appears in both
   native reports and is tracked independently from this rule's fault/control
   outcome.
+- **Hosted acceptance:** Tagged acceptance for `v0.5.0rc160` passed on
+  2026-10-12 (GitHub Actions run `38256064816`). The tag selected this rule's
+  focused pytest scope with its native fixture switch enabled. Fault and
+  control exports passed on digest-pinned KiCad 10.0.0 and 10.0.5; the package,
+  installed-wheel check against a separate project checkout, static/type/docs
+  checks, and Ubuntu, macOS, and Windows preview jobs also passed.
 
 ### P2 — PCB geometry and schematic review assistance
 
