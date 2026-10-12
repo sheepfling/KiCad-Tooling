@@ -5528,8 +5528,9 @@ is not a reason by itself to expand its scope or change its default policy.
   now links the test as both fault and valid control and requires
   `KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES`; the architecture suite guards
   that association. The rule-scoped `v0.5.0rc182` run `38294501510` passed the
-  lint and installed-wheel steps plus all three portability previews; the full
-  package job was skipped by RC policy.
+  native fault/control lane on digest-pinned KiCad 10.0.0 and 10.0.5, the
+  installed-wheel check against the separate template checkout, and all three
+  portability previews; the full package job was skipped by RC policy.
 - **Incremental value:** LINT-070 already prompts on split return pins across
   comparable repeated components. LINT-103 adds the direct-I2C-bus relation
   between heterogeneous devices when that repeated-component comparison has no
@@ -5541,10 +5542,11 @@ is not a reason by itself to expand its scope or change its default policy.
   reviewer-time measurements are available, so precision, false-prompt rate,
   and review-time benefit remain unmeasured. Public, nonconfidential examples
   can be added later only to measure those outcomes.
-- **Next:** Keep the rule at default `REVIEW` until the hosted pinned export
-  lane passes on both supported versions. Do not promote the heuristic to a
-  blocking requirement without an independent project-authored pinout or
-  grounding contract.
+- **Next:** Retain default `REVIEW`. The rule-scoped hosted gate now covers both
+  pinned export versions. Keep precision and review-time benefit unmeasured
+  until independent board dispositions and reviewer-time observations are
+  available. Do not promote the heuristic to a blocking requirement without
+  an independent project-authored pinout or grounding contract.
 
 #### LINT-104 — SPI peers share a clock but have split explicit references
 
