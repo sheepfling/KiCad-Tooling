@@ -15,6 +15,9 @@ when extending a legacy suite. `unittest.mock` remains useful with pytest.
 The schematic-to-PCB pad-net native fault and control are synthetic tooling
 fixtures; their source boundary and pinned hashes are recorded in the
 [fixture README](fixtures/design_lint/schematic-pcb-pad-net/README.md).
+The named connector supply/return pin fault and control are also synthetic
+tooling fixtures; their source boundary and pinned hashes are recorded in the
+[connector pin fixture README](fixtures/design_lint/unconnected-named-connector-pins/README.md).
 
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:
