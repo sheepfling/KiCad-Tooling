@@ -106,3 +106,8 @@ return functions and numbered return nets; the common `0V PWM` control is
 | ----------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ------ |
 | `pwm-fault.kicad_sch`   | `c4a842c1685d5fbf21985aa22bd0b6436e163025f4381a8ac2544621c264e546` | `98c326c073ca0bf7ff38c00acddec5bbd2df1f5cb531936f3744a79bae533154` | REVIEW |
 | `pwm-control.kicad_sch` | `3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc` | `fbb740fb9f8c29bd880d871f33047aa8993ea99720d7707daca3feff41e3c3f2` | PASS   |
+
+Tagged hosted acceptance for `v0.5.0rc147` (commit `43dfe95`, GitHub Actions
+run `38243428425`) passed the focused `net.numbered_returns` gate, exact-version
+connector fixtures, installed-wheel check against a separate project checkout,
+and preview jobs on Ubuntu, macOS, and Windows.

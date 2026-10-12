@@ -1368,6 +1368,11 @@ is not a reason by itself to expand its scope or change its default policy.
   10.0.5: the four split names and all eight pin memberships were retained on
   repeated exports, the fault produced `net.numbered_returns`, and the common
   control passed without findings.
+  Tagged hosted acceptance for `v0.5.0rc147` (commit `43dfe95`, GitHub Actions
+  run `38243428425`) passed with the `net.numbered_returns` pytest scope and
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. The exact-version connector lane,
+  installed-wheel check against a separate project checkout, and Ubuntu,
+  macOS, and Windows preview jobs passed.
   The project-policy regression also keeps the default at `REVIEW` while proving
   an explicitly configured `block` override changes the report to `FAIL`
   without changing the finding fingerprint or evidence. A
