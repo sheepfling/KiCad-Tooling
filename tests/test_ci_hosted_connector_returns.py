@@ -242,14 +242,14 @@ def _assert_native_named_connector_power_pin_cases(
     )
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     prefix = "connector-named-power-pin-fixture/"
-    results = {
-        item["stage"]: item for item in events if item.get("stage", "").startswith(prefix)
-    }
+    results = {item["stage"]: item for item in events if item.get("stage", "").startswith(prefix)}
     assert set(results) == {f"{prefix}native-export", *(f"{prefix}{case}" for case in cases)}
     native_export = results[f"{prefix}native-export"]
     assert native_export["status"] == "PASS"
     assert native_export["kicad_version"] == version
-    assert tuple(item.split(":", 1)[0] for item in native_export["source_hashes"].split(",")) == cases
+    assert (
+        tuple(item.split(":", 1)[0] for item in native_export["source_hashes"].split(",")) == cases
+    )
     assert_native_fixture_mounts(root, native_export["command_receipt"])
 
     expected = {

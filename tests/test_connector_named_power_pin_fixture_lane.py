@@ -86,12 +86,8 @@ def test_lane_exports_only_named_pin_faults_and_control(
     monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
 
     log = HostedLog(project_root, "named-connector-power-pin-unit")
-    connector_named_power_pin_fixture_lane(
-        project_root, project="controller", image=image, log=log
-    )
-    events = tuple(
-        json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines()
-    )
+    connector_named_power_pin_fixture_lane(project_root, project="controller", image=image, log=log)
+    events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     prefix = "connector-named-power-pin-fixture/"
     results = {
         event["stage"]: event for event in events if event.get("stage", "").startswith(prefix)
@@ -108,6 +104,4 @@ def test_lane_exports_only_named_pin_faults_and_control(
         "connector.unconnected_return_pin"
     )
     assert results[f"{prefix}unconnected-named-power-control"]["findings"] == "none"
-    assert_native_fixture_mounts(
-        project_root, results[f"{prefix}native-export"]["command_receipt"]
-    )
+    assert_native_fixture_mounts(project_root, results[f"{prefix}native-export"]["command_receipt"])
