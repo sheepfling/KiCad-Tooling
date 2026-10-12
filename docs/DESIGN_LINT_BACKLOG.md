@@ -1780,9 +1780,13 @@ is not a reason by itself to expand its scope or change its default policy.
   declared its serial peer-reference lane. Package acceptance also checks all
   test Python support modules for environment-gated native regressions, then
   verifies every catalog switch is both exercised by a test gate and enabled in
-  the hosted full acceptance workflow. This keeps focused annotated tags from
-  silently skipping an exact-native regression. The checks govern test selection
-  only; a passing fixture is not electrical approval.
+  the hosted full acceptance workflow. It also follows fixture arguments from
+  each catalogued native test into pytest fixture definitions and requires the
+  rule's declared switches to match those reachable gates exactly. This catches
+  a plausible but unrelated switch declaration; for example, serial peer
+  regressions depend on the shared native digital-peer fixture. These checks
+  keep focused annotated tags from silently skipping an exact-native regression.
+  They govern test selection only; a passing fixture is not electrical approval.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and

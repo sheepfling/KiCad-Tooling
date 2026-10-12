@@ -25,10 +25,123 @@ def _has_exact_native_marker(node: ast.AST) -> bool:
     )
 
 
+def _native_switches(nodes: ast.AST | tuple[ast.AST, ...]) -> frozenset[str]:
+    roots = nodes if isinstance(nodes, tuple) else (nodes,)
+    switches: set[str] = set()
+    for root in roots:
+        for node in ast.walk(root):
+            if (
+                isinstance(node, ast.Call)
+                and ast.unparse(node.func) in {"os.environ.get", "os.getenv"}
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+            ):
+                value = node.args[0].value
+                if isinstance(value, str) and re.fullmatch(r"KICAD_RUN_NATIVE_[A-Z0-9_]+", value):
+                    switches.add(value)
+            if (
+                isinstance(node, ast.Subscript)
+                and ast.unparse(node.value) == "os.environ"
+                and isinstance(node.slice, ast.Constant)
+                and isinstance(node.slice.value, str)
+                and re.fullmatch(r"KICAD_RUN_NATIVE_[A-Z0-9_]+", node.slice.value)
+            ):
+                switches.add(node.slice.value)
+    return frozenset(switches)
+
+
+def _fixture_names(function: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
+    return {
+        argument.arg
+        for argument in (
+            *function.args.posonlyargs,
+            *function.args.args,
+            *function.args.kwonlyargs,
+        )
+        if argument.arg not in {"self", "cls"}
+    }
+
+
+def _usefixture_names(nodes: tuple[ast.AST, ...]) -> set[str]:
+    names: set[str] = set()
+    for root in nodes:
+        for node in ast.walk(root):
+            if (
+                not isinstance(node, ast.Call)
+                or ast.unparse(node.func) != "pytest.mark.usefixtures"
+            ):
+                continue
+            names.update(
+                fixture
+                for argument in node.args
+                if isinstance(argument, ast.Constant) and isinstance(argument.value, str)
+                for fixture in argument.value.split()
+            )
+    return names
+
+
+def _pytest_fixture_name(function: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
+    for decorator in function.decorator_list:
+        target = decorator.func if isinstance(decorator, ast.Call) else decorator
+        if ast.unparse(target) != "pytest.fixture":
+            continue
+        if isinstance(decorator, ast.Call):
+            for keyword in decorator.keywords:
+                if (
+                    keyword.arg == "name"
+                    and isinstance(keyword.value, ast.Constant)
+                    and isinstance(keyword.value.value, str)
+                ):
+                    return keyword.value.value
+        return function.name
+    return None
+
+
+def _fixture_index(
+    tests_root: Path,
+    parsed_modules: dict[Path, ast.Module],
+) -> dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]]:
+    fixtures: dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]] = {}
+    for source_path in tests_root.rglob("*.py"):
+        tree = parsed_modules.get(source_path)
+        if tree is None:
+            tree = ast.parse(source_path.read_text(encoding="utf-8"))
+            parsed_modules[source_path] = tree
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            name = _pytest_fixture_name(node)
+            if name is not None:
+                fixtures.setdefault(name, []).append((source_path, node))
+    return fixtures
+
+
+def _fixture_dependency_switches(
+    names: set[str],
+    fixtures: dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]],
+) -> frozenset[str]:
+    pending = set(names)
+    visited: set[tuple[Path, int]] = set()
+    switches: set[str] = set()
+    while pending:
+        name = pending.pop()
+        for source_path, function in fixtures.get(name, ()):
+            identity = (source_path, function.lineno)
+            if identity in visited:
+                continue
+            visited.add(identity)
+            switches.update(_native_switches(function))
+            dependencies = _fixture_names(function)
+            dependencies.update(_usefixture_names(tuple(function.decorator_list)))
+            pending.update(dependencies)
+    return frozenset(switches)
+
+
 def _fixture_reference_native_switches(
     reference: str,
     tests_root: Path,
     parsed_modules: dict[Path, ast.Module],
+    fixtures: dict[str, list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]],
 ) -> frozenset[str] | None:
     parts = reference.split(".")
     module = ".".join(parts[:2])
@@ -73,14 +186,10 @@ def _fixture_reference_native_switches(
                 or "native_kicad" in execution_markers_for_path(path)
             ):
                 continue
-            switches = {
-                child.value
-                for node in marked_nodes
-                for child in ast.walk(node)
-                if isinstance(child, ast.Constant)
-                and isinstance(child.value, str)
-                and re.fullmatch(r"KICAD_RUN_NATIVE_[A-Z0-9_]+", child.value)
-            }
+            dependencies = _fixture_names(function)
+            dependencies.update(_usefixture_names(tuple(marked_nodes)))
+            switches = set(_native_switches(tuple(marked_nodes)))
+            switches.update(_fixture_dependency_switches(dependencies, fixtures))
             return frozenset(switches)
     return None
 
@@ -88,6 +197,7 @@ def _fixture_reference_native_switches(
 def test_native_catalog_fixtures_require_rule_tag_lanes() -> None:
     tests_root = Path(__file__).parent
     parsed_modules: dict[Path, ast.Module] = {}
+    fixtures = _fixture_index(tests_root, parsed_modules)
     for rule in rule_catalog().rules:
         if rule.status != "active":
             continue
@@ -98,15 +208,18 @@ def test_native_catalog_fixtures_require_rule_tag_lanes() -> None:
         )
         native_references: list[str] = []
         declared_switches = set(rule.required_native_fixtures)
+        observed_switches: set[str] = set()
         for reference in references:
             switches = _fixture_reference_native_switches(
                 reference,
                 tests_root,
                 parsed_modules,
+                fixtures,
             )
             if switches is None:
                 continue
             native_references.append(reference)
+            observed_switches.update(switches)
             assert switches <= declared_switches, (
                 f"{rule.rule_id} does not require native fixture switches "
                 f"{sorted(switches - declared_switches)} declared by {reference}"
@@ -120,6 +233,11 @@ def test_native_catalog_fixtures_require_rule_tag_lanes() -> None:
             assert native_references, (
                 f"{rule.rule_id} requires a Native-Fixture lane without a catalogued "
                 "exact-native regression"
+            )
+            assert declared_switches == observed_switches, (
+                f"{rule.rule_id} required_native_fixtures do not match its native fixture "
+                f"dependency gates; missing={sorted(observed_switches - declared_switches)}, "
+                f"unused={sorted(declared_switches - observed_switches)}"
             )
 
 
