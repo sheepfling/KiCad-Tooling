@@ -10,7 +10,7 @@ from .design_lint_evaluation_types import (
 )
 from .design_lint_report_models import DesignLintReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import (
+from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
 )
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport

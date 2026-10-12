@@ -704,7 +704,13 @@ and optional ecosystem adapters are `P3`.
   and synthetic regressions now import that owner directly, while
   `hwrepo/models.py` retains identity-compatible exports. Architecture and
   wheel-asset tests guard the boundary; the shared registry ceiling dropped
-  from 4,554 to 4,398 lines. The extraction changes no lint behavior.
+  from 4,554 to 4,398 lines. The extraction changes no lint behavior. On
+  2026-10-12, the four PCB keepout contract and report models moved into
+  `pcb_keepout_models.py`. Internal services import the theme owner directly;
+  `hwrepo/models.py` retains identity-compatible exports, including its public
+  shared UUID primitive. Architecture and wheel-asset tests guard the new
+  owner and imports. The shared registry shrank from 4,398 to 4,261 lines; the
+  extraction changes no lint predicate or policy.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import (
-    PcbKeepoutCoverageReport,
-)
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbSignalPathRuleCoverageReport,
+)
+from .pcb_keepout_models import (
+    PcbKeepoutCoverageReport,
 )
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (

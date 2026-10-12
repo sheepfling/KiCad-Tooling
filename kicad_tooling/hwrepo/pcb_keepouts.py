@@ -5,9 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 
-from .models import PcbKeepoutCoverageEntry, PcbKeepoutMap
 from .pcb_connectivity_observations import PcbRuleAreaObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_keepout_models import (
+    PcbKeepoutCoverageEntry,
+    PcbKeepoutMap,
+)
 
 
 def pcb_rule_area_geometry_sha256(area: PcbRuleAreaObservation) -> str:

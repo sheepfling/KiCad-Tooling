@@ -15,11 +15,13 @@ from .models import (
     ConnectorReturnDistributionCoverageReport,
     ContractCoachReport,
     DesignLintPolicy,
-    PcbKeepoutCoverageReport,
     RcFilterCoverageReport,
 )
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport
+from .pcb_keepout_models import (
+    PcbKeepoutCoverageReport,
+)
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,

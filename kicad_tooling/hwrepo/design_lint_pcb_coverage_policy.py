@@ -8,7 +8,6 @@ from typing import Literal
 
 from .models import (
     DesignLintPolicy,
-    PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
     PcbProtectionPathMap,
 )
@@ -16,6 +15,9 @@ from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
     PcbSignalPathRuleCoverageReport,
+)
+from .pcb_keepout_models import (
+    PcbKeepoutCoverageReport,
 )
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport

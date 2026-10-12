@@ -19,6 +19,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/power_connectivity_models.py",
         "kicad_tooling/hwrepo/analysis_state_models.py",
         "kicad_tooling/hwrepo/crystal_network_models.py",
+        "kicad_tooling/hwrepo/pcb_keepout_models.py",
         "kicad_tooling/hwrepo/usb_c_models.py",
         "kicad_tooling/hwrepo/usb_data_path_models.py",
         "kicad_tooling/markdown_check/__main__.py",

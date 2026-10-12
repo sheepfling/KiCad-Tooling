@@ -18,8 +18,6 @@ from .models import (
     ContractCoachReport,
     DesignLintPolicy,
     PcbDecouplingMap,
-    PcbKeepoutCoverageReport,
-    PcbKeepoutMap,
     PcbProtectionPathCoverageReport,
     PcbProtectionPathMap,
     ProjectKind,
@@ -30,6 +28,10 @@ from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
     PcbSignalPathRuleCoverageReport,
     PcbSignalPathRuleMap,
+)
+from .pcb_keepout_models import (
+    PcbKeepoutCoverageReport,
+    PcbKeepoutMap,
 )
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_return_path_capture import (

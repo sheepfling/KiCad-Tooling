@@ -36,6 +36,7 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/power_connectivity_models.py",
         "kicad_tooling/hwrepo/analysis_state_models.py",
         "kicad_tooling/hwrepo/crystal_network_models.py",
+        "kicad_tooling/hwrepo/pcb_keepout_models.py",
         "kicad_tooling/hwrepo/usb_c_models.py",
     ),
     ids=(
@@ -47,6 +48,7 @@ from scripts.lint_gate_scope import (
         "power-connectivity-models",
         "analysis-state-models",
         "crystal-network-models",
+        "pcb-keepout-models",
         "usb-c-models",
     ),
 )

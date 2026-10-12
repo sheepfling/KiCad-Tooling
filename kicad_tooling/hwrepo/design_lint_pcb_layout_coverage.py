@@ -14,14 +14,16 @@ from .discovery import ProjectConfig
 from .models import (
     ContractCoachReport,
     Digest,
-    PcbKeepoutCoverageReport,
-    PcbKeepoutMap,
 )
 from .pcb_drc_models import (
     PcbSignalPathRuleCoverageReport,
     PcbSignalPathRuleMap,
 )
 from .pcb_drc_source_scan import scan_source_bound_signal_path_map
+from .pcb_keepout_models import (
+    PcbKeepoutCoverageReport,
+    PcbKeepoutMap,
+)
 from .pcb_keepouts import pcb_keepout_entries
 from .pcb_rf_antenna import pcb_rf_module_antenna_entries
 from .pcb_rf_antenna_models import (
