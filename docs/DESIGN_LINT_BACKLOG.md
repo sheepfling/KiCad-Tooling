@@ -5917,7 +5917,11 @@ is not a reason by itself to expand its scope or change its default policy.
   three-peer fault and connected control. Digest-pinned native fault/control
   schematics are recorded in
   [the mixed-open fixture README](../tests/fixtures/design_lint/component-peer-generic-mixed-open-native/README.md);
-  the local exact-version lane passed on KiCad 10.0.0 and 10.0.5.
+  the local exact-version lane passed on KiCad 10.0.0 and 10.0.5. Tagged
+  hosted acceptance for `v0.5.0rc146` passed on 2026-10-12 (GitHub Actions
+  run `38241901424`) with `KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES=1`,
+  including the scoped pytest gate, installed-wheel check against a separate
+  project checkout, and Ubuntu, macOS, and Windows preview jobs.
 - **Next:** Keep the rule opt-in. Use independently reviewed, sanitized
   pinout examples to measure whether the prompt catches useful regressions and
   to record false positives before considering broader peer identities or a
