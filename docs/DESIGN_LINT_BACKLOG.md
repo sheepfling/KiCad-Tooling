@@ -6547,8 +6547,12 @@ is not a reason by itself to expand its scope or change its default policy.
   mapping order; policy and exact-ignore lifecycle; and CLI/MCP parity. A
   digest-pinned synthetic all-open schematic fault and common-net control are
   included in the exact KiCad 10.0.0 and 10.0.5 connector lane, which repeats
-  normalized exports and verifies the rule outcome. Hosted tagged acceptance
-  remains pending.
+  normalized exports and verifies the rule outcome. The first tagged attempt
+  (`v0.5.0rc201`) exposed a stale two-case unpack in the hosted result
+  validator; a catalog-linked synthetic regression now covers that validator.
+  The retry (`v0.5.0rc202`, GitHub Actions run `38319891413`) passed, including
+  both exact-version native fixture parameters and the installed-wheel exercise
+  against the separate public template checkout.
 - **Cohort input:** This is a first-party complement to the cross-symbol
   connector open-assignment heuristic. No cohort code, private project source,
   board, or product expectation was imported.
