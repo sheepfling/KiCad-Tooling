@@ -448,6 +448,10 @@ and optional ecosystem adapters are `P3`.
   The schematic text-policy suite now uses four top-level pytest functions,
   and its rule catalog references and architecture guards match the
   `schematic_lint` selector. This preserves existing rule behavior.
+  SPI and serial peer-voltage policy tests now use top-level pytest functions;
+  the eleven SPI suppression controls have individual names and direct rule
+  catalog references. This improves focused interface selection without
+  changing either voltage heuristic.
   The grounding and connector-pin contract regressions are also split from
   `tests/test_electrical.py` into
   focused pytest modules selectable with `return_path_lint` and

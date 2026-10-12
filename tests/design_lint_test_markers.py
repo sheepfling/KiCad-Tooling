@@ -168,6 +168,7 @@ _LINT_AREA_MODULES = {
             "tests/test_ci_hosted_digital_peer_serial.py",
             "tests/test_ci_hosted_component_peer_power.py",
             "tests/test_digital_peer_voltages.py",
+            "tests/test_design_lint_peer_voltage.py",
             "tests/test_i2c_address_coverage.py",
             "tests/test_i2c_address_collisions.py",
             "tests/test_i2c_address_straps.py",
