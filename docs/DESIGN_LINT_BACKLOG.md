@@ -1968,10 +1968,13 @@ is not a reason by itself to expand its scope or change its default policy.
   steps plus all three portability previews; each package job was skipped by
   RC policy. CAN peer-assignment run `38296123722` (`v0.5.0rc185`) and PCB
   signal-path run `38296563673` (`v0.5.0rc186`) also passed those focused jobs
-  and previews; their package jobs were skipped by RC policy. The remaining 7
-  test functions across 7 modules cover CAN termination, component ratings,
-  empty-netlist evidence, I2C pull-up arrays, connector return domains, and PCB
-  test access and return paths.
+  and previews; their package jobs were skipped by RC policy. Power-rule runs
+  `38297901205` (`v0.5.0rc187`) and `38297901239` (`v0.5.0rc188`) passed their
+  focused lint and installed-wheel checks against the separate project plus
+  all three portability previews; their package jobs were skipped by RC policy.
+  The remaining 7 test functions across 7 modules cover CAN termination,
+  component ratings, empty-netlist evidence, I2C pull-up arrays, connector
+  return domains, and PCB test access and return paths.
   Review each test against a rule predicate before indexing it; the inventory
   identifies selection gaps, not proof that every test belongs to a lint rule.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
