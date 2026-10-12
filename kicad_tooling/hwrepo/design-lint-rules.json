@@ -2677,18 +2677,18 @@
         "The prompt does not model analog or open-drain buses, level translators, power sequencing, loading, timing, transients, off-board devices, PCB copper, or physical continuity. Complete exact LINT-061 mappings carry the sourced compatibility comparison; this rule remains review-only by default."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_serial_peer_voltage.DesignLintSerialPeerVoltageTests.test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
-        "tests.test_design_lint_serial_peer_voltage.DesignLintSerialPeerVoltageTests.test_serial_peer_voltage_prompt_suppresses_only_exact_fully_mapped_links"
+        "tests.test_design_lint_serial_peer_voltage.test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
+        "tests.test_design_lint_serial_peer_voltage.test_serial_peer_voltage_prompt_suppresses_only_exact_fully_mapped_links"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_serial_peer_voltage.DesignLintSerialPeerVoltageTests.test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
-        "tests.test_design_lint_serial_peer_voltage.DesignLintSerialPeerVoltageTests.test_serial_peer_voltage_prompt_suppresses_only_exact_fully_mapped_links",
+        "tests.test_design_lint_serial_peer_voltage.test_serial_peer_voltage_prompt_suppresses_ineligible_controls",
+        "tests.test_design_lint_serial_peer_voltage.test_serial_peer_voltage_prompt_suppresses_only_exact_fully_mapped_links",
         "tests.test_design_lint_peer_voltage.DesignLintPeerVoltageTests.test_peer_voltage_coverage_excludes_header_only_spi_and_uart_endpoints",
         "tests.test_design_lint_peer_voltage.DesignLintPeerVoltageTests.test_gpio_to_regulator_enable_is_outside_protocol_peer_voltage_rules"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_serial_peer_voltage.DesignLintSerialPeerVoltageTests.test_serial_peer_voltage_prompt_is_stable_and_project_configurable"
+        "tests.test_design_lint_serial_peer_voltage.test_serial_peer_voltage_prompt_is_stable_and_project_configurable"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/digital_peer_voltage_scan.py#unmapped_serial_peer_voltage_reviews",

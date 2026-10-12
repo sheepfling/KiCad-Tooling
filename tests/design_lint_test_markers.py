@@ -161,6 +161,7 @@ _LINT_AREA_MODULES = {
             "tests/test_can_native_fixture_lanes.py",
             "tests/test_digital_peer_spi_voltage_fixture_lane.py",
             "tests/test_digital_peer_serial_voltage_fixture_lane.py",
+            "tests/test_design_lint_serial_peer_voltage.py",
             "tests/test_digital_peer_serial_reference_fixture_lane.py",
             "tests/test_ci_hosted_digital_peer_spi.py",
             "tests/test_ci_hosted_digital_peer_serial.py",

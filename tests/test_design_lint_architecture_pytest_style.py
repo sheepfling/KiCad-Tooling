@@ -47,6 +47,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_i2c_pullup_rail_families.py": {"interface_lint"},
     "test_electrical_rs485_contract.py": {"interface_lint"},
     "test_design_lint_led_topology.py": {"component_lint", "power_lint"},
+    "test_design_lint_serial_peer_voltage.py": {"interface_lint"},
     "test_pcb_reference_plane_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_switching_loop_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_return_path_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
@@ -236,6 +237,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
         (
             "component.led_directly_across_supply_and_return",
             "tests/test_design_lint_led_topology.py::test_led_non_matching_topologies_remain_valid_controls[series-resistor]",
+        ),
+        (
+            "bus.serial_peer_voltage_review",
+            "tests/test_design_lint_serial_peer_voltage.py::test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
         ),
     ),
 )
