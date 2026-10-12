@@ -43,6 +43,8 @@ from tests.synthetic_design_lint_project import (
     synthetic_design_lint_project,
 )
 
+pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
+
 
 def _install_source_matched_rf_netlist(summary_path: Path) -> None:
     """Bind a tooling-owned synthetic module export into the fixture receipt."""

@@ -7,7 +7,10 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
 from mcp import Client
+
+pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
 
 from kicad_tooling.hwrepo.contracts import parse_model_text
 from kicad_tooling.hwrepo.mcp_server import create_server

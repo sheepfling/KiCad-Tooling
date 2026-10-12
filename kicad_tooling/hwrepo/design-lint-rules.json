@@ -218,7 +218,8 @@
         "tests.test_connector_signal_peer_pin_all_open.test_cross_symbol_signal_peers_require_matching_part_identity_and_pin_type",
         "tests.test_connector_peer_pin_all_open.test_exact_symbol_peer_can_use_absent_native_pin_function_metadata",
         "tests.test_connector_peer_pin_all_open.test_guarded_part_id_aliases_prompt_once_for_an_all_open_generic_pin",
-        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope",
+        "tests.test_design_lint_mcp_parity_connector_all_open.test_all_open_generic_peer_pin_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_common_assignment_clears_the_all_open_prompt",
@@ -231,7 +232,8 @@
         "tests.test_connector_signal_peer_pin_all_open.test_named_signal_function_and_power_types_stay_with_specific_rules",
         "tests.test_connector_signal_peer_pin_all_open.test_exact_symbol_signal_peers_require_a_matching_pin_type",
         "tests.test_connector_peer_pin_all_open.test_rule_supports_block_off_and_exact_ignore_policy",
-        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope",
+        "tests.test_design_lint_mcp_parity_connector_all_open.test_all_open_generic_peer_pin_lint_cli_mcp_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_candidate_fingerprint_is_stable_under_input_reordering",
@@ -537,7 +539,8 @@
         "tests.test_peer_component_pin_identity.test_shared_part_id_aliases_accept_identical_generic_pin_metadata",
         "tests.test_peer_component_pin_identity.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_power_output.test_shield_named_power_output_remains_eligible_without_a_component_shield_rule",
-        "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions"
+        "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_peer_power_output.test_assigned_peer_outputs_are_valid_same_or_separate_net_controls",
@@ -549,7 +552,8 @@
         "tests.test_peer_component_pin_identity.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_component_pin_identity.test_part_id_peer_scan_deduplicates_same_pin_candidate_from_exact_symbol_group",
         "tests.test_peer_power_output.test_named_supply_and_return_outputs_keep_their_specific_findings",
-        "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions"
+        "tests.test_peer_power_output.test_peer_power_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -587,7 +591,8 @@
         "tests.test_peer_component_pin_identity.test_shared_part_id_aliases_cover_each_typed_peer_rule",
         "tests.test_peer_component_pin_identity.test_shared_part_id_aliases_accept_identical_generic_pin_metadata",
         "tests.test_peer_component_pin_identity.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
-        "tests.test_peer_signal_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions"
+        "tests.test_peer_signal_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_peer_signal_output.test_assigned_signal_peer_outputs_are_valid_same_or_separate_net_controls",
@@ -595,7 +600,8 @@
         "tests.test_peer_component_pin_identity.test_shared_part_id_aliases_skip_mismatched_pin_functions",
         "tests.test_peer_component_pin_identity.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_signal_output.test_signal_output_review_supports_project_policy_and_exact_ignore",
-        "tests.test_peer_signal_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions"
+        "tests.test_peer_signal_output.test_peer_signal_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -634,7 +640,8 @@
         "tests.test_peer_component_pin_identity.test_shared_part_id_aliases_accept_identical_generic_pin_metadata",
         "tests.test_peer_component_pin_identity.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_signal_input.test_active_low_input_is_eligible_for_peer_review",
-        "tests.test_peer_signal_input.test_peer_signal_input_fault_and_control_on_pinned_native_versions"
+        "tests.test_peer_signal_input.test_peer_signal_input_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_peer_signal_input.test_assigned_signal_peer_inputs_are_valid_same_or_separate_net_controls",
@@ -643,7 +650,8 @@
         "tests.test_peer_component_pin_identity.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_signal_input.test_specific_supply_return_and_control_inputs_keep_their_own_findings",
         "tests.test_peer_signal_input.test_signal_input_review_supports_project_policy_and_exact_ignore",
-        "tests.test_peer_signal_input.test_peer_signal_input_fault_and_control_on_pinned_native_versions"
+        "tests.test_peer_signal_input.test_peer_signal_input_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -690,7 +698,8 @@
         "tests.test_peer_component_pin_identity.test_shared_part_id_aliases_skip_mismatched_pin_functions",
         "tests.test_peer_component_pin_identity.test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp",
         "tests.test_peer_bidirectional_pin.test_bidirectional_review_supports_project_policy_and_exact_ignore",
-        "tests.test_peer_bidirectional_pin.test_peer_bidirectional_fault_and_control_on_pinned_native_versions"
+        "tests.test_peer_bidirectional_pin.test_peer_bidirectional_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_peer_component_pin_unconnected_lint_cli_mcp_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -864,14 +873,16 @@
       "fault_fixtures": [
         "tests.test_two_pin_passives.test_detects_resistor_capacitor_and_inductor_on_their_same_net",
         "tests.test_two_pin_passives.test_custom_capacitor_requires_exact_role_map_for_same_net_review",
-        "tests.test_two_pin_component_native_fixture_lane.test_native_custom_mapped_capacitor_same_net_fault_and_control"
+        "tests.test_two_pin_component_native_fixture_lane.test_native_custom_mapped_capacitor_same_net_fault_and_control",
+        "tests.test_design_lint_mcp_parity_mapped_custom_passive.test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_passives.test_distinct_pin_nets_are_the_no_finding_control",
         "tests.test_two_pin_passives.test_mapped_custom_capacitor_distinct_net_and_dnp_controls_stay_quiet",
         "tests.test_two_pin_component_native_fixture_lane.test_native_custom_mapped_capacitor_same_net_fault_and_control",
         "tests.test_two_pin_passives.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_passives.test_override_exact_ignore_and_stale_fingerprint_lifecycle"
+        "tests.test_two_pin_passives.test_override_exact_ignore_and_stale_fingerprint_lifecycle",
+        "tests.test_design_lint_mcp_parity_mapped_custom_passive.test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -1257,7 +1268,8 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_report_includes_native_evidence",
-        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+        "tests.test_design_lint_mcp_parity_connector_coverage.test_design_lint_connector_coverage_and_review_lifecycle"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_valid_controls_are_suppressed",
@@ -1300,12 +1312,14 @@
       ],
       "fault_fixtures": [
         "tests.test_connector_unconnected_power_output.test_unassigned_generic_connector_power_output_contacts_are_reviewed",
-        "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions"
+        "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_connector_power_output.test_generic_connector_power_output_review_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_unconnected_power_output.test_valid_and_out_of_scope_contacts_do_not_emit_the_rule",
         "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions",
-        "tests.test_connector_unconnected_power_output.test_project_can_block_ignore_or_disable_the_review"
+        "tests.test_connector_unconnected_power_output.test_project_can_block_ignore_or_disable_the_review",
+        "tests.test_design_lint_mcp_parity_connector_power_output.test_generic_connector_power_output_review_cli_mcp_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_unconnected_power_output.test_finding_is_mapping_order_stable_and_assignment_clears_it",
@@ -1387,11 +1401,13 @@
       "fault_fixtures": [
         "tests.test_component_unconnected_power_output.test_unconnected_generic_power_output_is_an_evidence_backed_review",
         "tests.test_component_unconnected_power_output.test_generic_pin_placeholder_is_reviewed",
-        "tests.test_component_unconnected_power_output.test_generic_power_output_fault_and_control_on_pinned_native_versions"
+        "tests.test_component_unconnected_power_output.test_generic_power_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_unconnected_power_output.test_generic_power_output_review_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_component_unconnected_power_output.test_valid_pin_controls_do_not_emit_the_generic_power_output_rule",
-        "tests.test_component_unconnected_power_output.test_generic_power_output_fault_and_control_on_pinned_native_versions"
+        "tests.test_component_unconnected_power_output.test_generic_power_output_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_unconnected_power_output.test_generic_power_output_review_cli_mcp_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_component_unconnected_power_output.test_finding_is_mapping_order_stable_and_assignment_clears_it"
@@ -1679,14 +1695,16 @@
         "tests.test_design_lint_i2c_missing_pullups.test_connecting_one_line_leaves_only_the_other_pullup_missing",
         "tests.test_i2c_pullup_heuristic_coverage.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_requirement_for_a_different_ordered_bus_does_not_resolve_hint",
-        "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing"
+        "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing",
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
         "tests.test_i2c_pullup_heuristic_coverage.test_valid_mapped_array_resolves_only_its_exact_missing_path_hint",
-        "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control"
+        "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control",
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3040,7 +3058,9 @@
       "fault_fixtures": [
         "tests.test_serial_participants.test_unmapped_endpoints_are_deterministic_and_exact_mapped_pairs_clear",
         "tests.test_serial_participant_net_labels.test_explicit_uart_net_labels_discover_alternate_function_mcu_pins",
-        "tests.test_serial_participants.test_missing_map_and_pending_states_prompt_without_asserting_intent"
+        "tests.test_serial_participants.test_missing_map_and_pending_states_prompt_without_asserting_intent",
+        "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
+        "tests.test_design_lint_serial_parity.DesignLintSerialParityTests.test_alternate_function_uart_labels_match_cli_and_mcp"
       ],
       "valid_control_fixtures": [
         "tests.test_serial_participant_net_labels.test_net_label_serial_discovery_rejects_ambiguous_or_incomplete_controls",
@@ -3788,7 +3808,8 @@
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_signal_path_coverage.test_exact_path_and_bundle_rules_cover_reviewed_map",
-        "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable"
+        "tests.test_pcb_signal_path_coverage.test_map_order_and_native_rule_order_are_stable",
+        "tests.test_pcb_signal_path_mcp_parity.test_disabled_signal_path_coverage_matches_cli_and_mcp"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3827,7 +3848,8 @@
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_keepouts.test_exact_keepout_signature_matches_one_named_native_area",
-        "tests.test_pcb_keepouts.test_geometry_digest_ignores_polygon_and_hole_order"
+        "tests.test_pcb_keepouts.test_geometry_digest_ignores_polygon_and_hole_order",
+        "tests.test_pcb_keepouts_mcp_parity.test_disabled_keepout_coverage_matches_cli_and_mcp"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3863,12 +3885,15 @@
         "tests.test_pcb_rf_antenna.test_missing_duplicate_and_mismatched_keepouts_are_incomplete",
         "tests.test_pcb_rf_antenna.test_source_identity_and_feed_mismatches_are_incomplete",
         "tests.test_pcb_rf_antenna.test_schema_without_explicit_footprint_inventory_is_incomplete",
-        "tests.test_pcb_rf_antenna.test_rf_antenna_lint_finding_supports_review_block_off_and_exact_ignore"
+        "tests.test_pcb_rf_antenna.test_rf_antenna_lint_finding_supports_review_block_off_and_exact_ignore",
+        "tests.test_pcb_rf_antenna_mcp_parity.test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_rf_antenna.test_exact_module_identity_feed_and_local_keepout_transform_complete",
         "tests.test_pcb_rf_antenna.test_explicit_external_antenna_and_dnp_dispositions_are_supported",
-        "tests.test_pcb_keepouts_native.test_native_schema_13_snapshot_records_keepout_and_footprint_evidence"
+        "tests.test_pcb_keepouts_native.test_native_schema_13_snapshot_records_keepout_and_footprint_evidence",
+        "tests.test_pcb_rf_antenna_mcp_parity.test_disabled_rf_antenna_coverage_matches_cli_and_mcp",
+        "tests.test_pcb_rf_antenna_mcp_parity.test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

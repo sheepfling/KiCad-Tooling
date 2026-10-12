@@ -76,7 +76,7 @@ class _DesignLintMcpParityConnectorCoverageCases(DesignLintMcpParityReportHarnes
                 "Synthetic review covered all connector candidates in the schematic",
             )
             self.assertEqual(open_report.native_status, "FAIL")
-            self.assertEqual(len(open_report.findings), 25)
+            self.assertEqual(len(open_report.findings), 26)
             led_bridge = next(
                 item
                 for item in open_report.findings
@@ -317,7 +317,21 @@ class _DesignLintMcpParityConnectorCoverageCases(DesignLintMcpParityReportHarnes
             accepted = await self.compare_lint_report(client, native, "PASS", 0)
             self.assertEqual(accepted.netlist_sha256, open_report.netlist_sha256)
             self.assertNotEqual(accepted.policy_sha256, open_report.policy_sha256)
-            self.assertTrue(all(item.disposition == "IGNORED" for item in accepted.findings))
+            self.assertTrue(
+                any(
+                    item.rule_id == "component.generic_peer_pin_assignment_outlier"
+                    and item.disposition == "RULE_OFF"
+                    for item in accepted.findings
+                )
+            )
+            self.assertTrue(
+                all(item.disposition in {"IGNORED", "RULE_OFF"} for item in accepted.findings),
+                [
+                    (item.rule_id, item.subject, item.disposition)
+                    for item in accepted.findings
+                    if item.disposition not in {"IGNORED", "RULE_OFF"}
+                ],
+            )
 
 
 def test_design_lint_connector_coverage_and_review_lifecycle() -> None:

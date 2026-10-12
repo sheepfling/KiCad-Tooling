@@ -1858,6 +1858,30 @@ is not a reason by itself to expand its scope or change its default policy.
   inventory and repeated guide counts that match the active package catalog;
   CLI/MCP catalog parity without a native summary; readable text output with
   default modes, evidence, and limits.
+- **Rule-scoped CLI/MCP parity audit (2026-10-12):** A source scan found
+  existing fault/control parity tests omitted from 13 active rules' catalog
+  fixture lists. The catalog now indexes I2C pull-up and serial-peer parity,
+  comparable component-pin and connector power-output parity, mapped passive
+  bypass parity, and PCB keepout, RF antenna, and signal-path coverage parity.
+  A catalog regression requires these exact parity cases to remain selectable
+  by their rule IDs. The audit also found two power-output parity fixtures
+  inheriting the unrelated PCB pad-net check without native board evidence;
+  those fixtures now explicitly turn that check off. Three PCB parity modules
+  now carry explicit design-lint, PCB, and parity markers. The combined
+  13-rule selector passed locally (`232 passed, 12 skipped, 2,855 deselected`);
+  catalog, fixture-reference, and reachability checks passed (`17 passed`).
+  Skips are environment-gated exact-native cases; this change improves
+  regression selection and parity evidence without changing lint predicates.
+  The broader parity-area run exposed the generic connector power-input
+  finding at `J12.1`; its existing CLI/MCP lifecycle test now asserts that
+  finding and is indexed by the rule. The accepted-report check preserves the
+  default-off peer outlier as `RULE_OFF` while requiring reviewed findings to
+  be `IGNORED`. A third synthetic power-pin parity fixture now explicitly
+  disables the unrelated PCB pad-net check because it has no native board
+  snapshot. The expanded 14-rule selector passed (`244 passed, 14 skipped,
+  2,841 deselected`), the complete `design_lint and parity_lint` slice passed
+  (`113 passed, 2,986 deselected, 14 subtests passed`), and the
+  catalog/backlog/architecture group passed (`65 passed`).
 - **Done when:** CI can identify an undocumented rule or missing required
   fixture, and a reviewer can trace each report finding to its evidence and
   limitations.

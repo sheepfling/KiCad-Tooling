@@ -13,6 +13,150 @@ from kicad_tooling.hwrepo.design_lint import rule_catalog
 pytestmark = pytest.mark.design_lint
 
 
+def _refs(owner: str, *tests: str) -> tuple[str, ...]:
+    return tuple(f"{owner}.{name}" for name in tests)
+
+
+_PARITY_FIXTURES_BY_RULE = {
+    "bus.i2c_missing_pullup": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests",
+            "test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests",
+            "test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
+        ),
+    },
+    "bus.serial_unmapped_peer": {
+        "fault_fixtures": (
+            *_refs(
+                "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests",
+                "test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
+            ),
+            *_refs(
+                "tests.test_design_lint_serial_parity.DesignLintSerialParityTests",
+                "test_alternate_function_uart_labels_match_cli_and_mcp",
+            ),
+        ),
+    },
+    "component.peer_power_output_unconnected": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+    },
+    "component.peer_signal_input_unconnected": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+    },
+    "component.peer_signal_output_unconnected": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+    },
+    "component.peer_bidirectional_pin_unconnected": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_peer_pins",
+            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+        ),
+    },
+    "component.two_pin_passive_same_net": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_mapped_custom_passive",
+            "test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_mapped_custom_passive",
+            "test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity",
+        ),
+    },
+    "component.unconnected_power_output": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_unconnected_power_output",
+            "test_generic_power_output_review_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_unconnected_power_output",
+            "test_generic_power_output_review_cli_mcp_parity",
+        ),
+    },
+    "connector.generic_peer_pin_all_open": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_connector_all_open",
+            "test_all_open_generic_peer_pin_lint_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_connector_all_open",
+            "test_all_open_generic_peer_pin_lint_cli_mcp_parity",
+        ),
+    },
+    "connector.unconnected_power_output": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_connector_power_output",
+            "test_generic_connector_power_output_review_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_connector_power_output",
+            "test_generic_connector_power_output_review_cli_mcp_parity",
+        ),
+    },
+    "connector.unconnected_power_input": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_connector_coverage",
+            "test_design_lint_connector_coverage_and_review_lifecycle",
+        ),
+    },
+    "pcb.keepout_intent_coverage": {
+        "valid_control_fixtures": _refs(
+            "tests.test_pcb_keepouts_mcp_parity",
+            "test_disabled_keepout_coverage_matches_cli_and_mcp",
+        ),
+    },
+    "pcb.rf_module_antenna_keepout_coverage": {
+        "fault_fixtures": _refs(
+            "tests.test_pcb_rf_antenna_mcp_parity",
+            "test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp",
+        ),
+        "valid_control_fixtures": (
+            *_refs(
+                "tests.test_pcb_rf_antenna_mcp_parity",
+                "test_disabled_rf_antenna_coverage_matches_cli_and_mcp",
+            ),
+            *_refs(
+                "tests.test_pcb_rf_antenna_mcp_parity",
+                "test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp",
+            ),
+        ),
+    },
+    "pcb.signal_path_rule_coverage": {
+        "valid_control_fixtures": _refs(
+            "tests.test_pcb_signal_path_mcp_parity",
+            "test_disabled_signal_path_coverage_matches_cli_and_mcp",
+        ),
+    },
+}
+
+
 def _pytest_collects_class(owner: type) -> bool:
     return owner.__name__.startswith("Test") or any(
         base.__module__ == "unittest.case" and base.__name__ == "TestCase" for base in owner.__mro__
@@ -71,6 +215,19 @@ def test_active_rules_reference_existing_regression_fixtures() -> None:
         key=lambda item: (item[0].__module__, item[0].__qualname__, item[1]),
     ):
         getattr(owner(), method_name)()
+
+
+def test_cli_mcp_fault_and_control_parity_is_reachable_by_rule_selector() -> None:
+    """Keep cross-surface fault/control cases visible to focused lint gates."""
+    rules = {entry.rule_id: entry for entry in rule_catalog().rules}
+    for rule_id, expected_fields in _PARITY_FIXTURES_BY_RULE.items():
+        entry = rules[rule_id]
+        for field, references in expected_fields.items():
+            catalogued = set(getattr(entry, field))
+            assert set(references) <= catalogued, (
+                f"{rule_id}: {field} omits CLI/MCP fixture references "
+                f"{sorted(set(references) - catalogued)}"
+            )
 
 
 def test_catalog_implementation_references_resolve_to_sources_or_fixtures() -> None:
