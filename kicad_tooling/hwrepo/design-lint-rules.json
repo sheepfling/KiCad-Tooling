@@ -2721,11 +2721,13 @@
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_direct_mcu_to_serial_header_peer_reviews_split_reference_nets",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_headers_localize_one_split_reference",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_channel_labelled_generic_ic_pair_reviews_split_reference_domains",
+        "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_ic_pair_groups_split_reference_review",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_stale_reference_map_does_not_suppress_prompt"
       ],
       "valid_control_fixtures": [
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_same_reference_net_is_a_quiet_control",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_headers_with_common_references_are_a_quiet_control",
+        "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_ic_pair_with_common_reference_is_quiet",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_exact_direct_map_suppresses_reviewed_common_or_separate_references",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_source_matched_separate_header_reference_map_suppresses_prompt",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_incomplete_or_ambiguous_native_reference_evidence_is_skipped",
@@ -2739,6 +2741,7 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_peer_reference_review_is_order_stable",
+        "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_peer_review_is_order_stable",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_reference_domain_finding_is_order_stable_and_exact_map_clears_it",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_is_order_stable"
       ],

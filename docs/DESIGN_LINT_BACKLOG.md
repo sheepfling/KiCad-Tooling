@@ -3023,7 +3023,12 @@ is not a reason by itself to expand its scope or change its default policy.
   `2006adbfa6c6f1c99e88e3320a1ed7230f01a02f5e143c16a946abaa34f9db20`
   (fault). This serial-label lane exports and parses native netlists; it does
   not run ERC or DRC. The public common-GND sample is a boundary control only;
-  it supplies no defect expectation.
+  it supplies no defect expectation. A tooling-owned synthetic three-channel
+  labeled IC-pair fault now checks that all split-reference channels collapse
+  to one review group, with a matching all-common quiet control and a
+  three-channel order-stability case. This complements the single-channel
+  parity/native fixture and public four-channel common-reference screen without
+  copying public project source.
 
 #### LINT-083 — Reviewed peer-comparison scopes for connector heuristics
 

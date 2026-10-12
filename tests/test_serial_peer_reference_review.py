@@ -9,6 +9,9 @@ from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from kicad_tooling.hwrepo.serial_peer_reference_review import (
     unmapped_serial_peer_reference_reviews,
 )
+from tests.serial_peer_reference_multichannel_support import (
+    multi_channel_labelled_serial_reference_netlist,
+)
 from tests.serial_peer_reference_support import (
     RULE_ID,
     labelled_serial_reference_netlist,
@@ -220,3 +223,75 @@ class SerialPeerReferenceReviewTests:
         )
         assert (unmapped_serial_peer_reference_reviews(source)) == (())
         assert not (any(item.rule_id == RULE_ID for item in report(source).findings))
+
+    def test_three_channel_labelled_ic_pair_groups_split_reference_review(self) -> None:
+        source = multi_channel_labelled_serial_reference_netlist()
+        candidates = unmapped_serial_peer_reference_reviews(source)
+
+        assert len(candidates) == 1
+        assert {candidates[0].first_reference, candidates[0].second_reference} == {"U1", "U2"}
+        assert tuple(link.channel for link in candidates[0].label_links) == (
+            "uart0",
+            "uart1",
+            "uart2",
+        )
+        assert len(candidates[0].label_links) == 3
+
+        lint_report = report(source)
+        findings = [item for item in lint_report.findings if item.rule_id == RULE_ID]
+        coverage = lint_report.serial_peer_reference_coverage
+        assert len(findings) == 1
+        assert coverage is not None
+        assert (
+            coverage.label_peer_link_count,
+            coverage.separate_reference_link_count,
+            coverage.candidate_group_count,
+        ) == (3, 3, 1)
+        assert findings[0].evidence["serial_label_link_assignments"] == (
+            (
+                "uart0: TX Compute module/UART.0.TX (U1.1, U2.2); "
+                "RX Compute module/UART.0.RX (U1.2, U2.1)"
+            ),
+            (
+                "uart1: TX Compute module/UART.1.TX (U1.3, U2.4); "
+                "RX Compute module/UART.1.RX (U1.4, U2.3)"
+            ),
+            (
+                "uart2: TX Compute module/UART.2.TX (U1.5, U2.6); "
+                "RX Compute module/UART.2.RX (U1.6, U2.5)"
+            ),
+        )
+
+    def test_three_channel_labelled_ic_pair_with_common_reference_is_quiet(self) -> None:
+        source = multi_channel_labelled_serial_reference_netlist(common_reference=True)
+
+        assert not unmapped_serial_peer_reference_reviews(source)
+        lint_report = report(source)
+        assert not any(item.rule_id == RULE_ID for item in lint_report.findings)
+        coverage = lint_report.serial_peer_reference_coverage
+        assert coverage is not None
+        assert (
+            coverage.label_peer_link_count,
+            coverage.common_reference_link_count,
+            coverage.candidate_group_count,
+        ) == (3, 3, 0)
+
+    def test_three_channel_labelled_peer_review_is_order_stable(self) -> None:
+        source = multi_channel_labelled_serial_reference_netlist()
+        reordered = source.model_copy(
+            update={
+                "components": dict(reversed(tuple(source.components.items()))),
+                "nets": dict(reversed(tuple(source.nets.items()))),
+                "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+                "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+                "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+                "component_pin_numbers": dict(
+                    reversed(tuple(source.component_pin_numbers.items()))
+                ),
+            }
+        )
+
+        assert unmapped_serial_peer_reference_reviews(source) == (
+            unmapped_serial_peer_reference_reviews(reordered)
+        )
+        assert report(source).findings == report(reordered).findings
