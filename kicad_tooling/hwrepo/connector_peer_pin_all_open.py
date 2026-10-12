@@ -10,7 +10,7 @@ from .connector_identity import (
     pin_function_is_generic,
 )
 from .connector_peer_pin_scan import (
-    _ConnectorPartIdPeerPinGroup,
+    ConnectorPartIdPeerPinGroup,
     scan_connector_part_id_peer_pins,
 )
 from .design_lint_types import Candidate
@@ -222,7 +222,7 @@ def all_open_generic_connector_peer_pin_candidates(
         peer_assignment_groups,
     )
     part_id_groups_by_scope: dict[
-        tuple[str, str, frozenset[str]], list[_ConnectorPartIdPeerPinGroup]
+        tuple[str, str, frozenset[str]], list[ConnectorPartIdPeerPinGroup]
     ] = {}
     for group in part_id_scan.pin_groups:
         references = frozenset(pin.rsplit(".", 1)[0].casefold() for pin in group.assignments)
@@ -250,7 +250,7 @@ def all_open_generic_connector_peer_pin_candidates(
             ):
                 continue
 
-            shared_anchors = tuple(
+            shared_anchor_groups = tuple(
                 anchor
                 for anchor in peer_pin_groups
                 if anchor.pin_number.casefold() != group.pin_number.casefold()
@@ -258,7 +258,7 @@ def all_open_generic_connector_peer_pin_candidates(
                 and len(set(anchor.assignments.values())) == 1
                 and len(next(iter(anchor.assignments.values()))) == 1
             )
-            if not shared_anchors:
+            if not shared_anchor_groups:
                 continue
 
             anchor_contacts = tuple(
@@ -267,7 +267,7 @@ def all_open_generic_connector_peer_pin_candidates(
                         " / ".join(anchor.assignments)
                         + f" -> {next(iter(anchor.assignments.values()))[0]}"
                     )
-                    for anchor in shared_anchors
+                    for anchor in shared_anchor_groups
                 )
             )
             evidence = {

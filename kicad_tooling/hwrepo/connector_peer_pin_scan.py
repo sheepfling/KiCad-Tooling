@@ -37,7 +37,7 @@ class ConnectorPeerPinAssignmentDivergence:
 
 
 @dataclass(frozen=True)
-class _ConnectorPartIdPeerPinGroup:
+class ConnectorPartIdPeerPinGroup:
     part_id: str
     pin_number: str
     pin_function: str
@@ -49,14 +49,14 @@ class _ConnectorPartIdPeerPinGroup:
 
 
 @dataclass(frozen=True)
-class _ConnectorPartIdPeerPinScan:
+class ConnectorPartIdPeerPinScan:
     candidate_group_count: int
     incomplete_component_identity_group_count: int
     incomplete_pin_inventory_group_count: int
     incomplete_pin_metadata_group_count: int
     eligible_peer_group_count: int
     incomplete_pin_inventory_references: tuple[str, ...]
-    pin_groups: tuple[_ConnectorPartIdPeerPinGroup, ...]
+    pin_groups: tuple[ConnectorPartIdPeerPinGroup, ...]
 
 
 def unique_peer_pin_majority(
@@ -76,7 +76,7 @@ def scan_connector_part_id_peer_pins(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
-) -> _ConnectorPartIdPeerPinScan:
+) -> ConnectorPartIdPeerPinScan:
     """Compare connector aliases only after exact source identity and pin metadata match."""
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
     connector_references = {
@@ -139,7 +139,7 @@ def scan_connector_part_id_peer_pins(
     incomplete_metadata_count = 0
     eligible_peer_group_count = 0
     incomplete_inventory_references: set[str] = set()
-    pin_groups: list[_ConnectorPartIdPeerPinGroup] = []
+    pin_groups: list[ConnectorPartIdPeerPinGroup] = []
     for part_key, display_id, peers in candidate_groups:
         peer_components = tuple(components[reference.casefold()] for reference in peers)
         values = {component.value.strip().casefold() for component in peer_components}
@@ -245,7 +245,7 @@ def scan_connector_part_id_peer_pins(
                 if len(scoped_assignments) < 2:
                     continue
                 pin_groups.append(
-                    _ConnectorPartIdPeerPinGroup(
+                    ConnectorPartIdPeerPinGroup(
                         part_id=display_id,
                         pin_number=pin_number,
                         pin_function=pin_metadata[pin_number][0],
@@ -261,7 +261,7 @@ def scan_connector_part_id_peer_pins(
                         peer_assignment_basis=peer_review,
                     )
                 )
-    return _ConnectorPartIdPeerPinScan(
+    return ConnectorPartIdPeerPinScan(
         candidate_group_count=len(candidate_groups),
         incomplete_component_identity_group_count=incomplete_identity_count,
         incomplete_pin_inventory_group_count=incomplete_inventory_count,
