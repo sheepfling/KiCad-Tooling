@@ -5823,6 +5823,10 @@ is not a reason by itself to expand its scope or change its default policy.
   exact KiCad versions. The matrix passed the local KiCad 10.0.0/10.0.5 lane
   on 2026-10-12; its source hashes and expected results are recorded in the
   [signal-type fixture README](../tests/fixtures/design_lint/generic-peer-signal-pin-types-native/README.md).
+  The tagged `v0.5.0rc143` acceptance also passed (run `38234660675`),
+  including the exact-version native fixture lane, installed-wheel check
+  against a separate project checkout, and preview jobs on Ubuntu, macOS, and
+  Windows.
   This broadens native metadata evidence; it does not measure false-positive
   rate or reviewer value.
 - **Applicability evidence:** More examples can test boundary diversity, but
