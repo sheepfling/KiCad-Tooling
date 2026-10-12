@@ -248,6 +248,19 @@ def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
 
 @pytest.mark.design_lint_rule(rule_id="component.generic_peer_pin_all_open")
 def test_generic_peer_pin_all_open_cli_mcp_parity(tmp_path: Path) -> None:
+    _generic_component_peer_pin_cli_mcp_parity(tmp_path, mixed_open=False)
+
+
+@pytest.mark.design_lint_rule(rule_id="component.generic_peer_pin_mixed_open")
+def test_generic_peer_pin_mixed_open_cli_mcp_parity(tmp_path: Path) -> None:
+    _generic_component_peer_pin_cli_mcp_parity(tmp_path, mixed_open=True)
+
+
+def _generic_component_peer_pin_cli_mcp_parity(
+    tmp_path: Path,
+    *,
+    mixed_open: bool,
+) -> None:
     root, island, _ = parity_workspace(tmp_path)
     native = parity_native_evidence(root, island)
     netlist = native.parent / "netlist.xml"
@@ -263,7 +276,11 @@ def test_generic_peer_pin_all_open_cli_mcp_parity(tmp_path: Path) -> None:
                         "rules": (
                             *policy.rules,
                             DesignLintRuleOverride(
-                                rule_id="component.generic_peer_pin_all_open",
+                                rule_id=(
+                                    "component.generic_peer_pin_mixed_open"
+                                    if mixed_open
+                                    else "component.generic_peer_pin_all_open"
+                                ),
                                 mode="review",
                                 reason="Synthetic parity fixture reviews generic open component peers",
                             ),
@@ -275,26 +292,40 @@ def test_generic_peer_pin_all_open_cli_mcp_parity(tmp_path: Path) -> None:
     )
 
     def write_netlist(*, fault: bool) -> None:
-        target_nets = (
-            ""
+        references = ("U10", "U11", "U12") if mixed_open else ("U10", "U11")
+        assigned_nets = (
+            ("LOAD", "LOAD", None)
+            if mixed_open and fault
+            else ("LOAD", "LOAD", "LOAD")
+            if mixed_open
+            else (None, None)
             if fault
-            else '<net name="LOAD_A"><node ref="U10" pin="2"/></net>'
-            '<net name="LOAD_B"><node ref="U11" pin="2"/></net>'
+            else ("LOAD_A", "LOAD_B")
         )
+        components = "".join(
+            f'<comp ref="{reference}"><value>Synthetic peer module</value>'
+            "<footprint>Synthetic:Module</footprint>"
+            '<libsource lib="Synthetic" part="GenericPeer"/></comp>'
+            for reference in references
+        )
+        target_nets = "".join(
+            f'<net name="{net}">'
+            + "".join(
+                f'<node ref="{reference}" pin="2"/>'
+                for reference, assigned_net in zip(references, assigned_nets, strict=True)
+                if assigned_net == net
+            )
+            + "</net>"
+            for net in sorted({net for net in assigned_nets if net is not None})
+        )
+        anchor_nodes = "".join(f'<node ref="{reference}" pin="1"/>' for reference in references)
         netlist_text = native_fixture.NETLIST.replace(
             "</components><nets/>",
-            '<comp ref="U10"><value>Synthetic peer module</value>'
-            "<footprint>Synthetic:Module</footprint>"
-            '<libsource lib="Synthetic" part="GenericPeer"/></comp>'
-            '<comp ref="U11"><value>Synthetic peer module</value>'
-            "<footprint>Synthetic:Module</footprint>"
-            '<libsource lib="Synthetic" part="GenericPeer"/></comp>'
-            '</components><libparts><libpart lib="Synthetic" part="GenericPeer"><pins>'
+            f'{components}</components><libparts><libpart lib="Synthetic" part="GenericPeer"><pins>'
             '<pin num="1" name="ANCHOR" type="passive"/>'
             '<pin num="2" name="Pin_2" type="passive"/>'
             "</pins></libpart></libparts><nets>"
-            '<net name="SHARED"><node ref="U10" pin="1"/>'
-            '<node ref="U11" pin="1"/></net>'
+            f'<net name="SHARED">{anchor_nodes}</net>'
             f"{target_nets}</nets>",
         )
         netlist.write_text(netlist_text, encoding="utf-8")
@@ -346,12 +377,19 @@ def test_generic_peer_pin_all_open_cli_mcp_parity(tmp_path: Path) -> None:
                 findings = [
                     item
                     for item in mcp_report.findings
-                    if item.rule_id == "component.generic_peer_pin_all_open"
+                    if item.rule_id
+                    == (
+                        "component.generic_peer_pin_mixed_open"
+                        if mixed_open
+                        else "component.generic_peer_pin_all_open"
+                    )
                 ]
                 assert len(findings) == int(fault)
                 if fault:
                     assert findings[0].mode == "review"
                     assert findings[0].disposition == "OPEN"
+                    expected_open = ("U12.2",) if mixed_open else ("U10.2", "U11.2")
+                    assert findings[0].evidence["unassigned_pins"] == expected_open
 
     asyncio.run(exercise())
 

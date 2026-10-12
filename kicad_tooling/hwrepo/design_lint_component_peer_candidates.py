@@ -4,33 +4,11 @@ from __future__ import annotations
 
 from .component_peer_pin_all_open import all_open_generic_component_peer_pin_candidates
 from .component_peer_pin_findings import component_peer_power_pin_assignment_divergences
-from .component_peer_pin_scan import ComponentPeerPinAssignmentScans, PeerPinAssignmentOutlier
+from .component_peer_pin_identity import component_peer_pin_identity_context
+from .component_peer_pin_mixed_open import mixed_open_generic_component_peer_pin_candidates
+from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .design_lint_types import Candidate
 from .models import NetlistContract
-
-
-def _component_peer_identity_context(
-    group: PeerPinAssignmentOutlier,
-) -> tuple[str, str, str, dict[str, tuple[str, ...]]]:
-    """Describe the exact source identity that made two components comparable."""
-    if group.peer_identity_basis == "part_id":
-        subject_identity = f"PART_ID {group.peer_identity}"
-        identity_text = (
-            f"the same native PART_ID {group.peer_identity!r} across distinct native symbols"
-        )
-        independent_net_text = "a shared PART_ID does not require peer pins to share a net"
-    else:
-        subject_identity = group.peer_identity
-        identity_text = f"the exact native symbol {group.peer_identity!r}"
-        independent_net_text = "identical symbols do not require peer pins to share a net"
-    evidence: dict[str, tuple[str, ...]] = {
-        "peer_group_basis": (group.peer_identity_basis,),
-        "peer_group_identity": (group.peer_identity,),
-        "peer_group_symbols": group.peer_symbols,
-    }
-    if group.peer_identity_basis == "exact_symbol":
-        evidence["symbol"] = (group.peer_identity,)
-    return subject_identity, identity_text, independent_net_text, evidence
 
 
 def component_peer_candidates(
@@ -111,7 +89,7 @@ def component_peer_candidates(
             identity_text,
             independent_net_text,
             identity_evidence,
-        ) = _component_peer_identity_context(group)
+        ) = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_power_output_unconnected",
@@ -143,7 +121,7 @@ def component_peer_candidates(
             identity_text,
             independent_net_text,
             identity_evidence,
-        ) = _component_peer_identity_context(group)
+        ) = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_signal_output_unconnected",
@@ -178,7 +156,7 @@ def component_peer_candidates(
             identity_text,
             independent_net_text,
             identity_evidence,
-        ) = _component_peer_identity_context(group)
+        ) = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_signal_input_unconnected",
@@ -211,7 +189,7 @@ def component_peer_candidates(
             identity_text,
             independent_net_text,
             identity_evidence,
-        ) = _component_peer_identity_context(group)
+        ) = component_peer_pin_identity_context(group)
         found.append(
             Candidate(
                 rule_id="component.peer_bidirectional_pin_unconnected",
@@ -235,5 +213,8 @@ def component_peer_candidates(
                 },
             )
         )
+    found.extend(
+        mixed_open_generic_component_peer_pin_candidates(peer_pin_scans.generic_partial_open)
+    )
     found.extend(all_open_generic_component_peer_pin_candidates(peer_pin_scans.generic_all_open))
     return tuple(found)

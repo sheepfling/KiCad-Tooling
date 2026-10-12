@@ -12,6 +12,7 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
         HostedLog,
         component_peer_bidirectional_fixture_lane,
         component_peer_generic_all_open_fixture_lane,
+        component_peer_generic_mixed_open_fixture_lane,
         component_peer_power_output_fixture_lane,
         component_peer_signal_input_fixture_lane,
         component_peer_signal_output_fixture_lane,
@@ -37,6 +38,10 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
             "generic-all-open",
             component_peer_generic_all_open_fixture_lane,
         ),
+        "generic-mixed-open": (
+            "generic-mixed-open",
+            component_peer_generic_mixed_open_fixture_lane,
+        ),
     }
     lane_kind, lane = lanes[kind]
     expected_peer_basis_counts = (0, 1) if kind == "power" else (1, 0)
@@ -61,6 +66,10 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
         "generic-all-open": {
             "fault": "0cc0e21feb53a94306378599d69e920fc0f7b54d9ce792ba56c523ad42c658ae",
             "control": "bf6920996fb0fea85bc4c7124fa69db79a1b58a1dabc89c1bb6b436a7cd40b8b",
+        },
+        "generic-mixed-open": {
+            "fault": "f7dbc6a60581d66e74e5daef25064f5690e0c13a570526974dd5a22044dab430",
+            "control": "1b079ba2c4af5b4fb40341d3ea7bfb971478327baf80df32026d8cbeea12a8db",
         },
     }[kind]
     for project, version in expected_versions.items():
@@ -94,7 +103,11 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
         for case, expected_pins, expected_status in (
             (
                 "fault",
-                "U1.2,U2.2" if kind == "generic-all-open" else "U2.2",
+                "U1.2,U2.2"
+                if kind == "generic-all-open"
+                else "U3.2"
+                if kind == "generic-mixed-open"
+                else "U2.2",
                 "REVIEW",
             ),
             ("control", "none", "PASS"),

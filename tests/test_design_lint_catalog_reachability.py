@@ -104,6 +104,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.peer_connector_pin_assignments(),
         _connector_peer_pin_all_open.generic_open_peer_netlist(),
         _component_peer_pin_all_open.generic_component_peer_netlist(),
+        _component_peer_pin_all_open.generic_component_peer_mixed_netlist(),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(("PORT_A", "PORT_B")),
         unroled_return_labels,
         numbered_power_rails,

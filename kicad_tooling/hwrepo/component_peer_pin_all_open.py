@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_peer_pin_identity import component_peer_pin_identity_context
 from .component_peer_pin_scan import PeerPinAssignmentScan
 from .design_lint_types import Candidate
 
@@ -17,25 +18,9 @@ def all_open_generic_component_peer_pin_candidates(
         open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
         if len(open_pins) < 2 or len(open_pins) != len(group.assignments):
             continue
-        if group.peer_identity_basis == "part_id":
-            identity = f"PART_ID {group.peer_identity}"
-            identity_description = (
-                f"the same native PART_ID {group.peer_identity!r} across distinct native symbols"
-            )
-            identity_evidence = {
-                "peer_group_basis": ("part_id",),
-                "peer_group_identity": (group.peer_identity,),
-                "peer_group_symbols": group.peer_symbols,
-            }
-        else:
-            identity = group.peer_identity
-            identity_description = f"the exact native symbol {group.peer_identity!r}"
-            identity_evidence = {
-                "peer_group_basis": ("exact_symbol",),
-                "peer_group_identity": (group.peer_identity,),
-                "peer_group_symbols": group.peer_symbols,
-                "symbol": (group.peer_identity,),
-            }
+        identity, identity_description, _, identity_evidence = component_peer_pin_identity_context(
+            group
+        )
         function = group.pin_function or ""
         candidates.append(
             Candidate(

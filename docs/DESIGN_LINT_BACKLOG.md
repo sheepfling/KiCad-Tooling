@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 100 rules are implemented with synthetic regression coverage.
+The following 101 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -311,6 +311,7 @@ Their actual recognition limits are documented in
 - `component.peer_signal_input_unconnected`
 - `component.peer_bidirectional_pin_unconnected`
 - `component.generic_peer_pin_all_open`
+- `component.generic_peer_pin_mixed_open`
 - `component.peer_signal_output_unconnected`
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
@@ -2201,7 +2202,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 100 active rules; CI requires every new
+- **Status:** Baseline complete for all 101 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2210,7 +2211,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 100 covered, 0 not applicable, 0 unreviewed.
+  audit: 101 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5880,6 +5881,48 @@ is not a reason by itself to expand its scope or change its default policy.
   dispositions to measure reviewer value and false positives before changing
   its default or relaxing its identity and shared-anchor requirements.
 
+#### LINT-116 — Generic component peer pin is open on part of a group
+
+- **Status:** Implemented as the opt-in, default-off rule
+  `component.generic_peer_pin_mixed_open`.
+- **Priority:** P1 component-completeness review. A generic pin can be assigned
+  consistently on several fitted copies while remaining open on another; the
+  role-specific component peer checks do not cover passive-pin groups, and
+  this prompt adds a larger group with exact assignment consensus.
+- **Predicate:** Compare at least three fitted non-connector peers with
+  complete, identical pin inventories. Peers must use the same exact native
+  symbol or share a nonempty native `PART_ID` plus matching nonempty value and
+  footprint. Cross-symbol groups also require identical native function and
+  electrical-type metadata for every pin. Prompt only when a target with
+  absent, generic `Pin_N`, or numeric-only function metadata is open on
+  at least one peer and assigned to the same exact single net on at least two
+  other peers. Require another pin with the same exact single-net assignment
+  across every peer as an anchor. Supported target electrical types are
+  `passive`, `tri_state`, `open_collector`, and `open_emitter`. Native
+  `input`, `output`, and `bidirectional` pins stay with their existing peer
+  checks to avoid duplicate findings.
+- **Boundary:** The anchor, peer identity, and assigned-peer consensus provide
+  comparison context only. They do not establish the pin's function or require
+  a common net. The rule is default-off and can be selected as `review`,
+  `block`, or `off`, or suppressed by an exact reviewed ignore. Named
+  functions, recognized supply and return pins, `power_in`, `power_out`,
+  `free`, and `unspecified` pins, connectors, DNP peers, incomplete identities
+  or inventories, and ambiguous assignments are outside the predicate. It
+  covers schematic assignments, not PCB copper continuity, off-board wiring,
+  physical population, or approved component requirements.
+- **Fixtures:** Typed synthetic tests cover subset-open faults, connected,
+  disagreeing-net, one-assigned-peer, two-peer, missing-anchor, DNP,
+  connector, electrical-type, function, identity, policy, ignore, and
+  input-order controls. CLI/MCP parity and source-bound coverage use the same
+  three-peer fault and connected control. Digest-pinned native fault/control
+  schematics are recorded in
+  [the mixed-open fixture README](../tests/fixtures/design_lint/component-peer-generic-mixed-open-native/README.md);
+  the local exact-version lane passed on KiCad 10.0.0 and 10.0.5.
+- **Next:** Keep the rule opt-in. Use independently reviewed, sanitized
+  pinout examples to measure whether the prompt catches useful regressions and
+  to record false positives before considering broader peer identities or a
+  default-mode change.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8735,11 +8778,11 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 100 active rules. Each entry has a deterministic predicate, evidence
+contains 101 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-The schematic geometry rules and the generic connector and component all-open
-rules default to `off`; other active rules default to `review`.
+The schematic geometry rules and the generic connector and component peer-pin
+heuristics default to `off`; other active rules default to `review`.
 The report carries this catalog and a SHA-256 digest of its packaged bytes.
 Tests assert that catalog IDs match the closed policy type, each active rule is
 reachable from a synthetic fault case, and every named fixture still exists and

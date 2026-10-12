@@ -13,6 +13,21 @@ from .connector_identity import (
 )
 from .models import NetlistContract
 
+_GENERIC_COMPONENT_PIN_TYPES = frozenset(
+    {
+        "passive",
+        "input",
+        "output",
+        "bidirectional",
+        "tri_state",
+        "open_collector",
+        "open_emitter",
+    }
+)
+_GENERIC_COMPONENT_MIXED_PIN_TYPES = frozenset(
+    {"passive", "tri_state", "open_collector", "open_emitter"}
+)
+
 
 @dataclass(frozen=True)
 class PeerPowerPinAssignmentDivergence:
@@ -64,6 +79,7 @@ class ComponentPeerPinAssignmentScans:
     signal_output: PeerPinAssignmentScan
     signal_input: PeerPinAssignmentScan
     bidirectional: PeerPinAssignmentScan
+    generic_partial_open: PeerPinAssignmentScan
     generic_all_open: PeerPinAssignmentScan
 
 
@@ -74,7 +90,11 @@ def scan_component_peer_pin_assignments(
     electrical_types: frozenset[str],
     require_pin_functions: bool = False,
     require_generic_pin_functions: bool = False,
-    include_all_open: bool = False,
+    assignment_pattern: Literal["partial_open", "all_open"] = "partial_open",
+    require_shared_anchor: bool = False,
+    minimum_peer_count: int = 2,
+    minimum_assigned_peer_count: int = 1,
+    require_assigned_peers_on_same_net: bool = False,
 ) -> PeerPinAssignmentScan:
     """Scan assignment coverage among exact-symbol and exact-part peers.
 
@@ -84,9 +104,14 @@ def scan_component_peer_pin_assignments(
     footprint, complete pin inventories, native types, and present, identical
     per-pin function metadata. Identical generic placeholders are accepted as
     a structural match only; they do not identify the pin's electrical role.
-    ``include_all_open`` is reserved for the opt-in generic rule and requires a
-    generic target function plus a shared exact-net anchor.
+    ``assignment_pattern`` selects mixed open/assigned peers or all-open peers.
+    The generic pin rules also require one separate exact-net anchor shared by
+    every peer; this establishes comparison context without asserting intent.
+    Mixed-open rules can additionally require a larger peer group and assigned
+    peers with a single exact-net consensus.
     """
+    if minimum_peer_count < 2 or minimum_assigned_peer_count < 1:
+        raise ValueError("Peer-pin scans require at least two peers and one assigned peer")
     accepted_types = {value.strip().casefold() for value in electrical_types}
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
     connector_references = {
@@ -240,8 +265,22 @@ def scan_component_peer_pin_assignments(
             open_pins = tuple(pin for pin, nets in assignments.items() if not nets)
             assigned_pins = tuple(pin for pin, nets in assignments.items() if nets)
             all_open = bool(open_pins) and not assigned_pins
-            if not open_pins or (not assigned_pins and not (include_all_open and all_open)):
+            if assignment_pattern == "all_open":
+                if not all_open:
+                    continue
+            elif not open_pins or not assigned_pins:
                 continue
+            if assignment_pattern == "partial_open" and len(peers) < minimum_peer_count:
+                continue
+            if (
+                assignment_pattern == "partial_open"
+                and len(assigned_pins) < minimum_assigned_peer_count
+            ):
+                continue
+            if require_assigned_peers_on_same_net:
+                assigned_nets = {assignments[pin] for pin in assigned_pins}
+                if len(assigned_nets) != 1 or len(next(iter(assigned_nets))) != 1:
+                    continue
             if any(
                 function is not None
                 and (is_named_supply_function(function) or is_return_function(function))
@@ -251,7 +290,7 @@ def scan_component_peer_pin_assignments(
                 # Preserve the more specific existing named supply/return prompt.
                 continue
             shared_anchors: list[str] = []
-            if include_all_open and all_open:
+            if require_shared_anchor:
                 for anchor_number in peer_inventories[0]:
                     if anchor_number.casefold() == pin_number.casefold():
                         continue
@@ -369,18 +408,19 @@ def component_peer_pin_assignment_scans(
         generic_all_open=scan_component_peer_pin_assignments(
             observed,
             declared_references,
-            electrical_types=frozenset(
-                {
-                    "passive",
-                    "input",
-                    "output",
-                    "bidirectional",
-                    "tri_state",
-                    "open_collector",
-                    "open_emitter",
-                }
-            ),
+            electrical_types=_GENERIC_COMPONENT_PIN_TYPES,
             require_generic_pin_functions=True,
-            include_all_open=True,
+            assignment_pattern="all_open",
+            require_shared_anchor=True,
+        ),
+        generic_partial_open=scan_component_peer_pin_assignments(
+            observed,
+            declared_references,
+            electrical_types=_GENERIC_COMPONENT_MIXED_PIN_TYPES,
+            require_generic_pin_functions=True,
+            require_shared_anchor=True,
+            minimum_peer_count=3,
+            minimum_assigned_peer_count=2,
+            require_assigned_peers_on_same_net=True,
         ),
     )

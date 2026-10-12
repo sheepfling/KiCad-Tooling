@@ -64,6 +64,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_connector_peer_pin_all_open.py": {"connector_lint"},
     "test_connector_signal_peer_pin_all_open.py": {"connector_lint", "interface_lint"},
     "test_component_peer_pin_all_open.py": {"component_lint"},
+    "test_component_peer_pin_mixed_open.py": {"component_lint"},
     "test_pcb_reference_plane_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_switching_loop_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_return_path_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},

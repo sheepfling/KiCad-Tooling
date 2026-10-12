@@ -79,6 +79,19 @@ def component_peer_generic_all_open_fixture_lane(
     )
 
 
+def component_peer_generic_mixed_open_fixture_lane(
+    root: Path, *, project: str, image: str, log: HostedLog
+) -> None:
+    """Verify the generic mixed-open peer fault and control natively."""
+    _component_peer_pin_assignment_fixture_lane(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        kind="generic-mixed-open",
+    )
+
+
 def _component_peer_pin_assignment_fixture_lane(
     root: Path,
     *,
@@ -91,6 +104,7 @@ def _component_peer_pin_assignment_fixture_lane(
         "signal-input",
         "bidirectional",
         "generic-all-open",
+        "generic-mixed-open",
     ],
 ) -> None:
     """Verify one comparable-peer open-pin class against repeated KiCad exports."""
@@ -127,6 +141,7 @@ def _component_peer_pin_assignment_fixture_lane(
         "signal-input": "input",
         "bidirectional": "bidirectional",
         "generic-all-open": "passive",
+        "generic-mixed-open": "passive",
     }
     rule_ids: dict[str, DesignLintRuleId] = {
         "power-output": "component.peer_power_output_unconnected",
@@ -134,6 +149,7 @@ def _component_peer_pin_assignment_fixture_lane(
         "signal-input": "component.peer_signal_input_unconnected",
         "bidirectional": "component.peer_bidirectional_pin_unconnected",
         "generic-all-open": "component.generic_peer_pin_all_open",
+        "generic-mixed-open": "component.generic_peer_pin_mixed_open",
     }
     fixture_symbols = {
         "power-output": "Synthetic:PowerModule",
@@ -141,6 +157,7 @@ def _component_peer_pin_assignment_fixture_lane(
         "signal-input": "Synthetic:SignalInputModule",
         "bidirectional": "Synthetic:BidirectionalModule",
         "generic-all-open": "Synthetic:GenericPeerModule",
+        "generic-mixed-open": "Synthetic:GenericPeerModule",
     }
     functions = {
         "power-output": "Pin_2",
@@ -148,6 +165,7 @@ def _component_peer_pin_assignment_fixture_lane(
         "signal-input": "IN",
         "bidirectional": "DATA_IO",
         "generic-all-open": "Pin_2",
+        "generic-mixed-open": "Pin_2",
     }
     native_pin_type = native_pin_types[kind]
     rule_id = rule_ids[kind]
@@ -159,13 +177,18 @@ def _component_peer_pin_assignment_fixture_lane(
         "power-output": "VOUT",
         "signal-output": "VOUT",
         "generic-all-open": "LOAD",
+        "generic-mixed-open": "LOAD",
     }[kind]
     lane_name = f"component-peer-{kind}-fixture"
     display_name = kind
     cases = {
         "fault": (
             "fault.kicad_sch",
-            ("U1.2", "U2.2") if kind == "generic-all-open" else ("U2.2",),
+            ("U1.2", "U2.2")
+            if kind == "generic-all-open"
+            else ("U3.2",)
+            if kind == "generic-mixed-open"
+            else ("U2.2",),
         ),
         "control": ("control.kicad_sch", ()),
     }
@@ -270,6 +293,12 @@ def _component_peer_pin_assignment_fixture_lane(
                     if case == "fault"
                     else {"U1.2": ("LOAD_A",), "U2.2": ("LOAD_B",)}
                 )
+            elif kind == "generic-mixed-open":
+                expected_assignments = (
+                    {"U1.2": ("LOAD",), "U2.2": ("LOAD",), "U3.2": ()}
+                    if case == "fault"
+                    else {"U1.2": ("LOAD",), "U2.2": ("LOAD",), "U3.2": ("LOAD",)}
+                )
             else:
                 expected_assignments = (
                     {"U1.2": (signal_name,), "U2.2": ()}
@@ -285,23 +314,30 @@ def _component_peer_pin_assignment_fixture_lane(
                     f"Native {case} expected schematic output assignments "
                     f"{expected_assignments}, observed {actual_assignments}"
                 )
+            expected_references = (
+                ("U1", "U2", "U3") if kind == "generic-mixed-open" else ("U1", "U2")
+            )
             expected_symbols = (
                 {"U1": "Synthetic:PowerModule", "U2": "Synthetic:PowerModuleAlias"}
                 if kind == "power-output"
-                else {"U1": fixture_symbol, "U2": fixture_symbol}
+                else {reference: fixture_symbol for reference in expected_references}
             )
             if (
                 observed.component_symbols != expected_symbols
-                or observed.component_pin_numbers.get("U1") != ("1", "2")
-                or observed.component_pin_numbers.get("U2") != ("1", "2")
-                or observed.pin_electrical_types.get("U1.1") != "passive"
-                or observed.pin_electrical_types.get("U2.1") != "passive"
-                or observed.pin_electrical_types.get("U1.2") != native_pin_type
-                or observed.pin_electrical_types.get("U2.2") != native_pin_type
-                or observed.pin_functions.get("U1.1") != "Pin_1"
-                or observed.pin_functions.get("U2.1") != "Pin_1"
-                or observed.pin_functions.get("U1.2") != pin_function
-                or observed.pin_functions.get("U2.2") != pin_function
+                or any(
+                    observed.component_pin_numbers.get(reference) != ("1", "2")
+                    for reference in expected_references
+                )
+                or any(
+                    observed.pin_electrical_types.get(f"{reference}.{number}") != expected_type
+                    for reference in expected_references
+                    for number, expected_type in (("1", "passive"), ("2", native_pin_type))
+                )
+                or any(
+                    observed.pin_functions.get(f"{reference}.{number}") != expected_function
+                    for reference in expected_references
+                    for number, expected_function in (("1", "Pin_1"), ("2", pin_function))
+                )
             ):
                 raise ValueError(
                     f"Native {case} export omitted the exact peer symbol, pin inventory, "
@@ -329,14 +365,14 @@ def _component_peer_pin_assignment_fixture_lane(
                 netlist_sha256=raw_hashes[(case, run)],
             )
             policy = DesignLintPolicy()
-            if kind == "generic-all-open":
+            if kind in {"generic-all-open", "generic-mixed-open"}:
                 policy = policy.model_copy(
                     update={
                         "rules": (
                             DesignLintRuleOverride(
                                 rule_id=rule_id,
                                 mode="review",
-                                reason="Synthetic native fixture enables the all-open peer prompt",
+                                reason="Synthetic native fixture enables the generic peer-pin prompt",
                             ),
                         )
                     }

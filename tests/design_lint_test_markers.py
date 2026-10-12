@@ -42,6 +42,7 @@ _LINT_AREA_MODULES = {
         {
             "tests/test_component_unconnected_power_output.py",
             "tests/test_component_peer_pin_all_open.py",
+            "tests/test_component_peer_pin_mixed_open.py",
             "tests/test_design_lint_mcp_parity_peer_pins.py",
             "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
             "tests/test_electrical_component_rating_parity.py",

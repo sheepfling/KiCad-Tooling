@@ -93,17 +93,32 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
     assert scope.native_fixtures == ("KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES",)
 
 
-def test_lint_tag_selects_one_active_rule_and_its_configured_native_fixture() -> None:
+@pytest.mark.parametrize(
+    ("rule_id", "native_fixture"),
+    (
+        (
+            "power.mapped_sequence_dependency_mismatch",
+            "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",
+        ),
+        (
+            "component.generic_peer_pin_mixed_open",
+            "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
+        ),
+    ),
+)
+def test_lint_tag_selects_one_active_rule_and_its_configured_native_fixture(
+    rule_id: str,
+    native_fixture: str,
+) -> None:
     repository = Path(__file__).resolve().parents[1]
-    rule_id = "power.mapped_sequence_dependency_mismatch"
     fixtures = configured_native_fixtures(repository)
     assert rule_id in active_design_lint_rule_ids()
-    assert "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES" in fixtures
+    assert native_fixture in fixtures
 
     scope = parse_tag_message(
-        "Mapped power-sequence dependency lint gate\n\n"
+        "Focused deterministic lint gate\n\n"
         f"Lint-Rule: {rule_id}\n"
-        "Native-Fixture: KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES\n",
+        f"Native-Fixture: {native_fixture}\n",
         fixtures,
         active_design_lint_rule_ids(),
     )
@@ -111,7 +126,7 @@ def test_lint_tag_selects_one_active_rule_and_its_configured_native_fixture() ->
     assert scope.area is None
     assert scope.rule_id == rule_id
     assert scope.pytest_markexpr == f'design_lint and design_lint_rule(rule_id="{rule_id}")'
-    assert scope.native_fixtures == ("KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",)
+    assert scope.native_fixtures == (native_fixture,)
 
 
 def test_lint_tag_areas_are_registered_pytest_markers() -> None:
