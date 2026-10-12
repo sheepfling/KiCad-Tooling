@@ -2266,7 +2266,7 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_coincident_free_text_anchors_are_reported",
         "tests.test_schematic_geometry_hierarchy.SchematicGeometryHierarchyTests.test_reused_sheet_tree_maps_geometry_to_each_instance_reference",
-        "tests.test_design_lint_schematic_text.DesignLintSchematicTextTests.test_coincident_text_anchor_rule_is_configurable_and_review_only_by_default"
+        "tests.test_design_lint_schematic_text.test_coincident_text_anchor_rule_is_configurable_and_review_only_by_default"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_separate_free_text_anchors_are_not_reported"
@@ -2343,7 +2343,7 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_free_text_crossing_wire_is_reported",
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_free_text_wire_overlap_uses_guard_and_minimum_length",
-        "tests.test_design_lint_schematic_text.DesignLintSchematicTextTests.test_free_text_over_wire_rule_is_configurable_and_review_only_by_default"
+        "tests.test_design_lint_schematic_text.test_free_text_over_wire_rule_is_configurable_and_review_only_by_default"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_free_text_clear_of_wire_is_valid_control",
@@ -2381,7 +2381,7 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_over_symbol_body_is_reported_with_clear_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_uses_area_threshold",
-        "tests.test_design_lint_schematic_text.DesignLintSchematicTextTests.test_free_text_over_symbol_body_rule_is_configurable_and_off_by_default"
+        "tests.test_design_lint_schematic_text.test_free_text_over_symbol_body_rule_is_configurable_and_off_by_default"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_over_symbol_body_is_reported_with_clear_control",

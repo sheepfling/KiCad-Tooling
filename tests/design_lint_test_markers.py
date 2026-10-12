@@ -21,6 +21,7 @@ _LINT_AREA_MODULES = {
     "schematic_lint": frozenset(
         {
             "tests/test_schematic_geometry_text.py",
+            "tests/test_design_lint_schematic_text.py",
             "tests/test_schematic_geometry_symbol_body.py",
             "tests/test_schematic_geometry_pin_proximity.py",
             "tests/test_schematic_geometry_wire_topology.py",

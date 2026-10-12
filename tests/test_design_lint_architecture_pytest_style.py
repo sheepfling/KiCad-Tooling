@@ -48,6 +48,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_electrical_rs485_contract.py": {"interface_lint"},
     "test_design_lint_led_topology.py": {"component_lint", "power_lint"},
     "test_design_lint_serial_peer_voltage.py": {"interface_lint"},
+    "test_design_lint_schematic_text.py": {"schematic_lint"},
     "test_pcb_reference_plane_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_switching_loop_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_return_path_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
@@ -241,6 +242,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
         (
             "bus.serial_peer_voltage_review",
             "tests/test_design_lint_serial_peer_voltage.py::test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
+        ),
+        (
+            "schematic.coincident_text_anchors",
+            "tests/test_design_lint_schematic_text.py::test_coincident_text_anchor_rule_is_configurable_and_review_only_by_default",
         ),
     ),
 )
