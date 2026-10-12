@@ -84,6 +84,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/peer-scope-shared-control",
     "connector-return-fixture/four-db9-fault",
     "connector-return-fixture/four-db9-control",
+    "connector-return-fixture/four-db9-pwm-fault",
+    "connector-return-fixture/four-db9-pwm-control",
     "connector-return-fixture/four-db9-neutral-fault",
     "connector-return-fixture/four-db9-neutral-control",
     "connector-return-fixture/ground-contract-common-fault",

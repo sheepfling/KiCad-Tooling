@@ -87,6 +87,8 @@ def prepare_connector_return_fixture_context(
         "channel-power-control": fixture_root / "cohort-channel-power-names/control.kicad_sch",
         "four-db9-fault": fixture_root / "four-port-db9-returns/fault.kicad_sch",
         "four-db9-control": fixture_root / "four-port-db9-returns/control.kicad_sch",
+        "four-db9-pwm-fault": fixture_root / "four-port-db9-returns/pwm-fault.kicad_sch",
+        "four-db9-pwm-control": fixture_root / "four-port-db9-returns/pwm-control.kicad_sch",
         "four-db9-neutral-fault": fixture_root
         / "four-port-db9-returns/numeric-function-neutral-fault.kicad_sch",
         "four-db9-neutral-control": fixture_root
@@ -164,6 +166,8 @@ def prepare_connector_return_fixture_context(
         "channel-power-control": "37c7c28963b530a679cd3dc2087a4fa3b5d97dda52250332556406c66b9e1fc7",
         "four-db9-fault": "1baabede29ea7a33cf85ec85f35c3affb2937e31db981e8f5d68f3b769d43791",
         "four-db9-control": "ed2096c8aedbf263290c19c3a067cdf959fac92512aa3ab02fabbd7e10db4171",
+        "four-db9-pwm-fault": "c4a842c1685d5fbf21985aa22bd0b6436e163025f4381a8ac2544621c264e546",
+        "four-db9-pwm-control": "3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc",
         "four-db9-neutral-fault": "8b54babacd735da898cbd477b641a57085ff03b74bf0d9aa665fc8625a36f65f",
         "four-db9-neutral-control": "49e3bca48e79e4b46ce4eba8298026b5c730fca56b119a3ec407dfaafbcf54cd",
         "peer-power-fault": "4e2382aede1643770a466a9c902b1e960f8a8ab0d1bc676a03db33dfe6e582a8",

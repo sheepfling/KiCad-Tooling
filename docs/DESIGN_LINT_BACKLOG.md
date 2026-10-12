@@ -1361,9 +1361,14 @@ is not a reason by itself to expand its scope or change its default policy.
   typed-netlist follow-up applies the same pin pattern to spaced
   `0V PWM 1`–`0V PWM 4`, underscored `0V_PWM_1`–`0V_PWM_4`, and compact
   `0V_PWM1`–`0V_PWM4` names; all three produce the numbered-return review. A
-  common `0V PWM` net is a quiet control. This covers the failure's naming
-  pattern without importing a board or adding a native-export claim. A
-  project-policy regression also keeps the default at `REVIEW` while proving
+  common `0V PWM` net is a quiet control. A tooling-owned synthetic native
+  fault/control pair now also preserves the spaced labels through KiCad export.
+  This covers the failure's naming pattern without importing a board. A
+  local exact-version native run on 2026-10-12 passed for KiCad 10.0.0 and
+  10.0.5: the four split names and all eight pin memberships were retained on
+  repeated exports, the fault produced `net.numbered_returns`, and the common
+  control passed without findings.
+  The project-policy regression also keeps the default at `REVIEW` while proving
   an explicitly configured `block` override changes the report to `FAIL`
   without changing the finding fingerprint or evidence. A
   separate CLI/MCP parity case binds the spaced-name fixture to a synthetic
@@ -1392,6 +1397,9 @@ is not a reason by itself to expand its scope or change its default policy.
   after normalization to the parsed netlist contract, exact review findings on
   fault cases, and clean lint passes on controls. Raw KiCad XML includes a
   changing export timestamp.
+  A second tooling-owned DB9 source pair uses the spaced labels `0V PWM 1`
+  through `0V PWM 4` and the common `0V PWM` control. This verifies native name
+  parsing without claiming that the four domains should be connected.
   A numeric-function variant renames pins 7/9 to native function text `7`/`9`
   and replaces return-like nets with neutral `NET_A` through `NET_D` labels.
   Both pinned KiCad versions preserve the two exact-symbol repeated-pin

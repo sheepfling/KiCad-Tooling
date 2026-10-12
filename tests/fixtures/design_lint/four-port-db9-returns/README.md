@@ -1,6 +1,6 @@
 # Synthetic four-port DB9 return domains
 
-This fixture pair uses four embedded, synthetic nine-pin connector symbols. Pins 7
+This fixture set uses four embedded, synthetic nine-pin connector symbols. Pins 7
 and 9 are explicitly named `GND` in the fixture symbol metadata and receive
 local return labels. The fault assigns each connector's two contacts to one of
 four separately named `RETURN_PORT_n` nets; the control assigns all eight
@@ -10,10 +10,18 @@ The other seven contacts are wired to matching `SIGNAL<n>` nets across all four
 connectors. This keeps the regression focused on the return contacts and avoids
 warnings caused by unrelated unassigned synthetic pins.
 
-| Fixture             | Assignment                             | Expected lint result                                            |
-| ------------------- | -------------------------------------- | --------------------------------------------------------------- |
-| `fault.kicad_sch`   | J1–J4 pins 7/9 use `RETURN_PORT_n`     | `REVIEW` for repeated return functions and numbered return nets |
-| `control.kicad_sch` | All J1–J4 pins 7/9 use `COMMON_RETURN` | `PASS`                                                          |
+| Fixture                 | Assignment                                       | Expected lint result                                            |
+| ----------------------- | ------------------------------------------------ | --------------------------------------------------------------- |
+| `fault.kicad_sch`       | J1–J4 pins 7/9 use `RETURN_PORT_n`               | `REVIEW` for repeated return functions and numbered return nets |
+| `control.kicad_sch`     | All J1–J4 pins 7/9 use `COMMON_RETURN`           | `PASS`                                                          |
+| `pwm-fault.kicad_sch`   | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4` | `REVIEW` for numbered return nets                               |
+| `pwm-control.kicad_sch` | All J1–J4 pins 7/9 use `0V PWM`                  | `PASS`                                                          |
+
+The PWM-named pair is a tooling-owned synthetic reproduction of the supplied
+name pattern. It checks that native KiCad export preserves the spaces and
+numeric suffixes used by the deterministic numbered-return heuristic. The
+review only asks whether the domains are common, bonded, or intentionally
+isolated; it does not require joining them.
 
 The fixture deliberately tests detection of a suspicious pattern. It does not
 assert that every DB9 return must be bonded. A real project's connector pinout
@@ -81,7 +89,20 @@ scratch path `/private/tmp/kicad-tooling-native-10.0.6-db9/`.
 
 | Fixture                                      | Source SHA-256                                                     | Repeated raw native XML SHA-256                                    | Repeated normalized typed-netlist SHA-256                          |
 | -------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| `fault.kicad_sch`                            | `c4a842c1685d5fbf21985aa22bd0b6436e163025f4381a8ac2544621c264e546` | `f5c9428f86fb5a429e5d4550dcf7f39c845f3a476129754700fed0124401f324` | `98c326c073ca0bf7ff38c00acddec5bbd2df1f5cb531936f3744a79bae533154` |
-| `control.kicad_sch`                          | `3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc` | `07ce84591f187d0be1b02705b2950af4493299cafab8f352e1977959c00c4a60` | `fbb740fb9f8c29bd880d871f33047aa8993ea99720d7707daca3feff41e3c3f2` |
+| `pwm-fault.kicad_sch`                        | `c4a842c1685d5fbf21985aa22bd0b6436e163025f4381a8ac2544621c264e546` | `f5c9428f86fb5a429e5d4550dcf7f39c845f3a476129754700fed0124401f324` | `98c326c073ca0bf7ff38c00acddec5bbd2df1f5cb531936f3744a79bae533154` |
+| `pwm-control.kicad_sch`                      | `3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc` | `07ce84591f187d0be1b02705b2950af4493299cafab8f352e1977959c00c4a60` | `fbb740fb9f8c29bd880d871f33047aa8993ea99720d7707daca3feff41e3c3f2` |
 | `numeric-function-neutral-fault.kicad_sch`   | `8b54babacd735da898cbd477b641a57085ff03b74bf0d9aa665fc8625a36f65f` | `5fb7b8b4d7f5ade8ac9fbd14fc8080f31ccc953d8b83d0ae76c6f6476f5e6137` | `6a2e7d4b2c5cce09130a5ca037d674d4b289316281c0bc620bd7949ad866d13b` |
 | `numeric-function-neutral-control.kicad_sch` | `49e3bca48e79e4b46ce4eba8298026b5c730fca56b119a3ec407dfaafbcf54cd` | `b208452e91c4d79d25c14e8fdbcc56e246393d80fedb63c1d0e2968bfef012c4` | `162b69f7992c357ce86f64744cb0a14ed5bcdf8f3b8f801903548f0f091747f0` |
+
+## Digest-pinned native acceptance for PWM labels (2026-10-12)
+
+The exact-version connector lane exported both PWM-named schematics twice on
+KiCad 10.0.0 and 10.0.5. The repeated normalized typed-netlist hashes match for
+each source and across both versions. The fault remains `REVIEW` for repeated
+return functions and numbered return nets; the common `0V PWM` control is
+`PASS` with the expected eight pin memberships.
+
+| Fixture                 | Source SHA-256                                                     | Normalized typed-netlist SHA-256                                   | Result |
+| ----------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ------ |
+| `pwm-fault.kicad_sch`   | `c4a842c1685d5fbf21985aa22bd0b6436e163025f4381a8ac2544621c264e546` | `98c326c073ca0bf7ff38c00acddec5bbd2df1f5cb531936f3744a79bae533154` | REVIEW |
+| `pwm-control.kicad_sch` | `3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc` | `fbb740fb9f8c29bd880d871f33047aa8993ea99720d7707daca3feff41e3c3f2` | PASS   |
