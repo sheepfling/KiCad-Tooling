@@ -419,6 +419,15 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
+- **Named connector power-pin evidence:** The existing
+  `connector.unconnected_supply_pin` and `connector.unconnected_return_pin`
+  rules retain default `REVIEW` semantics. Each now has a focused exact-native
+  gate with one open named contact and a fully assigned control, selectable by
+  its own rule ID. The source fixtures are synthetic and test native pin/net
+  extraction; they do not decide whether a connector contact should be used,
+  bonded, common, or isolated. The tagged KiCad 10.0.0/10.0.5 hosted runs are
+  pending.
+
 - **Test architecture — Keep native fixture acceptance selectable by theme.**
   The exact-version empty-netlist fault and nonempty control now live in the
   pytest module `tests/test_empty_netlist_evidence_native_fixture_lane.py`,

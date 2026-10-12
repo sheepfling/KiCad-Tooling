@@ -19,7 +19,12 @@ from tests.hosted_ci_connector_return_support import (
     assert_grounding_contract_cases,
     assert_positive_rail_return_cases,
 )
+from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.support import reference_root
+from tests.synthetic_design_lint_project import (
+    PINNED_NATIVE_KICAD_IMAGES,
+    synthetic_design_lint_project,
+)
 
 pytestmark = [
     pytest.mark.template_checkout,
@@ -202,3 +207,94 @@ def test_normalized_return_patterns_match_across_versions(connector_return_resul
         for version, results in connector_return_results_by_version.items()
     }
     assert patterns_by_version["10.0.0"] == patterns_by_version["10.0.5"]
+
+
+def _assert_native_named_connector_power_pin_cases(
+    tmp_path: Path,
+    version: str,
+    cases: tuple[str, ...],
+    fault_case: str,
+    rule_id: str,
+) -> None:
+    from kicad_tooling.ci_hosted_connector_named_power_pin_lane import (
+        connector_named_power_pin_fixture_lane,
+    )
+    from kicad_tooling.ci_hosted_support import HostedLog
+    from kicad_tooling.hwrepo.electrical import selected_config
+    from kicad_tooling.hwrepo.models import DesignLintPolicy
+
+    project = "controller" if version == "10.0.0" else "raspberry-pi-status-led"
+    image = PINNED_NATIVE_KICAD_IMAGES[version]
+    root, _ = synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(),
+        project_id=project,
+        kicad_version=version,
+        image=image,
+    )
+    config = selected_config(root, project)
+    assert config.kicad_version == version
+    assert config.image == image
+
+    log = HostedLog(root, f"native-named-connector-power-pins-{project}")
+    connector_named_power_pin_fixture_lane(
+        root, project=project, image=config.image, log=log, case_names=cases
+    )
+    events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
+    prefix = "connector-named-power-pin-fixture/"
+    results = {
+        item["stage"]: item for item in events if item.get("stage", "").startswith(prefix)
+    }
+    assert set(results) == {f"{prefix}native-export", *(f"{prefix}{case}" for case in cases)}
+    native_export = results[f"{prefix}native-export"]
+    assert native_export["status"] == "PASS"
+    assert native_export["kicad_version"] == version
+    assert tuple(item.split(":", 1)[0] for item in native_export["source_hashes"].split(",")) == cases
+    assert_native_fixture_mounts(root, native_export["command_receipt"])
+
+    expected = {
+        fault_case: ("REVIEW", rule_id),
+        "unconnected-named-power-control": ("PASS", "none"),
+    }
+    for case, (lint_status, findings) in expected.items():
+        result = results[f"{prefix}{case}"]
+        assert result["status"] == "PASS"
+        assert result["lint_status"] == lint_status
+        assert result["findings"] == findings
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+def test_native_unconnected_named_connector_supply_pin_cases_repeat(
+    tmp_path: Path, version: str
+) -> None:
+    from kicad_tooling.ci_hosted_connector_named_power_pins import (
+        NAMED_CONNECTOR_SUPPLY_PIN_CASES,
+    )
+
+    _assert_native_named_connector_power_pin_cases(
+        tmp_path,
+        version,
+        NAMED_CONNECTOR_SUPPLY_PIN_CASES,
+        "unconnected-named-supply-fault",
+        "connector.unconnected_supply_pin",
+    )
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+def test_native_unconnected_named_connector_return_pin_cases_repeat(
+    tmp_path: Path, version: str
+) -> None:
+    from kicad_tooling.ci_hosted_connector_named_power_pins import (
+        NAMED_CONNECTOR_RETURN_PIN_CASES,
+    )
+
+    _assert_native_named_connector_power_pin_cases(
+        tmp_path,
+        version,
+        NAMED_CONNECTOR_RETURN_PIN_CASES,
+        "unconnected-named-return-fault",
+        "connector.unconnected_return_pin",
+    )

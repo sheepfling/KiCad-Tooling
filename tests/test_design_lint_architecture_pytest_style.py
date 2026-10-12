@@ -113,6 +113,8 @@ def test_native_connector_acceptance_uses_version_parameterized_pytest() -> None
         "test_peer_pin_assignments_and_offboard_scope",
         "test_power_pin_and_reviewed_role_cases",
         "test_grounding_and_pin_connectivity_contracts",
+        "test_native_unconnected_named_connector_supply_pin_cases_repeat",
+        "test_native_unconnected_named_connector_return_pin_cases_repeat",
     }
     version_parameterized = {
         node.name

@@ -114,6 +114,36 @@ def connector_power_case_contracts() -> dict[str, NetlistContract]:
     }
 
 
+def named_connector_power_pin_cases() -> dict[str, NetlistContract]:
+    """Return isolated named-pin faults and the connected native control."""
+    component_symbols = {"J1": "Synthetic:NamedConnector"}
+    component_pin_numbers = {"J1": ("1", "2")}
+    pin_functions = {"J1.1": "VDD", "J1.2": "GND"}
+    return {
+        "unconnected-named-supply-fault": NetlistContract(
+            components={},
+            nets={"GND": ("J1.2",)},
+            component_symbols=component_symbols,
+            component_pin_numbers=component_pin_numbers,
+            pin_functions=pin_functions,
+        ),
+        "unconnected-named-return-fault": NetlistContract(
+            components={},
+            nets={"+3V3": ("J1.1",)},
+            component_symbols=component_symbols,
+            component_pin_numbers=component_pin_numbers,
+            pin_functions=pin_functions,
+        ),
+        "unconnected-named-power-control": NetlistContract(
+            components={},
+            nets={"+3V3": ("J1.1",), "GND": ("J1.2",)},
+            component_symbols=component_symbols,
+            component_pin_numbers=component_pin_numbers,
+            pin_functions=pin_functions,
+        ),
+    }
+
+
 def generic_component_power_input_cases() -> dict[str, NetlistContract]:
     """Return generic component power-input fault and control netlists."""
     cases: dict[str, NetlistContract] = {}

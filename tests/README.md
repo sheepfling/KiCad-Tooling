@@ -74,6 +74,12 @@ KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 \
   -m "design_lint and connector_lint and return_path_lint and native_kicad" \
   tests/test_ci_hosted_connector_returns.py
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="connector.unconnected_supply_pin")' \
+  tests/test_ci_hosted_connector_returns.py
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="connector.unconnected_return_pin")' \
+  tests/test_ci_hosted_connector_returns.py
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="net.numbered_returns")' \
   tests/test_numbered_return_native_fixture_lane.py
 python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"

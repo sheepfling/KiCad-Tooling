@@ -904,11 +904,13 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
-        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
+        "tests.test_ci_hosted_connector_returns.test_native_unconnected_named_connector_supply_pin_cases_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_connector_power_labels_do_not_merge_distinct_domains",
-        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances"
+        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances",
+        "tests.test_ci_hosted_connector_returns.test_native_unconnected_named_connector_supply_pin_cases_repeat"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_open_connector_supply_and_return_order_and_completion"
@@ -918,7 +920,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
-      "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_named_connector_pins"
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_named_connector_pins",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "connector.unconnected_return_pin",
@@ -940,11 +945,13 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
-        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics"
+        "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
+        "tests.test_ci_hosted_connector_returns.test_native_unconnected_named_connector_return_pin_cases_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
-        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances"
+        "tests.test_design_lint_connector_roles.test_connector_population_heuristics_ignore_dnp_instances",
+        "tests.test_ci_hosted_connector_returns.test_native_unconnected_named_connector_return_pin_cases_repeat"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_open_connector_supply_and_return_order_and_completion"
@@ -954,7 +961,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "returns",
-      "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_named_connector_pins"
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_named_connector_pins",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "connector.return_pin_on_positive_rail",
