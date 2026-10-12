@@ -1888,18 +1888,23 @@
       "fault_fixtures": [
         "tests.test_spi_peer_reference_review.test_shared_sck_with_split_references_emits_review_and_exact_evidence",
         "tests.test_spi_peer_reference_review.test_known_split_remains_reviewable_when_another_peer_is_incomplete",
-        "tests.test_spi_peer_reference_review.test_component_peer_review_must_cover_every_reference_pin_to_suppress"
+        "tests.test_spi_peer_reference_review.test_component_peer_review_must_cover_every_reference_pin_to_suppress",
+        "tests.test_spi_peer_reference_native_fixture_lane.test_native_spi_peer_reference_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_spi_peer_reference_review.test_common_reference_is_a_valid_control",
         "tests.test_spi_peer_reference_review.test_distinct_clock_segments_are_not_compared",
         "tests.test_spi_peer_reference_review.test_dnp_incomplete_and_shield_only_endpoints_are_not_ground_evidence",
-        "tests.test_spi_peer_reference_review.test_only_directed_clock_peers_are_covered"
+        "tests.test_spi_peer_reference_review.test_only_directed_clock_peers_are_covered",
+        "tests.test_spi_peer_reference_native_fixture_lane.test_native_spi_peer_reference_fault_and_control_on_supported_images"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_spi_peer_reference_review.test_split_candidate_is_stable_under_mapping_order",
         "tests.test_spi_peer_reference_review.test_report_coverage_tracks_candidate_and_policy_disposition"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_peer_reference_scan.py#scan_spi_peer_references",

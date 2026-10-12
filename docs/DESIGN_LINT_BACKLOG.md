@@ -1951,14 +1951,15 @@ is not a reason by itself to expand its scope or change its default policy.
   `v0.5.0rc181` passed its scoped lint and installed-wheel steps plus all three
   portability previews; the full package job was skipped by RC policy. The
   full package lane continues to run all 16 cases.
-- **Rule-scoped native fixture inventory (2026-10-12):** A source-based
+- **Rule-scoped native fixture inventory (2026-10-12):** An initial source-based
   comparison of the 17 modules assigned both `native_kicad` and `design_lint`
-  markers found 12 native test functions across 10 modules without an active
-  rule-catalog fixture reference. This iteration connected the existing I2C
-  peer-reference native fault/control test to LINT-103 and its required native
-  switch. The remaining suites are CAN fixtures, component ratings, empty-netlist
+  markers found 13 native test functions across 11 modules without an active
+  rule-catalog fixture reference. The I2C and SPI peer-reference native
+  fault/control tests are now linked to LINT-103 and LINT-104 and require their
+  existing native switches; scoped hosted results are pending. The remaining
+  11 test functions across 9 modules cover CAN, component ratings, empty-netlist
   evidence, I2C pull-up arrays, connector return domains, PCB test access,
-  return paths and signal paths, a mapped power path, and SPI peer references.
+  return paths and signal paths, and a mapped power path.
   Review each test against a rule predicate before indexing it; the inventory
   identifies selection gaps, not proof that every test belongs to a lint rule.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
@@ -5563,6 +5564,13 @@ is not a reason by itself to expand its scope or change its default policy.
   The focused SPI review suite passed 10 tests on 2026-10-11. Its exact-native
   lane is marked `native_kicad` and `slow`; hosted tagged-source acceptance is
   confirmed by `v0.5.0rc70`.
+- **Rule-scoped gate registration (2026-10-12):** The exact-native fault/control
+  test was already exercised by the broad interface-area gate, but it was not
+  in this rule's fixture catalog. A `Lint-Rule: bus.spi_peer_reference_review`
+  tag therefore could not select it. The catalog now links the test as both
+  fault and valid control, requires
+  `KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES`, and the architecture suite
+  guards that association. The new rule-scoped hosted result is pending.
 - **Incremental value:** The equal `+3V3` control/fault pair isolates return
   assignments as the changed variable. The split case has distinct symbol
   identities and no component-peer assignment finding, while the existing SPI

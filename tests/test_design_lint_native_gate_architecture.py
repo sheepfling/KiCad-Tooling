@@ -422,3 +422,18 @@ def test_i2c_peer_reference_rule_selects_its_native_fault_control_case() -> None
     assert native_fixture in rule.required_native_fixtures
     assert native_test in rule.fault_fixtures
     assert native_test in rule.valid_control_fixtures
+
+
+def test_spi_peer_reference_rule_selects_its_native_fault_control_case() -> None:
+    rule = next(
+        entry for entry in rule_catalog().rules if entry.rule_id == "bus.spi_peer_reference_review"
+    )
+    native_fixture = "KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES"
+    native_test = (
+        "tests.test_spi_peer_reference_native_fixture_lane."
+        "test_native_spi_peer_reference_fault_and_control_on_supported_images"
+    )
+
+    assert native_fixture in rule.required_native_fixtures
+    assert native_test in rule.fault_fixtures
+    assert native_test in rule.valid_control_fixtures
