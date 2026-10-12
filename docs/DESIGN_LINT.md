@@ -375,7 +375,11 @@ The first rules are:
   `component.unconnected_return_pin` apply the same named-pin coverage to
   non-connector components, including IC power pins. They only flag pins with
   no net assignment; they do not prove that an assigned pin is on the correct
-  rail or that the rail has a valid source.
+  rail or that the rail has a valid source. The focused exact-native lane is
+  configured to export a synthetic open-VDD fault and assigned control twice
+  on pinned KiCad 10.0.0 and 10.0.5 for `component.unconnected_supply_pin`;
+  tagged acceptance is pending. See the
+  [named component pin fixture record](../tests/fixtures/design_lint/unconnected-named-component-pins/README.md).
 - `component.led_directly_across_supply_and_return` prompts review when a
   fitted exact `Device:LED` symbol has two inventoried pins assigned directly
   to distinct, recognized positive-supply and return nets. It does not

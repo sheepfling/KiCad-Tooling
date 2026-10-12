@@ -1198,10 +1198,14 @@
         "An assigned pin is not checked for correct rail, voltage, current capacity, or power-source validity."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_component_power_pins.test_unconnected_component_supply_and_return_pins_need_review"
+        "tests.test_design_lint_component_power_pins.test_unconnected_component_supply_and_return_pins_need_review",
+        "tests.test_component_named_supply_pin_native_fixture_lane.test_component_named_supply_pin_lane_exports_only_its_fault_and_control",
+        "tests.test_component_named_supply_pin_native_fixture_lane.test_native_named_component_supply_pin_fault_and_control_are_focused_and_repeatable"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_component_power_pins.test_unconnected_component_supply_and_return_pins_need_review"
+        "tests.test_design_lint_component_power_pins.test_unconnected_component_supply_and_return_pins_need_review",
+        "tests.test_component_named_supply_pin_native_fixture_lane.test_component_named_supply_pin_lane_exports_only_its_fault_and_control",
+        "tests.test_component_named_supply_pin_native_fixture_lane.test_native_named_component_supply_pin_fault_and_control_are_focused_and_repeatable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -1212,7 +1216,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "components",
-      "implementation_owner": "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_named_component_pins"
+      "implementation_owner": "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_named_component_pins",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_NAMED_SUPPLY_PIN_FIXTURES"
+      ]
     },
     {
       "rule_id": "component.unconnected_return_pin",

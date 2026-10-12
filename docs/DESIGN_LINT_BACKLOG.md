@@ -431,6 +431,14 @@ and optional ecosystem adapters are `P3`.
   native fixture-load issue, a Ruff format issue, and an unreachable fixture
   guide in the Markdown documentation graph.
 
+- **Named component supply-pin evidence (gate in development):** Add an
+  exact-native fault/control pair for `component.unconnected_supply_pin` on a
+  single synthetic non-connector component. The intended result remains a
+  `REVIEW` prompt about an unassigned named pin; the source does not state the
+  correct rail or prove the pin must be connected. The focused pytest selector
+  and pinned KiCad 10.0.0/10.0.5 lane are in place; tagged hosted acceptance is
+  pending.
+
 - **Test architecture — Keep native fixture acceptance selectable by theme.**
   The exact-version empty-netlist fault and nonempty control now live in the
   pytest module `tests/test_empty_netlist_evidence_native_fixture_lane.py`,

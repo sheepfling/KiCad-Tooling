@@ -18,6 +18,9 @@ fixtures; their source boundary and pinned hashes are recorded in the
 The named connector supply/return pin fault and control are also synthetic
 tooling fixtures; their source boundary and pinned hashes are recorded in the
 [connector pin fixture README](fixtures/design_lint/unconnected-named-connector-pins/README.md).
+The non-connector named supply-pin fault and assigned control have a separate
+[component pin fixture README](fixtures/design_lint/unconnected-named-component-pins/README.md)
+and focused native lane.
 
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:
@@ -82,6 +85,10 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="connector.unconnected_return_pin")' \
   tests/test_ci_hosted_connector_returns.py
+KICAD_RUN_NATIVE_COMPONENT_NAMED_SUPPLY_PIN_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="component.unconnected_supply_pin")' \
+  tests/test_component_named_supply_pin_native_fixture_lane.py
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="net.numbered_returns")' \
   tests/test_numbered_return_native_fixture_lane.py

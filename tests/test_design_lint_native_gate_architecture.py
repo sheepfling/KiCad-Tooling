@@ -314,13 +314,22 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "component.unconnected_power_input": {
             "tests.test_component_power_input_native_fixture_lane.test_native_generic_component_power_input_cases_are_focused_and_repeatable",
         },
+        "component.unconnected_supply_pin": {
+            "tests.test_component_named_supply_pin_native_fixture_lane.test_native_named_component_supply_pin_fault_and_control_are_focused_and_repeatable",
+        },
         "net.numbered_power_rails": {
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },
     }
     rules = {rule.rule_id: rule for rule in rule_catalog().rules}
+    native_fixture_by_rule = {
+        rule_id: "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES" for rule_id in expected_cases_by_rule
+    }
+    native_fixture_by_rule["component.unconnected_supply_pin"] = (
+        "KICAD_RUN_NATIVE_COMPONENT_NAMED_SUPPLY_PIN_FIXTURES"
+    )
     for rule_id, expected_cases in expected_cases_by_rule.items():
         rule = rules[rule_id]
-        assert "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES" in rule.required_native_fixtures
+        assert native_fixture_by_rule[rule_id] in rule.required_native_fixtures
         assert expected_cases <= set(rule.fault_fixtures)
         assert expected_cases <= set(rule.valid_control_fixtures)
