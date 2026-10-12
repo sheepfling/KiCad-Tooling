@@ -102,7 +102,13 @@ def test_connector_return_fixture_lane_is_split_by_theme() -> None:
         for node in coordinator.body
         if isinstance(node, ast.FunctionDef) and node.name == "connector_return_lint_fixture_lane"
     )
+    focused_lane = next(
+        node
+        for node in coordinator.body
+        if isinstance(node, ast.FunctionDef) and node.name == "numbered_pwm_return_fixture_lane"
+    )
     lane_lines = lane.end_lineno - lane.lineno + 1
+    focused_lane_lines = focused_lane.end_lineno - focused_lane.lineno + 1
     modules = sorted(CONNECTOR_RETURN_MODULES.glob("ci_hosted_connector_return_*.py"))
     oversized_modules = {
         path.name: len(path.read_text(encoding="utf-8").splitlines())
@@ -111,6 +117,9 @@ def test_connector_return_fixture_lane_is_split_by_theme() -> None:
     }
 
     assert lane_lines < 100, f"Keep the fixture lane as a coordinator: {lane_lines} lines"
+    assert focused_lane_lines < 30, (
+        f"Keep the numbered-return native lane focused: {focused_lane_lines} lines"
+    )
     assert len(modules) == 15, "Keep connector return fixture work in named theme modules"
     assert not oversized_modules, (
         f"Split connector return modules by responsibility: {oversized_modules}"

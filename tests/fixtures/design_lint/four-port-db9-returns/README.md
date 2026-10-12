@@ -108,6 +108,20 @@ return functions and numbered return nets; the common `0V PWM` control is
 | `pwm-control.kicad_sch` | `3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc` | `fbb740fb9f8c29bd880d871f33047aa8993ea99720d7707daca3feff41e3c3f2` | PASS   |
 
 Tagged hosted acceptance for `v0.5.0rc147` (commit `43dfe95`, GitHub Actions
-run `38243428425`) passed the focused `net.numbered_returns` gate, exact-version
-connector fixtures, installed-wheel check against a separate project checkout,
-and preview jobs on Ubuntu, macOS, and Windows.
+run `38243428425`) passed the `net.numbered_returns` pytest scope. At that point,
+the referenced native tests shared a module-scoped fixture that exported the
+entire connector matrix. The focused native lane now maps this rule to the two
+PWM schematics only; full connector acceptance still runs the complete matrix.
+
+Run the focused exact-version fault/control pair with:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="net.numbered_returns")' \
+  tests/test_numbered_return_native_fixture_lane.py
+```
+
+The native lane uses a minimal tooling-owned synthetic project manifest to
+select each pinned KiCad version. It copies only `pwm-fault.kicad_sch` and
+`pwm-control.kicad_sch` into the read-only fixture mount, then exports each
+twice for repeatability.

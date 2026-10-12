@@ -291,8 +291,7 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },
         "net.numbered_returns": {
-            "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-            "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
+            "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable",
         },
         "connector.peer_pin_assignment_outlier": {
             "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope",

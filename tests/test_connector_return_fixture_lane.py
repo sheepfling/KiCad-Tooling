@@ -17,6 +17,7 @@ from tests.design_lint_fixtures.connector_power_cases import (
     generic_component_power_input_cases,
 )
 from tests.design_lint_fixtures.connector_return_cases import (
+    pwm_return_case_contracts,
     return_case_contracts,
     return_positive_rail_case_contracts,
 )
@@ -35,6 +36,7 @@ def connector_return_fixture_lane_context(tmp_path: Path) -> SimpleNamespace:
     config = SimpleNamespace(image=image, kicad_version="10.0.0")
     observed: dict[str, NetlistContract] = {}
     observed.update(return_case_contracts())
+    observed.update(pwm_return_case_contracts())
     observed.update(return_positive_rail_case_contracts())
     observed.update(peer_pin_case_contracts())
     observed.update(connector_power_case_contracts())

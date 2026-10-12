@@ -7,6 +7,42 @@ from collections.abc import Mapping
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 
 
+def verify_numbered_pwm_return_cases(ctx: ConnectorReturnFixtureContext) -> None:
+    """Verify native fault/control cases for numbered 0V PWM return labels."""
+    pwm_fault = ctx.reports["four-db9-pwm-fault", "first"]
+    pwm_numbered = next(
+        (finding for finding in pwm_fault.findings if finding.rule_id == "net.numbered_returns"),
+        None,
+    )
+    expected_pwm_nets = {
+        f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9") for reference in range(1, 5)
+    }
+    if (
+        pwm_fault.status != "REVIEW"
+        or {finding.rule_id for finding in pwm_fault.findings}
+        != {"connector.repeated_pin_function", "net.numbered_returns"}
+        or pwm_numbered is None
+        or dict(pwm_numbered.evidence) != expected_pwm_nets
+    ):
+        raise ValueError(
+            "Native 0V PWM return labels did not produce the expected numbered-return review"
+        )
+
+    pwm_control = ctx.reports["four-db9-pwm-control", "first"]
+    pwm_control_nets = ctx.observed_contracts["four-db9-pwm-control", "first"].nets
+    expected_common_pwm_pins = {
+        f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
+    }
+    if (
+        pwm_control.status != "PASS"
+        or pwm_control.findings
+        or set(pwm_control_nets.get("0V PWM", ())) != expected_common_pwm_pins
+    ):
+        raise ValueError(
+            "Native common 0V PWM return control did not preserve the expected pin membership"
+        )
+
+
 def verify_connector_return_distribution(
     ctx: ConnectorReturnFixtureContext,
 ) -> Mapping[str, tuple[str, ...]]:
@@ -83,38 +119,6 @@ def verify_connector_return_distribution(
     if db9_control.status != "PASS" or db9_control.findings:
         raise ValueError("Common four-port DB9 return control no longer passes cleanly")
     db9_control_nets = ctx.observed_contracts["four-db9-control", "first"].nets
-
-    pwm_fault = ctx.reports["four-db9-pwm-fault", "first"]
-    pwm_numbered = next(
-        (finding for finding in pwm_fault.findings if finding.rule_id == "net.numbered_returns"),
-        None,
-    )
-    expected_pwm_nets = {
-        f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9") for reference in range(1, 5)
-    }
-    if (
-        pwm_fault.status != "REVIEW"
-        or {finding.rule_id for finding in pwm_fault.findings}
-        != {"connector.repeated_pin_function", "net.numbered_returns"}
-        or pwm_numbered is None
-        or dict(pwm_numbered.evidence) != expected_pwm_nets
-    ):
-        raise ValueError(
-            "Native 0V PWM return labels did not produce the expected numbered-return review"
-        )
-
-    pwm_control = ctx.reports["four-db9-pwm-control", "first"]
-    pwm_control_nets = ctx.observed_contracts["four-db9-pwm-control", "first"].nets
-    expected_common_pwm_pins = {
-        f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
-    }
-    if (
-        pwm_control.status != "PASS"
-        or pwm_control.findings
-        or set(pwm_control_nets.get("0V PWM", ())) != expected_common_pwm_pins
-    ):
-        raise ValueError(
-            "Native common 0V PWM return control did not preserve the expected pin membership"
-        )
+    verify_numbered_pwm_return_cases(ctx)
 
     return db9_control_nets

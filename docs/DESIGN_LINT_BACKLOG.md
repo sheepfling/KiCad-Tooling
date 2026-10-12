@@ -1370,9 +1370,13 @@ is not a reason by itself to expand its scope or change its default policy.
   control passed without findings.
   Tagged hosted acceptance for `v0.5.0rc147` (commit `43dfe95`, GitHub Actions
   run `38243428425`) passed with the `net.numbered_returns` pytest scope and
-  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. The exact-version connector lane,
-  installed-wheel check against a separate project checkout, and Ubuntu,
-  macOS, and Windows preview jobs passed.
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. At that point the rule's native test
+  references shared a module-scoped fixture that exported the complete
+  connector matrix. A dedicated focused native lane now selects only the PWM
+  fault/control pair for this rule; the full connector lane retains the broader
+  matrix. The exact-version native run for this narrowed selector is pending
+  hosted acceptance. The installed-wheel check against a separate project
+  checkout and Ubuntu, macOS, and Windows preview jobs passed on rc147.
   The project-policy regression also keeps the default at `REVIEW` while proving
   an explicitly configured `block` override changes the report to `FAIL`
   without changing the finding fingerprint or evidence. A

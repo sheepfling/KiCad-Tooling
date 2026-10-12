@@ -210,6 +210,37 @@ def return_case_contracts() -> dict[str, NetlistContract]:
     }
 
 
+def pwm_return_case_contracts() -> dict[str, NetlistContract]:
+    """Return the synthetic split/common 0V PWM return fault and control."""
+    base = return_case_contracts()["four-db9-fault"]
+    signal_nets = {
+        name: pins for name, pins in base.nets.items() if not name.startswith("RETURN_PORT_")
+    }
+    return {
+        "four-db9-pwm-fault": base.model_copy(
+            update={
+                "nets": {
+                    **signal_nets,
+                    **{
+                        f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9")
+                        for reference in range(1, 5)
+                    },
+                }
+            }
+        ),
+        "four-db9-pwm-control": base.model_copy(
+            update={
+                "nets": {
+                    **signal_nets,
+                    "0V PWM": tuple(
+                        f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
+                    ),
+                }
+            }
+        ),
+    }
+
+
 def return_positive_rail_case_contracts() -> dict[str, NetlistContract]:
     """Return native-lane cases for a return pin on +5V and a common-return control."""
     control = return_case_contracts()["control"]

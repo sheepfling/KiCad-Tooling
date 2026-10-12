@@ -42,7 +42,12 @@ class ConnectorReturnFixtureContext:
 
 
 def prepare_connector_return_fixture_context(
-    root: Path, project: str, image: str, log: ConnectorReturnLog
+    root: Path,
+    project: str,
+    image: str,
+    log: ConnectorReturnLog,
+    *,
+    case_names: tuple[str, ...] | None = None,
 ) -> ConnectorReturnFixtureContext:
     """Prepare digest-pinned synthetic inputs and repeated native netlist reports."""
     import hashlib
@@ -68,7 +73,7 @@ def prepare_connector_return_fixture_context(
         )
     pinned = pinned_image(config.image)
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
-    fixtures = {
+    fixture_sources = {
         "fault": fixture_root / "cohort-connector-ground-domains/fault.kicad_sch",
         "control": fixture_root / "cohort-connector-ground-domains/control.kicad_sch",
         "return-positive-rail-fault": fixture_root / "return-pin-positive-rail/fault.kicad_sch",
@@ -150,7 +155,13 @@ def prepare_connector_return_fixture_context(
         "unconnected-generic-component-power-input-dnp-control": fixture_root
         / "generic-component-power-input/dnp-control.kicad_sch",
     }
-    cases = tuple(fixtures)
+    cases = tuple(fixture_sources) if case_names is None else tuple(case_names)
+    if not cases or len(set(cases)) != len(cases):
+        raise ValueError("Connector-return fixture cases must be a non-empty unique sequence")
+    unknown_cases = tuple(case for case in cases if case not in fixture_sources)
+    if unknown_cases:
+        raise ValueError(f"Unknown connector-return fixture cases: {unknown_cases}")
+    fixtures = {case: fixture_sources[case] for case in cases}
     source_hashes = {case: digest(path) for (case, path) in fixtures.items()}
     expected_source_hashes = {
         "fault": "aea557c738a417192ccfce0e7228b5832aab566f66c2a354dce72f5df7882474",
@@ -200,7 +211,8 @@ def prepare_connector_return_fixture_context(
         "unconnected-generic-component-power-input-no-connect-fault": "664e619ceaba71c27bd7acfaa0bb4563ab3203b33a03c564b2a8f7c6bdf4c4bd",
         "unconnected-generic-component-power-input-dnp-control": "3be52ef83ba54bf0f43bede043095afe42583319e9fd6fa19f17aba250cc3c81",
     }
-    if source_hashes != expected_source_hashes:
+    reviewed_source_hashes = {case: expected_source_hashes[case] for case in cases}
+    if source_hashes != reviewed_source_hashes:
         raise ValueError("Connector-return fixture sources differ from the reviewed hashes")
     scratch = Path(
         tempfile.mkdtemp(prefix=f"connector-return-{project}-", dir=log.directory.resolve())

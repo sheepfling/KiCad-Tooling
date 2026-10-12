@@ -2143,16 +2143,14 @@
         "tests.test_design_lint_numbered_returns.test_four_db9_numbered_pwm_return_names_are_reviewed",
         "tests.test_design_lint_numbered_returns.test_project_can_block_numbered_return_review",
         "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review",
-        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
+        "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_return_control_clears_review_findings",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_pwm_return_name_is_a_valid_control",
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
-        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
+        "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_numbered_returns.test_numbered_return_fingerprint_is_stable_under_mapping_reordering",

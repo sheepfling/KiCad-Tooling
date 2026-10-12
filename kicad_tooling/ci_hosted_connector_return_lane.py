@@ -19,7 +19,10 @@ from .ci_hosted_connector_return_peer_power import verify_peer_power_inputs
 from .ci_hosted_connector_return_peer_scope import verify_connector_peer_scope
 from .ci_hosted_connector_return_power import verify_connector_power_inputs
 from .ci_hosted_connector_return_receipts import emit_connector_return_receipts
-from .ci_hosted_connector_return_returns import verify_connector_return_distribution
+from .ci_hosted_connector_return_returns import (
+    verify_connector_return_distribution,
+    verify_numbered_pwm_return_cases,
+)
 from .ci_hosted_connector_return_supply import verify_positive_rail_return_cases
 
 
@@ -41,3 +44,18 @@ def connector_return_lint_fixture_lane(
     verify_mapped_supply_interfaces(context)
     verify_connector_peer_scope(context)
     emit_connector_return_receipts(context, peer_pin_coverage_receipts)
+
+
+def numbered_pwm_return_fixture_lane(
+    root: Path, *, project: str, image: str, log: ConnectorReturnLog
+) -> None:
+    """Run only the native numbered 0V PWM return fault/control cases."""
+    context = prepare_connector_return_fixture_context(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        case_names=("four-db9-pwm-fault", "four-db9-pwm-control"),
+    )
+    verify_numbered_pwm_return_cases(context)
+    emit_connector_return_receipts(context, {})
