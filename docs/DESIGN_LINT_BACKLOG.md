@@ -573,10 +573,17 @@ and optional ecosystem adapters are `P3`.
   parameterized controls. Rule-catalog locators now point directly to those
   functions, and the architecture suite verifies both theme scope and
   rule-specific collection. The candidate behavior and default REVIEW policy
-  did not change. Connector-verification integration tests also set an
-  explicit reasoned `off` override for PCB component inventory, since they do
-  not supply that check's exact native board evidence; LINT-102 remains covered
-  by its dedicated fixture and acceptance lane.
+  did not change. The remaining decoupling and complementary-pair regressions
+  now use top-level pytest functions, with direct rule-catalog locators and
+  entries in the architecture suite's pytest-native/theme-scope guard. Their
+  existing `power_lint`/`component_lint` and `interface_lint` markers remain;
+  boundary controls now have named parameter IDs. The focused selector passed
+  27 tests; the pytest-style architecture slice passed 17, and the rule catalog
+  suite passed 11. These are test organization and selection improvements;
+  neither predicate changed. Connector-verification integration tests also set
+  an explicit reasoned `off` override for PCB component inventory, since they
+  do not supply that check's exact native board evidence; LINT-102 remains
+  covered by its dedicated fixture and acceptance lane.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

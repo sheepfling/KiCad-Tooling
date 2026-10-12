@@ -1782,19 +1782,21 @@
         "Fitted-symbol assignments are reviewed. DNP symbols are skipped; an intentionally unused fitted pair or deliberate same-net test mode needs an exact project-owned ignore or another reviewed decision."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
+        "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
+        "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
+        "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
+        "tests.test_design_lint_complementary_pairs.test_complementary_pair_assignments_are_reviewed_without_inferred_requirements",
+        "tests.test_design_lint_complementary_pairs.test_usb_superspeed_connector_aliases_have_fault_and_control_coverage",
+        "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block",
+        "tests.test_design_lint_complementary_pairs.test_usb_c_lane_indexed_pairs_remain_outside_single_pair_rule",
+        "tests.test_design_lint_complementary_pairs.test_function_names_without_unique_pair_classification_remain_outside_rule"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_complementary_pair_finding_is_order_stable_and_assignment_clears_it",
-        "tests.test_design_lint_complementary_pairs.DesignLintComplementaryPairTests.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
+        "tests.test_design_lint_complementary_pairs.test_complementary_pair_finding_is_order_stable_and_assignment_clears_it",
+        "tests.test_design_lint_complementary_pairs.test_project_complementary_aliases_are_symbol_scoped_and_stale_maps_block"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_pairs.py#complementary_signal_gaps",
@@ -3549,20 +3551,20 @@
         "Unrecognized capacitor symbol IDs and custom return labels without a recognized return pin function may create extra review prompts; off-board or internal decoupling may do the same. A custom capacitor counts only when the project's exact role map matches its PART_ID, symbol, footprint, and complete two-pin passive inventory; stale entries block lint, and the role is used only by this decoupling-presence hint. Custom/unrecognized rail names without a recognized power_in function can evade the rule. Explicitly DNP ICs are excluded, and DNP capacitors do not satisfy the presence check. Numeric J/P/X/CN references, standard Connector libraries, and exact project-reviewed connector references are excluded; other unreviewed component identities may be treated as IC candidates."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_ic_power_rail_without_fitted_capacitor_needs_review",
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_ic_power_decoupling_enforces_capacitor_and_scope_boundaries",
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_custom_decoupling_capacitor_requires_exact_project_role"
+        "tests.test_design_lint_decoupling.test_ic_power_rail_without_fitted_capacitor_needs_review",
+        "tests.test_design_lint_decoupling.test_ic_power_decoupling_enforces_capacitor_and_scope_boundaries",
+        "tests.test_design_lint_decoupling.test_custom_decoupling_capacitor_requires_exact_project_role"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_fitted_capacitor_to_return_controls_review",
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_custom_decoupling_capacitor_requires_exact_project_role",
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_ic_power_decoupling_review_supports_rule_policy_and_exact_ignore",
+        "tests.test_design_lint_decoupling.test_fitted_capacitor_to_return_controls_review",
+        "tests.test_design_lint_decoupling.test_custom_decoupling_capacitor_requires_exact_project_role",
+        "tests.test_design_lint_decoupling.test_ic_power_decoupling_review_supports_rule_policy_and_exact_ignore",
         "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_ic_decoupling_prompt_is_order_stable_and_fitted_capacitor_clears_it",
-        "tests.test_design_lint_decoupling.DesignLintDecouplingTests.test_custom_decoupling_capacitor_suppression_is_input_order_stable"
+        "tests.test_design_lint_decoupling.test_ic_decoupling_prompt_is_order_stable_and_fitted_capacitor_clears_it",
+        "tests.test_design_lint_decoupling.test_custom_decoupling_capacitor_suppression_is_input_order_stable"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_decoupling.py#ic_power_rails_without_fitted_capacitors",

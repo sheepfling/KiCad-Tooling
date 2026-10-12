@@ -1,4 +1,4 @@
-"""Keep connector native acceptance selectable and pytest-native."""
+"""Keep focused lint suites pytest-native and theme-selectable."""
 
 from __future__ import annotations
 
@@ -34,6 +34,8 @@ _DIGITAL_PEER_SUITES = {
     },
 }
 _PYTEST_NATIVE_LINT_SUITES = {
+    "test_design_lint_complementary_pairs.py": {"interface_lint"},
+    "test_design_lint_decoupling.py": {"component_lint", "power_lint"},
     "test_design_lint_dc_reference.py": {"power_lint"},
     "test_design_lint_policy.py": {"connector_lint", "return_path_lint"},
     "test_electrical_can_termination.py": {"interface_lint"},
