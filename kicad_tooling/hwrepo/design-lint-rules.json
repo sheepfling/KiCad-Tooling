@@ -4346,16 +4346,21 @@
         "tests.test_power_paths.test_two_stage_path_detects_open_fuse_and_dnp_fuse",
         "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability",
         "tests.test_power_paths.test_map_rejects_discontinuous_ordered_net_chain",
-        "tests.test_power_paths.test_map_rejects_reused_component_reference"
+        "tests.test_power_paths.test_map_rejects_reused_component_reference",
+        "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault"
       ],
       "valid_control_fixtures": [
         "tests.test_power_paths.test_reviewed_ferrite_and_multistage_paths_pass",
         "tests.test_power_paths.test_rule_uses_review_block_off_and_exact_ignore_lifecycle",
-        "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability"
+        "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability",
+        "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_power_paths.test_map_order_is_stable_and_fixing_path_clears_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_POWER_PATH_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_paths.py#power_path_mismatches",
@@ -4447,7 +4452,8 @@
         "tests.test_power_input_source_paths.test_bridged12_does_not_infer_a_path_to_terminal_three",
         "tests.test_power_input_source_paths.test_reverse_dnp_unsupported_and_unmapped_diodes_do_not_count_as_source_paths",
         "tests.test_power_input_source_anchors.test_recognized_custom_capacitor_name_counts_but_arbitrary_symbol_does_not",
-        "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability"
+        "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability",
+        "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault"
       ],
       "valid_control_fixtures": [
         "tests.test_power_input_source_paths.test_valid_ferrite_low_resistance_and_named_rail_paths_are_controls",
@@ -4461,11 +4467,15 @@
         "tests.test_power_input_source_anchors.test_fitted_regulator_output_is_an_anchor_but_dnp_output_is_not",
         "tests.test_power_input_source_anchors.test_connector_power_inputs_are_outside_this_review",
         "tests.test_power_input_source_anchors.test_project_map_covers_its_endpoint_without_duplicate_heuristic",
-        "tests.test_power_input_source_anchors.test_standard_connector_identity_under_nonstandard_reference_is_excluded"
+        "tests.test_power_input_source_anchors.test_standard_connector_identity_under_nonstandard_reference_is_excluded",
+        "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_power_input_policy.test_finding_is_order_stable_and_valid_path_clears_it"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_POWER_PATH_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_pin_paths.py#power_inputs_without_supported_source_paths",

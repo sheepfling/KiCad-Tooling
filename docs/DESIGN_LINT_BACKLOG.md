@@ -1958,15 +1958,20 @@ is not a reason by itself to expand its scope or change its default policy.
   CAN peer-reference, and CAN peer-assignment native fault/control tests are
   now linked to active rules and require their existing switches. The PCB
   signal-path native fault/control test is also now linked to LINT-095 and
-  requires its existing switch. Hosted runs
+  requires its existing switch. The native power-path fault/control test now
+  links to both the source-path heuristic and mapped-path contract and requires
+  `KICAD_RUN_NATIVE_POWER_PATH_FIXTURES`; both rule selectors collect its two
+  pinned-version cases. The focused local power slice passed 66 tests, with the
+  two native cases skipped because the exact-version lane is hosted. Hosted runs
   `38294501510` (`v0.5.0rc182`), `38294866007` (`v0.5.0rc183`), and
   `38295223564` (`v0.5.0rc184`) passed the scoped lint and installed-wheel
   steps plus all three portability previews; each package job was skipped by
-  RC policy. The CAN peer-assignment run `v0.5.0rc185` and PCB signal-path run
-  `v0.5.0rc186` are pending. The remaining 8 test functions across 8 modules
-  cover CAN termination, component ratings, empty-netlist evidence, I2C
-  pull-up arrays, connector return domains, PCB test access and return paths,
-  and a mapped power path.
+  RC policy. CAN peer-assignment run `38296123722` (`v0.5.0rc185`) and PCB
+  signal-path run `38296563673` (`v0.5.0rc186`) also passed those focused jobs
+  and previews; their package jobs were skipped by RC policy. The remaining 7
+  test functions across 7 modules cover CAN termination, component ratings,
+  empty-netlist evidence, I2C pull-up arrays, connector return domains, and PCB
+  test access and return paths.
   Review each test against a rule predicate before indexing it; the inventory
   identifies selection gaps, not proof that every test belongs to a lint rule.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
@@ -6407,7 +6412,9 @@ is not a reason by itself to expand its scope or change its default policy.
   rule's fixture catalog, so `Lint-Rule: pcb.signal_path_rule_coverage` could
   not select it. The catalog now links the test as both fault and valid control,
   requires `KICAD_RUN_NATIVE_PCB_FIXTURES`, and the architecture suite guards
-  that association. The new rule-scoped hosted result is pending.
+  that association. Hosted run `38296563673` for `v0.5.0rc186` passed the
+  focused lint and installed-wheel steps plus all three portability previews;
+  the package job was skipped by RC policy.
 - **Privacy:** Tooling-owned synthetic data only. No project-specific source,
   observed pinout, contract, or candidate implementation is retained.
 
@@ -10675,8 +10682,9 @@ it does not claim field validation or effectiveness against private boards.
   catalog that test, so a `Lint-Rule: bus.can_peer_assignment_divergence` tag
   could not select it. The catalog now links the test as both fault and valid
   control, requires `KICAD_RUN_NATIVE_CAN_PEER_FIXTURES`, and the architecture
-  suite guards the association. The rule-scoped hosted run for `v0.5.0rc185`
-  is pending.
+  suite guards the association. The rule-scoped hosted run `38296123722` for
+  `v0.5.0rc185` passed the focused lint and installed-wheel steps plus all three
+  portability previews; the package job was skipped by RC policy.
 - **Remaining:** This is a review-localization gain, not proof the asymmetric
   peer is defective. Reviewer effort and false-positive frequency on approved
   non-proprietary projects remain unmeasured.
