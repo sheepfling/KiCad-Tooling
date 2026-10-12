@@ -3606,18 +3606,20 @@
         "The map is not a current-direction or power-source inference. Switching devices, multi-pin protection networks, alternate assembly states, and direct same-net paths need separate explicit requirements."
       ],
       "fault_fixtures": [
-        "tests.test_power_paths.PowerPathTests.test_missing_endpoint_element_dnp_identity_and_bypass_faults_are_reported",
-        "tests.test_power_paths.PowerPathTests.test_two_stage_path_detects_open_fuse_and_dnp_fuse",
-        "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability"
+        "tests.test_power_paths.test_missing_endpoint_element_dnp_identity_and_bypass_faults_are_reported",
+        "tests.test_power_paths.test_two_stage_path_detects_open_fuse_and_dnp_fuse",
+        "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability",
+        "tests.test_power_paths.test_map_rejects_discontinuous_ordered_net_chain",
+        "tests.test_power_paths.test_map_rejects_reused_component_reference"
       ],
       "valid_control_fixtures": [
-        "tests.test_power_paths.PowerPathTests.test_reviewed_ferrite_and_multistage_paths_pass",
-        "tests.test_power_paths.PowerPathTests.test_rule_uses_review_block_off_and_exact_ignore_lifecycle",
+        "tests.test_power_paths.test_reviewed_ferrite_and_multistage_paths_pass",
+        "tests.test_power_paths.test_rule_uses_review_block_off_and_exact_ignore_lifecycle",
         "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_power_paths.PowerPathTests.test_map_order_is_stable_and_fixing_path_clears_finding"
+        "tests.test_power_paths.test_map_order_is_stable_and_fixing_path_clears_finding"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_paths.py#power_path_mismatches",

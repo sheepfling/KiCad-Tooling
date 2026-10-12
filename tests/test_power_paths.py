@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import unittest
 
 import pytest
 from pydantic import ValidationError
@@ -166,228 +165,220 @@ def lint_report(
     )
 
 
-class PowerPathTests(unittest.TestCase):
-    def test_reviewed_ferrite_and_multistage_paths_pass(self) -> None:
-        for two_elements in (False, True):
-            with self.subTest(two_elements=two_elements):
-                report = lint_report(
-                    power_path_netlist(two_elements=two_elements),
-                    power_path_map(two_elements=two_elements),
-                )
-                self.assertEqual(report.status, "PASS", report.issues)
-                self.assertNotIn(RULE_ID, {item.rule_id for item in report.findings})
-                run = next(item for item in report.mapped_check_runs if item.rule_id == RULE_ID)
-                expected_map_sha = hashlib.sha256(
-                    power_path_map(two_elements=two_elements).model_dump_json().encode("utf-8")
-                ).hexdigest()
-                self.assertEqual(run.status, "EVALUATED")
-                self.assertEqual(run.map_sha256, expected_map_sha)
-                self.assertEqual(run.netlist_sha256, report.netlist_sha256)
-                self.assertEqual(run.requirement_count, 1)
-                self.assertEqual(run.finding_count, 0)
-                rendered = text_report(report)
-                self.assertIn("Mapped topology check runs:", rendered)
-                self.assertIn(
-                    f"{RULE_ID}: EVALUATED (mode: review; 1 authored item(s), 0 finding(s))",
-                    rendered,
-                )
+@pytest.mark.parametrize(
+    "two_elements",
+    (pytest.param(False, id="single-element"), pytest.param(True, id="multistage")),
+)
+def test_reviewed_ferrite_and_multistage_paths_pass(two_elements: bool) -> None:
+    report = lint_report(
+        power_path_netlist(two_elements=two_elements),
+        power_path_map(two_elements=two_elements),
+    )
+    assert report.status == "PASS", report.issues
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    run = next(item for item in report.mapped_check_runs if item.rule_id == RULE_ID)
+    expected_map_sha = hashlib.sha256(
+        power_path_map(two_elements=two_elements).model_dump_json().encode("utf-8")
+    ).hexdigest()
+    assert run.status == "EVALUATED"
+    assert run.map_sha256 == expected_map_sha
+    assert run.netlist_sha256 == report.netlist_sha256
+    assert run.requirement_count == 1
+    assert run.finding_count == 0
+    rendered = text_report(report)
+    assert "Mapped topology check runs:" in rendered
+    assert f"{RULE_ID}: EVALUATED (mode: review; 1 authored item(s), 0 finding(s))" in rendered
 
-    def test_missing_endpoint_element_dnp_identity_and_bypass_faults_are_reported(self) -> None:
-        cases = (
-            ("open-source", "J1.1 is assigned to unconnected"),
-            ("open-element", "FB1.2 is assigned to FLOATING"),
-            ("open-load", "U1.3 is assigned to FLOATING"),
-            ("dnp-element", "FB1 is marked DNP"),
-            ("wrong-element-symbol", "FB1 symbol is Device:L"),
-            ("extra-element-pin", "FB1 has 3 native pins"),
-            ("bypassed-element", "FB1.2 is assigned to VIN"),
-        )
-        for fault, expected_issue in cases:
-            with self.subTest(fault=fault):
-                report = lint_report(power_path_netlist(fault=fault), power_path_map())
-                self.assertEqual(report.status, "REVIEW")
-                run = next(item for item in report.mapped_check_runs if item.rule_id == RULE_ID)
-                self.assertEqual(run.status, "EVALUATED")
-                self.assertEqual(run.finding_count, 1)
-                finding = next(item for item in report.findings if item.rule_id == RULE_ID)
-                self.assertTrue(
-                    any(expected_issue in issue for issue in finding.evidence["issues"]),
-                    finding.evidence["issues"],
-                )
-                self.assertEqual(finding.evidence["start_endpoint"], ("J1.1 on VIN",))
-                self.assertEqual(finding.evidence["end_endpoint"], ("U1.3 on VLOAD",))
-                self.assertIn("does not establish component conduction", finding.message)
 
-    def test_two_stage_path_detects_open_fuse_and_dnp_fuse(self) -> None:
-        for fault, expected_issue in (
-            ("open-element", "F1.1 is assigned to FLOATING"),
-            ("dnp-element", "F1 is marked DNP"),
-        ):
-            with self.subTest(fault=fault):
-                mismatches = power_path_mismatches(
-                    power_path_map(two_elements=True),
-                    power_path_netlist(fault=fault, two_elements=True),
-                )
-                self.assertEqual(len(mismatches), 1)
-                self.assertTrue(
-                    any(expected_issue in issue for issue in mismatches[0].issues),
-                    mismatches[0].issues,
-                )
-                self.assertEqual(len(mismatches[0].elements), 2)
+@pytest.mark.parametrize(
+    ("fault", "expected_issue"),
+    (
+        pytest.param("open-source", "J1.1 is assigned to unconnected", id="open-source"),
+        pytest.param("open-element", "FB1.2 is assigned to FLOATING", id="open-element"),
+        pytest.param("open-load", "U1.3 is assigned to FLOATING", id="open-load"),
+        pytest.param("dnp-element", "FB1 is marked DNP", id="dnp-element"),
+        pytest.param("wrong-element-symbol", "FB1 symbol is Device:L", id="wrong-element-symbol"),
+        pytest.param("extra-element-pin", "FB1 has 3 native pins", id="extra-element-pin"),
+        pytest.param("bypassed-element", "FB1.2 is assigned to VIN", id="bypassed-element"),
+    ),
+)
+def test_missing_endpoint_element_dnp_identity_and_bypass_faults_are_reported(
+    fault: str, expected_issue: str
+) -> None:
+    report = lint_report(power_path_netlist(fault=fault), power_path_map())
+    assert report.status == "REVIEW"
+    run = next(item for item in report.mapped_check_runs if item.rule_id == RULE_ID)
+    assert run.status == "EVALUATED"
+    assert run.finding_count == 1
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+    assert any(expected_issue in issue for issue in finding.evidence["issues"]), finding.evidence[
+        "issues"
+    ]
+    assert finding.evidence["start_endpoint"] == ("J1.1 on VIN",)
+    assert finding.evidence["end_endpoint"] == ("U1.3 on VLOAD",)
+    assert "does not establish component conduction" in finding.message
 
-    def test_rule_uses_review_block_off_and_exact_ignore_lifecycle(self) -> None:
-        fault_netlist = power_path_netlist(fault="open-element")
-        path_map = power_path_map()
-        blocked = lint_report(
-            fault_netlist,
-            path_map,
-            override=DesignLintRuleOverride(
-                rule_id=RULE_ID,
-                mode="block",
-                reason="Synthetic release policy requires this reviewed input path",
-            ),
-        )
-        self.assertEqual(blocked.status, "FAIL")
-        finding = next(
-            item
-            for item in lint_report(fault_netlist, path_map).findings
-            if item.rule_id == RULE_ID
-        )
-        ignored = lint_report(
-            fault_netlist,
-            path_map,
-            ignore=DesignLintIgnore(
-                rule_id=RULE_ID,
-                fingerprint=finding.fingerprint,
-                reason="Synthetic test records the reviewed assembly exception",
-            ),
-        )
-        self.assertEqual(
-            next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition,
-            "IGNORED",
-        )
-        disabled = lint_report(
-            fault_netlist,
-            path_map,
-            override=DesignLintRuleOverride(
-                rule_id=RULE_ID,
-                mode="off",
-                reason="Synthetic alternate configuration is checked by another contract",
-            ),
-        )
-        self.assertEqual(
-            next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition,
-            "RULE_OFF",
-        )
-        disabled_run = next(item for item in disabled.mapped_check_runs if item.rule_id == RULE_ID)
-        self.assertEqual((disabled_run.status, disabled_run.mode), ("EVALUATED", "off"))
-        self.assertEqual(disabled_run.finding_count, 1)
 
-    def test_unconfigured_and_unbound_maps_have_explicit_execution_states(self) -> None:
-        without_map = lint_report(power_path_netlist())
-        unconfigured = next(
-            item for item in without_map.mapped_check_runs if item.rule_id == RULE_ID
-        )
-        self.assertEqual(unconfigured.status, "NOT_CONFIGURED")
-        self.assertIsNone(unconfigured.map_sha256)
-        self.assertEqual(unconfigured.requirement_count, 0)
-        self.assertIn("No project-authored map", unconfigured.reason or "")
+@pytest.mark.parametrize(
+    ("fault", "expected_issue"),
+    (
+        pytest.param("open-element", "F1.1 is assigned to FLOATING", id="open-fuse"),
+        pytest.param("dnp-element", "F1 is marked DNP", id="dnp-fuse"),
+    ),
+)
+def test_two_stage_path_detects_open_fuse_and_dnp_fuse(fault: str, expected_issue: str) -> None:
+    mismatches = power_path_mismatches(
+        power_path_map(two_elements=True),
+        power_path_netlist(fault=fault, two_elements=True),
+    )
+    assert len(mismatches) == 1
+    assert any(expected_issue in issue for issue in mismatches[0].issues), mismatches[0].issues
+    assert len(mismatches[0].elements) == 2
 
-        unbound_coach = ContractCoachReport(
-            status="READY_FOR_REVIEW",
-            project_id="synthetic-power-path",
-            observed=power_path_netlist(),
-        )
-        unbound = evaluate(
-            "synthetic-power-path",
-            unbound_coach,
-            DesignLintPolicy(power_path_map=power_path_map()),
-        )
-        blocked = next(item for item in unbound.mapped_check_runs if item.rule_id == RULE_ID)
-        self.assertEqual(unbound.status, "BLOCKED")
-        self.assertEqual(blocked.status, "BLOCKED")
-        self.assertEqual(blocked.requirement_count, 1)
-        self.assertIn("no source-bound SHA-256", blocked.reason or "")
 
-    def test_map_order_is_stable_and_fixing_path_clears_finding(self) -> None:
-        faulty = power_path_netlist(fault="open-element")
-        path_map = power_path_map()
-        report = lint_report(faulty, path_map)
-        original = next(item for item in report.findings if item.rule_id == RULE_ID)
-        reordered = faulty.model_copy(update={"nets": dict(reversed(tuple(faulty.nets.items())))})
-        reordered_report = lint_report(reordered, path_map)
-        reordered_finding = next(
-            item for item in reordered_report.findings if item.rule_id == RULE_ID
-        )
-        self.assertEqual(
-            (reordered_finding.fingerprint, reordered_finding.evidence),
-            (original.fingerprint, original.evidence),
-        )
-
-        unrelated = faulty.model_copy(
-            update={
-                "components": {
-                    **faulty.components,
-                    "R3": ComponentContract(value="10k", footprint="Synthetic:R_0603"),
-                },
-                "nets": {
-                    **faulty.nets,
-                    "+3V3": ("R3.1",),
-                    "GND": ("R3.2",),
-                },
-                "component_symbols": {**faulty.component_symbols, "R3": "Device:R"},
-                "component_pin_numbers": {
-                    **faulty.component_pin_numbers,
-                    "R3": ("1", "2"),
-                },
-            }
-        )
-        unrelated_report = lint_report(unrelated, path_map)
-        unrelated_finding = next(
-            item for item in unrelated_report.findings if item.rule_id == RULE_ID
-        )
-        self.assertNotEqual(unrelated_report.netlist_sha256, report.netlist_sha256)
-        self.assertEqual(
-            (unrelated_finding.fingerprint, unrelated_finding.evidence),
-            (original.fingerprint, original.evidence),
-        )
-        original_run = next(item for item in report.mapped_check_runs if item.rule_id == RULE_ID)
-        unrelated_run = next(
-            item for item in unrelated_report.mapped_check_runs if item.rule_id == RULE_ID
-        )
-        self.assertEqual(unrelated_run.netlist_sha256, unrelated_report.netlist_sha256)
-        self.assertNotEqual(unrelated_run.netlist_sha256, original_run.netlist_sha256)
-        self.assertEqual(unrelated_run.map_sha256, original_run.map_sha256)
-
-        exact_ignore = DesignLintIgnore(
+def test_rule_uses_review_block_off_and_exact_ignore_lifecycle() -> None:
+    fault_netlist = power_path_netlist(fault="open-element")
+    path_map = power_path_map()
+    blocked = lint_report(
+        fault_netlist,
+        path_map,
+        override=DesignLintRuleOverride(
             rule_id=RULE_ID,
-            fingerprint=original.fingerprint,
-            reason="Synthetic review accepts this explicit source-to-load path exception",
-        )
-        for candidate in (faulty, unrelated):
-            ignored_report = lint_report(candidate, path_map, ignore=exact_ignore)
-            ignored_finding = next(
-                item for item in ignored_report.findings if item.rule_id == RULE_ID
-            )
-            self.assertEqual(ignored_finding.fingerprint, original.fingerprint)
-            self.assertEqual(ignored_finding.disposition, "IGNORED")
+            mode="block",
+            reason="Synthetic release policy requires this reviewed input path",
+        ),
+    )
+    assert blocked.status == "FAIL"
+    finding = next(
+        item for item in lint_report(fault_netlist, path_map).findings if item.rule_id == RULE_ID
+    )
+    ignored = lint_report(
+        fault_netlist,
+        path_map,
+        ignore=DesignLintIgnore(
+            rule_id=RULE_ID,
+            fingerprint=finding.fingerprint,
+            reason="Synthetic test records the reviewed assembly exception",
+        ),
+    )
+    assert (
+        next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    )
+    disabled = lint_report(
+        fault_netlist,
+        path_map,
+        override=DesignLintRuleOverride(
+            rule_id=RULE_ID,
+            mode="off",
+            reason="Synthetic alternate configuration is checked by another contract",
+        ),
+    )
+    assert (
+        next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition
+        == "RULE_OFF"
+    )
+    disabled_run = next(item for item in disabled.mapped_check_runs if item.rule_id == RULE_ID)
+    assert (disabled_run.status, disabled_run.mode) == ("EVALUATED", "off")
+    assert disabled_run.finding_count == 1
 
-        fixed = lint_report(power_path_netlist(), path_map)
-        self.assertNotIn(RULE_ID, {item.rule_id for item in fixed.findings})
 
-    def test_map_rejects_discontinuous_or_reused_component_paths(self) -> None:
-        raw = power_path_map().model_dump(mode="python")
-        raw["paths"][0]["elements"][0]["side_a_net"] = "OTHER"
-        with self.assertRaisesRegex(ValidationError, "ordered net chain"):
-            PowerPathMap.model_validate(raw)
+def test_unconfigured_and_unbound_maps_have_explicit_execution_states() -> None:
+    without_map = lint_report(power_path_netlist())
+    unconfigured = next(item for item in without_map.mapped_check_runs if item.rule_id == RULE_ID)
+    assert unconfigured.status == "NOT_CONFIGURED"
+    assert unconfigured.map_sha256 is None
+    assert unconfigured.requirement_count == 0
+    assert "No project-authored map" in (unconfigured.reason or "")
 
-        raw = power_path_map().model_dump(mode="python")
-        raw["paths"][0]["elements"][0]["reference"] = "J1"
-        raw["paths"][0]["elements"][0]["side_a_pin"] = "J1.2"
-        raw["paths"][0]["elements"][0]["side_b_pin"] = "J1.3"
-        with self.assertRaisesRegex(ValidationError, "references must be unique"):
-            PowerPathMap.model_validate(raw)
+    unbound_coach = ContractCoachReport(
+        status="READY_FOR_REVIEW",
+        project_id="synthetic-power-path",
+        observed=power_path_netlist(),
+    )
+    unbound = evaluate(
+        "synthetic-power-path",
+        unbound_coach,
+        DesignLintPolicy(power_path_map=power_path_map()),
+    )
+    blocked = next(item for item in unbound.mapped_check_runs if item.rule_id == RULE_ID)
+    assert unbound.status == "BLOCKED"
+    assert blocked.status == "BLOCKED"
+    assert blocked.requirement_count == 1
+    assert "no source-bound SHA-256" in (blocked.reason or "")
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_map_order_is_stable_and_fixing_path_clears_finding() -> None:
+    faulty = power_path_netlist(fault="open-element")
+    path_map = power_path_map()
+    report = lint_report(faulty, path_map)
+    original = next(item for item in report.findings if item.rule_id == RULE_ID)
+    reordered = faulty.model_copy(update={"nets": dict(reversed(tuple(faulty.nets.items())))})
+    reordered_report = lint_report(reordered, path_map)
+    reordered_finding = next(item for item in reordered_report.findings if item.rule_id == RULE_ID)
+    assert (reordered_finding.fingerprint, reordered_finding.evidence) == (
+        original.fingerprint,
+        original.evidence,
+    )
+
+    unrelated = faulty.model_copy(
+        update={
+            "components": {
+                **faulty.components,
+                "R3": ComponentContract(value="10k", footprint="Synthetic:R_0603"),
+            },
+            "nets": {
+                **faulty.nets,
+                "+3V3": ("R3.1",),
+                "GND": ("R3.2",),
+            },
+            "component_symbols": {**faulty.component_symbols, "R3": "Device:R"},
+            "component_pin_numbers": {
+                **faulty.component_pin_numbers,
+                "R3": ("1", "2"),
+            },
+        }
+    )
+    unrelated_report = lint_report(unrelated, path_map)
+    unrelated_finding = next(item for item in unrelated_report.findings if item.rule_id == RULE_ID)
+    assert unrelated_report.netlist_sha256 != report.netlist_sha256
+    assert (unrelated_finding.fingerprint, unrelated_finding.evidence) == (
+        original.fingerprint,
+        original.evidence,
+    )
+    original_run = next(item for item in report.mapped_check_runs if item.rule_id == RULE_ID)
+    unrelated_run = next(
+        item for item in unrelated_report.mapped_check_runs if item.rule_id == RULE_ID
+    )
+    assert unrelated_run.netlist_sha256 == unrelated_report.netlist_sha256
+    assert unrelated_run.netlist_sha256 != original_run.netlist_sha256
+    assert unrelated_run.map_sha256 == original_run.map_sha256
+
+    exact_ignore = DesignLintIgnore(
+        rule_id=RULE_ID,
+        fingerprint=original.fingerprint,
+        reason="Synthetic review accepts this explicit source-to-load path exception",
+    )
+    for candidate in (faulty, unrelated):
+        ignored_report = lint_report(candidate, path_map, ignore=exact_ignore)
+        ignored_finding = next(item for item in ignored_report.findings if item.rule_id == RULE_ID)
+        assert ignored_finding.fingerprint == original.fingerprint
+        assert ignored_finding.disposition == "IGNORED"
+
+    fixed = lint_report(power_path_netlist(), path_map)
+    assert RULE_ID not in {item.rule_id for item in fixed.findings}
+
+
+def test_map_rejects_discontinuous_ordered_net_chain() -> None:
+    raw = power_path_map().model_dump(mode="python")
+    raw["paths"][0]["elements"][0]["side_a_net"] = "OTHER"
+    with pytest.raises(ValidationError, match="ordered net chain"):
+        PowerPathMap.model_validate(raw)
+
+
+def test_map_rejects_reused_component_reference() -> None:
+    raw = power_path_map().model_dump(mode="python")
+    raw["paths"][0]["elements"][0]["reference"] = "J1"
+    raw["paths"][0]["elements"][0]["side_a_pin"] = "J1.2"
+    raw["paths"][0]["elements"][0]["side_b_pin"] = "J1.3"
+    with pytest.raises(ValidationError, match="references must be unique"):
+        PowerPathMap.model_validate(raw)
