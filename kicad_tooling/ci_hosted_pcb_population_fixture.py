@@ -125,7 +125,7 @@ def pcb_population_mismatch_fixture_lane(
         mismatch_refs = tuple(item.reference for item in coverage.population_mismatches)
         observed_outcomes[case] = mismatch_refs
         observed_state = (
-            "U1" in {reference.casefold() for reference in retained_netlist.dnp_components},
+            "u1" in {reference.casefold() for reference in retained_netlist.dnp_components},
             retained_snapshot.footprints[0].dnp,
         )
         if mismatch_refs != expected_refs or observed_state != expected_state:
