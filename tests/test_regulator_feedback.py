@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import unittest
 
 import pytest
 from pydantic import ValidationError
@@ -227,202 +226,188 @@ def power_connectivity_requirement() -> PowerConnectivityAnalysis:
     )
 
 
-class RegulatorFeedbackTests(unittest.TestCase):
-    def test_project_map_rejects_reversed_ranges_and_duplicate_pins(self) -> None:
-        reversed_range = regulator_feedback_map().model_dump(mode="python")
-        reversed_range["regulators"][0]["upper_resistor"]["minimum_nominal_resistance_ohms"] = (
-            200000.0
-        )
-        with self.assertRaisesRegex(ValidationError, "range is reversed"):
-            RegulatorFeedbackMap.model_validate(reversed_range)
+def test_project_map_rejects_reversed_ranges_and_duplicate_pins() -> None:
+    reversed_range = regulator_feedback_map().model_dump(mode="python")
+    reversed_range["regulators"][0]["upper_resistor"]["minimum_nominal_resistance_ohms"] = 200000.0
+    with pytest.raises(ValidationError, match="range is reversed"):
+        RegulatorFeedbackMap.model_validate(reversed_range)
 
-        duplicate_pin = regulator_feedback_map().model_dump(mode="python")
-        duplicate_pin["regulators"][0]["expected_feedback_pin_function"] = "OUT"
-        duplicate_pin["regulators"][0]["feedback_pin"] = "U1.1"
-        with self.assertRaisesRegex(ValidationError, "pins must differ"):
-            RegulatorFeedbackMap.model_validate(duplicate_pin)
+    duplicate_pin = regulator_feedback_map().model_dump(mode="python")
+    duplicate_pin["regulators"][0]["expected_feedback_pin_function"] = "OUT"
+    duplicate_pin["regulators"][0]["feedback_pin"] = "U1.1"
+    with pytest.raises(ValidationError, match="pins must differ"):
+        RegulatorFeedbackMap.model_validate(duplicate_pin)
 
-    def test_exact_network_and_reference_bounds_pass(self) -> None:
-        result = report(regulator_netlist(), regulator_feedback_map())
-        self.assertEqual(result.status, "PASS", result.issues)
-        coverage = result.regulator_feedback_coverage
-        self.assertEqual(coverage.status, "COMPLETE")
-        self.assertEqual(coverage.netlist_sha256, "d" * 64)
-        entry = coverage.entries[0]
-        self.assertEqual(entry.status, "COMPLETE")
-        self.assertEqual(entry.feedback_net, "FB")
-        self.assertEqual(entry.formula, "Vref*(1+Rupper/Rlower)")
-        self.assertAlmostEqual(entry.calculated_output_minimum_v or 0, 5.112)
-        self.assertAlmostEqual(entry.calculated_output_maximum_v or 0, 5.215272727272727)
-        self.assertFalse(
-            any(item.rule_id == "power.regulator_feedback_mismatch" for item in result.findings)
-        )
-        rendered = text_report(result)
-        self.assertIn("Regulator feedback coverage: COMPLETE", rendered)
-        self.assertIn("Formula: Vref*(1+Rupper/Rlower)", rendered)
-        self.assertIn("Calculated nominal output: 5.112–5.21527 V; target 5.1–5.22 V", rendered)
 
-    def test_non_finite_calculation_is_incomplete_instead_of_crashing(self) -> None:
-        feedback_map = regulator_feedback_map()
-        requirement = feedback_map.regulators[0].model_copy(
-            update={
-                "minimum_feedback_reference_voltage_v": 1.0e308,
-                "maximum_feedback_reference_voltage_v": 1.0e308,
-            }
-        )
-        feedback_map = feedback_map.model_copy(update={"regulators": (requirement,)})
+def test_exact_network_and_reference_bounds_pass() -> None:
+    result = report(regulator_netlist(), regulator_feedback_map())
+    assert result.status == "PASS", result.issues
+    coverage = result.regulator_feedback_coverage
+    assert coverage.status == "COMPLETE"
+    assert coverage.netlist_sha256 == "d" * 64
+    entry = coverage.entries[0]
+    assert entry.status == "COMPLETE"
+    assert entry.feedback_net == "FB"
+    assert entry.formula == "Vref*(1+Rupper/Rlower)"
+    assert entry.calculated_output_minimum_v == pytest.approx(5.112, abs=1e-7)
+    assert entry.calculated_output_maximum_v == pytest.approx(5.215272727272727, abs=1e-7)
+    assert not any(item.rule_id == "power.regulator_feedback_mismatch" for item in result.findings)
+    rendered = text_report(result)
+    assert "Regulator feedback coverage: COMPLETE" in rendered
+    assert "Formula: Vref*(1+Rupper/Rlower)" in rendered
+    assert "Calculated nominal output: 5.112–5.21527 V; target 5.1–5.22 V" in rendered
 
-        result = report(regulator_netlist(), feedback_map)
 
-        entry = result.regulator_feedback_coverage.entries[0]
-        self.assertEqual(entry.status, "INCOMPLETE")
-        self.assertIsNone(entry.calculated_output_minimum_v)
-        self.assertIsNone(entry.calculated_output_maximum_v)
-        self.assertTrue(any("supported finite numeric range" in issue for issue in entry.issues))
+def test_non_finite_calculation_is_incomplete_instead_of_crashing() -> None:
+    feedback_map = regulator_feedback_map()
+    requirement = feedback_map.regulators[0].model_copy(
+        update={
+            "minimum_feedback_reference_voltage_v": 1.0e308,
+            "maximum_feedback_reference_voltage_v": 1.0e308,
+        }
+    )
+    feedback_map = feedback_map.model_copy(update={"regulators": (requirement,)})
 
-    def test_divider_value_change_outside_target_is_reported_and_can_block(self) -> None:
-        result = report(
-            regulator_netlist(fault="upper-resistor-outside-range"), regulator_feedback_map()
-        )
-        self.assertEqual(result.status, "REVIEW")
-        entry = result.regulator_feedback_coverage.entries[0]
-        self.assertEqual(entry.status, "OUT_OF_RANGE")
-        self.assertGreater(entry.calculated_output_minimum_v or 0, 5.22)
-        finding = next(
-            item for item in result.findings if item.rule_id == "power.regulator_feedback_mismatch"
-        )
-        self.assertIn("R1=220000 Ω", finding.evidence["nominal_resistance_ohms"])
+    result = report(regulator_netlist(), feedback_map)
 
-        blocked = report(
-            regulator_netlist(fault="upper-resistor-outside-range"),
+    entry = result.regulator_feedback_coverage.entries[0]
+    assert entry.status == "INCOMPLETE"
+    assert entry.calculated_output_minimum_v is None
+    assert entry.calculated_output_maximum_v is None
+    assert any("supported finite numeric range" in issue for issue in entry.issues)
+
+
+def test_divider_value_change_outside_target_is_reported_and_can_block() -> None:
+    result = report(
+        regulator_netlist(fault="upper-resistor-outside-range"), regulator_feedback_map()
+    )
+    assert result.status == "REVIEW"
+    entry = result.regulator_feedback_coverage.entries[0]
+    assert entry.status == "OUT_OF_RANGE"
+    assert (entry.calculated_output_minimum_v or 0) > 5.22
+    finding = next(
+        item for item in result.findings if item.rule_id == "power.regulator_feedback_mismatch"
+    )
+    assert "R1=220000 Ω" in finding.evidence["nominal_resistance_ohms"]
+
+    blocked = report(
+        regulator_netlist(fault="upper-resistor-outside-range"),
+        regulator_feedback_map(),
+        override=DesignLintRuleOverride(
+            rule_id="power.regulator_feedback_mismatch",
+            mode="block",
+            reason="Synthetic reviewed output range is a release requirement",
+        ),
+    )
+    assert blocked.status == "FAIL"
+
+
+def test_feedback_mismatch_is_order_stable_and_corrected_value_clears_it() -> None:
+    rule_id = "power.regulator_feedback_mismatch"
+    source = regulator_netlist(fault="upper-resistor-outside-range")
+
+    def lint(netlist: NetlistContract):
+        source_hash = hashlib.sha256(netlist.model_dump_json().encode("utf-8")).hexdigest()
+        return source_hash, report(
+            netlist,
             regulator_feedback_map(),
-            override=DesignLintRuleOverride(
-                rule_id="power.regulator_feedback_mismatch",
-                mode="block",
-                reason="Synthetic reviewed output range is a release requirement",
-            ),
+            netlist_sha256=source_hash,
         )
-        self.assertEqual(blocked.status, "FAIL")
 
-    def test_feedback_mismatch_is_order_stable_and_corrected_value_clears_it(self) -> None:
-        rule_id = "power.regulator_feedback_mismatch"
-        source = regulator_netlist(fault="upper-resistor-outside-range")
+    source_hash, original = lint(source)
+    assert original.regulator_feedback_coverage.netlist_sha256 == source_hash
+    original_findings = {
+        item.subject: (item.fingerprint, item.evidence)
+        for item in original.findings
+        if item.rule_id == rule_id
+    }
+    assert len(original_findings) == 1
 
-        def lint(netlist: NetlistContract):
-            source_hash = hashlib.sha256(netlist.model_dump_json().encode("utf-8")).hexdigest()
-            return source_hash, report(
-                netlist,
-                regulator_feedback_map(),
-                netlist_sha256=source_hash,
-            )
-
-        source_hash, original = lint(source)
-        self.assertEqual(original.regulator_feedback_coverage.netlist_sha256, source_hash)
-        original_findings = {
-            item.subject: (item.fingerprint, item.evidence)
-            for item in original.findings
-            if item.rule_id == rule_id
+    reordered_source = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
         }
-        self.assertEqual(len(original_findings), 1)
+    )
+    reordered_hash, reordered = lint(reordered_source)
+    assert source_hash != reordered_hash
+    assert reordered.regulator_feedback_coverage.netlist_sha256 == reordered_hash
+    reordered_findings = {
+        item.subject: (item.fingerprint, item.evidence)
+        for item in reordered.findings
+        if item.rule_id == rule_id
+    }
+    assert reordered_findings == original_findings
 
-        reordered_source = source.model_copy(
-            update={
-                "components": dict(reversed(tuple(source.components.items()))),
-                "nets": dict(reversed(tuple(source.nets.items()))),
-                "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
-                "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
-                "component_pin_numbers": dict(
-                    reversed(tuple(source.component_pin_numbers.items()))
-                ),
-            }
-        )
-        reordered_hash, reordered = lint(reordered_source)
-        self.assertNotEqual(source_hash, reordered_hash)
-        self.assertEqual(reordered.regulator_feedback_coverage.netlist_sha256, reordered_hash)
-        reordered_findings = {
-            item.subject: (item.fingerprint, item.evidence)
-            for item in reordered.findings
-            if item.rule_id == rule_id
-        }
-        self.assertEqual(reordered_findings, original_findings)
-
-        repaired_hash, repaired = lint(regulator_netlist())
-        self.assertNotEqual(source_hash, repaired_hash)
-        self.assertNotIn(rule_id, {item.rule_id for item in repaired.findings})
-
-    def test_wrong_output_or_feedback_net_is_reported(self) -> None:
-        for fault in ("wrong-output-net", "split-feedback-node", "wrong-reference-net"):
-            with self.subTest(fault=fault):
-                result = report(regulator_netlist(fault=fault), regulator_feedback_map())
-                self.assertEqual(result.status, "REVIEW")
-                self.assertEqual(result.regulator_feedback_coverage.entries[0].status, "INCOMPLETE")
-                self.assertIsNone(
-                    result.regulator_feedback_coverage.entries[0].calculated_output_minimum_v
-                )
-                self.assertTrue(
-                    any(
-                        item.rule_id == "power.regulator_feedback_mismatch"
-                        for item in result.findings
-                    )
-                )
-
-    def test_stale_identity_missing_pin_dnp_and_unsupported_value_need_review(self) -> None:
-        for fault in (
-            "wrong-regulator-value",
-            "wrong-regulator-footprint",
-            "wrong-feedback-function",
-            "missing-feedback-pin",
-            "dnp-lower-resistor",
-            "unsupported-resistor-value",
-        ):
-            with self.subTest(fault=fault):
-                result = report(regulator_netlist(fault=fault), regulator_feedback_map())
-                self.assertEqual(result.status, "REVIEW")
-                self.assertEqual(result.regulator_feedback_coverage.entries[0].status, "INCOMPLETE")
-
-    def test_unmapped_fitted_resistor_on_feedback_node_makes_coverage_incomplete(self) -> None:
-        result = report(
-            regulator_netlist(fault="unmapped-feedback-resistor"), regulator_feedback_map()
-        )
-        entry = result.regulator_feedback_coverage.entries[0]
-        self.assertEqual(entry.status, "INCOMPLETE")
-        self.assertTrue(
-            any("unmapped fitted resistors" in issue.casefold() for issue in entry.issues)
-        )
-        self.assertIsNone(entry.calculated_output_minimum_v)
-
-    def test_compensation_cap_does_not_change_nominal_dc_divider_check(self) -> None:
-        result = report(
-            regulator_netlist(with_compensation_capacitor=True), regulator_feedback_map()
-        )
-        self.assertEqual(result.regulator_feedback_coverage.entries[0].status, "COMPLETE")
-        self.assertEqual(result.status, "PASS")
-
-    def test_unmapped_fixed_output_regulator_is_not_inferred(self) -> None:
-        fixed_output = NetlistContract(
-            components={
-                "U9": ComponentContract(value="SYNTH-FIXED-3V3", footprint="Synthetic:SOT-23-5")
-            },
-            nets={"3V3": ("U9.1",)},
-            component_symbols={"U9": "Synthetic:FixedRegulator"},
-        )
-        result = report(fixed_output)
-        self.assertEqual(result.regulator_feedback_coverage.status, "NOT_REQUESTED")
-        self.assertFalse(
-            any(item.rule_id == "power.regulator_feedback_mismatch" for item in result.findings)
-        )
-
-    def test_existing_power_connectivity_lane_does_not_see_divider_value_fault(self) -> None:
-        connectivity = power_connectivity_requirement()
-        check = power_connectivity_checks(
-            connectivity, regulator_netlist(fault="upper-resistor-outside-range")
-        )
-        self.assertTrue(all(item.status == "PASS" for item in check))
-        lint = report(
-            regulator_netlist(fault="upper-resistor-outside-range"), regulator_feedback_map()
-        )
-        self.assertEqual(lint.regulator_feedback_coverage.entries[0].status, "OUT_OF_RANGE")
+    repaired_hash, repaired = lint(regulator_netlist())
+    assert source_hash != repaired_hash
+    assert rule_id not in {item.rule_id for item in repaired.findings}
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.parametrize(
+    "fault",
+    ("wrong-output-net", "split-feedback-node", "wrong-reference-net"),
+)
+def test_wrong_output_or_feedback_net_is_reported(fault: str) -> None:
+    result = report(regulator_netlist(fault=fault), regulator_feedback_map())
+    assert result.status == "REVIEW"
+    assert result.regulator_feedback_coverage.entries[0].status == "INCOMPLETE"
+    assert result.regulator_feedback_coverage.entries[0].calculated_output_minimum_v is None
+    assert any(item.rule_id == "power.regulator_feedback_mismatch" for item in result.findings)
+
+
+@pytest.mark.parametrize(
+    "fault",
+    (
+        "wrong-regulator-value",
+        "wrong-regulator-footprint",
+        "wrong-feedback-function",
+        "missing-feedback-pin",
+        "dnp-lower-resistor",
+        "unsupported-resistor-value",
+    ),
+)
+def test_stale_identity_missing_pin_dnp_and_unsupported_value_need_review(fault: str) -> None:
+    result = report(regulator_netlist(fault=fault), regulator_feedback_map())
+    assert result.status == "REVIEW"
+    assert result.regulator_feedback_coverage.entries[0].status == "INCOMPLETE"
+
+
+def test_unmapped_fitted_resistor_on_feedback_node_makes_coverage_incomplete() -> None:
+    result = report(regulator_netlist(fault="unmapped-feedback-resistor"), regulator_feedback_map())
+    entry = result.regulator_feedback_coverage.entries[0]
+    assert entry.status == "INCOMPLETE"
+    assert any("unmapped fitted resistors" in issue.casefold() for issue in entry.issues)
+    assert entry.calculated_output_minimum_v is None
+
+
+def test_compensation_cap_does_not_change_nominal_dc_divider_check() -> None:
+    result = report(regulator_netlist(with_compensation_capacitor=True), regulator_feedback_map())
+    assert result.regulator_feedback_coverage.entries[0].status == "COMPLETE"
+    assert result.status == "PASS"
+
+
+def test_unmapped_fixed_output_regulator_is_not_inferred() -> None:
+    fixed_output = NetlistContract(
+        components={
+            "U9": ComponentContract(value="SYNTH-FIXED-3V3", footprint="Synthetic:SOT-23-5")
+        },
+        nets={"3V3": ("U9.1",)},
+        component_symbols={"U9": "Synthetic:FixedRegulator"},
+    )
+    result = report(fixed_output)
+    assert result.regulator_feedback_coverage.status == "NOT_REQUESTED"
+    assert not any(item.rule_id == "power.regulator_feedback_mismatch" for item in result.findings)
+
+
+def test_existing_power_connectivity_lane_does_not_see_divider_value_fault() -> None:
+    connectivity = power_connectivity_requirement()
+    check = power_connectivity_checks(
+        connectivity, regulator_netlist(fault="upper-resistor-outside-range")
+    )
+    assert all(item.status == "PASS" for item in check)
+    lint = report(regulator_netlist(fault="upper-resistor-outside-range"), regulator_feedback_map())
+    assert lint.regulator_feedback_coverage.entries[0].status == "OUT_OF_RANGE"

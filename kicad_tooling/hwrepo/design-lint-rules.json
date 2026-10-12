@@ -2894,19 +2894,19 @@
         "The calculation uses nominal schematic resistor values and authored reference-voltage bounds; it does not model resistor tolerance, feedback bias current, stability, compensation, startup, load response, device ratings, or PCB feedback routing."
       ],
       "fault_fixtures": [
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_divider_value_change_outside_target_is_reported_and_can_block",
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_wrong_output_or_feedback_net_is_reported",
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_stale_identity_missing_pin_dnp_and_unsupported_value_need_review",
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_unmapped_fitted_resistor_on_feedback_node_makes_coverage_incomplete"
+        "tests.test_regulator_feedback.test_divider_value_change_outside_target_is_reported_and_can_block",
+        "tests.test_regulator_feedback.test_wrong_output_or_feedback_net_is_reported",
+        "tests.test_regulator_feedback.test_stale_identity_missing_pin_dnp_and_unsupported_value_need_review",
+        "tests.test_regulator_feedback.test_unmapped_fitted_resistor_on_feedback_node_makes_coverage_incomplete"
       ],
       "valid_control_fixtures": [
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_exact_network_and_reference_bounds_pass",
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_compensation_cap_does_not_change_nominal_dc_divider_check",
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_unmapped_fixed_output_regulator_is_not_inferred"
+        "tests.test_regulator_feedback.test_exact_network_and_reference_bounds_pass",
+        "tests.test_regulator_feedback.test_compensation_cap_does_not_change_nominal_dc_divider_check",
+        "tests.test_regulator_feedback.test_unmapped_fixed_output_regulator_is_not_inferred"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_regulator_feedback.RegulatorFeedbackTests.test_feedback_mismatch_is_order_stable_and_corrected_value_clears_it"
+        "tests.test_regulator_feedback.test_feedback_mismatch_is_order_stable_and_corrected_value_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/regulator_feedback.py#scan_regulator_feedback_map",

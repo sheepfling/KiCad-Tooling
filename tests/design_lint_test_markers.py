@@ -76,7 +76,6 @@ _LINT_AREA_MODULES = {
             "tests/test_open_drain_heuristics.py",
             "tests/test_ci_hosted_control_inputs.py",
             "tests/test_rc_filters.py",
-            "tests/test_regulator_feedback.py",
             "tests/test_two_pin_crystals.py",
             "tests/test_two_pin_diodes.py",
             "tests/test_two_pin_ferrites.py",

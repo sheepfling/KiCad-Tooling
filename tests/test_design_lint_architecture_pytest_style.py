@@ -43,6 +43,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_policy.py": {"connector_lint", "return_path_lint"},
     "test_electrical_can_termination.py": {"interface_lint"},
     "test_electrical_power_connectivity.py": {"power_lint"},
+    "test_regulator_feedback.py": {"power_lint"},
     "test_electrical_component_evidence.py": {"component_lint", "evidence_lint"},
     "test_electrical_connector_evidence.py": {"connector_lint", "evidence_lint"},
     "test_electrical_pcb_return_evidence.py": {"return_path_lint", "evidence_lint"},
