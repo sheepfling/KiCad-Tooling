@@ -49,6 +49,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_led_topology.py": {"component_lint", "power_lint"},
     "test_design_lint_peer_voltage.py": {"interface_lint"},
     "test_design_lint_serial_peer_voltage.py": {"interface_lint"},
+    "test_design_lint_schematic_connectivity.py": {"schematic_lint"},
     "test_design_lint_schematic_text.py": {"schematic_lint"},
     "test_pcb_reference_plane_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_switching_loop_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
