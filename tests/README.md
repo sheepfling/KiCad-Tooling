@@ -61,6 +61,10 @@ KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXT
   tests/test_power_pin_net_role_native_fixture_lane.py
 python -I -B -m pytest -q -m "design_lint and return_path_lint" \
   tests/test_electrical_return_contracts.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and connector_lint and return_path_lint and native_kicad" \
+  tests/test_ci_hosted_connector_returns.py
 python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -B -m pytest -q \
   -m "design_lint and pcb_lint" \
