@@ -197,6 +197,8 @@ def assert_connector_peer_pin_cases(results, version):
             "all-open-generic-peer-control",
             "all-open-generic-signal-peer-fault",
             "all-open-generic-signal-peer-control",
+            "all-open-generic-signal-types-fault",
+            "all-open-generic-signal-types-control",
             "single-offboard-port-control",
             "offboard-inventory-unreviewed",
             "offboard-interface-control",

@@ -69,6 +69,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/all-open-generic-peer-control",
     "connector-return-fixture/all-open-generic-signal-peer-fault",
     "connector-return-fixture/all-open-generic-signal-peer-control",
+    "connector-return-fixture/all-open-generic-signal-types-fault",
+    "connector-return-fixture/all-open-generic-signal-types-control",
     "connector-return-fixture/single-offboard-port-control",
     "connector-return-fixture/offboard-inventory-unreviewed",
     "connector-return-fixture/offboard-interface-control",

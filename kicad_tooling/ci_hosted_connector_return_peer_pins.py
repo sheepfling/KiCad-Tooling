@@ -175,6 +175,75 @@ def verify_peer_pin_assignments(ctx: ConnectorReturnFixtureContext) -> dict[str,
             separators=(",", ":"),
             ensure_ascii=False,
         )
+    signal_types = {
+        "2": ("input", "SIGNAL_INPUT"),
+        "3": ("output", "SIGNAL_OUTPUT"),
+        "4": ("bidirectional", "SIGNAL_BIDIRECTIONAL"),
+        "5": ("tri_state", "SIGNAL_TRI_STATE"),
+        "6": ("open_collector", "SIGNAL_OPEN_COLLECTOR"),
+        "7": ("open_emitter", "SIGNAL_OPEN_EMITTER"),
+    }
+    for case, expected_status, expected_count in (
+        ("all-open-generic-signal-types-fault", "REVIEW", len(signal_types)),
+        ("all-open-generic-signal-types-control", "PASS", 0),
+    ):
+        report = ctx.reports[case, "first"]
+        observed = ctx.observed_contracts[case, "first"]
+        coverage = report.connector_peer_pin_coverage
+        findings = tuple(
+            item
+            for item in report.findings
+            if item.rule_id == "connector.generic_peer_pin_all_open"
+        )
+        findings_by_pin = {item.evidence["pin_number"][0]: item for item in findings}
+        if (
+            report.status != expected_status
+            or len(findings) != expected_count
+            or coverage is None
+            or coverage.netlist_sha256 != ctx.netlist_hashes[case, "first"]
+            or coverage.generic_peer_pin_all_open_finding_count != expected_count
+            or ctx.normalized_netlist_hashes[case, "first"]
+            != ctx.normalized_netlist_hashes[case, "repeat"]
+        ):
+            raise ValueError(f"Native {case} lost repeatable signal-type matrix evidence")
+        for pin_number, (electrical_type, _) in signal_types.items():
+            if (
+                observed.pin_electrical_types.get(f"J1.{pin_number}") != electrical_type
+                or observed.pin_electrical_types.get(f"J2.{pin_number}") != electrical_type
+            ):
+                raise ValueError(
+                    f"Native {case} changed pin {pin_number} electrical type {electrical_type}"
+                )
+        if expected_count:
+            if {item.rule_id for item in report.findings} != {
+                "connector.generic_peer_pin_all_open"
+            } or set(findings_by_pin) != set(signal_types):
+                raise ValueError(f"Native {case} did not report each supported signal type once")
+            for pin_number, (electrical_type, _) in signal_types.items():
+                finding = findings_by_pin[pin_number]
+                if (
+                    finding.evidence.get("pin_electrical_type") != (electrical_type,)
+                    or finding.evidence.get(f"J1.{pin_number}") != ()
+                    or finding.evidence.get(f"J2.{pin_number}") != ()
+                ):
+                    raise ValueError(
+                        f"Native {case} lost exact open-pin evidence for pin {pin_number}"
+                    )
+        elif report.findings or observed.nets != {
+            "+5V": ("J1.1", "J2.1"),
+            **{
+                net: (f"J1.{pin_number}", f"J2.{pin_number}")
+                for pin_number, (_, net) in signal_types.items()
+            },
+            "GND": ("J1.8", "J2.8"),
+        }:
+            raise ValueError(f"Native {case} connected control is not clean")
+        peer_pin_coverage_receipts[case] = json.dumps(
+            coverage.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
     part_id_fault = ctx.reports["peer-pin-part-id-open-fault", "first"]
     part_id_fault_findings = {item.rule_id: item for item in part_id_fault.findings}
     if (

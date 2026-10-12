@@ -5816,7 +5816,15 @@ is not a reason by itself to expand its scope or change its default policy.
   and preview orchestration on Ubuntu, macOS, and Windows. The signal-pin
   extension adds its own synthetic exact-symbol native fault/control and
   CLI/MCP parity cases. Its local exact-version native lane passed KiCad
-  10.0.0 and 10.0.5 on 2026-10-12; tagged hosted acceptance is pending.
+  10.0.0 and 10.0.5 on 2026-10-12; its initial tagged hosted acceptance passed
+  in `v0.5.0rc142` (run `38232663169`). A follow-up native matrix now checks
+  all six supported signal electrical types together, with shared supply and
+  return anchors, an open-pin fault, and per-contact connected control on both
+  exact KiCad versions. The matrix passed the local KiCad 10.0.0/10.0.5 lane
+  on 2026-10-12; its source hashes and expected results are recorded in the
+  [signal-type fixture README](../tests/fixtures/design_lint/generic-peer-signal-pin-types-native/README.md).
+  This broadens native metadata evidence; it does not measure false-positive
+  rate or reviewer value.
 - **Applicability evidence:** More examples can test boundary diversity, but
   do not establish precision or reviewer value without an independent pinout
   disposition. No field-review time or false-positive rate is claimed.

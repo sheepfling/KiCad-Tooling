@@ -129,6 +129,10 @@ def prepare_connector_return_fixture_context(
         / "generic-peer-signal-pin-all-open-native/fault.kicad_sch",
         "all-open-generic-signal-peer-control": fixture_root
         / "generic-peer-signal-pin-all-open-native/control.kicad_sch",
+        "all-open-generic-signal-types-fault": fixture_root
+        / "generic-peer-signal-pin-types-native/fault.kicad_sch",
+        "all-open-generic-signal-types-control": fixture_root
+        / "generic-peer-signal-pin-types-native/control.kicad_sch",
         "single-offboard-port-control": fixture_root
         / "generic-peer-pin-assignment-native/single-offboard-port-control.kicad_sch",
         "unconnected-generic-power-input-fault": fixture_root
@@ -182,6 +186,8 @@ def prepare_connector_return_fixture_context(
         "all-open-generic-peer-control": "c0cb38abf69437308aba70428c2ef05ae83a51aeb9fab592fe6fef33fb3a0713",
         "all-open-generic-signal-peer-fault": "77adf18dff325f85bf7675d42a25ad1603aa6debb67a96b586646598fac75d37",
         "all-open-generic-signal-peer-control": "144e3e571c2023e4d90048c95fe16f532bcd459c3f5a6e6da6c8b2632282046b",
+        "all-open-generic-signal-types-fault": "fbf954e97907913169d53491437423527c404795e1aeb4017ba4c3864c4acd02",
+        "all-open-generic-signal-types-control": "b59b67ba4f189afa4cf5e04e38ef54c748003ecde1195ab89d1f9cf52c51f22a",
         "single-offboard-port-control": "ceaa7038e372ec74a00f7e7c2cb5311377df01624760ab555adb413c4e02d8e9",
         "unconnected-generic-power-input-fault": "2e16c602d6ba0068360b3f8b493351f6d7e4d7adbe94946d17db883587f0528f",
         "unconnected-generic-power-input-control": "b05c1a3994a4f26f07e18bdfe28c8caaf4a298cbb66b6d1814b20c9a7dce2c13",
@@ -302,6 +308,8 @@ def prepare_connector_return_fixture_context(
                 "all-open-generic-peer-control",
                 "all-open-generic-signal-peer-fault",
                 "all-open-generic-signal-peer-control",
+                "all-open-generic-signal-types-fault",
+                "all-open-generic-signal-types-control",
                 "part-id-all-open-generic-peer-fault",
             }:
                 policy = DesignLintPolicy(
