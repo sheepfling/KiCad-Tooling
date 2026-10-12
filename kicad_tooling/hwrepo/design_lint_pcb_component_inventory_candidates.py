@@ -30,6 +30,25 @@ def pcb_component_inventory_candidates(
                     "board_sha256": (() if report.board_sha256 is None else (report.board_sha256,)),
                 },
             ),
+            Candidate(
+                rule_id="pcb.schematic_pcb_dnp_mismatch",
+                subject="schematic and PCB population comparison unavailable",
+                message=(
+                    "The source-bound schematic DNP state could not be compared with the native PCB. "
+                    "No population-consistency conclusion is available."
+                ),
+                evidence={
+                    "coverage_issue": (report.issue or "unavailable",),
+                    "netlist_sha256": (
+                        () if report.netlist_sha256 is None else (report.netlist_sha256,)
+                    ),
+                    "board_path": (() if report.board_path is None else (report.board_path,)),
+                    "board_sha256": (() if report.board_sha256 is None else (report.board_sha256,)),
+                    "snapshot_sha256": (
+                        () if report.snapshot_sha256 is None else (report.snapshot_sha256,)
+                    ),
+                },
+            ),
         )
     candidates = [
         Candidate(
@@ -81,5 +100,30 @@ def pcb_component_inventory_candidates(
             },
         )
         for item in report.footprint_mismatches
+    )
+    candidates.extend(
+        Candidate(
+            rule_id="pcb.schematic_pcb_dnp_mismatch",
+            subject=f"{item.reference}: schematic and PCB DNP states differ",
+            message=(
+                "The schematic and placed PCB footprint disagree whether this component is marked "
+                "DNP. Confirm the intended assembly variant and align the two CAD records. This "
+                "compares CAD flags only; it does not establish physical population."
+            ),
+            evidence={
+                "reference": (item.reference,),
+                "schematic_dnp": (str(item.schematic_dnp).lower(),),
+                "board_dnp": (str(item.board_dnp).lower(),),
+                "netlist_sha256": (report.netlist_sha256 or "unavailable",),
+                "board_path": (report.board_path or "unavailable",),
+                "board_sha256": (report.board_sha256 or "unavailable",),
+                "snapshot_sha256": (report.snapshot_sha256 or "unavailable",),
+                "snapshot_schema": (report.snapshot_schema or "unavailable",),
+                "kicad_version": (report.kicad_version or "unavailable",),
+                "image": (report.image or "unavailable",),
+                "probe_sha256": (report.probe_sha256 or "unavailable",),
+            },
+        )
+        for item in report.population_mismatches
     )
     return tuple(sorted(candidates, key=lambda item: item.subject.casefold()))

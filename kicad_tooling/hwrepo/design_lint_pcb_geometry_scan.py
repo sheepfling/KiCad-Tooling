@@ -80,7 +80,12 @@ def scan_pcb_geometry(
     overrides = {item.rule_id: item for item in policy.rules}
     inventory_override = overrides.get("pcb.schematic_component_inventory")
     inventory_mode = "review" if inventory_override is None else inventory_override.mode
-    inventory_required = config.kind is ProjectKind.PCB and inventory_mode != "off"
+    population_override = overrides.get("pcb.schematic_pcb_dnp_mismatch")
+    population_mode = "review" if population_override is None else population_override.mode
+    inventory_scan_mode = inventory_mode if inventory_mode != "off" else population_mode
+    inventory_required = config.kind is ProjectKind.PCB and (
+        inventory_mode != "off" or population_mode != "off"
+    )
     if (
         decoupling_map is None
         and protection_path_map is None
@@ -241,7 +246,7 @@ def scan_pcb_geometry(
             inventory_report = evaluate_native_component_inventory_coverage(
                 coach.observed,
                 snapshot,
-                mode=inventory_mode,
+                mode=inventory_scan_mode,
                 netlist_sha256=coach.netlist_sha256,
                 board_path=evidence.board_path,
                 board_sha256=evidence.board_sha256,
@@ -259,6 +264,7 @@ def scan_pcb_geometry(
             "pcb.keepout_intent_coverage": keepout_mode,
             "pcb.rf_module_antenna_keepout_coverage": rf_antenna_mode,
             "pcb.schematic_component_inventory": inventory_mode,
+            "pcb.schematic_pcb_dnp_mismatch": population_mode,
         }
         (
             decoupling_report,

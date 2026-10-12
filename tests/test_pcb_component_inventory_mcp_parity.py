@@ -24,6 +24,7 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
     PcbFootprintIdentityMismatch,
     PcbMissingFootprintPlacement,
+    PcbPopulationMismatch,
 )
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
 from kicad_tooling.hwrepo.pcb_drc_models import PcbSignalPathRuleCoverageReport
@@ -80,6 +81,13 @@ def test_component_inventory_findings_match_cli_and_mcp(
                         placed_footprint="Package_TSSOP:TSSOP-8",
                     ),
                 ),
+                population_mismatches=(
+                    PcbPopulationMismatch(
+                        reference="U1",
+                        schematic_dnp=False,
+                        board_dnp=True,
+                    ),
+                ),
             ),
         )
 
@@ -134,3 +142,9 @@ def test_component_inventory_findings_match_cli_and_mcp(
     assert findings[0].evidence["snapshot_schema"] == ("12",)
     assert findings[1].evidence["assigned_footprint"] == ("Package_SO:SOIC-8",)
     assert findings[1].evidence["placed_footprint"] == ("Package_TSSOP:TSSOP-8",)
+    (population_finding,) = tuple(
+        item for item in mcp_report.findings if item.rule_id == "pcb.schematic_pcb_dnp_mismatch"
+    )
+    assert population_finding.subject == "U1: schematic and PCB DNP states differ"
+    assert population_finding.evidence["schematic_dnp"] == ("false",)
+    assert population_finding.evidence["board_dnp"] == ("true",)

@@ -9,6 +9,8 @@ import pytest
 
 from kicad_tooling.hwrepo import models as shared_models
 from kicad_tooling.hwrepo import (
+    pcb_component_inventory_models,
+    pcb_component_population,
     pcb_decoupling_models,
     pcb_drc_models,
     pcb_reference_plane_models,
@@ -391,6 +393,22 @@ def test_rf_antenna_models_have_a_theme_owner_and_compatibility_exports() -> Non
     assert set(PCB_RF_ANTENNA_MODEL_NAMES) <= defined_models
     for name in PCB_RF_ANTENNA_MODEL_NAMES:
         assert getattr(shared_models, name) is getattr(pcb_rf_antenna_models, name)
+
+
+def test_pcb_population_review_keeps_its_model_and_predicate_in_the_pcb_theme() -> None:
+    model = pcb_component_inventory_models.PcbPopulationMismatch
+    owner = pcb_component_population
+
+    assert model.__module__.endswith("pcb_component_inventory_models")
+    assert not hasattr(shared_models, "PcbPopulationMismatch")
+    assert _line_count(HWREPO / "pcb_component_population.py") < IMPLEMENTATION_MAX_LINES
+    assert callable(owner.compare_schematic_pcb_population)
+
+    catalog = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
+    assert (
+        '"implementation_owner": "kicad_tooling/hwrepo/pcb_component_population.py#'
+        'compare_schematic_pcb_population"'
+    ) in catalog
 
 
 def test_pcb_services_import_rf_models_from_the_theme_owner() -> None:

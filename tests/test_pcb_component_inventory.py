@@ -127,6 +127,7 @@ def test_placed_reference_dnp_empty_assignment_and_board_extras_are_controls() -
             "U1": "Package_QFP:TQFP-48",
             "U3": "Package_SO:SOIC-8",
         },
+        dnp_by_reference={"R1": True},
     )
 
     assert missing_fitted_footprint_placements(observed, board) == ()
@@ -311,9 +312,14 @@ def test_casefolded_schematic_reference_collision_blocks_inventory_coverage() ->
 
     assert coverage.status == "BLOCKED"
     assert coverage.issue == "Native netlist has duplicate case-insensitive component references"
-    (candidate,) = pcb_component_inventory_candidates(coverage)
-    assert candidate.subject == "native PCB footprint inventory unavailable"
-    assert candidate.evidence["coverage_issue"] == (coverage.issue,)
+    candidates = pcb_component_inventory_candidates(coverage)
+    assert {candidate.rule_id for candidate in candidates} == {
+        RULE,
+        "pcb.schematic_pcb_dnp_mismatch",
+    }
+    inventory_candidate = next(candidate for candidate in candidates if candidate.rule_id == RULE)
+    assert inventory_candidate.subject == "native PCB footprint inventory unavailable"
+    assert inventory_candidate.evidence["coverage_issue"] == (coverage.issue,)
 
 
 def test_casefolded_board_reference_collision_is_rejected_at_snapshot_boundary() -> None:

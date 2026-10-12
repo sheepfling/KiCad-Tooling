@@ -11,6 +11,7 @@ from .ci_hosted_pcb_fixture_support import (
     capture_verified_pcb_snapshot,
     prepare_pcb_fixture,
 )
+from .ci_hosted_pcb_population_fixture import pcb_population_mismatch_fixture_lane
 from .hwrepo.contract_coach import ContainerNetlistRunner
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
@@ -380,3 +381,15 @@ def pcb_component_inventory_fixture_lane(
         fault_receipt=identity_receipts["fault"],
         control_receipt=identity_receipts["control"],
     )
+
+    try:
+        pcb_population_mismatch_fixture_lane(context, log=log)
+    except Exception as exc:
+        log.event(
+            "pcb-component-population-fixture/screen",
+            "FAIL",
+            project=project,
+            kicad_version=config.kicad_version,
+            error=str(exc),
+        )
+        raise HostedPcbFixtureFailure(str(exc)) from exc

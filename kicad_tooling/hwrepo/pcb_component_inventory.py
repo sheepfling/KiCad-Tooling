@@ -12,6 +12,7 @@ from .pcb_component_inventory_models import (
     PcbFootprintIdentityMismatch,
     PcbMissingFootprintPlacement,
 )
+from .pcb_component_population import compare_schematic_pcb_population
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 
@@ -94,6 +95,7 @@ def evaluate_native_component_inventory_coverage(
 
     issue: str | None = None
     comparison = PcbComponentInventoryComparison()
+    population_mismatches = ()
     if netlist is None:
         issue = "Source-bound native schematic netlist is unavailable"
     elif netlist_sha256 is None:
@@ -103,6 +105,7 @@ def evaluate_native_component_inventory_coverage(
     else:
         try:
             comparison = compare_fitted_schematic_pcb_inventory(netlist, snapshot)
+            population_mismatches = compare_schematic_pcb_population(netlist, snapshot)
         except ValueError as exc:
             issue = str(exc)
 
@@ -135,4 +138,5 @@ def evaluate_native_component_inventory_coverage(
         probe_sha256=probe_sha256,
         missing_placements=comparison.missing_placements,
         footprint_mismatches=comparison.footprint_mismatches,
+        population_mismatches=population_mismatches,
     )

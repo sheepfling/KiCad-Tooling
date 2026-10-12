@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 95 rules are implemented with synthetic regression coverage.
+The following 96 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -393,6 +393,7 @@ Their actual recognition limits are documented in
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
+- `pcb.schematic_pcb_dnp_mismatch`
 - `connector.return_distribution`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
@@ -681,6 +682,12 @@ and optional ecosystem adapters are `P3`.
   equivalence. The exact KiCad 10.0.0/10.0.5 lane is wired into tagged
   acceptance; local native execution remains unavailable without `kicad-cli`
   or a running Docker daemon.
+
+- **LINT-111 — Compare default/base DNP flags across schematic and PCB.**
+  The shared native PCB snapshot already records footprint DNP state and the
+  source-bound netlist records schematic DNP state. A focused default-REVIEW
+  rule now reports mismatches only for matching references with assigned
+  footprints. Named variant overrides remain outside its comparison.
 
 - **LINT-086 — Bound the USB split-reference prompt with applicability evidence.**
   The default-REVIEW rule has synthetic direct, series-resistor, USB-C,
@@ -2170,7 +2177,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 95 active rules; CI requires every new
+- **Status:** Baseline complete for all 96 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2179,7 +2186,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 95 covered, 0 not applicable, 0 unreviewed.
+  audit: 96 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5173,9 +5180,9 @@ is not a reason by itself to expand its scope or change its default policy.
   footprint IDs have different pad geometry. Off-board components and approved
   alternate footprints may need reviewed exact ignores. Empty-footprint
   symbols, DNP components, board-only mechanical or fabrication footprints,
-  value differences, DNP disagreements, and pad equivalence are outside the
-  predicate. Missing, stale, or unsupported source snapshots are coverage
-  gaps, never passes.
+  value differences, DNP disagreements, and pad equivalence are outside this
+  predicate. DNP flag differences are handled separately by LINT-111. Missing,
+  stale, or unsupported source snapshots are coverage gaps, never passes.
 - **Policy and evidence:** Default `REVIEW`; allow project `review`/`block`/`off`
   and the existing exact-fingerprint ignore lifecycle. Bind each finding and
   quiet result to the native netlist digest, board digest, KiCad version, image,
@@ -5631,6 +5638,37 @@ is not a reason by itself to expand its scope or change its default policy.
   checks, wheel and source builds, and installed-wheel verification against the
   separate public project. All three platform previews passed; the package job
   was skipped for this prerelease tag.
+
+#### LINT-111 — Schematic and PCB default DNP states differ
+
+- **Status:** Implemented as `pcb.schematic_pcb_dnp_mismatch`, default `REVIEW`,
+  using the source-bound schematic netlist and native PCB footprint snapshot
+  already captured for LINT-102.
+- **Priority:** P1 fabrication-handoff consistency. The DNP flag can disagree
+  between the schematic and its placed PCB footprint while the reference and
+  assigned footprint remain present.
+- **Predicate:** For each case-insensitive reference with a nonempty schematic
+  footprint assignment and a placed PCB footprint, compare the schematic
+  netlist DNP flag with the native footprint DNP flag. Report only a mismatch.
+  Missing references remain with LINT-102.
+- **Boundary:** These are default/base CAD flags, not proof of physical
+  population. The check does not evaluate named design-variant overrides or
+  choose a manufacturing variant. A variant-specific difference remains a
+  review question; project owners can retain REVIEW, select an explicit rule
+  mode, or suppress an exact reviewed finding.
+- **Fixtures:** Synthetic cases cover both mismatch directions, matched
+  fitted and DNP controls, absent placements, empty schematic footprints,
+  stable ordering, source evidence in findings, policy/ignore lifecycle,
+  CLI/MCP parity, and repeated native exports. The exact-version lane uses
+  tooling-owned fixtures and digest-pinned KiCad 10.0.0/10.0.5. See the
+  [fixture record](../tests/fixtures/design_lint/component-inventory-footprint-identity/README.md).
+- **Applicability evidence:** Additional project examples are not needed to
+  define this consistency check. An independent review of the selected variant
+  is needed to measure whether a finding is actionable; no reviewer-time or
+  field-precision claim is made. No project source or proprietary fixture is
+  stored.
+- **Next:** Keep the default at REVIEW. Extend the comparison to variants only
+  when the scan can bind both artifacts to the same explicit variant identity.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -8487,7 +8525,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 95 active rules. Each entry has a deterministic predicate, evidence
+contains 96 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

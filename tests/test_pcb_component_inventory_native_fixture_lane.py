@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -70,3 +71,24 @@ def test_native_component_inventory_fault_and_control_are_source_bound(
     assert len(identity["control_schematic_sha256"]) == 64
     assert len(identity["board_sha256"]) == 64
     assert identity["fault_receipt"] != identity["control_receipt"]
+
+    population = lane_event(log, "pcb-component-population-fixture/screen")
+    assert population["status"] == "PASS"
+    assert population["kicad_version"] == version
+    assert population["board_only_dnp"] == "U1"
+    assert population["schematic_only_dnp"] == "U1"
+    assert population["both_fitted"] == ""
+    assert population["both_dnp"] == ""
+    assert population["native_evidence_repeated"] == "true"
+    source_hashes = json.loads(population["source_hashes"])
+    assert set(source_hashes) == {
+        "board-only-dnp.board",
+        "board-only-dnp.schematic",
+        "both-dnp.board",
+        "both-dnp.schematic",
+        "both-fitted.board",
+        "both-fitted.schematic",
+        "schematic-only-dnp.board",
+        "schematic-only-dnp.schematic",
+    }
+    assert all(len(value) == 64 for value in source_hashes.values())

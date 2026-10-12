@@ -3484,6 +3484,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_component_inventory.py#compare_fitted_schematic_pcb_inventory"
     },
     {
+      "rule_id": "pcb.schematic_pcb_dnp_mismatch",
+      "title": "Schematic and PCB DNP states differ",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Source-bound schematic netlist DNP properties compared with exact KiCad native PCB footprint snapshot schema 12",
+      "predicate": "For each case-insensitive schematic reference with a nonempty assigned footprint and a matching placed PCB footprint, compare the schematic netlist DNP flag with the native PCB footprint DNP flag. Report only when the two flags differ.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
+      ],
+      "limitations": [
+        "This compares CAD DNP flags only; it does not establish the physical assembly population or whether a board placement should exist.",
+        "The check compares the default/base DNP state in the source-bound schematic netlist and PCB snapshot. It does not evaluate named design-variant overrides or select a manufacturing variant; a variant-specific difference remains a REVIEW question.",
+        "References absent from either artifact and schematic symbols without an assigned footprint are outside this comparison. Missing placements remain with pcb.schematic_component_inventory.",
+        "The check requires a source-bound netlist and KiCad PCB footprint inventory snapshot schema 12. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_population_mismatch.test_schematic_and_board_dnp_disagreement_is_reviewable_and_configurable",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_population_mismatch.test_matching_population_states_are_quiet_controls",
+        "tests.test_pcb_population_mismatch.test_noncomparable_population_records_are_out_of_scope_controls",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_population_mismatch.test_population_comparison_is_order_independent_and_requires_schema_12"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_component_population.py#compare_schematic_pcb_population",
+        "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
+        "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_candidates.py#pcb_component_inventory_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
+        "kicad_tooling/ci_hosted_pcb_component_inventory_fixture.py#pcb_component_inventory_fixture_lane"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_component_population.py#compare_schematic_pcb_population"
+    },
+    {
       "rule_id": "component.led_directly_across_supply_and_return",
       "title": "Supported two-pin LED directly spans a positive rail and return",
       "status": "active",

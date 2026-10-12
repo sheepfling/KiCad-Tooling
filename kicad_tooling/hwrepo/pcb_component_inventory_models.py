@@ -24,6 +24,14 @@ class PcbFootprintIdentityMismatch(StrictModel):
     placed_footprint: NonEmptyText
 
 
+class PcbPopulationMismatch(StrictModel):
+    """Schematic and placed PCB footprint disagree on DNP population state."""
+
+    reference: Identifier
+    schematic_dnp: bool
+    board_dnp: bool
+
+
 class PcbComponentInventoryComparison(StrictModel):
     """Deterministic comparison results for fitted schematic component placements."""
 
@@ -57,6 +65,7 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     probe_sha256: Digest | None = None
     missing_placements: tuple[PcbMissingFootprintPlacement, ...] = ()
     footprint_mismatches: tuple[PcbFootprintIdentityMismatch, ...] = ()
+    population_mismatches: tuple[PcbPopulationMismatch, ...] = ()
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
@@ -67,6 +76,9 @@ class PcbComponentInventoryCoverageReport(StrictModel):
         ]
         if len(references) != len(set(references)):
             raise ValueError("PCB component inventory finding references must be unique")
+        population_references = [item.reference.casefold() for item in self.population_mismatches]
+        if len(population_references) != len(set(population_references)):
+            raise ValueError("PCB population mismatch references must be unique")
         if self.status == "COMPLETE":
             if any(
                 value is None
@@ -90,6 +102,8 @@ class PcbComponentInventoryCoverageReport(StrictModel):
                 raise ValueError("Complete PCB component inventory cannot include an issue")
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked PCB component inventory must explain the evidence gap")
-        if self.status != "COMPLETE" and (self.missing_placements or self.footprint_mismatches):
+        if self.status != "COMPLETE" and (
+            self.missing_placements or self.footprint_mismatches or self.population_mismatches
+        ):
             raise ValueError("Only complete PCB component inventory can report comparison findings")
         return self

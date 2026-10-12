@@ -13,6 +13,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.pcb_component_inventory import compare_fitted_schematic_pcb_inventory
 from kicad_tooling.hwrepo.pcb_component_inventory_models import PcbComponentInventoryCoverageReport
+from kicad_tooling.hwrepo.pcb_component_population import compare_schematic_pcb_population
 
 NETLIST_SHA256 = "a" * 64
 BOARD_SHA256 = "b" * 64
@@ -43,11 +44,13 @@ def snapshot(
     *references: str,
     schema_version: SnapshotSchema = "12",
     footprint_by_reference: dict[str, str] | None = None,
+    dnp_by_reference: dict[str, bool] | None = None,
 ) -> PcbConnectivitySnapshot:
     identity_by_reference = {
         reference.casefold(): footprint
         for reference, footprint in (footprint_by_reference or {}).items()
     }
+    dnp_by_key = {reference.casefold(): dnp for reference, dnp in (dnp_by_reference or {}).items()}
     return PcbConnectivitySnapshot(
         schema_version=schema_version,
         board_sha256=BOARD_SHA256,
@@ -68,7 +71,7 @@ def snapshot(
             PcbFootprintPlacementObservation(
                 reference=reference,
                 footprint=identity_by_reference.get(reference.casefold(), "Synthetic:Footprint"),
-                dnp=False,
+                dnp=dnp_by_key.get(reference.casefold(), False),
                 position_nm=(0, 0),
                 orientation_microdegrees=0,
                 side="F.Cu",
@@ -99,6 +102,7 @@ def complete_report(
         probe_sha256=board.probe_sha256,
         missing_placements=comparison.missing_placements,
         footprint_mismatches=comparison.footprint_mismatches,
+        population_mismatches=compare_schematic_pcb_population(observed, board),
     )
 
 

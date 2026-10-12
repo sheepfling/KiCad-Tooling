@@ -10,6 +10,10 @@ They do not model a real package or assert pad-geometry equivalence.
   board unchanged. The expected result is one review candidate for U1.
 - The board also contains U2 and U3, which are intentionally board-only controls
   outside this comparison.
+- `population-schematic-dnp.kicad_sch` marks U1 DNP; `population-board-dnp.kicad_pcb`
+  marks the placed U1 footprint DNP. The native acceptance lane compares both
+  mismatch directions and the matching fitted and DNP controls. It checks only
+  the default/base DNP flags; named variant overrides are outside this lint.
 
 The native acceptance lane checks these source files and their expected SHA-256
 digests on digest-pinned KiCad 10.0.0 and 10.0.5. It repeats both schematic
@@ -21,3 +25,7 @@ Pinned source hashes:
 - `fault.kicad_sch`: `3a66be0b39af5f2a065de3b10e9476a53838042bc4e87f8618e711b31ad59e2b`
 - `control.kicad_sch`: `3acf612f93c0f2f48c6b469928ab9366fc2374644966b9bf07087c8a4cd808f8`
 - `control.kicad_pcb`: `500ba5a3fbaa36cec9d57cdd6a74f9b65cd03517ed37f11cd960de425c1d5522`
+- `population-schematic-dnp.kicad_sch`
+  SHA-256: `7f185318b3941f10901f8e27bc29b13030ca771e4ff7d3418c09e18a6428c269`
+- `population-board-dnp.kicad_pcb`
+  SHA-256: `cabf0b68f4ceadffa21ec590c7a2a67c5a54c9930a1e57bae688a813417b8ca4`

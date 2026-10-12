@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo.models import (
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
     PcbMissingFootprintPlacement,
+    PcbPopulationMismatch,
 )
 
 
@@ -41,6 +42,9 @@ def pcb_component_inventory_rule_ids() -> set[str]:
                 reference="U2",
                 assigned_footprint="Package_SO:SOIC-8",
             ),
+        ),
+        population_mismatches=(
+            PcbPopulationMismatch(reference="U1", schematic_dnp=False, board_dnp=True),
         ),
     )
     report = evaluate(
