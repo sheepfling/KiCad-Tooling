@@ -271,6 +271,15 @@ KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1 python -I -B -m pytest -q \
   tests/test_usb_data_path_native_fixture_lane.py
 ```
 
+The bounded USB SuperSpeed peer-reference heuristic has a fast synthetic
+fault/control and boundary suite:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  -m "design_lint and interface_lint" \
+  tests/test_usb_peer_reference_superspeed.py
+```
+
 The LED rail/output-path fault and valid series-path controls have a focused
 native component suite:
 

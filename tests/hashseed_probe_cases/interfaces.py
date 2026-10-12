@@ -66,6 +66,7 @@ from tests.usb_data_path_support import (
     usb_netlist,
 )
 from tests.usb_peer_reference_support import usb_multiport_peer_netlist
+from tests.usb_peer_superspeed_support import superspeed_peer_netlist
 
 
 def serial_reference_lint_report(*, common_references: bool) -> dict[str, object]:
@@ -428,6 +429,21 @@ def report_cases() -> dict[str, object]:
         "usb_multiport_peer_control": evaluate(
             "synthetic-usb-multiport-peer-reference-control",
             coach(usb_multiport_peer_netlist(common_references=True)),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "usb_superspeed_peer_fault": evaluate(
+            "synthetic-usb-superspeed-peer-reference-fault",
+            coach(superspeed_peer_netlist()),
+            DesignLintPolicy(),
+        ).model_dump(mode="json"),
+        "usb_superspeed_peer_control": evaluate(
+            "synthetic-usb-superspeed-peer-reference-control",
+            coach(
+                superspeed_peer_netlist(
+                    connector_reference_net="BOARD_GND",
+                    phy_reference_net="BOARD_GND",
+                )
+            ),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "header_only_spi_uart_boundary": header_only_spi_uart_lint_report(),

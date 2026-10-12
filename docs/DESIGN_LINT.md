@@ -712,51 +712,45 @@ have been connected.
   expected net or explicit no-connect state. The map checks the complete native
   pin inventory and rejects stale identity or pin assignments. It does not
   infer a universal external-resistor rule from USB names or choose a value.
-- `bus.usb_peer_reference_review` prompts on a fitted USB 2.0 D+/D−
-  connector-to-U/IC pair when each endpoint has explicit reference pins on one
-  native net and those two reference nets differ. Each D line may be direct,
-  pass through exactly one complete fitted two-pin `Device:R`, or pass through
-  one multi-pin component named by a current exact USB data-path map. The inline
-  map must match endpoint identities, data pins and nets, full component identity
-  and pin inventory, every pin's net or explicit no-connect state, and mapped
-  signal-net membership. The review evidence includes the mapped component
-  identity and pin assignments. Series-resistor evidence includes its reference,
-  symbol, value, pin numbers, and nets. A direct path with a multi-pin
-  protection part is considered only when the map names its exact D+/D− taps
-  and every native pin assignment; otherwise that array remains unsupported.
-  Function aliases include
-  hub names DPn/DMn, USB_DPn/USB_DMn, and USBnD+/USBnD-; numbered forms pair
-  only when their port numbers match. An
-  unnumbered connector pair can match a numbered hub port through its exact
-  native nets; two numbered endpoints must carry matching suffixes. Exact USB
-  maps can set `data_port_group` when a component exposes several numbered
-  ports, so each connector is checked against only its mapped PHY pair. Each
-  side may have repeated connector or PHY contacts, provided every pin within
-  that port and side shares the same data net. It also allows complete
-  fitted two-pin passive components with a `D` designator to branch from D+/D−
-  to one endpoint's explicit reference net; the report names both branch pins
-  and the symbol identity. Multiple series components, arbitrary extra peers,
-  unmapped multi-pin protection parts, unexplained data-net peers, mixed
-  reference domains, shield/chassis/PE functions, and ambiguous metadata remain
-  outside this bounded rule. Separate
-  nets can be intentional. The prompt asks whether the interface needs a
-  common reference, a designed bond, or isolation; it never declares that the
-  grounds must be tied. A current exact USB map with `reference_policy` set to
-  `common_net`, `separate_nets`, or `bonded` suppresses the prompt only when it
-  names all same-net data contacts and its
-  endpoint, direct, one-resistor, exact mapped inline data-path, or direct path
-  with exact mapped protection shunts, and reference-pin identities match. Use
-  `connector_parallel_pins` and `phy_parallel_pins` alongside each line's
-  primary pin to author additional same-net contacts. The same map checks
-  those authored pin and net assignments and reports stale assignments
-  through `bus.usb_data_path_mismatch`.
-  The structured and text coverage reports also identify each recognized
-  connector/PHY data group and mark it `SUPPORTED`, `INCOMPLETE`, or `DNP`.
-  `SUPPORTED` means the endpoint-local pins and reference are sufficient for
-  this bounded scan; it does not mean a peer path was found or electrically
-  approved. Numbered DPn/DMn and USBnD+/USBnD- groups retain their port
-  number, while unnumbered
-  D+/D− groups report a null port group.
+- `bus.usb_peer_reference_review` prompts on fitted USB 2.0 D+/D− or bounded
+  USB SuperSpeed connector-to-U/IC paths when each endpoint has explicit
+  reference pins on one native net and those two reference nets differ. It
+  remains a default `REVIEW`: separate references may be intentional, and this
+  heuristic does not say that grounds must be tied.
+
+  USB 2.0 paths may be direct, pass through exactly one complete fitted
+  two-pin `Device:R` per line, or pass through one multi-pin component named by
+  a current exact USB data-path map. A direct path with multi-pin protection
+  is supported only when the map names the exact D+/D− taps and every native
+  pin assignment. The map must match endpoint identities, complete component
+  identity and pin inventory, each pin's net or explicit no-connect state, and
+  complete signal-net membership. Complete fitted two-pin passive components
+  with a `D` designator may branch from D+/D− to an endpoint reference; the
+  report names both branch pins and their symbol identity. Numbered DPn/DMn,
+  USB_DPn/USB_DMn, and USBnD+/USBnD- forms pair only when their port numbers
+  match. Repeated contacts are supported when every pin on that side and port
+  shares the same data net.
+
+  USB SuperSpeed recognition covers the bounded SSTX+/SSTX− and SSRX+/SSRX−
+  Standard-A/Standard-B aliases documented by the
+  [USB-IF Front-Panel Implementation Document](https://www.usb.org/sites/default/files/USB3p1_Front_Panel_CabCon_Implment_Doc_Rev1p1.pdf).
+  It requires complete pin inventories and function/type metadata, one
+  positive and one negative pin per family, connector TX to PHY RX or
+  connector RX to PHY TX, and exactly the two endpoint pins on each data net.
+  This direct-path check excludes lane-indexed USB-C pairs, muxes, retimers,
+  series parts, shunts, extra peers, and other multi-hop paths. The current
+  USB data-path map covers USB 2.0 D+/D− only and cannot suppress a SuperSpeed
+  review; use a project-scoped rule override or exact reasoned ignore when a
+  reviewer records why the separate reference is intentional.
+
+  Incomplete pin inventories, ambiguous assignments, mixed reference
+  domains, shield/chassis/PE pins, and DNP endpoints remain outside the
+  predicate. The structured and text coverage reports identify each
+  recognized endpoint family as `SUPPORTED`, `INCOMPLETE`, or `DNP`.
+  `SUPPORTED` means the endpoint has enough local evidence to enter this
+  bounded scan; it does not mean a peer path was found or electrically
+  approved. USB 2.0 numbered groups retain their port number; SuperSpeed
+  families are reported separately by TX/RX role.
 - `signal.named_pair_without_reviewed_requirement` looks for populated source
   nets with recognized `_P/_N`, `_DP/_DM`, `_TXP/_TXN`, `_RXP/_RXN`, `_H/_L`,
   `+/-`, `DP/DM`, `P/N`, or `H/L` suffixes. If the exact pair is absent from

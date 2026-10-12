@@ -331,6 +331,23 @@ def test_interface_reports_remain_deterministic() -> None:
     assert usb_control_coverage["common_reference_path_count"] == 2
     assert usb_control_coverage["separate_reference_path_count"] == 0
     assert usb_control_coverage["candidate_group_count"] == 0
+    usb_superspeed_fault = reports["usb_superspeed_peer_fault"]
+    assert usb_superspeed_fault["status"] == "REVIEW"
+    ss_findings = tuple(
+        item
+        for item in usb_superspeed_fault["findings"]
+        if item["rule_id"] == "bus.usb_peer_reference_review"
+    )
+    assert len(ss_findings) == 1
+    assert ss_findings[0]["subject"] == "J1 / U1: USB SuperSpeed reference-domain review"
+    ss_path = usb_superspeed_fault["usb_peer_reference_coverage"]["path_entries"][0]
+    assert ss_path["data_path"]["connector_signal_family"] == "USB SuperSpeed TX"
+    assert ss_path["data_path"]["phy_signal_family"] == "USB SuperSpeed RX"
+    ss_control = reports["usb_superspeed_peer_control"]
+    assert "bus.usb_peer_reference_review" not in {
+        item["rule_id"] for item in ss_control["findings"]
+    }
+    assert ss_control["usb_peer_reference_coverage"]["common_reference_path_count"] == 1
     header_boundary = reports["header_only_spi_uart_boundary"]
     assert {
         item["rule_id"]: (

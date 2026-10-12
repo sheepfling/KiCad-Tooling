@@ -288,3 +288,56 @@ def usb_data_link(
         negative_series_resistor=negative_series,
         port_group=connector.port_group or phy.port_group,
     )
+
+
+def usb_superspeed_direct_data_link(
+    connector: UsbEndpoint,
+    phy: UsbEndpoint,
+    net_members: dict[str, set[str]],
+) -> UsbPeerDataLink | None:
+    """Match one unambiguous direct USB SuperSpeed P/N pair between two endpoints."""
+    if (
+        (connector.signal_family, phy.signal_family)
+        not in {
+            ("USB SuperSpeed TX", "USB SuperSpeed RX"),
+            ("USB SuperSpeed RX", "USB SuperSpeed TX"),
+        }
+        or connector.port_group is not None
+        or phy.port_group is not None
+        or len(connector.positive_pins) != 1
+        or len(connector.negative_pins) != 1
+        or len(phy.positive_pins) != 1
+        or len(phy.negative_pins) != 1
+        or connector.positive_net.casefold() != phy.positive_net.casefold()
+        or connector.negative_net.casefold() != phy.negative_net.casefold()
+        or connector.positive_net.casefold() == connector.negative_net.casefold()
+    ):
+        return None
+    for net, expected_pins in (
+        (
+            connector.positive_net,
+            {connector.positive_pins[0].casefold(), phy.positive_pins[0].casefold()},
+        ),
+        (
+            connector.negative_net,
+            {connector.negative_pins[0].casefold(), phy.negative_pins[0].casefold()},
+        ),
+    ):
+        if net_members.get(net.casefold(), set()) != expected_pins:
+            return None
+    return UsbPeerDataLink(
+        connector_positive_pin=connector.positive_pins[0],
+        phy_positive_pin=phy.positive_pins[0],
+        connector_positive_net=connector.positive_net,
+        phy_positive_net=phy.positive_net,
+        connector_negative_pin=connector.negative_pins[0],
+        phy_negative_pin=phy.negative_pins[0],
+        connector_negative_net=connector.negative_net,
+        phy_negative_net=phy.negative_net,
+        connector_positive_pins=connector.positive_pins,
+        phy_positive_pins=phy.positive_pins,
+        connector_negative_pins=connector.negative_pins,
+        phy_negative_pins=phy.negative_pins,
+        connector_signal_family=connector.signal_family,
+        phy_signal_family=phy.signal_family,
+    )

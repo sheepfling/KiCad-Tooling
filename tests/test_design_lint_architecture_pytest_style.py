@@ -38,6 +38,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_decoupling.py": {"component_lint", "power_lint"},
     "test_design_lint_dc_reference.py": {"power_lint"},
     "test_design_lint_determinism_power_connectivity.py": {"power_lint"},
+    "test_usb_peer_reference_superspeed.py": {"interface_lint"},
     "test_design_lint_policy.py": {"connector_lint", "return_path_lint"},
     "test_electrical_can_termination.py": {"interface_lint"},
     "test_electrical_power_connectivity.py": {"power_lint"},

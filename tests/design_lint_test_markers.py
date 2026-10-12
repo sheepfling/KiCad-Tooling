@@ -131,6 +131,8 @@ _LINT_AREA_MODULES = {
             "tests/test_usb_peer_reference_paths.py",
             "tests/test_usb_peer_reference_maps.py",
             "tests/test_usb_peer_reference_boundaries.py",
+            "tests/test_usb_peer_reference_superspeed.py",
+            "tests/test_design_lint_mcp_parity_usb_reference.py",
         }
     ),
     "interface_lint": frozenset(
@@ -155,6 +157,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_mcp_parity_stm32.py",
             "tests/test_spi_peer_reference_architecture.py",
             "tests/test_design_lint_mcp_parity_usb_can.py",
+            "tests/test_design_lint_mcp_parity_usb_reference.py",
             "tests/test_design_lint_mcp_parity_usb_data.py",
             "tests/test_can_peer_reference_review.py",
             "tests/test_can_peer_reference_architecture.py",
@@ -208,6 +211,7 @@ _LINT_AREA_MODULES = {
             "tests/test_usb_peer_reference_paths.py",
             "tests/test_usb_peer_reference_maps.py",
             "tests/test_usb_peer_reference_boundaries.py",
+            "tests/test_usb_peer_reference_superspeed.py",
         }
     ),
     "power_lint": frozenset(
@@ -363,6 +367,7 @@ _LINT_AREA_MODULES = {
             "tests/test_usb_peer_reference_paths.py",
             "tests/test_usb_peer_reference_maps.py",
             "tests/test_usb_peer_reference_boundaries.py",
+            "tests/test_usb_peer_reference_superspeed.py",
         }
     ),
     "parity_lint": frozenset(
@@ -384,6 +389,7 @@ _LINT_AREA_MODULES = {
             "tests/test_electrical_parity.py",
             "tests/test_electrical_i2c_parity.py",
             "tests/test_electrical_usb_c_parity.py",
+            "tests/test_design_lint_mcp_parity_usb_reference.py",
             "tests/test_pcb_component_inventory_mcp_parity.py",
             "tests/test_pcb_keepouts_mcp_parity.py",
             "tests/test_pcb_rf_antenna_mcp_parity.py",

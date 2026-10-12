@@ -4022,55 +4022,46 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-086 — USB peers use different explicit reference nets
 
 - **Status:** Implemented as `bus.usb_peer_reference_review`, a configurable
-  default-review hint. The exact USB data-path map can record a reviewed
+  default-review hint for supported USB 2.0 and direct USB SuperSpeed paths.
+  The exact USB 2.0 data-path map can record a reviewed
   `common_net`, `separate_nets`, or `bonded` reference decision and verify its
   named pins and nets against the native netlist. A `bonded` entry additionally
   maps one exact passive two-pin component, value, footprint, and side nets.
 - **Priority:** P1 connectivity review. LINT-074/LINT-082 cover UART peers,
   and LINT-049 covers a project-mapped USB data topology; neither notices a
-  supported USB 2.0 connector-to-IC pair when its connector and PHY reference
-  pins use separate explicit nets and no reference policy has been authored.
-- **Predicate:** For fitted connector-to-U/IC pairs, recognize one or more
-  supported USB 2.0 D+ and D− pins at each endpoint, with all pins on one side
-  assigned to that side's native net. Each line may be direct, cross exactly
-  one fitted, complete two-pin `Device:R`, or cross one exact mapped multi-pin
-  inline component between the connector-side and PHY-side
-  nets. The function aliases include direct names such as D+/D−, unnumbered
-  `UD+`/`UD−`, and numbered hub pairs DPn/DMn or USBnD+/USBnD-, which are
-  grouped by matching numeric port number. One
-  unnumbered endpoint can pair with a numbered endpoint when the exact nets
-  identify one path; two numbered endpoints must use the same group. Each
-  endpoint's explicit reference pins
-  must use one unambiguous native net; differing nets produce a review. Each
-  complete fitted two-pin passive D-designated branch may connect a data net to
-  an endpoint reference. A multi-pin inline path is eligible only when
-  LINT-049's exact current project map validates both endpoints, the inline
-  component identity and complete native pin inventory, every pin's expected
-  net or explicit no-connect state, and all mapped signal-net members. A
-  direct path with a multi-pin protection shunt is eligible only when an exact
-  current map validates each shunt identity, its D+/D− tap pins, every native
-  pin assignment, and complete data-net membership. Unmapped arrays and
-  unexplained signal-net peers remain outside the predicate. Findings retain
-  data functions, contact pins, resistor or inline-component assignments,
-  accepted branch pins and partner nets, endpoint identities, and
-  reference functions/types.
+  supported USB connector-to-IC path when connector and PHY reference pins use
+  separate explicit nets and no matching reference policy has been authored.
+- **Predicate:** USB 2.0 behavior remains unchanged: recognize direct D+/D−,
+  unnumbered UD+/UD−, and numbered hub pairs DPn/DMn or USBnD+/USBnD-; support
+  direct, one fitted complete two-pin `Device:R` per line, one exact mapped
+  inline component, or a direct path with exact mapped protection shunts.
+  Preserve exact pin inventories, net members, and explicit reference-pin
+  evidence. Separately, recognize direct USB SuperSpeed P/N pairs when native
+  endpoint pin metadata is complete, exactly one positive and negative pin
+  exists per family, connector TX connects to PHY RX or connector RX to PHY
+  TX, and each data net contains exactly those two pins. Both endpoint
+  references must be explicit passive/power_in pins on one net per endpoint.
+  A differing pair of reference nets produces a review; a common reference is
+  quiet. SuperSpeed names are the bounded SSTX/SSRX and StdA/StdB aliases
+  documented by the [USB-IF Front-Panel Implementation Document](https://www.usb.org/sites/default/files/USB3p1_Front_Panel_CabCon_Implment_Doc_Rev1p1.pdf).
 - **Boundary:** Separate nets may be intentional, joined through a reviewed
   bond, or intentionally isolated. This rule asks for review; it does not say
   grounds must be tied. It does not infer unlisted or multi-hop bond paths,
   multiple series components,
-  arbitrary extra peers, unmapped multi-pin protection arrays, USB 3.x paths, off-board
+  arbitrary extra peers, unmapped multi-pin protection arrays, lane-indexed
+  USB-C pairs, muxes, retimers, other SuperSpeed multi-lane paths, off-board
   wiring, or PCB copper. It does not infer resistor suitability or protection
-  performance. A `data_port_group` in an exact USB map scopes same-side PHY
-  inventory to one numbered pair. Incomplete pin inventories, mixed reference
-  domains, DNP endpoints or branch parts, shield/chassis/frame/PE functions,
-  and ambiguous assignments are skipped. A source-reviewed USB map suppresses
-  the prompt only when connector and PHY identities, direct, one-resistor, or
-  exact mapped inline
-  data topology, any exact direct-path protection-shunt maps, complete
-  reference pin inventories, and explicit reference decision all match. For
-  `bonded`, `bus.usb_data_path_mismatch` separately
-  reports a missing, DNP, identity-mismatched, or incorrectly assigned bond;
-  this netlist comparison does not prove component conduction or PCB copper.
+  performance. `data_port_group` scopes numbered USB 2.0 PHY inventory to one
+  pair. The current project map schema covers USB 2.0 D+/D− and cannot suppress
+  SuperSpeed findings; projects can use the rule-level override or a reasoned
+  exact ignore. Incomplete pin inventories, mixed reference domains, DNP
+  endpoints or branch parts, shield/chassis/frame/PE functions, and ambiguous
+  assignments are skipped. For USB 2.0, a source-reviewed USB map suppresses
+  the prompt only when connector and PHY identities, data topology, complete
+  reference-pin inventories, and explicit reference decision all match. For
+  `bonded`, `bus.usb_data_path_mismatch` separately reports a missing, DNP,
+  identity-mismatched, or incorrectly assigned bond; this netlist comparison
+  does not prove component conduction or PCB copper.
 - **Fixtures:** Synthetic split-reference fault and common-reference control,
   including native `UD+`/`UD−` PHY-pin aliases;
   exact mapped inline-protection split-reference fault, common-reference and
@@ -4084,7 +4075,9 @@ is not a reason by itself to expand its scope or change its default policy.
   unsupported-branch, split-duplicate-pin, multi-reference-PHY, and isolator-path
   controls;
   stale identity/net faults; exact ignore, review/block/off, input reordering
-  and commoning mutation; CLI/MCP parity; repeated source-hashed native
+  and commoning mutation; CLI/MCP parity; direct SuperSpeed TX-to-RX fault,
+  common-reference control, same-direction/reversed-polarity/extra-peer and
+  incomplete-metadata boundaries; three-process hash-seed determinism; repeated source-hashed native
   exports on the digest-pinned KiCad 10.0.0 and 10.0.5 lane. The typed-netlist
   multi-reference control gives one PHY two explicitly named return pins on
   separate nets and confirms the bounded predicate skips it.
@@ -11142,8 +11135,9 @@ maintenance cost open wherever they were not measured.
 5. Measure review value for implemented default-REVIEW rules, beginning with
    LINT-086's USB split-reference prompt, then LINT-061/066 digital-peer
    voltage prompts and LINT-063 LED-output prompts. LINT-086 recognizes direct
-   paths or one fitted `Device:R` per data line, same-net USB-C A/B contacts,
-   and bounded two-pin D-designated shunts. Count only supported connector-to-IC
+   USB 2.0 paths or one fitted `Device:R` per data line, same-net USB-C A/B
+   contacts, bounded two-pin D-designated shunts, and one exact direct USB
+   SuperSpeed P/N pair per endpoint family. Count only supported connector-to-IC
    pairs and record whether the review found missing, intentionally separate,
    or already bonded reference policy. The public CP2102, USB-C FUSB302/RP2040,
    and 16nx projects are common-reference non-finding screens. Synthetic split

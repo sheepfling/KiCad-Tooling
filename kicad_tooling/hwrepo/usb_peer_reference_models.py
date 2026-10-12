@@ -25,6 +25,11 @@ class UsbPeerEndpointGroupCoverage(StrictModel):
     reference: Identifier
     port_group: NonEmptyText | None = None
     disposition: Literal["SUPPORTED", "INCOMPLETE", "DNP"]
+    signal_family: Literal[
+        "USB 2.0 data",
+        "USB SuperSpeed TX",
+        "USB SuperSpeed RX",
+    ] = "USB 2.0 data"
 
 
 class UsbPeerReferencePinCoverage(StrictModel):
@@ -179,9 +184,45 @@ class UsbPeerDataPathCoverage(StrictModel):
     negative: UsbPeerDataLineCoverage
     port_group: UsbDataPortGroup | None = None
     protection_shunts: tuple[UsbPeerDataProtectionShuntCoverage, ...] = ()
+    connector_signal_family: Literal[
+        "USB 2.0 data",
+        "USB SuperSpeed TX",
+        "USB SuperSpeed RX",
+    ] = "USB 2.0 data"
+    phy_signal_family: Literal[
+        "USB 2.0 data",
+        "USB SuperSpeed TX",
+        "USB SuperSpeed RX",
+    ] = "USB 2.0 data"
 
     @model_validator(mode="after")
     def mapped_shunts_match_direct_lines(self) -> UsbPeerDataPathCoverage:
+        is_superspeed = self.connector_signal_family.startswith("USB SuperSpeed ")
+        if is_superspeed and (
+            not self.phy_signal_family.startswith("USB SuperSpeed ")
+            or (self.connector_signal_family, self.phy_signal_family)
+            not in {
+                ("USB SuperSpeed TX", "USB SuperSpeed RX"),
+                ("USB SuperSpeed RX", "USB SuperSpeed TX"),
+            }
+            or self.port_group is not None
+            or self.protection_shunts
+            or any(
+                line.series_resistor is not None
+                or line.inline_component is not None
+                or line.shunt_branches
+                or len(line.connector_pins) != 1
+                or len(line.phy_pins) != 1
+                or line.connector_net.casefold() != line.phy_net.casefold()
+                for line in (self.positive, self.negative)
+            )
+        ):
+            raise ValueError("USB SuperSpeed peer paths must be direct, unbranched P/N pairs")
+        if not is_superspeed and (
+            self.connector_signal_family != "USB 2.0 data"
+            or self.phy_signal_family != "USB 2.0 data"
+        ):
+            raise ValueError("USB 2.0 peer paths must use USB 2.0 data families")
         if self.protection_shunts and any(
             line.series_resistor is not None or line.inline_component is not None
             for line in (self.positive, self.negative)
@@ -296,7 +337,12 @@ class UsbPeerReferenceCoverageReport(StrictModel):
     def counts_match_scope(self) -> UsbPeerReferenceCoverageReport:
         if self.endpoint_groups is not None:
             group_keys = {
-                (item.endpoint_role, item.reference.casefold(), item.port_group)
+                (
+                    item.endpoint_role,
+                    item.reference.casefold(),
+                    item.port_group,
+                    item.signal_family,
+                )
                 for item in self.endpoint_groups
             }
             if len(group_keys) != len(self.endpoint_groups):
@@ -332,6 +378,8 @@ class UsbPeerReferenceCoverageReport(StrictModel):
                 (
                     item.connector_reference.casefold(),
                     item.phy_reference.casefold(),
+                    item.data_path.connector_signal_family,
+                    item.data_path.phy_signal_family,
                     item.data_path.port_group is not None,
                     item.data_path.port_group or "",
                 )

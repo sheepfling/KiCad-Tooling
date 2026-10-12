@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
+from typing import Literal, cast
 
 from .models import (
     ComplementaryPinFunctionAlias,
@@ -182,6 +183,28 @@ def usb_data_function_identity(function: str) -> tuple[str | None, str] | None:
     if family_side is None or family_side[0] != "USB data":
         return None
     return None, family_side[1]
+
+
+def usb_superspeed_function_identity(
+    function: str,
+) -> (
+    tuple[
+        Literal["USB SuperSpeed TX", "USB SuperSpeed RX"],
+        Literal["positive", "negative"],
+    ]
+    | None
+):
+    """Return the bounded USB SuperSpeed pair family and polarity for a pin alias."""
+    family_side = _COMPLEMENTARY_FUNCTIONS.get(_complementary_function_key(function))
+    if family_side is None or not family_side[0].startswith("USB SuperSpeed "):
+        return None
+    return cast(
+        tuple[
+            Literal["USB SuperSpeed TX", "USB SuperSpeed RX"],
+            Literal["positive", "negative"],
+        ],
+        family_side,
+    )
 
 
 def complementary_signal_gaps(

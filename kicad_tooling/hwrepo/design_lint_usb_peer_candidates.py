@@ -13,9 +13,12 @@ def _reference_policy_state(
     connector_reference: str,
     phy_reference: str,
     usb_data_path_map: UsbDataPathMap | None,
+    signal_family: str,
 ) -> str:
     if usb_data_path_map is None:
         return "no_data_path_map"
+    if signal_family.startswith("USB SuperSpeed "):
+        return "USB_2.0_map_not_applicable"
     matching_interfaces = tuple(
         interface
         for interface in usb_data_path_map.interfaces
@@ -44,6 +47,16 @@ def usb_peer_reference_candidates(
     """Build bounded USB connector-to-PHY reference-domain review prompts."""
     found: list[Candidate] = []
     for peer in usb_scan.reviews:
+        is_superspeed = peer.data_link.connector_signal_family.startswith("USB SuperSpeed ")
+        positive_link_key = "USB_SuperSpeed_positive_link" if is_superspeed else "USB_D+_link"
+        negative_link_key = "USB_SuperSpeed_negative_link" if is_superspeed else "USB_D-_link"
+        subject_signal_label = "USB SuperSpeed" if is_superspeed else "USB"
+        message_signal_label = "USB SuperSpeed" if is_superspeed else "USB 2.0 D+/D-"
+        topology_description = (
+            "one exact direct SuperSpeed complementary pair"
+            if is_superspeed
+            else "a direct path, one fitted two-pin series resistor, or one exact mapped inline component"
+        )
         connector_identity = (
             f"{peer.connector_reference}: {peer.connector_symbol}; {peer.connector_footprint}"
         )
@@ -96,8 +109,8 @@ def usb_peer_reference_candidates(
                 f"{item.pin} ({item.function}, {item.electrical_type})={item.net}"
                 for item in peer.phy_reference_pins
             ),
-            "USB_D+_link": (positive_link,),
-            "USB_D-_link": (negative_link,),
+            positive_link_key: (positive_link,),
+            negative_link_key: (negative_link,),
             "USB_data_map_state": (
                 "configured" if usb_data_path_map is not None else "not_configured",
             ),
@@ -106,9 +119,13 @@ def usb_peer_reference_candidates(
                     peer.connector_reference,
                     peer.phy_reference,
                     usb_data_path_map,
+                    peer.data_link.connector_signal_family,
                 ),
             ),
         }
+        if is_superspeed:
+            evidence["USB_connector_pair_family"] = (peer.data_link.connector_signal_family,)
+            evidence["USB_PHY_pair_family"] = (peer.data_link.phy_signal_family,)
         if peer.data_link.port_group is not None:
             evidence["USB_port_group"] = (peer.data_link.port_group,)
         if peer.data_link.positive_shunt_branches:
@@ -164,7 +181,7 @@ def usb_peer_reference_candidates(
                 rule_id="bus.usb_peer_reference_review",
                 subject=(
                     f"{peer.connector_reference} / {peer.phy_reference}: "
-                    "USB reference-domain review"
+                    f"{subject_signal_label} reference-domain review"
                     + (
                         f" (port {peer.data_link.port_group})"
                         if peer.data_link.port_group is not None
@@ -172,10 +189,10 @@ def usb_peer_reference_candidates(
                     )
                 ),
                 message=(
-                    "Supported USB 2.0 D+ and D- connector-to-PHY paths (direct, through one "
-                    "fitted two-pin series resistor, or through one exact mapped inline component) "
-                    "have separate explicit endpoint "
-                    "reference nets. Review whether this interface needs a common reference, an "
+                    f"Supported {message_signal_label} connector-to-PHY paths "
+                    f"({topology_description}) "
+                    "have separate explicit endpoint reference nets. Review whether this interface "
+                    "needs a common reference, an "
                     "explicit bond, or intentional isolation. Pin functions and the bounded "
                     "topology only identify a candidate; this prompt does not prove the required "
                     "relationship, component behavior, PCB copper, or off-board continuity."

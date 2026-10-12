@@ -236,7 +236,23 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
         "kicad_tooling/hwrepo/usb_peer_protection_shunt_analysis.py#mapped_protection_shunt_usb_data_link"
         in rule.implementation_refs
     )
-    assert references <= {*USB_PEER_ANALYSIS_MODULES, "design_lint_candidate_aggregation.py"}
+    assert (
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_superspeed_function_identity"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_superspeed_endpoints"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/usb_peer_path_analysis.py#usb_superspeed_direct_data_link"
+        in rule.implementation_refs
+    )
+    assert references <= {
+        *USB_PEER_ANALYSIS_MODULES,
+        "bus_signal_pairs.py",
+        "design_lint_candidate_aggregation.py",
+    }
 
 
 def test_serial_peer_reference_review_stays_split_by_responsibility() -> None:

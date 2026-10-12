@@ -126,7 +126,11 @@ def usb_reference_map_matches(
     path_map: UsbDataPathMap | None,
 ) -> bool:
     """Match a current bounded USB map with an explicit common/separate decision."""
-    if path_map is None:
+    if (
+        path_map is None
+        or connector.signal_family != "USB 2.0 data"
+        or phy.signal_family != "USB 2.0 data"
+    ):
         return False
     observed_connector_references = {item.pin.casefold() for item in connector.reference_pins}
     observed_phy_references = {item.pin.casefold() for item in phy.reference_pins}

@@ -154,6 +154,8 @@ REPORT_ORDER = (
     "serial_reference_bond_control",
     "usb_multiport_peer_fault",
     "usb_multiport_peer_control",
+    "usb_superspeed_peer_fault",
+    "usb_superspeed_peer_control",
     "led_output_direct_fault",
     "led_output_parallel_resistor_fault",
     "led_output_series_control",

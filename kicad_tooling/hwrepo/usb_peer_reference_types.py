@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+UsbPeerSignalFamily = Literal[
+    "USB 2.0 data",
+    "USB SuperSpeed TX",
+    "USB SuperSpeed RX",
+]
+
 
 @dataclass(frozen=True)
 class UsbReferencePinAssignment:
@@ -85,6 +91,8 @@ class UsbPeerDataLink:
     negative_inline_component: UsbPeerDataInlineComponent | None = None
     protection_shunts: tuple[UsbPeerDataProtectionShunt, ...] = ()
     port_group: str | None = None
+    connector_signal_family: UsbPeerSignalFamily = "USB 2.0 data"
+    phy_signal_family: UsbPeerSignalFamily = "USB 2.0 data"
 
 
 @dataclass(frozen=True)
@@ -151,6 +159,7 @@ class UsbPeerEndpointGroupCoverage:
     reference: str
     port_group: str | None
     disposition: Literal["SUPPORTED", "INCOMPLETE", "DNP"]
+    signal_family: UsbPeerSignalFamily = "USB 2.0 data"
 
 
 @dataclass(frozen=True)
@@ -173,3 +182,4 @@ class UsbEndpoint:
     reference_net: str
     reference_pins: tuple[UsbReferencePinAssignment, ...]
     port_group: str | None
+    signal_family: UsbPeerSignalFamily = "USB 2.0 data"

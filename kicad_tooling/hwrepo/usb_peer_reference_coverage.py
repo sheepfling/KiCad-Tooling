@@ -141,6 +141,8 @@ def _usb_peer_reference_path_entry(
                 link.negative_shunt_branches,
             ),
             port_group=link.port_group,
+            connector_signal_family=link.connector_signal_family,
+            phy_signal_family=link.phy_signal_family,
             protection_shunts=tuple(
                 UsbPeerDataProtectionShuntCoverage(
                     reference=shunt.reference,
@@ -202,6 +204,7 @@ def usb_peer_reference_coverage(
                 reference=entry.reference,
                 port_group=entry.port_group,
                 disposition=entry.disposition,
+                signal_family=entry.signal_family,
             )
             for entry in item.endpoint_groups
         ),

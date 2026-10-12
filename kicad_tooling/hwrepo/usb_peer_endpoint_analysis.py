@@ -6,11 +6,12 @@ import re
 from collections.abc import Iterable, Mapping
 from typing import TypeVar
 
-from .bus_signal_pairs import usb_data_function_identity
+from .bus_signal_pairs import usb_data_function_identity, usb_superspeed_function_identity
 from .models import NetlistContract
 from .return_nets import is_return_like_net_name
 from .usb_peer_reference_types import (
     UsbEndpoint,
+    UsbPeerSignalFamily,
     UsbReferencePinAssignment,
 )
 
@@ -226,6 +227,119 @@ def recognized_usb_data_groups(
             key=lambda item: (
                 item[0] is not None,
                 int(item[0]) if item[0] is not None else -1,
+            ),
+        )
+    )
+
+
+def recognized_usb_superspeed_groups(
+    observed: NetlistContract, reference: str
+) -> tuple[tuple[UsbPeerSignalFamily, frozenset[str]], ...]:
+    """Return recognized USB SuperSpeed TX/RX pair families for one endpoint."""
+    groups: dict[str, set[str]] = {}
+    for pin, function in observed.pin_functions.items():
+        pin_reference, separator, _number = pin.rpartition(".")
+        if not separator or pin_reference.casefold() != reference.casefold():
+            continue
+        identity = usb_superspeed_function_identity(function)
+        if identity is not None:
+            family, side = identity
+            groups.setdefault(family, set()).add(side)
+    order = {"USB SuperSpeed TX": 0, "USB SuperSpeed RX": 1}
+    return tuple(
+        (family, frozenset(sides))
+        for family, sides in sorted(groups.items(), key=lambda item: order[item[0]])
+    )
+
+
+def usb_superspeed_endpoints(
+    references: Iterable[str],
+    observed: NetlistContract,
+    pin_nets: dict[str, set[str]],
+    *,
+    connector: bool,
+) -> tuple[UsbEndpoint, ...]:
+    """Recognize complete, directly connected SuperSpeed pair families by endpoint."""
+    dnp_references = {reference.casefold() for reference in observed.dnp_components}
+    symbols = casefold_mapping(observed.component_symbols)
+    components = casefold_mapping(observed.components)
+    pin_inventories = casefold_mapping(observed.component_pin_numbers)
+    functions = casefold_mapping(observed.pin_functions)
+    electrical_types = casefold_mapping(observed.pin_electrical_types)
+    endpoints: list[UsbEndpoint] = []
+    for reference in references:
+        reference_key = reference.casefold()
+        if reference_key in dnp_references:
+            continue
+        if not connector and IC_REFERENCE.fullmatch(reference) is None:
+            continue
+        symbol = symbols.get(reference_key)
+        component = components.get(reference_key)
+        numbers = pin_inventories.get(reference_key)
+        if symbol is None or component is None or not numbers:
+            continue
+        pin_functions = {
+            f"{reference}.{number}": functions.get(f"{reference}.{number}".casefold())
+            for number in numbers
+        }
+        if any(
+            function is None or f"{reference}.{number}".casefold() not in electrical_types
+            for number, function in (
+                (number, pin_functions[f"{reference}.{number}"]) for number in numbers
+            )
+        ):
+            continue
+        reference_pins = usb_endpoint_reference_pins(observed, reference)
+        if not reference_pins:
+            continue
+        grouped: dict[str, dict[str, list[str]]] = {}
+        for pin, function in pin_functions.items():
+            if function is None:
+                continue
+            identity = usb_superspeed_function_identity(function)
+            if identity is None:
+                continue
+            family, side = identity
+            grouped.setdefault(family, {"positive": [], "negative": []})[side].append(pin)
+        for family, sides in grouped.items():
+            positive_pins = tuple(
+                sorted(sides["positive"], key=lambda item: (item.casefold(), item))
+            )
+            negative_pins = tuple(
+                sorted(sides["negative"], key=lambda item: (item.casefold(), item))
+            )
+            if len(positive_pins) != 1 or len(negative_pins) != 1:
+                continue
+            positive_nets = pin_nets.get(positive_pins[0].casefold(), set())
+            negative_nets = pin_nets.get(negative_pins[0].casefold(), set())
+            if len(positive_nets) != 1 or len(negative_nets) != 1:
+                continue
+            positive_net = next(iter(positive_nets))
+            negative_net = next(iter(negative_nets))
+            if positive_net.casefold() == negative_net.casefold():
+                continue
+            endpoints.append(
+                UsbEndpoint(
+                    reference=reference,
+                    symbol=symbol,
+                    footprint=component.footprint,
+                    positive_pins=positive_pins,
+                    positive_net=positive_net,
+                    negative_pins=negative_pins,
+                    negative_net=negative_net,
+                    reference_net=reference_pins[0].net,
+                    reference_pins=reference_pins,
+                    port_group=None,
+                    signal_family=family,
+                )
+            )
+    return tuple(
+        sorted(
+            endpoints,
+            key=lambda item: (
+                item.reference.casefold(),
+                item.reference,
+                0 if item.signal_family == "USB SuperSpeed TX" else 1,
             ),
         )
     )

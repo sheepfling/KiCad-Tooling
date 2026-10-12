@@ -32,6 +32,10 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
     usb_peer_coverage = report.usb_peer_reference_coverage
 
     if usb_peer_coverage is not None:
+        has_usb_superspeed_groups = any(
+            item.signal_family.startswith("USB SuperSpeed ")
+            for item in usb_peer_coverage.endpoint_groups or ()
+        )
         lines.append("USB peer-reference heuristic coverage:")
         lines.append(
             f"  {usb_peer_coverage.rule_id}: {usb_peer_coverage.status} "
@@ -50,7 +54,10 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                 "lacked complete evidence; any supported paths remain listed below."
             ),
             "NO_SUPPORTED_PEER_PATHS": (
-                "No direct or single-resistor USB D+/D− connector-to-PHY path matched "
+                "No supported USB 2.0 D+/D− or exact direct USB SuperSpeed pair "
+                "connector-to-PHY path matched the supported topology."
+                if has_usb_superspeed_groups
+                else "No direct or single-resistor USB D+/D− connector-to-PHY path matched "
                 "the supported topology."
             ),
             "EVALUATED": "At least one supported connector-to-PHY path was checked.",
@@ -63,6 +70,8 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                 port_group = (
                     f"port {endpoint.port_group}"
                     if endpoint.port_group is not None
+                    else endpoint.signal_family
+                    if endpoint.signal_family != "USB 2.0 data"
                     else "unnumbered port"
                 )
                 lines.append(
@@ -79,11 +88,23 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
         if usb_peer_coverage.path_entries:
             lines.append("    Matched connector-to-PHY paths:")
             for path in usb_peer_coverage.path_entries:
-                port_group = (
-                    f"port {path.data_path.port_group}"
-                    if path.data_path.port_group is not None
-                    else "unnumbered port"
-                )
+                connector_family = path.data_path.connector_signal_family
+                phy_family = path.data_path.phy_signal_family
+                if connector_family == phy_family == "USB 2.0 data":
+                    path_label = (
+                        f"port {path.data_path.port_group}"
+                        if path.data_path.port_group is not None
+                        else "unnumbered port"
+                    )
+                    data_labels = ("D+", "D-")
+                else:
+                    connector_direction = connector_family.rsplit(" ", 1)[-1]
+                    phy_direction = phy_family.rsplit(" ", 1)[-1]
+                    path_label = f"USB SuperSpeed {connector_direction} -> {phy_direction}"
+                    data_labels = (
+                        f"{connector_direction}+ -> {phy_direction}+",
+                        f"{connector_direction}- -> {phy_direction}-",
+                    )
                 connector_reference_pins = ", ".join(
                     f"{item.pin}={item.function}/{item.electrical_type}"
                     for item in path.connector_reference_pins
@@ -93,14 +114,15 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                     for item in path.phy_reference_pins
                 )
                 lines.append(
-                    f"      {path.connector_reference} -> {path.phy_reference} ({port_group}): "
+                    f"      {path.connector_reference} -> {path.phy_reference} ({path_label}): "
                     f"{path.reference_disposition}; references "
                     f"{path.connector_reference_net} [{connector_reference_pins}] / "
                     f"{path.phy_reference_net} [{phy_reference_pins}]"
                 )
-                for label, data_line in (
-                    ("D+", path.data_path.positive),
-                    ("D-", path.data_path.negative),
+                for label, data_line in zip(
+                    data_labels,
+                    (path.data_path.positive, path.data_path.negative),
+                    strict=True,
                 ):
                     series = data_line.series_resistor
                     series_text = (

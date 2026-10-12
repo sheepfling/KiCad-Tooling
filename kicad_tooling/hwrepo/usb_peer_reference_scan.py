@@ -12,10 +12,12 @@ from .usb_peer_endpoint_analysis import (
     IC_REFERENCE,
     pin_net_index,
     recognized_usb_data_groups,
+    recognized_usb_superspeed_groups,
     usb_endpoints,
+    usb_superspeed_endpoints,
 )
 from .usb_peer_inline_path_analysis import mapped_inline_usb_data_link
-from .usb_peer_path_analysis import usb_data_link
+from .usb_peer_path_analysis import usb_data_link, usb_superspeed_direct_data_link
 from .usb_peer_protection_shunt_analysis import mapped_protection_shunt_usb_data_link
 from .usb_peer_reference_contract import usb_reference_map_matches
 from .usb_peer_reference_types import (
@@ -24,6 +26,7 @@ from .usb_peer_reference_types import (
     UsbPeerReferencePathCoverage,
     UsbPeerReferenceReview,
     UsbPeerReferenceScan,
+    UsbPeerSignalFamily,
 )
 
 
@@ -34,16 +37,17 @@ def scan_usb_peer_reference_reviews(
 ) -> UsbPeerReferenceScan:
     """Scan supported USB peers and count bounded heuristic applicability.
 
-    Both fitted endpoints need complete native pin inventories and one or more
-    same-net positive and negative USB data pins within one port group, plus
-    uniquely assigned passive/power_in reference pins on one net. Numbered
-    DPn/DMn aliases pair only with the same number; unnumbered D+/D- aliases
-    pair with each other or with one numbered endpoint group. Each data line must be direct
-    or joined by exactly one fitted two-pin Device:R between endpoint nets, unless one exact
-    current project-authored inline-component map matches the complete path.
-    Complete two-pin passive diode-designated shunts to either endpoint
-    reference may also appear on those nets. Longer series paths, extra data
-    peers, DNP parts, unmapped multi-pin protection parts, and mixed reference domains
+    USB 2.0 endpoints need complete native pin inventories and one or more same-net
+    positive and negative data pins within one port group, plus uniquely assigned
+    passive/power_in reference pins on one net. Numbered DPn/DMn aliases pair only
+    with the same number; unnumbered D+/D- aliases pair with each other or with one
+    numbered endpoint group. USB SuperSpeed support is limited to one direct,
+    unbranched complementary P/N pair whose connector TX maps to PHY RX or connector
+    RX maps to PHY TX. Every matched net must contain exactly its two endpoint pins.
+    USB 2.0 lines may also use one fitted two-pin Device:R or an exact current
+    project-authored inline-component map; complete two-pin passive diode-designated
+    shunts may appear on those USB 2.0 nets. DNP parts, incomplete pin metadata,
+    unexplained signal-net peers, multi-hop topologies, and mixed reference domains
     remain outside this bounded topology check.
     """
     pin_nets, net_members = pin_net_index(observed)
@@ -61,11 +65,19 @@ def scan_usb_peer_reference_reviews(
             )
         }
     )
-    connectors = usb_endpoints(
-        connector_candidates,
-        observed,
-        pin_nets,
-        connector=True,
+    connectors = (
+        *usb_endpoints(
+            connector_candidates,
+            observed,
+            pin_nets,
+            connector=True,
+        ),
+        *usb_superspeed_endpoints(
+            connector_candidates,
+            observed,
+            pin_nets,
+            connector=True,
+        ),
     )
     phy_references = tuple(
         reference
@@ -74,35 +86,57 @@ def scan_usb_peer_reference_reviews(
         and reference.casefold() not in mapped_path_component_references
         and IC_REFERENCE.fullmatch(reference) is not None
     )
-    phy_endpoints = usb_endpoints(
-        phy_references,
-        observed,
-        pin_nets,
-        connector=False,
+    phy_endpoints = (
+        *usb_endpoints(
+            phy_references,
+            observed,
+            pin_nets,
+            connector=False,
+        ),
+        *usb_superspeed_endpoints(
+            phy_references,
+            observed,
+            pin_nets,
+            connector=False,
+        ),
     )
     dnp = {reference.casefold() for reference in observed.dnp_components}
     supported_connector_groups = {
-        (endpoint.reference.casefold(), endpoint.port_group) for endpoint in connectors
+        (endpoint.reference.casefold(), endpoint.port_group, endpoint.signal_family)
+        for endpoint in connectors
     }
     supported_phy_groups = {
-        (endpoint.reference.casefold(), endpoint.port_group) for endpoint in phy_endpoints
+        (endpoint.reference.casefold(), endpoint.port_group, endpoint.signal_family)
+        for endpoint in phy_endpoints
     }
 
     def group_coverage(
         references: Iterable[str],
         *,
         endpoint_role: Literal["connector", "phy"],
-        supported: set[tuple[str, str | None]],
+        supported: set[tuple[str, str | None, UsbPeerSignalFamily]],
     ) -> tuple[UsbPeerEndpointGroupCoverage, ...]:
         result: list[UsbPeerEndpointGroupCoverage] = []
         for reference in references:
             reference_key = reference.casefold()
-            for port_group, _sides in recognized_usb_data_groups(observed, reference):
+            groups: tuple[tuple[str | None, UsbPeerSignalFamily], ...] = (
+                *(
+                    (port_group, "USB 2.0 data")
+                    for port_group, _sides in recognized_usb_data_groups(observed, reference)
+                ),
+                *(
+                    (None, signal_family)
+                    for signal_family, _sides in recognized_usb_superspeed_groups(
+                        observed, reference
+                    )
+                ),
+            )
+            for port_group, signal_family in groups:
                 disposition: Literal["SUPPORTED", "INCOMPLETE", "DNP"] = (
                     "DNP"
                     if reference_key in dnp
                     else "SUPPORTED"
-                    if (reference_key, port_group) in supported
+                    if (reference_key, port_group, signal_family) in supported
                     else "INCOMPLETE"
                 )
                 result.append(
@@ -111,6 +145,7 @@ def scan_usb_peer_reference_reviews(
                         reference=reference,
                         port_group=port_group,
                         disposition=disposition,
+                        signal_family=signal_family,
                     )
                 )
         return tuple(result)
@@ -133,6 +168,7 @@ def scan_usb_peer_reference_reviews(
                 0 if item.endpoint_role == "connector" else 1,
                 item.reference.casefold(),
                 item.reference,
+                item.signal_family,
                 item.port_group is not None,
                 int(item.port_group) if item.port_group is not None else -1,
             ),
@@ -149,22 +185,29 @@ def scan_usb_peer_reference_reviews(
     path_entries: list[UsbPeerReferencePathCoverage] = []
     for connector in connectors:
         for phy in phy_endpoints:
-            data_link = usb_data_link(connector, phy, net_members, observed)
-            if data_link is None:
-                data_link = mapped_inline_usb_data_link(
-                    connector,
-                    phy,
-                    net_members,
-                    observed,
-                    path_map,
-                )
-            if data_link is None:
-                data_link = mapped_protection_shunt_usb_data_link(
-                    connector,
-                    phy,
-                    observed,
-                    path_map,
-                )
+            if connector.signal_family == phy.signal_family == "USB 2.0 data":
+                data_link = usb_data_link(connector, phy, net_members, observed)
+                if data_link is None:
+                    data_link = mapped_inline_usb_data_link(
+                        connector,
+                        phy,
+                        net_members,
+                        observed,
+                        path_map,
+                    )
+                if data_link is None:
+                    data_link = mapped_protection_shunt_usb_data_link(
+                        connector,
+                        phy,
+                        observed,
+                        path_map,
+                    )
+            elif connector.signal_family.startswith(
+                "USB SuperSpeed "
+            ) and phy.signal_family.startswith("USB SuperSpeed "):
+                data_link = usb_superspeed_direct_data_link(connector, phy, net_members)
+            else:
+                data_link = None
             if data_link is None:
                 continue
             common_reference = connector.reference_net.casefold() == phy.reference_net.casefold()
@@ -221,6 +264,8 @@ def scan_usb_peer_reference_reviews(
             key=lambda item: (
                 item.connector_reference.casefold(),
                 item.phy_reference.casefold(),
+                item.data_link.connector_signal_family,
+                item.data_link.phy_signal_family,
                 item.connector_reference_net.casefold(),
                 item.phy_reference_net.casefold(),
                 item.data_link.port_group is not None,
@@ -236,6 +281,8 @@ def scan_usb_peer_reference_reviews(
                 item.connector_reference,
                 item.phy_reference.casefold(),
                 item.phy_reference,
+                item.data_link.connector_signal_family,
+                item.data_link.phy_signal_family,
                 item.data_link.port_group is not None,
                 item.data_link.port_group or "",
             ),
