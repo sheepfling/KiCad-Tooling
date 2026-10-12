@@ -13,6 +13,7 @@ from .models import ComponentRoleMap, NetlistContract
 from .net_dc_reference import connector_capacitor_only_nets
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
 from .power_path_models import PowerPathMap
+from .power_pin_net_roles import named_power_pin_net_role_conflicts
 from .power_pin_paths import power_inputs_without_supported_source_paths
 from .power_rails import numbered_power_rail_groups
 
@@ -27,6 +28,12 @@ def power_candidates(
 ) -> tuple[Candidate, ...]:
     """Build review prompts for rails, fitted supplies, and visible source paths."""
     found: list[Candidate] = []
+    found.extend(
+        named_power_pin_net_role_conflicts(
+            observed,
+            reviewed_connector_references=reviewed_connector_references,
+        )
+    )
     mapped_capacitor_references = tuple(
         reference
         for reference, binding in resolve_component_role_map(

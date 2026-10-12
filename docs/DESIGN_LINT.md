@@ -401,6 +401,18 @@ The first rules are:
   }
   ```
 
+- `power.pin_function_net_role_conflict` prompts review when a fitted pin with
+  a recognized positive-supply function is assigned to a return-like net, or
+  a recognized return-function pin is assigned to a positive rail. Recognized
+  net labels take precedence; only otherwise do other attached pin functions
+  supply opposing role evidence. The candidate pin cannot classify its own
+  net. Connector return
+  pins remain with `connector.return_pin_on_positive_rail`; positive-supply
+  connector pins remain in scope. DNP components and open or multiply assigned
+  pins are skipped. Function and label names do not establish electrical
+  potential or intent, so the rule defaults to `REVIEW` and supports project
+  `block`, `off`, and exact-fingerprint ignores. The synthetic fault/control
+  regressions and CLI/MCP parity case use a tooling-owned normalized netlist.
 - `power.ic_rail_without_fitted_capacitor` prompts review when a fitted IC has
   an assigned native `power_in` pin on a recognized positive rail and no
   recognized fitted capacitor connects that rail to a distinct return-like
@@ -946,7 +958,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 94 active rules. They
+`synthetic_validated`; the catalog currently contains 95 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow

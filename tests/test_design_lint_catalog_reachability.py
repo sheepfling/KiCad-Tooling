@@ -15,6 +15,7 @@ import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_fixtures
 import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
+import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.external_protection_support as _external_protection_support
 import tests.i2c_peer_reference_support as _i2c_peer_reference_support
 import tests.pcb_decoupling_support as _pcb_decoupling_support
@@ -111,6 +112,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_led_output_heuristics.output_led_netlist(),
         _tests_design_lint_fixtures.repeated_component_supply_pins(),
         _tests_design_lint_fixtures.peer_component_power_pins(),
+        _power_pin_net_roles.positive_supply_on_return_netlist(),
         _tests_design_lint_fixtures.control_input_pins(),
         _tests_design_lint_fixtures.control_input_pins(connected=True, visible_bias=False),
         _tests_design_lint_fixtures.unconnected_protocol_pins(),

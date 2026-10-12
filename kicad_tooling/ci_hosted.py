@@ -57,9 +57,8 @@ from .ci_hosted_pcb_switching_loop_lane import (
 )
 from .ci_hosted_planning import plan_scope, write_action_outputs
 from .ci_hosted_power_paths import power_path_fixture_lane
-from .ci_hosted_power_sequences import (
-    power_sequence_fixture_lane as _run_power_sequence_fixture_lane,
-)
+from .ci_hosted_power_pin_net_roles import power_pin_net_role_fixture_lane
+from .ci_hosted_power_sequences import power_sequence_fixture_lane
 from .ci_hosted_release_fixture import release_fixture
 from .ci_hosted_rs485_peer_reference import rs485_peer_reference_native_fixture_lane
 from .ci_hosted_serial_peer_fixtures import serial_peer_fixture_lane
@@ -136,6 +135,7 @@ __all__ = (
     "plan_scope",
     "portable_lane",
     "power_path_fixture_lane",
+    "power_pin_net_role_fixture_lane",
     "power_sequence_fixture_lane",
     "project_simulator",
     "read_kicad_erc_report",
@@ -176,11 +176,6 @@ def usb_c_port_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
 def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
     """Keep the hosted CI import stable while checks live by theme."""
     _run_ic_rail_capacitor_fixture_lane(root, project=project, image=image, log=log)
-
-
-def power_sequence_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
-    """Keep the hosted CI import stable while checks live by theme."""
-    _run_power_sequence_fixture_lane(root, project=project, image=image, log=log)
 
 
 def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
@@ -401,6 +396,7 @@ def native_lane(
         component_rating_fixtures_lane(root, project=project, image=image, log=log)
         power_sequence_fixture_lane(root, project=project, image=image, log=log)
         ic_rail_capacitor_fixture_lane(root, project=project, image=image, log=log)
+        power_pin_net_role_fixture_lane(root, project=project, image=image, log=log)
         pcb_signal_path_drc_fixture_lane(root, project=project, image=image, log=log)
         pcb_return_fixture_lane(root, project=project, image=image, log=log)
         pcb_access_fixture_lane(root, project=project, image=image, log=log)

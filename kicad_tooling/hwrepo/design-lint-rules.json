@@ -3473,6 +3473,52 @@
       "implementation_owner": "kicad_tooling/hwrepo/led_heuristics.py#leds_directly_driven_without_visible_series_resistor"
     },
     {
+      "rule_id": "power.pin_function_net_role_conflict",
+      "title": "Named power pin conflicts with a recognized net role",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with exactly one exported net and a native function recognized by power_function_key or is_return_function, emit a review candidate when a recognized positive-supply function is assigned to a return-like net, or when a recognized return function is assigned to a positive-supply net. Net labels recognized as one role take precedence over attached pin functions; peer-pin evidence is used only when the net name is unrecognized, and the candidate pin never classifies its own net. Connector return pins remain with the connector-specific rule.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Supply functions are limited to the exact aliases recognized by power_function_key; return functions and net labels use the bounded connector_identity and return_nets recognizers. Unrecognized custom functions or labels can evade the candidate.",
+        "Connector return pins are excluded because connector.return_pin_on_positive_rail handles native and source-matched return roles; recognized positive-supply connector pins remain in scope. DNP components and pins with zero or multiple exported net assignments are excluded.",
+        "Pin function and net-name evidence do not prove electrical potential, project intent, a required connection, physical population, or PCB copper continuity. This rule is REVIEW by default; a project may apply its normal rule override or exact-fingerprint ignore lifecycle."
+      ],
+      "fault_fixtures": [
+        "tests.test_power_pin_net_roles.test_positive_supply_pin_on_return_net_is_reviewed_with_role_evidence",
+        "tests.test_power_pin_net_roles.test_net_role_can_come_from_a_peer_pin_function_without_a_named_rail",
+        "tests.test_power_pin_net_roles.test_return_pin_on_positive_rail_is_reported_and_connector_rule_owns_connector_returns",
+        "tests.test_design_lint_mcp_parity_power_pin_roles.test_named_power_pin_net_role_review_cli_mcp_parity",
+        "tests.test_power_pin_net_role_native_fixture_lane.test_named_power_pin_fault_and_control_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_power_pin_net_roles.test_common_negative_unrecognized_open_and_dnp_cases_are_controls",
+        "tests.test_power_pin_net_roles.test_multi_assigned_pin_and_self_role_do_not_create_conflict_evidence",
+        "tests.test_power_pin_net_roles.test_project_policy_can_block_turn_off_or_exactly_ignore_the_candidate",
+        "tests.test_design_lint_mcp_parity_power_pin_roles.test_named_power_pin_net_role_review_cli_mcp_parity",
+        "tests.test_power_pin_net_role_native_fixture_lane.test_named_power_pin_fault_and_control_export_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_power_pin_net_roles.test_fingerprint_is_order_stable_and_reassignment_clears_the_candidate",
+        "tests.test_power_pin_net_roles.test_peer_pin_role_evidence_is_order_stable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_pin_net_roles.py#named_power_pin_net_role_conflicts",
+        "kicad_tooling/hwrepo/connector_identity.py#power_function_key",
+        "kicad_tooling/hwrepo/connector_identity.py#is_return_function",
+        "kicad_tooling/hwrepo/return_nets.py#is_return_like_net_name",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#power_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_pin_net_roles.py#named_power_pin_net_role_conflicts"
+    },
+    {
       "rule_id": "power.ic_rail_without_fitted_capacitor",
       "title": "Recognized IC supply rail has no fitted capacitor to return",
       "status": "active",
@@ -3726,3 +3772,6 @@
     }
   ]
 }
+        "tests.test_power_pin_net_roles.test_return_label_precedence_prevents_duplicate_peer_role_finding",
+        "tests.test_power_pin_net_roles.test_positive_supply_connector_pin_on_return_net_remains_in_scope",
+        "tests.test_power_pin_net_roles.test_positive_supply_connector_pin_on_positive_rail_is_a_valid_control",

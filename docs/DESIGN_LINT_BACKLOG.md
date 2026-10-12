@@ -292,7 +292,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 94 rules are implemented with synthetic regression coverage.
+The following 95 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -324,6 +324,7 @@ Their actual recognition limits are documented in
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
 - `power.ic_rail_without_fitted_capacitor`
+- `power.pin_function_net_role_conflict`
 - `power.mapped_series_path_mismatch`
 - `power.mapped_sequence_dependency_mismatch`
 - `power.input_without_supported_source_path`
@@ -2038,7 +2039,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 94 active rules; CI requires every new
+- **Status:** Baseline complete for all 95 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2047,7 +2048,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 94 covered, 0 not applicable, 0 unreviewed.
+  audit: 95 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5410,6 +5411,63 @@ is not a reason by itself to expand its scope or change its default policy.
   KiCad 10.0.0/10.0.5 fault/control lane and the installed-wheel check against
   a separate project checkout. No hardware or electrical approval is inferred.
 
+#### LINT-110 — Named power pin conflicts with a recognized net role
+
+- **Status:** Implemented as `power.pin_function_net_role_conflict`, default
+  `REVIEW`. The owner is the focused `power_pin_net_roles.py` power-theme
+  module; candidate aggregation remains a thin adapter.
+- **Problem:** A fitted IC can have a named positive-supply pin assigned to a
+  return-like net, or a named return pin assigned to a recognized positive
+  rail. Native ERC can accept some such assignments when the electrical pin
+  types do not conflict.
+- **Predicate:** Require one exported net assignment and a native pin function
+  recognized by `power_function_key` or `is_return_function`. The assigned net
+  must be identified as the opposite role by its bounded name or a different
+  attached pin function. A recognized label takes precedence; peer functions
+  classify only otherwise unnamed rails. The candidate pin's own function
+  cannot establish the opposing net role. Connector return pins remain with
+  the connector-specific
+  rule; positive-supply connector pins remain in scope.
+- **Boundary:** This is a name/function review hint, not proof of voltage,
+  project intent, or required connectivity. Unrecognized aliases, DNP parts,
+  open pins, and multiply assigned pins are outside the predicate. The rule
+  defaults to review and supports project `block`, `off`, and exact-fingerprint
+  ignore decisions.
+- **Fixtures:** Synthetic typed-netlist tests cover both conflict directions,
+  recognized-label precedence when peer pin functions disagree, role evidence
+  from peer pins, common and negative-rail controls, unknown
+  roles, connectors, DNP and ambiguous/open assignments, project policy, stable
+  fingerprints, and correction. A positive-supply connector pin on a return net
+  remains in scope, while a connector return pin is left to its connector rule;
+  a matching positive-rail connector pin is a valid control. A source-bound
+  CLI/MCP test exercises the
+  shared report service. The digest-pinned native lane repeats the fault and
+  control schematic exports on KiCad 10.0.0 and 10.0.5; fixture notes explain
+  that passive native pin types isolate this rule from ERC source checks.
+- **Applicability evidence:** More examples are not needed to define the
+  bounded predicate. Public designs with independently reviewed pinouts can
+  help measure applicability and false prompts; reviewer time remains
+  unmeasured. A 2026-10-11 screen against the licensed public KiCad-Test
+  template at commit `ed89536f0dbbcb013145af2994fef41b2250143e` used a
+  temporary checkout and manifest-pinned native containers. The three PCB
+  projects that produced component netlists (`controller`,
+  `raspberry-pi-status-led`, and `arduino-uno-status-led`, KiCad 10.0.0/10.0.5)
+  yielded zero candidates for this rule. The `passive-signal-reference`
+  schematic exported no component records and was blocked, so it provides no
+  rule evidence; the wiring and harness examples are outside this rule's
+  native-netlist applicability. This is a no-candidate screen, not an
+  independently adjudicated valid-control or false-positive-rate measurement;
+  the aggregate native verification results were not all green. No project
+  source or receipts were copied into this repository.
+- **Acceptance:** Local synthetic, CLI/MCP parity, catalog, architecture, and
+  style checks passed. The focused `design_lint and power_lint and not
+  native_kicad` selection passed 17 tests; catalog reachability and
+  architecture checks passed 29 tests, and focused Ruff checks passed. The
+  recorded digest-pinned native fixture lane passed on KiCad 10.0.0 and 10.0.5:
+  both exports reproduced the named-pin fault as `REVIEW`, kept the valid
+  control at `PASS`, and matched across repeat exports (2 passed). The
+  GitHub-hosted workflow run remains pending publication of this branch.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -8265,7 +8323,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 94 active rules. Each entry has a deterministic predicate, evidence
+contains 95 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to

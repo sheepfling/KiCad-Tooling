@@ -27,6 +27,7 @@ PCB_RETURN_MODULES = REPO_ROOT / "kicad_tooling"
 LARGER_THEME_LANES = {
     "usb_c_port_fixture_lane": "ci_hosted_usb_c_ports.py",
     "ic_rail_capacitor_fixture_lane": "ci_hosted_ic_rail_capacitors.py",
+    "power_pin_net_role_fixture_lane": "ci_hosted_power_pin_net_roles.py",
     "power_sequence_fixture_lane": "ci_hosted_power_sequences.py",
     "open_drain_bias_fixture_lane": "ci_hosted_open_drain_bias.py",
 }
@@ -46,7 +47,9 @@ def _lane_lengths() -> dict[str, int]:
             continue
         for alias in node.names:
             name = alias.asname or alias.name
-            if name == "pcb_return_fixture_lane":
+            is_public_lane = alias.asname in (None, alias.name) and name in LARGER_THEME_LANES
+            is_legacy_return_lane = name == "pcb_return_fixture_lane"
+            if is_public_lane or is_legacy_return_lane:
                 lengths[name] = 1
     return lengths
 

@@ -56,6 +56,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         "component_rating_fixtures_lane",
         "power_sequence_fixture_lane",
         "ic_rail_capacitor_fixture_lane",
+        "power_pin_net_role_fixture_lane",
         "pcb_return_fixture_lane",
         "pcb_access_fixture_lane",
         "pcb_component_inventory_fixture_lane",
