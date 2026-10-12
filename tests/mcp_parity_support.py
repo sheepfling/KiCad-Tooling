@@ -87,20 +87,26 @@ def parity_workspace(base: Path) -> tuple[Path, Path, Path]:
 
 def parity_design_lint_policy(policy: DesignLintPolicy) -> DesignLintPolicy:
     """Keep unrelated native PCB inventory capture out of synthetic parity cases."""
-    if any(item.rule_id == "pcb.schematic_component_inventory" for item in policy.rules):
-        return policy
-    return policy.model_copy(
-        update={
-            "rules": (
-                *policy.rules,
-                DesignLintRuleOverride(
-                    rule_id="pcb.schematic_component_inventory",
-                    mode="off",
-                    reason="Synthetic parity fixture isolates its declared lint behavior",
-                ),
-            )
-        }
+    native_rules = (
+        "pcb.schematic_component_inventory",
+        "pcb.schematic_pcb_dnp_mismatch",
+        "pcb.schematic_pcb_value_mismatch",
     )
+    overrides = {item.rule_id: item for item in policy.rules}
+    inventory_override = overrides.get("pcb.schematic_component_inventory")
+    if inventory_override is not None and inventory_override.mode != "off":
+        return policy
+    additions: list[DesignLintRuleOverride] = []
+    for rule_id in native_rules:
+        if rule_id not in overrides:
+            additions.append(
+                DesignLintRuleOverride(
+                    rule_id=rule_id,
+                    mode="off",
+                    reason="Synthetic parity fixture has no native PCB inventory snapshot evidence",
+                )
+            )
+    return policy.model_copy(update={"rules": (*policy.rules, *additions)})
 
 
 async def parity_cli_process(base: Path, root: Path, module: str, *arguments: str):

@@ -93,6 +93,7 @@ def footprint_placement_observation(footprint: Any, board: Any) -> dict[str, Any
         "reference": reference,
         "footprint": footprint.GetFPIDAsString(),
         "dnp": bool(footprint.IsDNP()),
+        "value": str(footprint.GetValue()),
         "position_nm": [int(position.x), int(position.y)],
         "orientation_microdegrees": orientation_microdegrees,
         "side": side,

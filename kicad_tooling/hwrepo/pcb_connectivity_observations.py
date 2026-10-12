@@ -244,11 +244,12 @@ class PcbPadConnectivityObservation(StrictModel):
 
 
 class PcbFootprintPlacementObservation(StrictModel):
-    """Native placement transform and identity for one referenced PCB footprint."""
+    """Native identity, value field, and placement transform for one PCB footprint."""
 
     reference: Reference
     footprint: NonEmptyText
     dnp: bool
+    value: str | None = None
     position_nm: tuple[int, int]
     orientation_microdegrees: Annotated[int, Field(ge=0, lt=360_000_000)]
     side: Literal["F.Cu", "B.Cu"]

@@ -22,6 +22,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
+    PcbComponentValueMismatch,
     PcbFootprintIdentityMismatch,
     PcbMissingFootprintPlacement,
     PcbPopulationMismatch,
@@ -64,7 +65,7 @@ def test_component_inventory_findings_match_cli_and_mcp(
                 board_sha256="b" * 64,
                 snapshot_path="build/design-lint/synthetic-inventory/snapshot.json",
                 snapshot_sha256="c" * 64,
-                snapshot_schema="12",
+                snapshot_schema="13",
                 kicad_version=config.kicad_version,
                 image=config.image,
                 probe_sha256="d" * 64,
@@ -86,6 +87,14 @@ def test_component_inventory_findings_match_cli_and_mcp(
                         reference="U1",
                         schematic_dnp=False,
                         board_dnp=True,
+                    ),
+                ),
+                value_comparison_status="COMPLETE",
+                value_mismatches=(
+                    PcbComponentValueMismatch(
+                        reference="R4",
+                        schematic_value="10k",
+                        board_value="100k",
                     ),
                 ),
             ),
@@ -139,7 +148,7 @@ def test_component_inventory_findings_match_cli_and_mcp(
         "U2: schematic footprint absent from PCB",
         "U3: schematic and PCB footprint identities differ",
     )
-    assert findings[0].evidence["snapshot_schema"] == ("12",)
+    assert findings[0].evidence["snapshot_schema"] == ("13",)
     assert findings[1].evidence["assigned_footprint"] == ("Package_SO:SOIC-8",)
     assert findings[1].evidence["placed_footprint"] == ("Package_TSSOP:TSSOP-8",)
     (population_finding,) = tuple(
@@ -148,3 +157,9 @@ def test_component_inventory_findings_match_cli_and_mcp(
     assert population_finding.subject == "U1: schematic and PCB DNP states differ"
     assert population_finding.evidence["schematic_dnp"] == ("false",)
     assert population_finding.evidence["board_dnp"] == ("true",)
+    (value_finding,) = tuple(
+        item for item in mcp_report.findings if item.rule_id == "pcb.schematic_pcb_value_mismatch"
+    )
+    assert value_finding.subject == "R4: schematic and PCB value fields differ"
+    assert value_finding.evidence["schematic_value"] == ("10k",)
+    assert value_finding.evidence["board_value"] == ("100k",)

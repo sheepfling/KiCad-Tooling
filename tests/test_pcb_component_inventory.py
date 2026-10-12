@@ -288,11 +288,13 @@ def test_missing_native_inventory_evidence_is_not_reported_as_clean() -> None:
 
     assert report.status != "PASS"
     assert coverage.status == "BLOCKED"
-    assert coverage.issue == "PCB component inventory needs native footprint snapshot schema 12"
+    assert (
+        coverage.issue == "PCB component inventory needs native footprint snapshot schema 12 or 13"
+    )
     (finding,) = tuple(item for item in report.findings if item.rule_id == RULE)
     assert finding.subject == "native PCB footprint inventory unavailable"
     assert finding.evidence["coverage_issue"] == (
-        "PCB component inventory needs native footprint snapshot schema 12",
+        "PCB component inventory needs native footprint snapshot schema 12 or 13",
     )
 
 

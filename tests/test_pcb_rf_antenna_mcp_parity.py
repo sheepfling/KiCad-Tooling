@@ -86,6 +86,16 @@ def test_disabled_rf_antenna_coverage_matches_cli_and_mcp(tmp_path: Path) -> Non
                 mode="off",
                 reason="Synthetic parity fixture isolates RF antenna review",
             ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_dnp_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB inventory",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_value_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB value comparison",
+            ),
         ),
     )
     root, native = synthetic_design_lint_project(tmp_path, policy)

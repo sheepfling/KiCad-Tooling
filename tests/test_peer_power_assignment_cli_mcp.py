@@ -50,6 +50,16 @@ def test_shared_part_id_power_assignment_matches_between_cli_and_mcp(tmp_path: P
                     mode="off",
                     reason="Synthetic power-peer parity case isolates net assignment review",
                 ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_dnp_mismatch",
+                    mode="off",
+                    reason="Synthetic power-peer parity case has no native PCB snapshot",
+                ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_value_mismatch",
+                    mode="off",
+                    reason="Synthetic power-peer parity case has no native PCB value snapshot",
+                ),
             )
         ),
     )

@@ -40,7 +40,7 @@ def pcb_population_mismatch_fixture_lane(
     expected_hashes = {
         schematic_control: "3acf612f93c0f2f48c6b469928ab9366fc2374644966b9bf07087c8a4cd808f8",
         schematic_dnp: "7f185318b3941f10901f8e27bc29b13030ca771e4ff7d3418c09e18a6428c269",
-        board_control: "500ba5a3fbaa36cec9d57cdd6a74f9b65cd03517ed37f11cd960de425c1d5522",
+        board_control: "23a19d40848ad3b6136f163ccf3ab64c53fef9185d696cde96323b66415d8913",
         board_dnp: "cabf0b68f4ceadffa21ec590c7a2a67c5a54c9930a1e57bae688a813417b8ca4",
     }
     for source, expected in expected_hashes.items():
@@ -96,8 +96,8 @@ def pcb_population_mismatch_fixture_lane(
                 expected_board_sha256=board_hash,
                 purpose=f"{case} population comparison PCB",
             )
-            if observed_snapshot.schema_version != "12":
-                raise ValueError("Native population comparison requires PCB snapshot schema 12")
+            if observed_snapshot.schema_version != "13":
+                raise ValueError("Native population acceptance requires PCB snapshot schema 13")
             if retained_netlist is None:
                 retained_netlist = observed_netlist
                 retained_snapshot = observed_snapshot
@@ -119,6 +119,7 @@ def pcb_population_mismatch_fixture_lane(
             snapshot_path=retained_snapshot_path.relative_to(context.root).as_posix(),
             snapshot_sha256=digest(retained_snapshot_path),
             probe_sha256=retained_snapshot.probe_sha256,
+            value_mode="off",
         )
         if coverage.status != "COMPLETE":
             raise ValueError(coverage.issue or f"Native {case} comparison is incomplete")

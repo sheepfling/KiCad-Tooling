@@ -43,6 +43,16 @@ def test_generic_power_output_review_cli_mcp_parity(tmp_path: Path) -> None:
                 mode="off",
                 reason="Synthetic parity fixture isolates the power-output heuristic",
             ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_dnp_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB snapshot",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_value_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB value snapshot",
+            ),
         )
     )
     root, native = synthetic_design_lint_project(tmp_path, policy)

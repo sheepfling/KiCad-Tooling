@@ -77,6 +77,7 @@ def placement(
         reference="U1",
         footprint=footprint,
         dnp=dnp,
+        value="Synthetic RF module",
         position_nm=position_nm,
         orientation_microdegrees=orientation_microdegrees,
         side=side,
@@ -161,7 +162,7 @@ def snapshot(
                 positions_nm=((1_234_000, -5_000),),
             ),
         )
-        if schema_version == "12" or pad_net is not None
+        if schema_version in {"12", "13"} or pad_net is not None
         else (),
         net_ties=(),
         zones=(),
@@ -171,7 +172,7 @@ def snapshot(
         tracks=(),
         copper_layers=("F.Cu", "B.Cu"),
         rule_areas=(area(),) if rule_areas is None else rule_areas,
-        footprints=(module_placement,) if schema_version == "12" else (),
+        footprints=(module_placement,) if schema_version in {"12", "13"} else (),
     )
 
 

@@ -22,7 +22,7 @@
       (uuid "3c159a44-50e7-4d6f-a23e-dccfb0a4a73f")
       (effects (font (size 1 1) (thickness 0.15)))
     )
-    (property "Value" "Probe_Module"
+    (property "Value" "Synthetic identity probe"
       (at 20 22 0)
       (layer "F.Fab")
       (uuid "62a34d2f-edf5-43c6-a8eb-345a6f1ab2e4")

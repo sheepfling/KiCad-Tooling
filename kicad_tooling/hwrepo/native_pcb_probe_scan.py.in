@@ -317,7 +317,7 @@ def main(board_path: Path, output_path: Path, request_path: Path | None = None) 
     access_observations = access_probe_observations(access_requests, pad_geometry)
 
     output = {
-        "schema_version": "12",
+        "schema_version": "13",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,

@@ -99,6 +99,16 @@ def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
                     mode="off",
                     reason="Synthetic peer-pin parity case isolates component identity review",
                 ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_dnp_mismatch",
+                    mode="off",
+                    reason="Synthetic peer-pin parity case has no native PCB snapshot",
+                ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_value_mismatch",
+                    mode="off",
+                    reason="Synthetic peer-pin parity case has no native PCB value snapshot",
+                ),
             )
         ),
     )

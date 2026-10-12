@@ -106,6 +106,16 @@ class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
                         mode="off",
                         reason="Synthetic serial and I2C parity case has no native PCB fixture",
                     ),
+                    DesignLintRuleOverride(
+                        rule_id="pcb.schematic_pcb_dnp_mismatch",
+                        mode="off",
+                        reason="Synthetic serial and I2C parity case has no native PCB fixture",
+                    ),
+                    DesignLintRuleOverride(
+                        rule_id="pcb.schematic_pcb_value_mismatch",
+                        mode="off",
+                        reason="Synthetic serial and I2C parity case has no native PCB value snapshot",
+                    ),
                 )
             ),
         )

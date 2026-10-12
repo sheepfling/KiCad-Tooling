@@ -96,6 +96,20 @@ def test_schema_12_rejects_duplicate_footprints_and_non_copper_side() -> None:
         PcbConnectivitySnapshot.model_validate(data)
 
 
+def test_schema_13_requires_explicit_native_footprint_values() -> None:
+    data = snapshot_data()
+    data["schema_version"] = "13"
+    footprint = data["footprints"][0]  # type: ignore[index]
+    footprint["value"] = "Synthetic value"  # type: ignore[index]
+
+    snapshot = PcbConnectivitySnapshot.model_validate(data)
+    assert snapshot.footprints[0].value == "Synthetic value"
+
+    data["footprints"] = ({key: value for key, value in footprint.items() if key != "value"},)  # type: ignore[index]
+    with pytest.raises(ValidationError, match="requires explicit footprint value fields"):
+        PcbConnectivitySnapshot.model_validate(data)
+
+
 @pytest.mark.parametrize("angle", (-1, 360_000_000))
 def test_footprint_angle_has_canonical_microdegree_range(angle: int) -> None:
     data = snapshot_data()

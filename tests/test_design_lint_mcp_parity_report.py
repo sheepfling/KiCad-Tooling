@@ -29,6 +29,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintReport,
+    DesignLintRuleOverride,
     ProjectManifest,
     ProjectTestContract,
     ValidationSummary,
@@ -57,6 +58,23 @@ class _DesignLintMcpParityReportCases(McpParityHarness):
             contract.model_copy(
                 update={
                     "design_lint": DesignLintPolicy(
+                        rules=(
+                            DesignLintRuleOverride(
+                                rule_id="pcb.schematic_component_inventory",
+                                mode="off",
+                                reason="Synthetic parity case does not exercise PCB inventory review",
+                            ),
+                            DesignLintRuleOverride(
+                                rule_id="pcb.schematic_pcb_dnp_mismatch",
+                                mode="off",
+                                reason="Synthetic parity case does not exercise PCB population review",
+                            ),
+                            DesignLintRuleOverride(
+                                rule_id="pcb.schematic_pcb_value_mismatch",
+                                mode="off",
+                                reason="Synthetic parity case does not exercise PCB value review",
+                            ),
+                        ),
                         complementary_pin_function_alias_map=ComplementaryPinFunctionAliasMap(
                             entries=(
                                 ComplementaryPinFunctionAlias(
@@ -67,7 +85,7 @@ class _DesignLintMcpParityReportCases(McpParityHarness):
                                     basis="Synthetic fixture explicitly defines these native pin functions as a pair",
                                 ),
                             )
-                        )
+                        ),
                     )
                 }
             ),

@@ -155,6 +155,14 @@ class DesignLintReport(StrictModel):
             )
             if actual_population_findings != expected_population_findings:
                 raise ValueError("PCB DNP findings must match their comparison rows")
+            if inventory.value_comparison_status == "COMPLETE":
+                expected_value_findings = len(inventory.value_mismatches)
+                actual_value_findings = sum(
+                    finding.rule_id == "pcb.schematic_pcb_value_mismatch"
+                    for finding in self.findings
+                )
+                if actual_value_findings != expected_value_findings:
+                    raise ValueError("PCB value findings must match their comparison rows")
         if (
             self.netlist_sha256 is not None
             and self.control_input_bias_coverage.netlist_sha256 is not None

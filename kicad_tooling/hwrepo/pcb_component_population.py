@@ -13,8 +13,10 @@ def compare_schematic_pcb_population(
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[PcbPopulationMismatch, ...]:
     """Review DNP differences for footprint-assigned components present on both sources."""
-    if snapshot.schema_version != "12":
-        raise ValueError("PCB population comparison requires native footprint snapshot schema 12")
+    if snapshot.schema_version not in {"12", "13"}:
+        raise ValueError(
+            "PCB population comparison requires native footprint snapshot schema 12 or 13"
+        )
 
     schematic_components: dict[str, tuple[str, str]] = {}
     for reference, component in netlist.components.items():

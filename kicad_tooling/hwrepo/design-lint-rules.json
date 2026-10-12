@@ -3360,7 +3360,7 @@
       "evidence_adapter": "Project-authored named keepout signature compared with source-bound KiCad 10 native PCB rule-area geometry, copper layers, and restriction flags",
       "predicate": "For each mapped named copper keepout, require exactly one native rule area with the reviewed canonical outline-and-hole digest, exact copper-layer set, and exact track/via/pad/zone-fill/footprint restriction flags; missing, duplicate, renamed, reshaped, layer-changed, or restriction-changed areas remain incomplete.",
       "supported_kicad_versions": [
-        "KiCad 10 CLI profile; rule-area geometry is emitted in native PCB snapshot schemas 11 and 12"
+        "KiCad 10 CLI profile; rule-area geometry is emitted in native PCB snapshot schemas 11, 12, and 13"
       ],
       "limitations": [
         "The check verifies that a reviewed native keepout definition remains unchanged. It does not establish that the reviewed shape, layer scope, or restrictions are appropriate for an antenna, RF module, connector, thermal region, or any other engineering requirement.",
@@ -3396,10 +3396,10 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Project-authored exact module identity, RF feed, antenna disposition, and footprint-local keepout compared with native schematic netlist and KiCad 10 PCB snapshot schema 12",
+      "evidence_adapter": "Project-authored exact module identity, RF feed, antenna disposition, and footprint-local keepout compared with native schematic netlist and KiCad 10 PCB snapshot schema 12 or 13",
       "predicate": "For each explicitly mapped RF module, compare symbol, footprint, optional PART_ID, fitted/DNP state, and RF feed pin/net with the native schematic and board. For onboard antennas, transform the independently authored module-local polygons through the exact native footprint position, orientation, and front/back side, then require exactly one named native rule area with matching geometry, copper layers, and restrictions.",
       "supported_kicad_versions": [
-        "KiCad 10 CLI profile; placement-relative evidence requires native PCB snapshot schema 12"
+        "KiCad 10 CLI profile; placement-relative evidence requires native PCB snapshot schema 12 or 13"
       ],
       "limitations": [
         "The project owner must explicitly identify each RF module, exact symbol and footprint, fitted disposition, feed pin/net, and local keepout from an approved independent requirement. The check does not infer RF modules from names or decide which grounds, antenna regions, or RF paths should be common.",
@@ -3416,7 +3416,7 @@
       "valid_control_fixtures": [
         "tests.test_pcb_rf_antenna.test_exact_module_identity_feed_and_local_keepout_transform_complete",
         "tests.test_pcb_rf_antenna.test_explicit_external_antenna_and_dnp_dispositions_are_supported",
-        "tests.test_pcb_keepouts_native.test_native_schema_12_snapshot_records_keepout_and_footprint_evidence"
+        "tests.test_pcb_keepouts_native.test_native_schema_13_snapshot_records_keepout_and_footprint_evidence"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3441,15 +3441,15 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Source-bound native schematic netlist compared with exact KiCad native PCB footprint snapshot schema 12",
+      "evidence_adapter": "Source-bound native schematic netlist compared with exact KiCad native PCB footprint snapshot schema 12 or 13",
       "predicate": "For each schematic component with a nonempty assigned footprint that is not marked DNP, compare its reference case-insensitively with the native PCB footprint inventory. Report a review candidate when the reference is absent or when the exact assigned footprint identity differs from the placed native footprint identity.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
       ],
       "limitations": [
         "The check does not infer whether a fitted schematic component is intended to be off-board or whether two different footprint identities are geometrically equivalent. Projects can suppress a reviewed exception with the existing exact-fingerprint ignore lifecycle.",
-        "Only missing references and exact assigned-footprint identity differences are reported. Board-only mechanical footprints, value differences, schematic/board DNP disagreements, pad equivalence, and physical assembly state are outside this predicate.",
-        "The check requires a source-bound netlist and KiCad PCB footprint inventory snapshot schema 12. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
+        "Only missing references and exact assigned-footprint identity differences are reported. Board-only mechanical footprints, schematic/PCB value differences, schematic/board DNP disagreements, pad equivalence, and physical assembly state are outside this predicate; value and DNP differences have dedicated rules.",
+        "The check requires a source-bound netlist and KiCad PCB footprint inventory snapshot schema 12 or 13. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
       ],
       "fault_fixtures": [
         "tests.test_pcb_component_inventory.test_fitted_assigned_footprint_missing_from_board_is_reviewable_and_configurable",
@@ -3489,7 +3489,7 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Source-bound schematic netlist DNP properties compared with exact KiCad native PCB footprint snapshot schema 12",
+      "evidence_adapter": "Source-bound schematic netlist DNP properties compared with exact KiCad native PCB footprint snapshot schema 12 or 13",
       "predicate": "For each case-insensitive schematic reference with a nonempty assigned footprint and a matching placed PCB footprint, compare the schematic netlist DNP flag with the native PCB footprint DNP flag. Report only when the two flags differ.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
@@ -3498,7 +3498,7 @@
         "This compares CAD DNP flags only; it does not establish the physical assembly population or whether a board placement should exist.",
         "The check compares the default/base DNP state in the source-bound schematic netlist and PCB snapshot. It does not evaluate named design-variant overrides or select a manufacturing variant; a variant-specific difference remains a REVIEW question.",
         "References absent from either artifact and schematic symbols without an assigned footprint are outside this comparison. Missing placements remain with pcb.schematic_component_inventory.",
-        "The check requires a source-bound netlist and KiCad PCB footprint inventory snapshot schema 12. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
+        "The check requires a source-bound netlist and KiCad PCB footprint inventory snapshot schema 12 or 13. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
       ],
       "fault_fixtures": [
         "tests.test_pcb_population_mismatch.test_schematic_and_board_dnp_disagreement_is_reviewable_and_configurable",
@@ -3527,6 +3527,51 @@
       ],
       "theme": "pcb",
       "implementation_owner": "kicad_tooling/hwrepo/pcb_component_population.py#compare_schematic_pcb_population"
+    },
+    {
+      "rule_id": "pcb.schematic_pcb_value_mismatch",
+      "title": "Schematic and PCB component value fields differ",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Source-bound schematic netlist value fields compared with KiCad native PCB footprint value fields in snapshot schema 13",
+      "predicate": "For each case-insensitive reference with a nonempty schematic footprint assignment that is fitted in both sources, compare the schematic component value with the placed native PCB footprint value after trimming surrounding whitespace. Report only exact text differences.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
+      ],
+      "limitations": [
+        "This compares two CAD text fields. It does not establish electrical equivalence, component identity, assembly intent, physical population, or whether a displayed value is required on the board.",
+        "The check is case-sensitive and reports formatting differences after trimming surrounding whitespace. Approved board-specific labels and intentional alternate text may be ignored by exact fingerprint or disabled through the project rule mode.",
+        "Only references present and footprint-assigned in the schematic and placed in the PCB are compared. DNP components, mismatched population states, off-board components, board-only footprints, and named design-variant values are outside this comparison.",
+        "The check requires a source-bound schematic netlist and native PCB footprint value snapshot schema 13. Missing, stale, or older snapshot evidence is a coverage gap and never a clean result."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_component_value_mismatch.test_value_difference_is_reviewable_configurable_and_source_bound",
+        "tests.test_pcb_component_value_mismatch.test_value_only_policy_captures_and_compares_native_footprint_values",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_component_value_mismatch.test_matching_trimmed_values_and_noncomparable_parts_are_controls",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_component_value_mismatch.test_value_comparison_is_order_independent_and_values_are_case_sensitive"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_component_values.py#compare_schematic_pcb_values",
+        "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
+        "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_candidates.py#pcb_component_inventory_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
+        "kicad_tooling/ci_hosted_pcb_component_value_fixture.py#pcb_component_value_fixture_lane"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_component_values.py#compare_schematic_pcb_values"
     },
     {
       "rule_id": "component.led_directly_across_supply_and_return",

@@ -399,6 +399,16 @@ def test_part_id_connector_alias_assignment_matches_between_cli_and_mcp(
                     mode="off",
                     reason="Synthetic parity fixture has no native PCB snapshot evidence.",
                 ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_dnp_mismatch",
+                    mode="off",
+                    reason="Synthetic parity fixture has no native PCB snapshot evidence.",
+                ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_value_mismatch",
+                    mode="off",
+                    reason="Synthetic parity fixture has no native PCB value snapshot evidence.",
+                ),
             )
         ),
     )

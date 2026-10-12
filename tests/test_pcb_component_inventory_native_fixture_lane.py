@@ -92,3 +92,15 @@ def test_native_component_inventory_fault_and_control_are_source_bound(
         "schematic-only-dnp.schematic",
     }
     assert all(len(value) == 64 for value in source_hashes.values())
+
+    values = lane_event(log, "pcb-component-value-fixture/screen")
+    assert values["status"] == "PASS"
+    assert values["kicad_version"] == version
+    assert values["fault_mismatch_references"] == "U1"
+    assert values["control_mismatch_references"] == ""
+    assert values["fault_schematic_value"] == "Synthetic identity probe"
+    assert values["fault_board_value"] == "Stale synthetic board value"
+    assert values["control_schematic_value"] == "Synthetic identity probe"
+    assert values["control_board_value"] == "Synthetic identity probe"
+    assert values["repeated_native_evidence"] == "stable"
+    assert all(len(value) == 64 for value in values["source_hashes"].values())

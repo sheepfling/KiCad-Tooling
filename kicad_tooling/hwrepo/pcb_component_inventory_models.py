@@ -32,6 +32,14 @@ class PcbPopulationMismatch(StrictModel):
     board_dnp: bool
 
 
+class PcbComponentValueMismatch(StrictModel):
+    """Schematic and placed PCB value fields differ for one fitted component."""
+
+    reference: Identifier
+    schematic_value: NonEmptyText
+    board_value: str
+
+
 class PcbComponentInventoryComparison(StrictModel):
     """Deterministic comparison results for fitted schematic component placements."""
 
@@ -59,13 +67,18 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     board_sha256: Digest | None = None
     snapshot_path: RepositoryPath | None = None
     snapshot_sha256: Digest | None = None
-    snapshot_schema: Literal["12"] | None = None
+    snapshot_schema: Literal["12", "13"] | None = None
     kicad_version: NonEmptyText | None = None
     image: NonEmptyText | None = None
     probe_sha256: Digest | None = None
     missing_placements: tuple[PcbMissingFootprintPlacement, ...] = ()
     footprint_mismatches: tuple[PcbFootprintIdentityMismatch, ...] = ()
     population_mismatches: tuple[PcbPopulationMismatch, ...] = ()
+    value_comparison_status: Literal["NOT_APPLICABLE", "COMPLETE", "BLOCKED", "DISABLED"] = (
+        "NOT_APPLICABLE"
+    )
+    value_mismatches: tuple[PcbComponentValueMismatch, ...] = ()
+    value_comparison_issue: NonEmptyText | None = None
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
@@ -79,6 +92,17 @@ class PcbComponentInventoryCoverageReport(StrictModel):
         population_references = [item.reference.casefold() for item in self.population_mismatches]
         if len(population_references) != len(set(population_references)):
             raise ValueError("PCB population mismatch references must be unique")
+        value_references = [item.reference.casefold() for item in self.value_mismatches]
+        if len(value_references) != len(set(value_references)):
+            raise ValueError("PCB value mismatch references must be unique")
+        if self.value_comparison_status == "COMPLETE" and self.snapshot_schema != "13":
+            raise ValueError("Complete PCB value comparison requires snapshot schema 13")
+        if self.value_comparison_status == "BLOCKED" and self.value_comparison_issue is None:
+            raise ValueError("Blocked PCB value comparison must explain the evidence gap")
+        if self.value_comparison_status != "BLOCKED" and self.value_comparison_issue is not None:
+            raise ValueError("Only blocked PCB value comparison may include an issue")
+        if self.value_comparison_status != "COMPLETE" and self.value_mismatches:
+            raise ValueError("Only complete PCB value comparison can report mismatch rows")
         if self.status == "COMPLETE":
             if any(
                 value is None
@@ -103,7 +127,10 @@ class PcbComponentInventoryCoverageReport(StrictModel):
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked PCB component inventory must explain the evidence gap")
         if self.status != "COMPLETE" and (
-            self.missing_placements or self.footprint_mismatches or self.population_mismatches
+            self.missing_placements
+            or self.footprint_mismatches
+            or self.population_mismatches
+            or self.value_comparison_status == "COMPLETE"
         ):
             raise ValueError("Only complete PCB component inventory can report comparison findings")
         return self

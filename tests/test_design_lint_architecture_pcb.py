@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo import models as shared_models
 from kicad_tooling.hwrepo import (
     pcb_component_inventory_models,
     pcb_component_population,
+    pcb_component_values,
     pcb_decoupling_models,
     pcb_drc_models,
     pcb_reference_plane_models,
@@ -408,6 +409,22 @@ def test_pcb_population_review_keeps_its_model_and_predicate_in_the_pcb_theme() 
     assert (
         '"implementation_owner": "kicad_tooling/hwrepo/pcb_component_population.py#'
         'compare_schematic_pcb_population"'
+    ) in catalog
+
+
+def test_pcb_value_review_keeps_its_predicate_in_a_focused_pcb_module() -> None:
+    model = pcb_component_inventory_models.PcbComponentValueMismatch
+    owner = pcb_component_values
+
+    assert model.__module__.endswith("pcb_component_inventory_models")
+    assert not hasattr(shared_models, "PcbComponentValueMismatch")
+    assert _line_count(HWREPO / "pcb_component_values.py") < IMPLEMENTATION_MAX_LINES
+    assert callable(owner.compare_schematic_pcb_values)
+
+    catalog = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
+    assert (
+        '"implementation_owner": "kicad_tooling/hwrepo/pcb_component_values.py#'
+        'compare_schematic_pcb_values"'
     ) in catalog
 
 

@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .ci_hosted_pcb_component_value_fixture import pcb_component_value_fixture_lane
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureFailure,
     capture_verified_pcb_snapshot,
@@ -110,8 +111,10 @@ def pcb_component_inventory_fixture_lane(
                     expected_board_sha256=board_hash,
                     purpose=f"{case} component inventory PCB",
                 )
-                if snapshot.schema_version != "12":
-                    raise ValueError("Native footprint inventory requires PCB snapshot schema 12")
+                if snapshot.schema_version != "13":
+                    raise ValueError(
+                        "Native footprint inventory acceptance requires snapshot schema 13"
+                    )
                 if retained_netlist is None:
                     retained_netlist = observed
                     retained_snapshot = snapshot
@@ -212,7 +215,7 @@ def pcb_component_inventory_fixture_lane(
     identity_hashes = {
         "fault": "3a66be0b39af5f2a065de3b10e9476a53838042bc4e87f8618e711b31ad59e2b",
         "control": "3acf612f93c0f2f48c6b469928ab9366fc2374644966b9bf07087c8a4cd808f8",
-        "board": "500ba5a3fbaa36cec9d57cdd6a74f9b65cd03517ed37f11cd960de425c1d5522",
+        "board": "23a19d40848ad3b6136f163ccf3ab64c53fef9185d696cde96323b66415d8913",
     }
     for case, schematic_source in identity_cases.items():
         if digest(schematic_source) != identity_hashes[case]:
@@ -278,8 +281,8 @@ def pcb_component_inventory_fixture_lane(
                 or retained_snapshot_path is None
             ):
                 raise ValueError(f"Native footprint identity {case} evidence is unavailable")
-            if retained_snapshot.schema_version != "12":
-                raise ValueError("Native footprint identity comparison requires snapshot schema 12")
+            if retained_snapshot.schema_version != "13":
+                raise ValueError("Native footprint identity acceptance requires snapshot schema 13")
             component = retained_netlist.components.get("U1")
             placement = next(
                 (
@@ -393,3 +396,4 @@ def pcb_component_inventory_fixture_lane(
             error=str(exc),
         )
         raise HostedPcbFixtureFailure(str(exc)) from exc
+    pcb_component_value_fixture_lane(context, log=log)

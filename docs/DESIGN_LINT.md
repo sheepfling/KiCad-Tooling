@@ -952,7 +952,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 96 active rules. They
+`synthetic_validated`; the catalog currently contains 97 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules default to `off` because they have a narrow
@@ -1955,8 +1955,11 @@ or arc and which native pad/via copper shapes each endpoint touches. Snapshot
 schema 9 adds canonical integer-nanometer filled-zone island outlines and hole
 rings, bound to the same board, exact KiCad image, and probe digest.
 Snapshot schema 10 adds target aperture shape and diameter to native access
-probe observations. Current source-bound KiCad 10 geometry captures require
-schema 10; these aperture fields do not change the schema 9 zone-contour data.
+probe observations. Schema 11 adds rule-area evidence; schema 12 adds source-
+bound footprint identity, fitted state, board origin, canonical orientation,
+and board side; schema 13 adds native footprint value fields. Current
+source-bound KiCad 10 geometry captures use schema 13. These additions retain
+the earlier aperture and zone-contour evidence.
 The probe copies each native filled-zone polygon set and calls KiCad's
 `SHAPE_POLY_SET.Unfracture()` before recording its outlines and holes. This
 preserves clearances that KiCad's filled result represents as fractured outline
@@ -2282,9 +2285,33 @@ KiCad version, image, and probe. Missing, stale, or unsupported evidence is
 reported as a coverage gap, not as a clean comparison.
 
 This is a placement and exact-name consistency screen. It does not compare
-values, DNP agreement, board-only parts, pad geometry, assembly state, or
-electrical connectivity. A matching footprint ID does not prove the fabricated
-board matches the source.
+CAD values, DNP agreement, board-only parts, pad geometry, assembly state, or
+electrical connectivity. Schematic/PCB value text has a separate review rule
+described below. A matching footprint ID does not prove the fabricated board
+matches the source.
+
+## Review schematic and PCB component-value differences
+
+`pcb.schematic_pcb_value_mismatch` compares the schematic netlist value with
+the native PCB footprint value for each case-insensitive reference that has a
+schematic footprint assignment and is fitted in both sources. It trims
+surrounding whitespace and then compares case-sensitive text exactly. A
+difference is a review prompt, since a board may intentionally show a shorter
+label or another approved value string.
+
+This check defaults to `review`; project policy can select `block`, `off`, or
+an exact fingerprint ignore. It requires source-bound footprint value fields
+from PCB snapshot schema 13. Schema 12 remains usable for footprint placement,
+identity, and population checks, while value coverage stays blocked until a
+schema 13 capture is available. Findings bind the netlist, board, snapshot,
+KiCad version, image, and probe digests.
+
+The comparison excludes DNP components, references missing from either file,
+components without a schematic footprint assignment, population mismatches,
+board-only footprints, and named variant values. It compares CAD text only; it
+does not identify a part, establish electrical equivalence, or determine
+assembly intent. The exact-version synthetic native lane exercises a matching
+control and one stale-board-value fault on KiCad 10.0.0 and 10.0.5.
 
 ## Review mapped PCB keepout intent
 
@@ -2331,8 +2358,9 @@ The checker requires exactly one native rule area with the mapped name, exact
 geometry digest, exact copper-layer set, and exact track, via, pad, zone-fill,
 and footprint restrictions. A missing or duplicate name, changed geometry,
 changed layer, changed restriction, or native snapshot older than schema 11 is
-incomplete. Snapshot schema 12 retains that keepout evidence and adds source-bound
-footprint placement identity, origin, orientation, and board side. The project
+incomplete. Snapshot schema 12 and later retain that keepout evidence and add
+source-bound footprint placement identity, origin, orientation, and board side.
+Snapshot schema 13 also records the native footprint value. The project
 owner must author the digest, layers, flags, and basis
 from an independent approved source; do not generate the requirement by
 accepting whatever shape happens to be on the board.

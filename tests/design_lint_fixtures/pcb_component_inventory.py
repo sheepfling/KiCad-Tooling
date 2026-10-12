@@ -12,27 +12,34 @@ from kicad_tooling.hwrepo.models import (
     PcbFootprintPlacementObservation,
 )
 from kicad_tooling.hwrepo.pcb_component_inventory import compare_fitted_schematic_pcb_inventory
-from kicad_tooling.hwrepo.pcb_component_inventory_models import PcbComponentInventoryCoverageReport
+from kicad_tooling.hwrepo.pcb_component_inventory_models import (
+    PcbComponentInventoryCoverageReport,
+)
 from kicad_tooling.hwrepo.pcb_component_population import compare_schematic_pcb_population
+from kicad_tooling.hwrepo.pcb_component_values import compare_schematic_pcb_values
 
 NETLIST_SHA256 = "a" * 64
 BOARD_SHA256 = "b" * 64
 SNAPSHOT_SHA256 = "c" * 64
 PROBE_SHA256 = "d" * 64
 IMAGE = "registry.example/kicad:10.0.5@sha256:" + "e" * 64
-SnapshotSchema = Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+SnapshotSchema = Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"]
 ReviewMode = Literal["review", "block", "off"]
 
 
 def netlist(
     *,
     components: dict[str, str] | None = None,
+    values: dict[str, str] | None = None,
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:
     assignments = components or {"U1": "Package_QFP:TQFP-48", "J1": "Connector:USB_B"}
     return NetlistContract(
         components={
-            reference: ComponentContract(value="synthetic", footprint=footprint)
+            reference: ComponentContract(
+                value=(values or {}).get(reference, "synthetic"),
+                footprint=footprint,
+            )
             for reference, footprint in assignments.items()
         },
         nets={},
@@ -45,12 +52,16 @@ def snapshot(
     schema_version: SnapshotSchema = "12",
     footprint_by_reference: dict[str, str] | None = None,
     dnp_by_reference: dict[str, bool] | None = None,
+    value_by_reference: dict[str, str] | None = None,
 ) -> PcbConnectivitySnapshot:
     identity_by_reference = {
         reference.casefold(): footprint
         for reference, footprint in (footprint_by_reference or {}).items()
     }
     dnp_by_key = {reference.casefold(): dnp for reference, dnp in (dnp_by_reference or {}).items()}
+    value_by_key = {
+        reference.casefold(): value for reference, value in (value_by_reference or {}).items()
+    }
     return PcbConnectivitySnapshot(
         schema_version=schema_version,
         board_sha256=BOARD_SHA256,
@@ -72,6 +83,11 @@ def snapshot(
                 reference=reference,
                 footprint=identity_by_reference.get(reference.casefold(), "Synthetic:Footprint"),
                 dnp=dnp_by_key.get(reference.casefold(), False),
+                value=(
+                    value_by_key.get(reference.casefold(), "synthetic")
+                    if schema_version == "13"
+                    else None
+                ),
                 position_nm=(0, 0),
                 orientation_microdegrees=0,
                 side="F.Cu",
@@ -86,6 +102,7 @@ def complete_report(
     board: PcbConnectivitySnapshot,
     *,
     mode: ReviewMode = "review",
+    value_mode: ReviewMode = "off",
 ) -> PcbComponentInventoryCoverageReport:
     comparison = compare_fitted_schematic_pcb_inventory(observed, board)
     return PcbComponentInventoryCoverageReport(
@@ -96,13 +113,30 @@ def complete_report(
         board_sha256=BOARD_SHA256,
         snapshot_path="build/design-lint/native/snapshot.json",
         snapshot_sha256=SNAPSHOT_SHA256,
-        snapshot_schema="12",
+        snapshot_schema=board.schema_version if board.schema_version in {"12", "13"} else "12",
         kicad_version=board.kicad_version,
         image=board.image,
         probe_sha256=board.probe_sha256,
         missing_placements=comparison.missing_placements,
         footprint_mismatches=comparison.footprint_mismatches,
         population_mismatches=compare_schematic_pcb_population(observed, board),
+        value_comparison_status=(
+            "DISABLED"
+            if value_mode == "off"
+            else "COMPLETE"
+            if board.schema_version == "13"
+            else "BLOCKED"
+        ),
+        value_mismatches=(
+            compare_schematic_pcb_values(observed, board)
+            if value_mode != "off" and board.schema_version == "13"
+            else ()
+        ),
+        value_comparison_issue=(
+            "PCB component value comparison needs native footprint snapshot schema 13"
+            if value_mode != "off" and board.schema_version != "13"
+            else None
+        ),
     )
 
 

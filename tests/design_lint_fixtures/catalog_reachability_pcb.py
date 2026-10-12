@@ -10,6 +10,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
+    PcbComponentValueMismatch,
     PcbMissingFootprintPlacement,
     PcbPopulationMismatch,
 )
@@ -33,7 +34,7 @@ def pcb_component_inventory_rule_ids() -> set[str]:
         board_sha256="b" * 64,
         snapshot_path="build/design-lint/synthetic-pcb-inventory/snapshot.json",
         snapshot_sha256="c" * 64,
-        snapshot_schema="12",
+        snapshot_schema="13",
         kicad_version="10.0.5",
         image="registry.example/kicad:10.0.5@sha256:" + "d" * 64,
         probe_sha256="e" * 64,
@@ -45,6 +46,14 @@ def pcb_component_inventory_rule_ids() -> set[str]:
         ),
         population_mismatches=(
             PcbPopulationMismatch(reference="U1", schematic_dnp=False, board_dnp=True),
+        ),
+        value_comparison_status="COMPLETE",
+        value_mismatches=(
+            PcbComponentValueMismatch(
+                reference="U3",
+                schematic_value="Synthetic schematic value",
+                board_value="Synthetic board value",
+            ),
         ),
     )
     report = evaluate(

@@ -22,7 +22,7 @@ from .pcb_connectivity_observations import (
 class PcbConnectivitySnapshot(StrictModel):
     """Retained, deterministic native connectivity evidence for an exact board."""
 
-    schema_version: Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] = "3"
+    schema_version: Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
     image: NonEmptyText
@@ -51,7 +51,19 @@ class PcbConnectivitySnapshot(StrictModel):
         track_ids = [item.uuid.casefold() for item in self.tracks]
         if len(set(track_ids)) != len(track_ids):
             raise ValueError("Native PCB evidence contains duplicate track identities")
-        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}:
+        if self.schema_version in {
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+        }:
             if "vias" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v3 requires an explicit via inventory")
             if any("connected_vias" not in item.model_fields_set for item in self.pads):
@@ -108,7 +120,19 @@ class PcbConnectivitySnapshot(StrictModel):
                 mapped_islands_by_zone.setdefault(key, set()).add(island.island_index)
             if mapped_zone_keys != connected_zone_keys:
                 raise ValueError("Native PCB connected zones need exact filled-island evidence")
-        if self.schema_version in {"3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}:
+        if self.schema_version in {
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+        }:
             for key, zone in zones_by_key.items():
                 expected_unanchored = set(range(zone.filled_island_count)) - (
                     mapped_islands_by_zone.get(key, set())
@@ -118,7 +142,18 @@ class PcbConnectivitySnapshot(StrictModel):
                         "Native PCB zone unanchored-to-pad island indexes do not match "
                         "the pad-to-island evidence"
                     )
-        if self.schema_version in {"4", "5", "6", "7", "8", "9", "10", "11", "12"}:
+        if self.schema_version in {
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+        }:
             if "access_probe_observations" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v4+ requires explicit probe observations")
             if "access_probe_requests_sha256" not in self.model_fields_set:
@@ -127,26 +162,26 @@ class PcbConnectivitySnapshot(StrictModel):
                 self.access_probe_requests_sha256 is not None
             ):
                 raise ValueError("Native PCB probe observations need matching request evidence")
-        if self.schema_version in {"5", "6", "7", "8", "9", "10", "11", "12"} and any(
+        if self.schema_version in {"5", "6", "7", "8", "9", "10", "11", "12", "13"} and any(
             "positions_nm" not in item.model_fields_set or not item.positions_nm
             for item in self.pads
         ):
             raise ValueError("Native PCB schema v5+ requires physical pad-center positions")
         if (
-            self.schema_version in {"6", "7", "8", "9", "10", "11", "12"}
+            self.schema_version in {"6", "7", "8", "9", "10", "11", "12", "13"}
             and "tracks" not in self.model_fields_set
         ):
             raise ValueError(
                 f"Native PCB schema v{self.schema_version} requires an explicit track inventory"
             )
-        if self.schema_version in {"7", "8", "9", "10", "11", "12"}:
+        if self.schema_version in {"7", "8", "9", "10", "11", "12", "13"}:
             if "copper_layers" not in self.model_fields_set or len(self.copper_layers) < 2:
                 raise ValueError(
                     f"Native PCB schema v{self.schema_version} requires the actual copper stack inventory"
                 )
             if len({item.casefold() for item in self.copper_layers}) != len(self.copper_layers):
                 raise ValueError("Native PCB copper stack contains duplicate layer names")
-        if self.schema_version in {"8", "9", "10", "11", "12"}:
+        if self.schema_version in {"8", "9", "10", "11", "12", "13"}:
             tracks_by_uuid = {item.uuid.casefold(): item for item in self.tracks}
             for track in self.tracks:
                 if any(
@@ -194,7 +229,7 @@ class PcbConnectivitySnapshot(StrictModel):
                     for contact in (*track.start_tracks, *track.end_tracks)
                 ):
                     raise ValueError("Native PCB track endpoint contact has a different net")
-        if self.schema_version in {"9", "10", "11", "12"}:
+        if self.schema_version in {"9", "10", "11", "12", "13"}:
             for zone in self.zones:
                 if "filled_islands" not in zone.model_fields_set:
                     raise ValueError(
@@ -225,14 +260,14 @@ class PcbConnectivitySnapshot(StrictModel):
                     )
                 if obstacle.net != item.obstacle_net:
                     raise ValueError("Native PCB probe obstacle net differs from its pad inventory")
-            if self.schema_version in {"10", "11", "12"} and any(
+            if self.schema_version in {"10", "11", "12", "13"} and any(
                 field not in item.model_fields_set
                 for field in ("target_aperture_shape", "target_aperture_diameter_nm")
             ):
                 raise ValueError(
                     "Native PCB schema v10+ requires explicit target aperture evidence"
                 )
-        if self.schema_version in {"11", "12"}:
+        if self.schema_version in {"11", "12", "13"}:
             if "rule_areas" not in self.model_fields_set:
                 raise ValueError(
                     f"Native PCB schema v{self.schema_version} requires explicit rule-area evidence"
@@ -246,16 +281,21 @@ class PcbConnectivitySnapshot(StrictModel):
                 copper_layers = {layer.casefold() for layer in self.copper_layers}
                 if any(layer.casefold() not in copper_layers for layer in area.layers):
                     raise ValueError("Native PCB rule-area layers are outside the copper stack")
-        if self.schema_version == "12":
+        if self.schema_version in {"12", "13"}:
             if "footprints" not in self.model_fields_set:
                 raise ValueError(
-                    "Native PCB schema v12 requires explicit footprint placement evidence"
+                    f"Native PCB schema v{self.schema_version} requires explicit footprint placement evidence"
                 )
             footprint_rows = {item.reference.casefold(): item for item in self.footprints}
             if len(footprint_rows) != len(self.footprints):
                 raise ValueError("Native PCB evidence contains duplicate footprint references")
             if any(item.side not in self.copper_layers for item in self.footprints):
                 raise ValueError("Native PCB footprint side is outside the copper stack")
+            if self.schema_version == "13" and any(
+                "value" not in item.model_fields_set or item.value is None
+                for item in self.footprints
+            ):
+                raise ValueError("Native PCB schema v13 requires explicit footprint value fields")
             for pad in self.pads:
                 reference = pad.pad.rsplit(".", 1)[0].casefold()
                 footprint = footprint_rows.get(reference)

@@ -50,6 +50,16 @@ def test_generic_connector_power_output_review_cli_mcp_parity(tmp_path: Path) ->
                 reason="Synthetic parity fixture isolates connector power-output review",
             ),
             DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_dnp_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB snapshot",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_value_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB value snapshot",
+            ),
+            DesignLintRuleOverride(
                 rule_id="protection.unreviewed_interface_pin",
                 mode="off",
                 reason="Synthetic parity fixture isolates connector power-output review",

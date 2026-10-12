@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 96 rules are implemented with synthetic regression coverage.
+The following 97 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -394,6 +394,7 @@ Their actual recognition limits are documented in
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
 - `pcb.schematic_pcb_dnp_mismatch`
+- `pcb.schematic_pcb_value_mismatch`
 - `connector.return_distribution`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
@@ -2177,7 +2178,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 96 active rules; CI requires every new
+- **Status:** Baseline complete for all 97 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2186,7 +2187,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 96 covered, 0 not applicable, 0 unreviewed.
+  audit: 97 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5170,7 +5171,7 @@ is not a reason by itself to expand its scope or change its default policy.
   the placed identity. Projects can select `review`, `block`, or `off`.
 - **Priority:** P1 source consistency at the fabrication handoff.
 - **Predicate:** Compare case-insensitive component references from the
-  source-bound native schematic netlist and KiCad PCB snapshot schema 12. For
+  source-bound native schematic netlist and KiCad PCB snapshot schema 12 or 13. For
   each non-DNP schematic component with a nonempty assigned footprint, report
   a missing-placement candidate when no native board reference matches. When a
   board footprint is present, report a second candidate if its exact
@@ -5181,7 +5182,8 @@ is not a reason by itself to expand its scope or change its default policy.
   alternate footprints may need reviewed exact ignores. Empty-footprint
   symbols, DNP components, board-only mechanical or fabrication footprints,
   value differences, DNP disagreements, and pad equivalence are outside this
-  predicate. DNP flag differences are handled separately by LINT-111. Missing,
+  predicate. DNP flag differences are handled separately by LINT-111, and
+  value-field differences by LINT-112. Missing,
   stale, or unsupported source snapshots are coverage gaps, never passes.
 - **Policy and evidence:** Default `REVIEW`; allow project `review`/`block`/`off`
   and the existing exact-fingerprint ignore lifecycle. Bind each finding and
@@ -5670,6 +5672,39 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Next:** Keep the default at REVIEW. Extend the comparison to variants only
   when the scan can bind both artifacts to the same explicit variant identity.
 
+#### LINT-112 — Schematic and PCB component value fields differ
+
+- **Status:** Implemented as `pcb.schematic_pcb_value_mismatch`, default
+  `REVIEW`, using source-bound schematic values and native PCB footprint values
+  from snapshot schema 13.
+- **Priority:** P1 fabrication-handoff consistency. The schematic component
+  value and board footprint value can drift after separate edits or an
+  incomplete board update.
+- **Predicate:** For each case-insensitive schematic reference with a
+  nonempty assigned footprint, require a matching PCB placement and fitted
+  state in both sources. Compare the exact value strings after trimming
+  surrounding whitespace; retain case sensitivity and report only differences.
+- **Boundary:** A different value may be an intentional board label or an
+  approved display choice. The finding does not establish part identity,
+  electrical equivalence, assembly intent, or the correct manufacturing
+  variant. DNP components, population mismatches, board-only footprints,
+  schematic-only/off-board components, and variant-specific fields are outside
+  this check. Projects can choose `review`, `block`, or `off`, and suppress a
+  reviewed exact finding through the existing fingerprint lifecycle.
+- **Evidence:** Findings bind the netlist, board, native snapshot, KiCad
+  version, image, and probe digests. Snapshot schema 12 remains supported for
+  footprint inventory and population checks; it keeps value coverage blocked
+  until schema 13 is captured.
+- **Fixtures:** Synthetic unit cases cover changed value text, matching
+  trimmed values, DNP and incomplete-reference controls, case sensitivity,
+  ordering, policy modes, and stale-ignore detection. CLI/MCP parity carries a
+  typed value finding. The digest-pinned native lane repeats one matching
+  control and one stale-board-value fault on KiCad 10.0.0 and 10.0.5. The
+  fixture is tooling-owned and synthetic.
+- **Cohort context:** The kicad-happy XV schematic/PCB consistency family
+  motivated the audit. The local predicate is first-party and uses native
+  KiCad evidence; no cohort implementation was copied or executed.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -5737,7 +5772,7 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Status:** Implemented as the opt-in `pcb.keepout_intent_coverage` rule.
   The native probe records rule-area names, canonical outlines and holes,
   copper-layer membership, and track/via/pad/zone-fill/footprint restrictions
-  in snapshot schemas 11 and 12. Synthetic extraction was run with the exact
+  in snapshot schemas 11, 12, and 13. Synthetic extraction was run with the exact
   digest-pinned KiCad 10.0.0 and 10.0.5 images. Synthetic pytest cases cover
   exact matches, changed geometry/layers/restrictions, missing and duplicate
   names, unsupported snapshot schema, digest order stability, and review,
@@ -8525,7 +8560,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 96 active rules. Each entry has a deterministic predicate, evidence
+contains 97 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules default to `off`; other active rules default to
@@ -11001,7 +11036,7 @@ candidate commit and installation inputs before any new runtime comparison.
 | CC-001 connector/contact current versus PCB copper | LINT-021 measures project-mapped net track widths; LINT-071 checks authored component power dissipation. LINT-077 now checks owner-authored current against an exact per-contact rating. Neither local check calculates copper ampacity. | The contact slice is implemented in LINT-077 with exact identity/pin binding; hosted native pass, run 38143123091. Defer copper-capacity work until an independently reviewed model defines stack-up, temperature, vias/zones, route topology, branching, and current allocation. Do not infer ratings or current sharing from net names or a net-wide minimum width. The public candidate implementation was not installed or runtime-tested; only its documented question informed this narrower local contract. |
 | EG-001 external-connector ESD coverage             | LINT-034 requires a reviewed protection disposition per scoped connector pin; LINT-060 checks mapped PCB entry and return-via geometry.                                                                                                  | Pinned source review found no bounded gap beyond LINT-034; retain no new rule. See the source-review note below.                                                                                                                                                                                                                                                                                                                                                                                                   |
 | DA-001 decoupling strategy adequacy                | LINT-046 prompts on selected schematic power-input rails without a fitted capacitor; LINT-020 measures project-mapped PCB capacitor placement and optional connected return-via distance.                                                | Pinned source review found only a generic capacitor-count hint; no requirement-independent gap beyond LINT-046/LINT-020. See source-review note below.                                                                                                                                                                                                                                                                                                                                                             |
-| XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts.                                                                                                                                                                  | LINT-102 now compares footprint-assigned fitted schematic references with native PCB footprint inventory; defer prefix-based extras and value comparisons. Cohort source reviewed only; no code imported or run.                                                                                                                                                                                                                                                                                                   |
+| XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts.                                                                                                                                                                  | LINT-102 compares fitted schematic references and assigned footprint identities; LINT-111 compares default DNP flags; LINT-112 compares fitted schematic/PCB value fields. Board-only footprint classification and variant-aware comparisons remain deferred. Cohort source review informed the audit; no code was imported or executed.                                                                                                                                                                           |
 | CC-001 style ampacity-target net-class proposal    | LINT-021 accepts project-authored minimum widths and records exact native track measurements.                                                                                                                                            | Treat the public [kicad-tools ampacity-target proposal](https://github.com/rjwalters/kicad-tools/issues/4216) as an unimplemented research lead, not a cohort feature to import. Any future derivation needs a documented, licensed/available calculation basis, explicit copper and temperature assumptions, boundary tests, and comparison with an independent reference. Preserve authored widths as screens until that evidence exists.                                                                        |
 | Mapped bundle route length and inter-signal skew   | LINT-095 audits project-authored exact endpoints, bundle membership, and active native DRC length/skew rules; LINT-022 covers differential-pair constraint coverage.                                                                     | Keep using native DRC for route measurement and LINT-095 for authored intent and rule coverage. Reconsider a separate geometry engine only if it adds independently confirmed coverage or materially clearer localization beyond those checks.                                                                                                                                                                                                                                                                     |
 | Thermal-via coverage for mapped dissipating parts  | LINT-071 compares exact-part dissipated power with an authored derated power limit; it does not estimate package temperature or via benefit.                                                                                             | Keep deferred until a project-authored thermal requirement identifies the exact package, heat path, layers, connected via population, copper stack, and boundary basis. Test any narrow geometry screen against pad-connected, unconnected, wrong-plane, DNP, and datasheet-supported alternatives. Stop if via count or density is presented as thermal adequacy without an independently reviewed model.                                                                                                         |

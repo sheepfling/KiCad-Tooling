@@ -171,6 +171,7 @@ class FakeFootprint:
         reference: str = "U1",
         footprint: str = "RF_Module:Module_Antenna",
         dnp: bool = False,
+        value: str = "RF antenna module",
         position: tuple[int, int] = (1_234_000, -5_000),
         angle_degrees: float = 450.0,
         layer: int = 0,
@@ -178,6 +179,7 @@ class FakeFootprint:
         self._reference = reference
         self._footprint = footprint
         self._dnp = dnp
+        self._value = value
         self._position = FakePoint(*position)
         self._angle_degrees = angle_degrees
         self._layer = layer
@@ -190,6 +192,9 @@ class FakeFootprint:
 
     def IsDNP(self) -> bool:
         return self._dnp
+
+    def GetValue(self) -> str:
+        return self._value
 
     def GetPosition(self) -> FakePoint:
         return self._position
@@ -305,6 +310,7 @@ def test_footprint_placement_observation_records_canonical_source_transform() ->
         "reference": "U1",
         "footprint": "RF_Module:Module_Antenna",
         "dnp": False,
+        "value": "RF antenna module",
         "position_nm": [1_234_000, -5_000],
         "orientation_microdegrees": 90_000_000,
         "side": "F.Cu",

@@ -5,7 +5,8 @@ schematic footprint ID matches the exact ID in native PCB placement evidence.
 They do not model a real package or assert pad-geometry equivalence.
 
 - `control.kicad_sch` assigns `Synthetic:Probe_Module` to U1, matching the
-  footprint ID in `control.kicad_pcb`.
+  footprint ID in `control.kicad_pcb`. Its native value field also matches the
+  schematic's `Synthetic identity probe` value.
 - `fault.kicad_sch` assigns `Synthetic:Wrong_Footprint` to U1 while leaving the
   board unchanged. The expected result is one review candidate for U1.
 - The board also contains U2 and U3, which are intentionally board-only controls
@@ -20,11 +21,16 @@ digests on digest-pinned KiCad 10.0.0 and 10.0.5. It repeats both schematic
 exports and board snapshots to verify stable evidence. All content is synthetic
 and included solely for Tooling regression tests.
 
+- `value-fault.kicad_pcb` changes only U1's board value to `Stale synthetic
+  board value`. Compared with the control schematic, it must produce one
+  fitted value-field review; the control PCB must stay quiet.
+
 Pinned source hashes:
 
 - `fault.kicad_sch`: `3a66be0b39af5f2a065de3b10e9476a53838042bc4e87f8618e711b31ad59e2b`
 - `control.kicad_sch`: `3acf612f93c0f2f48c6b469928ab9366fc2374644966b9bf07087c8a4cd808f8`
-- `control.kicad_pcb`: `500ba5a3fbaa36cec9d57cdd6a74f9b65cd03517ed37f11cd960de425c1d5522`
+- `control.kicad_pcb`: `23a19d40848ad3b6136f163ccf3ab64c53fef9185d696cde96323b66415d8913`
+- `value-fault.kicad_pcb`: `08a35eee9763c93501167098fcdf8b7484c9c539f5d0c649b58b64fb99feb1c0`
 - `population-schematic-dnp.kicad_sch`
   SHA-256: `7f185318b3941f10901f8e27bc29b13030ca771e4ff7d3418c09e18a6428c269`
 - `population-board-dnp.kicad_pcb`

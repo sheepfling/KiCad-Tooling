@@ -79,12 +79,23 @@ def scan_pcb_geometry(
     rf_antenna_map: PcbRfModuleAntennaMap | None = policy.pcb_rf_module_antenna_map
     overrides = {item.rule_id: item for item in policy.rules}
     inventory_override = overrides.get("pcb.schematic_component_inventory")
-    inventory_mode = "review" if inventory_override is None else inventory_override.mode
+    inventory_mode: PcbRuleMode = (
+        "review" if inventory_override is None else inventory_override.mode
+    )
     population_override = overrides.get("pcb.schematic_pcb_dnp_mismatch")
-    population_mode = "review" if population_override is None else population_override.mode
-    inventory_scan_mode = inventory_mode if inventory_mode != "off" else population_mode
+    population_mode: PcbRuleMode = (
+        "review" if population_override is None else population_override.mode
+    )
+    value_override = overrides.get("pcb.schematic_pcb_value_mismatch")
+    value_mode: PcbRuleMode = "review" if value_override is None else value_override.mode
+    active_inventory_modes: tuple[PcbRuleMode, ...] = tuple(
+        mode for mode in (inventory_mode, population_mode, value_mode) if mode != "off"
+    )
+    inventory_scan_mode: PcbRuleMode = (
+        active_inventory_modes[0] if active_inventory_modes else "off"
+    )
     inventory_required = config.kind is ProjectKind.PCB and (
-        inventory_mode != "off" or population_mode != "off"
+        inventory_mode != "off" or population_mode != "off" or value_mode != "off"
     )
     if (
         decoupling_map is None
@@ -208,7 +219,7 @@ def scan_pcb_geometry(
                 "build/design-lint/pcb-geometry-*"
             )
         if (
-            snapshot.schema_version not in {"10", "11", "12"}
+            snapshot.schema_version not in {"10", "11", "12", "13"}
             or snapshot.board_sha256 != board_hash
             or snapshot.kicad_version != config.kicad_version
             or snapshot.image != pinned_image(config.image)
@@ -253,6 +264,7 @@ def scan_pcb_geometry(
                 snapshot_path=evidence.snapshot_relative_path,
                 snapshot_sha256=evidence.snapshot_sha256,
                 probe_sha256=evidence.probe_sha256,
+                value_mode=value_mode,
             )
         modes: dict[str, PcbRuleMode] = {
             "pcb.decoupling_proximity": decoupling_mode,
@@ -265,6 +277,7 @@ def scan_pcb_geometry(
             "pcb.rf_module_antenna_keepout_coverage": rf_antenna_mode,
             "pcb.schematic_component_inventory": inventory_mode,
             "pcb.schematic_pcb_dnp_mismatch": population_mode,
+            "pcb.schematic_pcb_value_mismatch": value_mode,
         }
         (
             decoupling_report,
