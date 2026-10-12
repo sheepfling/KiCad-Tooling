@@ -5545,8 +5545,11 @@ is not a reason by itself to expand its scope or change its default policy.
   valid control at `PASS`, and matched across repeat exports (2 passed).
   GitHub run `38190696668` for `v0.5.0rc109` passed its unit gate and all three
   preview jobs; the prerelease gate failed in `ruff-format` on moved parity
-  suites. The current test-organization changes include the formatter output;
-  a fresh tagged run is required to record hosted acceptance.
+  suites. Run `38191557064` for `v0.5.0rc110` passed its unit gate, Ruff
+  formatting, Ruff, Pyright, Windows typing, and all preview jobs, then failed
+  Markdown lint on one line in a new synthetic-fixture README. The README line
+  is wrapped in the follow-up; a fresh tagged run is required to record hosted
+  acceptance.
 
 ### P2 — PCB geometry and schematic review assistance
 
