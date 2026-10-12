@@ -133,7 +133,11 @@ def test_generic_power_input_peer_assignment_matches_between_cli_and_mcp(
     symbols = {"U1": "Synthetic:GenericPowerInputPeer", "U2": "Synthetic:GenericPowerInputPeer"}
     pin_functions = {reference: ("1", "2") for reference in symbols}
     pin_types = {reference: ("power_in", "passive") for reference in symbols}
-    for supplies, expected in ((("+5V", "+3V3"), True), (("+3V3", "+3V3"), False)):
+    for supplies, expected, expected_coverage in (
+        (("+5V", "+3V3"), True, "EVALUATED"),
+        (("+3V3", "+3V3"), False, "EVALUATED"),
+        (("+5V", None), False, "NO_COMPLETE_ASSIGNMENTS"),
+    ):
         observed = peer_power_netlist(
             symbols=symbols,
             supply_nets=supplies,
@@ -153,4 +157,12 @@ def test_generic_power_input_peer_assignment_matches_between_cli_and_mcp(
             if item.rule_id == "component.peer_power_input_assignment_divergence"
         ]
         assert bool(findings) is expected
+        coverage = next(
+            item
+            for item in report.component_peer_pin_coverage
+            if item.rule_id == "component.peer_power_input_assignment_divergence"
+        )
+        assert coverage.status == expected_coverage
+        if supplies[1] is None:
+            assert coverage.open_assignment_pin_group_count == 1
         assert report.status == "REVIEW", report.model_dump_json(indent=2)

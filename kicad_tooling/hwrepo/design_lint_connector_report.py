@@ -130,6 +130,7 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
                 f"ambiguous/unambiguous assignments: "
                 f"{coverage.ambiguous_assignment_pin_group_count}/"
                 f"{coverage.unambiguous_assignment_pin_group_count}; "
+                f"open assignments: {coverage.open_assignment_pin_group_count}; "
                 f"candidates/deduplicated/findings/suppressed: "
                 f"{coverage.candidate_group_count}/"
                 f"{coverage.deduplicated_candidate_group_count}/"

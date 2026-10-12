@@ -17,6 +17,7 @@ class ComponentPeerPinRuleCoverage(StrictModel):
         "component.peer_signal_output_unconnected",
         "component.peer_signal_input_unconnected",
         "component.peer_bidirectional_pin_unconnected",
+        "component.peer_power_input_assignment_divergence",
         "component.generic_peer_pin_mixed_open",
         "component.generic_peer_pin_all_open",
         "component.generic_peer_pin_assignment_outlier",
@@ -28,6 +29,7 @@ class ComponentPeerPinRuleCoverage(StrictModel):
         "NO_MATCHING_PIN_TYPES",
         "NO_COMPATIBLE_PIN_FUNCTIONS",
         "NO_UNAMBIGUOUS_ASSIGNMENTS",
+        "NO_COMPLETE_ASSIGNMENTS",
         "PARTIALLY_EVALUATED",
         "EVALUATED",
     ]
@@ -46,6 +48,7 @@ class ComponentPeerPinRuleCoverage(StrictModel):
     compatible_function_pin_group_count: NonNegativeCount
     ambiguous_assignment_pin_group_count: NonNegativeCount
     unambiguous_assignment_pin_group_count: NonNegativeCount
+    open_assignment_pin_group_count: NonNegativeCount = 0
     candidate_group_count: NonNegativeCount
     deduplicated_candidate_group_count: NonNegativeCount
     finding_count: NonNegativeCount
@@ -107,6 +110,8 @@ class ComponentPeerPinRuleCoverage(StrictModel):
             != self.compatible_function_pin_group_count
         ):
             raise ValueError("Compatible peer pin groups must have unambiguous or ambiguous nets")
+        if self.open_assignment_pin_group_count > self.unambiguous_assignment_pin_group_count:
+            raise ValueError("Open peer assignments require unambiguous assignments")
         if self.candidate_group_count > self.unambiguous_assignment_pin_group_count:
             raise ValueError("Peer-pin candidates require unambiguous assignments")
         if self.deduplicated_candidate_group_count > self.unambiguous_assignment_pin_group_count:
@@ -127,10 +132,20 @@ class ComponentPeerPinRuleCoverage(StrictModel):
             if self.compatible_function_pin_group_count == 0
             else "NO_UNAMBIGUOUS_ASSIGNMENTS"
             if self.unambiguous_assignment_pin_group_count == 0
+            else "NO_COMPLETE_ASSIGNMENTS"
+            if (
+                self.rule_id == "component.peer_power_input_assignment_divergence"
+                and self.open_assignment_pin_group_count
+                == self.unambiguous_assignment_pin_group_count
+            )
             else "PARTIALLY_EVALUATED"
             if (
                 self.incomplete_pin_inventory_group_count > 0
                 or self.part_id_incomplete_component_identity_group_count > 0
+                or (
+                    self.rule_id == "component.peer_power_input_assignment_divergence"
+                    and self.open_assignment_pin_group_count > 0
+                )
             )
             else "EVALUATED"
         )

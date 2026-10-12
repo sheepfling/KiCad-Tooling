@@ -363,6 +363,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_component_peer_power_input_divergence.test_generic_peer_power_input_findings_are_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic",
         "tests.test_component_peer_power_input_native_fixture_lane.test_generic_peer_power_input_fixture_sources_match_reviewed_digests",
         "tests.test_component_peer_power_input_native_fixture_lane.test_native_generic_peer_power_input_fault_and_control_are_repeatable"
       ],
@@ -370,12 +371,12 @@
         "KICAD_RUN_NATIVE_COMPONENT_PEER_POWER_INPUT_FIXTURES"
       ],
       "implementation_refs": [
-        "kicad_tooling/hwrepo/component_power_input_peer_findings.py#component_peer_power_input_assignment_divergences",
+        "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_power_input_assignments",
         "kicad_tooling/hwrepo/design_lint_component_peer_candidates.py#component_peer_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "components",
-      "implementation_owner": "kicad_tooling/hwrepo/component_power_input_peer_findings.py#component_peer_power_input_assignment_divergences"
+      "implementation_owner": "kicad_tooling/hwrepo/component_power_input_peer_scan.py#scan_component_peer_power_input_assignments"
     },
     {
       "rule_id": "component.peer_power_output_unconnected",

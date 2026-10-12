@@ -49,6 +49,7 @@ I2C_PEER_REFERENCE_MODELS = {
 }
 PEER_COVERAGE_SERVICES = (
     "component_peer_pin_coverage.py",
+    "component_power_input_peer_scan.py",
     "digital_peer_voltage_coverage.py",
     "i2c_peer_reference_coverage.py",
     "serial_peer_reference_coverage.py",

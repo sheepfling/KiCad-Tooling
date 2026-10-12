@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from kicad_tooling.hwrepo.design_lint_connector_report import connector_peer_report_lines
 from kicad_tooling.hwrepo.models import (
     DesignLintIgnore,
     DesignLintPolicy,
@@ -34,28 +35,71 @@ def test_generic_peer_power_input_split_is_reviewed_with_bounded_controls() -> N
     assert finding.evidence["U1.1"] == ("SYNTHETIC_RAIL_A",)
     assert finding.evidence["U2.1"] == ("SYNTHETIC_RAIL_B",)
     assert "do not prove that the rails must be common" in finding.message
+    coverage = next(
+        item
+        for item in report.component_peer_pin_coverage
+        if item.rule_id == GENERIC_PEER_POWER_INPUT_RULE_ID
+    )
+    assert coverage.status == "EVALUATED"
+    assert coverage.exact_symbol_peer_group_count == 1
+    assert coverage.complete_pin_inventory_group_count == 1
+    assert coverage.matching_electrical_type_pin_group_count == 1
+    assert coverage.compatible_function_pin_group_count == 1
+    assert coverage.unambiguous_assignment_pin_group_count == 1
+    assert coverage.open_assignment_pin_group_count == 0
+    assert coverage.candidate_group_count == coverage.finding_count == 1
 
     controls = (
-        generic_peer_power_input_netlist(assignments=("+3V3", "+3V3")),
-        generic_peer_power_input_netlist(dnp=("U2",)),
-        generic_peer_power_input_netlist(references=("J1", "J2")),
-        generic_peer_power_input_netlist(assignments=("+5V", None)),
-        generic_peer_power_input_netlist(incomplete_inventory=("U2",)),
-        generic_peer_power_input_netlist(
-            functions={"U1": "VDD", "U2": "VDD"},
+        (generic_peer_power_input_netlist(assignments=("+3V3", "+3V3")), "EVALUATED"),
+        (generic_peer_power_input_netlist(dnp=("U2",)), "NO_COMPARABLE_PEERS"),
+        (generic_peer_power_input_netlist(references=("J1", "J2")), "NO_COMPARABLE_PEERS"),
+        (generic_peer_power_input_netlist(assignments=("+5V", None)), "NO_COMPLETE_ASSIGNMENTS"),
+        (
+            generic_peer_power_input_netlist(incomplete_inventory=("U2",)),
+            "INCOMPLETE_PIN_INVENTORY",
         ),
-        generic_peer_power_input_netlist(electrical_types={"U2": "input"}),
-        generic_peer_power_input_netlist(
-            symbols={
-                "U1": "Synthetic:GenericPowerInputPeer",
-                "U2": "Synthetic:DifferentPowerInputPeer",
-            }
+        (
+            generic_peer_power_input_netlist(
+                functions={"U1": "VDD", "U2": "VDD"},
+            ),
+            "NO_COMPATIBLE_PIN_FUNCTIONS",
+        ),
+        (
+            generic_peer_power_input_netlist(electrical_types={"U2": "input"}),
+            "NO_MATCHING_PIN_TYPES",
+        ),
+        (
+            generic_peer_power_input_netlist(
+                symbols={
+                    "U1": "Synthetic:GenericPowerInputPeer",
+                    "U2": "Synthetic:DifferentPowerInputPeer",
+                }
+            ),
+            "NO_COMPARABLE_PEERS",
         ),
     )
-    for control in controls:
+    for control, expected_status in controls:
+        control_report = lint_report(control)
         assert GENERIC_PEER_POWER_INPUT_RULE_ID not in {
-            item.rule_id for item in lint_report(control).findings
+            item.rule_id for item in control_report.findings
         }
+        coverage = next(
+            item
+            for item in control_report.component_peer_pin_coverage
+            if item.rule_id == GENERIC_PEER_POWER_INPUT_RULE_ID
+        )
+        assert coverage.status == expected_status
+        assert coverage.finding_count == 0
+        if expected_status == "NO_COMPLETE_ASSIGNMENTS":
+            assert coverage.open_assignment_pin_group_count == 1
+            assert coverage.unambiguous_assignment_pin_group_count == 1
+            assert any(
+                GENERIC_PEER_POWER_INPUT_RULE_ID in line and "open assignments: 1" in line
+                for line in connector_peer_report_lines(control_report)
+            )
+        if expected_status == "INCOMPLETE_PIN_INVENTORY":
+            assert coverage.incomplete_pin_inventory_group_count == 1
+            assert set(coverage.incomplete_pin_inventory_references) == {"U1", "U2"}
 
 
 def test_generic_peer_power_input_rule_obeys_override_and_ignore_lifecycle() -> None:
@@ -122,6 +166,11 @@ def test_generic_peer_power_input_findings_are_stable_under_mapping_order() -> N
     source = generic_peer_power_input_netlist(
         references=("U3", "U1", "U2"),
         assignments=("+5V", "+3V3", "+5V"),
+        symbols={
+            "U1": "Synthetic:GenericPowerInputPeer",
+            "U2": "synthetic:genericpowerinputpeer",
+            "U3": "Synthetic:GenericPowerInputPeer",
+        },
     )
     reordered = source.model_copy(
         update={

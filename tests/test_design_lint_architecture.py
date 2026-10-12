@@ -43,7 +43,7 @@ PIN_ANALYSIS_MODULES = (
     "connector_pins.py",
     "connector_return_pins.py",
     "component_peer_pin_findings.py",
-    "component_power_input_peer_findings.py",
+    "component_power_input_peer_scan.py",
     "component_peer_pin_all_open.py",
     "component_peer_pin_mixed_open.py",
     "component_peer_pin_identity.py",

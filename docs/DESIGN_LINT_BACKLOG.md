@@ -1917,8 +1917,8 @@ is not a reason by itself to expand its scope or change its default policy.
   netlist digest. It distinguishes candidates that are all DNP, no exact-symbol
   peers, no comparable pins, incomplete native pin inventories, and evaluated
   groups. A missing, empty, or inconsistent same-symbol inventory raises
-  `REVIEW` and identifies its references. The four non-connector exact-symbol
-  component peer-pin rules now report `component_peer_pin_coverage` entries with
+  `REVIEW` and identifies its references. The non-connector component peer-pin
+  rules now report `component_peer_pin_coverage` entries with
   source-bound counts for exact-symbol groups and cross-symbol shared-`PART_ID`
   candidates, including aliases excluded because their values or footprints do
   not agree. The report names references in those identity-incomplete groups,
@@ -1935,6 +1935,20 @@ is not a reason by itself to expand its scope or change its default policy.
   coverage. A synthetic CLI/MCP case confirms a mismatched shared-`PART_ID`
   value is reported as incomplete identity coverage without creating an
   electrical finding or changing `PASS` status.
+- **LINT-117 coverage follow-up (2026-10-12):** The generic power-input peer
+  comparison now shares the source-bound component-peer scan and coverage
+  report. Its entry explains absent comparable peers, incomplete native pin
+  inventories, unsupported power-input/function metadata, ambiguous or open
+  assignments, and completed comparisons. Open pins remain outside the
+  divergence predicate; coverage makes that exclusion visible without turning
+  an open pin into an inferred defect. Synthetic fault, common-rail, open-pin,
+  DNP, connector, identity, inventory, type, and function controls verify the
+  states, with CLI/MCP report parity. The focused rule/area regression slice
+  passed 55 tests. Exact KiCad 10.0.0/10.0.5 native fault/control runs passed
+  eight selected tests. The local package smoke passed scoped pytest, Ruff,
+  host and Windows Pyright, rumdl, wheel and source builds, source-wheel
+  comparison, and installed-wheel origin/version checks; it skipped mdrepo and
+  the external-template rehearsal, which remain in hosted tagged acceptance.
 - **Current working-tree verification (2026-10-09):** The full pytest stage
   passed on the dirty checkout: 2,372 tests passed, 86 environment-gated tests
   skipped, and 1,880 subtests passed. Ruff formatting and lint, host and Windows

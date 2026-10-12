@@ -11,6 +11,7 @@ from .component_peer_pin_scan import (
     ComponentPeerPinAssignmentScans,
     scan_component_peer_pin_assignments,
 )
+from .component_power_input_peer_scan import scan_component_peer_power_input_assignments
 from .models import NetlistContract
 
 
@@ -63,5 +64,9 @@ def component_peer_pin_assignment_scans(
             minimum_peer_count=3,
             minimum_assigned_peer_count=2,
             require_assigned_peers_on_same_net=True,
+        ),
+        power_input_assignment_divergence=scan_component_peer_power_input_assignments(
+            observed,
+            declared_references,
         ),
     )

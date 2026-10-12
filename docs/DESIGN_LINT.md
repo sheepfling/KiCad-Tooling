@@ -260,14 +260,16 @@ The first rules are:
   [synthetic fixture record](../tests/fixtures/design_lint/generic-component-peer-pin-assignment-outlier/README.md)
   documents the digest-pinned fault and control. The native netlist does not establish PCB copper
   continuity, off-board wiring, or physical population.
-- The report gives each of these seven rules a bounded `component_peer_pin_coverage` entry
+- The report gives each of these eight rules a bounded `component_peer_pin_coverage` entry
   tied to the native netlist digest. It counts exact-symbol groups, cross-symbol shared-`PART_ID`
   candidates and eligible groups, shared-identity groups excluded by value or footprint mismatch,
   inventory completeness, comparable and type/function-compatible pins, ambiguous assignments,
-  deduplicated candidates, findings, and suppressed candidates. The report names references in
-  identity-incomplete groups and distinguishes that state from having no comparable peers. Status
-  explains why a rule could not evaluate a group; it does not claim that every component or
-  interface was recognized, or that matching peer pins must share a net.
+  open assignments, deduplicated candidates, findings, and suppressed candidates. The report names
+  references in identity-incomplete groups and distinguishes that state from having no comparable
+  peers. For `component.peer_power_input_assignment_divergence`, status distinguishes no eligible
+  peers, incomplete inventories, unsupported pin types or functions, open assignments, and a
+  completed comparison. Status explains why a rule could not evaluate a group; it does not claim
+  that every component or interface was recognized, or that matching peer pins must share a net.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
   resolve to the same schematic net. A custom symbol is included only when an

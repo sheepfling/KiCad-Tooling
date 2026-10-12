@@ -76,6 +76,7 @@ class PeerPinAssignmentScan:
     compatible_function_pin_group_count: int
     ambiguous_assignment_pin_group_count: int
     unambiguous_assignment_pin_group_count: int
+    open_assignment_pin_group_count: int
     deduplicated_candidate_group_count: int
     outliers: tuple[PeerPinAssignmentOutlier, ...]
 
@@ -89,6 +90,7 @@ class ComponentPeerPinAssignmentScans:
     generic_assignment_outlier: PeerPinAssignmentScan
     generic_partial_open: PeerPinAssignmentScan
     generic_all_open: PeerPinAssignmentScan
+    power_input_assignment_divergence: PeerPinAssignmentScan
 
 
 def scan_component_peer_pin_assignments(
@@ -214,6 +216,7 @@ def scan_component_peer_pin_assignments(
     compatible_function_pin_group_count = 0
     ambiguous_assignment_pin_group_count = 0
     unambiguous_assignment_pin_group_count = 0
+    open_assignment_pin_group_count = 0
     deduplicated_candidate_group_count = 0
     candidate_keys: set[tuple[str, tuple[str, ...], tuple[tuple[str, tuple[str, ...]], ...]]] = (
         set()
@@ -276,6 +279,8 @@ def scan_component_peer_pin_assignments(
                 continue
             unambiguous_assignment_pin_group_count += 1
             open_pins = tuple(pin for pin, nets in assignments.items() if not nets)
+            if open_pins:
+                open_assignment_pin_group_count += 1
             assigned_pins = tuple(pin for pin, nets in assignments.items() if nets)
             all_open = bool(open_pins) and not assigned_pins
             majority_net: str | None = None
@@ -402,6 +407,7 @@ def scan_component_peer_pin_assignments(
         compatible_function_pin_group_count=compatible_function_pin_group_count,
         ambiguous_assignment_pin_group_count=ambiguous_assignment_pin_group_count,
         unambiguous_assignment_pin_group_count=unambiguous_assignment_pin_group_count,
+        open_assignment_pin_group_count=open_assignment_pin_group_count,
         deduplicated_candidate_group_count=deduplicated_candidate_group_count,
         outliers=outliers,
     )

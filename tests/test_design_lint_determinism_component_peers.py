@@ -148,6 +148,11 @@ def test_component_peer_reports_remain_deterministic() -> None:
     assert peer_power_output_incomplete["status"] == "PASS"
     assert peer_power_output_incomplete["findings"] == []
     for coverage in peer_power_output_incomplete["component_peer_pin_coverage"]:
+        if coverage["rule_id"] == "component.peer_power_input_assignment_divergence":
+            assert coverage["status"] == "NO_COMPARABLE_PEERS"
+            assert coverage["exact_symbol_peer_group_count"] == 0
+            assert coverage["part_id_candidate_group_count"] == 0
+            continue
         assert coverage["status"] == "INCOMPLETE_COMPONENT_IDENTITY"
         assert coverage["netlist_sha256"] == peer_power_output_incomplete["netlist_sha256"]
         assert coverage["part_id_candidate_group_count"] == 1

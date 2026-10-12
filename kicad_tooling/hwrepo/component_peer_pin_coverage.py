@@ -29,6 +29,10 @@ def component_peer_pin_rule_coverage(
             "component.generic_peer_pin_assignment_outlier",
             scans.generic_assignment_outlier,
         ),
+        (
+            "component.peer_power_input_assignment_divergence",
+            scans.power_input_assignment_divergence,
+        ),
         ("component.generic_peer_pin_mixed_open", scans.generic_partial_open),
         ("component.generic_peer_pin_all_open", scans.generic_all_open),
     )
@@ -50,8 +54,17 @@ def component_peer_pin_rule_coverage(
         elif scan.unambiguous_assignment_pin_group_count == 0:
             status = "NO_UNAMBIGUOUS_ASSIGNMENTS"
         elif (
+            rule_id == "component.peer_power_input_assignment_divergence"
+            and scan.open_assignment_pin_group_count == scan.unambiguous_assignment_pin_group_count
+        ):
+            status = "NO_COMPLETE_ASSIGNMENTS"
+        elif (
             scan.incomplete_pin_inventory_group_count > 0
             or scan.part_id_incomplete_component_identity_group_count > 0
+            or (
+                rule_id == "component.peer_power_input_assignment_divergence"
+                and scan.open_assignment_pin_group_count > 0
+            )
         ):
             status = "PARTIALLY_EVALUATED"
         else:
@@ -86,6 +99,7 @@ def component_peer_pin_rule_coverage(
                 unambiguous_assignment_pin_group_count=(
                     scan.unambiguous_assignment_pin_group_count
                 ),
+                open_assignment_pin_group_count=scan.open_assignment_pin_group_count,
                 candidate_group_count=candidate_count,
                 deduplicated_candidate_group_count=scan.deduplicated_candidate_group_count,
                 finding_count=finding_count,
