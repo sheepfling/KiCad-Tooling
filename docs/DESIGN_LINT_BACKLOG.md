@@ -3663,9 +3663,14 @@ is not a reason by itself to expand its scope or change its default policy.
   open while its SCL channel still passes. The native test is indexed as both
   fault and valid control for the rule and requires
   `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES`; a synthetic orchestration regression
-  checks the same integration without invoking KiCad. Exact-version hosted
-  acceptance is pending for this change. The fixture proves contract-to-lint
-  behavior on native-derived connectivity, not array internals or physical
+  checks the same integration without invoking KiCad. The focused tagged
+  acceptance `v0.5.0rc189` passed GitHub Actions run `38300304999`; it selected
+  this rule and enabled the native fixture switch. Its exact-version native
+  fixture covers KiCad 10.0.0 and 10.0.5, and the hosted gate also passed the
+  installed-wheel check against a separate public template checkout and the
+  Ubuntu, macOS, and Windows preview jobs. The package-release job was skipped
+  for the prerelease tag. This validates contract-to-lint behavior on
+  native-derived synthetic connectivity, not array internals or physical
   resistor behavior.
 - **Remaining:** Rail ceiling and pin-voltage limits remain reviewed inputs;
   the checker does not verify cited source documents or whether the authored
