@@ -699,7 +699,12 @@ and optional ecosystem adapters are `P3`.
   also pass. That suite caught a lingering internal import of
   `PcbConnectivitySnapshot` through the compatibility registry, so the native
   fixture adapter now imports it from `pcb_connectivity_snapshot`. No lint
-  predicate or policy changed.
+  predicate or policy changed. On 2026-10-12, crystal-network requirements and
+  coverage records moved into `crystal_network_models.py`. Internal services
+  and synthetic regressions now import that owner directly, while
+  `hwrepo/models.py` retains identity-compatible exports. Architecture and
+  wheel-asset tests guard the boundary; the shared registry ceiling dropped
+  from 4,554 to 4,398 lines. The extraction changes no lint behavior.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

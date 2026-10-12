@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_crystal_candidates import crystal_network_candidates
 from .design_lint_power_path_candidates import power_path_candidates
 from .design_lint_power_sequence_candidates import power_sequence_candidates
@@ -12,7 +13,6 @@ from .design_lint_types import Candidate
 from .design_lint_usb_data_path_candidates import usb_data_path_candidates
 from .external_protection_models import ExternalProtectionCoverageReport
 from .models import (
-    CrystalNetworkCoverageReport,
     NetlistContract,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,

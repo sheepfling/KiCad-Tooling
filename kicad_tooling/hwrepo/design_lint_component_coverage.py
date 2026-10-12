@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .connector_return_distribution import scan_connector_return_distribution_map
+from .crystal_network_models import CrystalNetworkCoverageReport, CrystalNetworkMap
 from .crystal_networks import scan_crystal_network_map
 from .i2c_address_models import (
     I2cAddressCoverageReport,
@@ -15,8 +16,6 @@ from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
     ConnectorReturnDistributionMap,
-    CrystalNetworkCoverageReport,
-    CrystalNetworkMap,
     DesignLintPolicy,
     Digest,
     NetlistContract,

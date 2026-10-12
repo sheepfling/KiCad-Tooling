@@ -7,14 +7,16 @@ from decimal import localcontext
 
 import pytest
 
+from kicad_tooling.hwrepo.crystal_network_models import (
+    CrystalLoadCapRequirement,
+    CrystalNetworkMap,
+    CrystalNetworkRequirement,
+)
 from kicad_tooling.hwrepo.crystal_networks import parse_capacitance_pf
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
-    CrystalLoadCapRequirement,
-    CrystalNetworkMap,
-    CrystalNetworkRequirement,
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,

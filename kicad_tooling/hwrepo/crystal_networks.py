@@ -7,13 +7,13 @@ from collections.abc import Mapping
 from decimal import Decimal, DecimalException, InvalidOperation, localcontext
 from typing import TypeVar
 
-from .models import (
+from .crystal_network_models import (
     CrystalNetworkCoverageEntry,
     CrystalNetworkCoverageReport,
     CrystalNetworkMap,
     CrystalNetworkRequirement,
-    NetlistContract,
 )
+from .models import NetlistContract
 
 _CAPACITANCE_VALUE = re.compile(
     r"^\s*(?P<number>(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))\s*"

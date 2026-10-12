@@ -13,6 +13,7 @@ from .component_peer_pin_evaluation import component_peer_pin_assignment_scans
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .component_role_models import ComponentRoleMap
 from .control_input_models import ControlInputBiasHeuristicCoverage
+from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_candidates import bus_candidates
 from .design_lint_catalog import rule_catalog
 from .design_lint_component_candidates import component_candidates
@@ -45,7 +46,6 @@ from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
-    CrystalNetworkCoverageReport,
     NetlistContract,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,

@@ -14,6 +14,7 @@ from .component_peer_pin_models import ComponentPeerPinRuleCoverage
 from .component_roles import ComponentRoleResolution
 from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .control_input_models import ControlInputBiasHeuristicCoverage
+from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
@@ -32,7 +33,6 @@ from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
     ContractCoachReport,
-    CrystalNetworkCoverageReport,
     DesignLintFinding,
     DesignLintIgnore,
     DesignLintMappedCheckRun,

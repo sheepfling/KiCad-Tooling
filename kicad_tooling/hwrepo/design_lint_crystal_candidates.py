@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_types import Candidate
-from .models import CrystalNetworkCoverageReport
 
 
 def crystal_network_candidates(
