@@ -1920,10 +1920,14 @@ is not a reason by itself to expand its scope or change its default policy.
   rule's existing native test is now filtered to its own four cases. Direct
   pytest rule selection passes for both gates (`7 passed, 2 native skips` for
   fuse and `9 passed, 2 native skips` for passives; over 3,000 unrelated tests
-  deselected). The local Docker socket denied access, so the changed exact
-  KiCad lane still needs its hosted tagged run. Diode, crystal, ferrite, and
-  switch remain to be registered as separately selectable native gates. The
-  full package lane continues to run all 16 cases.
+  deselected). Tagged run `38292257528` for `v0.5.0rc177` passed the focused
+  fuse gate, its installed-wheel check against the external template, and all
+  three portability previews. The tag enabled the native switch and selected
+  the four fuse/polyfuse fault/control sources on the exact pinned versions.
+  Its full `package` job was skipped by RC policy, so it is not full package
+  acceptance. Diode, crystal, ferrite, and switch remain to be registered as
+  separately selectable native gates. The full package lane continues to run
+  all 16 cases.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
@@ -4147,10 +4151,13 @@ is not a reason by itself to expand its scope or change its default policy.
   now points to a native test that selects only the fuse/polyfuse same-net
   faults and distinct-net controls. The local rule selector passed seven
   tests with two exact-native cases skipped because Docker socket access was
-  denied; hosted exact-version results remain pending.
-- **Remaining:** Complete the tagged exact-native run on KiCad 10.0.0 and
-  10.0.5, then complete package acceptance. The focused tagged lint gate does
-  not replace that acceptance.
+  denied. Tagged run `38292257528` on `v0.5.0rc177` then passed the focused
+  gate with the native fixture switch enabled, covering the fuse/polyfuse
+  faults and distinct-net controls on KiCad 10.0.0 and 10.0.5. The separate
+  installed-wheel check against the external template and all three portability
+  previews also passed; the full `package` job was skipped by RC policy.
+- **Remaining:** Complete full package acceptance. The focused tagged lint
+  gate does not replace that acceptance.
 
 #### LINT-085 — Fitted two-pin ferrite bead bypassed by one net
 
@@ -4205,8 +4212,10 @@ is not a reason by itself to expand its scope or change its default policy.
   full `package` job was skipped. The exact-version ferrite native cases have
   local pinned-version evidence; this tagged run supplies no hosted full-package
   result for them.
-- **Remaining:** Run the complete package acceptance with the ferrite native
-  fixtures enabled on the pinned KiCad 10.0.0 and 10.0.5 images.
+- **Remaining:** Register a ferrite-specific native test and fixture switch
+  requirement so a rule-scoped tag selects its same-net fault and distinct-net
+  control on the pinned KiCad 10.0.0 and 10.0.5 images. Then complete full
+  package acceptance; RC177 selected the fuse rule and skipped the package job.
 - **Cohort boundary:** This is a first-party deterministic extension prompted
   by the inspected series-path concept. No third-party source, board, fixture,
   or install workflow was copied.
