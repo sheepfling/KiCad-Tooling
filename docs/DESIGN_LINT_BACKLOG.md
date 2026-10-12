@@ -6582,13 +6582,18 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Evidence:** Synthetic fault/control tests cover the mixed assignment,
   common, all-open and split-net controls, identity and metadata guards,
   generic and recognized-role exclusions, DNP and ambiguous assignments,
-  stable output, policy and exact-ignore lifecycle, and CLI/MCP parity. A
-  digest-pinned tooling-owned fault/control pair uses native `power_out` pins
-  and will run in exact KiCad 10.0.0 and 10.0.5 acceptance. Hosted results are
-  pending. The first tagged attempt (`v0.5.0rc203`, GitHub Actions run
-  `38321543865`) passed the scoped unit stage but stopped at `ruff-format` on
-  one wrapped comparison in the native fixture validator. The formatting fix
-  is in `v0.5.0rc204`; its hosted retry is pending.
+  stable output, policy and exact-ignore lifecycle, and CLI/MCP parity. The
+  digest-pinned tooling-owned fault/control pair uses native `power_out` pins.
+  Its provenance and source hashes are recorded in the
+  [fixture README](../tests/fixtures/design_lint/connector-named-power-output-peer-native/README.md).
+  Exact KiCad 10.0.0 and 10.0.5 native acceptance is pending. The first tagged
+  attempt (`v0.5.0rc203`, GitHub Actions run `38321543865`) passed the scoped
+  unit stage but stopped at
+  `ruff-format` on one wrapped comparison in the native fixture validator.
+  The formatting fix is in `v0.5.0rc204`; its hosted run (`38321806881`) passed
+  the scoped unit, Ruff, Pyright, Windows typing and rumdl stages, then failed
+  because mdrepo could not reach the fixture README from a graph root. This
+  backlog link closes that documentation edge; the hosted retry is pending.
 - **Cohort input:** The rule uses the existing peer-comparison pattern as a
   first-party deterministic heuristic. No cohort code, private project source,
   board, or product expectation was imported.
