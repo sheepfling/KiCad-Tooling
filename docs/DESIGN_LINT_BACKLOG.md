@@ -4031,19 +4031,17 @@ is not a reason by itself to expand its scope or change its default policy.
   and LINT-049 covers a project-mapped USB data topology; neither notices a
   supported USB connector-to-IC path when connector and PHY reference pins use
   separate explicit nets and no matching reference policy has been authored.
-- **Predicate:** USB 2.0 behavior remains unchanged: recognize direct D+/D−,
-  unnumbered UD+/UD−, and numbered hub pairs DPn/DMn or USBnD+/USBnD-; support
-  direct, one fitted complete two-pin `Device:R` per line, one exact mapped
-  inline component, or a direct path with exact mapped protection shunts.
-  Preserve exact pin inventories, net members, and explicit reference-pin
-  evidence. Separately, recognize direct USB SuperSpeed P/N pairs when native
-  endpoint pin metadata is complete, exactly one positive and negative pin
-  exists per family, connector TX connects to PHY RX or connector RX to PHY
-  TX, and each data net contains exactly those two pins. Both endpoint
-  references must be explicit passive/power_in pins on one net per endpoint.
-  A differing pair of reference nets produces a review; a common reference is
-  quiet. SuperSpeed names are the bounded SSTX/SSRX and StdA/StdB aliases
-  documented by the [USB-IF Front-Panel Implementation Document](https://www.usb.org/sites/default/files/USB3p1_Front_Panel_CabCon_Implment_Doc_Rev1p1.pdf).
+- **Predicate:** USB 2.0 behavior remains unchanged: recognize direct D+/D−, unnumbered UD+/UD−, and
+  numbered hub pairs DPn/DMn or USBnD+/USBnD-; support direct, one fitted complete two-pin
+  `Device:R` per line, one exact mapped inline component, or a direct path with exact mapped
+  protection shunts. Preserve exact pin inventories, net members, and explicit reference-pin
+  evidence. Separately, recognize direct USB SuperSpeed P/N pairs when native endpoint pin metadata
+  is complete, exactly one positive and negative pin exists per family, connector TX connects to PHY
+  RX or connector RX to PHY TX, and each data net contains exactly those two pins. Both endpoint
+  references must be explicit passive/power_in pins on one net per endpoint. A differing pair of
+  reference nets produces a review; a common reference is quiet. SuperSpeed names are the bounded
+  SSTX/SSRX and StdA/StdB aliases documented by the
+  [USB-IF Front-Panel Implementation Document](https://www.usb.org/sites/default/files/USB3p1_Front_Panel_CabCon_Implment_Doc_Rev1p1.pdf).
 - **Boundary:** Separate nets may be intentional, joined through a reviewed
   bond, or intentionally isolated. This rule asks for review; it does not say
   grounds must be tied. It does not infer unlisted or multi-hop bond paths,
