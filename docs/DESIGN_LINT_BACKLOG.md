@@ -5548,7 +5548,10 @@ is not a reason by itself to expand its scope or change its default policy.
   suites. Run `38191557064` for `v0.5.0rc110` passed its unit gate, Ruff
   formatting, Ruff, Pyright, Windows typing, and all preview jobs, then failed
   Markdown lint on one line in a new synthetic-fixture README. The README line
-  is wrapped in the follow-up; a fresh tagged run is required to record hosted
+  is wrapped in the follow-up. Run `38191917547` for `v0.5.0rc111` passed its
+  unit gate, Ruff, Pyright, Windows typing, Markdown lint, and all preview jobs;
+  `mdrepo` then flagged four fixture notes as unreachable. `tests/README.md` now
+  links those records. A fresh tagged run is required to record hosted
   acceptance.
 
 ### P2 — PCB geometry and schematic review assistance

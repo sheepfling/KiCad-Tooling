@@ -172,6 +172,15 @@ tests/test_verify_design_lint.py
 Shared synthetic CLI/MCP report and native-snapshot inputs are documented in
 the [parity fixture record](fixtures/design_lint/mcp-parity/README.md).
 
+## Synthetic fixture records
+
+These notes identify the separate fixture inputs used by focused suites:
+
+- [Power-pin net-role native fault and control](fixtures/design_lint/power-pin-net-role-native/README.md)
+- [Multi-bus contract parity netlist](fixtures/electrical/multi-bus-contract-parity/README.md)
+- [Release-contract evidence netlist](fixtures/electrical/release-contract-evidence/README.md)
+- [PCB access probe snapshot](fixtures/pcb-access-probe/README.md)
+
 The first command runs the portable, non-slow design-lint group that is
 self-contained. Tests that need the public template checkout carry the
 `template_checkout` marker and use the separate command after setting
