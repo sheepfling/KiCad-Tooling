@@ -190,6 +190,10 @@ def prepare_connector_return_fixture_context(
         / "connector-named-power-input-peer-native/control.kicad_sch",
         "connector-named-power-input-all-open-fault": fixture_root
         / "connector-named-power-input-peer-native/all-open-fault.kicad_sch",
+        "connector-named-power-output-open-fault": fixture_root
+        / "connector-named-power-output-peer-native/fault.kicad_sch",
+        "connector-named-power-output-open-control": fixture_root
+        / "connector-named-power-output-peer-native/control.kicad_sch",
         "component-peer-assignment-outlier-fault": fixture_root
         / "generic-component-peer-pin-assignment-outlier/fault.kicad_sch",
         "component-peer-assignment-outlier-control": fixture_root
@@ -269,6 +273,8 @@ def prepare_connector_return_fixture_context(
         "connector-named-power-input-open-fault": "48eae0285f76c61668dbe58e33ee00bf9480a3064f5a45c2e122b12d2f91ec7c",
         "connector-named-power-input-open-control": "401fda583c25519540d427b1e24e320e5843c3aab5e99407378497e7dc475717",
         "connector-named-power-input-all-open-fault": "b17443d0e3db891ca9946f032561dabe57d29e17bd9396668b0398a70ac2fdeb",
+        "connector-named-power-output-open-fault": "ef721f666d540f3ce99598fcf9e52a494729e6cdbd56b57798fd260c10bc40be",
+        "connector-named-power-output-open-control": "e5621a2b8f8660db341ffe5a4088c1b802c28d1b624e522434516f0235de7d71",
         "component-peer-assignment-outlier-fault": "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
         "component-peer-assignment-outlier-control": "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
     }

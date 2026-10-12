@@ -3,16 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 
-from .connector_identity import (
-    is_named_supply_function,
-    is_return_function,
-    pin_function_is_generic,
-)
-from .connector_peer_pin_scan import (
-    ConnectorPartIdPeerPinGroup,
-    scan_connector_part_id_peer_pins,
+from .connector_peer_named_power_aliases import (
+    connector_named_power_alias_evidence,
+    connector_named_power_alias_peers,
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
@@ -20,82 +14,6 @@ from .models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.peer_power_input_open_assignment"
 ALL_OPEN_RULE_ID: DesignLintRuleId = "connector.peer_power_input_named_all_open"
-
-
-@dataclass(frozen=True)
-class _NamedPowerInputAliasPeer:
-    group: ConnectorPartIdPeerPinGroup
-    function: str
-    symbols: tuple[str, ...]
-
-
-def _named_power_input_alias_peers(
-    observed: NetlistContract,
-    declared_references: tuple[str, ...],
-    peer_assignment_groups: Mapping[str, tuple[str, str]] | None,
-) -> tuple[_NamedPowerInputAliasPeer, ...]:
-    """Return guarded cross-symbol aliases with one explicit named power input."""
-    symbols_by_reference = {
-        reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
-    }
-    peers: list[_NamedPowerInputAliasPeer] = []
-    scan = scan_connector_part_id_peer_pins(
-        observed,
-        declared_references,
-        peer_assignment_groups,
-    )
-    for group in scan.pin_groups:
-        function = group.pin_function.strip()
-        if (
-            group.pin_electrical_type.strip().casefold() != "power_in"
-            or pin_function_is_generic(function)
-            or is_named_supply_function(function)
-            or is_return_function(function)
-        ):
-            continue
-
-        references = {pin.rsplit(".", 1)[0].casefold() for pin in group.assignments}
-        symbols = tuple(
-            sorted(
-                {
-                    symbols_by_reference[reference]
-                    for reference in references
-                    if reference in symbols_by_reference
-                },
-                key=lambda item: (item.casefold(), item),
-            )
-        )
-        if len({symbol.casefold() for symbol in symbols}) < 2:
-            continue
-        peers.append(_NamedPowerInputAliasPeer(group, function, symbols))
-    return tuple(
-        sorted(
-            peers,
-            key=lambda item: (
-                item.group.part_id.casefold(),
-                item.group.pin_number.casefold(),
-                item.function.casefold(),
-            ),
-        )
-    )
-
-
-def _alias_evidence(peer: _NamedPowerInputAliasPeer) -> dict[str, tuple[str, ...]]:
-    """Build stable source evidence shared by named connector power-input rules."""
-    group = peer.group
-    evidence: dict[str, tuple[str, ...]] = {
-        **group.assignments,
-        "peer_identity_basis": ("part_id",),
-        "peer_identity": (group.part_id,),
-        "peer_symbols": peer.symbols,
-        "pin_number": (group.pin_number,),
-        "pin_function": (peer.function,),
-        "pin_electrical_type": (group.pin_electrical_type,),
-    }
-    if group.peer_assignment_group is not None:
-        evidence["peer_assignment_group"] = (group.peer_assignment_group,)
-        evidence["peer_assignment_basis"] = group.peer_assignment_basis
-    return evidence
 
 
 def connector_named_power_input_open_assignments(
@@ -113,8 +31,9 @@ def connector_named_power_input_open_assignments(
     common net.
     """
     found: list[Candidate] = []
-    for peer in _named_power_input_alias_peers(
+    for peer in connector_named_power_alias_peers(
         observed,
+        "power_in",
         declared_references,
         peer_assignment_groups,
     ):
@@ -126,7 +45,7 @@ def connector_named_power_input_open_assignments(
         if not assigned_pins or not open_pins:
             continue
 
-        evidence = _alias_evidence(peer)
+        evidence = connector_named_power_alias_evidence(peer)
         evidence["assigned_peer_pins"] = assigned_pins
         evidence["open_peer_pins"] = open_pins
 
@@ -166,8 +85,9 @@ def connector_named_power_input_all_open(
 ) -> tuple[Candidate, ...]:
     """Review a named power-input pin left open on every guarded connector alias."""
     found: list[Candidate] = []
-    for peer in _named_power_input_alias_peers(
+    for peer in connector_named_power_alias_peers(
         observed,
+        "power_in",
         declared_references,
         peer_assignment_groups,
     ):
@@ -175,7 +95,7 @@ def connector_named_power_input_all_open(
         if any(group.assignments.values()):
             continue
 
-        evidence = _alias_evidence(peer)
+        evidence = connector_named_power_alias_evidence(peer)
         evidence["open_peer_pins"] = tuple(group.assignments)
         found.append(
             Candidate(

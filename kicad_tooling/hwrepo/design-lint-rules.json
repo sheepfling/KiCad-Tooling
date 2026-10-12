@@ -211,12 +211,12 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_open_on_every_connector_alias_is_reviewed",
-        "tests.test_design_lint_mcp_parity_connector_named_power_input.test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp",
         "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_alias_all_open_rule_keeps_assignment_controls_quiet",
-        "tests.test_design_lint_mcp_parity_connector_named_power_input.test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp",
         "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_hosted_case_validator_accepts_all_three_cases",
         "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
         "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
@@ -231,6 +231,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_peer_pin_scan.py#scan_connector_part_id_peer_pins",
+        "kicad_tooling/hwrepo/connector_peer_named_power_aliases.py#connector_named_power_alias_peers",
         "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_all_open",
         "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -259,13 +260,13 @@
       "fault_fixtures": [
         "tests.test_design_lint_connector_named_power_input_peers.test_open_named_power_input_on_one_connector_symbol_alias_is_reviewed",
         "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_alias_rule_obeys_policy_and_exact_ignore",
-        "tests.test_design_lint_mcp_parity_connector_named_power_input.test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp",
         "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_named_power_input_peers.test_common_and_all_open_named_power_input_aliases_are_controls",
         "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_alias_rule_requires_guarded_identity_and_eligible_metadata",
-        "tests.test_design_lint_mcp_parity_connector_named_power_input.test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp",
         "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
         "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
       ],
@@ -279,12 +280,63 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_peer_pin_scan.py#scan_connector_part_id_peer_pins",
+        "kicad_tooling/hwrepo/connector_peer_named_power_aliases.py#connector_named_power_alias_peers",
         "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_open_assignments",
         "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_open_assignments"
+    },
+    {
+      "rule_id": "connector.peer_power_output_open_assignment",
+      "title": "Named connector power-output pin is open on one PART_ID alias peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances using distinct native symbols that share a nonempty PART_ID, matching nonempty value and footprint, complete identical pin inventories, and matching nonempty function and electrical-type metadata for every pin, compare the same pin number only when its matching function is explicit and unrecognized as a generic, supply, or return role and every alias assigns it the same native power_out type. Emit a REVIEW candidate when at least one peer has exactly one net assignment and another has no assignment, with no peer assigned to multiple nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching PART_ID, value, footprint, pin function, and electrical type make a review candidate only; they do not prove the symbols represent the same physical part or that the contacts should share a net.",
+        "The rule is limited to mixed assigned/open groups across distinct connector symbols. All-open groups, common assignments, split fully assigned groups, ambiguous assignments, generic functions, recognized supplies and returns, DNP peers, and incomplete or mismatched identity, inventory, function, or type metadata do not trigger this rule.",
+        "Exact-symbol peer contacts remain with connector.repeated_pin_function. Connector candidate discovery is bounded to J/P/X/CN references, standard Connector library symbols, and exact project-reviewed interface references; other aliases can evade scanning.",
+        "The finding does not infer intent from net names, join nets, establish PCB copper continuity or off-board wiring, or determine whether a connector contact is required. Project-authored pinout and connectivity requirements remain authoritative."
+      ],
+      "fault_fixtures": [
+        "tests.test_design_lint_connector_named_power_output_peers.test_open_named_power_output_on_one_connector_symbol_alias_is_reviewed",
+        "tests.test_design_lint_connector_named_power_output_peers.test_named_power_output_alias_rule_obeys_policy_and_exact_ignore",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_output_open_assignment_matches_between_cli_and_mcp",
+        "tests.test_connector_named_power_output_native_fixture_lane.test_native_connector_named_power_output_alias_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_design_lint_connector_named_power_output_peers.test_common_all_open_and_split_assigned_output_aliases_are_controls",
+        "tests.test_design_lint_connector_named_power_output_peers.test_named_power_output_alias_rule_requires_guarded_identity_and_metadata",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_output_open_assignment_matches_between_cli_and_mcp",
+        "tests.test_connector_named_power_output_native_fixture_lane.test_named_connector_power_output_hosted_case_validator_accepts_fault_and_control",
+        "tests.test_connector_named_power_output_native_fixture_lane.test_named_connector_power_output_fixture_sources_match_reviewed_digests",
+        "tests.test_connector_named_power_output_native_fixture_lane.test_native_connector_named_power_output_alias_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_design_lint_connector_named_power_output_peers.test_named_power_output_alias_finding_is_stable_under_mapping_order",
+        "tests.test_connector_named_power_output_native_fixture_lane.test_named_connector_power_output_fixture_sources_match_reviewed_digests",
+        "tests.test_connector_named_power_output_native_fixture_lane.test_native_connector_named_power_output_alias_fault_and_control_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_peer_pin_scan.py#scan_connector_part_id_peer_pins",
+        "kicad_tooling/hwrepo/connector_peer_named_power_aliases.py#connector_named_power_alias_peers",
+        "kicad_tooling/hwrepo/connector_peer_power_output.py#connector_named_power_output_open_assignments",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_power_output.py#connector_named_power_output_open_assignments"
     },
     {
       "rule_id": "connector.generic_peer_pin_all_open",

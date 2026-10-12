@@ -12,6 +12,7 @@ import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.component_peer_power_input_support as _component_peer_power_input_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
+import tests.design_lint_fixtures.connector_named_power_aliases as _connector_named_power_aliases
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
@@ -103,6 +104,14 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.connector_capacitor_only_netlist(),
         _power_input_paths.source_path_netlist(wrong_rail=True),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(),
+        _connector_named_power_aliases.named_connector_power_alias_netlist(),
+        _connector_named_power_aliases.named_connector_power_alias_netlist(
+            assignments=(None, None)
+        ),
+        _connector_named_power_aliases.named_connector_power_alias_netlist(
+            target_functions=("BIAS_OUT", "BIAS_OUT"),
+            target_types=("power_out", "power_out"),
+        ),
         _connector_peer_pin_all_open.generic_open_peer_netlist(),
         _component_peer_pin_all_open.generic_component_peer_netlist(),
         _component_peer_pin_all_open.generic_component_peer_mixed_netlist(),

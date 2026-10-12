@@ -1,0 +1,78 @@
+"""Review named power-output assignments across connector symbol aliases."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+
+from .connector_peer_named_power_aliases import (
+    connector_named_power_alias_evidence,
+    connector_named_power_alias_peers,
+)
+from .design_lint_rule_types import DesignLintRuleId
+from .design_lint_types import Candidate
+from .models import NetlistContract
+
+RULE_ID: DesignLintRuleId = "connector.peer_power_output_open_assignment"
+
+
+def connector_named_power_output_open_assignments(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+) -> tuple[Candidate, ...]:
+    """Review a named power-output contact open on one PART_ID symbol alias peer.
+
+    Peer grouping requires matching native PART_ID, value, footprint, complete
+    pin inventory, and every pin's function and electrical type. This predicate
+    reports only explicit unrecognized ``power_out`` pins spanning distinct
+    symbols when a peer is assigned to one net and another peer is open. The
+    metadata suggests a review; it does not establish that the contacts should
+    share a net.
+    """
+    found: list[Candidate] = []
+    for peer in connector_named_power_alias_peers(
+        observed,
+        "power_out",
+        declared_references,
+        peer_assignment_groups,
+    ):
+        group = peer.group
+        if any(len(nets) > 1 for nets in group.assignments.values()):
+            continue
+        assigned_pins = tuple(pin for pin, nets in group.assignments.items() if len(nets) == 1)
+        open_pins = tuple(pin for pin, nets in group.assignments.items() if not nets)
+        if not assigned_pins or not open_pins:
+            continue
+
+        evidence = connector_named_power_alias_evidence(peer)
+        evidence["assigned_peer_pins"] = assigned_pins
+        evidence["open_peer_pins"] = open_pins
+        found.append(
+            Candidate(
+                rule_id=RULE_ID,
+                subject=(
+                    f"PART_ID {group.part_id} pin {group.pin_number} ({peer.function}): "
+                    "named connector power-output peer assignment is open"
+                ),
+                message=(
+                    "Fitted connector symbols sharing this native PART_ID use the same explicit, "
+                    "unrecognized power_out pin function, but at least one peer is open while "
+                    "another has one net assignment. Review the approved interface pinout for a "
+                    "missing connection or an intentionally unused contact; matching part "
+                    "identity and pin metadata do not establish that the contacts should share "
+                    "a net."
+                ),
+                evidence=evidence,
+            )
+        )
+
+    return tuple(
+        sorted(
+            found,
+            key=lambda item: (
+                item.subject.casefold(),
+                item.subject,
+                tuple(sorted(item.evidence)),
+            ),
+        )
+    )

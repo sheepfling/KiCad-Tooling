@@ -67,12 +67,20 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "connector_lint",
         "power_lint",
     },
-    "test_design_lint_mcp_parity_connector_named_power_input.py": {
+    "test_design_lint_connector_named_power_output_peers.py": {
+        "connector_lint",
+        "power_lint",
+    },
+    "test_design_lint_mcp_parity_connector_named_power_peers.py": {
         "connector_lint",
         "power_lint",
         "parity_lint",
     },
     "test_connector_named_power_input_native_fixture_lane.py": {
+        "connector_lint",
+        "power_lint",
+    },
+    "test_connector_named_power_output_native_fixture_lane.py": {
         "connector_lint",
         "power_lint",
     },

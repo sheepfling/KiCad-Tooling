@@ -1,4 +1,4 @@
-"""CLI/MCP parity for named connector power-input alias review."""
+"""CLI/MCP parity for named connector power-pin alias review."""
 
 from __future__ import annotations
 
@@ -35,19 +35,25 @@ from tests.synthetic_design_lint_project import (
 
 RULE_ID = "connector.peer_power_input_open_assignment"
 ALL_OPEN_RULE_ID = "connector.peer_power_input_named_all_open"
+OUTPUT_RULE_ID = "connector.peer_power_output_open_assignment"
 
 
-def _netlist_xml(*, power_mode: Literal["split", "common", "all_open"]) -> str:
+def _netlist_xml(
+    *,
+    power_mode: Literal["split", "common", "all_open"],
+    pin_function: str,
+    pin_electrical_type: Literal["power_in", "power_out"],
+) -> str:
     components = "".join(
         f'<comp ref="J{index}"><value>Synthetic peer</value>'
         "<footprint>Synthetic:2Pin</footprint>"
-        '<fields><field name="PART_ID">SYNTHETIC-NAMED-INPUT-001</field></fields>'
+        '<fields><field name="PART_ID">SYNTHETIC-NAMED-POWER-001</field></fields>'
         f'<libsource lib="Synthetic" part="Port{alias}"/></comp>'
         for index, alias in ((1, "A"), (2, "B"))
     )
     pins = "".join(
         f'<libpart lib="Synthetic" part="Port{alias}"><pins>'
-        '<pin num="1" name="BIAS_IN" type="power_in"/>'
+        f'<pin num="1" name="{pin_function}" type="{pin_electrical_type}"/>'
         '<pin num="2" name="Pin_2" type="passive"/>'
         "</pins></libpart>"
         for alias in ("A", "B")
@@ -66,9 +72,14 @@ def _netlist_xml(*, power_mode: Literal["split", "common", "all_open"]) -> str:
     )
 
 
-def _assert_named_connector_power_input_parity(
+def _assert_named_connector_power_peer_parity(
     tmp_path: Path,
     cases: tuple[tuple[Literal["split", "common", "all_open"], int, int], ...],
+    *,
+    pin_function: str,
+    pin_electrical_type: Literal["power_in", "power_out"],
+    rule_id: str,
+    all_open_rule_id: str | None,
 ) -> None:
     unrelated_rules = (
         "pcb.schematic_component_inventory",
@@ -105,7 +116,14 @@ def _assert_named_connector_power_input_parity(
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
     for power_mode, expected_mixed_count, expected_all_open_count in cases:
-        netlist.write_text(_netlist_xml(power_mode=power_mode), encoding="utf-8")
+        netlist.write_text(
+            _netlist_xml(
+                power_mode=power_mode,
+                pin_function=pin_function,
+                pin_electrical_type=pin_electrical_type,
+            ),
+            encoding="utf-8",
+        )
         write_model(
             native,
             summary.model_copy(
@@ -124,22 +142,51 @@ def _assert_named_connector_power_input_parity(
 
         assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
         assert cli.status in {"PASS", "REVIEW"}
-        assert sum(item.rule_id == RULE_ID for item in cli.findings) == expected_mixed_count
-        assert (
-            sum(item.rule_id == ALL_OPEN_RULE_ID for item in cli.findings)
-            == expected_all_open_count
-        )
+        assert sum(item.rule_id == rule_id for item in cli.findings) == expected_mixed_count
+        if all_open_rule_id is not None:
+            assert (
+                sum(item.rule_id == all_open_rule_id for item in cli.findings)
+                == expected_all_open_count
+            )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp(
     tmp_path: Path,
 ) -> None:
-    _assert_named_connector_power_input_parity(tmp_path, (("split", 1, 0), ("common", 0, 0)))
+    _assert_named_connector_power_peer_parity(
+        tmp_path,
+        (("split", 1, 0), ("common", 0, 0)),
+        pin_function="BIAS_IN",
+        pin_electrical_type="power_in",
+        rule_id=RULE_ID,
+        all_open_rule_id=ALL_OPEN_RULE_ID,
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=ALL_OPEN_RULE_ID)
 def test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp(
     tmp_path: Path,
 ) -> None:
-    _assert_named_connector_power_input_parity(tmp_path, (("all_open", 0, 1), ("common", 0, 0)))
+    _assert_named_connector_power_peer_parity(
+        tmp_path,
+        (("all_open", 0, 1), ("common", 0, 0)),
+        pin_function="BIAS_IN",
+        pin_electrical_type="power_in",
+        rule_id=RULE_ID,
+        all_open_rule_id=ALL_OPEN_RULE_ID,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=OUTPUT_RULE_ID)
+def test_named_connector_power_output_open_assignment_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    _assert_named_connector_power_peer_parity(
+        tmp_path,
+        (("split", 1, 0), ("common", 0, 0), ("all_open", 0, 0)),
+        pin_function="BIAS_OUT",
+        pin_electrical_type="power_out",
+        rule_id=OUTPUT_RULE_ID,
+        all_open_rule_id=None,
+    )
