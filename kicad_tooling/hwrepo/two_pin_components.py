@@ -5,8 +5,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .component_roles import resolve_component_role_map
-from .models import ComponentRoleBinding, ComponentRoleMap, NetlistContract
+from .models import NetlistContract
 
 _SUPPORTED_DEVICE_SYMBOL = re.compile(
     r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead|Crystal)"

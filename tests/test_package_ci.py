@@ -29,12 +29,19 @@ from scripts.lint_gate_scope import (
     (
         "kicad_tooling/hwrepo/design-lint-rules.json",
         "kicad_tooling/package_build.py",
+        "kicad_tooling/hwrepo/component_role_models.py",
         "kicad_tooling/hwrepo/power_path_models.py",
         "kicad_tooling/hwrepo/power_sequence_models.py",
     ),
-    ids=("rule-catalog", "package-build-service", "power-path-models", "power-sequence-models"),
+    ids=(
+        "rule-catalog",
+        "package-build-service",
+        "component-role-models",
+        "power-path-models",
+        "power-sequence-models",
+    ),
 )
-def test_wheel_requires_rule_catalog_and_theme_owned_power_models(
+def test_wheel_requires_rule_catalog_and_theme_owned_models(
     tmp_path: Path, missing_asset: str
 ) -> None:
     wheel = tmp_path / "synthetic.whl"

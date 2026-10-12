@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .component_pin_patterns import UnconnectedNamedComponentPin, unconnected_named_component_pins
 from .component_return_pins import unconnected_component_return_pins
+from .component_role_models import ComponentRoleMap
 from .component_roles import component_role_binding_evidence
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
@@ -11,7 +12,7 @@ from .led_heuristics import (
     leds_directly_between_positive_and_return_nets,
     leds_directly_driven_without_visible_series_resistor,
 )
-from .models import ComponentRoleMap, NetlistContract
+from .models import NetlistContract
 from .two_pin_components import two_pin_components_on_same_net
 
 

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .component_roles import (
     component_role_binding_digest,
     resolve_component_role_map,
 )
 from .connector_identity import power_function_key
-from .models import ComponentRoleBinding, ComponentRoleMap, NetlistContract
+from .models import NetlistContract
 from .resistor_paths import (
     direct_resistors,
 )

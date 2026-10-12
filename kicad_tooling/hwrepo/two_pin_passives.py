@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .models import ComponentRoleBinding, ComponentRoleMap, NetlistContract
+from .component_role_models import ComponentRoleBinding, ComponentRoleMap
+from .models import NetlistContract
 from .two_pin_components import two_pin_components_on_same_net
 
 

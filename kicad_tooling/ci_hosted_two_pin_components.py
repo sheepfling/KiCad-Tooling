@@ -103,18 +103,17 @@ def two_pin_component_fixture_lane(root: Path, *, project: str, image: str, log:
     import hashlib
     import os
 
+    from .hwrepo.component_role_models import (
+        ComponentRoleBinding,
+        ComponentRoleMap,
+        ComponentRolePin,
+    )
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
     from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        ComponentRoleBinding,
-        ComponentRoleMap,
-        ComponentRolePin,
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
+    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
     from .hwrepo.two_pin_components import two_pin_components_on_same_net
     from .validate import read_netlist
 

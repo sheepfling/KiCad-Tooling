@@ -588,7 +588,7 @@ and optional ecosystem adapters are `P3`.
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary
   checks and a repository-wide scan of Python modules in `kicad_tooling/`,
-  `scripts/`, and `tests/`. New modules must stay below 500 lines; the 42
+  `scripts/`, and `tests/`. New modules must stay below 500 lines; the 38
   existing modules at or above that size have no-growth ceilings in
   `tests/python_module_line_ceilings.json`. Remove each ceiling when its module
   is split below 500 lines. The current inventory has 38 modules at or above
@@ -636,6 +636,12 @@ and optional ecosystem adapters are `P3`.
   `ci_hosted.py` retains compatible imports for callers. The architecture suite
   checks ownership and those exports, and the hosted coordinator ceiling fell
   from 892 to 846 lines without changing execution behavior.
+  The reviewed custom component-role pin, binding, and map contracts now live in
+  `component_role_models.py`. Component services import that owner directly;
+  `models.py` keeps identity-compatible exports. The architecture suite checks
+  owner size, import boundaries, and compatibility, and the registry shrank from
+  5,061 to 5,022 lines with a matching lower ceiling. This extraction adds no
+  lint rule or behavior change.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

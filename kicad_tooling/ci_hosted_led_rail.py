@@ -19,6 +19,11 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
     import hashlib
     import os
 
+    from .hwrepo.component_role_models import (
+        ComponentRoleBinding,
+        ComponentRoleMap,
+        ComponentRolePin,
+    )
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
     from .hwrepo.design_lint_report_models import DesignLintReport
@@ -28,13 +33,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         leds_directly_between_positive_and_return_nets,
         leds_directly_driven_without_visible_series_resistor,
     )
-    from .hwrepo.models import (
-        ComponentRoleBinding,
-        ComponentRoleMap,
-        ComponentRolePin,
-        ContractCoachReport,
-        DesignLintPolicy,
-    )
+    from .hwrepo.models import ContractCoachReport, DesignLintPolicy
     from .validate import read_netlist
 
     root = root.resolve()
