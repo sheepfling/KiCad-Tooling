@@ -22,7 +22,7 @@ from tests.component_peer_pin_support import (
     peer_component_pin_netlist,
     peer_power_output_netlist,
 )
-from tests.mcp_parity_support import semantic_design_lint_report
+from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_lint_report
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
@@ -80,7 +80,6 @@ def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
     from kicad_tooling.hwrepo.mcp_server import create_server
     from kicad_tooling.hwrepo.models import (
         ConnectorInventoryReview,
-        DesignLintRuleOverride,
         ProjectManifest,
         ValidationSummary,
     )
@@ -92,25 +91,7 @@ def test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp(
 
     root, summary_path = synthetic_design_lint_project(
         tmp_path,
-        DesignLintPolicy(
-            rules=(
-                DesignLintRuleOverride(
-                    rule_id="pcb.schematic_component_inventory",
-                    mode="off",
-                    reason="Synthetic peer-pin parity case isolates component identity review",
-                ),
-                DesignLintRuleOverride(
-                    rule_id="pcb.schematic_pcb_dnp_mismatch",
-                    mode="off",
-                    reason="Synthetic peer-pin parity case has no native PCB snapshot",
-                ),
-                DesignLintRuleOverride(
-                    rule_id="pcb.schematic_pcb_value_mismatch",
-                    mode="off",
-                    reason="Synthetic peer-pin parity case has no native PCB value snapshot",
-                ),
-            )
-        ),
+        parity_design_lint_policy(DesignLintPolicy()),
     )
     netlist_path = summary_path.parent / "netlist.xml"
     summary = read_model(summary_path, ValidationSummary)

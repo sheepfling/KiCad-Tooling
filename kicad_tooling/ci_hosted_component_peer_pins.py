@@ -66,13 +66,32 @@ def component_peer_bidirectional_fixture_lane(
     )
 
 
+def component_peer_generic_all_open_fixture_lane(
+    root: Path, *, project: str, image: str, log: HostedLog
+) -> None:
+    """Verify the generic all-open component peer fault and control natively."""
+    _component_peer_pin_assignment_fixture_lane(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        kind="generic-all-open",
+    )
+
+
 def _component_peer_pin_assignment_fixture_lane(
     root: Path,
     *,
     project: str,
     image: str,
     log: HostedLog,
-    kind: Literal["power-output", "signal-output", "signal-input", "bidirectional"],
+    kind: Literal[
+        "power-output",
+        "signal-output",
+        "signal-input",
+        "bidirectional",
+        "generic-all-open",
+    ],
 ) -> None:
     """Verify one comparable-peer open-pin class against repeated KiCad exports."""
     import hashlib
@@ -81,11 +100,13 @@ def _component_peer_pin_assignment_fixture_lane(
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
     from .hwrepo.design_lint_report_models import DesignLintReport
+    from .hwrepo.design_lint_rule_types import DesignLintRuleId
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
+        DesignLintRuleOverride,
     )
     from .validate import read_netlist
 
@@ -105,24 +126,28 @@ def _component_peer_pin_assignment_fixture_lane(
         "signal-output": "output",
         "signal-input": "input",
         "bidirectional": "bidirectional",
+        "generic-all-open": "passive",
     }
-    rule_ids = {
+    rule_ids: dict[str, DesignLintRuleId] = {
         "power-output": "component.peer_power_output_unconnected",
         "signal-output": "component.peer_signal_output_unconnected",
         "signal-input": "component.peer_signal_input_unconnected",
         "bidirectional": "component.peer_bidirectional_pin_unconnected",
+        "generic-all-open": "component.generic_peer_pin_all_open",
     }
     fixture_symbols = {
         "power-output": "Synthetic:PowerModule",
         "signal-output": "Synthetic:SignalModule",
         "signal-input": "Synthetic:SignalInputModule",
         "bidirectional": "Synthetic:BidirectionalModule",
+        "generic-all-open": "Synthetic:GenericPeerModule",
     }
     functions = {
         "power-output": "Pin_2",
         "signal-output": "OUT",
         "signal-input": "IN",
         "bidirectional": "DATA_IO",
+        "generic-all-open": "Pin_2",
     }
     native_pin_type = native_pin_types[kind]
     rule_id = rule_ids[kind]
@@ -133,11 +158,15 @@ def _component_peer_pin_assignment_fixture_lane(
         "bidirectional": "DATA_IO",
         "power-output": "VOUT",
         "signal-output": "VOUT",
+        "generic-all-open": "LOAD",
     }[kind]
     lane_name = f"component-peer-{kind}-fixture"
     display_name = kind
     cases = {
-        "fault": ("fault.kicad_sch", ("U2.2",)),
+        "fault": (
+            "fault.kicad_sch",
+            ("U1.2", "U2.2") if kind == "generic-all-open" else ("U2.2",),
+        ),
         "control": ("control.kicad_sch", ()),
     }
     source_hashes = {case: digest(fixture_root / filename) for case, (filename, _) in cases.items()}
@@ -235,11 +264,18 @@ def _component_peer_pin_assignment_fixture_lane(
                 raise ValueError(f"Native peer {display_name} fixture omitted {netlist_path.name}")
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
-            expected_assignments = (
-                {"U1.2": (signal_name,), "U2.2": ()}
-                if case == "fault"
-                else {"U1.2": (f"{signal_name}_A",), "U2.2": (f"{signal_name}_B",)}
-            )
+            if kind == "generic-all-open":
+                expected_assignments = (
+                    {"U1.2": (), "U2.2": ()}
+                    if case == "fault"
+                    else {"U1.2": ("LOAD_A",), "U2.2": ("LOAD_B",)}
+                )
+            else:
+                expected_assignments = (
+                    {"U1.2": (signal_name,), "U2.2": ()}
+                    if case == "fault"
+                    else {"U1.2": (f"{signal_name}_A",), "U2.2": (f"{signal_name}_B",)}
+                )
             actual_assignments = {
                 pin: tuple(sorted(net for net, pins in observed.nets.items() if pin in pins))
                 for pin in expected_assignments
@@ -258,8 +294,12 @@ def _component_peer_pin_assignment_fixture_lane(
                 observed.component_symbols != expected_symbols
                 or observed.component_pin_numbers.get("U1") != ("1", "2")
                 or observed.component_pin_numbers.get("U2") != ("1", "2")
+                or observed.pin_electrical_types.get("U1.1") != "passive"
+                or observed.pin_electrical_types.get("U2.1") != "passive"
                 or observed.pin_electrical_types.get("U1.2") != native_pin_type
                 or observed.pin_electrical_types.get("U2.2") != native_pin_type
+                or observed.pin_functions.get("U1.1") != "Pin_1"
+                or observed.pin_functions.get("U2.1") != "Pin_1"
                 or observed.pin_functions.get("U1.2") != pin_function
                 or observed.pin_functions.get("U2.2") != pin_function
             ):
@@ -288,7 +328,20 @@ def _component_peer_pin_assignment_fixture_lane(
                 observed=observed,
                 netlist_sha256=raw_hashes[(case, run)],
             )
-            reports[(case, run)] = evaluate(project_id, coach, DesignLintPolicy())
+            policy = DesignLintPolicy()
+            if kind == "generic-all-open":
+                policy = policy.model_copy(
+                    update={
+                        "rules": (
+                            DesignLintRuleOverride(
+                                rule_id=rule_id,
+                                mode="review",
+                                reason="Synthetic native fixture enables the all-open peer prompt",
+                            ),
+                        )
+                    }
+                )
+            reports[(case, run)] = evaluate(project_id, coach, policy)
             findings = tuple(
                 item for item in reports[(case, run)].findings if item.rule_id == rule_id
             )

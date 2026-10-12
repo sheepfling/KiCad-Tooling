@@ -18,6 +18,7 @@ from .ci_hosted_can_termination_fixtures import can_termination_native_fixture_l
 from .ci_hosted_complementary_pairs import complementary_pair_fixture_lane
 from .ci_hosted_component_peer_pins import (
     component_peer_bidirectional_fixture_lane,
+    component_peer_generic_all_open_fixture_lane,
     component_peer_power_output_fixture_lane,
     component_peer_signal_input_fixture_lane,
     component_peer_signal_output_fixture_lane,
@@ -99,6 +100,7 @@ __all__ = (
     "checked_source",
     "complementary_pair_fixture_lane",
     "component_peer_bidirectional_fixture_lane",
+    "component_peer_generic_all_open_fixture_lane",
     "component_peer_power_assignment_fixture_lane",
     "component_peer_power_output_fixture_lane",
     "component_peer_signal_input_fixture_lane",
@@ -393,6 +395,7 @@ def native_lane(
         component_peer_signal_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_signal_input_fixture_lane(root, project=project, image=image, log=log)
         component_peer_bidirectional_fixture_lane(root, project=project, image=image, log=log)
+        component_peer_generic_all_open_fixture_lane(root, project=project, image=image, log=log)
         component_rating_fixtures_lane(root, project=project, image=image, log=log)
         power_sequence_fixture_lane(root, project=project, image=image, log=log)
         ic_rail_capacitor_fixture_lane(root, project=project, image=image, log=log)

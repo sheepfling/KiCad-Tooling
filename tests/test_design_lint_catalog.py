@@ -55,6 +55,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "schematic.free_text_over_symbol_body",
             "schematic.wire_through_symbol_body",
             "connector.generic_peer_pin_all_open",
+            "component.generic_peer_pin_all_open",
         }
     )
     assert all(
@@ -74,6 +75,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "schematic.free_text_over_symbol_body",
             "schematic.wire_through_symbol_body",
             "connector.generic_peer_pin_all_open",
+            "component.generic_peer_pin_all_open",
         }
     )
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)

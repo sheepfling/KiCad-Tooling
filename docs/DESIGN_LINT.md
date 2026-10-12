@@ -209,7 +209,21 @@ The first rules are:
   connectors, ambiguous assignments, and other native electrical types are outside the predicate.
   Digest-pinned synthetic native fault/control fixtures and hashes are in
   [the peer bidirectional-pin fixture notes](../tests/fixtures/design_lint/component-peer-bidirectional-native/README.md).
-  The report also gives each of these four rules a bounded `component_peer_pin_coverage` entry
+- `component.generic_peer_pin_all_open` is an opt-in, default-off review prompt for a native
+  `passive` or signal pin with absent, blank, `Pin_N`, or numeric-only function metadata, left
+  unassigned on every fitted non-connector peer with a complete matching pin inventory, when
+  another pin has the same exact single-net assignment across the group. Peers must use the exact
+  same native symbol or share a native `PART_ID` with matching
+  nonempty value and footprint and identical per-pin function and electrical-type metadata. Named
+  supply and return pins, `power_in`, `power_out`, `free`, `unspecified`, DNP instances, connector
+  candidates, incomplete inventories, and ambiguous assignments are excluded. The shared pin is
+  context for review only: neither peer identity nor common wiring proves that the open pin must
+  connect. The reviewer should check the approved component requirements for an intentionally
+  unused pin or missing connection. The
+  [synthetic fixture record](../tests/fixtures/design_lint/component-peer-generic-all-open-native/README.md)
+  documents the digest-pinned native fault and control. Coverage is source-bound to the native
+  netlist; the result does not establish PCB copper continuity or physical population.
+- The report gives each of these five rules a bounded `component_peer_pin_coverage` entry
   tied to the native netlist digest. It counts exact-symbol groups, cross-symbol shared-`PART_ID`
   candidates and eligible groups, shared-identity groups excluded by value or footprint mismatch,
   inventory completeness, comparable and type/function-compatible pins, ambiguous assignments,
@@ -974,12 +988,12 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 99 active rules. They
+`synthetic_validated`; the catalog currently contains 100 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
-`review`; schematic geometry rules and the generic all-open peer connector
-heuristic default to `off`. The latter needs project-specific review because a
-generic contact may be intentionally unused.
+`review`; schematic geometry rules and the generic all-open connector and
+component peer heuristics default to `off`. These prompts need project-specific
+review because a generic contact may be intentionally unused.
 
 ## Compare STM32 CubeMX and KiCad pin assignments
 

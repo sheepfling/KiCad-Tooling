@@ -9,6 +9,7 @@ from .connector_identity import (
     connector_candidate_references,
     is_named_supply_function,
     is_return_function,
+    pin_function_is_generic,
 )
 from .models import NetlistContract
 
@@ -35,6 +36,7 @@ class PeerPinAssignmentOutlier:
     peer_identity_basis: Literal["exact_symbol", "part_id"] = "exact_symbol"
     peer_identity: str = ""
     peer_symbols: tuple[str, ...] = ()
+    shared_anchor_contacts: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -62,6 +64,7 @@ class ComponentPeerPinAssignmentScans:
     signal_output: PeerPinAssignmentScan
     signal_input: PeerPinAssignmentScan
     bidirectional: PeerPinAssignmentScan
+    generic_all_open: PeerPinAssignmentScan
 
 
 def scan_component_peer_pin_assignments(
@@ -70,6 +73,8 @@ def scan_component_peer_pin_assignments(
     *,
     electrical_types: frozenset[str],
     require_pin_functions: bool = False,
+    require_generic_pin_functions: bool = False,
+    include_all_open: bool = False,
 ) -> PeerPinAssignmentScan:
     """Scan assignment coverage among exact-symbol and exact-part peers.
 
@@ -79,6 +84,8 @@ def scan_component_peer_pin_assignments(
     footprint, complete pin inventories, native types, and present, identical
     per-pin function metadata. Identical generic placeholders are accepted as
     a structural match only; they do not identify the pin's electrical role.
+    ``include_all_open`` is reserved for the opt-in generic rule and requires a
+    generic target function plus a shared exact-net anchor.
     """
     accepted_types = {value.strip().casefold() for value in electrical_types}
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
@@ -217,6 +224,10 @@ def scan_component_peer_pin_assignments(
                 }
             ) > 1:
                 continue
+            if require_generic_pin_functions and any(
+                not pin_function_is_generic(function) for function in peer_functions
+            ):
+                continue
             compatible_function_pin_group_count += 1
             assignments = {
                 pin: tuple(sorted(pin_nets.get(pin.casefold(), ()), key=str.casefold))
@@ -228,7 +239,8 @@ def scan_component_peer_pin_assignments(
             unambiguous_assignment_pin_group_count += 1
             open_pins = tuple(pin for pin, nets in assignments.items() if not nets)
             assigned_pins = tuple(pin for pin, nets in assignments.items() if nets)
-            if not open_pins or not assigned_pins:
+            all_open = bool(open_pins) and not assigned_pins
+            if not open_pins or (not assigned_pins and not (include_all_open and all_open)):
                 continue
             if any(
                 function is not None
@@ -238,6 +250,26 @@ def scan_component_peer_pin_assignments(
             ):
                 # Preserve the more specific existing named supply/return prompt.
                 continue
+            shared_anchors: list[str] = []
+            if include_all_open and all_open:
+                for anchor_number in peer_inventories[0]:
+                    if anchor_number.casefold() == pin_number.casefold():
+                        continue
+                    anchor_pins = tuple(f"{reference}.{anchor_number}" for reference in peers)
+                    anchor_assignments = tuple(
+                        tuple(sorted(pin_nets.get(pin.casefold(), ()), key=str.casefold))
+                        for pin in anchor_pins
+                    )
+                    if (
+                        anchor_assignments
+                        and len(set(anchor_assignments)) == 1
+                        and len(anchor_assignments[0]) == 1
+                    ):
+                        shared_anchors.append(
+                            " / ".join(anchor_pins) + f" -> {anchor_assignments[0][0]}"
+                        )
+                if not shared_anchors:
+                    continue
             candidate_key = (
                 pin_number.casefold(),
                 tuple(sorted(open_pins, key=lambda pin: (pin.casefold(), pin))),
@@ -266,6 +298,9 @@ def scan_component_peer_pin_assignments(
                     peer_identity_basis=peer_identity_basis,
                     peer_identity=peer_identity,
                     peer_symbols=peer_symbols,
+                    shared_anchor_contacts=tuple(
+                        sorted(shared_anchors, key=lambda item: (item.casefold(), item))
+                    ),
                 )
             )
     outliers = tuple(
@@ -330,5 +365,22 @@ def component_peer_pin_assignment_scans(
             declared_references,
             electrical_types=frozenset({"bidirectional"}),
             require_pin_functions=True,
+        ),
+        generic_all_open=scan_component_peer_pin_assignments(
+            observed,
+            declared_references,
+            electrical_types=frozenset(
+                {
+                    "passive",
+                    "input",
+                    "output",
+                    "bidirectional",
+                    "tri_state",
+                    "open_collector",
+                    "open_emitter",
+                }
+            ),
+            require_generic_pin_functions=True,
+            include_all_open=True,
         ),
     )

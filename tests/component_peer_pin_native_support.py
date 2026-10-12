@@ -11,6 +11,7 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
     from kicad_tooling.ci_hosted import (
         HostedLog,
         component_peer_bidirectional_fixture_lane,
+        component_peer_generic_all_open_fixture_lane,
         component_peer_power_output_fixture_lane,
         component_peer_signal_input_fixture_lane,
         component_peer_signal_output_fixture_lane,
@@ -32,6 +33,10 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
         "signal": ("signal-output", component_peer_signal_output_fixture_lane),
         "signal-input": ("signal-input", component_peer_signal_input_fixture_lane),
         "bidirectional": ("bidirectional", component_peer_bidirectional_fixture_lane),
+        "generic-all-open": (
+            "generic-all-open",
+            component_peer_generic_all_open_fixture_lane,
+        ),
     }
     lane_kind, lane = lanes[kind]
     expected_peer_basis_counts = (0, 1) if kind == "power" else (1, 0)
@@ -52,6 +57,10 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
         "bidirectional": {
             "fault": "5811d43e0298fb4bd8443bf849e8e75665e693561b4981786e768c0c895f4ea3",
             "control": "1ea8f0a5b92fab8fafd0170adbe6b374f8bc9c24f38b00c00a0ceaafa70e2aa0",
+        },
+        "generic-all-open": {
+            "fault": "0cc0e21feb53a94306378599d69e920fc0f7b54d9ce792ba56c523ad42c658ae",
+            "control": "bf6920996fb0fea85bc4c7124fa69db79a1b58a1dabc89c1bb6b436a7cd40b8b",
         },
     }[kind]
     for project, version in expected_versions.items():
@@ -83,7 +92,11 @@ def _run_native_peer_pin_assignment_lane(kind: str, base: Path) -> None:
         assert native["kicad_version"] == version
         assert native["image"] == expected_images[project]
         for case, expected_pins, expected_status in (
-            ("fault", "U2.2", "REVIEW"),
+            (
+                "fault",
+                "U1.2,U2.2" if kind == "generic-all-open" else "U2.2",
+                "REVIEW",
+            ),
             ("control", "none", "PASS"),
         ):
             result = results[f"{fixture_lane}/{case}"]

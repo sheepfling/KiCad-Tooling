@@ -25,6 +25,7 @@ def component_peer_pin_rule_coverage(
         ("component.peer_signal_output_unconnected", scans.signal_output),
         ("component.peer_signal_input_unconnected", scans.signal_input),
         ("component.peer_bidirectional_pin_unconnected", scans.bidirectional),
+        ("component.generic_peer_pin_all_open", scans.generic_all_open),
     )
     result: list[ComponentPeerPinRuleCoverage] = []
     for rule_id, scan in rule_scans:

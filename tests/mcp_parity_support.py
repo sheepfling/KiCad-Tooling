@@ -91,6 +91,7 @@ def parity_design_lint_policy(policy: DesignLintPolicy) -> DesignLintPolicy:
         "pcb.schematic_component_inventory",
         "pcb.schematic_pcb_dnp_mismatch",
         "pcb.schematic_pcb_value_mismatch",
+        "pcb.schematic_pcb_pad_net_mismatch",
     )
     overrides = {item.rule_id: item for item in policy.rules}
     inventory_override = overrides.get("pcb.schematic_component_inventory")

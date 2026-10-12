@@ -526,6 +526,52 @@
       "implementation_owner": "kicad_tooling/hwrepo/component_peer_pin_findings.py#component_peer_bidirectional_pin_outliers"
     },
     {
+      "rule_id": "component.generic_peer_pin_all_open",
+      "title": "Generic component peer pin is open everywhere",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among at least two fitted non-connector component peers, compare exact native-symbol peers or cross-symbol peers only when they share a nonempty native PART_ID plus matching nonempty value, footprint, complete pin inventory, and identical per-pin function and electrical-type metadata. Require a target pin with absent or generic native function metadata (blank, Pin_N, or numeric-only), matching passive or signal electrical type, no net assignment on every peer, and at least one other pin with the same exact single net assignment across all peers. Recognized named supply and return pins, power_in/power_out/free/unspecified pins, connectors, DNP instances, incomplete inventories, and ambiguous assignments remain outside the predicate.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The prompt is default-off because a generic pin can be intentionally unused on every repeated component; review exact part requirements before treating it as a defect.",
+        "Peer identity and a shared anchor provide candidate context only. They do not establish the pin function, required net, component interchangeability, or a required connection.",
+        "Cross-symbol groups require the same nonempty native PART_ID, matching value and footprint, complete matching inventories, and identical pin function/type metadata. PART_ID remains project-entered metadata and can be wrong.",
+        "The result concerns schematic pin assignments only; it does not establish PCB copper continuity, off-board wiring, or physical population."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_peer_pin_all_open.test_all_open_generic_component_peer_pin_is_opt_in_review",
+        "tests.test_component_peer_pin_all_open.test_supported_signal_electrical_types_are_reviewable",
+        "tests.test_component_peer_pin_all_open.test_absent_or_numeric_only_function_metadata_is_still_generic",
+        "tests.test_component_peer_pin_all_open.test_cross_symbol_part_id_peers_are_reviewable_with_complete_identity",
+        "tests.test_component_peer_pin_all_open.test_component_peer_all_open_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_generic_peer_pin_all_open_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_peer_pin_all_open.test_connected_same_or_separate_pins_are_valid_controls",
+        "tests.test_component_peer_pin_all_open.test_unanchored_or_noncomparable_peers_are_quiet",
+        "tests.test_component_peer_pin_all_open.test_component_peer_all_open_fault_and_control_on_pinned_native_versions",
+        "tests.test_design_lint_mcp_parity_peer_pins.test_generic_peer_pin_all_open_cli_mcp_parity"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_component_peer_pin_all_open.test_fingerprint_is_stable_under_input_order_changes"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_peer_pin_all_open.py#all_open_generic_component_peer_pin_candidates",
+        "kicad_tooling/hwrepo/component_peer_pin_scan.py#scan_component_peer_pin_assignments",
+        "kicad_tooling/hwrepo/design_lint_component_peer_candidates.py#component_peer_candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_peer_pin_all_open.py#all_open_generic_component_peer_pin_candidates"
+    },
+    {
       "rule_id": "component.two_pin_passive_same_net",
       "title": "Supported two-pin passive is bypassed by one net",
       "status": "active",

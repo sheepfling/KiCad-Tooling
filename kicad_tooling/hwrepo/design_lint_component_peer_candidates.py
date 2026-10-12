@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_peer_pin_all_open import all_open_generic_component_peer_pin_candidates
 from .component_peer_pin_findings import component_peer_power_pin_assignment_divergences
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans, PeerPinAssignmentOutlier
 from .design_lint_types import Candidate
@@ -234,4 +235,5 @@ def component_peer_candidates(
                 },
             )
         )
+    found.extend(all_open_generic_component_peer_pin_candidates(peer_pin_scans.generic_all_open))
     return tuple(found)

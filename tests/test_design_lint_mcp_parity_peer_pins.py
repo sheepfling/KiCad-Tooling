@@ -26,7 +26,10 @@ from kicad_tooling.hwrepo.contracts import (
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
+    DesignLintPolicy,
     DesignLintReport,
+    DesignLintRuleOverride,
+    ProjectTestContract,
     ValidationSummary,
 )
 from tests import test_parts_workflow as native_fixture
@@ -239,6 +242,116 @@ def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
                     assert findings[0].evidence["unassigned_pins"] == ("U11.2",)
                 else:
                     assert findings == ()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.design_lint_rule(rule_id="component.generic_peer_pin_all_open")
+def test_generic_peer_pin_all_open_cli_mcp_parity(tmp_path: Path) -> None:
+    root, island, _ = parity_workspace(tmp_path)
+    native = parity_native_evidence(root, island)
+    netlist = native.parent / "netlist.xml"
+    contract_path = island / "tests/contract.json"
+    contract = read_model(contract_path, ProjectTestContract)
+    policy = contract.design_lint or DesignLintPolicy()
+    write_model(
+        contract_path,
+        contract.model_copy(
+            update={
+                "design_lint": policy.model_copy(
+                    update={
+                        "rules": (
+                            *policy.rules,
+                            DesignLintRuleOverride(
+                                rule_id="component.generic_peer_pin_all_open",
+                                mode="review",
+                                reason="Synthetic parity fixture reviews generic open component peers",
+                            ),
+                        )
+                    }
+                )
+            }
+        ),
+    )
+
+    def write_netlist(*, fault: bool) -> None:
+        target_nets = (
+            ""
+            if fault
+            else '<net name="LOAD_A"><node ref="U10" pin="2"/></net>'
+            '<net name="LOAD_B"><node ref="U11" pin="2"/></net>'
+        )
+        netlist_text = native_fixture.NETLIST.replace(
+            "</components><nets/>",
+            '<comp ref="U10"><value>Synthetic peer module</value>'
+            "<footprint>Synthetic:Module</footprint>"
+            '<libsource lib="Synthetic" part="GenericPeer"/></comp>'
+            '<comp ref="U11"><value>Synthetic peer module</value>'
+            "<footprint>Synthetic:Module</footprint>"
+            '<libsource lib="Synthetic" part="GenericPeer"/></comp>'
+            '</components><libparts><libpart lib="Synthetic" part="GenericPeer"><pins>'
+            '<pin num="1" name="ANCHOR" type="passive"/>'
+            '<pin num="2" name="Pin_2" type="passive"/>'
+            "</pins></libpart></libparts><nets>"
+            '<net name="SHARED"><node ref="U10" pin="1"/>'
+            '<node ref="U11" pin="1"/></net>'
+            f"{target_nets}</nets>",
+        )
+        netlist.write_text(netlist_text, encoding="utf-8")
+        summary = read_model(native, ValidationSummary)
+        write_model(
+            native,
+            summary.model_copy(
+                update={
+                    "artifacts_sha256": {
+                        **summary.artifacts_sha256,
+                        "netlist.xml": digest(netlist),
+                    }
+                }
+            ),
+        )
+
+    async def exercise() -> None:
+        async with Client(create_server(root), mode="legacy") as client:
+            for fault, expected_status in ((True, "REVIEW"), (False, "PASS")):
+                write_netlist(fault=fault)
+                process = await parity_cli_process(
+                    tmp_path,
+                    root,
+                    "kicad_tooling.design_lint",
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                )
+                cli_report = parse_model_text(process.stdout, DesignLintReport)
+                assert process.returncode == (1 if cli_report.status != "PASS" else 0)
+                result = await client.call_tool(
+                    "inspect_design_lint",
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(root).as_posix(),
+                    },
+                )
+                assert not result.is_error, result.content
+                assert result.structured_content is not None
+                mcp_report = parse_model_text(
+                    json.dumps(result.structured_content),
+                    DesignLintReport,
+                )
+                assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(
+                    mcp_report
+                )
+                assert mcp_report.status == cli_report.status == expected_status
+                findings = [
+                    item
+                    for item in mcp_report.findings
+                    if item.rule_id == "component.generic_peer_pin_all_open"
+                ]
+                assert len(findings) == int(fault)
+                if fault:
+                    assert findings[0].mode == "review"
+                    assert findings[0].disposition == "OPEN"
 
     asyncio.run(exercise())
 
