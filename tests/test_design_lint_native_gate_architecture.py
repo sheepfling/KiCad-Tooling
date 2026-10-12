@@ -283,13 +283,38 @@ def test_workflow_enables_every_native_fixture_regression() -> None:
         assert set(scope.native_fixtures) == set(required), rule_id
 
 
-def test_connector_return_rules_catalogue_the_exact_native_fault_control_cases() -> None:
-    expected_cases = {
-        "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
+def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> None:
+    expected_cases_by_rule = {
+        "connector.repeated_pin_function": {
+            "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
+            "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
+            "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+        },
+        "net.numbered_returns": {
+            "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
+            "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
+        },
+        "connector.peer_pin_assignment_outlier": {
+            "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope",
+        },
+        "connector.peer_pin_assignment_divergence": {
+            "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope",
+        },
+        "connector.return_pin_on_positive_rail": {
+            "tests.test_ci_hosted_connector_returns.test_return_pin_on_positive_rail",
+        },
+        "connector.unconnected_power_input": {
+            "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+        },
+        "component.unconnected_power_input": {
+            "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+        },
+        "net.numbered_power_rails": {
+            "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+        },
     }
     rules = {rule.rule_id: rule for rule in rule_catalog().rules}
-    for rule_id in ("connector.repeated_pin_function", "net.numbered_returns"):
+    for rule_id, expected_cases in expected_cases_by_rule.items():
         rule = rules[rule_id]
         assert "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES" in rule.required_native_fixtures
         assert expected_cases <= set(rule.fault_fixtures)

@@ -172,6 +172,7 @@ def test_peer_pin_assignments_and_offboard_scope(connector_return_results_by_ver
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
 @pytest.mark.connector_lint
+@pytest.mark.component_lint
 @pytest.mark.power_lint
 def test_power_pin_and_reviewed_role_cases(connector_return_results_by_version, version):
     assert_connector_power_and_role_cases(connector_return_results_by_version[version], version)

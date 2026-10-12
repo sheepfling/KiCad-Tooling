@@ -35,7 +35,8 @@
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
+        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
@@ -51,7 +52,8 @@
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_ci_hosted_connector_returns.test_return_net_and_cross_symbol_findings",
-        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts"
+        "tests.test_ci_hosted_connector_returns.test_grounding_and_pin_connectivity_contracts",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_returns.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
@@ -100,7 +102,8 @@
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_connector_part_id_peers.test_shared_part_id_symbol_aliases_surface_open_generic_pin_with_coverage",
         "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp",
-        "tests.test_connector_part_id_peers.test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle"
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle",
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_peer_pins.test_exact_symbol_peer_pin_controls_exclude_consistent_independent_and_dnp_cases",
@@ -110,7 +113,8 @@
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_connector_part_id_peers.test_common_part_id_aliases_are_a_quiet_control_and_split_groups_allow_isolation",
         "tests.test_connector_part_id_peers.test_dnp_and_ambiguous_pin_assignments_do_not_trigger_alias_findings",
-        "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp"
+        "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp",
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_peer_pins.test_generic_connector_outlier_order_is_stable_and_completion_clears_it",
@@ -122,7 +126,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
-      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_pin_findings.py#connector_peer_pin_assignment_outliers"
+      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_pin_findings.py#connector_peer_pin_assignment_outliers",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "connector.peer_pin_assignment_divergence",
@@ -155,7 +162,8 @@
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
         "tests.test_connector_part_id_peers.test_common_part_id_aliases_are_a_quiet_control_and_split_groups_allow_isolation",
         "tests.test_connector_part_id_peers.test_part_id_connector_alias_assignment_matches_between_cli_and_mcp",
-        "tests.test_connector_part_id_peers.test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle"
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_obey_project_policy_and_ignore_lifecycle",
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_split_return_peers.test_four_peer_connectors_with_common_return_pins_do_not_diverge",
@@ -164,7 +172,8 @@
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_common_assignment_is_a_control",
         "tests.test_design_lint_connector_peer_pins.test_four_generic_peer_ports_with_common_pin_assignment_are_quiet_control",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global"
+        "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_divergence_order_is_stable_and_agreement_clears_it",
@@ -177,7 +186,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
-      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_pin_findings.py#connector_peer_pin_assignment_divergences"
+      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_pin_findings.py#connector_peer_pin_assignment_divergences",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "component.repeated_supply_pin_function",
@@ -815,12 +827,14 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_return_pin_positive_rail.test_return_pin_assigned_to_positive_supply_requests_review",
-        "tests.test_design_lint_return_pin_positive_rail.test_source_matched_generic_return_role_is_checked"
+        "tests.test_design_lint_return_pin_positive_rail.test_source_matched_generic_return_role_is_checked",
+        "tests.test_ci_hosted_connector_returns.test_return_pin_on_positive_rail"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_return_pin_positive_rail.test_reference_net_negative_rail_and_unrecognized_pin_are_controls",
         "tests.test_design_lint_return_pin_positive_rail.test_shield_open_and_dnp_pins_are_not_return_to_rail_findings",
-        "tests.test_design_lint_return_pin_positive_rail.test_project_policy_can_block_or_turn_off_the_review_hint"
+        "tests.test_design_lint_return_pin_positive_rail.test_project_policy_can_block_or_turn_off_the_review_hint",
+        "tests.test_ci_hosted_connector_returns.test_return_pin_on_positive_rail"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_return_pin_positive_rail.test_finding_is_order_stable_and_reassignment_clears_it"
@@ -831,7 +845,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "returns",
-      "implementation_owner": "kicad_tooling/hwrepo/connector_return_supply.py#return_pin_positive_rail_candidates"
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_supply.py#return_pin_positive_rail_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "connector.unconnected_power_input",
@@ -852,12 +869,14 @@
         "Only exact connector candidates identified by native or project-reviewed connector identity are evaluated; DNP instances are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_report_includes_native_evidence"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_report_includes_native_evidence",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_valid_controls_are_suppressed",
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_generic_connector_power_pins_keep_specific_rules",
-        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_supports_policy_block_ignore_and_off"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_supports_policy_block_ignore_and_off",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_type_is_order_stable",
@@ -868,7 +887,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
-      "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_input_connector_pins"
+      "implementation_owner": "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_input_connector_pins",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "connector.unconnected_power_output",
@@ -935,12 +957,14 @@
         "Connector candidates, including source-reviewed connector references, and DNP components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_component_power_pins.test_unconnected_generic_component_power_input_is_reviewable"
+        "tests.test_design_lint_component_power_pins.test_unconnected_generic_component_power_input_is_reviewable",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_component_power_pins.test_generic_component_power_input_valid_controls_are_suppressed",
         "tests.test_design_lint_component_power_pins.test_generic_component_power_input_keeps_specific_supply_and_connector_rules",
-        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_supports_policy_block_ignore_and_off"
+        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_supports_policy_block_ignore_and_off",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_component_power_pins.test_generic_component_power_input_is_order_stable"
@@ -950,7 +974,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "components",
-      "implementation_owner": "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_generic_power_input_component_pins"
+      "implementation_owner": "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_generic_power_input_component_pins",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "component.unconnected_power_output",
@@ -2051,12 +2078,14 @@
       "fault_fixtures": [
         "tests.test_design_lint_numbered_power_rails.test_numbered_positive_supply_rail_names_need_review",
         "tests.test_design_lint_numbered_power_rails.test_channel_prefixed_positive_supply_rail_names_need_review",
-        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments"
+        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_numbered_power_rails.test_numbered_power_rail_controls_do_not_merge_distinct_or_ambiguous_rails",
         "tests.test_design_lint_numbered_power_rails.test_channel_prefixed_power_name_controls_do_not_infer_or_merge_rails",
-        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments"
+        "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_numbered_power_rails.test_numbered_power_rail_order_is_stable_and_commoning_clears_the_hint"
@@ -2066,7 +2095,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "power",
-      "implementation_owner": "kicad_tooling/hwrepo/power_rails.py#numbered_power_rail_groups"
+      "implementation_owner": "kicad_tooling/hwrepo/power_rails.py#numbered_power_rail_groups",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
     },
     {
       "rule_id": "schematic.wire_end_on_pin_line",

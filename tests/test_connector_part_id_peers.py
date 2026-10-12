@@ -409,6 +409,11 @@ def test_part_id_connector_alias_assignment_matches_between_cli_and_mcp(
                     mode="off",
                     reason="Synthetic parity fixture has no native PCB value snapshot evidence.",
                 ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.schematic_pcb_pad_net_mismatch",
+                    mode="off",
+                    reason="Synthetic parity fixture has no native PCB pad-net snapshot evidence.",
+                ),
             )
         ),
     )
@@ -460,7 +465,7 @@ def test_part_id_connector_alias_assignment_matches_between_cli_and_mcp(
                 assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(
                     mcp_report
                 )
-                assert mcp_report.status == "REVIEW"
+                assert mcp_report.status == "REVIEW", mcp_report.issues
                 peer_rule_ids = {
                     item.rule_id
                     for item in mcp_report.findings
