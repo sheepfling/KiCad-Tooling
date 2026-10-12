@@ -3,10 +3,10 @@
 These synthetic schematics exercise
 `component.peer_power_input_open_assignment` using native KiCad pin metadata.
 
-| Fixture | Case |
-| --- | --- |
-| `fault.kicad_sch` | Two fitted peers with the same explicit `BIAS_IN`, `power_in` pin; U1 is assigned and U2 is open. |
-| `control.kicad_sch` | The same peer pin is assigned on both components. |
+| Fixture             | Case                                                 |
+| ------------------- | ---------------------------------------------------- |
+| `fault.kicad_sch`   | U1 is assigned; U2's matching `BIAS_IN` pin is open. |
+| `control.kicad_sch` | Both peers assign the pin to one synthetic rail.     |
 
 The rule is a default-REVIEW heuristic. The shared symbol, pin function, and
 native electrical type identify a comparison group; they do not establish that

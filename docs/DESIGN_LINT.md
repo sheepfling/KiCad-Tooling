@@ -279,8 +279,9 @@ The first rules are:
   peers, incomplete inventories, unsupported pin types or functions, open assignments, and a
   completed comparison. The named power-input open-assignment rule also reports whether each
   comparable group has complete inventories, matching `power_in` types and explicit functions,
-  and a mix of assigned and open peers. Status explains why a rule could not evaluate a group; it does not claim
-  that every component or interface was recognized, or that matching peer pins must share a net.
+  and a mix of assigned and open peers. Status explains why a rule could not evaluate a group; it
+  does not claim that every component or interface was recognized, or that matching peer pins must
+  share a net.
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` symbol
   resolve to the same schematic net. A custom symbol is included only when an
