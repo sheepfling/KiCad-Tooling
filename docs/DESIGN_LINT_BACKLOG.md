@@ -11234,6 +11234,17 @@ it does not claim field validation or effectiveness against private boards.
   rejects a missing required lane, and a focused pytest collection regression
   confirms the rule selector collects the native test cases. This closes a
   release-gate coverage gap; it does not claim a physical return-path test.
+- **Rule-scoped parity indexing (2026-10-12):** A follow-up selector audit
+  found four relevant CLI/MCP parity tests that were not reachable from the
+  LINT-074 rule selector: the dual-UART split-reference case, channel-labeled
+  generic-UART case, bonded-map control, and serial connector parity case. The
+  catalog now indexes those tests as fault/control fixtures. The focused
+  selector collects all four; the complete local LINT-074 selector passed
+  (`26 passed, 7 skipped, 6 subtests passed`). Tag `v0.5.0rc175` passed hosted
+  acceptance run `38285389294`, including the focused lint gate, exact native
+  lane, installed-wheel check against a separate template project, and all
+  three preview jobs. This improves regression selection and adapter parity
+  coverage; it is not additional electrical evidence.
 - **Done when:** Complete.
 
 #### LINT-075 — Oscillator-module output load-path review
