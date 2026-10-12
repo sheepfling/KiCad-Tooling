@@ -17,6 +17,7 @@ from kicad_tooling.package_build import clear_distribution_build_cache
 from scripts import ci
 from scripts.lint_gate_scope import (
     LINT_AREAS,
+    active_design_lint_rule_ids,
     configured_native_fixtures,
     parse_tag_message,
     read_tag_scope,
@@ -119,6 +120,27 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
     assert scope.native_fixtures == ("KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES",)
 
 
+def test_lint_tag_selects_one_active_rule_and_its_configured_native_fixture() -> None:
+    repository = Path(__file__).resolve().parents[1]
+    rule_id = "power.mapped_sequence_dependency_mismatch"
+    fixtures = configured_native_fixtures(repository)
+    assert rule_id in active_design_lint_rule_ids()
+    assert "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES" in fixtures
+
+    scope = parse_tag_message(
+        "Mapped power-sequence dependency lint gate\n\n"
+        f"Lint-Rule: {rule_id}\n"
+        "Native-Fixture: KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES\n",
+        fixtures,
+        active_design_lint_rule_ids(),
+    )
+
+    assert scope.area is None
+    assert scope.rule_id == rule_id
+    assert scope.pytest_markexpr == f'design_lint and design_lint_rule(rule_id="{rule_id}")'
+    assert scope.native_fixtures == ("KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",)
+
+
 def test_lint_tag_areas_are_registered_pytest_markers() -> None:
     repository = Path(__file__).resolve().parents[1]
     configuration = tomllib.loads((repository / "pyproject.toml").read_text(encoding="utf-8"))
@@ -147,14 +169,16 @@ def test_catalog_lint_tag_selects_only_catalog_regressions() -> None:
     assert scope.pytest_markexpr == "design_lint and catalog_lint"
 
 
-def test_annotated_tag_resolves_scope_and_writes_github_action_files(
+def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_files(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     repository = tmp_path / "repository"
     workflow = repository / ".github/workflows/tooling.yml"
     workflow.parent.mkdir(parents=True)
     workflow.write_text(
-        "          KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES: '1'\n", encoding="utf-8"
+        "          KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES: '1'\n"
+        "          KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES: '1'\n",
+        encoding="utf-8",
     )
     (repository / "source.txt").write_text("synthetic\n", encoding="utf-8")
     commands = (
@@ -190,14 +214,63 @@ def test_annotated_tag_resolves_scope_and_writes_github_action_files(
         "KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES=1\n"
     )
 
+    rule_id = "power.mapped_sequence_dependency_mismatch"
+    subprocess.run(
+        (
+            "git",
+            "tag",
+            "-a",
+            "v0.5.0rc2",
+            "-m",
+            "Synthetic power lint gate",
+            "-m",
+            f"Lint-Rule: {rule_id}",
+            "-m",
+            "Native-Fixture: KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",
+        ),
+        cwd=repository,
+        check=True,
+        capture_output=True,
+    )
+    rule_scope = read_tag_scope("v0.5.0rc2", repository)
+    assert rule_scope.pytest_markexpr == f'design_lint and design_lint_rule(rule_id="{rule_id}")'
+    assert rule_scope.native_fixtures == ("KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",)
+    output.write_text("", encoding="utf-8")
+    environment.write_text("", encoding="utf-8")
+    write_github_scope(rule_scope)
+    assert output.read_text(encoding="utf-8") == (
+        f'markexpr=design_lint and design_lint_rule(rule_id="{rule_id}")\n'
+    )
+    assert environment.read_text(encoding="utf-8") == (
+        "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES=1\n"
+    )
+
 
 @pytest.mark.parametrize(
-    ("message", "fixtures", "error"),
+    ("message", "fixtures", "rule_ids", "error"),
     (
-        ("Missing area", frozenset(), "exactly one supported Lint-Area"),
-        ("Lint-Area: unknown_theme", frozenset(), "exactly one supported Lint-Area"),
+        ("Missing selector", frozenset(), frozenset(), "exactly one Lint-Area or Lint-Rule"),
+        (
+            "Lint-Area: unknown_theme",
+            frozenset(),
+            frozenset(),
+            "unsupported Lint-Area",
+        ),
+        (
+            "Lint-Rule: power.unknown_rule",
+            frozenset(),
+            frozenset(),
+            "unknown or inactive Lint-Rule",
+        ),
+        (
+            "Lint-Area: power_lint\nLint-Rule: power.mapped_sequence_dependency_mismatch",
+            frozenset(),
+            frozenset({"power.mapped_sequence_dependency_mismatch"}),
+            "exactly one Lint-Area or Lint-Rule",
+        ),
         (
             "Lint-Area: interface_lint\nNative-Fixture: KICAD_RUN_NATIVE_NOT_REAL",
+            frozenset(),
             frozenset(),
             "absent from full acceptance",
         ),
@@ -208,15 +281,16 @@ def test_annotated_tag_resolves_scope_and_writes_github_action_files(
                 "Native-Fixture: KICAD_RUN_NATIVE_CAN_PEER_FIXTURES"
             ),
             frozenset({"KICAD_RUN_NATIVE_CAN_PEER_FIXTURES"}),
+            frozenset(),
             "more than once",
         ),
     ),
 )
 def test_lint_tag_rejects_ambiguous_or_unconfigured_scope(
-    message: str, fixtures: frozenset[str], error: str
+    message: str, fixtures: frozenset[str], rule_ids: frozenset[str], error: str
 ) -> None:
     with pytest.raises(ValueError, match=error):
-        parse_tag_message(message, fixtures)
+        parse_tag_message(message, fixtures, rule_ids)
 
 
 def test_distribution_build_clears_stale_staging_without_removing_receipts(

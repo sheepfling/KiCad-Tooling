@@ -36,11 +36,16 @@ _NATIVE_FIXTURE_PATTERN = re.compile(
 
 @dataclass(frozen=True)
 class LintGateScope:
-    area: str
+    area: str | None
+    rule_id: str | None
     native_fixtures: tuple[str, ...]
 
     @property
     def pytest_markexpr(self) -> str:
+        if self.rule_id is not None:
+            return f'design_lint and design_lint_rule(rule_id="{self.rule_id}")'
+        if self.area is None:
+            raise ValueError("lint gate scope has no selector")
         if self.area in {"design_lint", "architecture"}:
             return self.area
         return f"design_lint and {self.area}"
@@ -52,16 +57,37 @@ def configured_native_fixtures(repository: Path) -> frozenset[str]:
     return frozenset(_NATIVE_FIXTURE_PATTERN.findall(workflow))
 
 
-def parse_tag_message(message: str, known_fixtures: frozenset[str]) -> LintGateScope:
-    """Parse the exact marker and native fixture declarations for one lint gate."""
-    areas = [
-        value.strip()
+def active_design_lint_rule_ids() -> frozenset[str]:
+    """Return active rule IDs from the installed package's validated catalog."""
+    from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+
+    return frozenset(str(rule.rule_id) for rule in rule_catalog().rules if rule.status == "active")
+
+
+def parse_tag_message(
+    message: str,
+    known_fixtures: frozenset[str],
+    known_rule_ids: frozenset[str] = frozenset(),
+) -> LintGateScope:
+    """Parse one area or active rule selector and native fixture declarations."""
+    selectors = [
+        (key.strip(), value.strip())
         for key, separator, value in (line.partition(":") for line in message.splitlines())
-        if separator and key.strip() == "Lint-Area"
+        if separator and key.strip() in {"Lint-Area", "Lint-Rule"}
     ]
-    if len(areas) != 1 or areas[0] not in LINT_AREAS:
-        expected = ", ".join(sorted(LINT_AREAS))
-        raise ValueError(f"tag message must declare exactly one supported Lint-Area ({expected})")
+    if len(selectors) != 1:
+        raise ValueError("tag message must declare exactly one Lint-Area or Lint-Rule")
+
+    selector, value = selectors[0]
+    if selector == "Lint-Area":
+        if value not in LINT_AREAS:
+            expected = ", ".join(sorted(LINT_AREAS))
+            raise ValueError(f"tag message declares an unsupported Lint-Area ({expected})")
+        area, rule_id = value, None
+    else:
+        if value not in known_rule_ids:
+            raise ValueError(f"tag message names an unknown or inactive Lint-Rule: {value!r}")
+        area, rule_id = None, value
 
     fixtures = [
         value.strip()
@@ -75,7 +101,7 @@ def parse_tag_message(message: str, known_fixtures: frozenset[str]) -> LintGateS
         raise ValueError(
             f"tag message names fixtures absent from full acceptance: {sorted(unknown)}"
         )
-    return LintGateScope(areas[0], tuple(fixtures))
+    return LintGateScope(area, rule_id, tuple(fixtures))
 
 
 def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
@@ -94,7 +120,11 @@ def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
     _, separator, message = result.stdout.partition("\n\n")
     if not separator:
         raise ValueError(f"annotated lint tag {tag_name} has no message")
-    return parse_tag_message(message, configured_native_fixtures(repository))
+    return parse_tag_message(
+        message,
+        configured_native_fixtures(repository),
+        active_design_lint_rule_ids(),
+    )
 
 
 def write_github_scope(scope: LintGateScope) -> None:
