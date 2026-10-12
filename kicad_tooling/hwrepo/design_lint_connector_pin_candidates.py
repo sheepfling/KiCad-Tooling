@@ -14,7 +14,10 @@ from .connector_peer_pin_findings import (
     connector_peer_pin_assignment_divergences,
     connector_peer_pin_assignment_outliers,
 )
-from .connector_peer_power_input import connector_named_power_input_open_assignments
+from .connector_peer_power_input import (
+    connector_named_power_input_all_open,
+    connector_named_power_input_open_assignments,
+)
 from .connector_return_pins import (
     unconnected_generic_power_input_connector_pins,
     unconnected_generic_power_output_connector_pins,
@@ -426,6 +429,13 @@ def connector_pin_candidates(
     )
     found.extend(
         connector_named_power_input_open_assignments(
+            observed,
+            reviewed_connector_references,
+            reviewed_connector_peer_assignment_groups,
+        )
+    )
+    found.extend(
+        connector_named_power_input_all_open(
             observed,
             reviewed_connector_references,
             reviewed_connector_peer_assignment_groups,

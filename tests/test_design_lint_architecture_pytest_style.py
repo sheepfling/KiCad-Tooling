@@ -313,6 +313,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_design_lint_connector_named_power_input_peers.py::test_open_named_power_input_on_one_connector_symbol_alias_is_reviewed",
         ),
         (
+            "connector.peer_power_input_named_all_open",
+            "tests/test_design_lint_connector_named_power_input_peers.py::test_named_power_input_open_on_every_connector_alias_is_reviewed",
+        ),
+        (
             "bus.spi_peer_voltage_review",
             "tests/test_design_lint_peer_voltage.py::test_spi_peer_voltage_prompt_requires_unambiguous_native_evidence",
         ),

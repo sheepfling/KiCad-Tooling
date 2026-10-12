@@ -192,6 +192,52 @@
       ]
     },
     {
+      "rule_id": "connector.peer_power_input_named_all_open",
+      "title": "Named connector power-input pin is open on every PART_ID alias peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances using distinct native symbols that share a nonempty PART_ID, matching nonempty value and footprint, complete identical pin inventories, and matching nonempty function and electrical-type metadata for every pin, compare the same pin number only when its matching function is explicit and unrecognized as a generic, supply, or return role and every alias assigns it the same native power_in type. Emit a REVIEW candidate when no alias has a net assignment for that pin.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching PART_ID, value, footprint, pin function, and electrical type make a review candidate only; they do not prove the symbols represent the same physical part or that the contacts should share a net.",
+        "The rule is limited to all-open groups across distinct connector symbols. Mixed assigned/open groups, common assignments, generic functions, recognized supplies and returns, DNP peers, and incomplete or mismatched identity, inventory, function, or type metadata do not trigger this rule.",
+        "Exact-symbol peer contacts remain with connector.repeated_pin_function. Connector candidate discovery is bounded to J/P/X/CN references, standard Connector library symbols, and exact project-reviewed interface references; other aliases can evade scanning.",
+        "The finding does not infer intent from net names, assign a connection, establish PCB copper continuity or off-board wiring, or determine whether a connector contact is required. Project-authored pinout and connectivity requirements remain authoritative."
+      ],
+      "fault_fixtures": [
+        "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_open_on_every_connector_alias_is_reviewed",
+        "tests.test_design_lint_mcp_parity_connector_named_power_input.test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_alias_all_open_rule_keeps_assignment_controls_quiet",
+        "tests.test_design_lint_mcp_parity_connector_named_power_input.test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_alias_all_open_rule_is_stable_under_mapping_order",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_peer_pin_scan.py#scan_connector_part_id_peer_pins",
+        "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_all_open",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_all_open"
+    },
+    {
       "rule_id": "connector.peer_power_input_open_assignment",
       "title": "Named connector power-input pin is open on one part-alias peer",
       "status": "active",

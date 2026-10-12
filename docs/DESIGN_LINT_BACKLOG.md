@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 108 rules are implemented with synthetic regression coverage.
+The following 109 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -305,6 +305,7 @@ Their actual recognition limits are documented in
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
 - `connector.generic_peer_pin_all_open`
+- `connector.peer_power_input_named_all_open`
 - `connector.peer_power_input_open_assignment`
 - `component.repeated_supply_pin_function`
 - `component.peer_power_pin_assignment_divergence`
@@ -2399,7 +2400,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 108 active rules; CI requires every new
+- **Status:** Baseline complete for all 109 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2408,7 +2409,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 108 covered, 0 not applicable, 0 unreviewed.
+  audit: 109 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -6492,7 +6493,8 @@ is not a reason by itself to expand its scope or change its default policy.
   non-generic `power_in` pin whose function is not recognized as a supply or
   return role, report when distinct symbol aliases have a mix of exactly one
   assigned net and no net assignment. Ambiguous multi-net assignments,
-  same-symbol groups, all-open groups, and common assignments are excluded.
+  same-symbol groups, all-open groups, and common assignments are excluded;
+  all-open aliases are covered by LINT-124.
 - **Boundary:** This is a review prompt, not a connectivity requirement.
   Similar pin metadata does not establish that pins must share a net; an open
   contact can be intentional. The rule does not infer rail roles, validate
@@ -6515,6 +6517,41 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Cohort input:** The rule adds first-party deterministic review coverage
   based on a peer-comparison hypothesis. No cohort code, private project
   source, board, or product expectation was imported.
+
+#### LINT-124 — Named power-input connector pin open on every PART_ID alias peer
+
+- **Status:** Implemented as the default-`REVIEW` rule
+  `connector.peer_power_input_named_all_open`. It reports an explicit named
+  connector power-input contact that is unassigned on every comparable
+  cross-symbol alias peer.
+- **Priority:** P1 connector pinout review. Exact-symbol peers already receive
+  `connector.repeated_pin_function` findings, but fully open named power-input
+  contacts on guarded cross-symbol aliases fell outside the generic all-open
+  rule and the mixed assigned/open peer rule.
+- **Predicate:** Reuse the guarded PART_ID peer scan, requiring matching
+  nonempty native identity, value, footprint, complete identical pin
+  inventories, and matching nonempty function and electrical-type metadata.
+  Compare an explicit, non-generic `power_in` pin whose function is not a
+  recognized supply or return role. Report only when every peer alias has no
+  net assignment for that pin.
+- **Boundary:** The finding is a review prompt, not a requirement to connect
+  the contacts. Similar symbol identity and pin metadata do not prove that a
+  contact is required or that peers should share a net. Mixed, assigned,
+  ambiguous, DNP, same-symbol, generic, recognized supply/return, or incomplete
+  groups are excluded or handled by their existing checks. The rule does not
+  infer role from net names, establish PCB continuity, validate off-board
+  wiring, or establish electrical approval. Required pinout intent belongs in
+  project-authored requirements.
+- **Evidence:** Synthetic regressions cover all-open fault detection; common,
+  mixed, same-symbol, identity, metadata, DNP, and ambiguous controls; stable
+  mapping order; policy and exact-ignore lifecycle; and CLI/MCP parity. A
+  digest-pinned synthetic all-open schematic fault and common-net control are
+  included in the exact KiCad 10.0.0 and 10.0.5 connector lane, which repeats
+  normalized exports and verifies the rule outcome. Hosted tagged acceptance
+  remains pending.
+- **Cohort input:** This is a first-party complement to the cross-symbol
+  connector open-assignment heuristic. No cohort code, private project source,
+  board, or product expectation was imported.
 
 ### P2 — PCB geometry and schematic review assistance
 
@@ -9380,7 +9417,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 108 active rules. Each entry has a deterministic predicate, evidence
+contains 109 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

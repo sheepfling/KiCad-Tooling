@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from mcp import Client
@@ -33,9 +34,10 @@ from tests.synthetic_design_lint_project import (
 )
 
 RULE_ID = "connector.peer_power_input_open_assignment"
+ALL_OPEN_RULE_ID = "connector.peer_power_input_named_all_open"
 
 
-def _netlist_xml(*, common_assignment: bool) -> str:
+def _netlist_xml(*, power_mode: Literal["split", "common", "all_open"]) -> str:
     components = "".join(
         f'<comp ref="J{index}"><value>Synthetic peer</value>'
         "<footprint>Synthetic:2Pin</footprint>"
@@ -50,22 +52,23 @@ def _netlist_xml(*, common_assignment: bool) -> str:
         "</pins></libpart>"
         for alias in ("A", "B")
     )
-    power_nodes = (
-        '<node ref="J1" pin="1"/><node ref="J2" pin="1"/>'
-        if common_assignment
-        else '<node ref="J1" pin="1"/>'
-    )
+    power_nodes = {
+        "split": '<node ref="J1" pin="1"/>',
+        "common": '<node ref="J1" pin="1"/><node ref="J2" pin="1"/>',
+        "all_open": "",
+    }[power_mode]
+    power_net = f'<net name="SYNTHETIC_BIAS">{power_nodes}</net>' if power_nodes else ""
     return (
         f"<export><components>{components}</components><libparts>{pins}</libparts><nets>"
         '<net name="SYNTHETIC_SIGNAL"><node ref="J1" pin="2"/>'
-        '<node ref="J2" pin="2"/></net>'
-        f'<net name="SYNTHETIC_BIAS">{power_nodes}</net>'
+        f'<node ref="J2" pin="2"/></net>{power_net}'
         "</nets></export>"
     )
 
 
-def test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp(
+def _assert_named_connector_power_input_parity(
     tmp_path: Path,
+    cases: tuple[tuple[Literal["split", "common", "all_open"], int, int], ...],
 ) -> None:
     unrelated_rules = (
         "pcb.schematic_component_inventory",
@@ -101,11 +104,8 @@ def test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for common_assignment, expected_count in (
-        (False, 1),
-        (True, 0),
-    ):
-        netlist.write_text(_netlist_xml(common_assignment=common_assignment), encoding="utf-8")
+    for power_mode, expected_mixed_count, expected_all_open_count in cases:
+        netlist.write_text(_netlist_xml(power_mode=power_mode), encoding="utf-8")
         write_model(
             native,
             summary.model_copy(
@@ -124,4 +124,22 @@ def test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp
 
         assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
         assert cli.status in {"PASS", "REVIEW"}
-        assert sum(item.rule_id == RULE_ID for item in cli.findings) == expected_count
+        assert sum(item.rule_id == RULE_ID for item in cli.findings) == expected_mixed_count
+        assert (
+            sum(item.rule_id == ALL_OPEN_RULE_ID for item in cli.findings)
+            == expected_all_open_count
+        )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    _assert_named_connector_power_input_parity(tmp_path, (("split", 1, 0), ("common", 0, 0)))
+
+
+@pytest.mark.design_lint_rule(rule_id=ALL_OPEN_RULE_ID)
+def test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    _assert_named_connector_power_input_parity(tmp_path, (("all_open", 0, 1), ("common", 0, 0)))

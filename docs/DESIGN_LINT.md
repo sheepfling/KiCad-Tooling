@@ -130,6 +130,14 @@ The first rules are:
   and [cross-symbol PART_ID fixture
   record](../tests/fixtures/design_lint/connector-peer-part-id-native/README.md).
   The schematic assignment does not establish routed copper continuity or off-board wiring.
+- `connector.peer_power_input_open_assignment` and
+  `connector.peer_power_input_named_all_open` compare an explicit, unrecognized
+  native `power_in` pin across distinct connector symbols with a guarded shared
+  `PART_ID`, matching component identity, complete pin inventories, and matching
+  per-pin metadata. The first prompts when the aliases mix one-net and open
+  assignments; the second prompts when every alias is open. Both default to
+  REVIEW. Matching aliases do not establish that the contacts should share a
+  net; exact-symbol peers remain with `connector.repeated_pin_function`.
 - `connector_peer_pin_coverage` is an observability summary for these existing
   connector heuristics. It binds candidate and fitted connector counts,
   exact-symbol and guarded `PART_ID` alias comparison counts,
@@ -1072,7 +1080,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 108 active rules. They
+`synthetic_validated`; the catalog currently contains 109 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and

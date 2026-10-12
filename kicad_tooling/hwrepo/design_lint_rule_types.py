@@ -9,6 +9,7 @@ DesignLintRuleId = Literal[
     "connector.peer_pin_assignment_outlier",
     "connector.peer_pin_assignment_divergence",
     "connector.peer_power_input_open_assignment",
+    "connector.peer_power_input_named_all_open",
     "connector.generic_peer_pin_all_open",
     "component.repeated_supply_pin_function",
     "power.pin_function_net_role_conflict",
