@@ -6507,7 +6507,11 @@ is not a reason by itself to expand its scope or change its default policy.
   10.0.5 native exports, including repeated normalized netlist comparison.
   The sources and their review boundary are recorded in the [synthetic alias
   fixture README](../tests/fixtures/design_lint/connector-named-power-input-peer-native/README.md).
-  Hosted tagged acceptance remains pending.
+  Hosted acceptance passed for `v0.5.0rc200` (GitHub Actions run
+  `38317433341`): the annotated-tag rule selector enabled the native connector
+  fixtures, and the focused unit, native, wheel, installed-wheel external
+  project rehearsal, and portability preview jobs passed. The stable package
+  job was skipped under prerelease policy.
 - **Cohort input:** The rule adds first-party deterministic review coverage
   based on a peer-comparison hypothesis. No cohort code, private project
   source, board, or product expectation was imported.
