@@ -6415,7 +6415,11 @@ is not a reason by itself to expand its scope or change its default policy.
   order, and CLI/MCP parity. Minimal digest-pinned sources are exercised with
   repeated normalized exports under exact KiCad 10.0.0 and 10.0.5 profiles.
   Local exact-native acceptance passed on 2026-10-12 for both versions; each
-  fault/control export repeated to an identical normalized netlist.
+  fault/control export repeated to an identical normalized netlist. Tagged
+  acceptance in `v0.5.0rc197` (GitHub Actions run `38314561122`) passed the
+  rule-scoped gate, exact-version native fixtures, installed-wheel rehearsal
+  against a separate project checkout, and portability previews on Ubuntu,
+  macOS, and Windows. The stable-only `package` job was skipped by RC policy.
 - **Cohort input:** This deterministic hypothesis adds first-party coverage;
   no cohort code, private project source, board, or product expectation was
   imported.
