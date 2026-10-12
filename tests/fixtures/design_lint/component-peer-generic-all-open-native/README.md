@@ -5,10 +5,10 @@ pins use native `passive` types and generic `Pin_1`/`Pin_2` functions. Pin 1 is
 a shared `DATA` anchor. Pin 2 is open on both peers in the fault; the control
 assigns the peers to separate `LOAD_A` and `LOAD_B` nets.
 
-| Fixture | Pin 1 assignments | Pin 2 assignments | Expected lint result |
-| --- | --- | --- | --- |
-| `fault.kicad_sch` | U1/U2 on `DATA` | both open | `component.generic_peer_pin_all_open` prompts for U1.2 and U2.2 when explicitly enabled |
-| `control.kicad_sch` | U1/U2 on `DATA` | `LOAD_A` / `LOAD_B` | no all-open prompt |
+| Fixture             | Pin 1 assignments | Pin 2 assignments   | Expected lint result                                                                    |
+| ------------------- | ----------------- | ------------------- | --------------------------------------------------------------------------------------- |
+| `fault.kicad_sch`   | U1/U2 on `DATA`   | both open           | `component.generic_peer_pin_all_open` prompts for U1.2 and U2.2 when explicitly enabled |
+| `control.kicad_sch` | U1/U2 on `DATA`   | `LOAD_A` / `LOAD_B` | no all-open prompt                                                                      |
 
 The rule is default-off. The shared anchor provides comparison context but does
 not establish that Pin 2 should connect. The fixtures contain no project design
