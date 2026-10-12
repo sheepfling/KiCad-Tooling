@@ -5,16 +5,18 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
-from typing import Any
 
 from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
+from .hwrepo.grounding_models import GroundingAnalysis
+from .hwrepo.models import ElectricalCheck
+from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis
 
 
 def _record_grounding_contract(
     ctx: ConnectorReturnFixtureContext,
     *,
     case: str,
-    spec: Any,
+    spec: GroundingAnalysis,
     source_case: str,
     relationship: str,
     checks: Mapping[str, str],
@@ -54,10 +56,10 @@ def _record_pin_connectivity_contract(
     ctx: ConnectorReturnFixtureContext,
     *,
     case: str,
-    spec: Any,
+    spec: PinConnectivityAnalysis,
     source_case: str,
     relationship: str,
-    check_results: tuple[Any, ...],
+    check_results: tuple[ElectricalCheck, ...],
 ) -> None:
     checks = {item.id: item.status for item in check_results}
     details = {item.id: item.detail for item in check_results}
@@ -100,8 +102,8 @@ def verify_db9_return_contracts(
 ) -> None:
     """Check common and isolated DB9 requirements against only DB9 native fixtures."""
     from .hwrepo.electrical import grounding_checks, pin_relationship_checks
-    from .hwrepo.grounding_models import GroundDomain, GroundingAnalysis
-    from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis, PinRelationshipRule
+    from .hwrepo.grounding_models import GroundDomain
+    from .hwrepo.pin_connectivity_models import PinRelationshipRule
 
     expected_pins = tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))
     if db9_control_nets.get("COMMON_RETURN") != expected_pins:
@@ -267,7 +269,7 @@ def verify_db9_return_contracts(
 def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
     """Check generic peer-power and stale-pin contract controls."""
     from .hwrepo.electrical import pin_relationship_checks
-    from .hwrepo.pin_connectivity_models import PinConnectivityAnalysis, PinRelationshipRule
+    from .hwrepo.pin_connectivity_models import PinRelationshipRule
 
     peer_common_power = PinConnectivityAnalysis(
         basis="Synthetic approved three-port pinout requires one shared +5V contact net",
