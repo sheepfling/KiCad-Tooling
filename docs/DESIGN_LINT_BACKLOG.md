@@ -656,6 +656,18 @@ and optional ecosystem adapters are `P3`.
   `models.py` preserves identity-compatible exports. Architecture and wheel
   checks cover the new boundaries; the registry shrank from 4,919 to 4,554
   lines. This extraction adds no lint rule or behavior change.
+  On 2026-10-12, the architecture size gate exposed two growing lint suites
+  above the 500-line review limit. PCB model-ownership assertions now live in
+  `tests/test_design_lint_architecture_pcb_models.py`. Shared CLI/MCP report
+  setup moved to `tests/design_lint_mcp_parity_report_support.py`, and
+  connector coverage plus ignore-lifecycle assertions moved to
+  `tests/test_design_lint_mcp_parity_connector_coverage.py`. Each resulting
+  test and support module is below 500 lines. The full architecture-marked
+  suite passed 177 tests and 895 subtests; both split CLI/MCP parity scenarios
+  also pass. That suite caught a lingering internal import of
+  `PcbConnectivitySnapshot` through the compatibility registry, so the native
+  fixture adapter now imports it from `pcb_connectivity_snapshot`. No lint
+  predicate or policy changed.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in
