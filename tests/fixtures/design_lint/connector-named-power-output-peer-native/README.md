@@ -31,6 +31,15 @@ normalized netlists, reported this rule for the fault, and kept the control
 free of this finding. The full scoped acceptance gate also passed its separate
 project wheel playtest and platform preview jobs.
 
+LINT-126 acceptance passed in hosted run 38323683834 with the same native
+fixture switch. Its added all-open fault reported
+`connector.peer_power_output_named_all_open`; the existing mixed fault retained
+`connector.peer_power_output_open_assignment`, and the common-net control had
+neither finding. All three fixtures were repeatable on both pinned KiCad
+versions listed below. The focused unit stage, format/lint/type checks,
+Markdown checks, wheel and source-distribution checks, installed-wheel checks,
+separate-project playtest, and Ubuntu, Windows, and macOS preview jobs passed.
+
 | KiCad version | Digest-pinned image                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------- |
 | 10.0.0        | `ghcr.io/kicad/kicad:10.0.0@sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3` |

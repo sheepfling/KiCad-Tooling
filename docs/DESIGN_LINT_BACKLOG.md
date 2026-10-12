@@ -6627,7 +6627,13 @@ is not a reason by itself to expand its scope or change its default policy.
   fingerprints, policy and exact-ignore lifecycle, and CLI/MCP parity pass.
   A tooling-owned native fixture set binds source hashes and exercises the
   all-open fault plus mixed/common controls on digest-pinned KiCad 10.0.0 and
-  10.0.5. Hosted acceptance is pending.
+  10.0.5. Hosted run `38323683834` passed the scoped unit gate with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`: both KiCad versions repeated all
+  three cases, the all-open fault reported this rule, the mixed fault retained
+  its separate rule, and the common-net control reported neither. Format,
+  Ruff, Pyright, Windows typing, Markdown, wheel/sdist and installed-wheel
+  checks, separate-project verification and playtest, and Ubuntu, Windows,
+  and macOS preview jobs also passed.
 
 ### P2 — PCB geometry and schematic review assistance
 
