@@ -5775,37 +5775,44 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Priority:** P1 connector interface review. Similar connector instances can
   repeat an accidentally omitted contact even when its generic passive symbol
   metadata gives ERC no reason to require a connection.
-- **Predicate:** Compare at least two fitted instances of one exact native
-  connector symbol only when their complete pin inventories match. Prompt when
+- **Predicate:** Compare at least two fitted exact-symbol peers with complete
+  identical pin inventories. Cross-symbol peers are eligible only with matching
+  nonempty native `PART_ID`, component value, footprint, complete pin inventory,
+  and matching function and electrical-type metadata on every pin. Prompt when
   a target pin is unassigned on every peer, has absent or generic `Pin_N`
   function metadata and native `passive` electrical type, and at least one
   different pin has the same exact single net assignment on every peer. Current
   source-matched `peer_assignment_group` evidence partitions the comparison.
 - **Boundary:** This pattern does not identify the open pin as signal, return,
   or power and does not establish that it must connect. The shared assignment
-  is context for review only. DNP peers, incomplete inventories, named or
-  mapped roles, non-passive pins, and cross-symbol aliases are outside this
-  rule. The result covers schematic assignments, not PCB copper continuity or
-  off-board wiring. Project policy can select `review`, `block`, or `off`; the
-  default remains `off` until each project decides whether this prompt is
-  useful.
+  is context for review only. DNP peers, incomplete identities or inventories,
+  named or mapped roles, and non-passive pins are outside this rule. Cross-symbol
+  matching uses the existing guarded `PART_ID` scan; it does not infer that
+  aliases are interchangeable beyond the listed identity evidence. The result
+  covers schematic assignments, not PCB copper continuity or off-board wiring.
+  Project policy can select `review`, `block`, or `off`; the default remains
+  `off` until each project decides whether this prompt is useful.
 - **Fixtures:** Synthetic typed-netlist cases cover the all-open fault, a
   common-net control, no shared-anchor control, distinct peer groups, DNP and
-  specific-role exclusions, stable fingerprint under input reordering, policy
-  modes, exact ignores, and CLI/MCP parity. Digest-pinned native schematics
-  verify fault/control behavior on KiCad 10.0.0 and 10.0.5 through
+  specific-role exclusions, guarded cross-symbol `PART_ID` peers, duplicate
+  suppression, stable fingerprint under input reordering, policy modes, exact
+  ignores, and CLI/MCP parity. Digest-pinned native schematics verify exact-
+  symbol and `PART_ID` fault/control behavior on KiCad 10.0.0 and 10.0.5 through
   `tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope`.
   The local exact-version lane passed both versions on 2026-10-12. The focused
   `v0.5.0rc139` annotated-tag acceptance passed on the same date (run
   `38226360094`), including exact-version native fixtures and the installed
   wheel against a separate public template checkout. These sources are
-  tooling-owned and contain no project board data.
+  tooling-owned and contain no project board data. The cross-symbol all-open
+  extension passed the local exact-version native lane on 2026-10-12; its
+  tag-specific hosted acceptance is pending.
 - **Applicability evidence:** More examples can test boundary diversity, but
   do not establish precision or reviewer value without an independent pinout
   disposition. No field-review time or false-positive rate is claimed.
-- **Next:** Keep the heuristic opt-in. Collect sanitized, independently
-  reviewed public or synthetic boundary cases before considering broader
-  connector identities or a different default.
+- **Next:** Keep the heuristic opt-in. The `PART_ID` extension uses the same
+  strict identity and pin-metadata gate as existing connector peer checks.
+  Collect sanitized, independently reviewed public or synthetic boundary
+  cases before considering weaker identities or a different default.
 
 ### P2 — PCB geometry and schematic review assistance
 

@@ -23,6 +23,7 @@ def normalized_connector_return_patterns(results):
         "peer-pin-outlier-fault",
         "peer-pin-outlier-control",
         "peer-pin-part-id-open-fault",
+        "part-id-all-open-generic-peer-fault",
         "peer-pin-part-id-common-control",
         "peer-pin-part-id-split-fault",
         "two-peer-open-fault",

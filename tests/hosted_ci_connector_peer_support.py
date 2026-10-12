@@ -113,6 +113,19 @@ def assert_connector_peer_pin_cases(results, version):
     assert all_open_control["status"] == "PASS"
     assert all_open_control["lint_status"] == "PASS"
     assert all_open_control["findings"] == "none"
+    part_id_all_open = results["connector-return-fixture/part-id-all-open-generic-peer-fault"]
+    part_id_control = results["connector-return-fixture/peer-pin-part-id-common-control"]
+    assert part_id_all_open["status"] == "PASS"
+    assert part_id_all_open["lint_status"] == "REVIEW"
+    assert part_id_all_open["findings"] == "connector.generic_peer_pin_all_open"
+    assert part_id_all_open["subjects"] == (
+        "PART_ID SYNTHETIC-CONNECTOR-2PIN-001 pin 2: generic passive contact is open on every peer"
+    )
+    part_id_coverage = json.loads(part_id_all_open["connector_peer_pin_coverage"])
+    assert part_id_coverage["generic_peer_pin_all_open_finding_count"] == 1
+    assert part_id_coverage["part_id_alias_coverage"]["eligible_peer_group_count"] == 1
+    assert part_id_control["lint_status"] == "PASS"
+    assert part_id_control["findings"] == "none"
     offboard_control = results["connector-return-fixture/offboard-interface-control"]
     assert offboard_control["status"] == "PASS"
     assert offboard_control["coverage_status"] == "COMPLETE"

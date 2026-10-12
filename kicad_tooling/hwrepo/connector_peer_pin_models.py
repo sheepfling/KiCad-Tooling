@@ -182,8 +182,11 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             raise ValueError("Peer-pin findings cannot exceed compared connector pin groups")
         if self.generic_peer_pin_all_open_finding_count > (
             self.exact_symbol_pin_groups_all_unassigned_count
+            + self.part_id_alias_coverage.all_unassigned_pin_group_count
         ):
-            raise ValueError("All-open generic findings cannot exceed all-unassigned peer groups")
+            raise ValueError(
+                "All-open generic findings cannot exceed all-unassigned exact-symbol and PART_ID groups"
+            )
         if self.status == "NO_CONNECTOR_CANDIDATES" and self.connector_candidate_count:
             raise ValueError("No-connector coverage cannot contain connector candidates")
         if self.status == "NO_FITTED_CONNECTORS" and (

@@ -13,6 +13,12 @@ KiCad 10.0.0 and 10.0.5 images. The warning does not claim that generic pin 2
 is a ground or power contact, or that it must be connected. An approved
 connector pinout is still needed to decide that.
 
+Cross-symbol peers with a shared `PART_ID` use the same prompt only after
+matching value, footprint, complete pin inventory, and per-pin function and
+electrical-type metadata are confirmed. The native `PART_ID` fault and shared
+assignment control are recorded in the
+[connector PART_ID fixture set](../connector-peer-part-id-native/README.md).
+
 | Fixture             | Pin 1             | Pin 2                 | Expected result               |
 | ------------------- | ----------------- | --------------------- | ----------------------------- |
 | `fault.kicad_sch`   | J1/J2 share `+5V` | J1.2/J2.2 unassigned  | `REVIEW` from the opt-in rule |

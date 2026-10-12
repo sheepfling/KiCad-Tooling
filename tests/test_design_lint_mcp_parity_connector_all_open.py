@@ -37,24 +37,36 @@ from tests.synthetic_design_lint_project import (
 RULE_ID = "connector.generic_peer_pin_all_open"
 
 
-def _netlist_xml(*, fault: bool) -> str:
+def _netlist_xml(*, fault: bool, part_id_aliases: bool = False) -> str:
     power_nodes = "".join(f'<node ref="J{reference}" pin="1"/>' for reference in (1, 2))
     return_nodes = (
         "" if fault else '<net name="GND"><node ref="J1" pin="2"/><node ref="J2" pin="2"/></net>'
     )
-    return (
-        "<export><components>"
-        + "".join(
-            f'<comp ref="J{reference}"><value>Synthetic peer port</value>'
-            "<footprint>Synthetic:Port</footprint>"
-            '<libsource lib="Synthetic" part="GenericPassivePort"/></comp>'
-            for reference in (1, 2)
+    symbol_names = (
+        ("GenericPassivePortLeft", "GenericPassivePortRight")
+        if part_id_aliases
+        else ("GenericPassivePort", "GenericPassivePort")
+    )
+    components = "".join(
+        f'<comp ref="J{reference}"><value>Synthetic peer port</value>'
+        "<footprint>Synthetic:Port</footprint>"
+        + (
+            '<fields><field name="PART_ID">SYNTHETIC-PASSIVE-PORT-001</field></fields>'
+            if part_id_aliases
+            else ""
         )
-        + "</components><libparts>"
-        '<libpart lib="Synthetic" part="GenericPassivePort"><pins>'
+        + f'<libsource lib="Synthetic" part="{symbol_name}"/></comp>'
+        for reference, symbol_name in zip((1, 2), symbol_names, strict=True)
+    )
+    libparts = "".join(
+        f'<libpart lib="Synthetic" part="{symbol_name}"><pins>'
         '<pin num="1" name="Pin_1" type="passive"/>'
         '<pin num="2" name="Pin_2" type="passive"/>'
-        "</pins></libpart></libparts><nets>"
+        "</pins></libpart>"
+        for symbol_name in sorted(set(symbol_names))
+    )
+    return (
+        f"<export><components>{components}</components><libparts>{libparts}</libparts><nets>"
         f'<net name="+5V">{power_nodes}</net>{return_nodes}'
         "</nets></export>"
     )
@@ -119,8 +131,11 @@ def test_all_open_generic_peer_pin_lint_cli_mcp_parity(tmp_path: Path) -> None:
     netlist = native.parent / "netlist.xml"
     summary = read_model(native, ValidationSummary)
 
-    def write_netlist(*, fault: bool) -> None:
-        netlist.write_text(_netlist_xml(fault=fault), encoding="utf-8")
+    def write_netlist(*, fault: bool, part_id_aliases: bool = False) -> None:
+        netlist.write_text(
+            _netlist_xml(fault=fault, part_id_aliases=part_id_aliases),
+            encoding="utf-8",
+        )
         write_model(
             native,
             summary.model_copy(
@@ -146,24 +161,31 @@ def test_all_open_generic_peer_pin_lint_cli_mcp_parity(tmp_path: Path) -> None:
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for fault, expected_status, expected_count in (
-        (True, "REVIEW", 1),
-        (False, "PASS", 0),
-    ):
-        write_netlist(fault=fault)
-        process = run_design_lint_cli(tmp_path, root, native)
-        assert process.returncode in {0, 1}, process.stderr + process.stdout
-        cli = DesignLintReport.model_validate_json(process.stdout)
-        mcp = asyncio.run(inspect_mcp())
+    for part_id_aliases in (False, True):
+        for fault, expected_status, expected_count in (
+            (True, "REVIEW", 1),
+            (False, "PASS", 0),
+        ):
+            write_netlist(fault=fault, part_id_aliases=part_id_aliases)
+            process = run_design_lint_cli(tmp_path, root, native)
+            assert process.returncode in {0, 1}, process.stderr + process.stdout
+            cli = DesignLintReport.model_validate_json(process.stdout)
+            mcp = asyncio.run(inspect_mcp())
 
-        assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
-        assert cli.status == expected_status, (
-            cli.issues,
-            [(item.rule_id, item.subject, item.mode, item.disposition) for item in cli.findings],
-        )
-        findings = tuple(item for item in cli.findings if item.rule_id == RULE_ID)
-        assert len(findings) == expected_count
-        assert cli.connector_peer_pin_coverage is not None
-        assert cli.connector_peer_pin_coverage.generic_peer_pin_all_open_finding_count == (
-            expected_count
-        )
+            assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
+            assert cli.status == expected_status, (
+                cli.issues,
+                [
+                    (item.rule_id, item.subject, item.mode, item.disposition)
+                    for item in cli.findings
+                ],
+            )
+            findings = tuple(item for item in cli.findings if item.rule_id == RULE_ID)
+            assert len(findings) == expected_count
+            assert cli.connector_peer_pin_coverage is not None
+            assert cli.connector_peer_pin_coverage.generic_peer_pin_all_open_finding_count == (
+                expected_count
+            )
+            if part_id_aliases and fault:
+                assert findings[0].evidence["peer_identity_basis"] == ("part_id",)
+                assert findings[0].evidence["peer_identity"] == ("SYNTHETIC-PASSIVE-PORT-001",)

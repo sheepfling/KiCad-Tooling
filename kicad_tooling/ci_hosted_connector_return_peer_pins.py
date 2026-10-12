@@ -48,6 +48,44 @@ def verify_peer_pin_assignments(ctx: ConnectorReturnFixtureContext) -> dict[str,
             separators=(",", ":"),
             ensure_ascii=False,
         )
+    part_id_all_open = ctx.reports["part-id-all-open-generic-peer-fault", "first"]
+    part_id_all_open_observed = ctx.observed_contracts[
+        "part-id-all-open-generic-peer-fault", "first"
+    ]
+    part_id_all_open_findings = {item.rule_id: item for item in part_id_all_open.findings}
+    part_id_all_open_coverage = part_id_all_open.connector_peer_pin_coverage
+    if (
+        part_id_all_open.status != "REVIEW"
+        or set(part_id_all_open_findings) != {"connector.generic_peer_pin_all_open"}
+        or part_id_all_open_findings["connector.generic_peer_pin_all_open"].subject
+        != "PART_ID SYNTHETIC-CONNECTOR-2PIN-001 pin 2: generic passive contact is open on every peer"
+        or part_id_all_open_findings["connector.generic_peer_pin_all_open"].evidence.get(
+            "peer_identity_basis"
+        )
+        != ("part_id",)
+        or part_id_all_open_findings["connector.generic_peer_pin_all_open"].evidence.get("J1.2")
+        != ()
+        or part_id_all_open_findings["connector.generic_peer_pin_all_open"].evidence.get("J2.2")
+        != ()
+        or part_id_all_open_findings["connector.generic_peer_pin_all_open"].evidence.get(
+            "shared_anchor_contacts"
+        )
+        != ("J1.1 / J2.1 -> SYNTHETIC_DATA",)
+        or part_id_all_open_coverage is None
+        or part_id_all_open_coverage.netlist_sha256
+        != ctx.netlist_hashes["part-id-all-open-generic-peer-fault", "first"]
+        or part_id_all_open_coverage.generic_peer_pin_all_open_finding_count != 1
+        or part_id_all_open_observed.nets != {"SYNTHETIC_DATA": ("J1.1", "J2.1")}
+    ):
+        raise ValueError(
+            "Native PART_ID all-open connector fault lost generic passive pin evidence"
+        )
+    peer_pin_coverage_receipts["part-id-all-open-generic-peer-fault"] = json.dumps(
+        part_id_all_open_coverage.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
     for case, expected_status, expected_count in (
         ("all-open-generic-peer-fault", "REVIEW", 1),
         ("all-open-generic-peer-control", "PASS", 0),

@@ -10,6 +10,7 @@ and passive electrical types.
 | `fault.kicad_sch`                  | `SYNTHETIC_RETURN` | Unconnected        | `REVIEW` for `connector.peer_pin_assignment_outlier`    |
 | `control.kicad_sch`                | `SYNTHETIC_RETURN` | `SYNTHETIC_RETURN` | No connector peer-pin finding                           |
 | `split-assignment-fault.kicad_sch` | `SYNTHETIC_NET_2`  | `SYNTHETIC_NET_3`  | `REVIEW` for `connector.peer_pin_assignment_divergence` |
+| `all-open-generic-fault.kicad_sch` | Unconnected        | Unconnected        | `REVIEW` for `connector.generic_peer_pin_all_open`      |
 
 Pin 1 is assigned to the same synthetic data net in both cases. The fault
 demonstrates a missing assignment surfaced by exact part identity and matching
@@ -25,6 +26,12 @@ shape where comparable connector returns appear on separately named nets. It
 does not assert that those nets must be bonded; a reviewed project contract
 must state that requirement.
 
+The all-open fault leaves both generic passive pin-2 contacts unassigned while
+pin 1 remains on one shared synthetic data net. It verifies that the default-off
+all-open prompt reuses the guarded cross-symbol identity path and reports one
+review candidate for the matching `PART_ID`. The common-assignment control
+above stays quiet.
+
 The source-bound native lane exports both schematics twice with digest-pinned
 KiCad 10.0.0 and 10.0.5, then checks the normalized netlist and lint result.
 These are tooling-owned fixtures only; no product schematic or project
@@ -36,3 +43,5 @@ SHA-256 source digests:
 - `fault.kicad_sch`: `db6f556278611edb21a66f8445f7dfc3a2e456a63783dc3d1e8a79a56a69d478`
 - `split-assignment-fault.kicad_sch`:
   `8530bab2ac3537a821be48321e9bb713aa8b2933d714902cc5a30fb4168fa192`
+- `all-open-generic-fault.kicad_sch`:
+  `156b464b55cc188154c9b724976c976effbf9ec8cf38ff347811a31f9148ee0a`

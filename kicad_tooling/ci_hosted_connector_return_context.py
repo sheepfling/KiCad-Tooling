@@ -99,6 +99,8 @@ def prepare_connector_return_fixture_context(
         / "generic-peer-pin-assignment-native/control.kicad_sch",
         "peer-pin-part-id-open-fault": fixture_root
         / "connector-peer-part-id-native/fault.kicad_sch",
+        "part-id-all-open-generic-peer-fault": fixture_root
+        / "connector-peer-part-id-native/all-open-generic-fault.kicad_sch",
         "peer-pin-part-id-common-control": fixture_root
         / "connector-peer-part-id-native/control.kicad_sch",
         "peer-pin-part-id-split-fault": fixture_root
@@ -161,6 +163,7 @@ def prepare_connector_return_fixture_context(
         "peer-pin-outlier-fault": "e9945c83c351ece43064a6c09c770fd8f3ab5fadd550ac58ee5d001f5d8842e2",
         "peer-pin-outlier-control": "94a9897ea50645a4232abf005477e620a4cd9b12330dfc2d6f32734e8157b8be",
         "peer-pin-part-id-open-fault": "db6f556278611edb21a66f8445f7dfc3a2e456a63783dc3d1e8a79a56a69d478",
+        "part-id-all-open-generic-peer-fault": "156b464b55cc188154c9b724976c976effbf9ec8cf38ff347811a31f9148ee0a",
         "peer-pin-part-id-common-control": "b8b85aa1fdc8c62547eab58788b120fa6028a8ba65051126f954432f4dd07d2c",
         "peer-pin-part-id-split-fault": "8530bab2ac3537a821be48321e9bb713aa8b2933d714902cc5a30fb4168fa192",
         "peer-pin-minority-fault": "a071543178ad7668d20a3653fea5196cf556c3b96338b81dbeac97a6360ede2c",
@@ -288,7 +291,11 @@ def prepare_connector_return_fixture_context(
                 netlist_sha256=netlist_hashes[case, run],
             )
             policy = DesignLintPolicy()
-            if case in {"all-open-generic-peer-fault", "all-open-generic-peer-control"}:
+            if case in {
+                "all-open-generic-peer-fault",
+                "all-open-generic-peer-control",
+                "part-id-all-open-generic-peer-fault",
+            }:
                 policy = DesignLintPolicy(
                     rules=(
                         DesignLintRuleOverride(

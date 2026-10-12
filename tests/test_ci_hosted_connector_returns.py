@@ -59,6 +59,7 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/peer-pin-outlier-fault",
     "connector-return-fixture/peer-pin-outlier-control",
     "connector-return-fixture/peer-pin-part-id-open-fault",
+    "connector-return-fixture/part-id-all-open-generic-peer-fault",
     "connector-return-fixture/peer-pin-part-id-common-control",
     "connector-return-fixture/peer-pin-part-id-split-fault",
     "connector-return-fixture/two-peer-open-fault",

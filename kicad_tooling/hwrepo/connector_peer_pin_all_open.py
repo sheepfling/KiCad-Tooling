@@ -9,6 +9,10 @@ from .connector_identity import (
     partition_peer_assignments,
     pin_function_is_generic,
 )
+from .connector_peer_pin_scan import (
+    _ConnectorPartIdPeerPinGroup,
+    scan_connector_part_id_peer_pins,
+)
 from .design_lint_types import Candidate
 from .models import ConnectorMappedPinEvidence, NetlistContract
 
@@ -212,9 +216,125 @@ def all_open_generic_connector_peer_pin_candidates(
                     )
                 )
 
+    part_id_scan = scan_connector_part_id_peer_pins(
+        observed,
+        declared_references,
+        peer_assignment_groups,
+    )
+    part_id_groups_by_scope: dict[
+        tuple[str, str, frozenset[str]], list[_ConnectorPartIdPeerPinGroup]
+    ] = {}
+    for group in part_id_scan.pin_groups:
+        references = frozenset(pin.rsplit(".", 1)[0].casefold() for pin in group.assignments)
+        scope = (
+            group.part_id.casefold(),
+            (group.peer_assignment_group or "").casefold(),
+            references,
+        )
+        part_id_groups_by_scope.setdefault(scope, []).append(group)
+
+    part_id_candidates: list[Candidate] = []
+    for scope, peer_pin_groups in part_id_groups_by_scope.items():
+        for group in peer_pin_groups:
+            if any(group.assignments.values()):
+                continue
+            if not pin_function_is_generic(group.pin_function):
+                continue
+            if group.pin_electrical_type.strip().casefold() != "passive":
+                continue
+            pin_keys = tuple(pin.casefold() for pin in group.assignments)
+            if any(
+                (reviewed := reviewed_pins.get(pin)) is not None
+                and reviewed.role in {"return", "supply"}
+                for pin in pin_keys
+            ):
+                continue
+
+            shared_anchors = tuple(
+                anchor
+                for anchor in peer_pin_groups
+                if anchor.pin_number.casefold() != group.pin_number.casefold()
+                and anchor.assignments
+                and len(set(anchor.assignments.values())) == 1
+                and len(next(iter(anchor.assignments.values()))) == 1
+            )
+            if not shared_anchors:
+                continue
+
+            anchor_contacts = tuple(
+                sorted(
+                    (
+                        " / ".join(anchor.assignments)
+                        + f" -> {next(iter(anchor.assignments.values()))[0]}"
+                    )
+                    for anchor in shared_anchors
+                )
+            )
+            evidence = {
+                **group.assignments,
+                "symbol": ("multiple connector symbols",),
+                "pin_number": (group.pin_number,),
+                "shared_anchor_contacts": anchor_contacts,
+                "peer_identity_basis": ("part_id",),
+                "peer_identity": (group.part_id,),
+                "peer_symbols": group.symbols,
+            }
+            if group.peer_assignment_group is not None:
+                evidence["peer_assignment_group"] = (group.peer_assignment_group,)
+                evidence["peer_assignment_basis"] = group.peer_assignment_basis
+            part_id_candidates.append(
+                Candidate(
+                    rule_id="connector.generic_peer_pin_all_open",
+                    subject=(
+                        f"PART_ID {group.part_id} pin {group.pin_number}: generic passive "
+                        "contact is open on every peer"
+                    ),
+                    message=(
+                        "This generic passive connector pin is unassigned on every fitted peer "
+                        "with the same reviewed PART_ID, while another pin has the same exact "
+                        "assigned net across those peers. Review the approved pinout for an "
+                        "intentionally unused contact or a missing connection. The generic pin "
+                        "metadata does not identify this contact as signal, return, or power, and "
+                        "peer similarity does not establish that it must connect."
+                        + (
+                            " The comparison is scoped by a source-reviewed peer-assignment group."
+                            if group.peer_assignment_group is not None
+                            else ""
+                        )
+                    ),
+                    evidence=evidence,
+                )
+            )
+
+    def is_subsumed_by_part_id(exact: Candidate) -> bool:
+        exact_evidence = exact.evidence
+        exact_pin_keys = {
+            key
+            for key in exact_evidence
+            if "." in key and key.rsplit(".", 1)[0].casefold() in symbols_by_reference
+        }
+        if not exact_pin_keys:
+            return False
+        exact_symbol = next(iter(exact_evidence.get("symbol", ())), "").casefold()
+        exact_pin_number = next(iter(exact_evidence.get("pin_number", ())), "").casefold()
+        for alias in part_id_candidates:
+            alias_evidence = alias.evidence
+            if next(
+                iter(alias_evidence.get("pin_number", ())), ""
+            ).casefold() != exact_pin_number or exact_symbol not in {
+                symbol.casefold() for symbol in alias_evidence.get("peer_symbols", ())
+            }:
+                continue
+            if all(alias_evidence.get(pin) == exact_evidence[pin] for pin in exact_pin_keys):
+                return True
+        return False
+
+    candidates = [
+        *(candidate for candidate in candidates if not is_subsumed_by_part_id(candidate)),
+        *part_id_candidates,
+    ]
     return tuple(
         sorted(
-            candidates,
-            key=lambda item: (item.rule_id, item.subject, tuple(sorted(item.evidence))),
+            candidates, key=lambda item: (item.rule_id, item.subject, tuple(sorted(item.evidence)))
         )
     )

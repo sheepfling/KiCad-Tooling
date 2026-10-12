@@ -41,6 +41,7 @@ class _ConnectorPartIdPeerPinGroup:
     part_id: str
     pin_number: str
     pin_function: str
+    pin_electrical_type: str
     assignments: dict[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     peer_assignment_group: str | None = None
@@ -248,6 +249,7 @@ def scan_connector_part_id_peer_pins(
                         part_id=display_id,
                         pin_number=pin_number,
                         pin_function=pin_metadata[pin_number][0],
+                        pin_electrical_type=pin_metadata[pin_number][1],
                         assignments=dict(
                             sorted(
                                 scoped_assignments.items(),

@@ -5,9 +5,61 @@ from __future__ import annotations
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 
+def _all_open_generic_peer_pin_cases() -> dict[str, NetlistContract]:
+    references = ("J1", "J2")
+    functions = {
+        f"{reference}.{number}": f"Pin_{number}"
+        for reference in references
+        for number in ("1", "2")
+    }
+    electrical_types = {pin: "passive" for pin in functions}
+    exact_components = {
+        reference: ComponentContract(value="Synthetic generic peer port", footprint="")
+        for reference in references
+    }
+    alias_components = {
+        reference: ComponentContract(
+            value="Synthetic two-contact connector",
+            footprint="Synthetic:Port_2x1",
+            part_id="SYNTHETIC-CONNECTOR-2PIN-001",
+        )
+        for reference in references
+    }
+    return {
+        "all-open-generic-peer-fault": NetlistContract(
+            components=exact_components,
+            nets={"+5V": ("J1.1", "J2.1")},
+            component_symbols={reference: "Lint:PeerPowerPort" for reference in references},
+            component_pin_numbers={reference: ("1", "2") for reference in references},
+            pin_functions=functions,
+            pin_electrical_types=electrical_types,
+        ),
+        "all-open-generic-peer-control": NetlistContract(
+            components=exact_components,
+            nets={"+5V": ("J1.1", "J2.1"), "GND": ("J1.2", "J2.2")},
+            component_symbols={reference: "Lint:PeerPowerPort" for reference in references},
+            component_pin_numbers={reference: ("1", "2") for reference in references},
+            pin_functions=functions,
+            pin_electrical_types=electrical_types,
+        ),
+        "part-id-all-open-generic-peer-fault": NetlistContract(
+            components=alias_components,
+            nets={"SYNTHETIC_DATA": ("J1.1", "J2.1")},
+            component_symbols={
+                "J1": "Synthetic:GenericPort",
+                "J2": "Synthetic:GenericPortAlias",
+            },
+            component_pin_numbers={reference: ("1", "2") for reference in references},
+            pin_functions=functions,
+            pin_electrical_types=electrical_types,
+        ),
+    }
+
+
 def peer_pin_case_contracts() -> dict[str, NetlistContract]:
     """Return synthetic fault and control netlists for this theme."""
     return {
+        **_all_open_generic_peer_pin_cases(),
         "peer-power-fault": NetlistContract(
             components={
                 f"J{reference}": ComponentContract(value="Synthetic power port", footprint="")
