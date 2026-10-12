@@ -331,6 +331,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "component.peer_power_input_named_all_open": {
             "tests.test_component_named_peer_power_input_all_open_native.test_native_named_peer_power_input_all_open_fault_and_control_are_repeatable",
         },
+        "connector.peer_power_input_open_assignment": {
+            "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable",
+        },
         "component.generic_peer_pin_assignment_outlier": {
             "tests.test_component_peer_pin_assignment_native_fixture_lane.test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable",
         },

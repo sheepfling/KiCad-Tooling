@@ -44,6 +44,9 @@ _LINT_AREA_MODULES = {
         {
             "tests/test_connector_unconnected_power_output.py",
             "tests/test_design_lint_connector_power_pins.py",
+            "tests/test_design_lint_connector_named_power_input_peers.py",
+            "tests/test_design_lint_mcp_parity_connector_named_power_input.py",
+            "tests/test_connector_named_power_input_native_fixture_lane.py",
             "tests/test_design_lint_mcp_parity_connector_power_output.py",
             "tests/test_connector_contact_ratings.py",
             "tests/test_electrical_connector_evidence.py",
@@ -181,6 +184,9 @@ _LINT_AREA_MODULES = {
         {
             "tests/test_connector_unconnected_power_output.py",
             "tests/test_design_lint_connector_power_pins.py",
+            "tests/test_design_lint_connector_named_power_input_peers.py",
+            "tests/test_design_lint_mcp_parity_connector_named_power_input.py",
+            "tests/test_connector_named_power_input_native_fixture_lane.py",
             "tests/test_design_lint_mcp_parity_connector_power_output.py",
             "tests/test_component_unconnected_power_output.py",
             "tests/test_component_power_input_native_fixture_lane.py",
@@ -350,6 +356,7 @@ _LINT_AREA_MODULES = {
     ),
     "parity_lint": frozenset(
         {
+            "tests/test_design_lint_mcp_parity_connector_named_power_input.py",
             "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",
             "tests/test_design_lint_mcp_parity_peer_pins.py",
             "tests/test_design_lint_mcp_parity_unconnected_power_output.py",

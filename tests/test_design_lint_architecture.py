@@ -40,6 +40,7 @@ PIN_ANALYSIS_MODULES = (
     "connector_peer_pin_coverage.py",
     "connector_peer_pin_findings.py",
     "connector_peer_pin_scan.py",
+    "connector_peer_power_input.py",
     "connector_pins.py",
     "connector_return_pins.py",
     "component_peer_pin_findings.py",

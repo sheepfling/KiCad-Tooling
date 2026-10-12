@@ -63,6 +63,19 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_schematic_text.py": {"schematic_lint"},
     "test_connector_peer_pin_all_open.py": {"connector_lint"},
     "test_design_lint_connector_power_pins.py": {"connector_lint", "power_lint"},
+    "test_design_lint_connector_named_power_input_peers.py": {
+        "connector_lint",
+        "power_lint",
+    },
+    "test_design_lint_mcp_parity_connector_named_power_input.py": {
+        "connector_lint",
+        "power_lint",
+        "parity_lint",
+    },
+    "test_connector_named_power_input_native_fixture_lane.py": {
+        "connector_lint",
+        "power_lint",
+    },
     "test_native_db9_return_contracts.py": {"connector_lint", "return_path_lint"},
     "test_connector_signal_peer_pin_all_open.py": {"connector_lint", "interface_lint"},
     "test_component_peer_pin_all_open.py": {"component_lint"},
@@ -294,6 +307,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
         (
             "component.peer_power_input_named_all_open",
             "tests/test_component_named_peer_power_input_all_open.py::test_named_peer_power_input_open_on_every_peer_is_reviewed",
+        ),
+        (
+            "connector.peer_power_input_open_assignment",
+            "tests/test_design_lint_connector_named_power_input_peers.py::test_open_named_power_input_on_one_connector_symbol_alias_is_reviewed",
         ),
         (
             "bus.spi_peer_voltage_review",
