@@ -932,9 +932,9 @@ and optional ecosystem adapters are `P3`.
    passed. All four common-return versus isolated-return contract outcomes
    matched, repeated exports were stable, and normalized netlists matched
    across versions. Hosted acceptance for this DB9 contract pair passed in
-   `v0.5.0rc123` (GitHub Actions run `38205232934`). The rule-scoped lane
-   added here separately verifies that only the DB9 fault/control sources are
-   exported; that focused hosted result is pending the next tagged run.
+   `v0.5.0rc123` (GitHub Actions run `38205232934`). The new rule-scoped lane
+   verified that only the DB9 fault/control sources are exported and completed
+   hosted acceptance in `v0.5.0rc195` (GitHub Actions run `38312579543`).
    A separate CLI/MCP parity test now exercises the same common-versus-isolated
    DB9 grounding requirement with synthetic netlist XML. It checks the four
    fault/control combinations and requires both surfaces to return identical
@@ -1385,8 +1385,8 @@ is not a reason by itself to expand its scope or change its default policy.
   pin-connectivity matrix passed locally on the pinned native images on
   2026-10-07. The DB9 common/isolated contract pair passed hosted acceptance
   in `v0.5.0rc123` (GitHub Actions run `38205232934`); hosted acceptance for
-  the additional peer-power and stale-pin matrix remains pending. The new
-  rule-scoped DB9 lane also awaits its next tagged run.
+  the additional peer-power and stale-pin matrix remains pending. The focused
+  DB9 lane passed in `v0.5.0rc195` (GitHub Actions run `38312579543`).
 - **Problem:** Similar connector instances can have separately named or
   unassigned corresponding pins without a direct, project-readable assertion
   about their intended relationship.
