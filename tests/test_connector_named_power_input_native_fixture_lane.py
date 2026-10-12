@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -13,6 +14,7 @@ from kicad_tooling.ci_hosted_connector_named_power_input import (
     ALL_OPEN_RULE_ID,
     CASES,
     RULE_ID,
+    verify_connector_named_power_input_cases,
 )
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import DesignLintPolicy
@@ -39,6 +41,61 @@ def test_named_connector_power_input_alias_fixture_sources_match_reviewed_digest
     assert {
         name: hashlib.sha256((fixture_root / name).read_bytes()).hexdigest() for name in expected
     } == expected
+
+
+def test_named_connector_power_input_hosted_case_validator_accepts_all_three_cases() -> None:
+    fault_case, control_case, all_open_case = CASES
+    symbols = {
+        "J1": "Lint:NamedPeerPowerInputA",
+        "J2": "Lint:NamedPeerPowerInputB",
+    }
+    components = {
+        reference: SimpleNamespace(part_id="SYNTHETIC-CONNECTOR-NAMED-INPUT-001")
+        for reference in symbols
+    }
+    report_findings = {
+        fault_case: (
+            SimpleNamespace(
+                rule_id=RULE_ID,
+                evidence={"J1.1": ("+3V3",), "J2.1": ()},
+            ),
+        ),
+        control_case: (),
+        all_open_case: (
+            SimpleNamespace(
+                rule_id=ALL_OPEN_RULE_ID,
+                evidence={"J1.1": (), "J2.1": ()},
+            ),
+        ),
+    }
+    reports = {
+        (case, "first"): SimpleNamespace(findings=findings)
+        for case, findings in report_findings.items()
+    }
+    observed_contracts = {
+        (fault_case, "first"): SimpleNamespace(
+            component_symbols=symbols,
+            components=components,
+            component_pin_numbers={"J1": ("1", "2"), "J2": ("1", "2")},
+            pin_functions={"J1.1": "BIAS_IN", "J2.1": "BIAS_IN"},
+            pin_electrical_types={"J1.1": "power_in", "J2.1": "power_in"},
+        ),
+        (control_case, "first"): SimpleNamespace(
+            nets={"+3V3": ("J1.1", "J2.1")},
+        ),
+        (all_open_case, "first"): SimpleNamespace(
+            component_symbols=symbols,
+            nets={"SIGNAL": ("J1.2", "J2.2")},
+        ),
+    }
+
+    verify_connector_named_power_input_cases(
+        SimpleNamespace(
+            cases=CASES,
+            reports=reports,
+            observed_contracts=observed_contracts,
+        )
+    )
 
 
 @pytest.mark.native_kicad

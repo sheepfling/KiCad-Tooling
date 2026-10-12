@@ -18,7 +18,7 @@ def verify_connector_named_power_input_cases(ctx: ConnectorReturnFixtureContext)
     if set(ctx.cases) != set(CASES):
         raise ValueError("Connector named power-input fixture set is incomplete")
 
-    fault_case, control_case = CASES
+    fault_case, control_case, all_open_case = CASES
     fault = ctx.reports[fault_case, "first"]
     observed_fault = ctx.observed_contracts[fault_case, "first"]
     findings = tuple(item for item in fault.findings if item.rule_id == RULE_ID)
@@ -58,7 +58,6 @@ def verify_connector_named_power_input_cases(ctx: ConnectorReturnFixtureContext)
             f"assignments={observed_control.nets.get('+3V3')}"
         )
 
-    all_open_case = CASES[2]
     all_open = ctx.reports[all_open_case, "first"]
     observed_all_open = ctx.observed_contracts[all_open_case, "first"]
     all_open_findings = tuple(
