@@ -246,6 +246,9 @@
         "tests.test_peer_power_assignment_native.test_native_fixture_sources_match_reviewed_digests",
         "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_peer_pin_findings.py#component_peer_power_pin_assignment_divergences",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -295,6 +298,9 @@
         "tests.test_peer_power_output.test_finding_is_stable_under_map_order_changes",
         "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_peer_pin_findings.py#component_peer_power_output_pin_outliers",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -337,6 +343,9 @@
       "metamorphic_fixtures": [
         "tests.test_peer_signal_output.test_signal_output_finding_is_stable_under_map_order_changes",
         "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_peer_pin_findings.py#component_peer_signal_output_pin_outliers",
@@ -383,6 +392,9 @@
         "tests.test_peer_signal_input.test_signal_input_finding_is_stable_under_map_order_changes",
         "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_peer_pin_findings.py#component_peer_signal_input_pin_outliers",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -427,6 +439,9 @@
         "tests.test_peer_bidirectional_pin.test_bidirectional_finding_is_stable_under_map_order_changes",
         "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_peer_pin_findings.py#component_peer_bidirectional_pin_outliers",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
@@ -465,6 +480,9 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_two_pin_passives.test_same_net_passive_findings_are_order_stable_and_each_split_clears_one"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_passives.py#two_pin_passives_on_same_net",
@@ -878,6 +896,9 @@
         "tests.test_connector_unconnected_power_output.test_typed_output_finding_owns_an_open_peer_outlier_when_enabled",
         "tests.test_connector_unconnected_power_output.test_peer_outlier_remains_when_the_power_output_rule_is_disabled"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_output_connector_pins",
         "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
@@ -953,6 +974,9 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_component_unconnected_power_output.test_finding_is_mapping_order_stable_and_assignment_clears_it"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_power_output_candidates.py#unconnected_power_output_candidates",
@@ -1579,6 +1603,9 @@
         "tests.test_usb_inline_component_paths.test_inline_component_findings_are_order_stable_and_repair_clears_them",
         "tests.test_usb_data_path_protection_shunts.test_shunt_path_evidence_is_stable_under_native_mapping_order"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_data_paths.py#usb_data_path_mismatches",
         "kicad_tooling/hwrepo/usb_data_path_inline_components.py#check_usb_inline_component",
@@ -1755,6 +1782,9 @@
       "metamorphic_fixtures": [
         "tests.test_rs485_peer_reference_review.test_exact_component_peer_duplicate_suppression_and_review_policy",
         "tests.test_rs485_peer_reference_review.test_source_and_mapping_order_preserve_the_candidate_fingerprint"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_PEER_REFERENCE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/rs485_peer_reference_scan.py#scan_rs485_peer_references",
@@ -2837,6 +2867,9 @@
         "tests.test_usb_peer_reference_superspeed.test_superspeed_pair_result_is_stable_under_input_mapping_order",
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_superspeed_function_identity",
         "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_endpoint",
@@ -3164,6 +3197,9 @@
         "tests.test_pcb_reference_plane_layers.PcbReferencePlaneLayerTests.test_excluded_short_track_review_is_opt_in_and_cli_text_keeps_ids_visible",
         "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_branched_route_reports_only_the_branch_crossing_a_reference_gap"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_reference_planes.py#pcb_reference_plane_entries",
         "kicad_tooling/hwrepo/native_pcb_probe_scan.py.in#main",
@@ -3224,6 +3260,9 @@
       "metamorphic_fixtures": [
         "tests.test_pcb_switching_loop_geometry.PcbSwitchingLoopGeometryTests.test_pad_inventory_order_preserves_area_finding_and_compact_repair_clears_it",
         "tests.test_pcb_switching_loop_routes.PcbSwitchingLoopRouteTests.test_track_inventory_order_preserves_resolved_route_finding_and_snapshot_binding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_switching_loop_review.py#pcb_switching_loop_entries",
@@ -3384,6 +3423,9 @@
         "tests.test_pcb_rf_antenna.test_module_and_keepout_moving_together_preserves_exact_coverage",
         "tests.test_pcb_rf_antenna.test_moving_only_the_module_leaves_keepout_coverage_incomplete"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_rf_antenna.py#pcb_rf_module_antenna_entries",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
@@ -3426,6 +3468,9 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_comparison"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_component_inventory.py#compare_fitted_schematic_pcb_inventory",
@@ -3550,6 +3595,9 @@
       "metamorphic_fixtures": [
         "tests.test_power_pin_net_roles.test_fingerprint_is_order_stable_and_reassignment_clears_the_candidate",
         "tests.test_power_pin_net_roles.test_peer_pin_role_evidence_is_order_stable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_pin_net_roles.py#named_power_pin_net_role_conflicts",
@@ -3682,6 +3730,9 @@
         "tests.test_power_sequences.test_netlist_order_is_stable_and_repair_clears_finding",
         "tests.test_power_sequence_cycles.test_mapped_output_to_enable_cycle_is_detected_with_acyclic_requirement_graph",
         "tests.test_power_sequence_native_fixture_lane.test_control_fault_and_cycle_repeat_on_pinned_kicad_versions"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_sequences.py#power_sequence_mismatches",

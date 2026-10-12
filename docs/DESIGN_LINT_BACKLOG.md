@@ -1772,6 +1772,17 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-076 — Analyzer execution and skipped-check coverage
 
+- **Native prerelease selector audit (2026-10-12):** The architecture suite now
+  requires every active catalog rule with exact-native fault, control, or
+  metamorphic regressions to declare the corresponding `required_native_fixtures`
+  switch. The audit found and closed 17 omissions across component pins,
+  connectors, USB/RS-485 peers, PCB checks, and power rules; LINT-074 already
+  declared its serial peer-reference lane. Package acceptance also checks all
+  test Python support modules for environment-gated native regressions, then
+  verifies every catalog switch is both exercised by a test gate and enabled in
+  the hosted full acceptance workflow. This keeps focused annotated tags from
+  silently skipping an exact-native regression. The checks govern test selection
+  only; a passing fixture is not electrical approval.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and

@@ -21,7 +21,6 @@ from scripts.lint_gate_scope import (
     configured_native_fixtures,
     parse_tag_message,
     read_tag_scope,
-    required_native_fixtures_by_rule,
     write_github_scope,
 )
 
@@ -62,35 +61,6 @@ def test_wheel_requires_rule_catalog_and_theme_owned_models(
             archive.writestr(path, "synthetic")
     with pytest.raises(ValueError, match=re.escape(missing_asset)):
         wheel_contents(wheel)
-
-
-def test_workflow_enables_every_native_fixture_regression() -> None:
-    repository = Path(__file__).resolve().parents[1]
-    gated_fixtures: set[str] = set()
-    for path in (repository / "tests").glob("test_*.py"):
-        source = path.read_text(encoding="utf-8")
-        gated_fixtures.update(
-            re.findall(
-                r'os\.environ\.get\("(KICAD_RUN_NATIVE_[A-Z0-9_]+)"\)\s*==\s*"1"',
-                source,
-            )
-        )
-    workflow = (repository / ".github/workflows/tooling.yml").read_text(encoding="utf-8")
-    package_gate = workflow.split(
-        "      - name: Check tooling and installed wheel against a separate project\n", 1
-    )[1].split("      - name: Keep stage logs", 1)[0]
-    assert "run: python scripts/ci.py --project-root build/acceptance-template" in package_gate
-    configured_fixtures = set(
-        re.findall(
-            r"^\s*(KICAD_RUN_NATIVE_[A-Z0-9_]+):\s*['\"]1['\"]\s*$",
-            package_gate,
-            flags=re.MULTILINE,
-        )
-    )
-    assert gated_fixtures
-    assert gated_fixtures <= configured_fixtures
-    for rule_id, required in required_native_fixtures_by_rule().items():
-        assert set(required) <= configured_fixtures, rule_id
 
 
 def test_workflow_keeps_full_acceptance_and_scopes_prerelease_tags() -> None:
