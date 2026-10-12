@@ -3042,6 +3042,12 @@ is not a reason by itself to expand its scope or change its default policy.
   to its own focused regression, while the rules remain opt-in review prompts
   whose peer comparisons do not prove a required pin connection. This adds no
   rule or project-derived fixture.
+- Tagged acceptance for `v0.5.0rc191` passed on 2026-10-12 (GitHub Actions run
+  `38305303770`). The scoped unit gate used the
+  `component.generic_peer_pin_all_open` selector with
+  `KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES` enabled. Installed-wheel
+  verification against the separate project checkout and Ubuntu, macOS, and
+  Windows previews also passed. The package job was skipped for this prerelease.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
