@@ -112,6 +112,10 @@ python -I -B -m pytest -q -m "design_lint and power_lint" \
   tests/test_electrical_power_connectivity.py
 python -I -B -m pytest -q tests/test_regulator_feedback.py \
   -m 'design_lint and power_lint'
+python -I -B -m pytest -q tests/test_power_sequences.py \
+  -m 'design_lint and power_lint'
+python -I -B -m pytest -q tests/test_power_sequences.py \
+  -m 'design_lint and power_lint' -k 'missing_net_identity and open-enable'
 python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="power.regulator_feedback_mismatch")'
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Team-Workflow-Template \

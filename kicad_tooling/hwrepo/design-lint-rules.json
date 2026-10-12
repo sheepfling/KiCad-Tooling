@@ -3644,19 +3644,21 @@
         "Firmware, external, always-on, or unmodeled enable control is owner-declared context and is not behaviorally checked. Numeric timing bounds and source-backed calculations are outside this first version."
       ],
       "fault_fixtures": [
-        "tests.test_power_sequences.PowerSequenceTests.test_missing_net_identity_inventory_part_and_dnp_faults_are_reported",
+        "tests.test_power_sequences.test_missing_net_identity_inventory_part_and_dnp_faults_are_reported",
         "tests.test_power_sequence_cycles.test_cycle_in_explicit_requirement_is_reported",
         "tests.test_power_sequence_cycles.test_mapped_output_to_enable_cycle_is_detected_with_acyclic_requirement_graph",
-        "tests.test_power_sequences.PowerSequenceTests.test_map_rejects_unresolved_or_inconsistent_dependencies"
+        "tests.test_power_sequences.test_map_rejects_unresolved_stage_names",
+        "tests.test_power_sequences.test_map_requires_dependency_net_to_match_power_good_endpoint",
+        "tests.test_power_sequences.test_map_requires_an_enable_endpoint_for_enabled_stage"
       ],
       "valid_control_fixtures": [
-        "tests.test_power_sequences.PowerSequenceTests.test_explicit_power_good_to_enable_map_passes_including_firmware_control",
-        "tests.test_power_sequences.PowerSequenceTests.test_unconfigured_map_does_not_infer_requirements_from_pin_names",
+        "tests.test_power_sequences.test_explicit_power_good_to_enable_map_passes_including_firmware_control",
+        "tests.test_power_sequences.test_unconfigured_map_does_not_infer_requirements_from_pin_names",
         "tests.test_power_sequence_cycles.test_mapped_output_to_enable_cycle_is_detected_with_acyclic_requirement_graph",
-        "tests.test_power_sequences.PowerSequenceTests.test_rule_supports_review_block_off_and_exact_ignore"
+        "tests.test_power_sequences.test_rule_supports_review_block_off_and_exact_ignore"
       ],
       "metamorphic_fixtures": [
-        "tests.test_power_sequences.PowerSequenceTests.test_netlist_order_is_stable_and_repair_clears_finding",
+        "tests.test_power_sequences.test_netlist_order_is_stable_and_repair_clears_finding",
         "tests.test_power_sequence_cycles.test_mapped_output_to_enable_cycle_is_detected_with_acyclic_requirement_graph"
       ],
       "implementation_refs": [
