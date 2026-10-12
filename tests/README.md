@@ -27,6 +27,16 @@ fixtures; their source boundary and pinned hashes are recorded in the
 The all-open named peer power-input fault and control are separate synthetic tooling fixtures;
 their source boundary and pinned hashes are recorded in the
 [all-open peer power-input fixture README](fixtures/design_lint/named-peer-power-input-all-open/README.md).
+Named connector power-output peer tests can be selected independently; the native case uses
+tooling-owned aliases and digest-pinned KiCad fixtures:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="connector.peer_power_output_named_all_open")' \
+  tests/test_design_lint_connector_named_power_output_peers.py \
+  tests/test_design_lint_mcp_parity_connector_named_power_peers.py \
+  tests/test_connector_named_power_output_native_fixture_lane.py
+```
 
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:

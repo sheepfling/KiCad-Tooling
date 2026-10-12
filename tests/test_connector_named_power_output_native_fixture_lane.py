@@ -11,6 +11,7 @@ from types import SimpleNamespace
 import pytest
 
 from kicad_tooling.ci_hosted_connector_named_power_output import (
+    ALL_OPEN_RULE_ID,
     CASES,
     RULE_ID,
     verify_connector_named_power_output_cases,
@@ -34,6 +35,7 @@ def test_named_connector_power_output_fixture_sources_match_reviewed_digests() -
     expected = {
         "fault.kicad_sch": "ef721f666d540f3ce99598fcf9e52a494729e6cdbd56b57798fd260c10bc40be",
         "control.kicad_sch": "e5621a2b8f8660db341ffe5a4088c1b802c28d1b624e522434516f0235de7d71",
+        "all-open-fault.kicad_sch": "e16ae20d4f198fdf648049f7571bdf4db0842518bd54f8c7536d89655e93b12b",
     }
 
     assert {
@@ -41,8 +43,8 @@ def test_named_connector_power_output_fixture_sources_match_reviewed_digests() -
     } == expected
 
 
-def test_named_connector_power_output_hosted_case_validator_accepts_fault_and_control() -> None:
-    fault_case, control_case = CASES
+def test_named_connector_power_output_hosted_case_validator_accepts_all_three_cases() -> None:
+    fault_case, control_case, all_open_case = CASES
     symbols = {
         "J1": "Lint:NamedPeerPowerOutputA",
         "J2": "Lint:NamedPeerPowerOutputB",
@@ -61,6 +63,14 @@ def test_named_connector_power_output_hosted_case_validator_accepts_fault_and_co
             )
         ),
         (control_case, "first"): SimpleNamespace(findings=()),
+        (all_open_case, "first"): SimpleNamespace(
+            findings=(
+                SimpleNamespace(
+                    rule_id=ALL_OPEN_RULE_ID,
+                    evidence={"J1.1": (), "J2.1": ()},
+                ),
+            )
+        ),
     }
     observed_contracts = {
         (fault_case, "first"): SimpleNamespace(
@@ -71,6 +81,14 @@ def test_named_connector_power_output_hosted_case_validator_accepts_fault_and_co
             pin_electrical_types={"J1.1": "power_out", "J2.1": "power_out"},
         ),
         (control_case, "first"): SimpleNamespace(nets={"+3V3": ("J1.1", "J2.1")}),
+        (all_open_case, "first"): SimpleNamespace(
+            component_symbols=symbols,
+            components=components,
+            component_pin_numbers={"J1": ("1", "2"), "J2": ("1", "2")},
+            pin_functions={"J1.1": "BIAS_OUT", "J2.1": "BIAS_OUT"},
+            pin_electrical_types={"J1.1": "power_out", "J2.1": "power_out"},
+            nets={"SIGNAL": ("J1.2", "J2.2")},
+        ),
     }
 
     verify_connector_named_power_output_cases(
@@ -127,12 +145,16 @@ def test_native_connector_named_power_output_alias_fault_and_control_are_repeata
 
     fault = results[CASES[0]]
     control = results[CASES[1]]
-    assert fault["status"] == control["status"] == "PASS"
+    all_open = results[CASES[2]]
+    assert fault["status"] == control["status"] == all_open["status"] == "PASS"
     assert fault["lint_status"] == "REVIEW"
     assert RULE_ID in fault["findings"].split(",")
     assert control["lint_status"] in {"PASS", "REVIEW"}
-    assert RULE_ID not in control["findings"].split(",")
-    for result in (fault, control):
+    assert not {RULE_ID, ALL_OPEN_RULE_ID}.intersection(control["findings"].split(","))
+    assert all_open["lint_status"] == "REVIEW"
+    assert ALL_OPEN_RULE_ID in all_open["findings"].split(",")
+    assert RULE_ID not in all_open["findings"].split(",")
+    for result in (fault, control, all_open):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

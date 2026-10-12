@@ -18,7 +18,7 @@ from .ci_hosted_connector_return_receipts import emit_connector_return_receipts
 def connector_named_power_output_fixture_lane(
     root: Path, *, project: str, image: str, log: ConnectorReturnLog
 ) -> None:
-    """Export only the named power-output alias fault and common-net control."""
+    """Export the named power-output alias fault and all-open/common controls."""
     context = prepare_connector_return_fixture_context(
         root,
         project=project,

@@ -36,6 +36,7 @@ from tests.synthetic_design_lint_project import (
 RULE_ID = "connector.peer_power_input_open_assignment"
 ALL_OPEN_RULE_ID = "connector.peer_power_input_named_all_open"
 OUTPUT_RULE_ID = "connector.peer_power_output_open_assignment"
+OUTPUT_ALL_OPEN_RULE_ID = "connector.peer_power_output_named_all_open"
 
 
 def _netlist_xml(
@@ -184,9 +185,23 @@ def test_named_connector_power_output_open_assignment_matches_between_cli_and_mc
 ) -> None:
     _assert_named_connector_power_peer_parity(
         tmp_path,
-        (("split", 1, 0), ("common", 0, 0), ("all_open", 0, 0)),
+        (("split", 1, 0), ("common", 0, 0), ("all_open", 0, 1)),
         pin_function="BIAS_OUT",
         pin_electrical_type="power_out",
         rule_id=OUTPUT_RULE_ID,
-        all_open_rule_id=None,
+        all_open_rule_id=OUTPUT_ALL_OPEN_RULE_ID,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=OUTPUT_ALL_OPEN_RULE_ID)
+def test_named_connector_power_output_all_open_aliases_match_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    _assert_named_connector_power_peer_parity(
+        tmp_path,
+        (("all_open", 0, 1), ("common", 0, 0)),
+        pin_function="BIAS_OUT",
+        pin_electrical_type="power_out",
+        rule_id=OUTPUT_RULE_ID,
+        all_open_rule_id=OUTPUT_ALL_OPEN_RULE_ID,
     )
