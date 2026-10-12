@@ -1052,9 +1052,11 @@ and optional ecosystem adapters are `P3`.
    explicit no-connect faults, connected and DNP controls, connector exclusion,
    and CLI/MCP parity.
    Its focused native regression now mounts only those four synthetic
-   component-pin schematics and records a component-specific receipt. The
-   exact-version hosted rerun for that narrower selector is pending. It remains
-   REVIEW-only and does not infer the pin's positive-supply or reference role.
+   component-pin schematics and records a component-specific receipt. Tagged
+   hosted acceptance `v0.5.0rc149` (GitHub run `38246884720`) passed the
+   `component.unconnected_power_input` selector and exact KiCad 10.0.0/10.0.5
+   lane. It remains REVIEW-only and does not infer the pin's positive-supply or
+   reference role.
 3. **Measure the value of existing REVIEW rules.** Continue with public
    geometry, LED, and peer-connector cases that have applicability signals.
    The public STM32 USB-to-triple-UART sample already recorded under LINT-031
@@ -4826,7 +4828,9 @@ is not a reason by itself to expand its scope or change its default policy.
   KiCad 10.0.0 and 10.0.5 fixture lanes. Both versions repeated native exports
   and produced REVIEW for the fault and no-connect cases, with PASS for the
   connected and DNP controls. The original run used the broad connector fixture
-  lane; the new component-only selector awaits its next tagged acceptance.
+  lane. Tagged acceptance `v0.5.0rc149` (GitHub run `38246884720`) passed the
+  focused component-only selector, the native cases on both pinned versions,
+  and the installed-wheel check against a separate project checkout.
 
 #### LINT-093 — Exact two-pin SPST switch is bypassed by one net
 

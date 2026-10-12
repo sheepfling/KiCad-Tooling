@@ -27,5 +27,6 @@ All source is tooling-owned synthetic test data and is not a manufacturing
 design. The focused native lane in
 `tests/test_component_power_input_native_fixture_lane.py` exports only these
 four schematics twice with the pinned KiCad 10.0.0 and 10.0.5 images and
-compares canonical typed netlist evidence. Its exact-version hosted rerun is
-pending acceptance; the earlier accepted run used the broader connector lane.
+compares canonical typed netlist evidence. Tagged hosted acceptance
+`v0.5.0rc149` (GitHub run `38246884720`) passed this focused lane on both
+versions; the earlier `v0.5.0rc9` acceptance used the broader connector lane.
