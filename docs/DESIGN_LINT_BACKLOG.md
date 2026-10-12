@@ -5551,8 +5551,11 @@ is not a reason by itself to expand its scope or change its default policy.
   is wrapped in the follow-up. Run `38191917547` for `v0.5.0rc111` passed its
   unit gate, Ruff, Pyright, Windows typing, Markdown lint, and all preview jobs;
   `mdrepo` then flagged four fixture notes as unreachable. `tests/README.md` now
-  links those records. A fresh tagged run is required to record hosted
-  acceptance.
+  links those records. Run `38192227375` for `v0.5.0rc112` passed the full
+  prerelease gate, including the scoped unit selection, lint/type/documentation
+  checks, wheel and source builds, and installed-wheel verification against the
+  separate public project. All three platform previews passed; the package job
+  was skipped for this prerelease tag.
 
 ### P2 — PCB geometry and schematic review assistance
 
