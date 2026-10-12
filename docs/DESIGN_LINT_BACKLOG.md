@@ -1937,14 +1937,30 @@ is not a reason by itself to expand its scope or change its default policy.
   versions. Its full `package` job was skipped by RC policy.
   The diode rule now catalogs its fault/control test and selects only its two
   sources. Its local selector passed seven tests with two exact-native cases
-  skipped and 3,101 unrelated tests deselected; its hosted tag run is pending.
+  skipped and 3,101 unrelated tests deselected. Hosted run `38293569399`
+  for `v0.5.0rc179` passed its scoped lint and installed-wheel steps plus all
+  three portability previews; the full package job was skipped by RC policy.
   The crystal rule now catalogs its fault/control test and selects only its two
   sources. Its local selector passed seven tests with two exact-native cases
-  skipped and 3,104 unrelated tests deselected; its hosted tag run is pending.
+  skipped and 3,104 unrelated tests deselected. Hosted run `38293748198`
+  for `v0.5.0rc180` passed its scoped lint and installed-wheel steps plus all
+  three portability previews; the full package job was skipped by RC policy.
   The switch rule now catalogs its fault/control test and selects only its two
   sources. Its selector collects 17 tests (15 passed, 2 exact-native skips),
-  deselecting 3,099 unrelated tests; its hosted tag run is pending. The full
-  package lane continues to run all 16 cases.
+  deselecting 3,099 unrelated tests. Hosted run `38293853354` for
+  `v0.5.0rc181` passed its scoped lint and installed-wheel steps plus all three
+  portability previews; the full package job was skipped by RC policy. The
+  full package lane continues to run all 16 cases.
+- **Rule-scoped native fixture inventory (2026-10-12):** A source-based
+  comparison of the 17 modules assigned both `native_kicad` and `design_lint`
+  markers found 12 native test functions across 10 modules without an active
+  rule-catalog fixture reference. This iteration connected the existing I2C
+  peer-reference native fault/control test to LINT-103 and its required native
+  switch. The remaining suites are CAN fixtures, component ratings, empty-netlist
+  evidence, I2C pull-up arrays, connector return domains, PCB test access,
+  return paths and signal paths, a mapped power path, and SPI peer references.
+  Review each test against a rule predicate before indexing it; the inventory
+  identifies selection gaps, not proof that every test belongs to a lint rule.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
@@ -5472,6 +5488,13 @@ is not a reason by itself to expand its scope or change its default policy.
   fault/control lane on both pinned KiCad versions. Formatting, lint, typing,
   Markdown, package builds, installed-wheel checks, external-template
   verification, and playtest also passed.
+- **Rule-scoped gate registration (2026-10-12):** The exact-native test was
+  previously covered through the broad interface-area gate, but was absent
+  from this rule's catalog. A `Lint-Rule: bus.i2c_peer_reference_review` tag
+  therefore did not select its native split/common-reference pair. The catalog
+  now links the test as both fault and valid control and requires
+  `KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES`; the architecture suite guards
+  that association. The new rule-scoped hosted result is pending.
 - **Incremental value:** LINT-070 already prompts on split return pins across
   comparable repeated components. LINT-103 adds the direct-I2C-bus relation
   between heterogeneous devices when that repeated-component comparison has no

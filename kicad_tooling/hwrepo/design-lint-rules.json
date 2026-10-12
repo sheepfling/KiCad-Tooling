@@ -1844,17 +1844,22 @@
       "fault_fixtures": [
         "tests.test_i2c_peer_reference_review.test_shared_i2c_bus_with_split_references_emits_exact_review",
         "tests.test_i2c_peer_reference_review.test_one_split_among_three_shared_bus_peers_emits_one_grouped_review",
-        "tests.test_i2c_peer_reference_review.test_known_split_remains_reviewable_when_another_peer_is_incomplete"
+        "tests.test_i2c_peer_reference_review.test_known_split_remains_reviewable_when_another_peer_is_incomplete",
+        "tests.test_i2c_peer_reference_native_fixture_lane.test_native_i2c_peer_reference_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_i2c_peer_reference_review.test_common_reference_is_a_valid_control",
         "tests.test_i2c_peer_reference_review.test_distinct_i2c_segments_are_not_compared_as_one_bus",
-        "tests.test_i2c_peer_reference_review.test_dnp_incomplete_reference_and_shield_pins_are_not_ground_evidence"
+        "tests.test_i2c_peer_reference_review.test_dnp_incomplete_reference_and_shield_pins_are_not_ground_evidence",
+        "tests.test_i2c_peer_reference_native_fixture_lane.test_native_i2c_peer_reference_fault_and_control_on_supported_images"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_i2c_peer_reference_review.test_split_reference_candidate_is_stable_under_mapping_order",
         "tests.test_i2c_peer_reference_review.test_project_override_and_exact_ignore_change_disposition_not_detection"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_peer_reference_scan.py#scan_i2c_peer_reference_reviews",
