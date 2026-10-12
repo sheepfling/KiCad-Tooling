@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.ci_hosted_support import HostedLog
-from kicad_tooling.hwrepo.models import DesignLintPolicy
+from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
     PINNED_NATIVE_KICAD_IMAGES,
@@ -22,8 +22,8 @@ FIXTURE_CASES = (
     "component-peer-assignment-outlier-control",
 )
 EXPECTED_SOURCE_HASHES = {
-    FIXTURE_CASES[0]: "ebf8109ce0270fbee3ed525d3e20aaf2b9c06dab845abc8fd29c828948428dce",
-    FIXTURE_CASES[1]: "b8a2b2d9969f779a12dd0ec5e4608895a49205b74f51e407db627bc99004f18a",
+    FIXTURE_CASES[0]: "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
+    FIXTURE_CASES[1]: "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
 }
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
@@ -53,7 +53,15 @@ def test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,
-        DesignLintPolicy(),
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID,
+                    mode="review",
+                    reason="Synthetic native fixture enables this scoped review",
+                ),
+            )
+        ),
         project_id=project,
         kicad_version=version,
         image=image,
@@ -71,11 +79,13 @@ def test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable
         stage_prefix="component-peer-assignment-outlier-fixture",
     )
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
-    native = next(
+    native_events = tuple(
         item
         for item in events
         if item["stage"] == "component-peer-assignment-outlier-fixture/native-export"
     )
+    assert tuple(item["status"] for item in native_events) == ("START", "PASS")
+    native = native_events[-1]
     assert native["status"] == "PASS"
     assert native["kicad_version"] == version
     assert context.source_hashes == EXPECTED_SOURCE_HASHES

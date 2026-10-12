@@ -242,8 +242,8 @@ def prepare_connector_return_fixture_context(
         "unconnected-generic-component-power-input-dnp-control": "3be52ef83ba54bf0f43bede043095afe42583319e9fd6fa19f17aba250cc3c81",
         "peer-generic-power-input-fault": "594736519e5c2e3bde88af27d9f059749060014a71f6447aeeceeb8767e7bdae",
         "peer-generic-power-input-control": "9242ac4bf9c466ea0e5a4b41a616c6de881283fdac697ef3e55618040ea6746d",
-        "component-peer-assignment-outlier-fault": "ebf8109ce0270fbee3ed525d3e20aaf2b9c06dab845abc8fd29c828948428dce",
-        "component-peer-assignment-outlier-control": "b8a2b2d9969f779a12dd0ec5e4608895a49205b74f51e407db627bc99004f18a",
+        "component-peer-assignment-outlier-fault": "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
+        "component-peer-assignment-outlier-control": "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
     }
     reviewed_source_hashes = {case: expected_source_hashes[case] for case in cases}
     if source_hashes != reviewed_source_hashes:
@@ -364,10 +364,15 @@ def prepare_connector_return_fixture_context(
                 "component-peer-assignment-outlier-fault",
                 "component-peer-assignment-outlier-control",
             }:
+                rule_id = (
+                    "component.generic_peer_pin_assignment_outlier"
+                    if case.startswith("component-peer-assignment-outlier-")
+                    else "connector.generic_peer_pin_all_open"
+                )
                 policy = DesignLintPolicy(
                     rules=(
                         DesignLintRuleOverride(
-                            rule_id="connector.generic_peer_pin_all_open",
+                            rule_id=rule_id,
                             mode="review",
                             reason="Synthetic native fixture explicitly enables the opt-in heuristic",
                         ),

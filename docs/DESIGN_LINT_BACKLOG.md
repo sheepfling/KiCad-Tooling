@@ -6028,8 +6028,8 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-118 — Generic component peer pin differs from its strict majority
 
 - **Status:** Implemented as the default-`off` rule
-  `component.generic_peer_pin_assignment_outlier`; tagged hosted acceptance is
-  pending.
+  `component.generic_peer_pin_assignment_outlier`; the first tagged acceptance
+  failed and the corrected tagged acceptance is pending.
 - **Priority:** P1 component wiring review. Repeated modules or components can
   have one generic pin assigned to a different net than comparable peers, while
   ERC treats each assignment as valid.
@@ -6056,9 +6056,11 @@ is not a reason by itself to expand its scope or change its default policy.
   order changes. CLI/MCP parity uses synthetic assignments and a consistent
   control. Digest-pinned synthetic fault/control schematics are recorded in
   [the fixture README](../tests/fixtures/design_lint/generic-component-peer-pin-assignment-outlier/README.md).
-  Exact native exports are configured for KiCad 10.0.0 and 10.0.5; local
-  hardware-independent tests pass, while the hosted exact-version gate remains
-  pending.
+  Exact native exports are configured for KiCad 10.0.0 and 10.0.5. Hosted run
+  `38259559695` for `v0.5.0rc161` failed because the embedded unit names in both
+  synthetic schematics did not match their library symbol name. The fixtures
+  and native-lane policy/log assertions are corrected; the focused pinned
+  KiCad 10.0.0/10.0.5 lane passes locally. Tagged hosted acceptance is pending.
 - **Cohort input:** This rule follows the cohort lesson to emit suspicious
   groups as review candidates. No cohort implementation, private project
   source, board, or product expectation was imported.

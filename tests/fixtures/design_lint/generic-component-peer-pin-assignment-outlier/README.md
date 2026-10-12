@@ -23,5 +23,5 @@ establish PCB continuity, or measure physical component behavior.
 
 | Source             | SHA-256                                                            |
 | ------------------ | ------------------------------------------------------------------ |
-| `fault.kicad_sch`  | `ebf8109ce0270fbee3ed525d3e20aaf2b9c06dab845abc8fd29c828948428dce` |
-| `control.kicad_sch`| `b8a2b2d9969f779a12dd0ec5e4608895a49205b74f51e407db627bc99004f18a` |
+| `fault.kicad_sch`  | `2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba` |
+| `control.kicad_sch`| `22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc` |
