@@ -217,6 +217,15 @@ KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   tests/test_pcb_component_inventory_native_fixture_lane.py
 ```
 
+The authored power-connectivity contract's source/load fault reports have a
+separate cross-process determinism slice:
+
+```sh
+.venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and power_lint and slow" \
+  tests/test_design_lint_determinism_power_connectivity.py
+```
+
 The native decoupling fixture runs separately with:
 
 ```sh

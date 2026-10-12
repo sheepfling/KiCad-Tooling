@@ -226,6 +226,7 @@ _LINT_AREA_MODULES = {
             "tests/test_ci_hosted_component_peer_power.py",
             "tests/test_net_dc_reference_native_fixture_lane.py",
             "tests/test_design_lint_determinism_interfaces.py",
+            "tests/test_design_lint_determinism_power_connectivity.py",
             "tests/test_design_lint_determinism_regulator.py",
             "tests/test_design_lint_mcp_parity_analog.py",
             "tests/test_design_lint_mcp_parity_components.py",

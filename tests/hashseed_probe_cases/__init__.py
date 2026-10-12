@@ -5,6 +5,7 @@ HASHSEED_REPORT_FAMILIES = (
     "connectors",
     "component_peers",
     "components",
+    "power_connectivity",
     "control_inputs",
     "pcb_power",
     "pcb_antenna",

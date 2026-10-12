@@ -2324,8 +2324,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v58. The cross-process probe supports themed report
-  selectors and retains the complete 152-report inventory gate. Fault/control
+- **Status:** Implemented v59. The cross-process probe supports themed report
+  selectors and retains the complete 155-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2784,6 +2784,14 @@ is not a reason by itself to expand its scope or change its default policy.
   contract check remains `FAIL`. Tag `v0.5.0rc93` passed scoped hosted
   acceptance in Actions run `38147931718`, including the installed-wheel check
   against a separate project checkout and Ubuntu, macOS, and Windows previews.
+  The v59 extension adds three authored power-connectivity result sets from the
+  shared typed check service: wrong source net, wrong load net, and a valid
+  control. All three retain one identical requirement digest and distinct
+  netlist digests. The source fault fails only its source-group check, the load
+  fault fails only its load check, and the control passes both checks. Each
+  complete serialized result matched across three independently randomized
+  Python processes. This strengthens deterministic evidence for project-authored
+  power-pin requirements; it adds no inferred wiring rule.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each
