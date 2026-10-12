@@ -2783,6 +2783,7 @@
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels",
         "tests.test_usb_peer_reference_superspeed.test_split_reference_direct_superspeed_pair_emits_review_and_family_evidence",
         "tests.test_usb_peer_reference_superspeed.test_full_duplex_superspeed_reviews_each_complementary_direction",
+        "tests.test_usb_superspeed_peer_reference_native_fixture_lane.test_usb_superspeed_peer_reference_native_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_reference.test_usb_peer_reference_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
@@ -2812,7 +2813,8 @@
         "tests.test_usb_peer_reference_superspeed.test_full_duplex_superspeed_reviews_each_complementary_direction",
         "tests.test_usb_peer_reference_superspeed.test_usb_2_data_map_cannot_suppress_a_superspeed_reference_review",
         "tests.test_usb_peer_reference_superspeed.test_project_rule_override_can_turn_off_superspeed_review",
-        "tests.test_usb_peer_reference_superspeed.test_superspeed_path_boundaries_are_not_promoted_to_findings"
+        "tests.test_usb_peer_reference_superspeed.test_superspeed_path_boundaries_are_not_promoted_to_findings",
+        "tests.test_usb_superspeed_peer_reference_native_fixture_lane.test_usb_superspeed_peer_reference_native_fixture_lane_is_repeatable"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

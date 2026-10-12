@@ -280,6 +280,17 @@ fault/control and boundary suite:
   tests/test_usb_peer_reference_superspeed.py
 ```
 
+Its full-duplex TX-to-RX and RX-to-TX split-reference fault, common-reference
+control, exact pin membership, and repeatable netlist exports also run against
+the digest-pinned KiCad 10.0.0 and 10.0.5 images. The lane uses a synthetic
+project-owned toolchain catalog and needs no external project checkout:
+
+```sh
+KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1 python -I -B -m pytest -q \
+  -m "design_lint and interface_lint and native_kicad" \
+  tests/test_usb_superspeed_peer_reference_native_fixture_lane.py
+```
+
 The LED rail/output-path fault and valid series-path controls have a focused
 native component suite:
 

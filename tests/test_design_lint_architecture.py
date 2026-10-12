@@ -105,6 +105,7 @@ I2C_ADDRESS_THEME_SUITES = (
 USB_HOSTED_THEME_SUITES = (
     "test_hosted_usb_requirements.py",
     "test_usb_data_path_native_fixture_lane.py",
+    "test_usb_superspeed_peer_reference_native_fixture_lane.py",
 )
 USB_INLINE_COMPONENT_THEME_SUITES = (
     "test_usb_inline_component_paths.py",
