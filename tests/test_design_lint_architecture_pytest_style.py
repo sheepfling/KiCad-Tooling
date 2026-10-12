@@ -246,6 +246,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_power_pin_net_roles.py::test_positive_supply_pin_on_return_net",
         ),
         (
+            "power.named_supply_pin_on_negative_rail",
+            "tests/test_power_negative_rail.py::test_named_supply_pin_on_negative_rail_is_reviewed",
+        ),
+        (
             "power.mapped_sequence_dependency_mismatch",
             "tests/test_power_sequence_native_fixture_lane.py::test_control_fault_and_cycle_repeat_on_pinned_kicad_versions",
         ),

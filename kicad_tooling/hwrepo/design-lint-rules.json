@@ -4300,6 +4300,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/power_pin_net_roles.py#named_power_pin_net_role_conflicts"
     },
     {
+      "rule_id": "power.named_supply_pin_on_negative_rail",
+      "title": "Named supply pin is assigned to a negative rail label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with exactly one exported net, report a review candidate when the native pin function is recognized by power_function_key and the assigned net has an explicitly leading minus sign followed by one of the supported numeric voltage rail names. The negative rail recognizer uses only numeric aliases already present in the positive rail catalog; it does not infer polarity from VEE, VSS, NEG labels, or arbitrary text.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The recognized negative labels are limited to -1V8/-1.8V, -2V5/-2.5V, -3V3/-3.3V, -5V/-5.0V, -9V, -12V, -24V, and -48V, including spaces that do not change the token. Custom negative-rail names and negative aliases such as VEE are outside the predicate.",
+        "A named function and signed net label are review clues, not proof of potential, symbol correctness, an electrical defect, or project intent. A valid isolated or re-referenced domain may use these names intentionally. The rule does not check rail magnitude, absolute maximum ratings, PCB copper, physical population, or conduction."
+      ],
+      "fault_fixtures": [
+        "tests.test_power_negative_rail.test_named_supply_pin_on_negative_rail_is_reviewed",
+        "tests.test_design_lint_mcp_parity_power_pin_roles.test_named_supply_pin_on_negative_rail_cli_mcp_parity",
+        "tests.test_power_pin_net_role_native_fixture_lane.test_named_supply_pin_on_negative_rail_fault_and_control_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_power_negative_rail.test_unrecognized_negative_roles_and_nonunique_assignments_are_controls",
+        "tests.test_power_negative_rail.test_negative_rail_name_recognition_is_narrow",
+        "tests.test_design_lint_mcp_parity_power_pin_roles.test_named_supply_pin_on_negative_rail_cli_mcp_parity",
+        "tests.test_power_pin_net_role_native_fixture_lane.test_named_supply_pin_on_negative_rail_fault_and_control_export_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_power_negative_rail.test_assignment_correction_clears_the_negative_rail_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_negative_rail.py#positive_supply_pins_on_negative_rails",
+        "kicad_tooling/hwrepo/power_rails.py#negative_voltage_rail_key",
+        "kicad_tooling/hwrepo/connector_identity.py#power_function_key",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#power_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_negative_rail.py#positive_supply_pins_on_negative_rails"
+    },
+    {
       "rule_id": "power.ic_rail_without_fitted_capacitor",
       "title": "Recognized IC supply rail has no fitted capacitor to return",
       "status": "active",

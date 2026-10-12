@@ -297,7 +297,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 106 rules are implemented with synthetic regression coverage.
+The following 107 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -338,6 +338,7 @@ Their actual recognition limits are documented in
 - `component.led_directly_driven_from_output`
 - `power.ic_rail_without_fitted_capacitor`
 - `power.pin_function_net_role_conflict`
+- `power.named_supply_pin_on_negative_rail`
 - `power.mapped_series_path_mismatch`
 - `power.mapped_sequence_dependency_mismatch`
 - `power.input_without_supported_source_path`
@@ -2374,7 +2375,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 106 active rules; CI requires every new
+- **Status:** Baseline complete for all 107 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2383,7 +2384,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 106 covered, 0 not applicable, 0 unreviewed.
+  audit: 107 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -6401,6 +6402,41 @@ is not a reason by itself to expand its scope or change its default policy.
   no cohort code, private project source, board, or product expectation was
   imported.
 
+#### LINT-122 — Named supply pin assigned to a negative rail label
+
+- **Status:** Implemented as the default-`REVIEW` rule
+  `power.named_supply_pin_on_negative_rail`. The rule recognizes a narrow set
+  of explicitly minus-prefixed numeric rail labels and asks for a pinout and
+  rail-name review.
+- **Priority:** P1 power-assignment review. ERC can accept a named supply pin
+  on a separately named rail without knowing whether the documented pin role
+  matches the intended board supply. This is a review clue for suspicious
+  assignments, not a substitute for a project-owned pinout or voltage map.
+- **Predicate:** For each fitted pin with exactly one exported net, recognize
+  the pin function through the existing `power_function_key` vocabulary and
+  report when the assigned net begins with `-` followed by an explicitly
+  supported numeric voltage rail spelling. The recognized spellings are
+  limited to the existing positive-rail aliases with the sign reversed.
+- **Boundary:** A signed label and pin function do not prove electrical
+  potential, a pinout defect, or project intent. A negative or re-referenced
+  supply can be intentional, and custom names such as `VEE` are outside the
+  predicate. DNP, unassigned, multiply assigned, unknown-function, and
+  unrecognized-rail cases do not trigger. The rule does not assess ratings,
+  copper continuity, population, or conduction. Project policy can promote,
+  disable, or fingerprint-ignore the review; mandatory relationships belong
+  in project-authored requirements.
+- **Evidence:** Synthetic tests cover recognized numeric spellings, excluded
+  aliases and role functions, DNP and ambiguous assignments, correction of
+  the assignment, policy and exact-ignore behavior, and CLI/MCP parity. A
+  minimal tooling-owned schematic fault and positive-rail control are repeated
+  through the digest-pinned KiCad 10.0.0 and 10.0.5 native acceptance lane.
+  The prerelease tag gate selects this rule and its native fixture; its hosted
+  receipt records the selected version, source and netlist hashes, finding,
+  and repeatability result.
+- **Cohort input:** This is a first-party extension of named power-pin role
+  review. No cohort code, private project source, board, or product expectation
+  was imported.
+
 ### P2 — PCB geometry and schematic review assistance
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -9264,7 +9300,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 106 active rules. Each entry has a deterministic predicate, evidence
+contains 107 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

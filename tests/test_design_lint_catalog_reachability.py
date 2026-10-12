@@ -134,6 +134,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             assignments=(None, None)
         ),
         _power_pin_net_roles.positive_supply_on_return_netlist(),
+        _power_pin_net_roles.supply_pin_on_rail_netlist("-5V"),
         _tests_design_lint_fixtures.control_input_pins(),
         _tests_design_lint_fixtures.control_input_pins(connected=True, visible_bias=False),
         _tests_design_lint_fixtures.unconnected_protocol_pins(),

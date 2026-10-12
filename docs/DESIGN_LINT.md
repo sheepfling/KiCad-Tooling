@@ -525,6 +525,14 @@ The first rules are:
   potential or intent, so the rule defaults to `REVIEW` and supports project
   `block`, `off`, and exact-fingerprint ignores. The synthetic fault/control
   regressions and CLI/MCP parity case use a tooling-owned normalized netlist.
+- `power.named_supply_pin_on_negative_rail` prompts review when a fitted pin
+  with a recognized positive-supply function is assigned to a label using a
+  supported, explicitly minus-prefixed numeric voltage spelling. Labels such
+  as `VEE`, custom aliases, open or multiply assigned pins, and DNP components
+  are excluded. Pin-function and net-label names do not prove potential or
+  intent; projects can override or fingerprint-ignore the review. Synthetic
+  fault/control, bounded recognition, policy, and CLI/MCP parity cases cover
+  this clue. Exact-version native exports are wired into the prerelease gate.
 - `power.ic_rail_without_fitted_capacitor` prompts review when a fitted IC has
   an assigned native `power_in` pin on a recognized positive rail and no
   recognized fitted capacitor connects that rail to a distinct return-like
@@ -1064,7 +1072,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 106 active rules. They
+`synthetic_validated`; the catalog currently contains 107 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and

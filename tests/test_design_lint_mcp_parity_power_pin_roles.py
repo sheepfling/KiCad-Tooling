@@ -28,7 +28,10 @@ from kicad_tooling.hwrepo.models import (
     ProjectManifest,
     ValidationSummary,
 )
-from tests.design_lint_fixtures.power_pin_net_roles import positive_supply_on_return_netlist
+from tests.design_lint_fixtures.power_pin_net_roles import (
+    positive_supply_on_return_netlist,
+    supply_pin_on_rail_netlist,
+)
 from tests.electrical_parity_support import contract_netlist_xml
 from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import (
@@ -120,3 +123,94 @@ def test_named_power_pin_net_role_review_cli_mcp_parity(tmp_path: Path) -> None:
     ]
     assert len(findings) == 1
     assert findings[0].subject == "U1.1: VDD pin assigned to GND"
+
+
+@pytest.mark.design_lint_rule(rule_id="power.named_supply_pin_on_negative_rail")
+def test_named_supply_pin_on_negative_rail_cli_mcp_parity(tmp_path: Path) -> None:
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="power.pin_function_net_role_conflict",
+                mode="off",
+                reason="Synthetic parity isolates the negative-rail review",
+            ),
+            DesignLintRuleOverride(
+                rule_id="power.ic_rail_without_fitted_capacitor",
+                mode="off",
+                reason="Synthetic parity fixture has no decoupling requirements",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_component_inventory",
+                mode="off",
+                reason="Synthetic parity fixture has no physical board inventory",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_dnp_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB snapshot",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_value_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB value snapshot",
+            ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_pad_net_mismatch",
+                mode="off",
+                reason="Synthetic parity fixture has no native PCB pad snapshot",
+            ),
+        )
+    )
+    root, native = synthetic_design_lint_project(tmp_path, policy)
+    manifest_path = root / "projects/controller/project.json"
+    manifest = read_model(manifest_path, ProjectManifest)
+    write_model(
+        manifest_path,
+        manifest.model_copy(
+            update={
+                "connector_inventory_review": ConnectorInventoryReview(
+                    basis="Synthetic parity case contains no external connector"
+                )
+            }
+        ),
+    )
+    netlist = native.parent / "netlist.xml"
+    netlist.write_text(contract_netlist_xml(supply_pin_on_rail_netlist("-5V")), encoding="utf-8")
+    summary = read_model(native, ValidationSummary)
+    write_model(
+        native,
+        summary.model_copy(
+            update={
+                "artifacts_sha256": {
+                    **summary.artifacts_sha256,
+                    "netlist.xml": digest(netlist),
+                }
+            }
+        ),
+    )
+
+    process = run_design_lint_cli(tmp_path, root, native)
+    assert process.returncode == 1, process.stderr + process.stdout
+    cli = parse_model_text(process.stdout, DesignLintReport)
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp = asyncio.run(inspect_mcp())
+    assert semantic_design_lint_report(cli) == semantic_design_lint_report(mcp)
+    assert cli.status == mcp.status == "REVIEW"
+    findings = [
+        item for item in cli.findings if item.rule_id == "power.named_supply_pin_on_negative_rail"
+    ]
+    assert len(findings) == 1
+    assert findings[0].subject == "U1.1: VDD pin assigned to -5V"

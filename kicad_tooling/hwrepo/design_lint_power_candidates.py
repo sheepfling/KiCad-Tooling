@@ -13,6 +13,7 @@ from .design_lint_types import Candidate
 from .models import NetlistContract
 from .net_dc_reference import connector_capacitor_only_nets
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
+from .power_negative_rail import positive_supply_pins_on_negative_rails
 from .power_path_models import PowerPathMap
 from .power_pin_net_roles import named_power_pin_net_role_conflicts
 from .power_pin_paths import power_inputs_without_supported_source_paths
@@ -35,6 +36,7 @@ def power_candidates(
             reviewed_connector_references=reviewed_connector_references,
         )
     )
+    found.extend(positive_supply_pins_on_negative_rails(observed))
     mapped_capacitor_references = tuple(
         reference
         for reference, binding in resolve_component_role_map(

@@ -41,6 +41,8 @@ _RAIL_STEMS = {
     "48v": "48V",
 }
 
+_EXPLICIT_VOLTAGE_RAIL_KEYS = frozenset({"1V8", "2V5", "3V3", "5V", "9V", "12V", "24V", "48V"})
+
 
 def _numbered_positive_rail(name: str) -> tuple[str, int] | None:
     match = _NUMBERED_RAIL.fullmatch(name)
@@ -63,6 +65,20 @@ def _numbered_positive_rail(name: str) -> tuple[str, int] | None:
         return None
     namespace = match.group("namespace").upper()
     return f"{namespace} {canonical_stem}", int(match.group("index"))
+
+
+def negative_voltage_rail_key(name: str) -> str | None:
+    """Return a narrow key for a net label explicitly prefixed with minus.
+
+    This recognizes only numeric voltage rail spellings already known to the
+    positive-rail vocabulary. The leading sign is evidence in the label, not
+    proof of the net's electrical potential.
+    """
+    compact = re.sub(r"\s+", "", name).casefold()
+    if not compact.startswith("-") or compact.startswith("--"):
+        return None
+    canonical = _RAIL_STEMS.get(compact[1:])
+    return canonical if canonical in _EXPLICIT_VOLTAGE_RAIL_KEYS else None
 
 
 def numbered_power_rail_groups(

@@ -126,6 +126,16 @@ _PARITY_FIXTURES_BY_RULE = {
             "test_design_lint_connector_coverage_and_review_lifecycle",
         ),
     },
+    "power.named_supply_pin_on_negative_rail": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_power_pin_roles",
+            "test_named_supply_pin_on_negative_rail_cli_mcp_parity",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_power_pin_roles",
+            "test_named_supply_pin_on_negative_rail_cli_mcp_parity",
+        ),
+    },
     "pcb.keepout_intent_coverage": {
         "valid_control_fixtures": _refs(
             "tests.test_pcb_keepouts_mcp_parity",
