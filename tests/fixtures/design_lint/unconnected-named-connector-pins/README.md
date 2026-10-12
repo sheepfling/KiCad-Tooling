@@ -23,6 +23,6 @@ Reviewed schematic source SHA-256 values:
 
 | Fixture                  | SHA-256                                                            |
 | ------------------------ | ------------------------------------------------------------------ |
-| `supply-fault.kicad_sch` | `f65c87159f9e0c63b512afec4763e2468004402887836c31cf1048dec7b42ee1` |
-| `return-fault.kicad_sch` | `b6c629d9da59acc5b5af27f383e56d6e4bb5e0a51c1077aa83ef1c17afd952b2` |
-| `control.kicad_sch`      | `1fd0278dc65dc2a930fcd6d80ade89d0fa388679306067aef26ffa34dd0d14c3` |
+| `supply-fault.kicad_sch` | `e4f00aa22957dcdb152cc10a694b25ddeb2d442ed3cd6827bd2e9b2f6cf233aa` |
+| `return-fault.kicad_sch` | `a9a76c8c9a1a01978b3c5ae3228825658631c4c9ad9cc5b73566427f5ce80a5f` |
+| `control.kicad_sch`      | `ee2980cf387a0326ddb92bcbec8f562ca560c3a9cc9cc249075002148f1e2275` |
