@@ -16,7 +16,13 @@ from tests.component_peer_pin_support import (
 from tests.component_peer_power_assignment_support import (
     lint_report as peer_power_pin_assignment_lint_report,
 )
-from tests.component_peer_power_assignment_support import peer_power_netlist
+from tests.component_peer_power_assignment_support import (
+    peer_power_netlist,
+)
+from tests.component_peer_power_input_support import (
+    generic_peer_power_input_netlist,
+    named_peer_power_input_netlist,
+)
 from tests.design_lint_fixtures import (
     coach,
     generic_component_power_input_netlist,
@@ -229,5 +235,29 @@ def report_cases() -> dict[str, object]:
                 supply_nets=("+3V3", "+3V3"),
                 return_nets=("GND", "GND"),
             )
+        ).model_dump(mode="json"),
+        "peer_power_input_assignment_fault": peer_power_pin_assignment_lint_report(
+            generic_peer_power_input_netlist()
+        ).model_dump(mode="json"),
+        "peer_power_input_assignment_control": peer_power_pin_assignment_lint_report(
+            generic_peer_power_input_netlist(assignments=("+3V3", "+3V3"))
+        ).model_dump(mode="json"),
+        "named_peer_power_input_partial_open_fault": peer_power_pin_assignment_lint_report(
+            named_peer_power_input_netlist()
+        ).model_dump(mode="json"),
+        "named_peer_power_input_partial_open_control": peer_power_pin_assignment_lint_report(
+            named_peer_power_input_netlist(assignments=("+3V3", "+3V3"))
+        ).model_dump(mode="json"),
+        "named_peer_power_input_divergence_fault": peer_power_pin_assignment_lint_report(
+            named_peer_power_input_netlist(assignments=("SYNTHETIC_RAIL_A", "SYNTHETIC_RAIL_B"))
+        ).model_dump(mode="json"),
+        "named_peer_power_input_divergence_control": peer_power_pin_assignment_lint_report(
+            named_peer_power_input_netlist(assignments=("+3V3", "+3V3"))
+        ).model_dump(mode="json"),
+        "named_peer_power_input_all_open_fault": peer_power_pin_assignment_lint_report(
+            named_peer_power_input_netlist(assignments=(None, None))
+        ).model_dump(mode="json"),
+        "named_peer_power_input_all_open_control": peer_power_pin_assignment_lint_report(
+            named_peer_power_input_netlist(assignments=("+3V3", "+3V3"))
         ).model_dump(mode="json"),
     }

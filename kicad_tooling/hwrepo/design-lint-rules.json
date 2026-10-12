@@ -366,6 +366,7 @@
       "metamorphic_fixtures": [
         "tests.test_component_peer_power_input_divergence.test_generic_peer_power_input_findings_are_stable_under_mapping_order",
         "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic",
+        "tests.test_design_lint_determinism_power_input_peers.test_power_input_peer_fault_controls_are_stable_across_hash_seeds",
         "tests.test_component_peer_power_input_native_fixture_lane.test_generic_peer_power_input_fixture_sources_match_reviewed_digests",
         "tests.test_component_peer_power_input_native_fixture_lane.test_native_generic_peer_power_input_fault_and_control_are_repeatable"
       ],
@@ -412,6 +413,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_component_peer_power_input_divergence.test_non_generic_peer_power_input_open_finding_is_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_power_input_peers.test_power_input_peer_fault_controls_are_stable_across_hash_seeds",
         "tests.test_component_peer_power_input_native_fixture_lane.test_named_peer_power_input_open_fixture_sources_match_reviewed_digests",
         "tests.test_component_peer_power_input_native_fixture_lane.test_native_named_peer_power_input_open_fault_and_control_are_repeatable"
       ],
@@ -457,6 +459,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_component_named_peer_power_input_divergence.test_named_peer_power_input_split_is_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_power_input_peers.test_power_input_peer_fault_controls_are_stable_across_hash_seeds",
         "tests.test_component_peer_power_input_native_fixture_lane.test_named_peer_power_input_divergence_fixture_sources_match_reviewed_digests",
         "tests.test_component_peer_power_input_native_fixture_lane.test_native_named_peer_power_input_divergence_fault_and_control_are_repeatable"
       ],
@@ -502,6 +505,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_component_named_peer_power_input_all_open.test_named_peer_power_input_all_open_is_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_power_input_peers.test_power_input_peer_fault_controls_are_stable_across_hash_seeds",
         "tests.test_component_named_peer_power_input_all_open_native.test_named_peer_power_input_all_open_fixture_sources_match_reviewed_digests",
         "tests.test_component_named_peer_power_input_all_open_native.test_native_named_peer_power_input_all_open_fault_and_control_are_repeatable"
       ],

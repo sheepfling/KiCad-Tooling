@@ -2549,8 +2549,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v59. The cross-process probe supports themed report
-  selectors and retains the complete 155-report inventory gate. Fault/control
+- **Status:** Implemented v60. The cross-process probe supports themed report
+  selectors and retains the complete 165-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2562,6 +2562,7 @@ is not a reason by itself to expand its scope or change its default policy.
   with exact-map controls, CAN peer asymmetry, mapped RS-485 split/common
   reference reports, a connector-only SPI/UART
   boundary control, coverage-sensitive connector peer finding suppression,
+  generic and named component power-input peer faults and controls,
   mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
   open-contact case, plus the typed contact-rating boundary and over-limit
   checks, DB9 grounding and pin-connectivity requirements, multi-device
@@ -3017,6 +3018,15 @@ is not a reason by itself to expand its scope or change its default policy.
   complete serialized result matched across three independently randomized
   Python processes. This strengthens deterministic evidence for project-authored
   power-pin requirements; it adds no inferred wiring rule.
+- The v60 extension adds eight complete synthetic fault/control reports for
+  generic power-input assignment divergence, named power-input partial opens,
+  named power-input assignment divergence, and named power-input pins left
+  open on every comparable peer. The focused component-peer determinism suite
+  compares each report and its source-bound coverage across three independently
+  randomized Python processes. The complete inventory test exposed that its
+  previous expected count was two reports behind the actual baseline; the
+  pinned inventory is now 165 and both focused tests pass. This adds no lint
+  rule, native export, or electrical-intent claim.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each

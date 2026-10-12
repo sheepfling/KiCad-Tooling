@@ -119,6 +119,9 @@ python -I -B -m pytest -q \
   tests/test_component_named_peer_power_input_all_open.py \
   tests/test_component_named_peer_power_input_all_open_native.py \
   tests/test_peer_power_assignment_cli_mcp.py
+.venv/bin/python -I -B -m pytest -q \
+  -m "design_lint and component_lint and power_lint and slow" \
+  tests/test_design_lint_determinism_power_input_peers.py
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="net.numbered_returns")' \
   tests/test_numbered_return_native_fixture_lane.py
