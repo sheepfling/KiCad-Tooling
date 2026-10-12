@@ -1605,6 +1605,18 @@ is not a reason by itself to expand its scope or change its default policy.
   pinned KiCad 10.0.0/10.0.5 lane covered the DB9 split/common fault-control
   pair, neutral-name controls, and the explicit common/isolated grounding and
   pin-connectivity contracts. Only tooling-owned synthetic fixtures ran.
+- **Named power-input peer regression gate (2026-10-12):** Tag
+  `v0.5.0rc198` (commit `67c1576`, GitHub Actions run `38315525975`) passed the
+  focused `connector.repeated_pin_function` rule gate, with the digest-pinned
+  KiCad 10.0.0/10.0.5 DB9 return-contract fixture lane enabled. The same
+  prerelease acceptance run passed its installed-wheel rehearsal against a
+  separate project checkout and Ubuntu, macOS, and Windows portability
+  previews; the stable-only package job was skipped by prerelease policy. The
+  added synthetic fault/control pair leaves a meaningful `BIAS_IN` function
+  with native `power_in` type open on two exact-symbol connector peers, then
+  assigns both to one net for the quiet control. This validates the existing
+  review heuristic on a new pin-function shape; it does not establish that the
+  contacts must connect. No project board source was used.
 - **Supplemental local native screen (2026-10-07):** The KiCad 10.0.6 CLI
   bundled with the installed application exported the DB9 split-return fault,
   common-return control, and both numeric-function/neutral-label variants
