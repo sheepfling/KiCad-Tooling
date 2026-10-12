@@ -84,6 +84,16 @@ def test_fuse_native_fixture_scope_contains_only_fuse_faults_and_controls() -> N
     assert any(not subjects for _, _, subjects in selected.values())
 
 
+def test_ferrite_native_fixture_scope_contains_only_ferrite_fault_and_control() -> None:
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_ferrite_same_net",))
+    assert set(selected) == {"same-net-ferrite", "distinct-nets-ferrite"}
+    assert {rule_id for _, rule_id, _ in selected.values()} == {
+        "component.two_pin_ferrite_same_net"
+    }
+    assert any(subjects for _, _, subjects in selected.values())
+    assert any(not subjects for _, _, subjects in selected.values())
+
+
 def _run_native_rule_fixture(
     tmp_path: Path,
     *,
@@ -180,4 +190,21 @@ def test_native_two_pin_fuse_same_net_fault_and_control(tmp_path: Path, kicad_ve
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_fuse_same_net",
+    )
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
+    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
+def test_native_two_pin_ferrite_same_net_fault_and_control(
+    tmp_path: Path, kicad_version: str
+) -> None:
+    _run_native_rule_fixture(
+        tmp_path,
+        kicad_version=kicad_version,
+        rule_id="component.two_pin_ferrite_same_net",
     )

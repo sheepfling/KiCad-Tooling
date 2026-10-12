@@ -1035,16 +1035,23 @@
         "The schematic netlist does not prove component impedance, filtering effectiveness, copper connectivity, footprint pin mapping, or physical population. DNP components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_ferrites.test_detects_exact_device_ferrite_bead_families_on_one_net"
+        "tests.test_two_pin_ferrites.test_detects_exact_device_ferrite_bead_families_on_one_net",
+        "tests.test_two_pin_component_native_fixture_lane.test_ferrite_native_fixture_scope_contains_only_ferrite_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_ferrite_same_net_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_ferrites.test_distinct_pin_nets_are_the_no_finding_control",
         "tests.test_two_pin_ferrites.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_ferrites.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_ferrites.test_rule_policy_and_exact_ignore_are_project_configurable",
+        "tests.test_two_pin_component_native_fixture_lane.test_ferrite_native_fixture_scope_contains_only_ferrite_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_ferrite_same_net_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_two_pin_ferrites.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_ferrites.py#two_pin_ferrites_on_same_net",

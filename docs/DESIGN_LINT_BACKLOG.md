@@ -1917,17 +1917,21 @@ is not a reason by itself to expand its scope or change its default policy.
   The runner now accepts rule IDs and filters the native exports to the
   selected rule. The fuse rule now catalogs a fuse/polyfuse fault/control test
   and requires `KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES`; the passive
-  rule's existing native test is now filtered to its own four cases. Direct
-  pytest rule selection passes for both gates (`7 passed, 2 native skips` for
-  fuse and `9 passed, 2 native skips` for passives; over 3,000 unrelated tests
-  deselected). Tagged run `38292257528` for `v0.5.0rc177` passed the focused
+  rule's existing native test is now filtered to its own four cases. The
+  ferrite rule now catalogs its native fault/control test and selects only its
+  two sources. The ferrite local selector passed six tests with two
+  exact-native cases skipped and 3,099 unrelated tests deselected because local
+  Docker access is denied. Direct pytest rule selection passes for the fuse
+  and passive gates (`7 passed, 2 native skips` for fuse and `9 passed, 2
+  native skips` for passives; over 3,000 unrelated tests deselected). Tagged
+  run `38292257528` for `v0.5.0rc177` passed the focused
   fuse gate, its installed-wheel check against the external template, and all
   three portability previews. The tag enabled the native switch and selected
   the four fuse/polyfuse fault/control sources on the exact pinned versions.
   Its full `package` job was skipped by RC policy, so it is not full package
-  acceptance. Diode, crystal, ferrite, and switch remain to be registered as
-  separately selectable native gates. The full package lane continues to run
-  all 16 cases.
+  acceptance. The ferrite rule's focused native run is pending its own tagged
+  gate. Diode, crystal, and switch remain to be registered as separately
+  selectable native gates. The full package lane continues to run all 16 cases.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
@@ -4212,10 +4216,16 @@ is not a reason by itself to expand its scope or change its default policy.
   full `package` job was skipped. The exact-version ferrite native cases have
   local pinned-version evidence; this tagged run supplies no hosted full-package
   result for them.
-- **Remaining:** Register a ferrite-specific native test and fixture switch
-  requirement so a rule-scoped tag selects its same-net fault and distinct-net
-  control on the pinned KiCad 10.0.0 and 10.0.5 images. Then complete full
-  package acceptance; RC177 selected the fuse rule and skipped the package job.
+- **Rule-scoped selector (2026-10-12):** The ferrite rule now catalogs a
+  dedicated exact-native test and requires
+  `KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES`. Its selection contains only
+  the same-net fault and distinct-net control. The local rule selector passed
+  six tests with two exact-native cases skipped and 3,099 unrelated tests
+  deselected because Docker socket access is denied locally. The hosted tagged
+  result is pending. RC177 selected the fuse rule, so it did not exercise
+  ferrite.
+- **Remaining:** Pass the tagged exact-native gate on KiCad 10.0.0 and 10.0.5,
+  then complete full package acceptance.
 - **Cohort boundary:** This is a first-party deterministic extension prompted
   by the inspected series-path concept. No third-party source, board, fixture,
   or install workflow was copied.
