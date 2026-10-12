@@ -5804,8 +5804,11 @@ is not a reason by itself to expand its scope or change its default policy.
   `38226360094`), including exact-version native fixtures and the installed
   wheel against a separate public template checkout. These sources are
   tooling-owned and contain no project board data. The cross-symbol all-open
-  extension passed the local exact-version native lane on 2026-10-12; its
-  tag-specific hosted acceptance is pending.
+  extension passed the local exact-version native lane on 2026-10-12 and its
+  tagged hosted acceptance in `v0.5.0rc141` on the same date (run
+  `38228971529`). The hosted gate passed the scoped lint checks, exact-version
+  native fixtures, installed-wheel test against a separate project checkout,
+  and preview orchestration on Ubuntu, macOS, and Windows.
 - **Applicability evidence:** More examples can test boundary diversity, but
   do not establish precision or reviewer value without an independent pinout
   disposition. No field-review time or false-positive rate is claimed.
