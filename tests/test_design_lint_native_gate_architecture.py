@@ -396,6 +396,10 @@ def test_two_pin_native_fault_control_cases_are_selectable_by_rule() -> None:
             f"{fixture_module}.test_native_two_pin_crystal_same_net_fault_and_control",
             f"{fixture_module}.test_crystal_native_fixture_scope_contains_only_crystal_fault_and_control",
         ),
+        "component.two_pin_switch_same_net": (
+            f"{fixture_module}.test_native_two_pin_switch_same_net_fault_and_control",
+            f"{fixture_module}.test_switch_native_fixture_scope_contains_only_switch_fault_and_control",
+        ),
     }
     for rule_id, (native_test_ref, scope_test_ref) in test_refs.items():
         rule = rules[rule_id]

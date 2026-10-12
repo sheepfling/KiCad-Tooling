@@ -1092,16 +1092,23 @@
         "The schematic netlist does not establish physical switch state, copper connectivity, footprint pin mapping, or assembly population. DNP components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_two_pin_switches.test_detects_exact_spst_switch_bypassed_by_one_net"
+        "tests.test_two_pin_switches.test_detects_exact_spst_switch_bypassed_by_one_net",
+        "tests.test_two_pin_component_native_fixture_lane.test_switch_native_fixture_scope_contains_only_switch_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_switch_same_net_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_switches.test_distinct_pin_nets_are_the_no_finding_control",
         "tests.test_two_pin_switches.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
-        "tests.test_two_pin_switches.test_rule_policy_and_exact_ignore_are_project_configurable"
+        "tests.test_two_pin_switches.test_rule_policy_and_exact_ignore_are_project_configurable",
+        "tests.test_two_pin_component_native_fixture_lane.test_switch_native_fixture_scope_contains_only_switch_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_switch_same_net_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_two_pin_switches.test_order_is_stable_and_splitting_the_switch_clears_the_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/two_pin_switches.py#two_pin_switches_on_same_net",
