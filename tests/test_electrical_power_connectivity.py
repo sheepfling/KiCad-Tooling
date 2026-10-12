@@ -12,15 +12,17 @@ from kicad_tooling.hwrepo.models import (
     ElectricalAnalysisContract,
     ElectricalCheck,
     PowerAnalysis,
-    PowerConnectivityAnalysis,
-    PowerConnectivityRailRequirement,
     PowerLoad,
-    PowerLoadConnectivityRequirement,
     PowerRail,
     SimulationMeasure,
     TransientAnalysis,
 )
 from kicad_tooling.hwrepo.power_connectivity import power_connectivity_checks
+from kicad_tooling.hwrepo.power_connectivity_models import (
+    PowerConnectivityAnalysis,
+    PowerConnectivityRailRequirement,
+    PowerLoadConnectivityRequirement,
+)
 from tests.electrical_power_connectivity_support import (
     power_connectivity_netlist,
     power_connectivity_requirement,

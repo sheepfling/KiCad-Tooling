@@ -7,6 +7,8 @@ from typing import Literal
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     NetlistContract,
+)
+from kicad_tooling.hwrepo.power_connectivity_models import (
     PowerConnectivityAnalysis,
     PowerConnectivityRailRequirement,
     PowerLoadConnectivityRequirement,

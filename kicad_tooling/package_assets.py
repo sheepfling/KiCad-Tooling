@@ -16,6 +16,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/component_role_models.py",
         "kicad_tooling/hwrepo/power_path_models.py",
         "kicad_tooling/hwrepo/power_sequence_models.py",
+        "kicad_tooling/hwrepo/power_connectivity_models.py",
         "kicad_tooling/hwrepo/usb_data_path_models.py",
         "kicad_tooling/markdown_check/__main__.py",
         "kicad_tooling/fixtures/foreign-eagle-board.xml",

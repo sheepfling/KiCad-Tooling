@@ -46,7 +46,6 @@ from .models import (
     EvidenceFile,
     PcbAccessAnalysis,
     PcbAccessProbeRequestSet,
-    PowerConnectivityAnalysis,
     ProjectKind,
     ProjectRecord,
     ReleaseClass,
@@ -62,6 +61,7 @@ from .pcb_return_path_checks import pcb_return_path_checks
 from .pcb_return_path_models import PcbReturnPathsAnalysis
 from .pin_connectivity_models import PinConnectivityAnalysis
 from .power_connectivity import power_connectivity_checks
+from .power_connectivity_models import PowerConnectivityAnalysis
 from .rs485_heuristics import rs485_checks
 from .rs485_models import Rs485Analysis
 from .serial_heuristics import serial_peer_checks

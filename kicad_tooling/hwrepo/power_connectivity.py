@@ -5,6 +5,8 @@ from __future__ import annotations
 from .models import (
     ElectricalCheck,
     NetlistContract,
+)
+from .power_connectivity_models import (
     PowerConnectivityAnalysis,
     PowerPinEndpointRequirement,
     PowerSourceGroupRequirement,

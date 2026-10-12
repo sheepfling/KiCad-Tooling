@@ -641,7 +641,13 @@ and optional ecosystem adapters are `P3`.
   `models.py` keeps identity-compatible exports. The architecture suite checks
   owner size, import boundaries, and compatibility, and the registry shrank from
   5,061 to 5,022 lines with a matching lower ceiling. This extraction adds no
-  lint rule or behavior change.
+  lint rule or behavior change. Power source/load pin requirements now live in
+  `power_connectivity_models.py`; the power evaluator, evidence services, and
+  regression builders import the owner directly while `models.py` preserves
+  identity-compatible exports. The architecture and package-asset checks cover
+  the new owner, and the shared registry shrank from 5,022 to 4,919 lines. This
+  extraction does not change the authored connectivity predicate or its
+  evidence boundary.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in

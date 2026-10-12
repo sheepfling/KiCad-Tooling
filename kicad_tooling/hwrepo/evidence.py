@@ -303,10 +303,10 @@ def verify_native(
         from .models import (
             AnalysisPending,
             PcbAccessAnalysis,
-            PowerConnectivityAnalysis,
             TestAccessAnalysis,
         )
         from .power_connectivity import power_connectivity_checks
+        from .power_connectivity_models import PowerConnectivityAnalysis
         from .rs485_heuristics import rs485_checks
         from .rs485_models import Rs485Analysis
         from .test_access import evaluate_test_access_checks, pcb_accessibility_checks

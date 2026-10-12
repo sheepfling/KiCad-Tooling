@@ -7,7 +7,11 @@ import ast
 import pytest
 
 from kicad_tooling.hwrepo import models as shared_models
-from kicad_tooling.hwrepo import power_path_models, power_sequence_models
+from kicad_tooling.hwrepo import (
+    power_connectivity_models,
+    power_path_models,
+    power_sequence_models,
+)
 from tests.lint_architecture_support import (
     HWREPO,
     IMPLEMENTATION_MAX_LINES,
@@ -29,12 +33,24 @@ POWER_SEQUENCE_MODEL_NAMES = (
     "PowerSequenceDependencyRequirement",
     "PowerSequenceMap",
 )
+POWER_CONNECTIVITY_MODEL_NAMES = (
+    "PowerPinEndpointRequirement",
+    "PowerSourceGroupRequirement",
+    "PowerLoadConnectivityRequirement",
+    "PowerConnectivityRailRequirement",
+    "PowerConnectivityAnalysis",
+)
 
 
 def test_power_models_have_bounded_theme_owners_and_compat_exports() -> None:
     owners = (
         ("power_path_models.py", power_path_models, POWER_PATH_MODEL_NAMES),
         ("power_sequence_models.py", power_sequence_models, POWER_SEQUENCE_MODEL_NAMES),
+        (
+            "power_connectivity_models.py",
+            power_connectivity_models,
+            POWER_CONNECTIVITY_MODEL_NAMES,
+        ),
     )
     for filename, owner_module, model_names in owners:
         owner = HWREPO / filename
@@ -52,7 +68,11 @@ def test_power_models_have_bounded_theme_owners_and_compat_exports() -> None:
 
 
 def test_internal_power_services_import_models_from_theme_owners() -> None:
-    model_names = set(POWER_PATH_MODEL_NAMES) | set(POWER_SEQUENCE_MODEL_NAMES)
+    model_names = (
+        set(POWER_PATH_MODEL_NAMES)
+        | set(POWER_SEQUENCE_MODEL_NAMES)
+        | set(POWER_CONNECTIVITY_MODEL_NAMES)
+    )
     legacy_imports: list[str] = []
     for scope in (REPO_ROOT / "kicad_tooling", REPO_ROOT / "tests"):
         for path in sorted(scope.rglob("*.py")):

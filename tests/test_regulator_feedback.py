@@ -15,16 +15,18 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,
-    PowerConnectivityAnalysis,
-    PowerConnectivityRailRequirement,
-    PowerLoadConnectivityRequirement,
-    PowerPinEndpointRequirement,
-    PowerSourceGroupRequirement,
     RegulatorDividerResistorRequirement,
     RegulatorFeedbackMap,
     RegulatorFeedbackRequirement,
 )
 from kicad_tooling.hwrepo.power_connectivity import power_connectivity_checks
+from kicad_tooling.hwrepo.power_connectivity_models import (
+    PowerConnectivityAnalysis,
+    PowerConnectivityRailRequirement,
+    PowerLoadConnectivityRequirement,
+    PowerPinEndpointRequirement,
+    PowerSourceGroupRequirement,
+)
 
 pytestmark = [
     pytest.mark.design_lint,
