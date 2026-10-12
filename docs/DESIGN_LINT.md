@@ -108,20 +108,18 @@ The first rules are:
   outlier and named-pin rules, and supports the same per-project `review`,
   `block`, `off`, and exact-ignore decisions. Source-matched peer groups scope
   fully reviewed connectors; partial group coverage does not silence the prompt.
-- `connector.generic_peer_pin_all_open` is an opt-in, default-off prompt for a
-  generic native `passive` contact left unassigned on every fitted peer of one
-  exact connector symbol, when the peers have complete identical pin
-  inventories and share another assigned pin. It asks the reviewer to check
-  the approved pinout for an intentionally unused contact or a missing
-  connection. The shared pin is context only: generic metadata does not say
-  whether the open contact is signal, return, or power, and does not establish
-  that it must connect. DNP peers, incomplete inventories, named or mapped
-  roles, non-passive electrical types, and cross-symbol aliases are excluded.
-  Project policy can set `review`, `block`, or `off`, and exact reviewed
-  findings use the usual ignore lifecycle. Synthetic fault/control schematics
-  are exercised through the digest-pinned KiCad 10.0.0 and 10.0.5 native
-  connector lane. The schematic assignment does not establish routed copper
-  continuity or off-board wiring.
+- `connector.generic_peer_pin_all_open` is an opt-in, default-off prompt for a generic native
+  `passive` contact left unassigned on every fitted peer of one exact connector symbol, when the
+  peers have complete identical pin inventories and share another assigned pin. It asks the reviewer
+  to check the approved pinout for an intentionally unused contact or a missing connection. The
+  shared pin is context only: generic metadata does not say whether the open contact is signal,
+  return, or power, and does not establish that it must connect. DNP peers, incomplete inventories,
+  named or mapped roles, non-passive electrical types, and cross-symbol aliases are excluded.
+  Project policy can set `review`, `block`, or `off`, and exact reviewed findings use the usual
+  ignore lifecycle. Synthetic fault/control schematics are exercised through the digest-pinned KiCad
+  10.0.0 and 10.0.5 native connector lane; see the
+  [synthetic fixture record](../tests/fixtures/design_lint/generic-peer-pin-all-open-native/README.md).
+  The schematic assignment does not establish routed copper continuity or off-board wiring.
 - `connector_peer_pin_coverage` is an observability summary for these existing
   connector heuristics. It binds candidate and fitted connector counts,
   exact-symbol and guarded `PART_ID` alias comparison counts,
