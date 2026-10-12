@@ -3772,6 +3772,3 @@
     }
   ]
 }
-        "tests.test_power_pin_net_roles.test_return_label_precedence_prevents_duplicate_peer_role_finding",
-        "tests.test_power_pin_net_roles.test_positive_supply_connector_pin_on_return_net_remains_in_scope",
-        "tests.test_power_pin_net_roles.test_positive_supply_connector_pin_on_positive_rail_is_a_valid_control",
