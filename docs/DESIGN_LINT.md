@@ -174,7 +174,8 @@ The first rules are:
   `PART_ID` with matching value and footprint. Generic functions and recognized
   supply/return names stay with their existing checks. The default mode is
   REVIEW because an open pin may be intentional; peer identity does not
-  establish that pins must share a net.
+  establish that pins must share a net. The digest-pinned synthetic examples
+  are documented in the [fixture README][peer-open-fixture].
 - `component.peer_power_output_unconnected` prompts when one fitted
   non-connector has an unassigned native `power_out` pin while a comparable
   fitted peer has one unambiguous net assignment. Peers may share an exact
@@ -4721,3 +4722,4 @@ passing result describes only the configured geometry around the selected PCB
 pad. Review the physical access path and first-article test separately.
 
 [chip-pro-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/25ef404b6a92de5a0cec203eb3270632136758e3/MCU_Module.kicad_sym
+[peer-open-fixture]: ../tests/fixtures/design_lint/named-peer-power-input-open/README.md
