@@ -27,6 +27,7 @@ class DesignLintRuleMetadata(StrictModel):
     fault_fixtures: tuple[NonEmptyText, ...] = ()
     valid_control_fixtures: tuple[NonEmptyText, ...] = ()
     metamorphic_fixtures: tuple[NonEmptyText, ...] = ()
+    required_native_fixtures: tuple[NonEmptyText, ...] = ()
     metamorphic_status: Literal["unreviewed", "covered", "not_applicable"] = "unreviewed"
     metamorphic_not_applicable_basis: NonEmptyText | None = None
     implementation_refs: tuple[NonEmptyText, ...]
@@ -41,6 +42,8 @@ class DesignLintRuleMetadata(StrictModel):
             raise ValueError("Design-lint rules must state at least one limitation")
         if not self.implementation_refs:
             raise ValueError("Design-lint rules must reference their implementation")
+        if len(set(self.required_native_fixtures)) != len(self.required_native_fixtures):
+            raise ValueError("Design-lint required native fixtures must be unique")
         if (
             self.implementation_owner != "legacy"
             and self.implementation_owner not in self.implementation_refs

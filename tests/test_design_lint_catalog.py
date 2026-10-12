@@ -194,6 +194,18 @@ def test_active_catalog_entries_require_fault_and_control_coverage() -> None:
         )
 
 
+def test_required_native_fixture_switches_must_be_unique() -> None:
+    entry = next(
+        rule.model_dump(mode="python")
+        for rule in rule_catalog().rules
+        if rule.required_native_fixtures
+    )
+    fixture = entry["required_native_fixtures"][0]
+    entry["required_native_fixtures"] = (fixture, fixture)
+    with pytest.raises(ValidationError, match="required native fixtures must be unique"):
+        DesignLintRuleMetadata.model_validate(entry)
+
+
 def test_metamorphic_status_requires_fixture_or_reasoned_not_applicability() -> None:
     entry = rule_catalog().rules[0].model_dump(mode="python")
     entry["metamorphic_fixtures"] = ()

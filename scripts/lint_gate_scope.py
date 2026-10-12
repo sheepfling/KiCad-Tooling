@@ -6,6 +6,7 @@ import argparse
 import os
 import re
 import subprocess
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -59,15 +60,25 @@ def configured_native_fixtures(repository: Path) -> frozenset[str]:
 
 def active_design_lint_rule_ids() -> frozenset[str]:
     """Return active rule IDs from the installed package's validated catalog."""
+    return frozenset(required_native_fixtures_by_rule())
+
+
+def required_native_fixtures_by_rule() -> dict[str, tuple[str, ...]]:
+    """Return required exact-native fixture switches for active rules."""
     from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 
-    return frozenset(str(rule.rule_id) for rule in rule_catalog().rules if rule.status == "active")
+    return {
+        str(rule.rule_id): tuple(rule.required_native_fixtures)
+        for rule in rule_catalog().rules
+        if rule.status == "active"
+    }
 
 
 def parse_tag_message(
     message: str,
     known_fixtures: frozenset[str],
     known_rule_ids: frozenset[str] = frozenset(),
+    required_native_fixtures: Mapping[str, tuple[str, ...]] | None = None,
 ) -> LintGateScope:
     """Parse one area or active rule selector and native fixture declarations."""
     selectors = [
@@ -101,6 +112,12 @@ def parse_tag_message(
         raise ValueError(
             f"tag message names fixtures absent from full acceptance: {sorted(unknown)}"
         )
+    required = set((required_native_fixtures or {}).get(rule_id or "", ()))
+    missing = required - set(fixtures)
+    if missing:
+        raise ValueError(
+            f"Lint-Rule {rule_id!r} requires Native-Fixture declarations: {sorted(missing)}"
+        )
     return LintGateScope(area, rule_id, tuple(fixtures))
 
 
@@ -120,10 +137,12 @@ def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
     _, separator, message = result.stdout.partition("\n\n")
     if not separator:
         raise ValueError(f"annotated lint tag {tag_name} has no message")
+    native_fixtures_by_rule = required_native_fixtures_by_rule()
     return parse_tag_message(
         message,
         configured_native_fixtures(repository),
-        active_design_lint_rule_ids(),
+        frozenset(native_fixtures_by_rule),
+        native_fixtures_by_rule,
     )
 
 

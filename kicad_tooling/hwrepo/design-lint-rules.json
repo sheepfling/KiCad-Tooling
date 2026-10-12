@@ -2722,7 +2722,10 @@
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_headers_localize_one_split_reference",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_channel_labelled_generic_ic_pair_reviews_split_reference_domains",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_ic_pair_groups_split_reference_review",
-        "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_stale_reference_map_does_not_suppress_prompt"
+        "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_stale_reference_map_does_not_suppress_prompt",
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_peer_voltage_fault_and_controls_by_native_version",
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_connector_and_optical_isolation_boundaries_by_native_version",
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_label_alias_fault_and_control_by_native_version"
       ],
       "valid_control_fixtures": [
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_same_reference_net_is_a_quiet_control",
@@ -2736,14 +2739,21 @@
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_skips_ambiguous_or_incomplete_cases",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_obeys_rule_override_and_exact_ignore",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_optically_isolated_uart_pair_is_not_treated_as_direct_peers",
-        "tests.test_digital_peer_serial_reference_fixture_lane.test_serial_optical_isolation_control_stays_outside_direct_peer_review"
+        "tests.test_digital_peer_serial_reference_fixture_lane.test_serial_optical_isolation_control_stays_outside_direct_peer_review",
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_peer_voltage_fault_and_controls_by_native_version",
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_connector_and_optical_isolation_boundaries_by_native_version",
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_label_alias_fault_and_control_by_native_version"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_peer_reference_review_is_order_stable",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_peer_review_is_order_stable",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_reference_domain_finding_is_order_stable_and_exact_map_clears_it",
-        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_is_order_stable"
+        "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_is_order_stable",
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_peer_normalized_netlists_match_across_native_versions"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/serial_peer_reference_domains.py#reference_domain",

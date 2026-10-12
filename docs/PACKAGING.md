@@ -99,6 +99,11 @@ fixtures remain enabled. The tag scope is validated before tests run; missing,
 ambiguous, inactive, or unsupported declarations fail the prerelease gate. Use a
 stable version tag for the full release acceptance run.
 
+An active rule may list `required_native_fixtures` in the packaged rule catalog.
+Every rule-scoped tag for that rule must declare those exact fixture switches.
+This binds its focused pytest selector to the native lane that exercises its
+catalogued native fault and control cases.
+
 Once published, project repositories should pin an exact tested package version.
 Upgrade that pin through a pull request that runs the project's focused and full
 acceptance lanes. Private projects can then consume public tooling updates without

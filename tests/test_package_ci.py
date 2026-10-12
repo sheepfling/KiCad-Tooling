@@ -21,6 +21,7 @@ from scripts.lint_gate_scope import (
     configured_native_fixtures,
     parse_tag_message,
     read_tag_scope,
+    required_native_fixtures_by_rule,
     write_github_scope,
 )
 
@@ -88,6 +89,8 @@ def test_workflow_enables_every_native_fixture_regression() -> None:
     )
     assert gated_fixtures
     assert gated_fixtures <= configured_fixtures
+    for rule_id, required in required_native_fixtures_by_rule().items():
+        assert set(required) <= configured_fixtures, rule_id
 
 
 def test_workflow_keeps_full_acceptance_and_scopes_prerelease_tags() -> None:
@@ -177,7 +180,9 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     workflow.parent.mkdir(parents=True)
     workflow.write_text(
         "          KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES: '1'\n"
-        "          KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES: '1'\n",
+        "          KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES: '1'\n"
+        "          KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES: '1'\n"
+        "          KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES: '1'\n",
         encoding="utf-8",
     )
     (repository / "source.txt").write_text("synthetic\n", encoding="utf-8")
@@ -244,6 +249,50 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     assert environment.read_text(encoding="utf-8") == (
         "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES=1\n"
     )
+
+    serial_rule_id = "bus.serial_peer_reference_review"
+    subprocess.run(
+        (
+            "git",
+            "tag",
+            "-a",
+            "v0.5.0rc3",
+            "-m",
+            "Serial reference lint with neighboring native lane",
+            "-m",
+            f"Lint-Rule: {serial_rule_id}",
+            "-m",
+            "Native-Fixture: KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES",
+        ),
+        cwd=repository,
+        check=True,
+        capture_output=True,
+    )
+    with pytest.raises(ValueError, match="requires Native-Fixture declarations"):
+        read_tag_scope("v0.5.0rc3", repository)
+
+    subprocess.run(
+        (
+            "git",
+            "tag",
+            "-a",
+            "v0.5.0rc4",
+            "-m",
+            "Serial reference lint with required exact native lane",
+            "-m",
+            f"Lint-Rule: {serial_rule_id}",
+            "-m",
+            "Native-Fixture: KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES",
+        ),
+        cwd=repository,
+        check=True,
+        capture_output=True,
+    )
+    serial_scope = read_tag_scope("v0.5.0rc4", repository)
+    assert serial_scope.pytest_markexpr == (
+        f'design_lint and design_lint_rule(rule_id="{serial_rule_id}")'
+    )
+    assert serial_scope.native_fixtures == ("KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES",)
 
 
 @pytest.mark.parametrize(

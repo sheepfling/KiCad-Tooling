@@ -299,6 +299,40 @@ def test_rule_marker_selects_catalogued_cases_without_external_checkout(
     assert "tests/test_power_paths.py::" not in result.stdout
 
 
+def test_serial_reference_rule_selects_its_exact_native_regressions() -> None:
+    environment = os.environ.copy()
+    environment.pop("KICAD_TEMPLATE_ROOT", None)
+    rule_id = "bus.serial_peer_reference_review"
+    result = subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "pytest",
+            "-q",
+            "--collect-only",
+            "-m",
+            f'design_lint_rule(rule_id="{rule_id}")',
+        ),
+        cwd=Path(__file__).resolve().parents[1],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    for function in (
+        "test_serial_peer_voltage_fault_and_controls_by_native_version",
+        "test_serial_connector_and_optical_isolation_boundaries_by_native_version",
+        "test_serial_label_alias_fault_and_control_by_native_version",
+        "test_serial_peer_normalized_netlists_match_across_native_versions",
+    ):
+        assert f"tests/test_ci_hosted_digital_peer_serial.py::{function}" in result.stdout
+    assert "tests/test_power_paths.py::" not in result.stdout
+
+
 def test_native_digital_peer_suites_are_pytest_native_and_theme_scoped() -> None:
     legacy_suite = Path(__file__).with_name("test_ci_hosted_digital_peers.py")
     assert not legacy_suite.exists()

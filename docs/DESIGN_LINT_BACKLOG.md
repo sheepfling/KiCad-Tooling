@@ -10642,6 +10642,17 @@ it does not claim field validation or effectiveness against private boards.
   rule; the bounded status is not complete interface discovery, and the added
   coverage has not yet been screened on nonconfidential public designs. The
   report field is part of design-lint schema 2; schema 1 remains readable.
+- **Focused native-gate repair (2026-10-12):** Review of LINT-074's prior
+  `v0.5.0rc126` gate showed that its rule selector covered the synthetic
+  multi-channel cases, while its tag enabled the neighboring serial roster
+  fixture lane. The exact-version serial reference fault/control cases lived
+  in the digital-peer native lane and were not linked from the rule catalog.
+  LINT-074 now catalogues those exact native fault/control and cross-version
+  repeatability tests and requires
+  `KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES` on rule-scoped tags. Tag validation
+  rejects a missing required lane, and a focused pytest collection regression
+  confirms the rule selector collects the native test cases. This closes a
+  release-gate coverage gap; it does not claim a physical return-path test.
 - **Done when:** Complete.
 
 #### LINT-075 — Oscillator-module output load-path review
