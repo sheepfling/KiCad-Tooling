@@ -2231,15 +2231,20 @@
       ],
       "fault_fixtures": [
         "tests.test_can_peer_reference_review.test_shared_can_line_pair_with_split_references_emits_one_exact_review",
-        "tests.test_can_peer_reference_review.test_known_split_survives_an_incomplete_peer_and_keeps_coverage_visible"
+        "tests.test_can_peer_reference_review.test_known_split_survives_an_incomplete_peer_and_keeps_coverage_visible",
+        "tests.test_can_native_fixture_lanes.test_native_can_peer_reference_fault_and_control"
       ],
       "valid_control_fixtures": [
-        "tests.test_can_peer_reference_review.test_common_reference_distinct_can_buses_dnp_and_shield_are_controls"
+        "tests.test_can_peer_reference_review.test_common_reference_distinct_can_buses_dnp_and_shield_are_controls",
+        "tests.test_can_native_fixture_lanes.test_native_can_peer_reference_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_can_peer_reference_review.test_component_peer_duplicate_suppression_requires_every_reference_assignment",
         "tests.test_can_peer_reference_review.test_rule_policy_ignore_and_mapping_order_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_peer_reference_scan.py#scan_can_peer_references",

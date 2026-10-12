@@ -437,3 +437,17 @@ def test_spi_peer_reference_rule_selects_its_native_fault_control_case() -> None
     assert native_fixture in rule.required_native_fixtures
     assert native_test in rule.fault_fixtures
     assert native_test in rule.valid_control_fixtures
+
+
+def test_can_peer_reference_rule_selects_its_native_fault_control_case() -> None:
+    rule = next(
+        entry for entry in rule_catalog().rules if entry.rule_id == "bus.can_peer_reference_review"
+    )
+    native_fixture = "KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES"
+    native_test = (
+        "tests.test_can_native_fixture_lanes.test_native_can_peer_reference_fault_and_control"
+    )
+
+    assert native_fixture in rule.required_native_fixtures
+    assert native_test in rule.fault_fixtures
+    assert native_test in rule.valid_control_fixtures

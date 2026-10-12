@@ -1954,12 +1954,13 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Rule-scoped native fixture inventory (2026-10-12):** An initial source-based
   comparison of the 17 modules assigned both `native_kicad` and `design_lint`
   markers found 13 native test functions across 11 modules without an active
-  rule-catalog fixture reference. The I2C and SPI peer-reference native
-  fault/control tests are now linked to LINT-103 and LINT-104 and require their
-  existing native switches; scoped hosted results are pending. The remaining
-  11 test functions across 9 modules cover CAN, component ratings, empty-netlist
-  evidence, I2C pull-up arrays, connector return domains, PCB test access,
-  return paths and signal paths, and a mapped power path.
+  rule-catalog fixture reference. The I2C, SPI, and CAN peer-reference native
+  fault/control tests are now linked to LINT-103 through LINT-105 and require
+  their existing native switches; scoped hosted results are pending. The
+  remaining 10 test functions across 9 modules cover CAN termination and peer
+  assignment, component ratings, empty-netlist evidence, I2C pull-up arrays,
+  connector return domains, PCB test access, return paths and signal paths, and
+  a mapped power path.
   Review each test against a rule predicate before indexing it; the inventory
   identifies selection gaps, not proof that every test belongs to a lint rule.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
@@ -5636,6 +5637,13 @@ is not a reason by itself to expand its scope or change its default policy.
   the exact pin-to-net assignments, repeatable netlists and ERC reports, and
   zero ERC errors on KiCad 10.0.0 and 10.0.5. See the
   [fixture notes](../tests/fixtures/design_lint/can-peer-reference-native/README.md).
+- **Rule-scoped gate registration (2026-10-12):** The exact-native fault/control
+  test was exercised by the broad interface-area gate, but was not in this
+  rule's fixture catalog. A `Lint-Rule: bus.can_peer_reference_review` tag
+  therefore could not select it. The catalog now links the test as both fault
+  and valid control, requires
+  `KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES`, and the architecture suite
+  guards that association. The new rule-scoped hosted result is pending.
 - **Incremental value:** The expected pin-to-net maps differ only at U3's
   reference assignment. U1/U2 share one symbol identity and have equal return/supply
   assignments; U3 has a distinct symbol identity, so component-peer comparison
