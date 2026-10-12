@@ -6586,14 +6586,17 @@ is not a reason by itself to expand its scope or change its default policy.
   digest-pinned tooling-owned fault/control pair uses native `power_out` pins.
   Its provenance and source hashes are recorded in the
   [fixture README](../tests/fixtures/design_lint/connector-named-power-output-peer-native/README.md).
-  Exact KiCad 10.0.0 and 10.0.5 native acceptance is pending. The first tagged
-  attempt (`v0.5.0rc203`, GitHub Actions run `38321543865`) passed the scoped
-  unit stage but stopped at
-  `ruff-format` on one wrapped comparison in the native fixture validator.
-  The formatting fix is in `v0.5.0rc204`; its hosted run (`38321806881`) passed
-  the scoped unit, Ruff, Pyright, Windows typing and rumdl stages, then failed
-  because mdrepo could not reach the fixture README from a graph root. This
-  backlog link closes that documentation edge; the hosted retry is pending.
+  Hosted acceptance passed in `v0.5.0rc205` (GitHub Actions
+  run `38322241068`).
+  The rule-scoped unit stage ran with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, so the parametrized KiCad 10.0.0 and
+  10.0.5 fault/control cases ran. Both versions passed repeated normalized
+  netlist checks; the fault reported this rule and the control did not. The
+  hosted gate also passed format, lint, Pyright, Windows typing, Markdown,
+  wheel and source-distribution checks, and the external-project wheel
+  playtest. Windows, macOS, and Ubuntu preview jobs passed. Earlier rc203 and
+  rc204 attempts exposed and fixed the native-validator formatting issue and
+  the fixture README graph link; neither required changing the rule predicate.
 - **Cohort input:** The rule uses the existing peer-comparison pattern as a
   first-party deterministic heuristic. No cohort code, private project source,
   board, or product expectation was imported.
