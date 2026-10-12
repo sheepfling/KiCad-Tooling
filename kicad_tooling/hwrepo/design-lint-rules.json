@@ -753,7 +753,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_component_peer_pin_all_open.test_fingerprint_is_stable_under_input_order_changes"
+        "tests.test_component_peer_pin_all_open.test_fingerprint_is_stable_under_input_order_changes",
+        "tests.test_design_lint_determinism_generic_peer_pins.test_generic_peer_pin_all_open_reports_are_stable_across_hash_seeds"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
@@ -800,7 +801,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_component_peer_pin_mixed_open.test_fingerprint_is_stable_when_peer_netlist_input_order_changes"
+        "tests.test_component_peer_pin_mixed_open.test_fingerprint_is_stable_when_peer_netlist_input_order_changes",
+        "tests.test_design_lint_determinism_generic_peer_pins.test_generic_peer_pin_mixed_open_reports_are_stable_across_hash_seeds"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
@@ -844,6 +846,7 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_component_peer_pin_assignment_outlier.test_generic_peer_assignment_outlier_is_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_generic_peer_pins.test_generic_peer_pin_assignment_outlier_reports_are_stable_across_hash_seeds",
         "tests.test_component_peer_pin_assignment_native_fixture_lane.test_native_generic_peer_assignment_outlier_fault_and_control_are_repeatable"
       ],
       "required_native_fixtures": [

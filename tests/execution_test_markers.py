@@ -27,6 +27,7 @@ _NATIVE_KICAD_MODULES = frozenset(
 _SLOW_MODULES = frozenset(
     {
         "tests/test_design_lint_determinism.py",
+        "tests/test_design_lint_determinism_generic_peer_pins.py",
         "tests/test_design_lint_determinism_power_input_peers.py",
         "tests/test_electrical_parity.py",
         "tests/test_electrical_connector_return_parity.py",

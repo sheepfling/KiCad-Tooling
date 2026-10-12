@@ -2549,8 +2549,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v60. The cross-process probe supports themed report
-  selectors and retains the complete 165-report inventory gate. Fault/control
+- **Status:** Implemented v61. The cross-process probe supports themed report
+  selectors and retains the complete 171-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2563,6 +2563,8 @@ is not a reason by itself to expand its scope or change its default policy.
   reference reports, a connector-only SPI/UART
   boundary control, coverage-sensitive connector peer finding suppression,
   generic and named component power-input peer faults and controls,
+  generic component peer-pin all-open, mixed-open, and strict-majority
+  assignment-outlier reports with valid controls,
   mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
   open-contact case, plus the typed contact-rating boundary and over-limit
   checks, DB9 grounding and pin-connectivity requirements, multi-device
@@ -3032,6 +3034,14 @@ is not a reason by itself to expand its scope or change its default policy.
   enabled, installed-wheel verification against a separate public project
   checkout, and Ubuntu, macOS, and Windows previews. The package-publish job
   was skipped for this prerelease tag.
+- The v61 extension adds six complete synthetic reports for generic component
+  peer-pin heuristics: all peers open, some peers open, and a strict-majority
+  assignment outlier, each with an explicitly connected control. The focused
+  tests compare complete reports and source-bound candidate coverage across
+  three independently randomized Python processes. Each rule catalog points
+  to its own focused regression, while the rules remain opt-in review prompts
+  whose peer comparisons do not prove a required pin connection. This adds no
+  rule or project-derived fixture.
 - **Next:** Extend the process-level determinism matrix to other high-risk
   source-bound report families when their complete synthetic fault/control
   reports can be serialized through the same shared service. Keep each

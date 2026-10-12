@@ -5,7 +5,11 @@ from __future__ import annotations
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
+    DesignLintRuleOverride,
     NetlistContract,
+)
+from tests.component_peer_pin_support import (
+    lint_report as component_peer_pin_lint_report,
 )
 from tests.component_peer_pin_support import (
     peer_bidirectional_netlist,
@@ -27,6 +31,10 @@ from tests.design_lint_fixtures import (
     coach,
     generic_component_power_input_netlist,
 )
+from tests.design_lint_fixtures.component_peer_pin_all_open import (
+    generic_component_peer_mixed_netlist,
+    generic_component_peer_netlist,
+)
 
 
 def part_id_peer_component_pin_netlist(
@@ -39,6 +47,19 @@ def part_id_peer_component_pin_netlist(
         pin_function=pin_function,
         part_ids={"U1": "SYNTHETIC-PEER-MODULE", "U2": "synthetic-peer-module"},
     )
+
+
+def generic_peer_pin_review_report(netlist: NetlistContract, rule_id: str) -> dict[str, object]:
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id=rule_id,
+                mode="review",
+                reason="Synthetic hash-seed fixture explicitly enables peer-pin review",
+            ),
+        )
+    )
+    return component_peer_pin_lint_report(netlist, policy).model_dump(mode="json")
 
 
 def report_cases() -> dict[str, object]:
@@ -242,6 +263,40 @@ def report_cases() -> dict[str, object]:
         "peer_power_input_assignment_control": peer_power_pin_assignment_lint_report(
             generic_peer_power_input_netlist(assignments=("+3V3", "+3V3"))
         ).model_dump(mode="json"),
+        "generic_peer_pin_all_open_fault": generic_peer_pin_review_report(
+            generic_component_peer_netlist(), "component.generic_peer_pin_all_open"
+        ),
+        "generic_peer_pin_all_open_control": generic_peer_pin_review_report(
+            generic_component_peer_netlist(target_nets=("TARGET_A", "TARGET_B")),
+            "component.generic_peer_pin_all_open",
+        ),
+        "generic_peer_pin_mixed_open_fault": generic_peer_pin_review_report(
+            generic_component_peer_mixed_netlist(), "component.generic_peer_pin_mixed_open"
+        ),
+        "generic_peer_pin_mixed_open_control": generic_peer_pin_review_report(
+            generic_component_peer_mixed_netlist(target_nets=("LOAD", "LOAD", "LOAD")),
+            "component.generic_peer_pin_mixed_open",
+        ),
+        "generic_peer_pin_assignment_outlier_fault": generic_peer_pin_review_report(
+            peer_component_pin_netlist(
+                references=("U1", "U2", "U3"),
+                pin_nets=("PEER_DATA", "PEER_DATA", "OTHER_DATA"),
+                symbols={reference: "Synthetic:PeerModule" for reference in ("U1", "U2", "U3")},
+                pin_electrical_types=("passive", "passive", "passive"),
+                pin_function="Pin_2",
+            ),
+            "component.generic_peer_pin_assignment_outlier",
+        ),
+        "generic_peer_pin_assignment_outlier_control": generic_peer_pin_review_report(
+            peer_component_pin_netlist(
+                references=("U1", "U2", "U3"),
+                pin_nets=("PEER_DATA", "PEER_DATA", "PEER_DATA"),
+                symbols={reference: "Synthetic:PeerModule" for reference in ("U1", "U2", "U3")},
+                pin_electrical_types=("passive", "passive", "passive"),
+                pin_function="Pin_2",
+            ),
+            "component.generic_peer_pin_assignment_outlier",
+        ),
         "named_peer_power_input_partial_open_fault": peer_power_pin_assignment_lint_report(
             named_peer_power_input_netlist()
         ).model_dump(mode="json"),

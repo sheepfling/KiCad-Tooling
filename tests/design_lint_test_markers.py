@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+from tests.design_lint_component_test_markers import COMPONENT_LINT_TEST_MODULES
 
 # Keep the area catalog explicit. Adding a lint test module here also includes
 # it in the portable design_lint selection derived below.
@@ -38,68 +39,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_mcp_parity_schematic_hierarchy.py",
         }
     ),
-    "component_lint": frozenset(
-        {
-            "tests/test_component_unconnected_power_output.py",
-            "tests/test_component_power_input_native_fixture_lane.py",
-            "tests/test_component_peer_pin_all_open.py",
-            "tests/test_component_peer_pin_mixed_open.py",
-            "tests/test_design_lint_mcp_parity_peer_pins.py",
-            "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
-            "tests/test_electrical_component_rating_parity.py",
-            "tests/test_component_power_ratings.py",
-            "tests/test_component_voltage_ratings.py",
-            "tests/test_component_rating_native_fixture_lane.py",
-            "tests/test_electrical_component_evidence.py",
-            "tests/test_component_peer_power_fixture_lane.py",
-            "tests/test_peer_power_assignment_symbol_groups.py",
-            "tests/test_peer_power_assignment_part_id_groups.py",
-            "tests/test_peer_power_assignment_cli_mcp.py",
-            "tests/test_peer_power_assignment_native.py",
-            "tests/test_component_peer_power_input_divergence.py",
-            "tests/test_component_named_peer_power_input_divergence.py",
-            "tests/test_component_named_peer_power_input_all_open.py",
-            "tests/test_component_named_peer_power_input_all_open_native.py",
-            "tests/test_component_peer_power_input_native_fixture_lane.py",
-            "tests/test_design_lint_determinism_component_peers.py",
-            "tests/test_design_lint_determinism_power_input_peers.py",
-            "tests/test_component_peer_pin_assignment_outlier.py",
-            "tests/test_component_peer_pin_assignment_native_fixture_lane.py",
-            "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",
-            "tests/test_control_inputs.py",
-            "tests/test_electrical_control_input_parity.py",
-            "tests/test_electrical_rs485_parity.py",
-            "tests/test_crystal_networks.py",
-            "tests/test_design_lint_determinism_analog.py",
-            "tests/test_design_lint_mcp_parity_analog.py",
-            "tests/test_design_lint_mcp_parity_components.py",
-            "tests/test_design_lint_mcp_parity_mapped_custom_passive.py",
-            "tests/test_design_lint_mcp_parity_protection.py",
-            "tests/test_design_lint_mcp_parity_two_pin_crystal_fuse.py",
-            "tests/test_design_lint_mcp_parity_two_pin_passives.py",
-            "tests/test_peer_power_output.py",
-            "tests/test_peer_signal_output.py",
-            "tests/test_peer_signal_input.py",
-            "tests/test_peer_bidirectional_pin.py",
-            "tests/test_peer_component_pin_identity.py",
-            "tests/test_peer_component_pin_coverage.py",
-            "tests/test_ci_hosted_component_peer_power.py",
-            "tests/test_electrical_power_connectivity_parity.py",
-            "tests/test_led_output_heuristics.py",
-            "tests/test_led_rail_native_fixture_lane.py",
-            "tests/test_open_drain_bias_fixture_lane.py",
-            "tests/test_open_drain_heuristics.py",
-            "tests/test_ci_hosted_control_inputs.py",
-            "tests/test_rc_filters.py",
-            "tests/test_two_pin_crystals.py",
-            "tests/test_two_pin_diodes.py",
-            "tests/test_two_pin_ferrites.py",
-            "tests/test_two_pin_fuses.py",
-            "tests/test_two_pin_passives.py",
-            "tests/test_two_pin_component_native_fixture_lane.py",
-            "tests/test_two_pin_switches.py",
-        }
-    ),
+    "component_lint": COMPONENT_LINT_TEST_MODULES,
     "connector_lint": frozenset(
         {
             "tests/test_connector_unconnected_power_output.py",
