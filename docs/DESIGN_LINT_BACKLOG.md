@@ -431,13 +431,19 @@ and optional ecosystem adapters are `P3`.
   native fixture-load issue, a Ruff format issue, and an unreachable fixture
   guide in the Markdown documentation graph.
 
-- **Named component supply-pin evidence (gate in development):** Add an
-  exact-native fault/control pair for `component.unconnected_supply_pin` on a
-  single synthetic non-connector component. The intended result remains a
-  `REVIEW` prompt about an unassigned named pin; the source does not state the
-  correct rail or prove the pin must be connected. The focused pytest selector
-  and pinned KiCad 10.0.0/10.0.5 lane are in place; tagged hosted acceptance is
-  pending.
+- **Named component supply-pin evidence:** `component.unconnected_supply_pin`
+  now has an exact-native fault/control pair on one synthetic non-connector
+  component. The fault leaves U1 VDD open with GND assigned; the control assigns
+  both pins. Tagged hosted acceptance `v0.5.0rc158` (run `38252361023`) passed
+  the exact KiCad 10.0.0/10.0.5 lane and installed-wheel check. The `REVIEW`
+  prompt does not state the correct rail or prove that the pin must connect.
+
+- **Named component return-pin evidence (gate in development):** Add a separate
+  exact-native fault/control pair for `component.unconnected_return_pin` on a
+  single synthetic non-connector component. The fault assigns VDD while leaving
+  GND open, so the named return predicate is exercised without relying on a
+  second open pin. The lane preserves `REVIEW` semantics and does not assert a
+  required common ground domain; tagged hosted acceptance is pending.
 
 - **Test architecture — Keep native fixture acceptance selectable by theme.**
   The exact-version empty-netlist fault and nonempty control now live in the

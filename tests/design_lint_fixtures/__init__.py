@@ -26,7 +26,10 @@ from .connectors import (
     standard_connector_identity_peers,
     three_port_power_pin_drift,
 )
-from .named_component_power_pins import named_component_supply_pin_cases
+from .named_component_power_pins import (
+    named_component_return_pin_cases,
+    named_component_supply_pin_cases,
+)
 from .peers import (
     header_only_spi_uart_netlist,
     serial_peer_voltage_map,
@@ -75,6 +78,7 @@ __all__ = (
     "ic_power_decoupling_fixture",
     "led_rail_bridge_netlist",
     "multiconductor_connector",
+    "named_component_return_pin_cases",
     "named_component_supply_pin_cases",
     "observed",
     "peer_component_power_pins",

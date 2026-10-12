@@ -156,6 +156,8 @@ def prepare_connector_return_fixture_context(
         / "unconnected-named-connector-pins/control.kicad_sch",
         "unconnected-named-component-supply-fault": fixture_root
         / "unconnected-named-component-pins/supply-fault.kicad_sch",
+        "unconnected-named-component-return-fault": fixture_root
+        / "unconnected-named-component-pins/return-fault.kicad_sch",
         "unconnected-named-component-power-control": fixture_root
         / "unconnected-named-component-pins/control.kicad_sch",
         "unconnected-generic-component-power-input-fault": fixture_root
@@ -224,6 +226,7 @@ def prepare_connector_return_fixture_context(
         "unconnected-named-return-fault": "a9a76c8c9a1a01978b3c5ae3228825658631c4c9ad9cc5b73566427f5ce80a5f",
         "unconnected-named-power-control": "ee2980cf387a0326ddb92bcbec8f562ca560c3a9cc9cc249075002148f1e2275",
         "unconnected-named-component-supply-fault": "f1ab42010ec4d41b3ea971e797a7cdff6c020fdaf86e7aae9e2f94664731d18e",
+        "unconnected-named-component-return-fault": "43a421486e1ac8f138269128715a45e47fc1998a266d631c8461ffaaf58f9357",
         "unconnected-named-component-power-control": "65e95e66fe3af0ce5136e5763f10f4b3aec71f658f790db929793a45c1895000",
         "unconnected-generic-component-power-input-fault": "40271ae0a6551c8c7209427b30e89d9a95267aa92765eaac1a5cdf65e1ffd1a1",
         "unconnected-generic-component-power-input-control": "67d6ad249e1caa2095b3a408457e6a1710fb9bb6ef7d8e5cb1fdcdd7710b43ec",

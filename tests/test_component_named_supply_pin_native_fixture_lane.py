@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
 from kicad_tooling.ci_hosted_component_named_supply_pin import COMPONENT_NAMED_SUPPLY_PIN_CASES
 from kicad_tooling.ci_hosted_support import HostedLog
-from kicad_tooling.hwrepo.models import CommandEvidence, DesignLintPolicy, NetlistContract
+from kicad_tooling.hwrepo.models import DesignLintPolicy
+from tests.component_named_power_pin_native_support import (
+    assert_mocked_named_component_power_pin_lane,
+    named_component_power_pin_lane_results,
+)
 from tests.design_lint_fixtures.named_component_power_pins import named_component_supply_pin_cases
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
@@ -22,12 +24,6 @@ from tests.synthetic_design_lint_project import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.power_lint]
 
 
-def _lane_results(log: HostedLog) -> dict[str, dict[str, object]]:
-    events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
-    prefix = "component-named-supply-pin-fixture/"
-    return {item["stage"]: item for item in events if item.get("stage", "").startswith(prefix)}
-
-
 def test_component_named_supply_pin_lane_exports_only_its_fault_and_control(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -35,75 +31,16 @@ def test_component_named_supply_pin_lane_exports_only_its_fault_and_control(
         component_named_supply_pin_fixture_lane,
     )
 
-    root = tmp_path.resolve()
-    image = PINNED_NATIVE_KICAD_IMAGES["10.0.0"]
-    config = SimpleNamespace(image=image, kicad_version="10.0.0")
-    observed = named_component_supply_pin_cases()
-
-    def fake_run_command(
-        command_root: Path, argv: tuple[str, ...], timeout: int
-    ) -> CommandEvidence:
-        assert command_root == root
-        assert timeout == 600
-        assert "--network" in argv and argv[argv.index("--network") + 1] == "none"
-        assert "--read-only" in argv
-        assert image in argv
-        mounts = tuple(argv[index + 1] for index, item in enumerate(argv[:-1]) if item == "-v")
-        assert len(mounts) == 2
-        source_directory = Path(
-            next(item for item in mounts if item.endswith(":/fixtures:ro")).removesuffix(
-                ":/fixtures:ro"
-            )
-        )
-        output_directory = Path(
-            next(item for item in mounts if item.endswith(":/output:rw")).removesuffix(
-                ":/output:rw"
-            )
-        )
-        assert {item.name for item in source_directory.iterdir()} == {
-            f"{case}.kicad_sch" for case in COMPONENT_NAMED_SUPPLY_PIN_CASES
-        }
-        for case in COMPONENT_NAMED_SUPPLY_PIN_CASES:
-            for run in ("first", "repeat"):
-                (output_directory / f"{case}.{run}.netlist.xml").write_text(
-                    f"synthetic {case} {run}\n", encoding="utf-8"
-                )
-        return CommandEvidence(
-            argv=argv,
-            started_utc="2026-10-12T00:00:00+00:00",
-            returncode=0,
-            stdout="kicad_version=10.0.0\n",
-        )
-
-    def fake_read_netlist(path: Path) -> NetlistContract:
-        return observed[path.name.split(".", 1)[0]]
-
-    monkeypatch.setattr("kicad_tooling.hwrepo.electrical.selected_config", lambda *_args: config)
-    monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
-    monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
-
-    log = HostedLog(root, "component-named-supply-pin-unit")
-    component_named_supply_pin_fixture_lane(root, project="synthetic", image=image, log=log)
-    results = _lane_results(log)
-
-    assert set(results) == {
-        "component-named-supply-pin-fixture/native-export",
-        *(
-            f"component-named-supply-pin-fixture/{case}"
-            for case in COMPONENT_NAMED_SUPPLY_PIN_CASES
-        ),
-    }
-    fault = results["component-named-supply-pin-fixture/unconnected-named-component-supply-fault"]
-    assert fault["lint_status"] == "REVIEW"
-    assert fault["findings"] == "component.unconnected_supply_pin"
-    assert fault["subjects"] == "U1.1: VDD"
-    control = results[
-        "component-named-supply-pin-fixture/unconnected-named-component-power-control"
-    ]
-    assert control["lint_status"] == "PASS"
-    assert control["findings"] == "none"
-    assert_native_fixture_mounts(
-        root, results["component-named-supply-pin-fixture/native-export"]["command_receipt"]
+    assert_mocked_named_component_power_pin_lane(
+        tmp_path,
+        monkeypatch,
+        lane=component_named_supply_pin_fixture_lane,
+        cases=COMPONENT_NAMED_SUPPLY_PIN_CASES,
+        observed_contracts=named_component_supply_pin_cases(),
+        stage_prefix="component-named-supply-pin-fixture",
+        fault_case="unconnected-named-component-supply-fault",
+        expected_rule_id="component.unconnected_supply_pin",
+        expected_subject="U1.1: VDD",
     )
 
 
@@ -139,7 +76,9 @@ def test_native_named_component_supply_pin_fault_and_control_are_focused_and_rep
 
     log = HostedLog(root, f"native-component-named-supply-pin-{project}")
     component_named_supply_pin_fixture_lane(root, project=project, image=config.image, log=log)
-    results = _lane_results(log)
+    results = named_component_power_pin_lane_results(
+        log, stage_prefix="component-named-supply-pin-fixture"
+    )
     native_export = results["component-named-supply-pin-fixture/native-export"]
     assert native_export["status"] == "PASS"
     assert native_export["kicad_version"] == version
