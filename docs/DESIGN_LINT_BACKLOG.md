@@ -438,12 +438,13 @@ and optional ecosystem adapters are `P3`.
   the exact KiCad 10.0.0/10.0.5 lane and installed-wheel check. The `REVIEW`
   prompt does not state the correct rail or prove that the pin must connect.
 
-- **Named component return-pin evidence (gate in development):** Add a separate
-  exact-native fault/control pair for `component.unconnected_return_pin` on a
-  single synthetic non-connector component. The fault assigns VDD while leaving
-  GND open, so the named return predicate is exercised without relying on a
-  second open pin. The lane preserves `REVIEW` semantics and does not assert a
-  required common ground domain; tagged hosted acceptance is pending.
+- **Named component return-pin evidence:** `component.unconnected_return_pin`
+  now has a separate exact-native fault/control pair on a synthetic
+  non-connector component. The fault assigns VDD while leaving GND open, so the
+  named return predicate is exercised without relying on a second open pin.
+  Tag `v0.5.0rc159` passed hosted acceptance (run `38253423642`), including the
+  pinned KiCad 10.0.0/10.0.5 cases and installed-wheel check. The lane preserves
+  `REVIEW` semantics and does not assert a required common ground domain.
 
 - **Test architecture — Keep native fixture acceptance selectable by theme.**
   The exact-version empty-netlist fault and nonempty control now live in the

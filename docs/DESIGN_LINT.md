@@ -378,8 +378,8 @@ The first rules are:
   rail or that the rail has a valid source. A focused exact-native lane exports
   the synthetic open-VDD fault and assigned control twice on pinned KiCad
   10.0.0 and 10.0.5; tag `v0.5.0rc158` passed hosted acceptance (run
-  `38252361023`). The named return-pin gate has a separate tagged acceptance
-  pending. See the
+  `38252361023`). The separate named return-pin gate passed on
+  `v0.5.0rc159` (run `38253423642`). See the
   [named component pin fixture record](../tests/fixtures/design_lint/unconnected-named-component-pins/README.md).
 - `component.led_directly_across_supply_and_return` prompts review when a
   fitted exact `Device:LED` symbol has two inventoried pins assigned directly

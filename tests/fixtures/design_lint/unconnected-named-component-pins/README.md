@@ -35,4 +35,4 @@ The focused pytest selectors are
 
 The supply-pin lane passed exact KiCad 10.0.0 and 10.0.5 hosted acceptance on
 `v0.5.0rc158` (run `38252361023`). The return-pin lane's tagged acceptance is
-pending.
+also passed on `v0.5.0rc159` (run `38253423642`).
