@@ -10,6 +10,7 @@ import pytest
 import tests.can_peer_reference_support as _can_peer_reference_support
 import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
+import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_fixtures
@@ -100,6 +101,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.connector_capacitor_only_netlist(),
         _power_input_paths.source_path_netlist(wrong_rail=True),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(),
+        _connector_peer_pin_all_open.generic_open_peer_netlist(),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(("PORT_A", "PORT_B")),
         unroled_return_labels,
         numbered_power_rails,

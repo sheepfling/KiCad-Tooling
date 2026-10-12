@@ -16,6 +16,68 @@ from .connector_peer_pin_scan import (
 from .design_lint_types import Candidate
 from .models import ConnectorMappedPinEvidence, NetlistContract
 
+_GENERIC_PEER_PIN_TYPES = frozenset(
+    {
+        "passive",
+        "input",
+        "output",
+        "bidirectional",
+        "tri_state",
+        "open_collector",
+        "open_emitter",
+    }
+)
+
+
+def _generic_peer_pin_type(
+    pin_keys: tuple[str, ...], electrical_types: Mapping[str, str]
+) -> str | None:
+    """Return one supported, matching native pin type for a generic peer group."""
+    types = {electrical_types.get(pin) for pin in pin_keys}
+    if len(types) != 1:
+        return None
+    pin_type = next(iter(types))
+    return pin_type if pin_type in _GENERIC_PEER_PIN_TYPES else None
+
+
+def _contact_description(pin_type: str) -> str:
+    if pin_type == "passive":
+        return "generic passive contact"
+    return f"generic {pin_type} signal contact"
+
+
+def _contact_message(pin_type: str, *, scoped: bool, part_id: bool = False) -> str:
+    group_note = (
+        " The comparison is scoped by a source-reviewed peer-assignment group." if scoped else ""
+    )
+    peer_description = "with the same reviewed PART_ID" if part_id else "of the exact symbol"
+    if pin_type == "passive":
+        if part_id:
+            return (
+                "This generic passive connector pin is unassigned on every fitted peer "
+                "with the same reviewed PART_ID, while another pin has the same exact "
+                "assigned net across those peers. Review the approved pinout for an "
+                "intentionally unused contact or a missing connection. The generic pin "
+                "metadata does not identify this contact as signal, return, or power, and "
+                "peer similarity does not establish that it must connect." + group_note
+            )
+        return (
+            "This generic passive connector pin is unassigned on every fitted peer "
+            f"{peer_description}, while another pin has the same assigned net "
+            "across those peers. Review the approved pinout for an intentionally "
+            "unused contact or a missing connection. The generic pin metadata does "
+            "not identify this contact as signal, return, or power, and peer "
+            "similarity does not establish that it must connect." + group_note
+        )
+    return (
+        f"This generic {pin_type} connector pin is unassigned on every fitted peer "
+        f"{peer_description}, while another pin has the same assigned "
+        "net across those peers. Review the approved pinout for an intentionally "
+        "unused contact or a missing connection. The native electrical type and "
+        "generic pin label do not identify its interface function or required net, "
+        "and peer similarity does not establish that it must connect." + group_note
+    )
+
 
 def all_open_generic_connector_peer_pin_candidates(
     observed: NetlistContract,
@@ -23,14 +85,15 @@ def all_open_generic_connector_peer_pin_candidates(
     reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
 ) -> tuple[Candidate, ...]:
-    """Prompt on generic passive pins open across exact-symbol peers with a shared anchor.
+    """Prompt on generic passive or signal pins open across comparable peers.
 
     The candidate is deliberately narrower than a general unconnected-pin rule:
     every fitted peer must expose the same complete pin inventory, the pin's
     native function must be absent or generic, its electrical type must be
-    passive, and another pin must have one common exact net assignment across
-    the same peer group. This context does not identify the open pin's role or
-    establish that it must be connected.
+    passive or one of the supported signal types, and another pin must have one
+    common exact net assignment across the same peer group. Power pins remain
+    with their dedicated rules. This context does not identify the open pin's
+    interface function or establish that it must be connected.
     """
     reviewed_connector_pins = reviewed_connector_pins or {}
     reviewed_pins = {pin.casefold(): evidence for pin, evidence in reviewed_connector_pins.items()}
@@ -130,7 +193,8 @@ def all_open_generic_connector_peer_pin_candidates(
             pin_keys = tuple(pin.casefold() for pin in assignments)
             if not all(pin_function_is_generic(functions.get(pin)) for pin in pin_keys):
                 continue
-            if not all(electrical_types.get(pin) == "passive" for pin in pin_keys):
+            pin_type = _generic_peer_pin_type(pin_keys, electrical_types)
+            if pin_type is None:
                 continue
             if any(
                 (reviewed := reviewed_pins.get(pin)) is not None
@@ -191,27 +255,19 @@ def all_open_generic_connector_peer_pin_candidates(
                         sorted(shared_anchors, key=lambda item: (item.casefold(), item))
                     ),
                 }
+                if pin_type != "passive":
+                    evidence["pin_electrical_type"] = (pin_type,)
                 if peer_group is not None:
                     evidence["peer_assignment_group"] = (peer_group,)
                     evidence["peer_assignment_basis"] = peer_review
                 candidates.append(
                     Candidate(
                         rule_id="connector.generic_peer_pin_all_open",
-                        subject=f"{symbol} pin {pin_number}: generic passive contact is open on every peer",
-                        message=(
-                            "This generic passive connector pin is unassigned on every fitted "
-                            "peer of the exact symbol, while another pin has the same assigned "
-                            "net across those peers. Review the approved pinout for an "
-                            "intentionally unused contact or a missing connection. The generic "
-                            "pin metadata does not identify this contact as signal, return, or "
-                            "power, and peer similarity does not establish that it must connect."
-                            + (
-                                " The comparison is scoped by a source-reviewed "
-                                "peer-assignment group."
-                                if peer_group is not None
-                                else ""
-                            )
+                        subject=(
+                            f"{symbol} pin {pin_number}: "
+                            f"{_contact_description(pin_type)} is open on every peer"
                         ),
+                        message=_contact_message(pin_type, scoped=peer_group is not None),
                         evidence=evidence,
                     )
                 )
@@ -240,7 +296,8 @@ def all_open_generic_connector_peer_pin_candidates(
                 continue
             if not pin_function_is_generic(group.pin_function):
                 continue
-            if group.pin_electrical_type.strip().casefold() != "passive":
+            pin_type = group.pin_electrical_type.strip().casefold()
+            if pin_type not in _GENERIC_PEER_PIN_TYPES:
                 continue
             pin_keys = tuple(pin.casefold() for pin in group.assignments)
             if any(
@@ -279,6 +336,8 @@ def all_open_generic_connector_peer_pin_candidates(
                 "peer_identity": (group.part_id,),
                 "peer_symbols": group.symbols,
             }
+            if pin_type != "passive":
+                evidence["pin_electrical_type"] = (pin_type,)
             if group.peer_assignment_group is not None:
                 evidence["peer_assignment_group"] = (group.peer_assignment_group,)
                 evidence["peer_assignment_basis"] = group.peer_assignment_basis
@@ -286,21 +345,13 @@ def all_open_generic_connector_peer_pin_candidates(
                 Candidate(
                     rule_id="connector.generic_peer_pin_all_open",
                     subject=(
-                        f"PART_ID {group.part_id} pin {group.pin_number}: generic passive "
-                        "contact is open on every peer"
+                        f"PART_ID {group.part_id} pin {group.pin_number}: "
+                        f"{_contact_description(pin_type)} is open on every peer"
                     ),
-                    message=(
-                        "This generic passive connector pin is unassigned on every fitted peer "
-                        "with the same reviewed PART_ID, while another pin has the same exact "
-                        "assigned net across those peers. Review the approved pinout for an "
-                        "intentionally unused contact or a missing connection. The generic pin "
-                        "metadata does not identify this contact as signal, return, or power, and "
-                        "peer similarity does not establish that it must connect."
-                        + (
-                            " The comparison is scoped by a source-reviewed peer-assignment group."
-                            if group.peer_assignment_group is not None
-                            else ""
-                        )
+                    message=_contact_message(
+                        pin_type,
+                        scoped=group.peer_assignment_group is not None,
+                        part_id=True,
                     ),
                     evidence=evidence,
                 )

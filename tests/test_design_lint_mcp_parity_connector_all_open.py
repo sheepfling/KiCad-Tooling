@@ -14,6 +14,7 @@ pytestmark = [
     pytest.mark.slow,
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
+    pytest.mark.interface_lint,
 ]
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
@@ -37,7 +38,12 @@ from tests.synthetic_design_lint_project import (
 RULE_ID = "connector.generic_peer_pin_all_open"
 
 
-def _netlist_xml(*, fault: bool, part_id_aliases: bool = False) -> str:
+def _netlist_xml(
+    *,
+    fault: bool,
+    part_id_aliases: bool = False,
+    signal_pin_type: str = "passive",
+) -> str:
     power_nodes = "".join(f'<node ref="J{reference}" pin="1"/>' for reference in (1, 2))
     return_nodes = (
         "" if fault else '<net name="GND"><node ref="J1" pin="2"/><node ref="J2" pin="2"/></net>'
@@ -61,7 +67,7 @@ def _netlist_xml(*, fault: bool, part_id_aliases: bool = False) -> str:
     libparts = "".join(
         f'<libpart lib="Synthetic" part="{symbol_name}"><pins>'
         '<pin num="1" name="Pin_1" type="passive"/>'
-        '<pin num="2" name="Pin_2" type="passive"/>'
+        f'<pin num="2" name="Pin_2" type="{signal_pin_type}"/>'
         "</pins></libpart>"
         for symbol_name in sorted(set(symbol_names))
     )
@@ -131,9 +137,18 @@ def test_all_open_generic_peer_pin_lint_cli_mcp_parity(tmp_path: Path) -> None:
     netlist = native.parent / "netlist.xml"
     summary = read_model(native, ValidationSummary)
 
-    def write_netlist(*, fault: bool, part_id_aliases: bool = False) -> None:
+    def write_netlist(
+        *,
+        fault: bool,
+        part_id_aliases: bool = False,
+        signal_pin_type: str = "passive",
+    ) -> None:
         netlist.write_text(
-            _netlist_xml(fault=fault, part_id_aliases=part_id_aliases),
+            _netlist_xml(
+                fault=fault,
+                part_id_aliases=part_id_aliases,
+                signal_pin_type=signal_pin_type,
+            ),
             encoding="utf-8",
         )
         write_model(
@@ -161,12 +176,21 @@ def test_all_open_generic_peer_pin_lint_cli_mcp_parity(tmp_path: Path) -> None:
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for part_id_aliases in (False, True):
+    for part_id_aliases, signal_pin_type in (
+        (False, "passive"),
+        (True, "passive"),
+        (False, "input"),
+        (True, "input"),
+    ):
         for fault, expected_status, expected_count in (
             (True, "REVIEW", 1),
             (False, "PASS", 0),
         ):
-            write_netlist(fault=fault, part_id_aliases=part_id_aliases)
+            write_netlist(
+                fault=fault,
+                part_id_aliases=part_id_aliases,
+                signal_pin_type=signal_pin_type,
+            )
             process = run_design_lint_cli(tmp_path, root, native)
             assert process.returncode in {0, 1}, process.stderr + process.stdout
             cli = DesignLintReport.model_validate_json(process.stdout)

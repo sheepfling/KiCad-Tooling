@@ -5768,31 +5768,36 @@ is not a reason by itself to expand its scope or change its default policy.
   separate grounds; connector/interface peer heuristics and project-authored
   grounding contracts address that different question.
 
-#### LINT-114 — All generic passive connector peers leave a contact open
+#### LINT-114 — All generic connector peers leave a contact open
 
 - **Status:** Implemented as the opt-in, default-off rule
   `connector.generic_peer_pin_all_open`.
 - **Priority:** P1 connector interface review. Similar connector instances can
-  repeat an accidentally omitted contact even when its generic passive symbol
-  metadata gives ERC no reason to require a connection.
+  repeat an accidentally omitted contact even when generic pin labels and
+  electrical types do not state whether peer contacts should be connected.
 - **Predicate:** Compare at least two fitted exact-symbol peers with complete
   identical pin inventories. Cross-symbol peers are eligible only with matching
   nonempty native `PART_ID`, component value, footprint, complete pin inventory,
   and matching function and electrical-type metadata on every pin. Prompt when
   a target pin is unassigned on every peer, has absent or generic `Pin_N`
-  function metadata and native `passive` electrical type, and at least one
-  different pin has the same exact single net assignment on every peer. Current
-  source-matched `peer_assignment_group` evidence partitions the comparison.
-- **Boundary:** This pattern does not identify the open pin as signal, return,
-  or power and does not establish that it must connect. The shared assignment
-  is context for review only. DNP peers, incomplete identities or inventories,
-  named or mapped roles, and non-passive pins are outside this rule. Cross-symbol
+  function metadata, and has native `passive`, `input`, `output`,
+  `bidirectional`, `tri_state`, `open_collector`, or `open_emitter`
+  electrical type. Require at least one different pin to have the same exact
+  single net assignment on every peer. Current source-matched
+  `peer_assignment_group` evidence partitions the comparison.
+- **Boundary:** The shared assignment is context for review only. A native
+  signal type describes KiCad electrical behavior but does not identify the
+  interface function, required net, or establish that the contact must connect.
+  DNP peers, incomplete identities or inventories, named pin functions, mapped
+  return/supply roles, and `power_in`, `power_out`, `free`, or `unspecified`
+  pins are outside this rule. Cross-symbol
   matching uses the existing guarded `PART_ID` scan; it does not infer that
   aliases are interchangeable beyond the listed identity evidence. The result
   covers schematic assignments, not PCB copper continuity or off-board wiring.
   Project policy can select `review`, `block`, or `off`; the default remains
   `off` until each project decides whether this prompt is useful.
-- **Fixtures:** Synthetic typed-netlist cases cover the all-open fault, a
+- **Fixtures:** Synthetic typed-netlist cases cover passive and each supported
+  signal-type all-open fault, a
   common-net control, no shared-anchor control, distinct peer groups, DNP and
   specific-role exclusions, guarded cross-symbol `PART_ID` peers, duplicate
   suppression, stable fingerprint under input reordering, policy modes, exact
@@ -5808,7 +5813,10 @@ is not a reason by itself to expand its scope or change its default policy.
   tagged hosted acceptance in `v0.5.0rc141` on the same date (run
   `38228971529`). The hosted gate passed the scoped lint checks, exact-version
   native fixtures, installed-wheel test against a separate project checkout,
-  and preview orchestration on Ubuntu, macOS, and Windows.
+  and preview orchestration on Ubuntu, macOS, and Windows. The signal-pin
+  extension adds its own synthetic exact-symbol native fault/control and
+  CLI/MCP parity cases. Its local exact-version native lane passed KiCad
+  10.0.0 and 10.0.5 on 2026-10-12; tagged hosted acceptance is pending.
 - **Applicability evidence:** More examples can test boundary diversity, but
   do not establish precision or reviewer value without an independent pinout
   disposition. No field-review time or false-positive rate is claimed.

@@ -31,6 +31,8 @@ def normalized_connector_return_patterns(results):
         "two-peer-common-control",
         "all-open-generic-peer-fault",
         "all-open-generic-peer-control",
+        "all-open-generic-signal-peer-fault",
+        "all-open-generic-signal-peer-control",
         "single-offboard-port-control",
         "peer-pin-minority-fault",
         "peer-pin-divergence-fault",

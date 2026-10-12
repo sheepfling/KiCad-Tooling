@@ -130,6 +130,51 @@ def verify_peer_pin_assignments(ctx: ConnectorReturnFixtureContext) -> dict[str,
             separators=(",", ":"),
             ensure_ascii=False,
         )
+    for case, expected_status, expected_count in (
+        ("all-open-generic-signal-peer-fault", "REVIEW", 1),
+        ("all-open-generic-signal-peer-control", "PASS", 0),
+    ):
+        report = ctx.reports[case, "first"]
+        observed = ctx.observed_contracts[case, "first"]
+        coverage = report.connector_peer_pin_coverage
+        findings = tuple(
+            item
+            for item in report.findings
+            if item.rule_id == "connector.generic_peer_pin_all_open"
+        )
+        if (
+            report.status != expected_status
+            or len(findings) != expected_count
+            or coverage is None
+            or coverage.netlist_sha256 != ctx.netlist_hashes[case, "first"]
+            or coverage.generic_peer_pin_all_open_finding_count != expected_count
+            or observed.pin_functions.get("J1.2") != "Pin_2"
+            or observed.pin_electrical_types.get("J1.2") != "input"
+        ):
+            raise ValueError(f"Native {case} lost its generic signal all-open result")
+        if expected_count:
+            finding = findings[0]
+            if (
+                {item.rule_id for item in report.findings}
+                != {"connector.generic_peer_pin_all_open"}
+                or observed.nets != {"+5V": ("J1.1", "J2.1")}
+                or finding.evidence.get("J1.2") != ()
+                or finding.evidence.get("J2.2") != ()
+                or finding.evidence.get("pin_electrical_type") != ("input",)
+                or finding.evidence.get("shared_anchor_contacts") != ("J1.1 / J2.1 -> +5V",)
+            ):
+                raise ValueError("Native generic signal peer fault lost exact pin evidence")
+        elif report.findings or observed.nets != {
+            "+5V": ("J1.1", "J2.1"),
+            "GND": ("J1.2", "J2.2"),
+        }:
+            raise ValueError("Native generic signal peer control no longer passes cleanly")
+        peer_pin_coverage_receipts[case] = json.dumps(
+            coverage.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
     part_id_fault = ctx.reports["peer-pin-part-id-open-fault", "first"]
     part_id_fault_findings = {item.rule_id: item for item in part_id_fault.findings}
     if (

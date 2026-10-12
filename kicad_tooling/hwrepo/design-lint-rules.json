@@ -193,26 +193,29 @@
     },
     {
       "rule_id": "connector.generic_peer_pin_all_open",
-      "title": "Generic passive peer connector contact is open everywhere",
+      "title": "Generic peer connector contact is open everywhere",
       "theme": "connectors",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "off",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among at least two fitted connector instances, compare exact native-symbol peers or cross-symbol peers only when they share native PART_ID plus matching nonempty value, footprint, complete pin inventory, per-pin function, and electrical-type metadata. Require a target pin with absent or generic Pin_N function metadata and native passive electrical type, no assigned net on that pin for every peer in the comparison group, and at least one other pin assigned to the same exact single net on every peer. Current source-matched peer_assignment_group evidence partitions the comparison; stale or incomplete group evidence retains the unscoped comparison.",
+      "predicate": "Among at least two fitted connector instances, compare exact native-symbol peers or cross-symbol peers only when they share native PART_ID plus matching nonempty value, footprint, complete pin inventory, per-pin function, and electrical-type metadata. Require a target pin with absent or generic Pin_N function metadata, native passive or signal electrical type (input, output, bidirectional, tri_state, open_collector, or open_emitter), no assigned net on that pin for every peer in the comparison group, and at least one other pin assigned to the same exact single net on every peer. Current source-matched peer_assignment_group evidence partitions the comparison; stale or incomplete group evidence retains the unscoped comparison.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The prompt is default-off because an all-open generic contact may be intentionally unused; project owners must review an approved pinout before treating it as a defect.",
-        "A shared assignment on another pin provides peer context only. It does not identify the open contact as signal, return, or power, or establish that the contact must be connected.",
+        "A shared assignment on another pin provides peer context only. A native signal pin type describes KiCad electrical behavior but does not identify the interface function, required net, or establish that the contact must be connected.",
         "Exact-symbol peers require complete matching pin inventories. Cross-symbol aliases participate only with matching nonempty native PART_ID, component value, footprint, complete pin inventory, and complete nonempty function and electrical-type metadata on every pin. Incomplete evidence and DNP instances are excluded.",
-        "Only native passive pins participate. Native power_in/power_out contacts and named or source-mapped supply/return roles stay with their more specific rules.",
+        "Supported native signal pin types describe KiCad electrical behavior only; they do not identify the interface function or establish a required connection. Native power_in/power_out/free/unspecified contacts and named or source-mapped supply/return roles stay with their more specific rules.",
         "The result concerns schematic net assignments only; it does not establish PCB copper continuity or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_all_open_generic_passive_peer_pin_is_opt_in_review",
+        "tests.test_connector_signal_peer_pin_all_open.test_all_open_generic_signal_peer_pin_is_opt_in_review",
+        "tests.test_connector_signal_peer_pin_all_open.test_signal_peer_can_use_absent_native_pin_function_metadata",
+        "tests.test_connector_signal_peer_pin_all_open.test_cross_symbol_signal_peers_require_matching_part_identity_and_pin_type",
         "tests.test_connector_peer_pin_all_open.test_exact_symbol_peer_can_use_absent_native_pin_function_metadata",
         "tests.test_connector_peer_pin_all_open.test_guarded_part_id_aliases_prompt_once_for_an_all_open_generic_pin",
         "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
@@ -223,12 +226,17 @@
         "tests.test_connector_peer_pin_all_open.test_distinct_reviewed_peer_groups_are_not_compared",
         "tests.test_connector_peer_pin_all_open.test_part_id_all_open_prompt_requires_matching_identity_and_peer_scope",
         "tests.test_connector_peer_pin_all_open.test_specific_roles_and_population_controls_stay_out_of_generic_rule",
+        "tests.test_connector_signal_peer_pin_all_open.test_common_signal_assignment_clears_the_all_open_prompt",
+        "tests.test_connector_signal_peer_pin_all_open.test_signal_peers_without_a_shared_anchor_are_quiet",
+        "tests.test_connector_signal_peer_pin_all_open.test_named_signal_function_and_power_types_stay_with_specific_rules",
+        "tests.test_connector_signal_peer_pin_all_open.test_exact_symbol_signal_peers_require_a_matching_pin_type",
         "tests.test_connector_peer_pin_all_open.test_rule_supports_block_off_and_exact_ignore_policy",
         "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_candidate_fingerprint_is_stable_under_input_reordering",
-        "tests.test_connector_peer_pin_all_open.test_part_id_candidate_fingerprint_is_stable_under_input_reordering"
+        "tests.test_connector_peer_pin_all_open.test_part_id_candidate_fingerprint_is_stable_under_input_reordering",
+        "tests.test_connector_signal_peer_pin_all_open.test_signal_candidate_fingerprint_is_stable_under_input_reordering"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_peer_pin_all_open.py#all_open_generic_connector_peer_pin_candidates",

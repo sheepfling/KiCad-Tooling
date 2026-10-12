@@ -10,91 +10,23 @@ from kicad_tooling.hwrepo.connector_peer_pin_all_open import (
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
 from kicad_tooling.hwrepo.models import (
-    ComponentContract,
     DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
-    NetlistContract,
 )
 from tests.design_lint_fixtures import coach
+from tests.design_lint_fixtures.connector_peer_pin_all_open import (
+    generic_open_part_id_peer_netlist,
+    generic_open_peer_netlist,
+)
+from tests.design_lint_fixtures.connector_peer_pin_all_open import (
+    review_generic_peer_pin_policy as review_policy,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
 
 _RULE_ID = "connector.generic_peer_pin_all_open"
 _REFERENCES = ("J1", "J2", "J3")
-
-
-def generic_open_peer_netlist(
-    *,
-    references: tuple[str, ...] = _REFERENCES,
-    open_pin_assignments: bool = True,
-    anchor_nets: tuple[str, ...] | None = None,
-    dnp_references: tuple[str, ...] = (),
-) -> NetlistContract:
-    anchor_nets = anchor_nets or ("+5V",) * len(references)
-    nets: dict[str, tuple[str, ...]] = {}
-    for reference, net in zip(references, anchor_nets, strict=True):
-        nets[net] = (*nets.get(net, ()), f"{reference}.1")
-    if not open_pin_assignments:
-        nets["GND"] = tuple(f"{reference}.2" for reference in references)
-    return NetlistContract(
-        components={
-            reference: ComponentContract(value="Synthetic passive peer port", footprint="")
-            for reference in references
-        },
-        nets=nets,
-        dnp_components=dnp_references,
-        component_symbols={reference: "Lint:PassiveGenericPort" for reference in references},
-        component_pin_numbers={reference: ("1", "2") for reference in references},
-        pin_functions={
-            f"{reference}.{number}": f"Pin_{number}"
-            for reference in references
-            for number in ("1", "2")
-        },
-        pin_electrical_types={
-            f"{reference}.{number}": "passive" for reference in references for number in ("1", "2")
-        },
-    )
-
-
-def generic_open_part_id_peer_netlist(
-    *,
-    references: tuple[str, ...] = ("J1", "J2", "J3", "J4"),
-    symbols: dict[str, str] | None = None,
-) -> NetlistContract:
-    left_symbol_count = max(1, (len(references) + 1) // 2)
-    symbols = symbols or {
-        reference: "Lint:PassiveGenericPortLeft"
-        if index < left_symbol_count
-        else "Lint:PassiveGenericPortRight"
-        for index, reference in enumerate(references)
-    }
-    source = generic_open_peer_netlist(references=references)
-    return source.model_copy(
-        update={
-            "components": {
-                reference: ComponentContract(
-                    value="Synthetic passive peer port",
-                    footprint="Synthetic:PassiveGenericPort",
-                    part_id="SYNTHETIC-PASSIVE-PORT-001",
-                )
-                for reference in references
-            },
-            "component_symbols": symbols,
-        }
-    )
-
-
-def review_policy() -> DesignLintPolicy:
-    return DesignLintPolicy(
-        rules=(
-            DesignLintRuleOverride(
-                rule_id=_RULE_ID,
-                mode="review",
-                reason="Synthetic project asks reviewers to disposition all-open generic peer contacts",
-            ),
-        )
-    )
 
 
 def test_all_open_generic_passive_peer_pin_is_opt_in_review() -> None:
@@ -167,6 +99,13 @@ def test_guarded_part_id_aliases_prompt_once_for_an_all_open_generic_pin() -> No
     candidate = candidates[0]
     assert candidate.subject == (
         "PART_ID SYNTHETIC-PASSIVE-PORT-001 pin 2: generic passive contact is open on every peer"
+    )
+    assert candidate.message == (
+        "This generic passive connector pin is unassigned on every fitted peer with the same "
+        "reviewed PART_ID, while another pin has the same exact assigned net across those peers. "
+        "Review the approved pinout for an intentionally unused contact or a missing connection. "
+        "The generic pin metadata does not identify this contact as signal, return, or power, and "
+        "peer similarity does not establish that it must connect."
     )
     assert candidate.evidence["peer_identity_basis"] == ("part_id",)
     assert candidate.evidence["peer_identity"] == ("SYNTHETIC-PASSIVE-PORT-001",)

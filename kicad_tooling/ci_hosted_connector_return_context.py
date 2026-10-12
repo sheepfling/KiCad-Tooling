@@ -125,6 +125,10 @@ def prepare_connector_return_fixture_context(
         / "generic-peer-pin-all-open-native/fault.kicad_sch",
         "all-open-generic-peer-control": fixture_root
         / "generic-peer-pin-all-open-native/control.kicad_sch",
+        "all-open-generic-signal-peer-fault": fixture_root
+        / "generic-peer-signal-pin-all-open-native/fault.kicad_sch",
+        "all-open-generic-signal-peer-control": fixture_root
+        / "generic-peer-signal-pin-all-open-native/control.kicad_sch",
         "single-offboard-port-control": fixture_root
         / "generic-peer-pin-assignment-native/single-offboard-port-control.kicad_sch",
         "unconnected-generic-power-input-fault": fixture_root
@@ -176,6 +180,8 @@ def prepare_connector_return_fixture_context(
         "two-peer-common-control": "ae23ddb802c9a0f5cf30e89699a2cf6f48b3d15b6e18967387e756dcdf6fa3df",
         "all-open-generic-peer-fault": "ef324858a679dd53b4207be2abc9a2d2cf90517af9c86a845c52d4604bcdc9cf",
         "all-open-generic-peer-control": "c0cb38abf69437308aba70428c2ef05ae83a51aeb9fab592fe6fef33fb3a0713",
+        "all-open-generic-signal-peer-fault": "77adf18dff325f85bf7675d42a25ad1603aa6debb67a96b586646598fac75d37",
+        "all-open-generic-signal-peer-control": "144e3e571c2023e4d90048c95fe16f532bcd459c3f5a6e6da6c8b2632282046b",
         "single-offboard-port-control": "ceaa7038e372ec74a00f7e7c2cb5311377df01624760ab555adb413c4e02d8e9",
         "unconnected-generic-power-input-fault": "2e16c602d6ba0068360b3f8b493351f6d7e4d7adbe94946d17db883587f0528f",
         "unconnected-generic-power-input-control": "b05c1a3994a4f26f07e18bdfe28c8caaf4a298cbb66b6d1814b20c9a7dce2c13",
@@ -294,6 +300,8 @@ def prepare_connector_return_fixture_context(
             if case in {
                 "all-open-generic-peer-fault",
                 "all-open-generic-peer-control",
+                "all-open-generic-signal-peer-fault",
+                "all-open-generic-signal-peer-control",
                 "part-id-all-open-generic-peer-fault",
             }:
                 policy = DesignLintPolicy(

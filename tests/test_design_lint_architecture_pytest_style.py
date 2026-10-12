@@ -61,6 +61,8 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_serial_peer_voltage.py": {"interface_lint"},
     "test_design_lint_schematic_connectivity.py": {"schematic_lint"},
     "test_design_lint_schematic_text.py": {"schematic_lint"},
+    "test_connector_peer_pin_all_open.py": {"connector_lint"},
+    "test_connector_signal_peer_pin_all_open.py": {"connector_lint", "interface_lint"},
     "test_pcb_reference_plane_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_switching_loop_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_return_path_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
@@ -242,6 +244,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
         (
             "connector.generic_peer_pin_all_open",
             "tests/test_connector_peer_pin_all_open.py::test_all_open_generic_passive_peer_pin_is_opt_in_review",
+        ),
+        (
+            "connector.generic_peer_pin_all_open",
+            "tests/test_connector_signal_peer_pin_all_open.py::test_all_open_generic_signal_peer_pin_is_opt_in_review",
         ),
         (
             "bus.i2c_missing_pullup",
