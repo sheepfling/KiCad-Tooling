@@ -101,11 +101,11 @@ def scan_usb_peer_reference_reviews(
         ),
     )
     dnp = {reference.casefold() for reference in observed.dnp_components}
-    supported_connector_groups = {
+    supported_connector_groups: set[tuple[str, str | None, UsbPeerSignalFamily]] = {
         (endpoint.reference.casefold(), endpoint.port_group, endpoint.signal_family)
         for endpoint in connectors
     }
-    supported_phy_groups = {
+    supported_phy_groups: set[tuple[str, str | None, UsbPeerSignalFamily]] = {
         (endpoint.reference.casefold(), endpoint.port_group, endpoint.signal_family)
         for endpoint in phy_endpoints
     }

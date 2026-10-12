@@ -236,7 +236,7 @@ def recognized_usb_superspeed_groups(
     observed: NetlistContract, reference: str
 ) -> tuple[tuple[UsbPeerSignalFamily, frozenset[str]], ...]:
     """Return recognized USB SuperSpeed TX/RX pair families for one endpoint."""
-    groups: dict[str, set[str]] = {}
+    groups: dict[UsbPeerSignalFamily, set[str]] = {}
     for pin, function in observed.pin_functions.items():
         pin_reference, separator, _number = pin.rpartition(".")
         if not separator or pin_reference.casefold() != reference.casefold():
@@ -292,7 +292,7 @@ def usb_superspeed_endpoints(
         reference_pins = usb_endpoint_reference_pins(observed, reference)
         if not reference_pins:
             continue
-        grouped: dict[str, dict[str, list[str]]] = {}
+        grouped: dict[UsbPeerSignalFamily, dict[str, list[str]]] = {}
         for pin, function in pin_functions.items():
             if function is None:
                 continue
