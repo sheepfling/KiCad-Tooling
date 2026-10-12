@@ -1929,9 +1929,13 @@ is not a reason by itself to expand its scope or change its default policy.
   three portability previews. The tag enabled the native switch and selected
   the four fuse/polyfuse fault/control sources on the exact pinned versions.
   Its full `package` job was skipped by RC policy, so it is not full package
-  acceptance. The ferrite rule's focused native run is pending its own tagged
-  gate. Diode, crystal, and switch remain to be registered as separately
-  selectable native gates. The full package lane continues to run all 16 cases.
+  acceptance. Tagged run `38292936740` for `v0.5.0rc178` passed the focused
+  ferrite gate, its installed-wheel check against the external template, and
+  all three portability previews. The tag enabled the native switch and
+  selected only the ferrite fault/control source pair on the exact pinned
+  versions. Its full `package` job was skipped by RC policy. Diode, crystal,
+  and switch remain to be registered as separately selectable native gates.
+  The full package lane continues to run all 16 cases.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
@@ -4222,10 +4226,11 @@ is not a reason by itself to expand its scope or change its default policy.
   the same-net fault and distinct-net control. The local rule selector passed
   six tests with two exact-native cases skipped and 3,099 unrelated tests
   deselected because Docker socket access is denied locally. The hosted tagged
-  result is pending. RC177 selected the fuse rule, so it did not exercise
-  ferrite.
-- **Remaining:** Pass the tagged exact-native gate on KiCad 10.0.0 and 10.0.5,
-  then complete full package acceptance.
+  run `38292936740` on `v0.5.0rc178` passed the exact-native lane for KiCad
+  10.0.0 and 10.0.5, the installed-wheel check against the external template,
+  and all three portability previews. The full `package` job was skipped by
+  RC policy; RC177 selected the fuse rule and did not exercise ferrite.
+- **Remaining:** Complete full package acceptance.
 - **Cohort boundary:** This is a first-party deterministic extension prompted
   by the inspected series-path concept. No third-party source, board, fixture,
   or install workflow was copied.
