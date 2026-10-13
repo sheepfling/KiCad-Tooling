@@ -1458,12 +1458,17 @@ is not a reason by itself to expand its scope or change its default policy.
   both `GroundingAnalysis` and `PinConnectivityAnalysis`. It also compares a
   native open peer-power contact and common control against an authored shared
   +5V requirement, plus an independently powered/unused-contact control pair.
-  These are synthetic test requirements, not project contract files. The full
-  pin-connectivity matrix passed locally on the pinned native images on
-  2026-10-07. The DB9 common/isolated contract pair passed hosted acceptance
-  in `v0.5.0rc123` (GitHub Actions run `38205232934`); hosted acceptance for
-  the additional peer-power and stale-pin matrix remains pending. The focused
-  DB9 lane passed in `v0.5.0rc195` (GitHub Actions run `38312579543`).
+  These are synthetic test requirements, not project contract files. The
+  focused connector gate passed locally on 2026-10-13 with 518 passed, 16
+  skipped, and 2,755 deselected; both pinned native connector fixture switches
+  were enabled. The DB9 common/isolated contract pair passed hosted acceptance
+  in `v0.5.0rc123` (GitHub Actions run `38205232934`), and the focused DB9 lane
+  passed in `v0.5.0rc195` (GitHub Actions run `38312579543`). Hosted acceptance
+  for the extended connector relationship matrix, including peer-power and
+  stale-pin cases, passed in `v0.5.0rc228` (GitHub Actions run `38359915602`)
+  with the connector-scoped gate, separate-project installed-wheel check, and
+  Ubuntu, macOS, and Windows preview jobs. The prerelease workflow's separate
+  package job remained skipped.
 - **Problem:** Similar connector instances can have separately named or
   unassigned corresponding pins without a direct, project-readable assertion
   about their intended relationship.
