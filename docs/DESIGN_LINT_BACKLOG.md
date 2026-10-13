@@ -500,9 +500,9 @@ and optional ecosystem adapters are `P3`.
   authored request digest bound to snapshot schema 14. Synthetic fault,
   boundary-control, missing-evidence, and CLI/MCP parity tests pass locally;
   digest-pinned KiCad 10.0.0 and 10.0.5 fixtures passed the hosted native
-  stage on `v0.5.0rc248`. That tag's full scoped gate then failed at MDR101
-  because this fixture README was unreachable from the documentation graph;
-  `DESIGN_LINT.md` now links it and the next tag will rerun the full gate. No
+  stage on `v0.5.0rc248`. The full scoped gate passed on `v0.5.0rc249`
+  (run `38395063701`), including the external installed-wheel test and all
+  three platform preview jobs. No
   board project, candidate implementation, or proprietary fixture was
   imported. The gate supplies review evidence and does not infer connector
   ground commoning, touch performance, or fabrication acceptance.
@@ -7163,13 +7163,14 @@ is not a reason by itself to expand its scope or change its default policy.
   disagreement, absent filled copper, map constraints, source-bound request
   coverage, and CLI/MCP parity. Exact-version KiCad 10.0.0 and 10.0.5 native
   fixtures for round and oval pads passed the hosted native test stage in
-  `v0.5.0rc248` (GitHub Actions run `38394572077`).
-  The full tag gate then stopped at MDR101 because the new fixture README was
-  unreachable; this change links it from `DESIGN_LINT.md`, and the next tag
-  reruns the full gate. The fixtures are gated by
-  `KICAD_RUN_NATIVE_PCB_FIXTURES`. Rotated-pad geometry, comparison with
-  native DRC, project applicability, false-positive rate, and reviewer effort
-  remain follow-up evidence, not current claims.
+  `v0.5.0rc248` (GitHub Actions run `38394572077`). The full scoped gate passed
+  on `v0.5.0rc249` (run `38395063701`), including the installed-wheel check and
+  three platform preview jobs. A new synthetic native case now compares a
+  rotated and unrotated oval pad at matching straight zone edges and asserts
+  the expected 0.5 mm clearance change; exact-version hosted confirmation is
+  pending. The fixtures are gated by `KICAD_RUN_NATIVE_PCB_FIXTURES`.
+  Comparison with native DRC, project applicability, false-positive rate, and
+  reviewer effort remain follow-up evidence, not current claims.
 - **Focused selection:**
 
   ```sh
@@ -12872,7 +12873,8 @@ maintenance cost open wherever they were not measured.
    domain checks, LINT-075's no-CLI oscillator-output trial is recorded. The
    LINT-133 implements the bounded CP-003 touch-pad clearance concept behind
    an exact project-authored minimum and native pad-geometry measurement;
-   hosted native acceptance and field applicability evidence remain pending.
+   the round/oval native lane and full scoped acceptance passed on `v0.5.0rc249`.
+   Rotated-pad geometry and field applicability are still being evaluated.
    Any first-party path contract still needs native netlist
    evidence and a project-authored requirement map before implementation. The
    other domain-specific cohort families above remain conditional research

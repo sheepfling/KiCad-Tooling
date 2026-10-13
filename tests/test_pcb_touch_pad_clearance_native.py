@@ -100,9 +100,22 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
             requirement_id="J1-oval-pad-clearance",
             pad="J1.2",
         ),
+        requirement(
+            minimum_clearance_nm=1_500_000,
+            requirement_id="J1-horizontal-oval-clearance",
+            pad="J1.3",
+        ),
+        requirement(
+            minimum_clearance_nm=2_000_000,
+            requirement_id="J1-rotated-oval-clearance",
+            pad="J1.4",
+        ),
     )
     authored = PcbTouchPadClearanceMap(
-        basis="Synthetic native fixture checks round and oval pads against a ground fill",
+        basis=(
+            "Synthetic native fixture checks round, oval, and rotated oval pads "
+            "against ground fills"
+        ),
         requirements=authored_requirements,
     )
     requests = PcbTouchPadClearanceRequestSet(requests=authored.requirements)
@@ -125,20 +138,28 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
         touch_pad_clearance_probes=True,
     )
     measurements = {item.pad: item for item in observed.touch_pad_clearance_observations}
-    assert set(measurements) == {"J1.1", "J1.2"}
+    assert set(measurements) == {"J1.1", "J1.2", "J1.3", "J1.4"}
     for authored_requirement in authored_requirements:
         measurement = measurements[authored_requirement.pad]
         assert measurement.requirement_id == authored_requirement.id
         assert measurement.observed_pad_net == authored_requirement.expected_pad_net
         assert measurement.reference_net == authored_requirement.reference_net
         assert measurement.layer == authored_requirement.layer
-        assert measurement.matching_zone_count == 1
+        assert measurement.matching_zone_count == 3
         assert measurement.status == "MEASURED"
         assert measurement.closest_zone_uuid is not None
         assert measurement.distance_nm is not None
 
+    # The two oval pads have matching center-to-zone-edge offsets. Rotating one
+    # changes its horizontal half-extent by 0.5 mm, which must change the native
+    # clearance by the same amount.
+    assert measurements["J1.3"].closest_zone_uuid == "87654321-4321-8765-4321-876543210001"
+    assert measurements["J1.4"].closest_zone_uuid == "87654321-4321-8765-4321-876543210002"
+    assert measurements["J1.3"].distance_nm == 1_000_000
+    assert measurements["J1.4"].distance_nm == 1_500_000
+
     entries = touch_pad_clearance_entries(authored, observed, round_and_oval_netlist())
-    assert {item.pad for item in entries} == {"J1.1", "J1.2"}
+    assert {item.pad for item in entries} == {"J1.1", "J1.2", "J1.3", "J1.4"}
     assert all(item.status == "COMPLETE" for item in entries)
     assert all(item.violates_minimum_clearance for item in entries), {
         item.pad: {
