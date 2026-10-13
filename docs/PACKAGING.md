@@ -101,6 +101,18 @@ fixtures remain enabled. The tag scope is validated before tests run; missing,
 ambiguous, inactive, or unsupported declarations fail the prerelease gate. Use a
 stable version tag for the full release acceptance run.
 
+Before pushing a prerelease tag, create the annotated tag locally and run the
+same scope resolver used by GitHub Actions. This catches a missing selector or
+required native-fixture declaration before the hosted job starts:
+
+```sh
+.venv/bin/python -I scripts/lint_gate_scope.py --tag v0.5.0rcNNN
+```
+
+Replace `NNN` with the tag's actual release-candidate number. The command only
+validates and prints the selected pytest expression and native-fixture
+switches; it does not run the tests.
+
 An active rule may list `required_native_fixtures` in the packaged rule catalog.
 Every rule-scoped tag for that rule must declare those exact fixture switches.
 This binds its focused pytest selector to the native lane that exercises its
