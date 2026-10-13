@@ -20,6 +20,8 @@ JSON_ADAPTERS = {
     "kicad_tooling/fault_probe.py",
     # Native PCB probe output is validated as a strict snapshot before models are built.
     "kicad_tooling/hwrepo/pcb_return_path_capture.py",
+    # Native variant-probe JSON is bound to board and project digests before use.
+    "kicad_tooling/hwrepo/pcb_variant_population_capture.py",
     # Native DRC JSON is decoded into typed report and source-bound evidence models.
     "kicad_tooling/hwrepo/pcb_drc_rule_parser.py",
     "kicad_tooling/hwrepo/pcb_drc_source_evidence.py",

@@ -462,6 +462,22 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
+- **Pytest architecture selection (2026-10-13):** Split the 501-line
+  `tests/test_design_lint_architecture_pytest_style.py` into
+  `tests/test_design_lint_architecture_pytest_markers.py` and
+  `tests/test_design_lint_architecture_pytest_collection.py`. The first owns
+  catalog marker and lint-suite theme checks; the second owns collection-time
+  isolation and selector behavior. Both modules are below 500 lines and carry
+  only the broad `design_lint` and `architecture` markers, so connector- and
+  interface-only selectors do not pull in cross-theme architecture probes.
+  The focused architecture run passed 31 tests; connector and interface
+  selection each collected zero tests from these modules. The full architecture
+  selection then passed 214 tests with 3,082 deselected after fixing one
+  internal import to use its theme-owned model and registering native
+  variant-probe JSON as an explicit source-bound adapter. The focused
+  variant-capture and affected architecture tests passed 12 tests. No lint
+  predicate behavior changed.
+
 - **Test selection and hosted gate follow-up (2026-10-12):** Hosted run
   `38333207786` for tag `v0.5.0rc213` passed its full unit stage but failed the
   repository-wide Ruff format step on the oversized MCP integration suite.

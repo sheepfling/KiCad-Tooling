@@ -13,6 +13,7 @@ from .ci_hosted_pcb_fixture_support import (
 from .hwrepo.contract_coach import ContainerNetlistRunner
 from .hwrepo.contracts import write_model
 from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_pcb_board_only_candidates import (
     pcb_board_only_footprint_candidates,
 )
@@ -20,7 +21,6 @@ from .hwrepo.evidence import digest
 from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
-    DesignLintRuleOverride,
     NetlistContract,
     ProjectKind,
 )
