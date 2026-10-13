@@ -7,10 +7,14 @@ import json
 from collections import Counter
 from typing import Literal
 
-from .design_lint_connectivity_snapshot import compare_connectivity_snapshots
+from .design_lint_connectivity_snapshot import (
+    compare_connectivity_snapshots,
+    compare_pin_metadata_snapshots,
+)
 from .design_lint_connectivity_snapshot_models import (
     DesignLintConnectivityChange,
     DesignLintConnectivitySnapshot,
+    DesignLintPinMetadataChange,
 )
 from .design_lint_finding_models import DesignLintFinding
 from .design_lint_reconciliation_models import (
@@ -117,6 +121,10 @@ def reconcile_design_lint_reports(
     current_snapshot = current.connectivity_snapshot
     connectivity_comparison: Literal["COMPLETE", "PARTIAL", "UNAVAILABLE", "INCOMPATIBLE"]
     connectivity_changes: tuple[DesignLintConnectivityChange, ...] = ()
+    pin_metadata_comparison: Literal["COMPLETE", "PARTIAL", "UNAVAILABLE", "INCOMPATIBLE"] = (
+        "UNAVAILABLE"
+    )
+    pin_metadata_changes: tuple[DesignLintPinMetadataChange, ...] = ()
     connectivity_issue: str | None = None
     if baseline_snapshot is None or current_snapshot is None:
         connectivity_comparison = "UNAVAILABLE"
@@ -125,6 +133,7 @@ def reconcile_design_lint_reports(
         current_snapshot.toolchain_image,
     ):
         connectivity_comparison = "INCOMPATIBLE"
+        pin_metadata_comparison = "INCOMPATIBLE"
         connectivity_issue = (
             "Baseline and current connectivity snapshots use different exact KiCad versions "
             "or toolchain images"
@@ -136,6 +145,22 @@ def reconcile_design_lint_reports(
             else "PARTIAL"
         )
         connectivity_changes = compare_connectivity_snapshots(
+            baseline_snapshot,
+            current_snapshot,
+        )
+        if (
+            baseline_snapshot.pin_metadata_coverage == "COMPLETE"
+            and current_snapshot.pin_metadata_coverage == "COMPLETE"
+        ):
+            pin_metadata_comparison = "COMPLETE"
+        elif (
+            baseline_snapshot.pin_metadata_coverage == "UNAVAILABLE"
+            and current_snapshot.pin_metadata_coverage == "UNAVAILABLE"
+        ):
+            pin_metadata_comparison = "UNAVAILABLE"
+        else:
+            pin_metadata_comparison = "PARTIAL"
+        pin_metadata_changes = compare_pin_metadata_snapshots(
             baseline_snapshot,
             current_snapshot,
         )
@@ -204,6 +229,24 @@ def reconcile_design_lint_reports(
         context_changes.append(
             f"Native pin connectivity changed for {len(connectivity_changes)} pin(s)"
         )
+    if pin_metadata_comparison == "PARTIAL":
+        context_changes.append(
+            "Pin-role metadata comparison is partial; inspect native function/type coverage"
+        )
+    elif pin_metadata_comparison == "UNAVAILABLE" and (
+        (baseline_snapshot is None) != (current_snapshot is None)
+        or (
+            baseline_snapshot is not None
+            and current_snapshot is not None
+            and baseline_snapshot.pin_metadata_coverage != current_snapshot.pin_metadata_coverage
+        )
+    ):
+        context_changes.append("Pin-role metadata comparison is unavailable; refresh the baseline")
+    if pin_metadata_changes:
+        context_changes.append(
+            "Native pin function/electrical-type metadata changed for "
+            f"{len(pin_metadata_changes)} pin(s)"
+        )
 
     before_sources = baseline.source_hashes
     after_sources = current.source_hashes
@@ -218,6 +261,7 @@ def reconcile_design_lint_reports(
         any(item.kind != "PERSISTING" for item in transitions)
         or bool(context_changes)
         or bool(connectivity_changes)
+        or bool(pin_metadata_changes)
     )
     status: Literal["UNCHANGED", "REVIEW", "BLOCKED"] = (
         "BLOCKED" if issues else "REVIEW" if changed else "UNCHANGED"
@@ -250,6 +294,8 @@ def reconcile_design_lint_reports(
         current_connectivity_sha256=_connectivity_sha256(current_snapshot),
         connectivity_comparison=connectivity_comparison,
         connectivity_changes=connectivity_changes,
+        pin_metadata_comparison=pin_metadata_comparison,
+        pin_metadata_changes=pin_metadata_changes,
         baseline_catalog_sha256=old_catalog,
         current_catalog_sha256=new_catalog,
         baseline_rule_overrides=tuple(

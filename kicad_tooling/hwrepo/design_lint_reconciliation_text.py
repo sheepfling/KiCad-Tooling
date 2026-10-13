@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from .design_lint_connectivity_snapshot_models import (
     DesignLintConnectivityChange,
+    DesignLintPinMetadataChange,
+    NativePinMetadata,
     NetlistPinConnectivityState,
 )
 from .design_lint_finding_models import DesignLintFinding
@@ -57,6 +59,22 @@ def _connectivity_change_lines(item: DesignLintConnectivityChange) -> list[str]:
     ]
 
 
+def _pin_metadata_text(metadata: NativePinMetadata) -> str:
+    return (
+        f"function={metadata.function or '<unnamed>'}; "
+        f"electrical_type={metadata.electrical_type or '<unavailable>'}"
+    )
+
+
+def _pin_metadata_change_lines(item: DesignLintPinMetadataChange) -> list[str]:
+    return [
+        (
+            f"  PIN_METADATA_CHANGED {item.pin} ({', '.join(item.fields_changed)}): "
+            f"[{_pin_metadata_text(item.baseline)}] -> [{_pin_metadata_text(item.current)}]"
+        )
+    ]
+
+
 def reconciliation_text(report: DesignLintReconciliationReport) -> str:
     """Render each finding transition with its baseline/current evidence intact."""
     lines = [
@@ -71,6 +89,10 @@ def reconciliation_text(report: DesignLintReconciliationReport) -> str:
         (
             f"Pin-connectivity comparison: {report.connectivity_comparison} "
             f"({len(report.connectivity_changes)} changed pins)"
+        ),
+        (
+            f"Pin-role metadata comparison: {report.pin_metadata_comparison} "
+            f"({len(report.pin_metadata_changes)} changed pins)"
         ),
     ]
     if report.changed_source_paths:
@@ -97,4 +119,6 @@ def reconciliation_text(report: DesignLintReconciliationReport) -> str:
         lines.extend(_transition_lines(item))
     for item in report.connectivity_changes:
         lines.extend(_connectivity_change_lines(item))
+    for item in report.pin_metadata_changes:
+        lines.extend(_pin_metadata_change_lines(item))
     return "\n".join(lines)

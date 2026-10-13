@@ -483,6 +483,14 @@ and optional ecosystem adapters are `P3`.
   polarity rule was added because the existing project-authored
   `pin_connectivity` contract can state exact pin relationships.
 
+- **Pin-role metadata regression review (2026-10-13):** LINT-132 extends that
+  baseline with each native pin's function and electrical type. A symbol-role
+  edit now appears in reconciliation even when every pin remains on the same
+  net. Older reports without this metadata remain readable, but their role
+  comparison is partial until a current baseline is saved. This adopts the
+  connectivity-delta review lesson from the pre-alpha Apache-2.0 `netspec`
+  cohort; no cohort code or project data was imported.
+
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
   `tests/test_design_lint_architecture_pytest_markers.py` and
@@ -3378,6 +3386,42 @@ is not a reason by itself to expand its scope or change its default policy.
   distinguish. Local exact pin-to-net contracts already express reviewed
   polarity requirements, so this increment adopts only the baseline-diff idea;
   it adds no runtime dependency and imports no cohort code or board data.
+
+#### LINT-132 — Pin-role metadata change review in design-lint reconciliation
+
+- **Status:** Implemented as a versioned extension to the source-bound native
+  connectivity snapshot and typed reconciliation report.
+- **Priority:** P0 regression evidence. Net assignments can remain identical
+  while a changed KiCad symbol function or electrical type changes the meaning
+  of a pin and can alter which review heuristics recognize it.
+- **Evidence:** Each current snapshot records the native function and
+  electrical type for every inventoried pin when available. Reconciliation
+  reports exact per-pin fields that changed, alongside the existing net and
+  peer deltas. Complete metadata comparison requires complete pin inventory
+  and a native electrical type for every pin. Partial snapshots compare a
+  field only when both sides retain it; reports from before snapshot schema 2
+  remain readable and expose partial or unavailable metadata comparison until
+  the project records a current baseline. Different KiCad versions or
+  toolchain images still block comparison. CLI and MCP share the same typed
+  service and output model.
+- **Boundary:** A function or electrical-type change is review evidence, not a
+  defect verdict. It does not infer required wiring, polarity, or component
+  behavior. Project-authored pin-connectivity and electrical contracts remain
+  the source of intent.
+- **Fixtures:** Same pin-to-net topology with a changed return function;
+  unchanged topology with a changed native electrical type; stable mapping
+  order; incomplete metadata with field-scoped comparisons; legacy schema-1
+  baseline; exact-toolchain mismatch; and CLI/MCP output parity. Synthetic
+  netlist inputs only.
+- **Cohort input:** The Apache-2.0, pre-alpha
+  [`heibench/netspec`](https://github.com/heibench/netspec) repository
+  documents pin-swap and connectivity-delta review. This increment
+  retains native pin metadata with the delta; no cohort code, board, or project
+  data was imported.
+- **Verification:** The focused reconciliation and architecture suites pass
+  locally. The CLI/MCP parity suite asserts the new fields but requires a
+  separate public template checkout and was not run in this workspace. This
+  changes review evidence only; no physical electrical acceptance is claimed.
 
 ### P1 — Netlist and interface-pattern checks
 

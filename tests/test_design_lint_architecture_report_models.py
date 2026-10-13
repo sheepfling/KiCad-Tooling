@@ -8,7 +8,11 @@ from typing import get_args
 
 import pytest
 
-from kicad_tooling.hwrepo import design_lint_report_models, models
+from kicad_tooling.hwrepo import (
+    design_lint_connectivity_snapshot_models,
+    design_lint_report_models,
+    models,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
@@ -74,7 +78,9 @@ def test_connectivity_snapshot_owners_stay_bounded_and_theme_owned() -> None:
         "from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot"
         in report_source
     )
-    assert (
-        "from .design_lint_connectivity_snapshot_models import DesignLintConnectivityChange"
-        in reconciliation_source
+    assert "from .design_lint_connectivity_snapshot_models import (" in reconciliation_source
+    assert "DesignLintConnectivityChange" in reconciliation_source
+    assert design_lint_connectivity_snapshot_models.NativePinMetadata.__module__.endswith(
+        "design_lint_connectivity_snapshot_models"
     )
+    assert "DesignLintPinMetadataChange" in reconciliation_source

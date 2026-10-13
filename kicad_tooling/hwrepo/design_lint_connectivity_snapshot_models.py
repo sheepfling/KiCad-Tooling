@@ -33,10 +33,17 @@ class NetlistPinConnectivityState(StrictModel):
         return self
 
 
-class DesignLintConnectivitySnapshot(StrictModel):
-    """Native, project-bound pin-to-net state suitable for later comparison."""
+class NativePinMetadata(StrictModel):
+    """Native symbol role labels retained for source-bound review comparisons."""
 
-    schema_version: Literal["1"] = "1"
+    function: NonEmptyText | None = None
+    electrical_type: NonEmptyText | None = None
+
+
+class DesignLintConnectivitySnapshot(StrictModel):
+    """Native, project-bound pin assignments and roles suitable for later comparison."""
+
+    schema_version: Literal["1", "2"] = "2"
     project_id: Identifier
     source_hashes: Mapping[RepositoryPath, Digest]
     netlist_sha256: Digest
@@ -44,6 +51,8 @@ class DesignLintConnectivitySnapshot(StrictModel):
     toolchain_image: NonEmptyText
     coverage: Literal["COMPLETE", "PARTIAL"]
     pin_states: Mapping[Reference, NetlistPinConnectivityState] = Field(default_factory=dict)
+    pin_metadata: Mapping[Reference, NativePinMetadata] = Field(default_factory=dict)
+    pin_metadata_coverage: Literal["COMPLETE", "PARTIAL", "UNAVAILABLE"] = "UNAVAILABLE"
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
@@ -61,6 +70,15 @@ class DesignLintConnectivitySnapshot(StrictModel):
                 peer_state = self.pin_states.get(peer)
                 if peer_state is None or pin not in peer_state.peers or peer_state.net != state.net:
                     raise ValueError("Pin peer evidence must be symmetric on the same native net")
+        if set(self.pin_metadata) - set(self.pin_states):
+            raise ValueError("Pin metadata must belong to an inventoried connectivity pin")
+        if self.pin_metadata_coverage == "UNAVAILABLE" and self.pin_metadata:
+            raise ValueError("Unavailable pin metadata coverage cannot contain pin metadata")
+        if self.pin_metadata_coverage == "COMPLETE":
+            if set(self.pin_metadata) != set(self.pin_states):
+                raise ValueError("Complete pin metadata must cover every inventoried pin")
+            if any(item.electrical_type is None for item in self.pin_metadata.values()):
+                raise ValueError("Complete pin metadata needs an electrical type for every pin")
         return self
 
 
@@ -82,4 +100,29 @@ class DesignLintConnectivityChange(StrictModel):
             self.baseline is None or self.current is None or self.baseline == self.current
         ):
             raise ValueError("A connectivity change needs different states on both sides")
+        return self
+
+
+class DesignLintPinMetadataChange(StrictModel):
+    """Changed native function or electrical type for a pin present on both sides."""
+
+    pin: Reference
+    fields_changed: tuple[Literal["function", "electrical_type"], ...]
+    baseline: NativePinMetadata
+    current: NativePinMetadata
+
+    @model_validator(mode="after")
+    def metadata_change_is_exact(self) -> DesignLintPinMetadataChange:
+        if (
+            not self.fields_changed
+            or tuple(dict.fromkeys(self.fields_changed)) != self.fields_changed
+        ):
+            raise ValueError("Pin metadata changes need unique changed fields")
+        expected = tuple(
+            name
+            for name in ("function", "electrical_type")
+            if getattr(self.baseline, name) != getattr(self.current, name)
+        )
+        if expected != self.fields_changed:
+            raise ValueError("Changed fields must match the retained pin metadata")
         return self

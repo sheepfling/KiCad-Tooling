@@ -13,6 +13,9 @@ from kicad_tooling.hwrepo.design_lint_connectivity_snapshot_models import (
     NetlistPinConnectivityState,
 )
 from kicad_tooling.hwrepo.design_lint_reconciliation import reconcile_design_lint_reports
+from kicad_tooling.hwrepo.design_lint_reconciliation_models import (
+    DesignLintReconciliationReport,
+)
 from kicad_tooling.hwrepo.design_lint_reconciliation_text import reconciliation_text
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
@@ -32,6 +35,26 @@ def _netlist(*, split_return: bool = False, return_net_name: str = "GND") -> Net
             **({"0V_PORT": ("J1.9",)} if split_return else {}),
         },
         component_pin_numbers={"J1": ("2", "9"), "U1": ("2", "3")},
+    )
+
+
+def _netlist_with_pin_metadata(
+    *,
+    functions: dict[str, str] | None = None,
+    electrical_types: dict[str, str] | None = None,
+) -> NetlistContract:
+    return _netlist().model_copy(
+        update={
+            "pin_functions": functions
+            or {"J1.2": "DATA", "J1.9": "GND", "U1.2": "GND", "U1.3": "DATA"},
+            "pin_electrical_types": electrical_types
+            or {
+                "J1.2": "passive",
+                "J1.9": "passive",
+                "U1.2": "passive",
+                "U1.3": "input",
+            },
+        }
     )
 
 
@@ -91,6 +114,136 @@ def test_split_return_mutation_lists_each_changed_pin_and_peer_set() -> None:
     assert "Native pin connectivity changed for 2 pin(s)" in rendered
     assert "ASSIGNMENT_CHANGED J1.9" in rendered
     assert "peers=U1.2" in rendered
+
+
+def test_pin_function_and_electrical_type_changes_are_reviewed_without_net_changes() -> None:
+    baseline = _report(
+        _snapshot(
+            _netlist_with_pin_metadata(),
+            netlist_hash="b" * 64,
+        )
+    )
+    current = _report(
+        _snapshot(
+            _netlist_with_pin_metadata(
+                functions={
+                    "J1.2": "DATA",
+                    "J1.9": "RETURN",
+                    "U1.2": "GND",
+                    "U1.3": "DATA",
+                },
+                electrical_types={
+                    "J1.2": "passive",
+                    "J1.9": "power_in",
+                    "U1.2": "passive",
+                    "U1.3": "input",
+                },
+            ),
+            source_hash="d" * 64,
+            netlist_hash="e" * 64,
+        )
+    )
+
+    report = reconcile_design_lint_reports(baseline, current)
+
+    assert report.status == "REVIEW"
+    assert report.connectivity_comparison == "COMPLETE"
+    assert report.connectivity_changes == ()
+    assert report.pin_metadata_comparison == "COMPLETE"
+    assert len(report.pin_metadata_changes) == 1
+    change = report.pin_metadata_changes[0]
+    assert change.pin == "J1.9"
+    assert change.fields_changed == ("function", "electrical_type")
+    assert change.baseline.function == "GND"
+    assert change.current.function == "RETURN"
+    assert change.baseline.electrical_type == "passive"
+    assert change.current.electrical_type == "power_in"
+    rendered = reconciliation_text(report)
+    assert "Pin-role metadata comparison: COMPLETE (1 changed pins)" in rendered
+    assert "PIN_METADATA_CHANGED J1.9 (function, electrical_type)" in rendered
+    serialized = DesignLintReconciliationReport.model_validate_json(report.model_dump_json())
+    assert serialized == report
+    assert serialized.schema_version == "3"
+
+
+def test_pin_metadata_reconciliation_is_stable_under_mapping_reordering() -> None:
+    metadata = _netlist_with_pin_metadata()
+    reordered = metadata.model_copy(
+        update={
+            "pin_functions": dict(reversed(tuple(metadata.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(metadata.pin_electrical_types.items()))),
+        }
+    )
+    baseline = _report(_snapshot(metadata))
+    current = _report(_snapshot(reordered))
+
+    report = reconcile_design_lint_reports(baseline, current)
+
+    assert report.status == "UNCHANGED"
+    assert report.pin_metadata_comparison == "COMPLETE"
+    assert report.pin_metadata_changes == ()
+
+
+def test_legacy_snapshot_requires_metadata_baseline_refresh() -> None:
+    baseline_snapshot = _snapshot(_netlist_with_pin_metadata()).model_copy(
+        update={
+            "schema_version": "1",
+            "pin_metadata": {},
+            "pin_metadata_coverage": "UNAVAILABLE",
+        }
+    )
+    current_snapshot = _snapshot(
+        _netlist_with_pin_metadata(
+            functions={
+                "J1.2": "DATA",
+                "J1.9": "RETURN",
+                "U1.2": "GND",
+                "U1.3": "DATA",
+            }
+        ),
+        source_hash="d" * 64,
+        netlist_hash="e" * 64,
+    )
+
+    report = reconcile_design_lint_reports(
+        _report(baseline_snapshot),
+        _report(current_snapshot),
+    )
+
+    assert report.status == "REVIEW"
+    assert report.pin_metadata_comparison == "PARTIAL"
+    assert report.pin_metadata_changes == ()
+    assert any("metadata comparison is partial" in item for item in report.context_changes)
+
+
+def test_partial_pin_metadata_compares_only_fields_available_on_both_sides() -> None:
+    baseline = _snapshot(_netlist_with_pin_metadata())
+    current_netlist = _netlist_with_pin_metadata(
+        functions={
+            "J1.2": "DATA",
+            "J1.9": "RETURN",
+            "U1.2": "GND",
+            "U1.3": "DATA",
+        },
+        electrical_types={
+            "J1.2": "passive",
+            "J1.9": "passive",
+            "U1.2": "passive",
+        },
+    )
+    current = _snapshot(
+        current_netlist,
+        source_hash="d" * 64,
+        netlist_hash="e" * 64,
+    )
+
+    report = reconcile_design_lint_reports(_report(baseline), _report(current))
+
+    assert current.pin_metadata_coverage == "PARTIAL"
+    assert report.pin_metadata_comparison == "PARTIAL"
+    assert tuple((item.pin, item.fields_changed) for item in report.pin_metadata_changes) == (
+        ("J1.9", ("function",)),
+    )
 
 
 def test_native_net_rename_is_reviewed_as_an_assignment_change() -> None:
@@ -186,5 +339,6 @@ def test_different_exact_native_toolchains_block_connectivity_comparison() -> No
 
     assert report.status == "BLOCKED"
     assert report.connectivity_comparison == "INCOMPATIBLE"
+    assert report.pin_metadata_comparison == "INCOMPATIBLE"
     assert report.issue is not None
     assert "different exact KiCad versions" in report.issue

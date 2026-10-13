@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Literal
 
 from .design_lint_connectivity_snapshot_models import (
     DesignLintConnectivityChange,
     DesignLintConnectivitySnapshot,
+    DesignLintPinMetadataChange,
+    NativePinMetadata,
     NetlistPinConnectivityState,
 )
 from .model_primitives import Digest, Identifier, RepositoryPath
@@ -80,6 +83,21 @@ def capture_connectivity_snapshot(
         toolchain_image=toolchain_image,
         coverage="PARTIAL" if coverage_issues else "COMPLETE",
         pin_states=pin_states,
+        pin_metadata={
+            pin: NativePinMetadata(
+                function=observed.pin_functions.get(pin),
+                electrical_type=observed.pin_electrical_types.get(pin),
+            )
+            for pin in sorted(pin_states)
+        },
+        pin_metadata_coverage=(
+            "COMPLETE"
+            if not coverage_issues
+            and set(pin_states) <= set(observed.pin_electrical_types)
+            and set(observed.pin_electrical_types) <= set(pin_states)
+            and set(observed.pin_functions) <= set(pin_states)
+            else "PARTIAL"
+        ),
         issue="; ".join(coverage_issues) if coverage_issues else None,
     )
 
@@ -113,4 +131,37 @@ def compare_connectivity_snapshots(
                 current=after,
             )
         )
+    return tuple(changes)
+
+
+def compare_pin_metadata_snapshots(
+    baseline: DesignLintConnectivitySnapshot,
+    current: DesignLintConnectivitySnapshot,
+) -> tuple[DesignLintPinMetadataChange, ...]:
+    """Compare exact native pin-role fields where both snapshots retain them."""
+    changes: list[DesignLintPinMetadataChange] = []
+    for pin in sorted(baseline.pin_metadata.keys() & current.pin_metadata.keys()):
+        before = baseline.pin_metadata[pin]
+        after = current.pin_metadata[pin]
+        complete_pair = (
+            baseline.pin_metadata_coverage == current.pin_metadata_coverage == "COMPLETE"
+        )
+        changed_fields: tuple[Literal["function", "electrical_type"], ...] = tuple(
+            name
+            for name in ("function", "electrical_type")
+            if getattr(before, name) != getattr(after, name)
+            and (
+                complete_pair
+                or (getattr(before, name) is not None and getattr(after, name) is not None)
+            )
+        )
+        if changed_fields:
+            changes.append(
+                DesignLintPinMetadataChange(
+                    pin=pin,
+                    fields_changed=changed_fields,
+                    baseline=before,
+                    current=after,
+                )
+            )
     return tuple(changes)

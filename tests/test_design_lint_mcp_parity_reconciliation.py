@@ -72,6 +72,8 @@ class _DesignLintReconciliationParityCases(McpParityHarness):
         self.assertIsNotNone(baseline.connectivity_snapshot)
         self.assertIn(cli.connectivity_comparison, {"COMPLETE", "PARTIAL"})
         self.assertEqual(cli.connectivity_changes, ())
+        self.assertIn(cli.pin_metadata_comparison, {"COMPLETE", "PARTIAL"})
+        self.assertEqual(cli.pin_metadata_changes, ())
 
 
 def test_design_lint_reconciliation_cli_mcp_parity() -> None:

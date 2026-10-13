@@ -7,7 +7,10 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
-from .design_lint_connectivity_snapshot_models import DesignLintConnectivityChange
+from .design_lint_connectivity_snapshot_models import (
+    DesignLintConnectivityChange,
+    DesignLintPinMetadataChange,
+)
 from .design_lint_finding_models import (
     DesignLintFinding,
     DesignLintIgnore,
@@ -53,7 +56,7 @@ class DesignLintFindingTransition(StrictModel):
 class DesignLintReconciliationReport(StrictModel):
     """Finding deltas with both source-bound reports' evidence preserved."""
 
-    schema_version: Literal["1", "2"] = "2"
+    schema_version: Literal["1", "2", "3"] = "3"
     lane: Literal["DESIGN_LINT_RECONCILIATION"] = "DESIGN_LINT_RECONCILIATION"
     status: Literal["UNCHANGED", "REVIEW", "BLOCKED"]
     build_authorized: Literal[False] = False
@@ -84,6 +87,10 @@ class DesignLintReconciliationReport(StrictModel):
         "UNAVAILABLE"
     )
     connectivity_changes: tuple[DesignLintConnectivityChange, ...] = ()
+    pin_metadata_comparison: Literal["COMPLETE", "PARTIAL", "UNAVAILABLE", "INCOMPATIBLE"] = (
+        "UNAVAILABLE"
+    )
+    pin_metadata_changes: tuple[DesignLintPinMetadataChange, ...] = ()
     baseline_catalog_sha256: Digest | None = None
     current_catalog_sha256: Digest | None = None
     baseline_rule_overrides: tuple[DesignLintRuleOverride, ...] = ()
@@ -105,11 +112,18 @@ class DesignLintReconciliationReport(StrictModel):
         if self.status != "BLOCKED" and self.issue is not None:
             raise ValueError("Only blocked reconciliation may carry an issue")
         changed = any(item.kind != "PERSISTING" for item in self.transitions)
-        changed = changed or bool(self.context_changes) or bool(self.connectivity_changes)
+        changed = (
+            changed
+            or bool(self.context_changes)
+            or bool(self.connectivity_changes)
+            or bool(self.pin_metadata_changes)
+        )
         if self.status == "UNCHANGED" and changed:
             raise ValueError("Unchanged reconciliation cannot contain finding or context changes")
         if self.status == "REVIEW" and not changed:
             raise ValueError("Review reconciliation must contain a finding or context change")
         if self.connectivity_comparison == "INCOMPATIBLE" and self.status != "BLOCKED":
             raise ValueError("Incompatible connectivity snapshots must block reconciliation")
+        if self.pin_metadata_comparison == "INCOMPATIBLE" and self.status != "BLOCKED":
+            raise ValueError("Incompatible pin metadata snapshots must block reconciliation")
         return self
