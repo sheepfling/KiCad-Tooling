@@ -1224,7 +1224,8 @@
       "fault_fixtures": [
         "tests.test_two_pin_diodes.test_detects_exact_device_diode_families_on_one_net",
         "tests.test_two_pin_component_native_fixture_lane.test_diode_native_fixture_scope_contains_only_diode_fault_and_control",
-        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_diode_same_net_fault_and_control"
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_diode_same_net_fault_and_control",
+        "tests.test_design_lint_mcp_parity_two_pin_passives.test_same_net_two_pin_diode_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_diodes.test_native_schematic_sources_match_reviewed_hashes",
@@ -1232,7 +1233,8 @@
         "tests.test_two_pin_diodes.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
         "tests.test_two_pin_diodes.test_rule_policy_and_exact_ignore_are_project_configurable",
         "tests.test_two_pin_component_native_fixture_lane.test_diode_native_fixture_scope_contains_only_diode_fault_and_control",
-        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_diode_same_net_fault_and_control"
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_diode_same_net_fault_and_control",
+        "tests.test_design_lint_mcp_parity_two_pin_passives.test_same_net_two_pin_diode_lint_cli_mcp_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
