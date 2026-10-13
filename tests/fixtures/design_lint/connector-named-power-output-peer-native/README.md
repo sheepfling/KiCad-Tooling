@@ -43,6 +43,15 @@ versions listed below. The focused unit stage, format/lint/type checks,
 Markdown checks, wheel and source-distribution checks, installed-wheel checks,
 separate-project playtest, and Ubuntu, Windows, and macOS preview jobs passed.
 
+LINT-127 acceptance passed in hosted run 38325531351 with the native fixture
+switch. On both pinned KiCad versions, the new divergent-assignment fault
+reported `connector.peer_power_output_named_assignment_divergence`; the common,
+mixed, and all-open cases retained their expected outcomes, and all four cases
+produced repeatable normalized netlists. The focused unit stage, format/lint/
+type checks, Markdown checks, wheel and source-distribution checks, installed-
+wheel checks, separate-project playtest, and Ubuntu, Windows, and macOS preview
+jobs passed.
+
 | KiCad version | Digest-pinned image                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------- |
 | 10.0.0        | `ghcr.io/kicad/kicad:10.0.0@sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3` |

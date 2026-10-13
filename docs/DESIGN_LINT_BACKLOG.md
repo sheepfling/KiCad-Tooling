@@ -6639,8 +6639,8 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-127 — Named power-output connector aliases assigned to different nets
 
 - **Status:** Implemented as the default-`REVIEW` rule
-  `connector.peer_power_output_named_assignment_divergence`; hosted native
-  acceptance is pending.
+  `connector.peer_power_output_named_assignment_divergence`; focused hosted
+  native acceptance passed in run `38325531351`.
 - **Priority:** P1 connector pinout review. LINT-125 covers one alias assigned
   while another is open, and LINT-126 covers aliases open everywhere. The
   synthetic baseline exposed a third state: both explicit power-output pins
@@ -6665,8 +6665,12 @@ is not a reason by itself to expand its scope or change its default policy.
   mismatched identity and metadata, stable finding fingerprints, project
   policy and exact-ignore behavior, and CLI/MCP parity. A tooling-owned native
   fixture adds the two-rail fault beside the existing mixed, all-open, and
-  common-net cases. The fixture source is hashed and hosted acceptance will
-  use the digest-pinned KiCad 10.0.0 and 10.0.5 connector lane.
+  common-net cases. The fixture source is hashed. Hosted run `38325531351` used
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`; the new fault reported this rule and
+  all four cases repeated successfully on digest-pinned KiCad 10.0.0 and 10.0.5.
+  The unit stage, Ruff, Pyright, Windows typing, Markdown, wheel/sdist and
+  installed-wheel checks, separate-project verification and playtest, and
+  Ubuntu, Windows, and macOS preview jobs also passed.
 
 ### P2 — PCB geometry and schematic review assistance
 
