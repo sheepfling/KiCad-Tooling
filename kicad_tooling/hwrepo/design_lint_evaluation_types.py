@@ -13,6 +13,7 @@ from .can_peer_reference_models import CanPeerReferenceCoverageReport
 from .component_peer_pin_models import ComponentPeerPinRuleCoverage
 from .component_roles import ComponentRoleResolution
 from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
+from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_finding_models import (
@@ -36,7 +37,6 @@ from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ConnectorCoverageReport,
-    ConnectorReturnDistributionCoverageReport,
     ContractCoachReport,
     DesignLintMappedCheckRun,
     DesignLintPolicy,

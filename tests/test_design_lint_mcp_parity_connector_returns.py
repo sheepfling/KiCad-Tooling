@@ -15,6 +15,10 @@ pytestmark = [
 
 from mcp import Client
 
+from kicad_tooling.hwrepo.connector_return_distribution_models import (
+    ConnectorReturnDistributionMap,
+    ConnectorReturnDistributionRequirement,
+)
 from kicad_tooling.hwrepo.contracts import (
     parse_model_text,
     read_model,
@@ -27,8 +31,6 @@ from kicad_tooling.hwrepo.models import (
     ComponentIdentity,
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
-    ConnectorReturnDistributionMap,
-    ConnectorReturnDistributionRequirement,
     DesignLintPolicy,
     DesignLintReport,
     InterfacePin,

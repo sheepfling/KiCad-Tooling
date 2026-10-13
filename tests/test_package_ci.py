@@ -39,6 +39,7 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/crystal_network_models.py",
         "kicad_tooling/hwrepo/pcb_keepout_models.py",
         "kicad_tooling/hwrepo/usb_c_models.py",
+        "kicad_tooling/hwrepo/connector_return_distribution_models.py",
     ),
     ids=(
         "rule-catalog",
@@ -52,6 +53,7 @@ from scripts.lint_gate_scope import (
         "crystal-network-models",
         "pcb-keepout-models",
         "usb-c-models",
+        "connector-return-distribution-models",
     ),
 )
 def test_wheel_requires_rule_catalog_and_theme_owned_models(

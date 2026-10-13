@@ -63,6 +63,7 @@ _LINT_AREA_MODULES = {
             "tests/test_electrical_connector_pin_contracts.py",
             "tests/test_pin_connectivity_acceptance.py",
             "tests/test_design_lint_mcp_parity_connector_identity.py",
+            "tests/test_design_lint_architecture_connector_return_distribution_models.py",
             "tests/test_design_lint_mcp_parity_connector_returns.py",
             "tests/test_design_lint_mcp_parity_peer_pins.py",
             "tests/test_connector_inventory_fixture_lane.py",

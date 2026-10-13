@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
+from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
@@ -12,7 +13,6 @@ from .design_lint_pcb_coverage_policy import (
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .models import (
-    ConnectorReturnDistributionCoverageReport,
     ContractCoachReport,
     DesignLintPolicy,
     RcFilterCoverageReport,

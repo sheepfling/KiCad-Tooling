@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .design_lint_types import Candidate
-from .models import ConnectorReturnDistributionCoverageReport
 
 
 def return_distribution_candidates(

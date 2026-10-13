@@ -6,13 +6,15 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
+from kicad_tooling.hwrepo.connector_return_distribution_models import (
+    ConnectorReturnDistributionMap,
+    ConnectorReturnDistributionRequirement,
+)
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, text_report
 from kicad_tooling.hwrepo.models import (
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
     ConnectorPinRole,
-    ConnectorReturnDistributionMap,
-    ConnectorReturnDistributionRequirement,
     ContractCoachReport,
     DesignLintIgnore,
     DesignLintPolicy,

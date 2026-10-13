@@ -125,7 +125,7 @@ SHARED_MODEL_PRIMITIVE_NAMES = (
     "NonNegativeCapacitancePf",
 )
 
-SHARED_MODEL_REGISTRY_MAX_LINES = 5_593
+SHARED_MODEL_REGISTRY_MAX_LINES = 4_186
 
 
 def _top_level_definitions(path: Path) -> set[str]:

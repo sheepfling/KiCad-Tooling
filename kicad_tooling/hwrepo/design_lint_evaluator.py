@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_evaluation_candidates import scan_evaluation_candidates
@@ -20,7 +21,6 @@ from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ConnectorCoverageReport,
-    ConnectorReturnDistributionCoverageReport,
     ContractCoachReport,
     DesignLintPolicy,
     PcbProtectionPathCoverageReport,

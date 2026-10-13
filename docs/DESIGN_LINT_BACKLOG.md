@@ -800,7 +800,14 @@ and optional ecosystem adapters are `P3`.
   `hwrepo/models.py` retains identity-compatible exports, including its public
   shared UUID primitive. Architecture and wheel-asset tests guard the new
   owner and imports. The shared registry shrank from 4,398 to 4,261 lines; the
-  extraction changes no lint predicate or policy.
+  extraction changes no lint predicate or policy. On 2026-10-13, connector
+  return-distribution requirement and evidence models moved into
+  `connector_return_distribution_models.py`. Internal services and test
+  builders import that owner directly, while `models.py` retains
+  identity-compatible exports. A focused connector architecture test guards
+  owner size, registry definitions, service imports, and compatibility. The
+  registry shrank from 4,247 to 4,186 lines; its no-growth ceiling was lowered
+  to 4,186. The extraction changes no report schema or lint behavior.
 
 - **LINT-010 — Keep exact-version I2C fixture acceptance theme-selectable.**
   The native resistor-array fault/control now lives in
