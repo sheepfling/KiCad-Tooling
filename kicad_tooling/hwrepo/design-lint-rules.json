@@ -4819,7 +4819,8 @@
       ],
       "valid_control_fixtures": [
         "tests.test_led_output_heuristics.test_visible_series_resistor_and_unrecognized_output_are_controls",
-        "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis"
+        "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
+        "tests.test_led_output_heuristics.test_custom_led_with_output_side_series_resistor_is_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

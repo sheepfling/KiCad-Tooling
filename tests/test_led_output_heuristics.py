@@ -294,6 +294,18 @@ def test_custom_led_needs_exact_project_role_map_and_reports_review_basis() -> N
     }
 
 
+def test_custom_led_with_output_side_series_resistor_is_control() -> None:
+    source = output_led_netlist(
+        "series-output-side",
+        led_symbol="Training:LED_5mm",
+        led_part_id="training-led",
+        led_footprint="Training:LED_0603",
+    )
+    report = observed_report(source, DesignLintPolicy(component_role_map=custom_led_role_map()))
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+
+
 @pytest.mark.parametrize(
     "identity_fault",
     ("symbol", "footprint", "pin-function", "pin-inventory", "part-id"),

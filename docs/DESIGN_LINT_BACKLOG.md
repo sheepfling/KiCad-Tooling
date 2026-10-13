@@ -11753,7 +11753,11 @@ it does not claim field validation or effectiveness against private boards.
   controls do not. Without the role map, the custom symbol stays outside the
   predicate. The native lane asserts that the parallel-resistor fixture
   actually places its resistor on the same two nets as the LED before
-  evaluating the rule.
+  evaluating the rule. A separate typed-service control now covers an exact
+  project-role map for a custom LED with an output-side series resistor, the
+  topology used by the public status-LED training examples. The public project
+  files remain in their template repository; this regression uses only the
+  minimal tooling-owned synthetic netlist.
 - **Public-template applicability check (2026-10-01):** The clean public
   KiCad-Team-Workflow-Template checkout at
   `ed89536f0dbbcb013145af2994fef41b2250143e` documents its Arduino status LED
