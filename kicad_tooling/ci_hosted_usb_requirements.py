@@ -16,8 +16,8 @@ from .hwrepo.usb_data_path_models import (
     UsbDataPathLineRequirement,
     UsbDataPathMap,
     UsbDataSeriesResistorRequirement,
-    UsbReferencePinRequirement,
 )
+from .hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 
 
 def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:

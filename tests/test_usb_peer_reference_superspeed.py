@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import pytest
+from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import text_report
 from kicad_tooling.hwrepo.models import DesignLintRuleOverride
+from kicad_tooling.hwrepo.reference_bond_models import ReferenceBondRequirement
 from kicad_tooling.hwrepo.usb_peer_reference_review import usb_peer_reference_reviews
-from tests.usb_peer_reference_support import RULE_ID, lint_report, usb_data_map
-from tests.usb_peer_superspeed_support import superspeed_peer_netlist
+from kicad_tooling.hwrepo.usb_superspeed_reference_models import (
+    UsbSuperspeedReferencePathRequirement,
+)
+from tests.usb_peer_reference_support import PATH_RULE_ID, RULE_ID, lint_report, usb_data_map
+from tests.usb_peer_superspeed_support import (
+    superspeed_peer_netlist,
+    superspeed_reference_bond,
+    superspeed_reference_map,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
@@ -98,6 +109,170 @@ def test_usb_2_data_map_cannot_suppress_a_superspeed_reference_review() -> None:
     )
     finding = next(item for item in report.findings if item.rule_id == RULE_ID)
     assert finding.evidence["USB_reference_policy_state"] == ("USB_2.0_map_not_applicable",)
+
+
+def test_exact_separate_superspeed_map_covers_the_review_and_mismatch_check() -> None:
+    observed = superspeed_peer_netlist()
+    report = lint_report(observed, path_map=superspeed_reference_map())
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert PATH_RULE_ID not in {item.rule_id for item in report.findings}
+    coverage = report.usb_peer_reference_coverage
+    assert coverage is not None
+    assert coverage.mapped_separate_reference_path_count == 1
+    assert coverage.separate_reference_path_count == 1
+    assert coverage.candidate_group_count == 0
+    usb_map_coverage = next(
+        item for item in report.mapped_check_runs if item.rule_id == PATH_RULE_ID
+    )
+    assert usb_map_coverage.requirement_count == 1
+
+
+def test_stale_superspeed_reference_map_reports_mismatch_and_keeps_review() -> None:
+    observed = superspeed_peer_netlist()
+    path_map = superspeed_reference_map(policy="common_net", phy_reference_net="USB_GND")
+    report = lint_report(observed, path_map=path_map)
+
+    findings = {item.rule_id: item for item in report.findings}
+    assert RULE_ID in findings
+    assert PATH_RULE_ID in findings
+    mismatch = findings[PATH_RULE_ID]
+    assert mismatch.evidence["line"] == ("reference",)
+    assert "reference pins or nets differ from the map" in " ".join(mismatch.evidence["issues"])
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected_issue"),
+    [
+        ("positive_net", "STALE_SS_LANE", "positive or negative pin/net assignments"),
+        ("expected_connector_footprint", "Synthetic:Wrong-USB", "identity differs"),
+    ],
+)
+def test_stale_superspeed_pin_net_or_identity_map_is_reported(
+    field: str, value: str, expected_issue: str
+) -> None:
+    path_map = superspeed_reference_map()
+    interface = path_map.superspeed_interfaces[0]
+    stale_interface = interface.model_copy(update={field: value})
+    stale_map = path_map.model_copy(update={"superspeed_interfaces": (stale_interface,)})
+
+    report = lint_report(superspeed_peer_netlist(), path_map=stale_map)
+    findings = {item.rule_id: item for item in report.findings}
+    assert RULE_ID in findings
+    assert PATH_RULE_ID in findings
+    assert expected_issue in " ".join(findings[PATH_RULE_ID].evidence["issues"])
+
+
+def test_stale_superspeed_reference_pin_map_is_reported() -> None:
+    path_map = superspeed_reference_map()
+    interface = path_map.superspeed_interfaces[0]
+    stale_interface = interface.model_copy(
+        update={
+            "connector_reference_pins": (
+                interface.connector_reference_pins[0].model_copy(update={"net": "STALE_GND"}),
+            )
+        }
+    )
+    report = lint_report(
+        superspeed_peer_netlist(),
+        path_map=path_map.model_copy(update={"superspeed_interfaces": (stale_interface,)}),
+    )
+    mismatch = next(item for item in report.findings if item.rule_id == PATH_RULE_ID)
+    assert "reference pins or nets differ from the map" in " ".join(mismatch.evidence["issues"])
+
+
+def test_full_duplex_superspeed_map_covers_both_exact_directions() -> None:
+    observed = superspeed_peer_netlist(full_duplex=True)
+    path_map = superspeed_reference_map(full_duplex=True)
+    report = lint_report(observed, path_map=path_map)
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert PATH_RULE_ID not in {item.rule_id for item in report.findings}
+    coverage = report.usb_peer_reference_coverage
+    assert coverage is not None
+    assert coverage.supported_data_path_count == 2
+    assert coverage.mapped_separate_reference_path_count == 2
+
+
+def test_exact_bonded_superspeed_map_is_checked_and_covers_the_review() -> None:
+    path_map = superspeed_reference_map(
+        policy="bonded",
+        reference_bond=superspeed_reference_bond(),
+    )
+    report = lint_report(superspeed_peer_netlist(bond_value="0R"), path_map=path_map)
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert PATH_RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.usb_peer_reference_coverage.mapped_separate_reference_path_count == 1
+
+
+@pytest.mark.parametrize("bond_value", [None, "10R"])
+def test_bonded_superspeed_map_reports_absent_or_wrong_bond(
+    bond_value: str | None,
+) -> None:
+    path_map = superspeed_reference_map(
+        policy="bonded",
+        reference_bond=superspeed_reference_bond(),
+    )
+    report = lint_report(superspeed_peer_netlist(bond_value=bond_value), path_map=path_map)
+
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    mismatch = next(item for item in report.findings if item.rule_id == PATH_RULE_ID)
+    assert "R3" in " ".join(mismatch.evidence["issues"])
+
+
+def test_superspeed_reference_models_reject_invalid_path_and_duplicate_ids() -> None:
+    path_map = superspeed_reference_map(full_duplex=True)
+    first, second = path_map.superspeed_interfaces
+    with pytest.raises(ValidationError, match="distinct nets"):
+        UsbSuperspeedReferencePathRequirement.model_validate(
+            {**first.model_dump(), "negative_net": first.positive_net}
+        )
+    with pytest.raises(ValidationError, match="reference-pin requirements must be unique"):
+        UsbSuperspeedReferencePathRequirement.model_validate(
+            {
+                **first.model_dump(),
+                "connector_reference_pins": (
+                    *first.connector_reference_pins,
+                    first.connector_reference_pins[0].model_dump(),
+                ),
+            }
+        )
+
+    with pytest.raises(ValidationError, match="IDs must be unique"):
+        type(path_map).model_validate(
+            {
+                **path_map.model_dump(),
+                "superspeed_interfaces": (
+                    first.model_dump(),
+                    {**second.model_dump(), "id": first.id},
+                ),
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    ("policy", "connector_net", "phy_net", "bond", "message"),
+    [
+        ("common_net", "USB_GND", "BOARD_GND", None, "share one declared net"),
+        ("separate_nets", "BOARD_GND", "BOARD_GND", None, "needs distinct nets"),
+        ("bonded", "USB_GND", "BOARD_GND", None, "needs one exact bond component"),
+    ],
+)
+def test_superspeed_map_requires_a_consistent_explicit_reference_decision(
+    policy: Literal["common_net", "separate_nets", "bonded"],
+    connector_net: str,
+    phy_net: str,
+    bond: ReferenceBondRequirement | None,
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        superspeed_reference_map(
+            policy=policy,
+            connector_reference_net=connector_net,
+            phy_reference_net=phy_net,
+            reference_bond=bond,
+        )
 
 
 def test_project_rule_override_can_turn_off_superspeed_review() -> None:

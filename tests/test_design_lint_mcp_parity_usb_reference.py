@@ -17,8 +17,15 @@ from mcp import Client
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
-from kicad_tooling.hwrepo.models import DesignLintReport, ValidationSummary
+from kicad_tooling.hwrepo.models import (
+    DesignLintPolicy,
+    DesignLintReport,
+    ProjectTestContract,
+    ValidationSummary,
+)
 from tests.mcp_parity_support import McpParityHarness, run_mcp_parity
+from tests.usb_peer_reference_support import PATH_RULE_ID, RULE_ID
+from tests.usb_peer_superspeed_support import superspeed_reference_map
 
 
 class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
@@ -144,7 +151,7 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
                 ),
             )
 
-        def write_superspeed_netlist(*, split_reference: bool) -> None:
+        def write_superspeed_netlist(*, split_reference: bool, full_duplex: bool = False) -> None:
             if split_reference:
                 reference_nets = (
                     '<net name="USB_GND"><node ref="J1" pin="3"/></net>'
@@ -168,18 +175,30 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
                 '<pin num="2" name="StdA_SSTX-" type="passive"/>'
                 '<pin num="3" name="GND" type="passive"/>'
                 '<pin num="4" name="VBUS" type="passive"/>'
+                '<pin num="5" name="StdA_SSRX+" type="passive"/>'
+                '<pin num="6" name="StdA_SSRX-" type="passive"/>'
                 "</pins></libpart>"
                 '<libpart lib="Synthetic" part="UsbPhy"><pins>'
                 '<pin num="1" name="SSRX+" type="bidirectional"/>'
                 '<pin num="2" name="SSRX-" type="bidirectional"/>'
                 '<pin num="3" name="AGND" type="power_in"/>'
                 '<pin num="4" name="VDD" type="power_in"/>'
+                '<pin num="5" name="SSTX+" type="bidirectional"/>'
+                '<pin num="6" name="SSTX-" type="bidirectional"/>'
                 "</pins></libpart></libparts><nets>"
                 '<net name="SS_LANE_A"><node ref="J1" pin="1"/>'
                 '<node ref="U1" pin="1"/></net>'
                 '<net name="SS_LANE_B"><node ref="J1" pin="2"/>'
                 '<node ref="U1" pin="2"/></net>'
-                f"{reference_nets}"
+                + (
+                    '<net name="SS_LANE_C"><node ref="J1" pin="5"/>'
+                    '<node ref="U1" pin="5"/></net>'
+                    '<net name="SS_LANE_D"><node ref="J1" pin="6"/>'
+                    '<node ref="U1" pin="6"/></net>'
+                    if full_duplex
+                    else ""
+                )
+                + f"{reference_nets}"
                 '<net name="+5V"><node ref="J1" pin="4"/></net>'
                 '<net name="+3V3"><node ref="U1" pin="4"/></net>'
                 "</nets></export>",
@@ -379,6 +398,61 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
                     self.assertEqual(findings, ())
                     self.assertEqual(coverage.common_reference_path_count, 1)
                     self.assertEqual(coverage.candidate_group_count, 0)
+
+            contract_path = self.island / "tests/contract.json"
+            contract = read_model(contract_path, ProjectTestContract)
+            policy = contract.design_lint or DesignLintPolicy()
+            path_map = superspeed_reference_map(
+                full_duplex=True,
+                connector_reference_net="USB_GND",
+                phy_reference_net="PHY_GND",
+            )
+            write_model(
+                contract_path,
+                contract.model_copy(
+                    update={
+                        "design_lint": policy.model_copy(update={"usb_data_path_map": path_map})
+                    }
+                ),
+            )
+            for split_reference in (True, False):
+                write_superspeed_netlist(
+                    split_reference=split_reference,
+                    full_duplex=True,
+                )
+                cli = await self.cli(
+                    "kicad_tooling.design_lint",
+                    DesignLintReport,
+                    "--project",
+                    "controller",
+                    "--native-summary",
+                    str(native),
+                    expected_exit=1,
+                )
+                mcp = await self.call(
+                    client,
+                    "inspect_design_lint",
+                    DesignLintReport,
+                    {
+                        "project_id": "controller",
+                        "native_summary": native.relative_to(self.root).as_posix(),
+                    },
+                )
+                self.assertEqual(cli, mcp)
+                observed_rule_ids = {item.rule_id for item in mcp.findings}
+                if split_reference:
+                    self.assertNotIn(RULE_ID, observed_rule_ids)
+                    self.assertNotIn(PATH_RULE_ID, observed_rule_ids)
+                    self.assertEqual(
+                        mcp.usb_peer_reference_coverage.mapped_separate_reference_path_count,
+                        2,
+                    )
+                else:
+                    self.assertNotIn(RULE_ID, observed_rule_ids)
+                    self.assertEqual(
+                        sum(item.rule_id == PATH_RULE_ID for item in mcp.findings),
+                        2,
+                    )
 
 
 def test_usb_peer_reference_lint_cli_mcp_parity() -> None:

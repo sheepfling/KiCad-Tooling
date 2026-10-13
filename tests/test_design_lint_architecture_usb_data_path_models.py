@@ -8,7 +8,12 @@ import json
 import pytest
 
 from kicad_tooling.hwrepo import models as shared_models
-from kicad_tooling.hwrepo import usb_data_path_component_models, usb_data_path_models
+from kicad_tooling.hwrepo import (
+    usb_data_path_component_models,
+    usb_data_path_models,
+    usb_reference_pin_models,
+    usb_superspeed_reference_models,
+)
 from tests.lint_architecture_support import (
     HWREPO,
     IMPLEMENTATION_MAX_LINES,
@@ -21,7 +26,6 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint, pytest.mark.a
 USB_DATA_PATH_MODEL_NAMES = (
     "UsbDataSeriesResistorRequirement",
     "UsbDataPathLineRequirement",
-    "UsbReferencePinRequirement",
     "UsbDataInterfaceRequirement",
     "UsbDataPathMap",
 )
@@ -67,9 +71,37 @@ def test_usb_component_pin_maps_live_in_their_theme_owner() -> None:
     )
 
 
+def test_usb_reference_pin_model_has_a_bounded_owner_and_compat_exports() -> None:
+    owner = HWREPO / "usb_reference_pin_models.py"
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    definitions = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
+    assert "UsbReferencePinRequirement" in definitions
+
+    model = usb_reference_pin_models.UsbReferencePinRequirement
+    assert model.__module__ == "kicad_tooling.hwrepo.usb_reference_pin_models"
+    assert usb_data_path_models.UsbReferencePinRequirement is model
+    assert shared_models.UsbReferencePinRequirement is model
+
+
+def test_usb_superspeed_reference_models_have_a_bounded_interface_owner() -> None:
+    owner = HWREPO / "usb_superspeed_reference_models.py"
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    definitions = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
+    assert "UsbSuperspeedReferencePathRequirement" in definitions
+
+    model = usb_superspeed_reference_models.UsbSuperspeedReferencePathRequirement
+    assert model.__module__ == "kicad_tooling.hwrepo.usb_superspeed_reference_models"
+    assert usb_data_path_models.UsbSuperspeedReferencePathRequirement is model
+    assert not hasattr(shared_models, "UsbSuperspeedReferencePathRequirement")
+
+
 def test_internal_services_import_usb_path_models_from_the_owner() -> None:
     legacy_imports: list[str] = []
     component_model_imports: list[str] = []
+    reference_pin_imports: list[str] = []
+    superspeed_model_imports: list[str] = []
     for path in sorted((REPO_ROOT / "kicad_tooling").rglob("*.py")):
         if path == HWREPO / "models.py":
             continue
@@ -92,6 +124,17 @@ def test_internal_services_import_usb_path_models_from_the_owner() -> None:
                     component_model_imports.extend(
                         f"{path.name}: {name}" for name in sorted(imported)
                     )
+                imported_names = {item.name for item in node.names}
+                if "UsbReferencePinRequirement" in imported_names and path not in {
+                    HWREPO / "usb_data_path_models.py",
+                    HWREPO / "models.py",
+                }:
+                    reference_pin_imports.append(path.name)
+                if (
+                    "UsbSuperspeedReferencePathRequirement" in imported_names
+                    and path != HWREPO / "usb_data_path_models.py"
+                ):
+                    superspeed_model_imports.append(path.name)
 
     assert not legacy_imports, (
         "Internal services must import USB path models from usb_data_path_models; "
@@ -101,6 +144,16 @@ def test_internal_services_import_usb_path_models_from_the_owner() -> None:
         "Internal services must import exact component pin models from "
         "usb_data_path_component_models; "
         f"legacy imports: {component_model_imports}"
+    )
+    assert not reference_pin_imports, (
+        "Internal services must import USB reference-pin requirements from "
+        "usb_reference_pin_models; "
+        f"legacy imports: {reference_pin_imports}"
+    )
+    assert not superspeed_model_imports, (
+        "Internal services must import SuperSpeed reference requirements from "
+        "usb_superspeed_reference_models; "
+        f"legacy imports: {superspeed_model_imports}"
     )
 
 
@@ -148,5 +201,30 @@ def test_protection_shunt_checks_have_bounded_theme_owners() -> None:
     )
     assert (
         "kicad_tooling/hwrepo/usb_data_path_protection_shunts.py#protection_shunt_mismatches"
+        in rule["implementation_refs"]
+    )
+    assert (
+        "kicad_tooling/hwrepo/usb_superspeed_reference_contract.py#usb_superspeed_reference_mismatches"
+        in rule["implementation_refs"]
+    )
+
+
+def test_superspeed_reference_contract_has_a_bounded_owner_and_catalog_reference() -> None:
+    owner = HWREPO / "usb_superspeed_reference_contract.py"
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    functions = {
+        node.name
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    assert "usb_superspeed_reference_mismatches" in functions
+
+    catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
+    rule = next(
+        item for item in catalog["rules"] if item["rule_id"] == "bus.usb_data_path_mismatch"
+    )
+    assert (
+        "kicad_tooling/hwrepo/usb_superspeed_reference_contract.py#usb_superspeed_reference_mismatches"
         in rule["implementation_refs"]
     )

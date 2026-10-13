@@ -79,7 +79,7 @@ def mapped_topology_coverage_runs(
             None
             if usb_map is None
             else hashlib.sha256(usb_map.model_dump_json().encode("utf-8")).hexdigest(),
-            0 if usb_map is None else len(usb_map.interfaces),
+            0 if usb_map is None else len(usb_map.interfaces) + len(usb_map.superspeed_interfaces),
             netlist_sha256,
             candidates,
             default_modes[usb_rule_id]

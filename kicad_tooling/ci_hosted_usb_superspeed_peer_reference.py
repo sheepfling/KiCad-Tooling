@@ -214,6 +214,21 @@ def usb_superspeed_peer_reference_fixture_lane(
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native USB SuperSpeed {case} exports differ after normalization")
 
+    from .ci_hosted_usb_superspeed_reference_maps import (
+        usb_superspeed_reference_map_fixture_lane,
+    )
+
+    usb_superspeed_reference_map_fixture_lane(
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+        output=output,
+        source_hashes=source_hashes,
+        normalized_hashes=normalized_hashes,
+        raw_hashes=raw_hashes,
+        log=log,
+    )
+
     for case, expected_findings in (("fault", 2), ("control", 0)):
         report = reports[(case, "first")]
         findings = tuple(

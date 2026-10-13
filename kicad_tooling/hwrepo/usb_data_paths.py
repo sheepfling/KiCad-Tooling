@@ -445,4 +445,8 @@ def usb_data_path_mismatches(
                     ),
                 )
             )
+    if path_map.superspeed_interfaces:
+        from .usb_superspeed_reference_contract import usb_superspeed_reference_mismatches
+
+        mismatches.extend(usb_superspeed_reference_mismatches(path_map, observed))
     return tuple(mismatches)

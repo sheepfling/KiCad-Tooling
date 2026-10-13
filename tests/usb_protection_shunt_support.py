@@ -14,8 +14,8 @@ from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
     UsbDataPathLineRequirement,
     UsbDataPathMap,
-    UsbReferencePinRequirement,
 )
+from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 
 
 def protection_shunt_map(

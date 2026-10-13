@@ -61,6 +61,7 @@ from . import stm32_pin_map_models as _stm32_pin_map_models
 from . import usb_c_models as _usb_c_models
 from . import usb_data_path_models as _usb_data_path_models
 from . import usb_peer_reference_models as _usb_peer_reference_models
+from . import usb_reference_pin_models as _usb_reference_pin_models
 from .model_primitives import (
     CapacitancePf,
     Digest,
@@ -174,7 +175,7 @@ UsbPeerReferencePathCoverageEntry = _usb_peer_reference_models.UsbPeerReferenceP
 UsbPeerReferencePinCoverage = _usb_peer_reference_models.UsbPeerReferencePinCoverage
 UsbDataSeriesResistorRequirement = _usb_data_path_models.UsbDataSeriesResistorRequirement
 UsbDataPathLineRequirement = _usb_data_path_models.UsbDataPathLineRequirement
-UsbReferencePinRequirement = _usb_data_path_models.UsbReferencePinRequirement
+UsbReferencePinRequirement = _usb_reference_pin_models.UsbReferencePinRequirement
 UsbDataInterfaceRequirement = _usb_data_path_models.UsbDataInterfaceRequirement
 UsbDataPathMap = _usb_data_path_models.UsbDataPathMap
 PcbReturnEndpointRequirement = _pcb_return_path_models.PcbReturnEndpointRequirement

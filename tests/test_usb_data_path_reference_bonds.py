@@ -7,9 +7,9 @@ from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataInterfaceRequirement,
-    UsbReferencePinRequirement,
 )
 from kicad_tooling.hwrepo.usb_data_paths import usb_data_path_mismatches
+from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 from tests.usb_data_path_support import (
     lint_report,
     usb_bonded_reference_map,

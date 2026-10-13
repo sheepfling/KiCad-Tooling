@@ -415,8 +415,9 @@ fault/control and boundary suite:
 ```
 
 Its full-duplex TX-to-RX and RX-to-TX split-reference fault, common-reference
-control, exact pin membership, and repeatable netlist exports also run against
-the digest-pinned KiCad 10.0.0 and 10.0.5 images. The lane uses a synthetic
+control, exact pin membership, repeatable netlist exports, exact common and
+separate reference maps, and stale-map fault behavior also run against the
+digest-pinned KiCad 10.0.0 and 10.0.5 images. The lane uses a synthetic
 project-owned toolchain catalog and needs no external project checkout:
 
 ```sh

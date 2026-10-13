@@ -4439,10 +4439,11 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Status:** Implemented as `bus.usb_peer_reference_review`, a configurable
   default-review hint for supported USB 2.0 and direct USB SuperSpeed paths.
-  The exact USB 2.0 data-path map can record a reviewed
+  The USB data-path map can record a reviewed USB 2.0 or direct SuperSpeed
   `common_net`, `separate_nets`, or `bonded` reference decision and verify its
-  named pins and nets against the native netlist. A `bonded` entry additionally
-  maps one exact passive two-pin component, value, footprint, and side nets.
+  exact endpoint pins and nets against the native netlist. A `bonded` entry
+  additionally maps one exact passive two-pin component, value, footprint, and
+  side nets.
 - **Priority:** P1 connectivity review. LINT-074/LINT-082 cover UART peers,
   and LINT-049 covers a project-mapped USB data topology; neither notices a
   supported USB connector-to-IC path when connector and PHY reference pins use
@@ -4455,7 +4456,11 @@ is not a reason by itself to expand its scope or change its default policy.
   is complete, exactly one positive and negative pin exists per family, connector TX connects to PHY
   RX or connector RX to PHY TX, and each data net contains exactly those two pins. Both endpoint
   references must be explicit passive/power_in pins on one net per endpoint. A differing pair of
-  reference nets produces a review; a common reference is quiet. SuperSpeed names are the bounded
+  reference nets produces a review; a common reference is quiet. An exact
+  `superspeed_interfaces` map can cover a reviewed direct SuperSpeed pair only
+  when its endpoint identities, complementary P/N pins and nets, reference-pin
+  inventories, and common/separate/bonded decision match. Stale mapped
+  expectations produce `bus.usb_data_path_mismatch`. SuperSpeed names are the bounded
   SSTX/SSRX and StdA/StdB aliases documented by the
   [USB-IF Front-Panel Implementation Document](https://www.usb.org/sites/default/files/USB3p1_Front_Panel_CabCon_Implment_Doc_Rev1p1.pdf).
 - **Boundary:** Separate nets may be intentional, joined through a reviewed
@@ -4466,13 +4471,15 @@ is not a reason by itself to expand its scope or change its default policy.
   USB-C pairs, muxes, retimers, other SuperSpeed multi-lane paths, off-board
   wiring, or PCB copper. It does not infer resistor suitability or protection
   performance. `data_port_group` scopes numbered USB 2.0 PHY inventory to one
-  pair. The current project map schema covers USB 2.0 D+/D− and cannot suppress
-  SuperSpeed findings; projects can use the rule-level override or a reasoned
-  exact ignore. Incomplete pin inventories, mixed reference domains, DNP
+  pair. The `superspeed_interfaces` map covers exact direct SuperSpeed paths;
+  stale or absent maps leave the default REVIEW prompt active. Projects can use
+  the rule-level override or a reasoned exact ignore for another reviewed case.
+  Incomplete pin inventories, mixed reference domains, DNP
   endpoints or branch parts, shield/chassis/frame/PE functions, and ambiguous
-  assignments are skipped. For USB 2.0, a source-reviewed USB map suppresses
-  the prompt only when connector and PHY identities, data topology, complete
-  reference-pin inventories, and explicit reference decision all match. For
+  assignments are skipped. A source-reviewed USB 2.0 or SuperSpeed map
+  suppresses the prompt only when connector and PHY identities, supported data
+  topology, complete reference-pin inventories, and explicit reference decision
+  all match. For
   `bonded`, `bus.usb_data_path_mismatch` separately reports a missing, DNP,
   identity-mismatched, or incorrectly assigned bond; this netlist comparison
   does not prove component conduction or PCB copper.
@@ -4490,8 +4497,10 @@ is not a reason by itself to expand its scope or change its default policy.
   controls;
   stale identity/net faults; exact ignore, review/block/off, input reordering
   and commoning mutation; CLI/MCP parity; direct SuperSpeed TX-to-RX fault,
-  common-reference control, same-direction/reversed-polarity/extra-peer and
-  incomplete-metadata boundaries; three-process hash-seed determinism; repeated source-hashed native
+  common-reference control, exact separate/common/bonded map coverage, stale
+  mapped pin/net/identity faults, full-duplex mapping, CLI/MCP parity, and
+  same-direction/reversed-polarity/extra-peer and incomplete-metadata
+  boundaries; three-process hash-seed determinism; repeated source-hashed native
   exports on the digest-pinned KiCad 10.0.0 and 10.0.5 lane. The typed-netlist
   multi-reference control gives one PHY two explicitly named return pins on
   separate nets and confirms the bounded predicate skips it.

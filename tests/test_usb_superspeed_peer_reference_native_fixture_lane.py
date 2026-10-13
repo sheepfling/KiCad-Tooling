@@ -141,6 +141,9 @@ def test_usb_superspeed_peer_reference_native_fixture_lane_is_repeatable(
         "usb-superspeed-peer-reference-fixture/native-export",
         "usb-superspeed-peer-reference-fixture/fault",
         "usb-superspeed-peer-reference-fixture/control",
+        "usb-superspeed-peer-reference-fixture/mapped-fault",
+        "usb-superspeed-peer-reference-fixture/mapped-control",
+        "usb-superspeed-peer-reference-fixture/stale-map-control",
     }
     fault = results["usb-superspeed-peer-reference-fixture/fault"]
     assert fault["status"] == "PASS"
@@ -165,6 +168,30 @@ def test_usb_superspeed_peer_reference_native_fixture_lane_is_repeatable(
     assert control["common_reference_paths"] == 2
     assert control["separate_reference_paths"] == 0
     assert control["reference_nets"] == "BOARD_GND->BOARD_GND"
+
+    mapped_fault = results["usb-superspeed-peer-reference-fixture/mapped-fault"]
+    assert mapped_fault["status"] == "PASS"
+    assert mapped_fault["reference_policy"] == "separate_nets"
+    assert mapped_fault["reference_findings"] == 0
+    assert mapped_fault["path_mismatches"] == 0
+    assert mapped_fault["mapped_separate_paths"] == 2
+    assert mapped_fault["requirement_count"] == 2
+    assert mapped_fault["repeatable"] == "true"
+
+    mapped_control = results["usb-superspeed-peer-reference-fixture/mapped-control"]
+    assert mapped_control["status"] == "PASS"
+    assert mapped_control["reference_policy"] == "common_net"
+    assert mapped_control["reference_findings"] == 0
+    assert mapped_control["path_mismatches"] == 0
+    assert mapped_control["mapped_separate_paths"] == 0
+    assert mapped_control["requirement_count"] == 2
+    assert mapped_control["repeatable"] == "true"
+
+    stale_map = results["usb-superspeed-peer-reference-fixture/stale-map-control"]
+    assert stale_map["status"] == "PASS"
+    assert stale_map["reference_findings"] == 0
+    assert stale_map["path_mismatches"] == 2
+    assert stale_map["repeatable"] == "true"
 
     for case, result in (("fault", fault), ("control", control)):
         assert result["kicad_version"] == version

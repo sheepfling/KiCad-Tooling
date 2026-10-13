@@ -11,6 +11,10 @@ explicit return pins on `BOARD_GND`, so neither path should prompt.
 The native lane exports each source twice with the exact digest-pinned KiCad
 version selected by the public template checkout. It verifies the pair pin
 functions, exact two-pin net membership, finding families, and repeatability.
+It also applies exact full-duplex SuperSpeed reference maps to the native
+netlists: the split-reference map and common-reference map must both match,
+while applying the stale split map to the common-reference control must report
+two mapped mismatches without emitting a split-reference heuristic prompt.
 
 | Case    | SHA-256                                                            |
 | ------- | ------------------------------------------------------------------ |

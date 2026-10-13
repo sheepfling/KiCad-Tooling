@@ -2372,13 +2372,13 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a project-authored connector-to-PHY interface, exact connector and PHY symbol/footprint identities, endpoint pin inventory and net assignments, and the declared direct path, fitted series-resistor identity/value/two-net topology, or one exact multi-pin inline-component identity and full pin-to-net/no-connect map must match. Inline-component paths also map the component pins that connect each connector-side D+/D- net to its PHY-side net. An optional multi-pin protection-shunt map names the exact component identity, one D+ and one D- tap, and every native pin's expected net or explicit no-connect state; all those assignments and the complete native pin inventory must match. A common_net or separate_nets reference policy checks the mapped endpoint reference pins; a bonded policy additionally requires one exact passive two-pin component identity, value, footprint, and side-pin net assignment between the two declared reference nets.",
+      "predicate": "For a project-authored connector-to-PHY interface, exact connector and PHY symbol/footprint identities, endpoint pin inventory and net assignments, and the declared direct path, fitted series-resistor identity/value/two-net topology, or one exact multi-pin inline-component identity and full pin-to-net/no-connect map must match. Inline-component paths also map the component pins that connect each connector-side D+/D- net to its PHY-side net. An optional multi-pin protection-shunt map names the exact component identity, one D+ and one D- tap, and every native pin's expected net or explicit no-connect state; all those assignments and the complete native pin inventory must match. A common_net or separate_nets reference policy checks the mapped endpoint reference pins; a bonded policy additionally requires one exact passive two-pin component identity, value, footprint, and side-pin net assignment between the two declared reference nets. A superspeed_interfaces entry checks one exact direct complementary SuperSpeed P/N path, endpoint identities, reference-pin inventories, and reviewed common_net, separate_nets, or bonded policy; stale expectations emit this mismatch finding.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The project must author the PHY-specific topology and cite its engineering basis; this rule does not infer that every USB PHY needs or forbids an external resistor.",
-        "Direct paths, one mapped conventional two-terminal resistor per data line, and one explicitly mapped multi-pin inline component are supported. The inline map must account for the component's complete native pin inventory and each pin's expected net or explicit no-connect state. A direct path may additionally map exact multi-pin protection shunts; each map accounts for the complete native pin inventory, D+/D- tap pins, and every expected net or explicit no-connect state. Shunt maps cannot be combined with inline paths in this version. Multiple inline devices, additional series components, USB-C role behavior, USB 3.x lanes, signal integrity, PCB placement, and copper continuity need separate requirements or evidence.",
+        "Direct USB 2.0 paths, one mapped conventional two-terminal resistor per data line, and one explicitly mapped multi-pin inline component are supported. The inline map must account for the component's complete native pin inventory and each pin's expected net or explicit no-connect state. A direct path may additionally map exact multi-pin protection shunts; each map accounts for the complete native pin inventory, D+/D- tap pins, and every expected net or explicit no-connect state. Shunt maps cannot be combined with inline paths in this version. SuperSpeed entries cover only exact direct complementary P/N endpoint and reference-pin assignments; lane-indexed USB-C, muxes, retimers, multiple inline devices, additional series components, signal integrity, PCB placement, and copper continuity need separate requirements or evidence.",
         "An inline component map records project-reviewed schematic connectivity. It does not establish that the selected symbol pin mapping matches the manufacturer's datasheet, that the device conducts or protects as intended, or that PCB copper completes the path.",
         "A passing schematic netlist comparison does not validate the selected resistor range against a datasheet or prove electrical or manufacturing suitability.",
         "A mapped reference bond checks native schematic symbol, footprint, value, DNP state, passive pin types, and net assignments; it does not prove component conduction, board copper continuity, or off-board grounding."
@@ -2391,6 +2391,10 @@
         "tests.test_usb_inline_component_paths.test_inline_component_faults_report_exact_pin_evidence",
         "tests.test_usb_inline_component_paths.test_missing_inline_component_reports_both_data_lines",
         "tests.test_usb_data_path_protection_shunts.test_stale_or_faulty_shunt_map_fails_closed",
+        "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_map_reports_mismatch_and_keeps_review",
+        "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_pin_net_or_identity_map_is_reported",
+        "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_pin_map_is_reported",
+        "tests.test_usb_peer_reference_superspeed.test_bonded_superspeed_map_reports_absent_or_wrong_bond",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_usb_data.test_usb_inline_component_map_parity"
@@ -2402,6 +2406,9 @@
         "tests.test_usb_inline_bonded_reference_paths.test_exact_inline_protection_and_reference_ferrite_map_is_a_valid_control",
         "tests.test_usb_inline_component_paths.test_exact_multi_pin_protection_path_is_a_valid_control",
         "tests.test_usb_data_path_protection_shunts.test_exact_mapped_protection_array_supports_split_reference_review",
+        "tests.test_usb_peer_reference_superspeed.test_exact_separate_superspeed_map_covers_the_review_and_mismatch_check",
+        "tests.test_usb_peer_reference_superspeed.test_full_duplex_superspeed_map_covers_both_exact_directions",
+        "tests.test_usb_peer_reference_superspeed.test_exact_bonded_superspeed_map_is_checked_and_covers_the_review",
         "tests.test_usb_data_path_protection_shunts.test_explicit_common_reference_policy_suppresses_the_review",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
@@ -2418,6 +2425,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_data_paths.py#usb_data_path_mismatches",
+        "kicad_tooling/hwrepo/usb_superspeed_reference_contract.py#usb_superspeed_reference_mismatches",
         "kicad_tooling/hwrepo/usb_data_path_inline_components.py#check_usb_inline_component",
         "kicad_tooling/hwrepo/usb_data_path_component_checks.py#check_usb_component_pin_map",
         "kicad_tooling/hwrepo/usb_data_path_protection_shunts.py#protection_shunt_mismatches",
@@ -3641,13 +3649,13 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, supported USB 2.0 D+/D− or bounded USB SuperSpeed pin functions, exact native net membership for direct SuperSpeed pairs, direct or one-fitted-Device:R-per-line USB 2.0 paths, exact map-backed inline-component paths, explicit passive or power-input reference pins, and unique net assignments",
-      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, recognize supported USB 2.0 D+ and D− paths plus bounded direct USB SuperSpeed complementary pairs. USB 2.0 paths retain the existing direct, one-fitted-resistor, exact-mapped-inline, and exact-mapped-protection-shunt rules. For SuperSpeed, require complete native pin inventories and function/type metadata, exactly one positive and one negative pin per endpoint family, connector TX to PHY RX or connector RX to PHY TX, matching positive and negative nets, and exactly the two endpoint pins on each net. Both endpoint reference pins must have explicit passive/power_in functions assigned to one unique net per endpoint. Emit a default REVIEW prompt when those reference nets differ; common reference is quiet. USB 2.0 maps suppress only when their exact data topology and reference policy match. The current USB 2.0 map schema does not cover SuperSpeed paths, so it cannot suppress a SuperSpeed review.",
+      "predicate": "For a fitted numeric or reviewed connector candidate and a fitted U/IC PHY, recognize supported USB 2.0 D+ and D− paths plus bounded direct USB SuperSpeed complementary pairs. USB 2.0 paths retain the existing direct, one-fitted-resistor, exact-mapped-inline, and exact-mapped-protection-shunt rules. For SuperSpeed, require complete native pin inventories and function/type metadata, exactly one positive and one negative pin per endpoint family, connector TX to PHY RX or connector RX to PHY TX, matching positive and negative nets, and exactly the two endpoint pins on each net. Both endpoint reference pins must have explicit passive/power_in functions assigned to one unique net per endpoint. Emit a default REVIEW prompt when those reference nets differ; common reference is quiet. USB 2.0 maps suppress only when their exact data topology and reference policy match. A superspeed_interfaces map suppresses only when one exact direct SuperSpeed path, both endpoint identities, all mapped data/reference pins and nets, and the reviewed reference policy match. A stale map is reported by bus.usb_data_path_mismatch.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Separate reference nets can be intentional, joined elsewhere, or linked by a designed bond; the finding asks for review and does not declare that they must be common.",
-        "USB 2.0 coverage includes direct paths, paths through exactly one complete fitted two-pin Device:R per line, paths through one complete inline component with a current exact project map, or direct paths with exact project-mapped multi-pin protection shunts. USB SuperSpeed coverage is limited to one distinct P/N pair family per endpoint, a direct unbranched connector-TX-to-PHY-RX or connector-RX-to-PHY-TX path, and exact two-pin membership on each data net. The USB 2.0 map schema cannot approve or suppress SuperSpeed paths; use the rule's project-scoped override or an exact reasoned ignore if review establishes the separate reference is intentional. Lane-indexed USB-C pairs, muxes, retimers, other multi-lane or multi-hop paths, series components, shunts, arbitrary signal-net peers, incomplete or ambiguous metadata, mixed reference domains, and DNP endpoints are skipped.",
+        "USB 2.0 coverage includes direct paths, paths through exactly one complete fitted two-pin Device:R per line, paths through one complete inline component with a current exact project map, or direct paths with exact project-mapped multi-pin protection shunts. USB SuperSpeed coverage is limited to one distinct P/N pair family per endpoint, a direct unbranched connector-TX-to-PHY-RX or connector-RX-to-PHY-TX path, and exact two-pin membership on each data net. A matching superspeed_interfaces entry can record an exact common_net, separate_nets, or bonded reference decision; it does not prove bond conduction or PCB copper continuity. A stale or absent map leaves the separate-reference path as REVIEW. Lane-indexed USB-C pairs, muxes, retimers, other multi-lane or multi-hop paths, series components, shunts, arbitrary signal-net peers, incomplete or ambiguous metadata, mixed reference domains, and DNP endpoints are skipped.",
         "Reference pins use bounded return-like function tokens such as GND, AGND, DGND, PGND, VSS, 0V, RTN, RETURN, or GROUND, including numeric suffixes and GND_A/GND_D/GND_P or VSSA/VSSD/VSSP forms; they must be passive or power_in type. Shield, chassis, frame, and protective-earth functions are excluded.",
         "An exact USB data map records source-reviewed schematic intent and compares the named reference pins and nets, but does not prove a fitted bond, PCB copper continuity, external grounding, connector wiring, or electrical suitability.",
         "A bonded USB map is checked separately by bus.usb_data_path_mismatch against exact native component and pin-to-net assignments; the peer-reference review itself does not establish bond conduction or PCB copper continuity."
@@ -3664,6 +3672,9 @@
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels",
         "tests.test_usb_peer_reference_superspeed.test_split_reference_direct_superspeed_pair_emits_review_and_family_evidence",
+        "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_map_reports_mismatch_and_keeps_review",
+        "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_pin_net_or_identity_map_is_reported",
+        "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_pin_map_is_reported",
         "tests.test_usb_peer_reference_superspeed.test_full_duplex_superspeed_reviews_each_complementary_direction",
         "tests.test_usb_superspeed_peer_reference_native_fixture_lane.test_usb_superspeed_peer_reference_native_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_reference.test_usb_peer_reference_lint_cli_mcp_parity"
@@ -3693,6 +3704,10 @@
         "tests.test_usb_inline_bonded_reference_paths.test_exact_inline_protection_and_reference_ferrite_map_is_a_valid_control",
         "tests.test_usb_inline_bonded_reference_paths.test_inline_reference_ferrite_faults_report_on_the_exact_map",
         "tests.test_usb_peer_reference_superspeed.test_common_reference_superspeed_pair_is_a_quiet_control",
+        "tests.test_usb_peer_reference_superspeed.test_exact_separate_superspeed_map_covers_the_review_and_mismatch_check",
+        "tests.test_usb_peer_reference_superspeed.test_full_duplex_superspeed_map_covers_both_exact_directions",
+        "tests.test_usb_peer_reference_superspeed.test_exact_bonded_superspeed_map_is_checked_and_covers_the_review",
+        "tests.test_usb_peer_reference_superspeed.test_bonded_superspeed_map_reports_absent_or_wrong_bond",
         "tests.test_usb_peer_reference_superspeed.test_full_duplex_superspeed_reviews_each_complementary_direction",
         "tests.test_usb_peer_reference_superspeed.test_usb_2_data_map_cannot_suppress_a_superspeed_reference_review",
         "tests.test_usb_peer_reference_superspeed.test_project_rule_override_can_turn_off_superspeed_review",

@@ -18,8 +18,8 @@ from kicad_tooling.hwrepo.usb_data_path_models import (
     UsbDataPathLineRequirement,
     UsbDataPathMap,
     UsbDataSeriesResistorRequirement,
-    UsbReferencePinRequirement,
 )
+from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 
 RULE_ID = "bus.usb_peer_reference_review"
 PATH_RULE_ID = "bus.usb_data_path_mismatch"

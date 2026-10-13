@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, model_validator
 
 from .model_primitives import (
     ElectricalPositive,
@@ -21,6 +21,8 @@ from .usb_data_path_component_models import (
     UsbDataPathInlinePinRequirement,
     UsbDataPathProtectionShuntRequirement,
 )
+from .usb_reference_pin_models import UsbReferencePinRequirement
+from .usb_superspeed_reference_models import UsbSuperspeedReferencePathRequirement
 
 
 class UsbDataSeriesResistorRequirement(StrictModel):
@@ -126,20 +128,6 @@ class UsbDataPathLineRequirement(StrictModel):
                 "USB inline-component paths need distinct nets and no series-resistor map"
             )
         return self
-
-
-class UsbReferencePinRequirement(StrictModel):
-    """One source-reviewed USB endpoint reference pin and expected native net."""
-
-    pin: Reference
-    net: NetName
-
-    @field_validator("pin")
-    @classmethod
-    def pin_is_qualified(cls, value: str) -> str:
-        if "." not in value:
-            raise ValueError("USB reference pin mappings must use COMPONENT.PIN form")
-        return value
 
 
 class UsbDataInterfaceRequirement(StrictModel):
@@ -420,19 +408,36 @@ class UsbDataInterfaceRequirement(StrictModel):
 
 
 class UsbDataPathMap(StrictModel):
-    """Project-authored USB connector-to-PHY topology; no universal resistor is assumed."""
+    """Project-authored USB path and reference policy; no universal resistor is assumed."""
 
     schema_version: Literal["1"] = "1"
     basis: NonEmptyText
-    interfaces: Annotated[tuple[UsbDataInterfaceRequirement, ...], Field(min_length=1)]
+    interfaces: tuple[UsbDataInterfaceRequirement, ...] = ()
+    superspeed_interfaces: tuple[UsbSuperspeedReferencePathRequirement, ...] = ()
 
     @model_validator(mode="after")
     def unique_interfaces_and_resistors(self) -> UsbDataPathMap:
-        if len({item.id.casefold() for item in self.interfaces}) != len(self.interfaces):
-            raise ValueError("USB data interface IDs must be unique")
+        if not self.interfaces and not self.superspeed_interfaces:
+            raise ValueError("USB data path maps need at least one USB 2.0 or SuperSpeed interface")
+        interface_ids = [
+            item.id.casefold() for item in (*self.interfaces, *self.superspeed_interfaces)
+        ]
+        if len(set(interface_ids)) != len(interface_ids):
+            raise ValueError("USB interface IDs must be unique")
         connector_references = [item.connector_reference.casefold() for item in self.interfaces]
         if len(set(connector_references)) != len(connector_references):
             raise ValueError("USB data connector references must be unique")
+        superspeed_paths = [
+            (
+                item.connector_reference.casefold(),
+                item.phy_reference.casefold(),
+                item.connector_signal_family,
+                item.phy_signal_family,
+            )
+            for item in self.superspeed_interfaces
+        ]
+        if len(set(superspeed_paths)) != len(superspeed_paths):
+            raise ValueError("USB SuperSpeed reference paths must be unique")
         resistor_references = [
             line.series_resistor.reference.casefold()
             for item in self.interfaces

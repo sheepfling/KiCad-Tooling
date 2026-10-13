@@ -6,8 +6,9 @@ import pytest
 
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 from kicad_tooling.hwrepo.reference_bond_models import ReferenceBondRequirement
-from kicad_tooling.hwrepo.usb_data_path_models import UsbDataPathMap, UsbReferencePinRequirement
+from kicad_tooling.hwrepo.usb_data_path_models import UsbDataPathMap
 from kicad_tooling.hwrepo.usb_data_paths import usb_data_path_mismatches
+from kicad_tooling.hwrepo.usb_reference_pin_models import UsbReferencePinRequirement
 from tests.usb_data_path_support import lint_report
 from tests.usb_peer_inline_path_support import usb_inline_peer_case
 from tests.usb_peer_reference_support import RULE_ID as USB_PEER_REFERENCE_RULE_ID

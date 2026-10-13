@@ -14,6 +14,7 @@ from .usb_peer_reference_types import (
     UsbPeerDataLink,
     UsbPeerDataSeriesResistor,
 )
+from .usb_superspeed_reference_models import UsbSuperspeedReferencePathRequirement
 
 
 def _mapped_line_matches(
@@ -119,6 +120,76 @@ def _mapped_protection_shunts_match(
     return True
 
 
+def _mapped_superspeed_reference_path_matches(
+    interface: UsbSuperspeedReferencePathRequirement,
+    connector: UsbEndpoint,
+    phy: UsbEndpoint,
+    data_link: UsbPeerDataLink,
+) -> bool:
+    """Match one exact direct SuperSpeed path and its reviewed reference policy."""
+    if (
+        interface.connector_reference.casefold() != connector.reference.casefold()
+        or interface.phy_reference.casefold() != phy.reference.casefold()
+        or interface.expected_connector_symbol != connector.symbol
+        or interface.expected_phy_symbol != phy.symbol
+        or interface.expected_connector_footprint != connector.footprint
+        or interface.expected_phy_footprint != phy.footprint
+        or interface.connector_signal_family != data_link.connector_signal_family
+        or interface.phy_signal_family != data_link.phy_signal_family
+    ):
+        return False
+
+    expected_positive = (
+        (interface.connector_positive_pin.casefold(),),
+        (interface.phy_positive_pin.casefold(),),
+        interface.positive_net.casefold(),
+        interface.positive_net.casefold(),
+    )
+    observed_positive = (
+        tuple(pin.casefold() for pin in data_link.connector_positive_pins),
+        tuple(pin.casefold() for pin in data_link.phy_positive_pins),
+        data_link.connector_positive_net.casefold(),
+        data_link.phy_positive_net.casefold(),
+    )
+    expected_negative = (
+        (interface.connector_negative_pin.casefold(),),
+        (interface.phy_negative_pin.casefold(),),
+        interface.negative_net.casefold(),
+        interface.negative_net.casefold(),
+    )
+    observed_negative = (
+        tuple(pin.casefold() for pin in data_link.connector_negative_pins),
+        tuple(pin.casefold() for pin in data_link.phy_negative_pins),
+        data_link.connector_negative_net.casefold(),
+        data_link.phy_negative_net.casefold(),
+    )
+    if observed_positive != expected_positive:
+        return False
+    if observed_negative != expected_negative:
+        return False
+
+    expected_connector_references = {
+        (item.pin.casefold(), item.net.casefold()) for item in interface.connector_reference_pins
+    }
+    expected_phy_references = {
+        (item.pin.casefold(), item.net.casefold()) for item in interface.phy_reference_pins
+    }
+    actual_connector_references = {
+        (item.pin.casefold(), item.net.casefold()) for item in connector.reference_pins
+    }
+    actual_phy_references = {
+        (item.pin.casefold(), item.net.casefold()) for item in phy.reference_pins
+    }
+    if (
+        expected_connector_references != actual_connector_references
+        or expected_phy_references != actual_phy_references
+    ):
+        return False
+
+    common_reference = connector.reference_net.casefold() == phy.reference_net.casefold()
+    return common_reference if interface.reference_policy == "common_net" else not common_reference
+
+
 def usb_reference_map_matches(
     connector: UsbEndpoint,
     phy: UsbEndpoint,
@@ -126,11 +197,16 @@ def usb_reference_map_matches(
     path_map: UsbDataPathMap | None,
 ) -> bool:
     """Match a current bounded USB map with an explicit common/separate decision."""
-    if (
-        path_map is None
-        or connector.signal_family != "USB 2.0 data"
-        or phy.signal_family != "USB 2.0 data"
+    if path_map is None:
+        return False
+    if connector.signal_family.startswith("USB SuperSpeed ") and phy.signal_family.startswith(
+        "USB SuperSpeed "
     ):
+        return any(
+            _mapped_superspeed_reference_path_matches(interface, connector, phy, data_link)
+            for interface in path_map.superspeed_interfaces
+        )
+    if connector.signal_family != "USB 2.0 data" or phy.signal_family != "USB 2.0 data":
         return False
     observed_connector_references = {item.pin.casefold() for item in connector.reference_pins}
     observed_phy_references = {item.pin.casefold() for item in phy.reference_pins}

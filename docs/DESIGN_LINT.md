@@ -903,8 +903,13 @@ have been connected.
   footprint, and pin-to-net assignments. A direct path may also declare exact
   multi-pin protection shunts, including their D+/D− taps and every native pin's
   expected net or explicit no-connect state. The map checks the complete native
-  pin inventory and rejects stale identity or pin assignments. It does not
-  infer a universal external-resistor rule from USB names or choose a value.
+  pin inventory and rejects stale identity or pin assignments. Its separate
+  `superspeed_interfaces` entries can map an exact direct SuperSpeed P/N peer
+  pair and reviewed common, separate, or bonded endpoint-reference policy.
+  These entries compare source-bound pin/net assignments and an optional exact
+  bond; they do not map SuperSpeed lane routing or signal-integrity limits. It
+  does not infer a universal external-resistor rule from USB names or choose a
+  value.
 - `bus.usb_peer_reference_review` prompts on fitted USB 2.0 D+/D− or bounded
   USB SuperSpeed connector-to-U/IC paths when each endpoint has explicit
   reference pins on one native net and those two reference nets differ. It
@@ -931,10 +936,12 @@ have been connected.
   positive and one negative pin per family, connector TX to PHY RX or
   connector RX to PHY TX, and exactly the two endpoint pins on each data net.
   This direct-path check excludes lane-indexed USB-C pairs, muxes, retimers,
-  series parts, shunts, extra peers, and other multi-hop paths. The current
-  USB data-path map covers USB 2.0 D+/D− only and cannot suppress a SuperSpeed
-  review; use a project-scoped rule override or exact reasoned ignore when a
-  reviewer records why the separate reference is intentional.
+  series parts, shunts, extra peers, and other multi-hop paths. A matching
+  `superspeed_interfaces` entry can record the reviewed exact path and a
+  common-net, separate-net, or bonded reference decision. A stale map reports
+  `bus.usb_data_path_mismatch`; the heuristic review remains when the observed
+  split references do not match the map. Use a project-scoped rule override or
+  exact reasoned ignore when review establishes a different intentional case.
 
   Incomplete pin inventories, ambiguous assignments, mixed reference
   domains, shield/chassis/PE pins, and DNP endpoints remain outside the
@@ -1670,6 +1677,54 @@ and its basis. The rule defaults to `review`; a project can set
 `bus.usb_data_path_mismatch` to `block` or `off`, or exactly ignore a reviewed
 finding. A passing schematic comparison does not prove resistor suitability,
 placement, PCB copper continuity, USB-C role behavior, or USB 3.x routing.
+
+For a reviewed direct USB SuperSpeed pair, add a `superspeed_interfaces`
+entry to the same map. It names one complementary connector/PHY signal-family
+pair, the exact positive and negative endpoint pins and nets, every return pin
+on both endpoints, and the project-approved relationship. A full-duplex link
+uses one entry for each direction. Example:
+
+```json
+{
+  "superspeed_interfaces": [
+    {
+      "id": "usb-ss-tx-to-rx",
+      "basis": "Reviewed connector and PHY pin tables, revisions 2 and C",
+      "connector_reference": "J1",
+      "expected_connector_symbol": "Connector:USB_A",
+      "expected_connector_footprint": "Synthetic:USB-A",
+      "phy_reference": "U1",
+      "expected_phy_symbol": "Vendor:UsbPhy",
+      "expected_phy_footprint": "Synthetic:QFN",
+      "connector_signal_family": "USB SuperSpeed TX",
+      "phy_signal_family": "USB SuperSpeed RX",
+      "connector_positive_pin": "J1.1",
+      "phy_positive_pin": "U1.1",
+      "positive_net": "SS_TX_P",
+      "connector_negative_pin": "J1.2",
+      "phy_negative_pin": "U1.2",
+      "negative_net": "SS_TX_N",
+      "connector_reference_pins": [
+        {"pin": "J1.3", "net": "USB_GND"}
+      ],
+      "phy_reference_pins": [
+        {"pin": "U1.3", "net": "BOARD_GND"}
+      ],
+      "reference_policy": "separate_nets"
+    }
+  ]
+}
+```
+
+`reference_policy` accepts `common_net`, `separate_nets`, or `bonded`. A
+`bonded` entry also includes the exact two-pin component identity and both
+side-pin net assignments, using the same `reference_bond` shape documented
+below. A matching entry resolves only the named direct pair and reference-pin
+decision. Stale identities, data pin/net assignments, reference inventories,
+or a required bond produce `bus.usb_data_path_mismatch`; a split-reference
+review remains visible when the policy map does not match. This schematic
+comparison does not prove bond conduction, PCB copper continuity, external
+grounding, lane routing, or signal integrity.
 
 A reviewed path through one multi-pin component can use
 `topology: "inline_component"` on both data lines and an `inline_component`
