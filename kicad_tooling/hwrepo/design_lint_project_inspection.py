@@ -10,7 +10,6 @@ from typing import Literal
 from ..validate import hashes
 from .contract_coach import inspect_summary as inspect_contract_summary
 from .contracts import read_model, repo_path
-from .control_input_models import ControlInputBiasHeuristicCoverage
 from .design_lint_connectivity_snapshot import capture_connectivity_snapshot
 from .design_lint_connector_coverage import (
     connector_coverage_from_project,
@@ -33,7 +32,6 @@ from .design_lint_schematic_coverage import scan_schematic_geometry
 from .design_lint_stm32_coverage import scan_stm32_pin_maps
 from .discovery import load_config, load_registry
 from .evidence import digest
-from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     DesignLintPolicy,
     ProjectManifest,
@@ -74,6 +72,8 @@ def inspect_design_lint_summary(
                     "policy_sha256": policy_hash,
                 }
             )
+        if coach.netlist_sha256 is None:
+            raise ValueError("Native netlist hash is unavailable for connectivity snapshot capture")
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared source changed while reading design-lint policy")
         spi_roster = spi_roster_context(root, config)
@@ -140,31 +140,17 @@ def inspect_design_lint_summary(
             coach.observed,
             coach.netlist_sha256,
         )
-        control_bias_coverage = (
-            control_input_bias_coverage_from_project(
-                root,
-                config,
-                coach.observed,
-                coach.netlist_sha256,
-            )
-            if coach.netlist_sha256 is not None
-            else ControlInputBiasHeuristicCoverage(
-                status="BLOCKED",
-                issue="Native netlist hash is unavailable for control-input bias review.",
-            )
+        control_bias_coverage = control_input_bias_coverage_from_project(
+            root,
+            config,
+            coach.observed,
+            coach.netlist_sha256,
         )
-        i2c_pullup_coverage = (
-            i2c_pullup_coverage_from_project(
-                root,
-                config,
-                coach.observed,
-                coach.netlist_sha256,
-            )
-            if coach.netlist_sha256 is not None
-            else I2cPullupHeuristicCoverage(
-                status="BLOCKED",
-                issue="Native netlist hash is unavailable for I2C pull-up review.",
-            )
+        i2c_pullup_coverage = i2c_pullup_coverage_from_project(
+            root,
+            config,
+            coach.observed,
+            coach.netlist_sha256,
         )
         protection_coverage = external_protection_coverage_from_project(
             root,

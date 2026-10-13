@@ -8,7 +8,10 @@ from collections import Counter
 from typing import Literal
 
 from .design_lint_connectivity_snapshot import compare_connectivity_snapshots
-from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot
+from .design_lint_connectivity_snapshot_models import (
+    DesignLintConnectivityChange,
+    DesignLintConnectivitySnapshot,
+)
 from .design_lint_finding_models import DesignLintFinding
 from .design_lint_reconciliation_models import (
     DesignLintFindingTransition,
@@ -113,7 +116,7 @@ def reconcile_design_lint_reports(
     baseline_snapshot = baseline.connectivity_snapshot
     current_snapshot = current.connectivity_snapshot
     connectivity_comparison: Literal["COMPLETE", "PARTIAL", "UNAVAILABLE", "INCOMPATIBLE"]
-    connectivity_changes = ()
+    connectivity_changes: tuple[DesignLintConnectivityChange, ...] = ()
     connectivity_issue: str | None = None
     if baseline_snapshot is None or current_snapshot is None:
         connectivity_comparison = "UNAVAILABLE"
@@ -183,7 +186,7 @@ def reconcile_design_lint_reports(
     if baseline.issues != current.issues:
         context_changes.append("Report issues changed")
     if connectivity_comparison == "UNAVAILABLE":
-        missing = []
+        missing: list[str] = []
         if baseline_snapshot is None:
             missing.append("baseline")
         if current_snapshot is None:

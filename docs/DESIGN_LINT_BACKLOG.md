@@ -3361,7 +3361,7 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Fixtures:** Synthetic common-return baseline and split-return mutation;
   net-label change; incomplete pin inventory; ambiguous multi-net assignment
   without false pin-removal reports; known assignment changes under partial
-  coverage;
+  coverage; ready native-summary state missing its netlist digest;
   missing legacy snapshot; exact-toolchain mismatch; CLI/MCP parity. See
   `tests/test_design_lint_connectivity_reconciliation.py`.
 - **Cohort input:** The Apache-2.0 [`heibench/netspec`](https://github.com/heibench/netspec) repository documents

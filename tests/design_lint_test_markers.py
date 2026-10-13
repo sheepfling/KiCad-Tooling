@@ -245,6 +245,7 @@ _LINT_AREA_MODULES = {
     "evidence_lint": frozenset(
         {
             "tests/test_design_lint_connectivity_reconciliation.py",
+            "tests/test_design_lint_connectivity_snapshot_inspection.py",
             "tests/test_design_lint_mcp_parity_reconciliation.py",
             "tests/test_contract_coach_capture.py",
             "tests/test_contract_coach_evidence.py",
