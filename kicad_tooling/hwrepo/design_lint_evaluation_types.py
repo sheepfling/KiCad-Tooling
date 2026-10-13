@@ -44,7 +44,6 @@ from .models import (
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
     RepositoryPath,
-    SchematicGeometryCoverage,
 )
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -66,6 +65,7 @@ from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
 from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .schematic_geometry import SchematicGeometryScan
+from .schematic_geometry_models import SchematicGeometryCoverage
 from .serial_participants import SerialPeerRosterContext
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
 from .spi_participants import SpiRosterContext

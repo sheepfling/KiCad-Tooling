@@ -34,10 +34,6 @@ from .design_lint_schematic_coverage import (
 from .design_lint_stm32_coverage import resolve_stm32_pin_map_coverage
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import (
-    SchematicGeometryCoverage,
-    SchematicGeometryRuleId,
-)
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport
@@ -45,6 +41,7 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .schematic_geometry_models import SchematicGeometryCoverage, SchematicGeometryRuleId
 
 
 def prepare_evaluation(

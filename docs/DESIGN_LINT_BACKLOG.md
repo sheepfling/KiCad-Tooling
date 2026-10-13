@@ -150,6 +150,14 @@ intended requirement.
   in `external_protection_models.py`. Internal lint services import that owner
   directly, and architecture tests check owner size, import boundaries, and
   identity-compatible registry exports; `models.py` shrank by another 140 lines.
+  Schematic-geometry rule IDs, source bindings, and coverage reports now live
+  in `schematic_geometry_models.py`. Evaluation and report services import the
+  owner directly; architecture tests guard its size, internal import boundary,
+  and identity-compatible registry exports. This extraction shrank
+  `models.py` from 3,690 to 3,598 lines without changing report behavior.
+  Differential-pair and signal-path DRC text rendering now lives in the
+  focused `design_lint_pcb_drc_report.py` owner, keeping the broader PCB
+  coverage report below the architecture review limit without changing output.
   - Treat the existing `hwrepo/models.py` as shrink-only while its shared records
   are split incrementally. Put new lint-specific requirements, findings, and
   coverage reports in theme-owned model modules, import those owners directly

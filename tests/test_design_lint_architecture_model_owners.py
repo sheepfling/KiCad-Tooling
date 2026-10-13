@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo import (
     pcb_touch_pad_clearance_models,
     rc_filter_models,
     regulator_feedback_models,
+    schematic_geometry_models,
     signal_pair_models,
 )
 from kicad_tooling.hwrepo import models as compatibility_models
@@ -32,6 +33,10 @@ MODEL_OWNERS = {
             "RegulatorFeedbackMap",
         ),
     ),
+    "schematic_geometry_models.py": (
+        schematic_geometry_models,
+        ("SchematicGeometrySourceBinding", "SchematicGeometryCoverage"),
+    ),
     "signal_pair_models.py": (
         signal_pair_models,
         ("ComplementaryPinFunctionAlias", "ComplementaryPinFunctionAliasMap"),
@@ -45,6 +50,10 @@ NEW_THEME_MODELS = (
     "PcbTouchPadClearanceCoverageEntry",
     "PcbTouchPadClearanceCoverageReport",
 )
+SCHEMATIC_GEOMETRY_RULE_TYPES = (
+    "SchematicGeometryRuleId",
+    "SchematicGeometryRuleCoverageStatus",
+)
 
 
 def _top_level_definitions(path) -> set[str]:
@@ -54,6 +63,16 @@ def _top_level_definitions(path) -> set[str]:
         for node in tree.body
         if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
     }
+
+
+def _top_level_assignment_names(path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            names.update(target.id for target in targets if isinstance(target, ast.Name))
+    return names
 
 
 def test_lint_models_have_bounded_owners_and_compatible_exports() -> None:
@@ -81,9 +100,18 @@ def test_new_touch_clearance_models_stay_in_their_theme_owner() -> None:
     assert all(not hasattr(compatibility_models, name) for name in NEW_THEME_MODELS)
 
 
+def test_schematic_geometry_rule_types_have_theme_owner_and_compatible_exports() -> None:
+    owner_path = HWREPO / "schematic_geometry_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(SCHEMATIC_GEOMETRY_RULE_TYPES) <= _top_level_assignment_names(owner_path)
+    for name in SCHEMATIC_GEOMETRY_RULE_TYPES:
+        assert getattr(compatibility_models, name) is getattr(schematic_geometry_models, name)
+
+
 def test_internal_services_import_lint_models_from_their_theme_owners() -> None:
     moved_names = {name for _, names in MODEL_OWNERS.values() for name in names}
     moved_names.update(NEW_THEME_MODELS)
+    moved_names.update(SCHEMATIC_GEOMETRY_RULE_TYPES)
     legacy_imports: list[str] = []
     for path in sorted(HWREPO.rglob("*.py")):
         if path == HWREPO / "models.py":

@@ -11,18 +11,18 @@ from .contract_coach import ContractCoachReport
 from .contracts import repo_path
 from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
-from .models import (
-    SchematicGeometryCoverage,
-    SchematicGeometryRuleCoverageStatus,
-    SchematicGeometryRuleId,
-    SchematicGeometrySourceBinding,
-)
 from .schematic_geometry import (
     MAX_SHEET_OCCURRENCES,
     SchematicGeometryScan,
     resolve_schematic_sheet_path,
     scan_schematic_geometry_tree,
     schematic_sheet_references,
+)
+from .schematic_geometry_models import (
+    SchematicGeometryCoverage,
+    SchematicGeometryRuleCoverageStatus,
+    SchematicGeometryRuleId,
+    SchematicGeometrySourceBinding,
 )
 
 SCHEMATIC_GEOMETRY_RULE_IDS: tuple[SchematicGeometryRuleId, ...] = (
