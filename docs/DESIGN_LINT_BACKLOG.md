@@ -503,10 +503,11 @@ and optional ecosystem adapters are `P3`.
   stage on `v0.5.0rc248`. The full scoped gate passed on `v0.5.0rc249`
   (run `38395063701`), including the external installed-wheel test and all
   three platform preview jobs. The rotated-pad geometry regression also
-  passed on both pinned KiCad versions in `v0.5.0rc250` (run `38396108362`). No
-  board project or proprietary fixture was imported. The gate supplies review
-  evidence and does not infer connector ground commoning, touch performance,
-  or fabrication acceptance.
+  passed on both pinned KiCad versions in `v0.5.0rc250` (run `38396108362`).
+  The repeated native DRC comparison passed on both versions in `v0.5.0rc251`
+  (run `38397569065`). No board project or proprietary fixture was imported.
+  The gate supplies review evidence and does not infer connector ground
+  commoning, touch performance, or fabrication acceptance.
 
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
@@ -7170,10 +7171,13 @@ is not a reason by itself to expand its scope or change its default policy.
   rotated and unrotated oval pad at matching straight zone edges and asserts
   the expected 0.5 mm clearance change. It passed on both pinned KiCad versions
   in `v0.5.0rc250` (run `38396108362`), along with the full scoped gate and
-  installed-wheel check and three platform previews. The fixtures are gated by
-  `KICAD_RUN_NATIVE_PCB_FIXTURES`.
-  Comparison with native DRC, project applicability, false-positive rate, and
-  reviewer effort remain follow-up evidence, not current claims.
+  installed-wheel check and three platform previews. The repeated native DRC
+  comparison passed on both pinned versions in `v0.5.0rc251` (run
+  `38397569065`): DRC reported no `clearance` violation and its normalized
+  violation evidence was identical across repeats, while all four measured
+  distances were below their authored minima. The fixtures are gated by
+  `KICAD_RUN_NATIVE_PCB_FIXTURES`. Project applicability, false-positive rate,
+  and reviewer effort remain follow-up evidence, not current claims.
 - **Focused selection:**
 
   ```sh
@@ -12686,10 +12690,10 @@ check. The rotated versus unrotated oval geometry regression passed on both
 pinned KiCad versions in `v0.5.0rc250` (run `38396108362`). A new native
 comparison now repeats DRC on the same fixture, compares normalized violation
 evidence, and asserts that the project-map minimum can report a clearance
-review when KiCad's default clearance emits no finding; exact-version hosted
-confirmation is pending. Independent public or synthetic applicability and
-reviewer-value evidence also remain open. No universal clearance value or new
-project requirement is inferred.
+review when KiCad's default clearance emits no finding; both pinned versions
+passed in `v0.5.0rc251` (run `38397569065`). Independent public or synthetic
+applicability and reviewer-value evidence also remain open. No universal
+clearance value or new project requirement is inferred.
 
 #### Preliminary source audit: antenna keepout coverage (2026-10-08)
 
@@ -12878,10 +12882,11 @@ maintenance cost open wherever they were not measured.
    cohort implementation or adding the adapter contract in `LINT-032`. For new
    domain checks, LINT-075's no-CLI oscillator-output trial is recorded. The
    LINT-133 implements the bounded CP-003 touch-pad clearance concept behind
-   an exact project-authored minimum and native pad-geometry measurement;
-   the round/oval native lane and full scoped acceptance passed on
+   an exact project-authored minimum and native pad-geometry measurement. The
+   round/oval native lane and full scoped acceptance passed on
    `v0.5.0rc249`; the rotated-pad geometry regression passed on both pinned
-   KiCad versions in `v0.5.0rc250`. Project applicability evidence remains
+   KiCad versions in `v0.5.0rc250`; the repeated DRC comparison passed on both
+   pinned versions in `v0.5.0rc251`. Project applicability evidence remains
    open.
    Any first-party path contract still needs native netlist
    evidence and a project-authored requirement map before implementation. The
