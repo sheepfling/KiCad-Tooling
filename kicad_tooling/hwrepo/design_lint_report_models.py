@@ -153,7 +153,9 @@ class DesignLintReport(StrictModel):
             )
             if actual_findings != expected_findings:
                 raise ValueError("PCB component inventory findings must match its comparison rows")
-            expected_population_findings = len(inventory.population_mismatches)
+            expected_population_findings = len(inventory.population_mismatches) + int(
+                inventory.variant_population.status == "BLOCKED"
+            )
             actual_population_findings = sum(
                 finding.rule_id == "pcb.schematic_pcb_dnp_mismatch" for finding in self.findings
             )

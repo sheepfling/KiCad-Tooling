@@ -26,6 +26,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/fixtures/foreign-eagle-board.xml",
         "kicad_tooling/fixtures/scaffold-license.txt",
         "kicad_tooling/hwrepo/design-lint-rules.json",
+        "kicad_tooling/hwrepo/pcb_variant_probe.py.in",
         "kicad_tooling/hwrepo/schematic-text-metrics.json",
         "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-via.kicad_pcb",
         "kicad_tooling/hwrepo/fixtures/pcb-return-alternate-layer-open.kicad_pcb",

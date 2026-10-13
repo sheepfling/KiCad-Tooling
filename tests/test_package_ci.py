@@ -29,6 +29,7 @@ from scripts.lint_gate_scope import (
     "missing_asset",
     (
         "kicad_tooling/hwrepo/design-lint-rules.json",
+        "kicad_tooling/hwrepo/pcb_variant_probe.py.in",
         "kicad_tooling/package_build.py",
         "kicad_tooling/hwrepo/component_role_models.py",
         "kicad_tooling/hwrepo/power_path_models.py",
@@ -41,6 +42,7 @@ from scripts.lint_gate_scope import (
     ),
     ids=(
         "rule-catalog",
+        "native-pcb-variant-probe",
         "package-build-service",
         "component-role-models",
         "power-path-models",

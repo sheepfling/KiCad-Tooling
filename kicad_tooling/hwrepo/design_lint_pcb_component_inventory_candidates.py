@@ -134,7 +134,11 @@ def pcb_component_inventory_candidates(
     candidates.extend(
         Candidate(
             rule_id="pcb.schematic_pcb_dnp_mismatch",
-            subject=f"{item.reference}: schematic and PCB DNP states differ",
+            subject=(
+                f"{item.reference}: schematic and PCB DNP states differ"
+                if item.variant is None
+                else f"{item.reference}: schematic and PCB DNP states differ in {item.variant}"
+            ),
             message=(
                 "The schematic and placed PCB footprint disagree whether this component is marked "
                 "DNP. Confirm the intended assembly variant and align the two CAD records. This "
@@ -152,10 +156,83 @@ def pcb_component_inventory_candidates(
                 "kicad_version": (report.kicad_version or "unavailable",),
                 "image": (report.image or "unavailable",),
                 "probe_sha256": (report.probe_sha256 or "unavailable",),
+                **_variant_population_evidence(report, item.variant),
             },
         )
         for item in report.population_mismatches
     )
+    if report.variant_population.status == "BLOCKED":
+        variant_coverage = report.variant_population
+        candidates.append(
+            Candidate(
+                rule_id="pcb.schematic_pcb_dnp_mismatch",
+                subject="named variant DNP comparison unavailable",
+                message=(
+                    "The project declares one or more named variants, but source-bound schematic "
+                    "and PCB exports could not be paired for every variant. No variant population "
+                    "consistency conclusion is available."
+                ),
+                evidence={
+                    "coverage_issue": (variant_coverage.issue or "unavailable",),
+                    "project_path": (
+                        ()
+                        if variant_coverage.project_path is None
+                        else (variant_coverage.project_path,)
+                    ),
+                    "project_sha256": (
+                        ()
+                        if variant_coverage.project_sha256 is None
+                        else (variant_coverage.project_sha256,)
+                    ),
+                    "schematic_path": (
+                        ()
+                        if variant_coverage.schematic_path is None
+                        else (variant_coverage.schematic_path,)
+                    ),
+                    "schematic_sha256": (
+                        ()
+                        if variant_coverage.schematic_sha256 is None
+                        else (variant_coverage.schematic_sha256,)
+                    ),
+                    "board_path": (
+                        ()
+                        if variant_coverage.board_path is None
+                        else (variant_coverage.board_path,)
+                    ),
+                    "board_sha256": (
+                        ()
+                        if variant_coverage.board_sha256 is None
+                        else (variant_coverage.board_sha256,)
+                    ),
+                    "kicad_version": (
+                        ()
+                        if variant_coverage.kicad_version is None
+                        else (variant_coverage.kicad_version,)
+                    ),
+                    "image": (() if variant_coverage.image is None else (variant_coverage.image,)),
+                    "board_variant_probe_sha256": (
+                        ()
+                        if variant_coverage.board_variant_probe_sha256 is None
+                        else (variant_coverage.board_variant_probe_sha256,)
+                    ),
+                    "board_variant_request_sha256": (
+                        ()
+                        if variant_coverage.board_variant_request_sha256 is None
+                        else (variant_coverage.board_variant_request_sha256,)
+                    ),
+                    "board_variant_command_sha256": (
+                        ()
+                        if variant_coverage.board_variant_command_sha256 is None
+                        else (variant_coverage.board_variant_command_sha256,)
+                    ),
+                    "partial_variant_exports": tuple(
+                        f"{item.variant}:{item.netlist_sha256}:"
+                        f"{item.board_all_positions_sha256}:{item.board_fitted_positions_sha256}"
+                        for item in variant_coverage.evidence
+                    ),
+                },
+            )
+        )
     if report.value_comparison_status == "BLOCKED":
         candidates.append(
             Candidate(
@@ -206,3 +283,79 @@ def pcb_component_inventory_candidates(
         for item in report.value_mismatches
     )
     return tuple(sorted(candidates, key=lambda item: item.subject.casefold()))
+
+
+def _variant_population_evidence(
+    report: PcbComponentInventoryCoverageReport,
+    variant: str | None,
+) -> dict[str, tuple[str, ...]]:
+    if variant is None:
+        return {}
+    evidence = next(
+        (item for item in report.variant_population.evidence if item.variant == variant),
+        None,
+    )
+    if evidence is None:
+        return {"variant": (variant,), "variant_evidence": ("unavailable",)}
+    coverage = report.variant_population
+    return {
+        "variant": (variant,),
+        "variant_project_path": (() if coverage.project_path is None else (coverage.project_path,)),
+        "variant_project_sha256": (
+            () if coverage.project_sha256 is None else (coverage.project_sha256,)
+        ),
+        "variant_schematic_path": (
+            () if coverage.schematic_path is None else (coverage.schematic_path,)
+        ),
+        "variant_schematic_sha256": (
+            () if coverage.schematic_sha256 is None else (coverage.schematic_sha256,)
+        ),
+        "variant_board_path": (() if coverage.board_path is None else (coverage.board_path,)),
+        "variant_board_sha256": (() if coverage.board_sha256 is None else (coverage.board_sha256,)),
+        "variant_board_probe_path": (
+            ()
+            if coverage.board_variant_probe_path is None
+            else (coverage.board_variant_probe_path,)
+        ),
+        "variant_board_probe_sha256": (
+            ()
+            if coverage.board_variant_probe_sha256 is None
+            else (coverage.board_variant_probe_sha256,)
+        ),
+        "variant_board_request_path": (
+            ()
+            if coverage.board_variant_request_path is None
+            else (coverage.board_variant_request_path,)
+        ),
+        "variant_board_request_sha256": (
+            ()
+            if coverage.board_variant_request_sha256 is None
+            else (coverage.board_variant_request_sha256,)
+        ),
+        "variant_board_probe_command_path": (
+            ()
+            if coverage.board_variant_command_path is None
+            else (coverage.board_variant_command_path,)
+        ),
+        "variant_board_probe_command_sha256": (
+            ()
+            if coverage.board_variant_command_sha256 is None
+            else (coverage.board_variant_command_sha256,)
+        ),
+        "variant_kicad_version": (
+            () if coverage.kicad_version is None else (coverage.kicad_version,)
+        ),
+        "variant_image": (() if coverage.image is None else (coverage.image,)),
+        "variant_netlist_path": (evidence.netlist_path,),
+        "variant_netlist_sha256": (evidence.netlist_sha256,),
+        "variant_netlist_command_path": (evidence.netlist_command_path,),
+        "variant_netlist_command_sha256": (evidence.netlist_command_sha256,),
+        "variant_board_all_positions_path": (evidence.board_all_positions_path,),
+        "variant_board_all_positions_sha256": (evidence.board_all_positions_sha256,),
+        "variant_board_all_command_path": (evidence.board_all_command_path,),
+        "variant_board_all_command_sha256": (evidence.board_all_command_sha256,),
+        "variant_board_fitted_positions_path": (evidence.board_fitted_positions_path,),
+        "variant_board_fitted_positions_sha256": (evidence.board_fitted_positions_sha256,),
+        "variant_board_fitted_command_path": (evidence.board_fitted_command_path,),
+        "variant_board_fitted_command_sha256": (evidence.board_fitted_command_sha256,),
+    }

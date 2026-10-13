@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
@@ -31,6 +31,88 @@ class PcbPopulationMismatch(StrictModel):
     reference: Identifier
     schematic_dnp: bool
     board_dnp: bool
+    variant: NonEmptyText | None = None
+
+
+class PcbVariantPopulationEvidence(StrictModel):
+    """Source-bound KiCad exports used for one named variant's DNP comparison."""
+
+    variant: NonEmptyText
+    netlist_path: RepositoryPath
+    netlist_sha256: Digest
+    netlist_command_path: RepositoryPath
+    netlist_command_sha256: Digest
+    board_all_positions_path: RepositoryPath
+    board_all_positions_sha256: Digest
+    board_all_command_path: RepositoryPath
+    board_all_command_sha256: Digest
+    board_fitted_positions_path: RepositoryPath
+    board_fitted_positions_sha256: Digest
+    board_fitted_command_path: RepositoryPath
+    board_fitted_command_sha256: Digest
+
+
+class PcbVariantPopulationCoverage(StrictModel):
+    """Coverage state for named schematic/PCB population variants."""
+
+    status: Literal["NOT_APPLICABLE", "COMPLETE", "BLOCKED", "DISABLED"] = "NOT_APPLICABLE"
+    project_path: RepositoryPath | None = None
+    project_sha256: Digest | None = None
+    schematic_path: RepositoryPath | None = None
+    schematic_sha256: Digest | None = None
+    board_path: RepositoryPath | None = None
+    board_sha256: Digest | None = None
+    kicad_version: NonEmptyText | None = None
+    image: NonEmptyText | None = None
+    board_variant_probe_path: RepositoryPath | None = None
+    board_variant_probe_sha256: Digest | None = None
+    board_variant_request_path: RepositoryPath | None = None
+    board_variant_request_sha256: Digest | None = None
+    board_variant_command_path: RepositoryPath | None = None
+    board_variant_command_sha256: Digest | None = None
+    evidence: tuple[PcbVariantPopulationEvidence, ...] = ()
+    issue: NonEmptyText | None = None
+
+    @model_validator(mode="after")
+    def consistent_variant_coverage(self) -> PcbVariantPopulationCoverage:
+        variants = [item.variant.casefold() for item in self.evidence]
+        if len(variants) != len(set(variants)):
+            raise ValueError("Variant population evidence must contain unique variant names")
+        if self.status == "COMPLETE":
+            if not self.evidence or self.issue is not None:
+                raise ValueError("Complete variant population coverage needs evidence and no issue")
+            if any(
+                value is None
+                for value in (
+                    self.project_path,
+                    self.project_sha256,
+                    self.schematic_path,
+                    self.schematic_sha256,
+                    self.board_path,
+                    self.board_sha256,
+                    self.kicad_version,
+                    self.image,
+                    self.board_variant_probe_path,
+                    self.board_variant_probe_sha256,
+                    self.board_variant_request_path,
+                    self.board_variant_request_sha256,
+                    self.board_variant_command_path,
+                    self.board_variant_command_sha256,
+                )
+            ):
+                raise ValueError(
+                    "Complete variant population coverage needs source and tool identity"
+                )
+        elif self.status == "BLOCKED":
+            if self.issue is None:
+                raise ValueError(
+                    "Blocked variant population coverage must explain the evidence gap"
+                )
+        elif self.issue is not None or self.evidence:
+            raise ValueError(
+                "Inactive variant population coverage cannot contain evidence or an issue"
+            )
+        return self
 
 
 class PcbComponentValueMismatch(StrictModel):
@@ -75,6 +157,9 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     missing_placements: tuple[PcbMissingFootprintPlacement, ...] = ()
     footprint_mismatches: tuple[PcbFootprintIdentityMismatch, ...] = ()
     population_mismatches: tuple[PcbPopulationMismatch, ...] = ()
+    variant_population: PcbVariantPopulationCoverage = Field(
+        default_factory=PcbVariantPopulationCoverage
+    )
     value_comparison_status: Literal["NOT_APPLICABLE", "COMPLETE", "BLOCKED", "DISABLED"] = (
         "NOT_APPLICABLE"
     )
@@ -95,8 +180,11 @@ class PcbComponentInventoryCoverageReport(StrictModel):
         ]
         if len(references) != len(set(references)):
             raise ValueError("PCB component inventory finding references must be unique")
-        population_references = [item.reference.casefold() for item in self.population_mismatches]
-        if len(population_references) != len(set(population_references)):
+        population_keys = [
+            (item.variant.casefold() if item.variant is not None else "", item.reference.casefold())
+            for item in self.population_mismatches
+        ]
+        if len(population_keys) != len(set(population_keys)):
             raise ValueError("PCB population mismatch references must be unique")
         value_references = [item.reference.casefold() for item in self.value_mismatches]
         if len(value_references) != len(set(value_references)):

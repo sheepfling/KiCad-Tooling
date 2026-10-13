@@ -23,6 +23,7 @@ from kicad_tooling.hwrepo import (
     pcb_rf_antenna_models,
     pcb_switching_loop_models,
     pcb_track_width_models,
+    pcb_variant_population_capture,
 )
 from tests.lint_architecture_support import (
     HWREPO,
@@ -296,18 +297,37 @@ def test_rf_antenna_models_have_a_theme_owner_and_compatibility_exports() -> Non
 
 def test_pcb_population_review_keeps_its_model_and_predicate_in_the_pcb_theme() -> None:
     model = pcb_component_inventory_models.PcbPopulationMismatch
+    evidence_model = pcb_component_inventory_models.PcbVariantPopulationEvidence
+    coverage_model = pcb_component_inventory_models.PcbVariantPopulationCoverage
     owner = pcb_component_population
 
     assert model.__module__.endswith("pcb_component_inventory_models")
     assert not hasattr(shared_models, "PcbPopulationMismatch")
+    assert evidence_model.__module__.endswith("pcb_component_inventory_models")
+    assert coverage_model.__module__.endswith("pcb_component_inventory_models")
+    assert not hasattr(shared_models, "PcbVariantPopulationEvidence")
+    assert not hasattr(shared_models, "PcbVariantPopulationCoverage")
     assert _line_count(HWREPO / "pcb_component_population.py") < IMPLEMENTATION_MAX_LINES
+    assert _line_count(HWREPO / "pcb_variant_population_capture.py") < IMPLEMENTATION_MAX_LINES
+    assert _line_count(HWREPO / "design_lint_pcb_component_inventory_scan.py") < (
+        IMPLEMENTATION_MAX_LINES
+    )
+    assert _line_count(HWREPO / "pcb_variant_probe.py.in") < IMPLEMENTATION_MAX_LINES
+    assert _line_count(REPO_ROOT / "kicad_tooling/ci_hosted_pcb_variant_population_fixture.py") < (
+        IMPLEMENTATION_MAX_LINES
+    )
     assert callable(owner.compare_schematic_pcb_population)
+    assert callable(owner.compare_variant_population_source)
+    assert callable(pcb_variant_population_capture.capture_variant_population)
+    assert callable(pcb_variant_population_capture.run_variant_native_command)
 
     catalog = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
     assert (
         '"implementation_owner": "kicad_tooling/hwrepo/pcb_component_population.py#'
         'compare_schematic_pcb_population"'
     ) in catalog
+    assert "compare_variant_population_source" in catalog
+    assert "capture_variant_population" in catalog
 
 
 def test_pcb_value_review_keeps_its_predicate_in_a_focused_pcb_module() -> None:

@@ -52,6 +52,7 @@ include = ["kicad_tooling", "kicad_tooling.*"]
   "kicad_library_license.txt",
   "design-lint-rules.json",
   "native_pcb_probe*.py.in",
+  "pcb_variant_probe.py.in",
   "schematic-text-metrics.json",
   "fixtures/*.kicad_pcb",
 ]

@@ -175,10 +175,19 @@ python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
   tests/test_pcb_population_mismatch.py tests/test_pcb_component_inventory_mcp_parity.py
 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.schematic_pcb_pad_net_mismatch")'
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="pcb.schematic_pcb_dnp_mismatch") and not native_kicad and not slow'
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
   .venv/bin/python -I -B -m pytest -q \
-  -m "design_lint and pcb_lint and native_kicad" \
+  -m 'design_lint_rule(rule_id="pcb.schematic_pcb_dnp_mismatch") and native_kicad' \
   tests/test_pcb_component_inventory_native_fixture_lane.py
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="pcb.schematic_pcb_dnp_mismatch") and native_kicad' \
+  tests/test_pcb_variant_population_native_fixture_lane.py
+# The named-variant lane uses fixed synthetic boards and checks both mismatch
+# directions, a fitted control, and fail-closed handling when the board variant
+# is absent.
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
   .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.schematic_pcb_pad_net_mismatch")' \

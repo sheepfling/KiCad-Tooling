@@ -14,10 +14,18 @@ They do not model a real package or assert pad-geometry equivalence.
 - `population-schematic-dnp.kicad_sch` marks U1 DNP; `population-board-dnp.kicad_pcb`
   marks the placed U1 footprint DNP. The native acceptance lane compares both
   mismatch directions and the matching fitted and DNP controls. It checks only
-  the default/base DNP flags; named variant overrides are outside this lint.
+  the default/base DNP flags.
+- The named-variant native lane uses fixed tooling-owned synthetic PCB variant
+  sources, pairs `--variant` schematic netlists with same-name PCB position
+  exports, confirms the board contains the declared variant, and compares both
+  DNP mismatch directions plus a fitted control. A board without that variant
+  must block before default-variant comparison. Temporary projects and exports
+  live only in ignored test scratch/build output. The synthetic inputs and
+  native fixture-generation recipe are described in the [variant fixture
+  record](../named-variant-population/README.md).
 
 The native acceptance lane checks these source files and their expected SHA-256
-digests on digest-pinned KiCad 10.0.0 and 10.0.5. It repeats both schematic
+digests on digest-pinned KiCad 10.0.0 and 10.0.5. It repeats the base schematic
 exports and board snapshots to verify stable evidence. All content is synthetic
 and included solely for Tooling regression tests.
 

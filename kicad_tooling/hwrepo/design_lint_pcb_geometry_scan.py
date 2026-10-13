@@ -9,6 +9,7 @@ from uuid import uuid4
 from ..validate import hashes
 from .contract_coach import pinned_image
 from .contracts import repo_path, write_model
+from .design_lint_pcb_component_inventory_scan import scan_pcb_component_inventory
 from .design_lint_pcb_coverage_common import PcbGeometrySourceEvidence, PcbRuleMode
 from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
@@ -22,7 +23,6 @@ from .models import (
     PcbProtectionPathMap,
     ProjectKind,
 )
-from .pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
@@ -263,16 +263,14 @@ def scan_pcb_geometry(
             command_sha256=digest(pcb_command_path),
         )
         if inventory_required:
-            inventory_report = evaluate_native_component_inventory_coverage(
-                coach.observed,
-                snapshot,
-                mode=inventory_scan_mode,
-                netlist_sha256=coach.netlist_sha256,
-                board_path=evidence.board_path,
-                board_sha256=evidence.board_sha256,
-                snapshot_path=evidence.snapshot_relative_path,
-                snapshot_sha256=evidence.snapshot_sha256,
-                probe_sha256=evidence.probe_sha256,
+            inventory_report = scan_pcb_component_inventory(
+                root,
+                config,
+                coach,
+                evidence,
+                output,
+                inventory_mode=inventory_scan_mode,
+                population_mode=population_mode,
                 value_mode=value_mode,
                 pad_net_mode=pad_net_mode,
             )

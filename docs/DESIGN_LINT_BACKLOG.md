@@ -6095,36 +6095,45 @@ is not a reason by itself to expand its scope or change its default policy.
   separate public project. All three platform previews passed; the package job
   was skipped for this prerelease tag.
 
-#### LINT-111 — Schematic and PCB default DNP states differ
+#### LINT-111 — Schematic and PCB DNP states differ
 
 - **Status:** Implemented as `pcb.schematic_pcb_dnp_mismatch`, default `REVIEW`,
-  using the source-bound schematic netlist and native PCB footprint snapshot
-  already captured for LINT-102.
+  comparing the base source-bound schematic netlist and native PCB snapshot,
+  plus paired exact-version schematic and PCB exports for declared variants.
 - **Priority:** P1 fabrication-handoff consistency. The DNP flag can disagree
   between the schematic and its placed PCB footprint while the reference and
   assigned footprint remain present.
 - **Predicate:** For each case-insensitive reference with a nonempty schematic
-  footprint assignment and a placed PCB footprint, compare the schematic
-  netlist DNP flag with the native footprint DNP flag. Report only a mismatch.
-  Missing references remain with LINT-102.
-- **Boundary:** These are default/base CAD flags, not proof of physical
-  population. The check does not evaluate named design-variant overrides or
-  choose a manufacturing variant. A variant-specific difference remains a
-  review question; project owners can retain REVIEW, select an explicit rule
-  mode, or suppress an exact reviewed finding.
+  footprint assignment and a placed PCB footprint, compare the base schematic
+  netlist DNP flag with the native PCB snapshot. For each `schematic.variants`
+  entry, first confirm KiCad's native PCB API reports that exact variant name,
+  then export the schematic netlist and PCB position files with the same name.
+  Compare schematic DNP state with PCB DNP state inferred from all positions
+  minus the native `--exclude-dnp` positions. Missing references remain with
+  LINT-102.
+- **Boundary:** These are CAD flags, not proof of physical population or
+  manufacturing intent. A declared variant absent from the PCB blocks variant
+  coverage; the check never falls back to default exports. Unlisted variants,
+  references absent from either artifact, and symbols without assigned
+  footprints are outside this comparison. Project owners can retain REVIEW,
+  select an explicit rule mode, or suppress an exact reviewed finding.
 - **Fixtures:** Synthetic cases cover both mismatch directions, matched
   fitted and DNP controls, absent placements, empty schematic footprints,
   stable ordering, source evidence in findings, policy/ignore lifecycle,
-  CLI/MCP parity, and repeated native exports. The exact-version lane uses
-  tooling-owned fixtures and digest-pinned KiCad 10.0.0/10.0.5. See the
+  CLI/MCP parity, and repeated native exports. Named-variant exports add both
+  mismatch directions, a fitted control, a missing-board-variant block, and
+  source-change detection. The exact-version lane uses tooling-owned fixtures
+  and digest-pinned KiCad 10.0.0/10.0.5. See the
   [fixture record](../tests/fixtures/design_lint/component-inventory-footprint-identity/README.md).
 - **Applicability evidence:** Additional project examples are not needed to
-  define this consistency check. An independent review of the selected variant
-  is needed to measure whether a finding is actionable; no reviewer-time or
-  field-precision claim is made. No project source or proprietary fixture is
-  stored.
-- **Next:** Keep the default at REVIEW. Extend the comparison to variants only
-  when the scan can bind both artifacts to the same explicit variant identity.
+  define this consistency check. They may help prioritize future heuristic
+  rules, but cannot substitute for project-owned population intent. An
+  independent review is still needed to measure whether a finding is
+  actionable; no reviewer-time or field-precision claim is made. No project
+  source or proprietary fixture is stored.
+- **Next:** Keep the default at REVIEW. Evaluate separate coverage for
+  board-only footprints and explicitly required fitted references; do not infer
+  assembly intent from component similarity alone.
 
 #### LINT-112 — Schematic and PCB component value fields differ
 

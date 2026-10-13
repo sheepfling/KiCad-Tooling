@@ -1,0 +1,74 @@
+"""Exact KiCad 10 probe for the variants stored in one native PCB source."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any, cast
+
+import pcbnew as _pcbnew  # type: ignore[import-not-found]
+
+native_pcbnew: Any = cast(Any, _pcbnew)
+
+
+def main(arguments: list[str] | None = None) -> None:
+    """Write board variant-presence evidence for an exact source and request set."""
+    values = sys.argv[1:] if arguments is None else arguments
+    if len(values) != 3:
+        raise SystemExit("usage: native_pcb_variant_probe.py BOARD REQUEST OUTPUT")
+    board_path, request_path, output_path = (Path(value) for value in values)
+    board_sha256 = hashlib.sha256(board_path.read_bytes()).hexdigest()
+    raw_request: object = json.loads(request_path.read_text(encoding="utf-8"))
+    if not isinstance(raw_request, dict):
+        raise TypeError("Variant request is malformed or bound to a different PCB source")
+    request = cast(dict[str, object], raw_request)
+    project_sha256 = request.get("project_sha256")
+    raw_variants = request.get("variants")
+    issues: list[str] = []
+    if set(request) != {"schema_version", "board_sha256", "project_sha256", "variants"}:
+        issues.append("unexpected request fields")
+    if request.get("schema_version") != "1":
+        issues.append("unsupported request schema")
+    if request.get("board_sha256") != board_sha256:
+        issues.append("board source hash mismatch")
+    project_hash_valid = (
+        isinstance(project_sha256, str)
+        and re.fullmatch(r"[0-9a-f]{64}", project_sha256) is not None
+    )
+    if not project_hash_valid:
+        issues.append("project source hash is malformed")
+    if not isinstance(raw_variants, list):
+        issues.append("variant names are not a list")
+    if issues:
+        raise ValueError(
+            "Variant request is malformed or bound to a different PCB source: " + "; ".join(issues)
+        )
+    variants = cast(list[object], raw_variants)
+    if any(not isinstance(item, str) or not item.strip() for item in variants):
+        raise ValueError("Variant request contains a blank or non-text name")
+    names = cast(list[str], variants)
+    if len({name.casefold() for name in names}) != len(names):
+        raise ValueError("Variant request contains duplicate case-insensitive names")
+
+    board = native_pcbnew.LoadBoard(str(board_path))
+    if board is None:
+        raise ValueError("KiCad could not load the requested PCB source")
+    observed: dict[str, object] = {
+        "schema_version": "1",
+        "board_sha256": board_sha256,
+        "project_sha256": project_sha256,
+        "variants": [
+            {"name": name, "present_on_board": bool(board.HasVariant(name))} for name in names
+        ],
+    }
+    output_path.write_text(
+        json.dumps(observed, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+
+
+if __name__ == "__main__":
+    main()

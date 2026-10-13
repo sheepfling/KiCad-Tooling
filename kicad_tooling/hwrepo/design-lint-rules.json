@@ -4341,6 +4341,7 @@
         "kicad_tooling/hwrepo/pcb_component_inventory.py#compare_fitted_schematic_pcb_inventory",
         "kicad_tooling/hwrepo/pcb_component_inventory.py#missing_fitted_footprint_placements",
         "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
+        "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_scan.py#scan_pcb_component_inventory",
         "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_candidates.py#pcb_component_inventory_candidates",
         "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
         "kicad_tooling/ci_hosted_pcb_component_inventory_fixture.py#pcb_component_inventory_fixture_lane"
@@ -4354,41 +4355,57 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Source-bound schematic netlist DNP properties compared with exact KiCad native PCB footprint snapshot schema 12 or 13",
-      "predicate": "For each case-insensitive schematic reference with a nonempty assigned footprint and a matching placed PCB footprint, compare the schematic netlist DNP flag with the native PCB footprint DNP flag. Report only when the two flags differ.",
+      "evidence_adapter": "Source-bound base schematic netlist and PCB snapshot plus paired exact-version schematic netlist and PCB position exports for each declared named variant",
+      "predicate": "For each case-insensitive schematic reference with a nonempty assigned footprint and a matching placed PCB footprint, compare base schematic and native PCB DNP flags. For each project-declared named variant present on the native board, export both artifacts using the same exact variant name; compare schematic netlist DNP state with native PCB DNP state inferred from all-position references minus --exclude-dnp references. Report only mismatches.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
       ],
       "limitations": [
         "This compares CAD DNP flags only; it does not establish the physical assembly population or whether a board placement should exist.",
-        "The check compares the default/base DNP state in the source-bound schematic netlist and PCB snapshot. It does not evaluate named design-variant overrides or select a manufacturing variant; a variant-specific difference remains a REVIEW question.",
-        "References absent from either artifact and schematic symbols without an assigned footprint are outside this comparison. Missing placements remain with pcb.schematic_component_inventory.",
+        "Named-variant checks run only for names declared in schematic.variants and independently confirmed present on the native PCB. If a declared name is absent from the board, coverage is BLOCKED and no default-variant fallback is compared.",
+        "Variant board population is inferred from the same-name KiCad position exports: all listed references minus references exported with --exclude-dnp. References absent from either compared artifact and schematic symbols without an assigned footprint are outside the comparison.",
+        "Missing placements remain with pcb.schematic_component_inventory.",
         "The check requires a source-bound netlist and KiCad PCB footprint inventory snapshot schema 12 or 13. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
       ],
       "fault_fixtures": [
         "tests.test_pcb_population_mismatch.test_schematic_and_board_dnp_disagreement_is_reviewable_and_configurable",
+        "tests.test_pcb_population_mismatch.test_named_variant_population_mismatch_uses_paired_source_evidence",
+        "tests.test_pcb_variant_population_capture.test_variant_capture_refuses_board_default_fallback",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
-        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound",
+        "tests.test_pcb_variant_population_native_fixture_lane.test_native_named_variant_population_faults_and_control_are_source_bound"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_population_mismatch.test_matching_population_states_are_quiet_controls",
+        "tests.test_pcb_population_mismatch.test_named_variant_population_controls_and_inconsistent_exports",
+        "tests.test_pcb_variant_population_capture.test_variant_capture_binds_same_name_and_source_hashes",
+        "tests.test_pcb_variant_population_capture.test_project_without_named_variants_needs_no_native_variant_capture",
+        "tests.test_pcb_variant_population_capture.test_variant_population_off_skips_named_variant_native_exports",
         "tests.test_pcb_population_mismatch.test_noncomparable_population_records_are_out_of_scope_controls",
         "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
-        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound",
+        "tests.test_pcb_variant_population_native_fixture_lane.test_native_named_variant_population_faults_and_control_are_source_bound"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_population_mismatch.test_population_comparison_is_order_independent_and_requires_schema_12"
+        "tests.test_pcb_population_mismatch.test_population_comparison_is_order_independent_and_requires_schema_12",
+        "tests.test_pcb_variant_population_capture.test_variant_capture_blocks_source_changes_during_exports"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_component_population.py#compare_schematic_pcb_population",
+        "kicad_tooling/hwrepo/pcb_component_population.py#compare_variant_population_source",
+        "kicad_tooling/hwrepo/pcb_variant_population_capture.py#capture_variant_population",
+        "kicad_tooling/hwrepo/pcb_variant_population_capture.py#run_variant_native_command",
+        "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_scan.py#scan_pcb_component_inventory",
+        "kicad_tooling/hwrepo/pcb_variant_probe.py.in#main",
         "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
         "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_candidates.py#pcb_component_inventory_candidates",
         "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
-        "kicad_tooling/ci_hosted_pcb_component_inventory_fixture.py#pcb_component_inventory_fixture_lane"
+        "kicad_tooling/ci_hosted_pcb_component_inventory_fixture.py#pcb_component_inventory_fixture_lane",
+        "kicad_tooling/ci_hosted_pcb_variant_population_fixture.py#pcb_variant_population_fixture_lane"
       ],
       "theme": "pcb",
       "implementation_owner": "kicad_tooling/hwrepo/pcb_component_population.py#compare_schematic_pcb_population"

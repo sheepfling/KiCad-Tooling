@@ -12,12 +12,14 @@ from .pcb_component_inventory_models import (
     PcbComponentValueMismatch,
     PcbFootprintIdentityMismatch,
     PcbMissingFootprintPlacement,
+    PcbVariantPopulationCoverage,
 )
 from .pcb_component_population import compare_schematic_pcb_population
 from .pcb_component_values import compare_schematic_pcb_values
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_comparison import compare_schematic_pcb_pad_nets
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
+from .pcb_variant_population_capture import PcbVariantPopulationCapture
 
 
 def compare_fitted_schematic_pcb_inventory(
@@ -96,10 +98,17 @@ def evaluate_native_component_inventory_coverage(
     probe_sha256: Digest,
     value_mode: Literal["review", "block", "off"] = "off",
     pad_net_mode: Literal["review", "block", "off"] = "off",
+    variant_population: PcbVariantPopulationCapture | None = None,
 ) -> PcbComponentInventoryCoverageReport:
     """Build complete inventory coverage or retain the precise comparison gap."""
     if mode == "off" and value_mode == "off" and pad_net_mode == "off":
         return PcbComponentInventoryCoverageReport(status="DISABLED", mode=mode)
+
+    variant_coverage = (
+        PcbVariantPopulationCoverage()
+        if variant_population is None
+        else variant_population.coverage
+    )
 
     coverage_mode: Literal["review", "block", "off"] = cast(
         Literal["review", "block", "off"],
@@ -128,7 +137,15 @@ def evaluate_native_component_inventory_coverage(
     else:
         try:
             comparison = compare_fitted_schematic_pcb_inventory(netlist, snapshot)
-            population_mismatches = compare_schematic_pcb_population(netlist, snapshot)
+            population_mismatches = compare_schematic_pcb_population(
+                netlist,
+                snapshot,
+                variants=(
+                    variant_population.sources
+                    if variant_population is not None and variant_coverage.status == "COMPLETE"
+                    else ()
+                ),
+            )
             if value_mode != "off":
                 if snapshot.schema_version == "13":
                     value_mismatches = compare_schematic_pcb_values(netlist, snapshot)
@@ -174,6 +191,7 @@ def evaluate_native_component_inventory_coverage(
             value_comparison_issue=value_comparison_issue,
             pad_net_comparison_status=pad_net_comparison_status,
             pad_net_comparison_issue=pad_net_comparison_issue,
+            variant_population=variant_coverage,
             issue=issue,
         )
 
@@ -196,6 +214,7 @@ def evaluate_native_component_inventory_coverage(
         missing_placements=comparison.missing_placements,
         footprint_mismatches=comparison.footprint_mismatches,
         population_mismatches=population_mismatches,
+        variant_population=variant_coverage,
         value_comparison_status=value_comparison_status,
         value_mismatches=value_mismatches,
         value_comparison_issue=value_comparison_issue,
