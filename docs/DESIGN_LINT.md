@@ -943,7 +943,12 @@ have been connected.
   `SUPPORTED` means the endpoint has enough local evidence to enter this
   bounded scan; it does not mean a peer path was found or electrically
   approved. USB 2.0 numbered groups retain their port number; SuperSpeed
-  families are reported separately by TX/RX role.
+  families are reported separately by TX/RX role. A multi-domain USB isolator
+  remains outside the endpoint predicate: its recognized PHY port groups are
+  `INCOMPLETE`, with no supported peer path. That quiet result is a partial
+  screen, not evidence that the isolated returns should be joined or a supported
+  non-finding. See the synthetic fixture at
+  `tests/fixtures/design_lint/usb-isolator-peer-reference-native/README.md`.
 - `signal.named_pair_without_reviewed_requirement` looks for populated source
   nets with recognized `_P/_N`, `_DP/_DM`, `_TXP/_TXN`, `_RXP/_RXN`, `_H/_L`,
   `+/-`, `DP/DM`, `P/N`, or `H/L` suffixes. If the exact pair is absent from

@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .ci_hosted_usb_isolation import validate_usb_isolator_reference_boundary
 from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
 from .ci_hosted_usb_requirements import usb_data_path_requirements
 
@@ -62,6 +63,8 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         / "usb-multiport-peer-reference-native/fault.kicad_sch",
         "usb-multiport-peer-reference-control": fixture_root
         / "usb-multiport-peer-reference-native/control.kicad_sch",
+        "intentional-isolation-boundary": fixture_root
+        / "usb-isolator-peer-reference-native/intentional-isolation.kicad_sch",
         "inline-component-control": fixture_root
         / "usb-data-path-native/inline-protection-control.kicad_sch",
         "inline-component-ground-fault": fixture_root
@@ -421,8 +424,13 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     ):
         raise ValueError("Native common-reference multiport USB control produced a review")
 
+    validate_usb_isolator_reference_boundary(reports[("intentional-isolation-boundary", "first")])
+
     for case in cases:
         report = reports[(case, "first")]
+        coverage = report.usb_peer_reference_coverage
+        if coverage is None:
+            raise ValueError(f"Native {case} report omitted USB reference coverage")
         log.event(
             f"usb-data-path-fixture/{case}",
             "PASS",
@@ -447,6 +455,13 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                 if item.rule_id == "bus.usb_peer_reference_review"
             )
             or "none",
+            usb_reference_coverage_status=coverage.status,
+            usb_reference_recognized_connector_groups=coverage.recognized_connector_group_count,
+            usb_reference_supported_connector_groups=coverage.supported_connector_group_count,
+            usb_reference_recognized_phy_groups=coverage.recognized_phy_group_count,
+            usb_reference_supported_phy_groups=coverage.supported_phy_group_count,
+            usb_reference_incomplete_groups=coverage.incomplete_group_count,
+            usb_reference_supported_data_paths=coverage.supported_data_path_count,
             repeatable="true",
             repeatability_basis="normalized_netlist_contract",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),

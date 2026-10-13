@@ -49,6 +49,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-c-peer-reference-control": "456f8d1f23735db18f4ec1b0c347cc1ab1d396af3b957c40d9158e535015a70f",
         "usb-multiport-peer-reference-fault": "9cbc4ebc8692b02fc9ef8b6a1723d926536b2b7a74251ff4d37e045cdacae615",
         "usb-multiport-peer-reference-control": "80f5af92083dbc5a3fce319dabb5c80efb535899e482ff6ad952a41f576df0d0",
+        "intentional-isolation-boundary": "d1a785a983b18315b402d003990056c2f3e5aab40e8bb937e3f44ffc901946d9",
         "inline-component-control": "cce0c203ea0eb8a04a186526c8c9396050e311018f732c7b6e33dbe8f6ea8ad6",
         "inline-component-ground-fault": "02868a8ff51f8a942bd6719ff0bde57776b3d92aac75e0f225b71ab189e0dcb8",
         "inline-component-peer-reference-fault": "457f1046ebef0e0d7f65aeb55b9439eeeb2449bfca776412d5edbcfc3ef9702e",
@@ -84,6 +85,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/usb-c-peer-reference-control",
         "usb-data-path-fixture/usb-multiport-peer-reference-fault",
         "usb-data-path-fixture/usb-multiport-peer-reference-control",
+        "usb-data-path-fixture/intentional-isolation-boundary",
         "usb-data-path-fixture/inline-component-control",
         "usb-data-path-fixture/inline-component-ground-fault",
         "usb-data-path-fixture/inline-component-peer-reference-fault",
@@ -196,6 +198,17 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     multiport_control = results["usb-data-path-fixture/usb-multiport-peer-reference-control"]
     assert multiport_control["status"] == "PASS"
     assert multiport_control["usb_reference_findings"] == "none"
+    isolation_boundary = results["usb-data-path-fixture/intentional-isolation-boundary"]
+    assert isolation_boundary["status"] == "PASS"
+    assert isolation_boundary["usb_path_findings"] == "none"
+    assert isolation_boundary["usb_reference_findings"] == "none"
+    assert isolation_boundary["usb_reference_coverage_status"] == "INCOMPLETE"
+    assert isolation_boundary["usb_reference_recognized_connector_groups"] == 2
+    assert isolation_boundary["usb_reference_supported_connector_groups"] == 2
+    assert isolation_boundary["usb_reference_recognized_phy_groups"] == 2
+    assert isolation_boundary["usb_reference_supported_phy_groups"] == 0
+    assert isolation_boundary["usb_reference_incomplete_groups"] == 2
+    assert isolation_boundary["usb_reference_supported_data_paths"] == 0
     for case in (
         "integrated-direct",
         "external-series",
@@ -208,6 +221,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-c-peer-reference-control",
         "usb-multiport-peer-reference-fault",
         "usb-multiport-peer-reference-control",
+        "intentional-isolation-boundary",
         "inline-component-control",
         "inline-component-ground-fault",
         "inline-component-peer-reference-fault",

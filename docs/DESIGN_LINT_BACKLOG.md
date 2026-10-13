@@ -817,6 +817,14 @@ and optional ecosystem adapters are `P3`.
   visible and keep project defaults and the review-only prompt unchanged while
   evidence is gathered.
 
+  A new Tooling-authored synthetic native case covers a two-port USB isolator
+  with separate host and device reference domains. It expects no peer-reference
+  finding and records two recognized connector groups, two incomplete PHY port
+  groups, and zero supported data paths. The expected `INCOMPLETE` coverage
+  makes the quiet result visibly unsupported; it is not counted as a negative.
+  The exact digest-pinned native acceptance is pending the tagged run. See the
+  [fixture contract and source hash](../tests/fixtures/design_lint/usb-isolator-peer-reference-native/README.md).
+
   A public topology lead is the DStat Mainboard rev 1.2.3 PCB at pinned commit
   `b6b2bbfdb7f8b2997d3035b083edbab2348333dc`. Its board source declares CERN
   OHL v1.2, maps USB1 pin 5 and U6 (TPD2S017) ground to `/USB_GND`, and maps

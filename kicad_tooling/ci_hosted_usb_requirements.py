@@ -184,6 +184,20 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
             )
         ),
     )
+    isolator_map = multiport_map.model_copy(
+        update={
+            "basis": "Synthetic exact mappings for two isolated USB ports",
+            "interfaces": tuple(
+                item.model_copy(
+                    update={
+                        "basis": f"Synthetic exact native path for isolated port {item.data_port_group}",
+                        "expected_phy_symbol": "Synthetic:UsbIsolator",
+                    }
+                )
+                for item in multiport_map.interfaces
+            ),
+        }
+    )
     inline_component_map = UsbDataPathMap(
         basis="Synthetic exact USB multi-pin pass-through component map",
         interfaces=(
@@ -380,6 +394,7 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "usb-c-peer-reference-control": usb_c_direct_map,
         "usb-multiport-peer-reference-fault": multiport_map,
         "usb-multiport-peer-reference-control": multiport_map,
+        "intentional-isolation-boundary": isolator_map,
         "inline-component-control": inline_component_map,
         "inline-component-ground-fault": inline_component_map,
         "inline-component-peer-reference-fault": inline_component_peer_fault_map,

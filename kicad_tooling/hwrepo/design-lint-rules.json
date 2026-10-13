@@ -3680,6 +3680,7 @@
         "tests.test_usb_peer_reference_paths.test_series_resistor_recognition_rejects_dnp_incomplete_and_extra_peers",
         "tests.test_usb_peer_reference_boundaries.test_phy_with_multiple_reference_domains_is_outside_predicate",
         "tests.test_usb_peer_reference_boundaries.test_isolator_mediated_usb_path_is_not_traced_across_domains",
+        "tests.test_usb_isolator_peer_reference.test_two_port_isolator_is_quiet_but_remains_incomplete_coverage",
         "tests.test_usb_peer_reference_coverage.test_single_port_numbered_usb_data_functions_are_recognized",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
         "tests.test_usb_data_path_reference_bonds.test_exact_bonded_reference_path_is_a_valid_control",
