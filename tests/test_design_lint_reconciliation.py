@@ -7,6 +7,10 @@ from typing import Literal
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import rule_catalog
+from kicad_tooling.hwrepo.design_lint_connectivity_snapshot_models import (
+    DesignLintConnectivitySnapshot,
+    NetlistPinConnectivityState,
+)
 from kicad_tooling.hwrepo.design_lint_reconciliation import reconcile_design_lint_reports
 from kicad_tooling.hwrepo.design_lint_reconciliation_text import reconciliation_text
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
@@ -43,11 +47,29 @@ def _report(
     catalog: bool = True,
     status: Literal["PASS", "REVIEW", "FAIL", "BLOCKED"] = "REVIEW",
 ) -> DesignLintReport:
+    sources = {"schematic.kicad_sch": source_sha256} if source_sha256 else {}
+    snapshot = (
+        DesignLintConnectivitySnapshot(
+            project_id=project_id,
+            source_hashes=sources,
+            netlist_sha256=netlist_sha256,
+            kicad_version="10.0.5",
+            toolchain_image="registry.example/kicad@sha256:" + "c" * 64,
+            coverage="COMPLETE",
+            pin_states={
+                "J1.7": NetlistPinConnectivityState(net="RETURN_A", peers=("J2.7",)),
+                "J2.7": NetlistPinConnectivityState(net="RETURN_A", peers=("J1.7",)),
+            },
+        )
+        if sources and netlist_sha256 is not None
+        else None
+    )
     return DesignLintReport(
         status=status,
         project_id=project_id,
-        source_hashes={"schematic.kicad_sch": source_sha256} if source_sha256 else {},
+        source_hashes=sources,
         netlist_sha256=netlist_sha256,
+        connectivity_snapshot=snapshot,
         rule_catalog=rule_catalog() if catalog else None,
         findings=findings,
     )

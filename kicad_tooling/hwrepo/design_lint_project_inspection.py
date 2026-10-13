@@ -11,6 +11,7 @@ from ..validate import hashes
 from .contract_coach import inspect_summary as inspect_contract_summary
 from .contracts import read_model, repo_path
 from .control_input_models import ControlInputBiasHeuristicCoverage
+from .design_lint_connectivity_snapshot import capture_connectivity_snapshot
 from .design_lint_connector_coverage import (
     connector_coverage_from_project,
     external_protection_coverage_from_project,
@@ -256,11 +257,21 @@ def inspect_design_lint_summary(
             )
         ):
             raise ValueError("Project manifest or lint policy changed during inspection")
-        return report.model_copy(
-            update={
+        connectivity_snapshot = capture_connectivity_snapshot(
+            project_id=project_id,
+            observed=coach.observed,
+            source_hashes=coach.source_hashes,
+            netlist_sha256=coach.netlist_sha256,
+            kicad_version=config.kicad_version,
+            toolchain_image=config.image,
+        )
+        return DesignLintReport.model_validate(
+            {
+                **report.model_dump(mode="python"),
                 "project_manifest_sha256": manifest_hash,
                 "policy_path": policy_path.relative_to(root).as_posix(),
                 "policy_sha256": policy_hash,
+                "connectivity_snapshot": connectivity_snapshot,
             }
         )
     except (OSError, ValueError, StopIteration) as exc:

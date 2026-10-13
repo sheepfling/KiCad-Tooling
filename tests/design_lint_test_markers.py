@@ -244,6 +244,8 @@ _LINT_AREA_MODULES = {
     ),
     "evidence_lint": frozenset(
         {
+            "tests/test_design_lint_connectivity_reconciliation.py",
+            "tests/test_design_lint_mcp_parity_reconciliation.py",
             "tests/test_contract_coach_capture.py",
             "tests/test_contract_coach_evidence.py",
             "tests/test_empty_netlist_evidence_native_fixture_lane.py",
@@ -384,6 +386,7 @@ _LINT_AREA_MODULES = {
             "tests/test_electrical_simulator_parity.py",
             "tests/test_electrical_test_access_parity.py",
             "tests/test_design_lint_mcp_parity_connector_returns.py",
+            "tests/test_design_lint_mcp_parity_reconciliation.py",
             "tests/test_electrical_digital_peer_voltage_parity.py",
             "tests/test_electrical_component_rating_parity.py",
             "tests/test_electrical_connector_rating_parity.py",

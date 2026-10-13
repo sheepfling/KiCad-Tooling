@@ -7,6 +7,8 @@ import json
 from collections import Counter
 from typing import Literal
 
+from .design_lint_connectivity_snapshot import compare_connectivity_snapshots
+from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot
 from .design_lint_finding_models import DesignLintFinding
 from .design_lint_reconciliation_models import (
     DesignLintFindingTransition,
@@ -17,6 +19,13 @@ from .design_lint_report_models import DesignLintReport
 
 def _report_sha256(report: DesignLintReport) -> str:
     payload = json.dumps(report.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _connectivity_sha256(snapshot: DesignLintConnectivitySnapshot | None) -> str | None:
+    if snapshot is None:
+        return None
+    payload = json.dumps(snapshot.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -101,11 +110,38 @@ def reconcile_design_lint_reports(
         and len({item.fingerprint for item in current.findings}) == len(current.findings)
         else ()
     )
+    baseline_snapshot = baseline.connectivity_snapshot
+    current_snapshot = current.connectivity_snapshot
+    connectivity_comparison: Literal["COMPLETE", "PARTIAL", "UNAVAILABLE", "INCOMPATIBLE"]
+    connectivity_changes = ()
+    connectivity_issue: str | None = None
+    if baseline_snapshot is None or current_snapshot is None:
+        connectivity_comparison = "UNAVAILABLE"
+    elif (baseline_snapshot.kicad_version, baseline_snapshot.toolchain_image) != (
+        current_snapshot.kicad_version,
+        current_snapshot.toolchain_image,
+    ):
+        connectivity_comparison = "INCOMPATIBLE"
+        connectivity_issue = (
+            "Baseline and current connectivity snapshots use different exact KiCad versions "
+            "or toolchain images"
+        )
+    else:
+        connectivity_comparison = (
+            "COMPLETE"
+            if baseline_snapshot.coverage == current_snapshot.coverage == "COMPLETE"
+            else "PARTIAL"
+        )
+        connectivity_changes = compare_connectivity_snapshots(
+            baseline_snapshot,
+            current_snapshot,
+        )
     issues = tuple(
         issue
         for issue in (
             _input_issue(baseline, "Baseline"),
             _input_issue(current, "Current"),
+            connectivity_issue,
         )
         if issue is not None
     )
@@ -146,6 +182,25 @@ def reconcile_design_lint_reports(
         context_changes.append("Stale exact-ignore records changed")
     if baseline.issues != current.issues:
         context_changes.append("Report issues changed")
+    if connectivity_comparison == "UNAVAILABLE":
+        missing = []
+        if baseline_snapshot is None:
+            missing.append("baseline")
+        if current_snapshot is None:
+            missing.append("current")
+        context_changes.append(
+            f"Pin-connectivity comparison unavailable: {', '.join(missing)} report "
+            "lacks a native connectivity snapshot"
+        )
+    elif connectivity_comparison == "PARTIAL":
+        context_changes.append(
+            "Pin-connectivity comparison is partial; inspect snapshot coverage before "
+            "relying on the listed changes"
+        )
+    elif connectivity_changes:
+        context_changes.append(
+            f"Native pin connectivity changed for {len(connectivity_changes)} pin(s)"
+        )
 
     before_sources = baseline.source_hashes
     after_sources = current.source_hashes
@@ -156,7 +211,11 @@ def reconcile_design_lint_reports(
             if before_sources.get(path) != after_sources.get(path)
         )
     )
-    changed = any(item.kind != "PERSISTING" for item in transitions) or bool(context_changes)
+    changed = (
+        any(item.kind != "PERSISTING" for item in transitions)
+        or bool(context_changes)
+        or bool(connectivity_changes)
+    )
     status: Literal["UNCHANGED", "REVIEW", "BLOCKED"] = (
         "BLOCKED" if issues else "REVIEW" if changed else "UNCHANGED"
     )
@@ -184,6 +243,10 @@ def reconcile_design_lint_reports(
         changed_source_paths=changed_source_paths,
         baseline_netlist_sha256=baseline.netlist_sha256,
         current_netlist_sha256=current.netlist_sha256,
+        baseline_connectivity_sha256=_connectivity_sha256(baseline_snapshot),
+        current_connectivity_sha256=_connectivity_sha256(current_snapshot),
+        connectivity_comparison=connectivity_comparison,
+        connectivity_changes=connectivity_changes,
         baseline_catalog_sha256=old_catalog,
         current_catalog_sha256=new_catalog,
         baseline_rule_overrides=tuple(

@@ -1213,7 +1213,8 @@
         "pcb.keepout_intent_coverage compares exact project-mapped named rule-area geometry, copper layers, and track/via/pad/zone-fill/footprint restrictions against source-bound native snapshot schema 11, 12, or 13; the signature must come from an independent approved requirement.",
         "pcb.rf_module_antenna_keepout_coverage compares exact schematic/PCB module identity, fitted disposition, authored feed assignment, and placement-transformed local keepout geometry against native snapshot schema 12 or 13; onboard, external, and DNP dispositions are explicit.",
         "Every active rule declares a typed implementation theme and source owner in the shared CLI and MCP catalog.",
-        "Reconciliation reads a project-relative baseline JSON file in CLI and serialized DesignLintReport JSON in MCP; both call the same typed comparison service, retain ignored and rule-off findings, and surface removed findings for review."
+        "Reconciliation reads a project-relative baseline JSON file in CLI and serialized DesignLintReport JSON in MCP; both call the same typed comparison service, retain ignored and rule-off findings, and surface removed findings for review.",
+        "DesignLintReport includes an exact-version, source-hashed native pin-connectivity snapshot. Reconciliation reports per-pin net-name and peer-set changes as REVIEW, marks incomplete inventories PARTIAL, and blocks comparisons across different KiCad versions or toolchain images. Netlist label changes remain review evidence; they are not classified as electrical faults."
       ],
       "parity_tests": [
         "tests.test_design_lint_mcp_parity_report.test_design_lint_parity",

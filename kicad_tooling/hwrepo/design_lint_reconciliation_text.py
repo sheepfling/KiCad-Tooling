@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from .design_lint_connectivity_snapshot_models import (
+    DesignLintConnectivityChange,
+    NetlistPinConnectivityState,
+)
 from .design_lint_finding_models import DesignLintFinding
 from .design_lint_reconciliation_models import (
     DesignLintFindingTransition,
@@ -35,6 +39,24 @@ def _transition_lines(item: DesignLintFindingTransition) -> list[str]:
     return lines
 
 
+def _connectivity_state_text(state: NetlistPinConnectivityState | None) -> str:
+    if state is None:
+        return "<pin absent>"
+    net = state.net or "<unconnected>"
+    peers = ", ".join(state.peers) or "<none>"
+    return f"net={net}; peers={peers}"
+
+
+def _connectivity_change_lines(item: DesignLintConnectivityChange) -> list[str]:
+    return [
+        (
+            f"  {item.kind} {item.pin}: "
+            f"[{_connectivity_state_text(item.baseline)}] -> "
+            f"[{_connectivity_state_text(item.current)}]"
+        )
+    ]
+
+
 def reconciliation_text(report: DesignLintReconciliationReport) -> str:
     """Render each finding transition with its baseline/current evidence intact."""
     lines = [
@@ -46,6 +68,10 @@ def reconciliation_text(report: DesignLintReconciliationReport) -> str:
         f"Rule catalog SHA-256: {report.baseline_catalog_sha256} -> {report.current_catalog_sha256}",
         f"Source-bound paths changed: {len(report.changed_source_paths)}",
         f"Findings compared: {len(report.transitions)}",
+        (
+            f"Pin-connectivity comparison: {report.connectivity_comparison} "
+            f"({len(report.connectivity_changes)} changed pins)"
+        ),
     ]
     if report.changed_source_paths:
         lines.extend(f"  Source changed: {path}" for path in report.changed_source_paths)
@@ -69,4 +95,6 @@ def reconciliation_text(report: DesignLintReconciliationReport) -> str:
                 lines.extend(_finding_lines("current", item))
     for item in report.transitions:
         lines.extend(_transition_lines(item))
+    for item in report.connectivity_changes:
+        lines.extend(_connectivity_change_lines(item))
     return "\n".join(lines)

@@ -462,6 +462,19 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
+- **Pin-connectivity regression review (2026-10-13):** LINT-131 extends the
+  source-bound reconciliation baseline with each native pin's net name and peer
+  set. A change to an unconnected contact, connector return, power pin, or peer
+  topology now becomes exact review evidence even when no heuristic finding
+  changes. Snapshot coverage is `COMPLETE` only when native symbol pin
+  inventories are available; incomplete data remains `PARTIAL`, older reports
+  without snapshots require a refreshed baseline, and different exact KiCad
+  versions or toolchain images block comparison. The pin-swap and declared
+  polarity concepts in the Apache-2.0, pre-alpha `netspec` cohort were useful
+  evidence for this gap; no code or board data was imported, and no separate
+  polarity rule was added because the existing project-authored
+  `pin_connectivity` contract can state exact pin relationships.
+
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
   `tests/test_design_lint_architecture_pytest_markers.py` and
@@ -3320,6 +3333,43 @@ is not a reason by itself to expand its scope or change its default policy.
   in place. Additional component roles require their own bounded predicates,
   source fields, controls, and applicability evidence; do not enable arbitrary
   rule-role combinations.
+
+#### LINT-131 — Pin-connectivity change review in design-lint reconciliation
+
+- **Status:** Implemented as source-bound connectivity snapshots embedded in
+  `DesignLintReport` and compared by the existing typed reconciliation service.
+- **Priority:** P0 regression evidence. Before this change, reconciliation
+  retained source and netlist hashes plus lint-finding transitions, but could
+  not name which pins changed when a design edit altered connectivity without
+  changing any current lint finding.
+- **Evidence:** Each native report stores exact KiCad version, toolchain image,
+  source hashes, netlist hash, every available symbol pin, its native net name,
+  and the other pins on that net. Reconciliation lists added/removed pins and
+  changed assignments in stable order. Complete inventories are required for
+  `COMPLETE` coverage; incomplete inventories remain `PARTIAL`. Partial
+  comparisons list assignment changes only for pins known on both sides; pin
+  additions and removals require complete coverage. A baseline
+  without a snapshot requires review, and different exact KiCad versions or
+  toolchain images block comparison. The CLI and MCP use the same typed report
+  and comparison service.
+- **Boundary:** A pin change is evidence for review, not proof of a defect.
+  Net-label changes also surface for review; the comparison does not decide
+  whether a connection is required. Project-authored pin, return, supply, or
+  interface contracts remain the authority for intent. A reviewed current
+  report can be saved as the next project-owned baseline. No board source is
+  stored here.
+- **Fixtures:** Synthetic common-return baseline and split-return mutation;
+  net-label change; incomplete pin inventory; ambiguous multi-net assignment
+  without false pin-removal reports; known assignment changes under partial
+  coverage;
+  missing legacy snapshot; exact-toolchain mismatch; CLI/MCP parity. See
+  `tests/test_design_lint_connectivity_reconciliation.py`.
+- **Cohort input:** The Apache-2.0 [`heibench/netspec`](https://github.com/heibench/netspec) repository documents
+  source-to-source connectivity deltas and pin-swap review, including a
+  polarized-capacitor reversal that native ERC does not distinguish. Its
+  published project is pre-alpha. Local exact pin-to-net contracts already
+  express reviewed polarity requirements, so this increment adopts only the
+  baseline-diff idea; it does not add a runtime dependency or copy cohort code.
 
 ### P1 — Netlist and interface-pattern checks
 

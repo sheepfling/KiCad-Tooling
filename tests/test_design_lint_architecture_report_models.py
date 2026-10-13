@@ -53,3 +53,28 @@ def test_models_compatibility_export_and_forward_field_use_the_owner() -> None:
         if isinstance(node, ast.ClassDef) and node.name == "DesignLintReport"
     ]
     assert local_report_definitions == []
+
+
+def test_connectivity_snapshot_owners_stay_bounded_and_theme_owned() -> None:
+    owners = {
+        "design_lint_connectivity_snapshot.py",
+        "design_lint_connectivity_snapshot_models.py",
+    }
+    for name in owners:
+        path = TOOLING / "hwrepo" / name
+        assert len(path.read_text(encoding="utf-8").splitlines()) < 500
+
+    report_source = (TOOLING / "hwrepo" / "design_lint_report_models.py").read_text(
+        encoding="utf-8"
+    )
+    reconciliation_source = (TOOLING / "hwrepo" / "design_lint_reconciliation_models.py").read_text(
+        encoding="utf-8"
+    )
+    assert (
+        "from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot"
+        in report_source
+    )
+    assert (
+        "from .design_lint_connectivity_snapshot_models import DesignLintConnectivityChange"
+        in reconciliation_source
+    )

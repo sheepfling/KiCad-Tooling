@@ -7,6 +7,7 @@ from mcp import Client
 
 pytestmark = [
     pytest.mark.design_lint,
+    pytest.mark.evidence_lint,
     pytest.mark.parity_lint,
     pytest.mark.slow,
     pytest.mark.template_checkout,
@@ -68,6 +69,9 @@ class _DesignLintReconciliationParityCases(McpParityHarness):
         self.assertEqual(cli.baseline_project_id, "controller")
         self.assertTrue(cli.baseline_source_hashes)
         self.assertTrue(cli.current_source_hashes)
+        self.assertIsNotNone(baseline.connectivity_snapshot)
+        self.assertIn(cli.connectivity_comparison, {"COMPLETE", "PARTIAL"})
+        self.assertEqual(cli.connectivity_changes, ())
 
 
 def test_design_lint_reconciliation_cli_mcp_parity() -> None:

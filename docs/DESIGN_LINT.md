@@ -44,6 +44,19 @@ correct or ready to build. Keep project-specific reports and their review
 decisions in the project repository; this tooling repository stores only
 synthetic regression cases.
 
+Each successful native inspection also stores a source-hashed pin-connectivity
+snapshot in the lint report. Reconciliation compares each pin's exported net
+name and peer pins, so an open, moved, split, or newly joined assignment is
+listed even when no heuristic finding changed. A net-label change is review
+evidence, not a claim that wiring is wrong. Incomplete pin inventories produce
+a `PARTIAL` connectivity comparison. Partial snapshots list changes only for
+pins with known states on both sides; added or removed pins require complete
+coverage. Reports made before snapshots existed
+return `REVIEW` until a current baseline is saved. Different exact KiCad
+versions or toolchain images block the comparison. This snapshot records the
+previous topology for regression review; it does not specify required wiring
+or replace a project-authored contract.
+
 Connector checks share one bounded candidate set: numeric `J`, `P`, `X`, or
 `CN` references, symbols in KiCad's standard `Connector` libraries, and exact
 references in the project's reviewed interface map. This identity is shared by

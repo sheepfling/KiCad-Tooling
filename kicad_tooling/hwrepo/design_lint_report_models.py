@@ -13,6 +13,7 @@ from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
+from .design_lint_connectivity_snapshot_models import DesignLintConnectivitySnapshot
 from .design_lint_finding_models import (
     DesignLintFinding,
     DesignLintIgnore,
@@ -57,7 +58,7 @@ from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 class DesignLintReport(StrictModel):
     """Source-bound heuristic findings; neither a pinout nor electrical approval."""
 
-    schema_version: Literal["1", "2"] = "2"
+    schema_version: Literal["1", "2", "3"] = "3"
     lane: Literal["DESIGN_LINT"] = "DESIGN_LINT"
     status: Literal["PASS", "REVIEW", "FAIL", "BLOCKED"]
     project_id: Identifier
@@ -65,6 +66,7 @@ class DesignLintReport(StrictModel):
     build_authorized: Literal[False] = False
     source_hashes: Mapping[RepositoryPath, Digest] = Field(default_factory=dict)
     netlist_sha256: Digest | None = None
+    connectivity_snapshot: DesignLintConnectivitySnapshot | None = None
     native_summary: str | None = None
     native_status: Literal["PASS", "FAIL"] | None = None
     rule_catalog: DesignLintRuleCatalog | None = None
@@ -140,6 +142,13 @@ class DesignLintReport(StrictModel):
 
     @model_validator(mode="after")
     def findings_are_catalogued(self) -> DesignLintReport:
+        snapshot = self.connectivity_snapshot
+        if snapshot is not None and (
+            snapshot.project_id != self.project_id
+            or dict(snapshot.source_hashes) != dict(self.source_hashes)
+            or snapshot.netlist_sha256 != self.netlist_sha256
+        ):
+            raise ValueError("Connectivity snapshot must use this report's source-bound netlist")
         inventory = self.pcb_component_inventory
         if (
             self.netlist_sha256 is not None
