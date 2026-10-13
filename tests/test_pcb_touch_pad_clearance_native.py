@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.contract_coach import docker_prefix, pinned_image, run_command
 from kicad_tooling.hwrepo.models import (
     ComponentIdentity,
     IgnoredChecks,
@@ -14,6 +15,7 @@ from kicad_tooling.hwrepo.models import (
     ProjectConfig,
     ProjectKind,
 )
+from kicad_tooling.hwrepo.pcb_drc_rule_parser import read_native_pcb_drc_fixture_report
 from kicad_tooling.hwrepo.pcb_return_path_capture import (
     capture_native_pcb_connectivity,
     expected_probe_sha256,
@@ -168,3 +170,46 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
         }
         for item in entries
     }
+
+    # Confirm native DRC reports no clearance issue for the same board while
+    # the authored minima produce lint candidates from exact pad geometry.
+    drc_output = root / "build/tests/touch-pad-clearance-drc" / expected_version
+    drc_output.mkdir(parents=True)
+    drc_reports = []
+    for run in ("first", "repeat"):
+        drc_argv = (
+            *docker_prefix(),
+            "--network",
+            "none",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:rw,nosuid,nodev,size=64m",
+            "-v",
+            f"{board.parent.resolve()}:/project:ro",
+            "-v",
+            f"{drc_output.resolve()}:/reports:rw",
+            pinned_image(image),
+            "pcb",
+            "drc",
+            "--format",
+            "json",
+            "--severity-all",
+            "--exit-code-violations",
+            "--output",
+            f"/reports/drc.{run}.json",
+            "/project/board.kicad_pcb",
+        )
+        drc_command = run_command(root, drc_argv, timeout=600)
+        assert drc_command.returncode in {0, 5}, drc_command.stderr or drc_command.error
+        drc_reports.append(read_native_pcb_drc_fixture_report(drc_output / f"drc.{run}.json"))
+
+    first_drc, repeat_drc = drc_reports
+    assert first_drc.kicad_version == expected_version
+    assert repeat_drc.kicad_version == expected_version
+    assert Path(first_drc.source).name == board.name
+    assert Path(repeat_drc.source).name == board.name
+    assert "clearance" not in first_drc.violation_types, first_drc.violation_types
+    assert (first_drc.violation_types, first_drc.violation_records_sha256) == (
+        repeat_drc.violation_types,
+        repeat_drc.violation_records_sha256,
+    )

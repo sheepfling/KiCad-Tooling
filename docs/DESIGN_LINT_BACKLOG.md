@@ -12680,13 +12680,16 @@ guessing from `TP`, a footprint name, a sampled point, or a bounding box. The
 synthetic fault/control, threshold metamorphic case, missing-evidence cases,
 and CLI/MCP parity are implemented. Exact-version native fixtures are coded
 for KiCad 10.0.0 and 10.0.5; both versions passed the hosted native fixture
-stage on `v0.5.0rc248` (GitHub Actions run `38394572077`).
-The full scoped gate then failed at MDR101 because the fixture README was not
-linked into the documentation graph; this change adds that link, and the next
-tag reruns full acceptance. Remaining work is to exercise rotated-pad
-geometry, compare measurements with native DRC, and gather independent public
-or synthetic applicability and reviewer-value evidence. No universal
-clearance value or new project requirement is inferred.
+stage on `v0.5.0rc248` (GitHub Actions run `38394572077`). The full scoped gate
+passed on `v0.5.0rc249` (run `38395063701`), including the installed-wheel
+check. The rotated versus unrotated oval geometry regression passed on both
+pinned KiCad versions in `v0.5.0rc250` (run `38396108362`). A new native
+comparison now repeats DRC on the same fixture, compares normalized violation
+evidence, and asserts that the project-map minimum can report a clearance
+review when KiCad's default clearance emits no finding; exact-version hosted
+confirmation is pending. Independent public or synthetic applicability and
+reviewer-value evidence also remain open. No universal clearance value or new
+project requirement is inferred.
 
 #### Preliminary source audit: antenna keepout coverage (2026-10-08)
 
