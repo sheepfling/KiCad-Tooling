@@ -3428,8 +3428,11 @@ is not a reason by itself to expand its scope or change its default policy.
   10.0.5 exports. Its capture-specific test has a function-level
   `evidence_lint` marker so the evidence selector can run it independently; the
   scoped tag declares `Native-Fixture: KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES`
-  to execute those native exports. This changes review evidence only; no
-  physical electrical acceptance is claimed.
+  to execute those native exports. Hosted acceptance `v0.5.0rc245` (run
+  `38386654503`) passed the scoped unit gate with that switch set, the installed-
+  wheel external-project check, and all three preview jobs; the package job was
+  skipped by prerelease policy. This changes review evidence only; no physical
+  electrical acceptance is claimed.
 
 ### P1 — Netlist and interface-pattern checks
 
