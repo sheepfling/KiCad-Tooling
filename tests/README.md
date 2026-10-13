@@ -49,6 +49,17 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
   tests/test_connector_named_power_output_native_fixture_lane.py
 ```
 
+Fully assigned named power-input aliases on distinct nets have a parallel
+review selector and synthetic/native regression module:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint_rule(rule_id="connector.peer_power_input_named_assignment_divergence")' \
+  tests/test_design_lint_connector_named_power_input_divergence.py \
+  tests/test_design_lint_mcp_parity_connector_named_power_peers.py \
+  tests/test_connector_named_power_input_native_fixture_lane.py
+```
+
 The suite uses a separate public template checkout for its reference examples.
 Set `KICAD_TEMPLATE_ROOT` to that checkout, then run from the tooling repository:
 

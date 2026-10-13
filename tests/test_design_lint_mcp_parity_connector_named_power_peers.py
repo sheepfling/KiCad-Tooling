@@ -35,6 +35,7 @@ from tests.synthetic_design_lint_project import (
 
 RULE_ID = "connector.peer_power_input_open_assignment"
 ALL_OPEN_RULE_ID = "connector.peer_power_input_named_all_open"
+INPUT_DIVERGENCE_RULE_ID = "connector.peer_power_input_named_assignment_divergence"
 OUTPUT_RULE_ID = "connector.peer_power_output_open_assignment"
 OUTPUT_ALL_OPEN_RULE_ID = "connector.peer_power_output_named_all_open"
 OUTPUT_DIVERGENCE_RULE_ID = "connector.peer_power_output_named_assignment_divergence"
@@ -195,6 +196,21 @@ def test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp(
         rule_id=RULE_ID,
         all_open_rule_id=ALL_OPEN_RULE_ID,
         divergence_rule_id=None,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=INPUT_DIVERGENCE_RULE_ID)
+def test_named_connector_power_input_assignment_divergence_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    _assert_named_connector_power_peer_parity(
+        tmp_path,
+        (("divergent", 0, 0, 1), ("common", 0, 0, 0)),
+        pin_function="BIAS_IN",
+        pin_electrical_type="power_in",
+        rule_id=RULE_ID,
+        all_open_rule_id=ALL_OPEN_RULE_ID,
+        divergence_rule_id=INPUT_DIVERGENCE_RULE_ID,
     )
 
 

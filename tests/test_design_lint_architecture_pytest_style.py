@@ -67,6 +67,10 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "connector_lint",
         "power_lint",
     },
+    "test_design_lint_connector_named_power_input_divergence.py": {
+        "connector_lint",
+        "power_lint",
+    },
     "test_design_lint_connector_named_power_output_peers.py": {
         "connector_lint",
         "power_lint",
@@ -327,6 +331,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
         (
             "connector.peer_power_input_named_all_open",
             "tests/test_design_lint_connector_named_power_input_peers.py::test_named_power_input_open_on_every_connector_alias_is_reviewed",
+        ),
+        (
+            "connector.peer_power_input_named_assignment_divergence",
+            "tests/test_design_lint_connector_named_power_input_divergence.py::test_named_power_input_aliases_on_distinct_nets_are_reviewed",
         ),
         (
             "connector.peer_power_output_open_assignment",

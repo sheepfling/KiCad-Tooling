@@ -190,6 +190,8 @@ def prepare_connector_return_fixture_context(
         / "connector-named-power-input-peer-native/control.kicad_sch",
         "connector-named-power-input-all-open-fault": fixture_root
         / "connector-named-power-input-peer-native/all-open-fault.kicad_sch",
+        "connector-named-power-input-divergent-fault": fixture_root
+        / "connector-named-power-input-peer-native/divergent-fault.kicad_sch",
         "connector-named-power-output-open-fault": fixture_root
         / "connector-named-power-output-peer-native/fault.kicad_sch",
         "connector-named-power-output-open-control": fixture_root

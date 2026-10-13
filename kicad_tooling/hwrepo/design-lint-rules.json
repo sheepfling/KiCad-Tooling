@@ -289,6 +289,55 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_open_assignments"
     },
     {
+      "rule_id": "connector.peer_power_input_named_assignment_divergence",
+      "title": "Named connector power-input assignments diverge across PART_ID aliases",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances using distinct native symbols that share a nonempty PART_ID, matching nonempty value and footprint, complete identical pin inventories, and matching nonempty function and electrical-type metadata for every pin, compare the same pin number only when its matching function is explicit and unrecognized as a generic, supply, or return role and every alias assigns it the same native power_in type. Emit a REVIEW candidate when every alias has exactly one net assignment and the assignments name at least two distinct schematic nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching PART_ID, value, footprint, function, and electrical type identify a review candidate only; they do not prove the symbols represent one physical part or that their nets should be common.",
+        "The rule is limited to fully assigned, unambiguous pins across distinct connector symbols. Common-net, mixed open/assigned, all-open, ambiguous, generic-function, recognized supply or return, DNP, and incomplete or mismatched identity, inventory, function, or type cases do not trigger this rule.",
+        "Exact-symbol peers remain with connector.repeated_pin_function and generic peer-assignment checks. Connector discovery is bounded to J/P/X/CN references, standard Connector library symbols, and exact project-reviewed interface references; other aliases can evade scanning.",
+        "The finding does not infer intent from net names, join rails, establish PCB copper continuity or off-board wiring, or determine whether either contact assignment is required. Project-authored pinout and connectivity requirements remain authoritative."
+      ],
+      "fault_fixtures": [
+        "tests.test_design_lint_connector_named_power_input_divergence.test_named_power_input_aliases_on_distinct_nets_are_reviewed",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_input_assignment_divergence_matches_between_cli_and_mcp",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_design_lint_connector_named_power_input_divergence.test_named_power_input_divergence_ignores_common_open_mixed_and_ambiguous_groups",
+        "tests.test_design_lint_connector_named_power_input_divergence.test_named_power_input_divergence_requires_guarded_alias_identity_and_metadata",
+        "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_input_assignment_divergence_matches_between_cli_and_mcp",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_hosted_case_validator_accepts_all_four_cases",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_design_lint_connector_named_power_input_divergence.test_named_power_input_divergence_is_stable_under_mapping_order",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_peer_pin_scan.py#scan_connector_part_id_peer_pins",
+        "kicad_tooling/hwrepo/connector_peer_named_power_aliases.py#connector_named_power_alias_peers",
+        "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_assignment_divergence",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_peer_power_input.py#connector_named_power_input_assignment_divergence"
+    },
+    {
       "rule_id": "connector.peer_power_output_open_assignment",
       "title": "Named connector power-output pin is open on one PART_ID alias peer",
       "status": "active",

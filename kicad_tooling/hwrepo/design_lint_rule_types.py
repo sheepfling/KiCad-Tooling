@@ -10,6 +10,7 @@ DesignLintRuleId = Literal[
     "connector.peer_pin_assignment_divergence",
     "connector.peer_power_input_open_assignment",
     "connector.peer_power_input_named_all_open",
+    "connector.peer_power_input_named_assignment_divergence",
     "connector.peer_power_output_open_assignment",
     "connector.peer_power_output_named_all_open",
     "connector.peer_power_output_named_assignment_divergence",

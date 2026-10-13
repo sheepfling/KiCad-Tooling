@@ -13,6 +13,7 @@ import pytest
 from kicad_tooling.ci_hosted_connector_named_power_input import (
     ALL_OPEN_RULE_ID,
     CASES,
+    DIVERGENCE_RULE_ID,
     RULE_ID,
     verify_connector_named_power_input_cases,
 )
@@ -36,6 +37,7 @@ def test_named_connector_power_input_alias_fixture_sources_match_reviewed_digest
         "fault.kicad_sch": "48eae0285f76c61668dbe58e33ee00bf9480a3064f5a45c2e122b12d2f91ec7c",
         "control.kicad_sch": "401fda583c25519540d427b1e24e320e5843c3aab5e99407378497e7dc475717",
         "all-open-fault.kicad_sch": "b17443d0e3db891ca9946f032561dabe57d29e17bd9396668b0398a70ac2fdeb",
+        "divergent-fault.kicad_sch": "fcbe8aba85c991d73f2daa19443749a440b7eef8cb5532ec3e2d09352b6d998c",
     }
 
     assert {
@@ -43,8 +45,8 @@ def test_named_connector_power_input_alias_fixture_sources_match_reviewed_digest
     } == expected
 
 
-def test_named_connector_power_input_hosted_case_validator_accepts_all_three_cases() -> None:
-    fault_case, control_case, all_open_case = CASES
+def test_named_connector_power_input_hosted_case_validator_accepts_all_four_cases() -> None:
+    fault_case, control_case, all_open_case, divergent_case = CASES
     symbols = {
         "J1": "Lint:NamedPeerPowerInputA",
         "J2": "Lint:NamedPeerPowerInputB",
@@ -67,6 +69,12 @@ def test_named_connector_power_input_hosted_case_validator_accepts_all_three_cas
                 evidence={"J1.1": (), "J2.1": ()},
             ),
         ),
+        divergent_case: (
+            SimpleNamespace(
+                rule_id=DIVERGENCE_RULE_ID,
+                evidence={"J1.1": ("+3V3",), "J2.1": ("+5V",)},
+            ),
+        ),
     }
     reports = {
         (case, "first"): SimpleNamespace(findings=findings)
@@ -86,6 +94,14 @@ def test_named_connector_power_input_hosted_case_validator_accepts_all_three_cas
         (all_open_case, "first"): SimpleNamespace(
             component_symbols=symbols,
             nets={"SIGNAL": ("J1.2", "J2.2")},
+        ),
+        (divergent_case, "first"): SimpleNamespace(
+            component_symbols=symbols,
+            components=components,
+            component_pin_numbers={"J1": ("1", "2"), "J2": ("1", "2")},
+            pin_functions={"J1.1": "BIAS_IN", "J2.1": "BIAS_IN"},
+            pin_electrical_types={"J1.1": "power_in", "J2.1": "power_in"},
+            nets={"+3V3": ("J1.1",), "+5V": ("J2.1",), "SIGNAL": ("J1.2", "J2.2")},
         ),
     }
 
@@ -148,17 +164,23 @@ def test_native_connector_named_power_input_alias_fault_and_control_are_repeatab
     fault = results[CASES[0]]
     control = results[CASES[1]]
     all_open = results[CASES[2]]
-    assert fault["status"] == control["status"] == "PASS"
+    divergent = results[CASES[3]]
+    assert fault["status"] == control["status"] == all_open["status"] == "PASS"
     assert fault["lint_status"] == "REVIEW"
     assert RULE_ID in fault["findings"].split(",")
     assert control["lint_status"] in {"PASS", "REVIEW"}
-    assert RULE_ID not in control["findings"].split(",")
-    assert ALL_OPEN_RULE_ID not in control["findings"].split(",")
+    assert not {RULE_ID, ALL_OPEN_RULE_ID, DIVERGENCE_RULE_ID}.intersection(
+        control["findings"].split(",")
+    )
     assert all_open["status"] == "PASS"
     assert all_open["lint_status"] == "REVIEW"
     assert ALL_OPEN_RULE_ID in all_open["findings"].split(",")
     assert RULE_ID not in all_open["findings"].split(",")
-    for result in (fault, control, all_open):
+    assert divergent["status"] == "PASS"
+    assert divergent["lint_status"] == "REVIEW"
+    assert DIVERGENCE_RULE_ID in divergent["findings"].split(",")
+    assert not {RULE_ID, ALL_OPEN_RULE_ID}.intersection(divergent["findings"].split(","))
+    for result in (fault, control, all_open, divergent):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
