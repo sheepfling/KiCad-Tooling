@@ -117,6 +117,11 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             target_functions=("BIAS_OUT", "BIAS_OUT"),
             target_types=("power_out", "power_out"),
         ),
+        _connector_named_power_aliases.named_connector_power_alias_netlist(
+            assignments=("SYNTHETIC_RAIL_A", "SYNTHETIC_RAIL_B"),
+            target_functions=("BIAS_OUT", "BIAS_OUT"),
+            target_types=("power_out", "power_out"),
+        ),
         _connector_peer_pin_all_open.generic_open_peer_netlist(),
         _component_peer_pin_all_open.generic_component_peer_netlist(),
         _component_peer_pin_all_open.generic_component_peer_mixed_netlist(),

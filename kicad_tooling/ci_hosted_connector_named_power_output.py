@@ -8,17 +8,19 @@ CASES = (
     "connector-named-power-output-open-fault",
     "connector-named-power-output-open-control",
     "connector-named-power-output-all-open-fault",
+    "connector-named-power-output-divergent-fault",
 )
 RULE_ID = "connector.peer_power_output_open_assignment"
 ALL_OPEN_RULE_ID = "connector.peer_power_output_named_all_open"
+DIVERGENCE_RULE_ID = "connector.peer_power_output_named_assignment_divergence"
 
 
 def verify_connector_named_power_output_cases(ctx: ConnectorReturnFixtureContext) -> None:
-    """Check native alias metadata and mixed/all-open fault-control cases."""
+    """Check native alias metadata and mixed/all-open/divergent cases."""
     if set(ctx.cases) != set(CASES):
         raise ValueError("Connector named power-output fixture set is incomplete")
 
-    fault_case, control_case, all_open_case = CASES
+    fault_case, control_case, all_open_case, divergent_case = CASES
     fault = ctx.reports[fault_case, "first"]
     observed_fault = ctx.observed_contracts[fault_case, "first"]
     findings = tuple(item for item in fault.findings if item.rule_id == RULE_ID)
@@ -49,9 +51,9 @@ def verify_connector_named_power_output_cases(ctx: ConnectorReturnFixtureContext
 
     control = ctx.reports[control_case, "first"]
     observed_control = ctx.observed_contracts[control_case, "first"]
-    if any(item.rule_id in {RULE_ID, ALL_OPEN_RULE_ID} for item in control.findings) or (
-        observed_control.nets.get("+3V3") != ("J1.1", "J2.1")
-    ):
+    if any(
+        item.rule_id in {RULE_ID, ALL_OPEN_RULE_ID, DIVERGENCE_RULE_ID} for item in control.findings
+    ) or (observed_control.nets.get("+3V3") != ("J1.1", "J2.1")):
         raise ValueError(
             "Connector named power-output common-net control changed its target-rule outcome: "
             f"findings={tuple(item.rule_id for item in control.findings)}, "
@@ -90,3 +92,38 @@ def verify_connector_named_power_output_cases(ctx: ConnectorReturnFixtureContext
         or observed_all_open.nets.get("SIGNAL") != ("J1.2", "J2.2")
     ):
         raise ValueError("Connector all-open power-output alias fault lost native lint evidence")
+
+    divergent = ctx.reports[divergent_case, "first"]
+    observed_divergent = ctx.observed_contracts[divergent_case, "first"]
+    divergent_findings = tuple(
+        item for item in divergent.findings if item.rule_id == DIVERGENCE_RULE_ID
+    )
+    if (
+        len(divergent_findings) != 1
+        or divergent_findings[0].evidence.get("J1.1") != ("+3V3",)
+        or divergent_findings[0].evidence.get("J2.1") != ("+5V",)
+        or any(item.rule_id in {RULE_ID, ALL_OPEN_RULE_ID} for item in divergent.findings)
+        or observed_divergent.component_symbols
+        != {
+            "J1": "Lint:NamedPeerPowerOutputA",
+            "J2": "Lint:NamedPeerPowerOutputB",
+        }
+        or any(
+            observed_divergent.components[reference].part_id
+            != "SYNTHETIC-CONNECTOR-NAMED-OUTPUT-001"
+            for reference in ("J1", "J2")
+        )
+        or observed_divergent.component_pin_numbers != {"J1": ("1", "2"), "J2": ("1", "2")}
+        or any(
+            observed_divergent.pin_functions.get(f"{reference}.1") != "BIAS_OUT"
+            for reference in ("J1", "J2")
+        )
+        or any(
+            observed_divergent.pin_electrical_types.get(f"{reference}.1") != "power_out"
+            for reference in ("J1", "J2")
+        )
+        or observed_divergent.nets.get("SIGNAL") != ("J1.2", "J2.2")
+        or observed_divergent.nets.get("+3V3") != ("J1.1",)
+        or observed_divergent.nets.get("+5V") != ("J2.1",)
+    ):
+        raise ValueError("Connector divergent power-output alias fault lost native lint evidence")

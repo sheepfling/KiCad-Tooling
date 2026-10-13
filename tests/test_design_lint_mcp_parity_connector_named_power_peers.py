@@ -37,11 +37,12 @@ RULE_ID = "connector.peer_power_input_open_assignment"
 ALL_OPEN_RULE_ID = "connector.peer_power_input_named_all_open"
 OUTPUT_RULE_ID = "connector.peer_power_output_open_assignment"
 OUTPUT_ALL_OPEN_RULE_ID = "connector.peer_power_output_named_all_open"
+OUTPUT_DIVERGENCE_RULE_ID = "connector.peer_power_output_named_assignment_divergence"
 
 
 def _netlist_xml(
     *,
-    power_mode: Literal["split", "common", "all_open"],
+    power_mode: Literal["split", "common", "all_open", "divergent"],
     pin_function: str,
     pin_electrical_type: Literal["power_in", "power_out"],
 ) -> str:
@@ -59,28 +60,34 @@ def _netlist_xml(
         "</pins></libpart>"
         for alias in ("A", "B")
     )
-    power_nodes = {
-        "split": '<node ref="J1" pin="1"/>',
-        "common": '<node ref="J1" pin="1"/><node ref="J2" pin="1"/>',
+    power_nets = {
+        "split": '<net name="SYNTHETIC_BIAS"><node ref="J1" pin="1"/></net>',
+        "common": (
+            '<net name="SYNTHETIC_BIAS"><node ref="J1" pin="1"/><node ref="J2" pin="1"/></net>'
+        ),
         "all_open": "",
+        "divergent": (
+            '<net name="SYNTHETIC_RAIL_A"><node ref="J1" pin="1"/></net>'
+            '<net name="SYNTHETIC_RAIL_B"><node ref="J2" pin="1"/></net>'
+        ),
     }[power_mode]
-    power_net = f'<net name="SYNTHETIC_BIAS">{power_nodes}</net>' if power_nodes else ""
     return (
         f"<export><components>{components}</components><libparts>{pins}</libparts><nets>"
         '<net name="SYNTHETIC_SIGNAL"><node ref="J1" pin="2"/>'
-        f'<node ref="J2" pin="2"/></net>{power_net}'
+        f'<node ref="J2" pin="2"/></net>{power_nets}'
         "</nets></export>"
     )
 
 
 def _assert_named_connector_power_peer_parity(
     tmp_path: Path,
-    cases: tuple[tuple[Literal["split", "common", "all_open"], int, int], ...],
+    cases: tuple[tuple[Literal["split", "common", "all_open", "divergent"], int, int, int], ...],
     *,
     pin_function: str,
     pin_electrical_type: Literal["power_in", "power_out"],
     rule_id: str,
     all_open_rule_id: str | None,
+    divergence_rule_id: str | None,
 ) -> None:
     unrelated_rules = (
         "pcb.schematic_component_inventory",
@@ -116,7 +123,12 @@ def _assert_named_connector_power_peer_parity(
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for power_mode, expected_mixed_count, expected_all_open_count in cases:
+    for (
+        power_mode,
+        expected_mixed_count,
+        expected_all_open_count,
+        expected_divergence_count,
+    ) in cases:
         netlist.write_text(
             _netlist_xml(
                 power_mode=power_mode,
@@ -149,6 +161,11 @@ def _assert_named_connector_power_peer_parity(
                 sum(item.rule_id == all_open_rule_id for item in cli.findings)
                 == expected_all_open_count
             )
+        if divergence_rule_id is not None:
+            assert (
+                sum(item.rule_id == divergence_rule_id for item in cli.findings)
+                == expected_divergence_count
+            )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -157,11 +174,12 @@ def test_named_connector_power_input_open_assignment_matches_between_cli_and_mcp
 ) -> None:
     _assert_named_connector_power_peer_parity(
         tmp_path,
-        (("split", 1, 0), ("common", 0, 0)),
+        (("split", 1, 0, 0), ("common", 0, 0, 0)),
         pin_function="BIAS_IN",
         pin_electrical_type="power_in",
         rule_id=RULE_ID,
         all_open_rule_id=ALL_OPEN_RULE_ID,
+        divergence_rule_id=None,
     )
 
 
@@ -171,11 +189,12 @@ def test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp(
 ) -> None:
     _assert_named_connector_power_peer_parity(
         tmp_path,
-        (("all_open", 0, 1), ("common", 0, 0)),
+        (("all_open", 0, 1, 0), ("common", 0, 0, 0)),
         pin_function="BIAS_IN",
         pin_electrical_type="power_in",
         rule_id=RULE_ID,
         all_open_rule_id=ALL_OPEN_RULE_ID,
+        divergence_rule_id=None,
     )
 
 
@@ -185,11 +204,17 @@ def test_named_connector_power_output_open_assignment_matches_between_cli_and_mc
 ) -> None:
     _assert_named_connector_power_peer_parity(
         tmp_path,
-        (("split", 1, 0), ("common", 0, 0), ("all_open", 0, 1)),
+        (
+            ("split", 1, 0, 0),
+            ("common", 0, 0, 0),
+            ("divergent", 0, 0, 1),
+            ("all_open", 0, 1, 0),
+        ),
         pin_function="BIAS_OUT",
         pin_electrical_type="power_out",
         rule_id=OUTPUT_RULE_ID,
         all_open_rule_id=OUTPUT_ALL_OPEN_RULE_ID,
+        divergence_rule_id=OUTPUT_DIVERGENCE_RULE_ID,
     )
 
 
@@ -199,9 +224,25 @@ def test_named_connector_power_output_all_open_aliases_match_between_cli_and_mcp
 ) -> None:
     _assert_named_connector_power_peer_parity(
         tmp_path,
-        (("all_open", 0, 1), ("common", 0, 0)),
+        (("all_open", 0, 1, 0), ("common", 0, 0, 0)),
         pin_function="BIAS_OUT",
         pin_electrical_type="power_out",
         rule_id=OUTPUT_RULE_ID,
         all_open_rule_id=OUTPUT_ALL_OPEN_RULE_ID,
+        divergence_rule_id=OUTPUT_DIVERGENCE_RULE_ID,
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=OUTPUT_DIVERGENCE_RULE_ID)
+def test_named_connector_power_output_assignment_divergence_matches_between_cli_and_mcp(
+    tmp_path: Path,
+) -> None:
+    _assert_named_connector_power_peer_parity(
+        tmp_path,
+        (("divergent", 0, 0, 1), ("common", 0, 0, 0)),
+        pin_function="BIAS_OUT",
+        pin_electrical_type="power_out",
+        rule_id=OUTPUT_RULE_ID,
+        all_open_rule_id=OUTPUT_ALL_OPEN_RULE_ID,
+        divergence_rule_id=OUTPUT_DIVERGENCE_RULE_ID,
     )

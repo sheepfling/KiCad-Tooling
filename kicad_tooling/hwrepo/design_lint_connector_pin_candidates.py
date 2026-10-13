@@ -20,6 +20,7 @@ from .connector_peer_power_input import (
 )
 from .connector_peer_power_output import (
     connector_named_power_output_all_open,
+    connector_named_power_output_assignment_divergence,
     connector_named_power_output_open_assignments,
 )
 from .connector_return_pins import (
@@ -454,6 +455,13 @@ def connector_pin_candidates(
     )
     found.extend(
         connector_named_power_output_all_open(
+            observed,
+            reviewed_connector_references,
+            reviewed_connector_peer_assignment_groups,
+        )
+    )
+    found.extend(
+        connector_named_power_output_assignment_divergence(
             observed,
             reviewed_connector_references,
             reviewed_connector_peer_assignment_groups,

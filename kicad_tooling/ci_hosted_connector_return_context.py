@@ -196,6 +196,8 @@ def prepare_connector_return_fixture_context(
         / "connector-named-power-output-peer-native/control.kicad_sch",
         "connector-named-power-output-all-open-fault": fixture_root
         / "connector-named-power-output-peer-native/all-open-fault.kicad_sch",
+        "connector-named-power-output-divergent-fault": fixture_root
+        / "connector-named-power-output-peer-native/divergent-fault.kicad_sch",
         "component-peer-assignment-outlier-fault": fixture_root
         / "generic-component-peer-pin-assignment-outlier/fault.kicad_sch",
         "component-peer-assignment-outlier-control": fixture_root
@@ -278,6 +280,7 @@ def prepare_connector_return_fixture_context(
         "connector-named-power-output-open-fault": "ef721f666d540f3ce99598fcf9e52a494729e6cdbd56b57798fd260c10bc40be",
         "connector-named-power-output-open-control": "e5621a2b8f8660db341ffe5a4088c1b802c28d1b624e522434516f0235de7d71",
         "connector-named-power-output-all-open-fault": "e16ae20d4f198fdf648049f7571bdf4db0842518bd54f8c7536d89655e93b12b",
+        "connector-named-power-output-divergent-fault": "915340d72ad323d01266b90948d8a42fb55bd0879ceb74cea9b71a667f5a649a",
         "component-peer-assignment-outlier-fault": "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
         "component-peer-assignment-outlier-control": "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
     }

@@ -14,6 +14,7 @@ from .models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.peer_power_output_open_assignment"
 ALL_OPEN_RULE_ID: DesignLintRuleId = "connector.peer_power_output_named_all_open"
+DIVERGENCE_RULE_ID: DesignLintRuleId = "connector.peer_power_output_named_assignment_divergence"
 
 
 def connector_named_power_output_open_assignments(
@@ -111,6 +112,61 @@ def connector_named_power_output_all_open(
                     "approved interface pinout for intentionally unused contacts or a missing "
                     "connection; matching part identity and pin metadata do not establish that "
                     "an output contact is required or that the aliases should share a net."
+                ),
+                evidence=evidence,
+            )
+        )
+
+    return tuple(
+        sorted(
+            found,
+            key=lambda item: (
+                item.subject.casefold(),
+                item.subject,
+                tuple(sorted(item.evidence)),
+            ),
+        )
+    )
+
+
+def connector_named_power_output_assignment_divergence(
+    observed: NetlistContract,
+    declared_references: tuple[str, ...] = (),
+    peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
+) -> tuple[Candidate, ...]:
+    """Review fully assigned named power-output pins on distinct alias nets."""
+    found: list[Candidate] = []
+    for peer in connector_named_power_alias_peers(
+        observed,
+        "power_out",
+        declared_references,
+        peer_assignment_groups,
+    ):
+        group = peer.group
+        if any(len(nets) != 1 for nets in group.assignments.values()):
+            continue
+        assigned_nets = {nets[0] for nets in group.assignments.values()}
+        if len(assigned_nets) < 2:
+            continue
+
+        evidence = connector_named_power_alias_evidence(peer)
+        evidence["distinct_net_assignments"] = tuple(
+            f"{pin}={nets[0]}" for pin, nets in sorted(group.assignments.items())
+        )
+        found.append(
+            Candidate(
+                rule_id=DIVERGENCE_RULE_ID,
+                subject=(
+                    f"PART_ID {group.part_id} pin {group.pin_number} ({peer.function}): "
+                    "named connector power-output peer assignments diverge"
+                ),
+                message=(
+                    "Fitted connector symbols sharing this native PART_ID use the same explicit, "
+                    "unrecognized power_out pin function, but every alias has one net assignment "
+                    "and the assignments use different nets. Review the approved interface "
+                    "pinout for intentionally separate supplies or a possible assignment "
+                    "mismatch; matching part identity and pin metadata do not establish that the "
+                    "nets should be joined."
                 ),
                 evidence=evidence,
             )

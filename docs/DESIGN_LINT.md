@@ -150,6 +150,13 @@ The first rules are:
   and matching per-pin metadata. It is a configurable REVIEW prompt for pinout
   review; it does not establish that a contact is required or that aliases
   should share a net.
+- `connector.peer_power_output_named_assignment_divergence` prompts when the
+  same explicit, unrecognized native `power_out` pin on fully assigned fitted
+  aliases with guarded shared PART_ID and matching complete pin metadata is
+  assigned to different nets. Common-net, open, mixed, ambiguous, and
+  recognized supply/return cases stay with their existing handling. The
+  configurable REVIEW prompt asks whether the split is intentional; it does
+  not instruct the project to join the nets.
 - `connector_peer_pin_coverage` is an observability summary for these existing
   connector heuristics. It binds candidate and fitted connector counts,
   exact-symbol and guarded `PART_ID` alias comparison counts,
@@ -1092,7 +1099,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 111 active rules. They
+`synthetic_validated`; the catalog currently contains 112 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and
