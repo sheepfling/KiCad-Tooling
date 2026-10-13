@@ -3603,9 +3603,8 @@ is not a reason by itself to expand its scope or change its default policy.
   external inventory/surface verification, and playtest. The remaining 3,278
   tests were deselected by the rule scope. The local receipt is retained under
   ignored `build/ci/run-yahhu9sd`. Hosted tag acceptance for `v0.5.0rc229`
-  ([run 38363991457](https://github.com/sheepfling/KiCad-Tooling/actions/runs/38363991457))
-  passed the focused lint gate, external installed-wheel check, and preview
-  orchestration on Ubuntu, macOS, and Windows.
+  (run `38363991457`) passed the focused lint gate, external installed-wheel
+  check, and preview orchestration on Ubuntu, macOS, and Windows.
 - **Exact custom-capacitor extension (2026-10-09):** The public
   [kicad-happy changelog][happy-changelog] records SP-001 for same-net
   two-pin passives and diodes. The local baseline already covered common
