@@ -217,7 +217,7 @@
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_named_power_input_peers.test_named_power_input_alias_all_open_rule_keeps_assignment_controls_quiet",
         "tests.test_design_lint_mcp_parity_connector_named_power_peers.test_named_connector_power_input_all_open_aliases_match_between_cli_and_mcp",
-        "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_hosted_case_validator_accepts_all_three_cases",
+        "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_hosted_case_validator_accepts_all_four_cases",
         "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
         "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
       ],

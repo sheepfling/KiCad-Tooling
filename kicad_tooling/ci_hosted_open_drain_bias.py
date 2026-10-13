@@ -23,11 +23,11 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
     from .ci_hosted import read_kicad_erc_report
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_finding_models import DesignLintFinding
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         ContractCoachReport,
-        DesignLintFinding,
         DesignLintPolicy,
         NetlistContract,
     )

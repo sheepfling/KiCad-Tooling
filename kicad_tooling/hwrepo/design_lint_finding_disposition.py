@@ -10,7 +10,7 @@ from .design_lint_evaluation_types import (
     DesignLintEvaluationPreparation,
     DesignLintFindingDisposition,
 )
-from .models import DesignLintFinding
+from .design_lint_finding_models import DesignLintFinding
 
 
 def resolve_finding_dispositions(

@@ -6,8 +6,8 @@ import hashlib
 from collections.abc import Mapping
 from typing import Literal
 
+from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
-from .models import DesignLintRuleOverride
 from .usb_data_path_models import UsbDataPathMap
 from .usb_peer_reference_models import (
     UsbPeerDataInlineComponentCoverage,

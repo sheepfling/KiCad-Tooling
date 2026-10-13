@@ -10,9 +10,9 @@ from .component_peer_pin_models import (
     ComponentPeerPinRuleCoverage,
 )
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans, PeerPinAssignmentScan
+from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import DesignLintRuleOverride
 
 
 def component_peer_pin_rule_coverage(

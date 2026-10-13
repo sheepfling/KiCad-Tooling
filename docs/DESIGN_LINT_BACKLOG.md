@@ -34,6 +34,30 @@ An empty or absent contract is a **coverage gap**, not proof of a defect and
 not a lint pass. Reports should keep coverage gaps, heuristic findings,
 contract mismatches, native diagnostics, and stale review decisions distinct.
 
+### Operationally reconcile existing findings
+
+Before expanding the rule count, use the source-bound reconciliation gate to
+compare each project's current lint report with its prior report. Keep every
+persistent finding visible, including exact ignores and rule-off findings;
+surface new, reclassified, and no-longer-reported findings for review. A
+no-longer-reported row is not an automatic dismissal. Verify it against current
+source evidence and independently authored requirements before accepting the
+change. Missing source, netlist, or catalog hashes block comparison.
+
+Track evidence levels separately: synthetic fault/control tests establish
+predicate behavior, exact native fixture runs establish export compatibility,
+pinned public baselines establish bounded applicability, and independently
+confirmed reviewer dispositions establish field value. Do not infer one level
+from another or invent reviewer precision/time measurements. More example
+projects expand applicability evidence only when their source, license,
+supported topology, and ground truth can be checked.
+
+The first operational sweep found a stale active-rule fixture locator: the
+catalog named a removed three-case hosted validator, while the existing native
+fixture test validates four cases. The locator now points to that four-case
+test. This was catalog/test reachability drift, not an observed lint-predicate
+failure or a board defect.
+
 ### Entry requirements
 
 Before implementation, every item needs:

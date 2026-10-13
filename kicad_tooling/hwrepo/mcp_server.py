@@ -26,6 +26,7 @@ from . import mcp_parts_extensions as part_tools
 from . import mcp_planning as planning
 from . import mcp_workflow as workflow
 from .contracts import read_model, repo_path
+from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .doctor import NativeRunner
@@ -517,6 +518,27 @@ def create_server(
             return workflow.inspect_design_lint(root, project_id, native_summary)
 
     server.tool(annotations=READ_ONLY)(inspect_design_lint)
+
+    def reconcile_design_lint(
+        project_id: str,
+        native_summary: str,
+        baseline_report_json: str,
+    ) -> DesignLintReconciliationReport:
+        """Compare a saved lint report with current evidence without suppressing findings.
+
+        baseline_report_json is a prior DesignLintReport serialized as JSON. Both old and
+        current findings, including ignored and rule-off findings, remain in the result.
+        A finding that is no longer reported is surfaced as a reviewable transition.
+        """
+        with service_operation(operation):
+            return workflow.reconcile_design_lint(
+                root,
+                project_id,
+                native_summary,
+                baseline_report_json,
+            )
+
+    server.tool(annotations=READ_ONLY)(reconcile_design_lint)
 
     def list_design_lint_rules() -> DesignLintRuleCatalog:
         """List each lint theme, source owner, evidence boundary and default mode."""

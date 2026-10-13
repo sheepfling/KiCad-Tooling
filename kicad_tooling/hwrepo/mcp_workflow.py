@@ -26,6 +26,8 @@ from . import (
     three_d,
 )
 from .contracts import read_model, repo_path, write_model
+from .design_lint_reconciliation import reconcile_design_lint_reports
+from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .diagnostic_journal import DiagnosticJournal
@@ -207,6 +209,22 @@ def inspect_design_lint(root: Path, project_id: str, native_summary: str) -> Des
 def list_design_lint_rules() -> DesignLintRuleCatalog:
     """Return the packaged rule catalog without reading project evidence."""
     return design_lint.rule_catalog()
+
+
+def reconcile_design_lint(
+    root: Path,
+    project_id: str,
+    native_summary: str,
+    baseline_report_json: str,
+) -> DesignLintReconciliationReport:
+    """Compare a saved report with current source-bound lint, preserving both findings."""
+    if len(baseline_report_json.encode("utf-8")) > 10 * 1024 * 1024:
+        raise ValueError("Baseline design-lint report exceeds the 10 MiB input limit")
+    baseline = DesignLintReport.model_validate_json(baseline_report_json)
+    current = design_lint.inspect_summary(
+        root, project_id, native_summary_path(root, native_summary)
+    )
+    return reconcile_design_lint_reports(baseline, current)
 
 
 def capture_contract(

@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Literal
 
+from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext, DigitalPeerVoltageScan
-from .models import DesignLintRuleOverride
 
 
 def digital_peer_voltage_coverage(

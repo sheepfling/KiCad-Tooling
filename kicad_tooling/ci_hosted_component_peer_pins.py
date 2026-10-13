@@ -113,6 +113,7 @@ def _component_peer_pin_assignment_fixture_lane(
 
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
     from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.design_lint_rule_types import DesignLintRuleId
     from .hwrepo.electrical import selected_config
@@ -120,7 +121,6 @@ def _component_peer_pin_assignment_fixture_lane(
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintRuleOverride,
     )
     from .validate import read_netlist
 

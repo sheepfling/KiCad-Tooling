@@ -5,13 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Literal
 
+from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
 from .i2c_peer_reference_models import (
     I2cPeerReferenceBusCoverage,
     I2cPeerReferenceCoverageReport,
 )
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
-from .models import DesignLintRuleOverride
 
 
 def i2c_peer_reference_coverage(

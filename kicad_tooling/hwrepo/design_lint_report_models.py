@@ -12,6 +12,11 @@ from .component_peer_pin_models import ComponentPeerPinRuleCoverage
 from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
+from .design_lint_finding_models import (
+    DesignLintFinding,
+    DesignLintIgnore,
+    DesignLintRuleOverride,
+)
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .external_protection_models import ExternalProtectionCoverageReport
@@ -22,10 +27,7 @@ from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, 
 from .models import (
     ConnectorCoverageReport,
     ConnectorReturnDistributionCoverageReport,
-    DesignLintFinding,
-    DesignLintIgnore,
     DesignLintMappedCheckRun,
-    DesignLintRuleOverride,
     PcbProtectionPathCoverageReport,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,

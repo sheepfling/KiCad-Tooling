@@ -25,13 +25,13 @@ def serial_peer_net_label_fixture_lane(
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.contracts import read_model
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
     from .hwrepo.design_lint_report_models import DesignLintReport
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintRuleOverride,
         NetlistContract,
     )
     from .hwrepo.serial_participants import SerialPeerRosterContext

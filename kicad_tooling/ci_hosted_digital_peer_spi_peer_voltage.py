@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
 from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
-    DesignLintRuleOverride,
 )
 
 

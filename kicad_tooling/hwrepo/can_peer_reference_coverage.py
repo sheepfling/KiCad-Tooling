@@ -10,8 +10,8 @@ from .can_peer_reference_models import (
     CanPeerReferenceCoverageReport,
 )
 from .can_peer_reference_scan import CanPeerReferenceScan
+from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
-from .models import DesignLintRuleOverride
 
 
 def can_peer_reference_coverage(

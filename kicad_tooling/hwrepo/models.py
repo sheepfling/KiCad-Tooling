@@ -28,6 +28,7 @@ from . import connector_contact_rating_models as _connector_contact_rating_model
 from . import connector_peer_pin_models as _connector_peer_pin_models
 from . import control_input_models as _control_input_models
 from . import crystal_network_models as _crystal_network_models
+from . import design_lint_finding_models as _design_lint_finding_models
 from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
 from . import digital_peer_voltage_models as _digital_peer_voltage_models
@@ -259,6 +260,9 @@ PcbRfModuleAntennaRequirement = _pcb_rf_antenna_models.PcbRfModuleAntennaRequire
 DesignLintRuleCatalog = _design_lint_rule_models.DesignLintRuleCatalog
 DesignLintRuleCatalogDocument = _design_lint_rule_models.DesignLintRuleCatalogDocument
 DesignLintRuleMetadata = _design_lint_rule_models.DesignLintRuleMetadata
+DesignLintRuleOverride = _design_lint_finding_models.DesignLintRuleOverride
+DesignLintIgnore = _design_lint_finding_models.DesignLintIgnore
+DesignLintFinding = _design_lint_finding_models.DesignLintFinding
 DesignLintRuleId = _design_lint_rule_types.DesignLintRuleId
 DesignLintTheme = _design_lint_rule_types.DesignLintTheme
 CanTerminationResistorRequirement = _can_termination_models.CanTerminationResistorRequirement
@@ -679,18 +683,6 @@ SchematicGeometryRuleId = Literal[
     "schematic.wire_through_symbol_body",
 ]
 SchematicGeometryRuleCoverageStatus = Literal["DISABLED", "COMPLETE", "PARTIAL", "UNSUPPORTED"]
-
-
-class DesignLintRuleOverride(StrictModel):
-    rule_id: DesignLintRuleId
-    mode: Literal["review", "block", "off"]
-    reason: NonEmptyText
-
-
-class DesignLintIgnore(StrictModel):
-    rule_id: DesignLintRuleId
-    fingerprint: Digest
-    reason: NonEmptyText
 
 
 class RegulatorDividerResistorRequirement(StrictModel):
@@ -2806,17 +2798,6 @@ class RcFilterCoverageReport(StrictModel):
         if self.status == "BLOCKED" and self.issue is None:
             raise ValueError("Blocked RC filter coverage must explain the evidence gap")
         return self
-
-
-class DesignLintFinding(StrictModel):
-    rule_id: DesignLintRuleId
-    fingerprint: Digest
-    subject: NonEmptyText
-    message: NonEmptyText
-    evidence: Mapping[str, tuple[str, ...]]
-    mode: Literal["review", "block", "off"]
-    disposition: Literal["OPEN", "IGNORED", "RULE_OFF"]
-    reason: NonEmptyText | None = None
 
 
 class DesignLintMappedCheckRun(StrictModel):

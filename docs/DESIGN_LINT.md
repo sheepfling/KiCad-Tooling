@@ -5,6 +5,45 @@ cannot infer whether matching connector pins should share a net. The project
 repository owns the pinout, electrical requirements, and decisions about each
 finding. Tooling owns the rules and report format.
 
+## Reconcile findings against a source-bound baseline
+
+Use a saved `DesignLintReport` to see what changed after a project edit:
+
+```sh
+kicad-team design-lint \
+  --root . \
+  --project controller \
+  --native-summary build/validation/controller/summary.json \
+  --baseline-report .kicad-team/design-lint-baseline.json
+```
+
+The baseline path is relative to `--root`. The CLI reads the current native
+summary and compares it with that saved report. MCP exposes the same typed
+comparison as `reconcile_design_lint`, taking the prior report as serialized
+JSON and the current summary as a repository-relative generated artifact.
+
+The comparison requires both reports to identify the same project and include
+source hashes, a native netlist hash, and a design-lint catalog digest. It
+reports findings as `PERSISTING`, `NEW`, `RECLASSIFIED`, or
+`NO_LONGER_REPORTED`. Both copies of a changed finding remain in the result,
+with their fingerprints, evidence, mode, disposition, and reason. Report
+status, policy, catalog, manifest, native-validation, stale-ignore, and issue
+changes are also surfaced. A changed or no-longer-reported finding returns
+`REVIEW`; persistent open findings and a current report that remains `REVIEW` or
+`FAIL` also keep the result at `REVIEW`. Missing or mismatched evidence returns
+`BLOCKED`.
+
+This is a comparison gate, not a finding filter. Persistent `IGNORED` and
+`RULE_OFF` findings remain visible, and a `NO_LONGER_REPORTED` transition does
+not by itself mean a defect was fixed or a dismissal was approved. Review the
+source and independently authored requirements before accepting a change.
+`UNCHANGED` means no findings changed, the current lint report is `PASS`, and
+the listed policy context matches the baseline; persistent ignored and
+rule-off findings are still printed. It does not mean the design is electrically
+correct or ready to build. Keep project-specific reports and their review
+decisions in the project repository; this tooling repository stores only
+synthetic regression cases.
+
 Connector checks share one bounded candidate set: numeric `J`, `P`, `X`, or
 `CN` references, symbols in KiCad's standard `Connector` libraries, and exact
 references in the project's reviewed interface map. This identity is shared by

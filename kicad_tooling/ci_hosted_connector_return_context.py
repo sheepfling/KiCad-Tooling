@@ -56,12 +56,12 @@ def prepare_connector_return_fixture_context(
 
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
+    from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
         ContractCoachReport,
         DesignLintPolicy,
-        DesignLintRuleOverride,
     )
     from .validate import read_netlist
 

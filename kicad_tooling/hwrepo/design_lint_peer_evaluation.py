@@ -11,6 +11,7 @@ from .can_peer_reference_models import CanPeerReferenceCoverageReport
 from .can_peer_reference_scan import CanPeerReferenceScan, scan_can_peer_references
 from .component_peer_pin_evaluation import component_peer_pin_assignment_scans
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
+from .design_lint_finding_models import DesignLintRuleOverride
 from .design_lint_rule_types import DesignLintRuleId
 from .digital_peer_voltage_coverage import digital_peer_voltage_coverage
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
@@ -21,7 +22,6 @@ from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_peer_reference_scan import I2cPeerReferenceScan, scan_i2c_peer_references
 from .models import (
     ConnectorCoverageReport,
-    DesignLintRuleOverride,
     Digest,
     NetlistContract,
 )

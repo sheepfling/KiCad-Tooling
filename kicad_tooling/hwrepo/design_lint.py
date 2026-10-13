@@ -8,6 +8,8 @@ from .design_lint_candidate_aggregation import candidates, fingerprint
 from .design_lint_catalog import rule_catalog
 from .design_lint_evaluator import evaluate
 from .design_lint_project_inspection import inspect_design_lint_summary
+from .design_lint_reconciliation import reconcile_design_lint_reports
+from .design_lint_reconciliation_text import reconciliation_text
 from .design_lint_report_models import DesignLintReport
 from .design_lint_text_report import text_report
 
@@ -16,6 +18,8 @@ __all__ = [
     "evaluate",
     "fingerprint",
     "inspect_summary",
+    "reconcile_design_lint_reports",
+    "reconciliation_text",
     "rule_catalog",
     "text_report",
 ]
