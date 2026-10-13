@@ -6,80 +6,81 @@ import json
 import os
 import subprocess
 import sys
-import tempfile
-import unittest
 from pathlib import Path
+
+import pytest
 
 from kicad_tooling.hwrepo.surface import inspect_tool_surfaces
 
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.slow
 
 
-class InstalledPackageTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.temporary = tempfile.TemporaryDirectory(prefix="kicad-tooling-project-")
-        self.addCleanup(self.temporary.cleanup)
-        self.project = Path(self.temporary.name)
-        (self.project / "catalog").mkdir()
-        (self.project / "projects").mkdir()
-        (self.project / "catalog/projects.json").write_text(
-            json.dumps(
-                {
-                    "schema_version": "1",
-                    "catalogs": {
-                        "parts": "catalog/parts.json",
-                        "interfaces": "catalog/interfaces.json",
-                        "libraries": "catalog/libraries.json",
-                        "toolchains": "catalog/toolchains.json",
-                        "release_policies": "catalog/release-policies.json",
-                    },
-                    "project_roots": ["projects"],
-                }
-            )
-        )
-        (self.project / "catalog/toolchains.json").write_text(
-            '{"schema_version":"0.1","toolchains":[]}\n'
-        )
-        (self.project / "catalog/products.json").write_text(
-            '{"schema_version":"1","products":[]}\n'
-        )
-
-    def run_cli(self, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-        environment = os.environ.copy()
-        return subprocess.run(
-            (sys.executable, "-I", "-B", "-m", "kicad_tooling", *args),
-            cwd=cwd or self.project,
-            env=environment,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-
-    def test_inventory_uses_project_checkout_not_package_source(self) -> None:
-        result = self.run_cli("template", "list", "--format", "json")
-        self.assertEqual(0, result.returncode, result.stderr)
-        report = json.loads(result.stdout)
-        self.assertEqual("PASS", report["status"])
-        self.assertEqual([], report["projects"])
-
-    def test_explicit_root_works_from_another_directory(self) -> None:
-        result = self.run_cli(
-            "template",
-            "list",
-            "--root",
-            str(self.project),
-            "--format",
-            "json",
-            cwd=SOURCE_ROOT,
-        )
-        self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual("PASS", json.loads(result.stdout)["status"])
-
-    def test_surface_catalog_belongs_to_tooling_package(self) -> None:
-        report = inspect_tool_surfaces(self.project)
-        self.assertEqual("PASS", report.coverage_status, report.issues)
-        self.assertEqual("PASS", report.parity_status, report.issues)
+@pytest.fixture
+def project(tmp_path: Path) -> Path:
+    (tmp_path / "catalog").mkdir()
+    (tmp_path / "projects").mkdir()
+    (tmp_path / "catalog/projects.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "1",
+                "catalogs": {
+                    "parts": "catalog/parts.json",
+                    "interfaces": "catalog/interfaces.json",
+                    "libraries": "catalog/libraries.json",
+                    "toolchains": "catalog/toolchains.json",
+                    "release_policies": "catalog/release-policies.json",
+                },
+                "project_roots": ["projects"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "catalog/toolchains.json").write_text(
+        '{"schema_version":"0.1","toolchains":[]}\n', encoding="utf-8"
+    )
+    (tmp_path / "catalog/products.json").write_text(
+        '{"schema_version":"1","products":[]}\n', encoding="utf-8"
+    )
+    return tmp_path
 
 
-if __name__ == "__main__":
-    unittest.main()
+def run_cli(project: Path, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    environment = os.environ.copy()
+    return subprocess.run(
+        (sys.executable, "-I", "-B", "-m", "kicad_tooling", *args),
+        cwd=cwd or project,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_inventory_uses_project_checkout_not_package_source(project: Path) -> None:
+    result = run_cli(project, "template", "list", "--format", "json")
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["status"] == "PASS"
+    assert report["projects"] == []
+
+
+def test_explicit_root_works_from_another_directory(project: Path) -> None:
+    result = run_cli(
+        project,
+        "template",
+        "list",
+        "--root",
+        str(project),
+        "--format",
+        "json",
+        cwd=SOURCE_ROOT,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["status"] == "PASS"
+
+
+def test_surface_catalog_belongs_to_tooling_package(project: Path) -> None:
+    report = inspect_tool_surfaces(project)
+    assert report.coverage_status == "PASS", report.issues
+    assert report.parity_status == "PASS", report.issues
