@@ -3412,7 +3412,9 @@ is not a reason by itself to expand its scope or change its default policy.
   unchanged topology with a changed native electrical type; stable mapping
   order; incomplete metadata with field-scoped comparisons; legacy schema-1
   baseline; exact-toolchain mismatch; and CLI/MCP output parity. Synthetic
-  netlist inputs for mutation and adapter parity. The exact-version UART
+  netlist inputs for mutation and adapter parity are documented in the
+  [connectivity snapshot fixture README](../tests/fixtures/design_lint/connectivity-snapshot/README.md).
+  The exact-version UART
   connector fixture lane also captures pin-role snapshots from its repeated
   native KiCad 10.0.0 and 10.0.5 exports and checks complete, stable metadata.
 - **Cohort input:** The Apache-2.0, pre-alpha
