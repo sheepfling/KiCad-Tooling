@@ -8043,10 +8043,11 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v20; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v21; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
-  public project review samples are recorded below. The UART peer heuristic now
+  public project review samples are recorded below, plus a source-only audit of
+  kicad-happy v2.3.1 CP-003. The UART peer heuristic now
   has an alternate-function net-label path, covered by synthetic fault/control
   tests and a pinned public hardware applicability screen; the screen found
   map-coverage candidates, not confirmed defects. A repeated
@@ -8071,6 +8072,40 @@ is not a reason by itself to expand its scope or change its default policy.
   follow-up also records a GPIO-to-regulator-enable false-positive boundary for
   the voltage-domain analyzer; local LINT-066 remains protocol-specific and
   now has a synthetic non-applicability control.
+
+##### Recorded source audit: kicad-happy CP-003 touch-pad copper clearance (2026-10-13)
+
+- **Pinned source:** `kicad-happy` release `v2.3.1`, commit
+  [`06840467ad0f5d76af45f64449b1f5ecb10f052f`][happy-cp003-commit]. The
+  [CP-003 implementation][happy-cp003-source] and [license][happy-cp003-license]
+  were checked at that revision. Its [release notes][happy-cp003-release]
+  report fixes for round and oval touch-pad geometry after an earlier
+  measurement sampled outside the actual copper.
+- **Observed predicate:** CP-003 measures clearance only for footprints already
+  classified as having no opposite-layer copper. It requires positive touch
+  evidence in the footprint library/value or a `TOUCH`/`TCH` reference prefix,
+  explicitly excluding test-point libraries. It selects same-layer zones whose
+  names look like ground and reports an INFO measurement. Filled-polygon data
+  uses outline samples; absent that data, the code falls back to filled or
+  authored zone bounding boxes and labels the basis as heuristic. The rule
+  supplies no minimum clearance or project-specific sensitivity requirement.
+- **Local overlap and gap:** LINT-096 can check a project-authored keepout
+  signature, and native DRC enforces configured copper spacing. Neither
+  validates that a controller-sourced touch-clearance requirement is configured
+  and met. Our native PCB snapshot retains filled-zone contours and pad nets,
+  but not pad-outline geometry. A cohort-style measurement therefore needs a
+  source-bound native geometry adapter; bounding-box or reference-name guesses
+  are not an acceptable substitute.
+- **Disposition:** This is a candidate for a configurable PCB review/contract
+  check, not an adopted detector or a confirmed defect class. Do not add a
+  universal clearance value. Advance only with an exact mapped pad, same-layer
+  ground net, and independently sourced minimum. A tooling-owned synthetic
+  comparison should cover circle and oval pads, a non-rectangular fill edge,
+  rotated placement, test-point and DNP controls, absent/unfilled zones, and a
+  below/at/above-minimum boundary. Compare against native DRC and retain the
+  exact measurement basis. No runtime trial, project example, reviewer
+  disposition, or precision measurement is claimed here; no cohort code or
+  board fixture was copied.
 - **Recorded runtime trial — kicad-happy `checks_run` (2026-10-12):** Tested
   release tag `v2.2.1` at commit
   [`d5fd7da585fce7e59329b68fd065384216d4ff0a`](https://github.com/aklofas/kicad-happy/commit/d5fd7da585fce7e59329b68fd065384216d4ff0a);
@@ -12576,6 +12611,17 @@ design.
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | Compare an authored driver-output-to-string map with exact LED/current-control component pins and connectivity; test multi-channel and valid constant-current alternatives against current LED prompts.                                            | The proposed check merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied.                                           |
 | Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data. | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                |
 
+#### Conditional candidate: capacitive touch-pad clearance
+
+Native DRC enforces configured copper spacing; LINT-096 checks project-authored
+keepout signatures. Neither validates that a controller-sourced touch-clearance
+requirement is configured and met. Use the pinned CP-003 source audit above to
+define a source-bound native distance observation and an exact project map.
+Test a controller-sourced minimum with synthetic fault/control and boundary
+cases, then compare the result with native DRC. Defer without a positive exact
+pad identity and an independent minimum. Do not use `TP` alone, a default
+millimeter value, or sampled/bounding-box measurements as a blocking predicate.
+
 #### Preliminary source audit: antenna keepout coverage (2026-10-08)
 
 A pinned source inspection of
@@ -12761,10 +12807,13 @@ maintenance cost open wherever they were not measured.
    and valid alternatives. Record incremental findings, false positives,
    missed cases, localization effort, and maintenance cost before adopting a
    cohort implementation or adding the adapter contract in `LINT-032`. For new
-   domain checks, LINT-075's no-CLI oscillator-output trial is recorded. Any
-   first-party path contract still needs native netlist evidence and a
-   project-authored requirement map before implementation. The additional
-   domain-specific cohort families above remain conditional research items.
+   domain checks, LINT-075's no-CLI oscillator-output trial is recorded. The
+   next bounded PCB candidate is CP-003 touch-pad clearance; it remains
+   conditional on a source-backed minimum and an exact native pad-geometry
+   measurement. Any first-party path contract still needs native netlist
+   evidence and a project-authored requirement map before implementation. The
+   other domain-specific cohort families above remain conditional research
+   items.
 7. LINT-076 now covers mapped-check execution plus bounded applicability
    counts for LINT-066's direct-peer voltage heuristics, LINT-086's USB
    peer-reference heuristic, LINT-074's direct serial reference review, and
@@ -12833,6 +12882,10 @@ quality, or first-article continuity.
 [happy-pcb-layout]: <https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/references/pcb-layout-analysis.md>
 [happy-pcb-methodology]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/methodology_pcb.md
 [happy-cross-verify]: https://github.com/aklofas/kicad-happy/blob/main/release-notes.md
+[happy-cp003-commit]: https://github.com/aklofas/kicad-happy/commit/06840467ad0f5d76af45f64449b1f5ecb10f052f
+[happy-cp003-source]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/analyze_pcb.py#L5796-L6103>
+[happy-cp003-license]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/LICENSE>
+[happy-cp003-release]: https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1
 [kicad-skills-pcb]: <https://github.com/sabas0ba/kicad_skills/blob/main/docs/guides/kicad-pcb-review.md>
 
 [calcumaker-revision]: https://github.com/calcumaker/calcumaker/commit/113a283
