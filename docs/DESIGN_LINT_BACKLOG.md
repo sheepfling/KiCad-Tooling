@@ -174,11 +174,13 @@ intended requirement.
   reports now live in `pcb_drc_models.py`. Internal PCB and lint services use
   that owner; the PCB architecture suite checks its size, import boundary, and
   compatibility exports. This extraction removes another 399 lines.
-  PCB decoupling candidate observations and source-bound coverage reports now
-  live in `pcb_decoupling_models.py`. PCB and lint services import that owner;
-  `models.py` preserves identity-compatible exports for existing callers. The
-  PCB architecture suite checks the owner size, import boundary, and exports,
-  and the shared-registry ceiling dropped by 98 lines with this extraction.
+  PCB decoupling requirements, maps, candidate observations, and source-bound
+  coverage reports now live in `pcb_decoupling_models.py`. Internal PCB and
+  lint services import that owner; `models.py` preserves identity-compatible
+  exports for existing callers. The PCB architecture suite checks the owner
+  size, import boundary, registry ownership, and exports. The observation and
+  report extraction removed 98 registry lines; moving the authored contract
+  models removes another 62 without changing schemas.
   PCB track-width requirements, maps, and source-bound measurement reports now
   live in `pcb_track_width_models.py`; the PCB checks and lint evaluation
   services import that owner. Architecture tests enforce its size, import

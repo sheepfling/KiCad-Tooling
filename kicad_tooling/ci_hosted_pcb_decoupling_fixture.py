@@ -12,12 +12,12 @@ from .ci_hosted_pcb_fixture_support import (
     prepare_pcb_fixture,
 )
 from .hwrepo.evidence import digest
-from .hwrepo.models import (
+from .hwrepo.pcb_decoupling import pcb_decoupling_entries
+from .hwrepo.pcb_decoupling_models import (
     PcbDecouplingCapacitor,
     PcbDecouplingMap,
     PcbDecouplingRequirement,
 )
-from .hwrepo.pcb_decoupling import pcb_decoupling_entries
 
 if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog

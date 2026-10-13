@@ -21,14 +21,13 @@ from .evidence import digest
 from .models import (
     ContractCoachReport,
     DesignLintPolicy,
-    PcbDecouplingMap,
     PcbProtectionPathCoverageReport,
     PcbProtectionPathMap,
     ProjectKind,
 )
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
-from .pcb_decoupling_models import PcbDecouplingCoverageReport
+from .pcb_decoupling_models import PcbDecouplingCoverageReport, PcbDecouplingMap
 from .pcb_drc_models import (
     PcbSignalPathRuleCoverageReport,
     PcbSignalPathRuleMap,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from math import isqrt
 
-from .models import PcbDecouplingMap
 from .pcb_connectivity_observations import (
     PcbPadConnectivityObservation,
     PcbViaObservation,
@@ -13,6 +12,7 @@ from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_decoupling_models import (
     PcbDecouplingCandidateObservation,
     PcbDecouplingCoverageEntry,
+    PcbDecouplingMap,
 )
 
 

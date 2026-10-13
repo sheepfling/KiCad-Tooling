@@ -72,6 +72,9 @@ PCB_DRC_MODEL_NAMES = (
 )
 
 PCB_DECOUPLING_MODEL_NAMES = (
+    "PcbDecouplingCapacitor",
+    "PcbDecouplingRequirement",
+    "PcbDecouplingMap",
     "PcbDecouplingCandidateObservation",
     "PcbDecouplingCoverageEntry",
     "PcbDecouplingCoverageReport",
@@ -125,7 +128,7 @@ SHARED_MODEL_PRIMITIVE_NAMES = (
     "NonNegativeCapacitancePf",
 )
 
-SHARED_MODEL_REGISTRY_MAX_LINES = 4_186
+SHARED_MODEL_REGISTRY_MAX_LINES = 4_124
 
 
 def _top_level_definitions(path: Path) -> set[str]:
@@ -178,9 +181,15 @@ def test_internal_pcb_drc_services_import_models_from_the_theme_owner() -> None:
 
 def test_pcb_decoupling_models_have_a_theme_owner_and_compatibility_exports() -> None:
     owner = HWREPO / "pcb_decoupling_models.py"
+    registry = HWREPO / "models.py"
 
     assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
     assert set(PCB_DECOUPLING_MODEL_NAMES) <= _top_level_definitions(owner)
+    registry_tree = ast.parse(registry.read_text(encoding="utf-8"), filename=registry.name)
+    registry_definitions = {
+        node.name for node in registry_tree.body if isinstance(node, ast.ClassDef)
+    }
+    assert not (set(PCB_DECOUPLING_MODEL_NAMES) & registry_definitions)
     for name in PCB_DECOUPLING_MODEL_NAMES:
         assert getattr(shared_models, name) is getattr(pcb_decoupling_models, name)
 

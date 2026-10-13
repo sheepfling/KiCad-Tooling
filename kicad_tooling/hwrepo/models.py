@@ -246,6 +246,9 @@ PcbKeepoutRequirement = _pcb_keepout_models.PcbKeepoutRequirement
 PcbKeepoutMap = _pcb_keepout_models.PcbKeepoutMap
 PcbKeepoutCoverageEntry = _pcb_keepout_models.PcbKeepoutCoverageEntry
 PcbKeepoutCoverageReport = _pcb_keepout_models.PcbKeepoutCoverageReport
+PcbDecouplingCapacitor = _pcb_decoupling_models.PcbDecouplingCapacitor
+PcbDecouplingRequirement = _pcb_decoupling_models.PcbDecouplingRequirement
+PcbDecouplingMap = _pcb_decoupling_models.PcbDecouplingMap
 PcbDecouplingCandidateObservation = _pcb_decoupling_models.PcbDecouplingCandidateObservation
 PcbDecouplingCoverageEntry = _pcb_decoupling_models.PcbDecouplingCoverageEntry
 PcbDecouplingCoverageReport = _pcb_decoupling_models.PcbDecouplingCoverageReport
@@ -889,71 +892,6 @@ class RcFilterMap(StrictModel):
         ]
         if len(set(references)) != len(references):
             raise ValueError("A component can belong to only one mapped RC filter")
-        return self
-
-
-class PcbDecouplingCapacitor(StrictModel):
-    """Exact capacitor pin mapping eligible to decouple one supply pin."""
-
-    reference: Identifier
-    footprint: NonEmptyText
-    supply_pad: Reference
-    return_pad: Reference
-
-    @model_validator(mode="after")
-    def exact_capacitor_pads(self) -> PcbDecouplingCapacitor:
-        prefix = f"{self.reference}.".casefold()
-        if any(not pad.casefold().startswith(prefix) for pad in (self.supply_pad, self.return_pad)):
-            raise ValueError("Decoupling capacitor pads must belong to the declared component")
-        if self.supply_pad.casefold() == self.return_pad.casefold():
-            raise ValueError("Decoupling capacitor supply and return pads must differ")
-        return self
-
-
-class PcbDecouplingRequirement(StrictModel):
-    """Project-reviewed IC power/return pin and candidate capacitor placement rule."""
-
-    id: Identifier
-    basis: NonEmptyText
-    ic_reference: Identifier
-    ic_footprint: NonEmptyText
-    supply_pad: Reference
-    return_pad: Reference
-    supply_net: NetName
-    return_net: NetName
-    capacitors: Annotated[tuple[PcbDecouplingCapacitor, ...], Field(min_length=1)]
-    selection: Literal["any", "all"] = "any"
-    max_distance_um: PositiveCount | None = None
-    max_return_via_distance_um: PositiveCount | None = None
-
-    @model_validator(mode="after")
-    def exact_supply_mapping(self) -> PcbDecouplingRequirement:
-        prefix = f"{self.ic_reference}.".casefold()
-        if any(not pad.casefold().startswith(prefix) for pad in (self.supply_pad, self.return_pad)):
-            raise ValueError("Decoupling IC pads must belong to the declared component")
-        if self.supply_pad.casefold() == self.return_pad.casefold():
-            raise ValueError("Decoupling IC supply and return pads must differ")
-        if self.supply_net.casefold() == self.return_net.casefold():
-            raise ValueError("Decoupling supply and return nets must differ")
-        if len({item.reference.casefold() for item in self.capacitors}) != len(self.capacitors):
-            raise ValueError("A decoupling requirement cannot repeat a capacitor reference")
-        return self
-
-
-class PcbDecouplingMap(StrictModel):
-    """Explicit per-project PCB decoupling scopes; no universal distance is assumed."""
-
-    schema_version: Literal["1"] = "1"
-    basis: NonEmptyText
-    requirements: Annotated[tuple[PcbDecouplingRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_supply_pins(self) -> PcbDecouplingMap:
-        if len({item.id.casefold() for item in self.requirements}) != len(self.requirements):
-            raise ValueError("PCB decoupling requirement IDs must be unique")
-        supply_pads = [item.supply_pad.casefold() for item in self.requirements]
-        if len(set(supply_pads)) != len(supply_pads):
-            raise ValueError("An IC supply pad can belong to only one decoupling requirement")
         return self
 
 
