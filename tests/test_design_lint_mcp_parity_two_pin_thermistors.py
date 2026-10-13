@@ -25,7 +25,9 @@ pytestmark = [
 ]
 
 
-def _thermistor_netlist(*, same_net: bool) -> str:
+def _thermistor_netlist(*, symbol: str, same_net: bool) -> str:
+    symbol_name = symbol.partition(":")[2]
+    value = "10k PTC" if "_PTC" in symbol_name else "10k NTC"
     nets = (
         '<net name="SHARED"><node ref="TH1" pin="1"/><node ref="TH1" pin="2"/></net>'
         if same_net
@@ -34,10 +36,10 @@ def _thermistor_netlist(*, same_net: bool) -> str:
     )
     return (
         "<export><components>"
-        '<comp ref="TH1"><value>10k NTC</value>'
+        f'<comp ref="TH1"><value>{value}</value>'
         "<footprint>Synthetic:Thermistor</footprint>"
-        '<libsource lib="Device" part="Thermistor_NTC"/></comp>'
-        '</components><libparts><libpart lib="Device" part="Thermistor_NTC"><pins>'
+        f'<libsource lib="Device" part="{symbol_name}"/></comp>'
+        f'</components><libparts><libpart lib="Device" part="{symbol_name}"><pins>'
         '<pin num="1" name="1" type="passive"/>'
         '<pin num="2" name="2" type="passive"/>'
         f"</pins></libpart></libparts><nets>{nets}</nets></export>"
@@ -45,7 +47,8 @@ def _thermistor_netlist(*, same_net: bool) -> str:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_same_net_thermistor_lint_cli_mcp_parity(tmp_path: Path) -> None:
+@pytest.mark.parametrize("symbol", ("Device:Thermistor_NTC", "Device:Thermistor_PTC"))
+def test_same_net_thermistor_lint_cli_mcp_parity(tmp_path: Path, symbol: str) -> None:
     root, summary_path = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
     netlist = summary_path.parent / "netlist.xml"
 
@@ -53,7 +56,10 @@ def test_same_net_thermistor_lint_cli_mcp_parity(tmp_path: Path) -> None:
         async with Client(create_server(root), mode="legacy") as client:
             reports: list[DesignLintReport] = []
             for same_net in (True, False):
-                netlist.write_text(_thermistor_netlist(same_net=same_net), encoding="utf-8")
+                netlist.write_text(
+                    _thermistor_netlist(symbol=symbol, same_net=same_net),
+                    encoding="utf-8",
+                )
                 summary = read_model(summary_path, ValidationSummary)
                 write_model(
                     summary_path,
@@ -85,7 +91,7 @@ def test_same_net_thermistor_lint_cli_mcp_parity(tmp_path: Path) -> None:
                 findings = [item for item in mcp.findings if item.rule_id == RULE_ID]
                 assert len(findings) == int(same_net)
                 if findings:
-                    assert findings[0].evidence["symbol"] == ("Device:Thermistor_NTC",)
+                    assert findings[0].evidence["symbol"] == (symbol,)
                     assert findings[0].evidence["pin_assignments"] == (
                         "TH1.1 -> SHARED",
                         "TH1.2 -> SHARED",

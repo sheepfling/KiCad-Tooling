@@ -45,6 +45,46 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_passive_same_net",
         set(),
     ),
+    "same-net-thermistor-ptc": (
+        "two-pin-thermistors/same-net-thermistor-ptc.kicad_sch",
+        "component.two_pin_passive_same_net",
+        {"TH1 (10k PTC thermistor) has both pins on one net"},
+    ),
+    "distinct-nets-thermistor-ptc": (
+        "two-pin-thermistors/distinct-nets-thermistor-ptc.kicad_sch",
+        "component.two_pin_passive_same_net",
+        set(),
+    ),
+    "same-net-thermistor-us": (
+        "two-pin-thermistors/same-net-thermistor-us.kicad_sch",
+        "component.two_pin_passive_same_net",
+        {"TH1 (10k US thermistor) has both pins on one net"},
+    ),
+    "distinct-nets-thermistor-us": (
+        "two-pin-thermistors/distinct-nets-thermistor-us.kicad_sch",
+        "component.two_pin_passive_same_net",
+        set(),
+    ),
+    "same-net-thermistor-ntc-us": (
+        "two-pin-thermistors/same-net-thermistor-ntc-us.kicad_sch",
+        "component.two_pin_passive_same_net",
+        {"TH1 (10k NTC US thermistor) has both pins on one net"},
+    ),
+    "distinct-nets-thermistor-ntc-us": (
+        "two-pin-thermistors/distinct-nets-thermistor-ntc-us.kicad_sch",
+        "component.two_pin_passive_same_net",
+        set(),
+    ),
+    "same-net-thermistor-ptc-us": (
+        "two-pin-thermistors/same-net-thermistor-ptc-us.kicad_sch",
+        "component.two_pin_passive_same_net",
+        {"TH1 (10k PTC US thermistor) has both pins on one net"},
+    ),
+    "distinct-nets-thermistor-ptc-us": (
+        "two-pin-thermistors/distinct-nets-thermistor-ptc-us.kicad_sch",
+        "component.two_pin_passive_same_net",
+        set(),
+    ),
     "same-net-mapped-capacitor": (
         "two-pin-components/custom-capacitor-same-net.kicad_sch",
         "component.two_pin_passive_same_net",

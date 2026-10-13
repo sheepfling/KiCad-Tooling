@@ -15,6 +15,16 @@ _SUPPORTED_DEVICE_SYMBOL = re.compile(
     re.IGNORECASE,
 )
 _SUPPORTED_SWITCH_SYMBOL = re.compile(r"^Switch:SW_SPST$", re.IGNORECASE)
+_SUPPORTED_THERMISTOR_SYMBOLS = frozenset(
+    {
+        "Device:Thermistor",
+        "Device:Thermistor_NTC",
+        "Device:Thermistor_PTC",
+        "Device:Thermistor_US",
+        "Device:Thermistor_NTC_US",
+        "Device:Thermistor_PTC_US",
+    }
+)
 _KIND_NAMES = {
     "r": "resistor",
     "c": "capacitor",
@@ -80,10 +90,7 @@ def two_pin_components_on_same_net(
                 "Device:Varistor_US",
             }:
                 continue
-            if native_kind == "thermistor" and symbol not in {
-                "Device:Thermistor",
-                "Device:Thermistor_NTC",
-            }:
+            if native_kind == "thermistor" and symbol not in _SUPPORTED_THERMISTOR_SYMBOLS:
                 continue
             kind = _KIND_NAMES[native_kind]
             role_binding = None

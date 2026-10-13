@@ -1164,13 +1164,13 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted member of the exact Device:R, Device:C, or Device:L symbol families; exact Device:Varistor or Device:Varistor_US symbols; exact Device:Thermistor or Device:Thermistor_NTC symbols; or an exact project-mapped custom capacitor, require exactly two native pin numbers and one unambiguous schematic net assignment per pin; report when both pins use the same net.",
+      "predicate": "For a fitted member of the exact Device:R, Device:C, or Device:L symbol families; exact Device:Varistor or Device:Varistor_US symbols; exact Device:Thermistor, Device:Thermistor_NTC, Device:Thermistor_PTC, Device:Thermistor_US, Device:Thermistor_NTC_US, or Device:Thermistor_PTC_US symbols; or an exact project-mapped custom capacitor, require exactly two native pin numbers and one unambiguous schematic net assignment per pin; report when both pins use the same net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "A same-net two-terminal passive may be intentional; this is a review prompt and does not assert that the topology is wrong.",
-        "Custom symbols are recognized only as capacitors when an exact project-authored component_role_map entry matches PART_ID, symbol, footprint, and the complete native pin number/function/electrical-type inventory. Varistors are limited to the exact stock identities Device:Varistor and Device:Varistor_US; thermistors are limited to the exact stock identities Device:Thermistor and Device:Thermistor_NTC. Other custom, multi-pin, and incomplete symbols are outside the predicate.",
+        "Custom symbols are recognized only as capacitors when an exact project-authored component_role_map entry matches PART_ID, symbol, footprint, and the complete native pin number/function/electrical-type inventory. Varistors are limited to the exact stock identities Device:Varistor and Device:Varistor_US; thermistors are limited to the exact six validated stock identities Device:Thermistor, Device:Thermistor_NTC, Device:Thermistor_PTC, Device:Thermistor_US, Device:Thermistor_NTC_US, and Device:Thermistor_PTC_US. Other custom, multi-pin, and incomplete symbols are outside the predicate.",
         "The schematic netlist does not prove copper connectivity, current flow, component behavior, footprint pin mapping, or physical population. DNP components are excluded."
       ],
       "fault_fixtures": [

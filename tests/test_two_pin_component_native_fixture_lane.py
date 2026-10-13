@@ -31,6 +31,14 @@ _EXPECTED_SOURCE_HASHES = {
     "two-pin-varistors/distinct-nets-varistor.kicad_sch": "60369d9cac30ade461b045c99b599b73821fbefc646a7c06f2ce552d31e871a0",
     "two-pin-thermistors/same-net-thermistor.kicad_sch": "be417443337f223c51b6caa7305038544df0e5342e90cae91d5fce6a797ac26f",
     "two-pin-thermistors/distinct-nets-thermistor.kicad_sch": "7a6753de56bf6985d4fd218b96e1f9b951541fd103920baaea503b8999f02a06",
+    "two-pin-thermistors/same-net-thermistor-ptc.kicad_sch": "5d7678f58af0a323961c1af73173a1dbcd52c7ad09fac43f1f0cd1545ff65762",
+    "two-pin-thermistors/distinct-nets-thermistor-ptc.kicad_sch": "452b3245be262532becb18866bf8a28dd01e9235214580fc67c74f98210daab5",
+    "two-pin-thermistors/same-net-thermistor-us.kicad_sch": "2c01ec413b9a122d7d96ead9f18a5fa470e419a89be1241e3216b0a8a7b0b56c",
+    "two-pin-thermistors/distinct-nets-thermistor-us.kicad_sch": "a0881cd4e53dc6b4d0de89401d81d4714254b52db1f12afa6163a6263307947f",
+    "two-pin-thermistors/same-net-thermistor-ntc-us.kicad_sch": "4953e4dbfb058fc5b563249736e823b296016504e3782534db9761562870d59f",
+    "two-pin-thermistors/distinct-nets-thermistor-ntc-us.kicad_sch": "bbc82a02e7a9e17d63b5d1d0541b8763b836e0934a43eab99c92980f8ac3409f",
+    "two-pin-thermistors/same-net-thermistor-ptc-us.kicad_sch": "0f43667c614d9c8c72f257101b173551e947f280ca11a47f32868b40d11320ef",
+    "two-pin-thermistors/distinct-nets-thermistor-ptc-us.kicad_sch": "4ca99c33fa15936b648832d1d116b578cf12433b40653f3d82120751c4f40301",
     "two-pin-components/custom-capacitor-same-net.kicad_sch": "304c3eb9b979f807f99ee91fecec83e4688bb8d50207c298ff985688950e9fc2",
     "cohort-power-pin-dc/custom-capacitor-role-control.kicad_sch": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
     "two-pin-components/same-net-diode.kicad_sch": "c7b34973f881f5c8d8e8ac26b07c03dec70b061f66b8338d61fb085583c2aa8b",
@@ -52,7 +60,7 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     case_sources = {filename for filename, _, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
     assert case_sources == set(_EXPECTED_SOURCE_HASHES)
-    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 20
+    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 28
     for filename, expected_digest in _EXPECTED_SOURCE_HASHES.items():
         source = (fixture_root / filename).resolve()
         assert source.is_relative_to(fixture_root.resolve())
@@ -69,6 +77,14 @@ def test_passive_native_fixture_scope_contains_only_passive_faults_and_controls(
         "distinct-nets-varistor",
         "same-net-thermistor",
         "distinct-nets-thermistor",
+        "same-net-thermistor-ptc",
+        "distinct-nets-thermistor-ptc",
+        "same-net-thermistor-us",
+        "distinct-nets-thermistor-us",
+        "same-net-thermistor-ntc-us",
+        "distinct-nets-thermistor-ntc-us",
+        "same-net-thermistor-ptc-us",
+        "distinct-nets-thermistor-ptc-us",
         "same-net-mapped-capacitor",
         "distinct-nets-mapped-capacitor",
     }

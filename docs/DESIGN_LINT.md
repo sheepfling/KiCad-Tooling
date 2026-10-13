@@ -378,8 +378,10 @@ The first rules are:
 - `component.two_pin_passive_same_net` prompts review when both pins of a
   fitted, exactly inventoried `Device:R`, `Device:C`, or `Device:L` family
   member, exact `Device:Varistor` or `Device:Varistor_US` symbol, or exact
-  `Device:Thermistor` or `Device:Thermistor_NTC` symbol, resolve to the same
-  schematic net. A custom symbol is included only when an
+  thermistor symbol (`Device:Thermistor`, `Device:Thermistor_NTC`,
+  `Device:Thermistor_PTC`, `Device:Thermistor_US`,
+  `Device:Thermistor_NTC_US`, or `Device:Thermistor_PTC_US`), resolve to the
+  same schematic net. A custom symbol is included only when an
   exact project-authored `component_role_map` capacitor entry matches its
   `PART_ID`, symbol, footprint, and complete native pin inventory. The
   assigned net bypasses the passive in the schematic topology. Other custom

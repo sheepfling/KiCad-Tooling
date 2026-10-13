@@ -3573,7 +3573,9 @@ is not a reason by itself to expand its scope or change its default policy.
   element or short a shunt element while every pin remains connected.
 - **Predicate:** Recognize the `Device:R`, `Device:C`, and `Device:L` symbol
   families; exact `Device:Varistor` and `Device:Varistor_US` identities; exact
-  `Device:Thermistor` and `Device:Thermistor_NTC` identities; and custom
+  `Device:Thermistor`, `Device:Thermistor_NTC`, `Device:Thermistor_PTC`,
+  `Device:Thermistor_US`, `Device:Thermistor_NTC_US`, and
+  `Device:Thermistor_PTC_US` identities; and custom
   capacitor symbols with an exact project-authored role binding, only
   when the native netlist contains exactly two distinct pin
   numbers, one unambiguous net per pin, a fitted component state, and the
@@ -3604,7 +3606,7 @@ is not a reason by itself to expand its scope or change its default policy.
   and evidence boundary.
 - **Thermistor fixture inputs:** The
   [synthetic thermistor README](../tests/fixtures/design_lint/two-pin-thermistors/README.md)
-  records the source hashes, exact supported identity, fault/control topology,
+  records the source hashes, exact supported identities, fault/control topologies,
   and evidence boundary.
 - **Exact varistor extension (2026-10-13):** The public
   [kicad-happy SP-001 analyzer][happy-analyzer] prompted a review of the local
@@ -3631,12 +3633,31 @@ is not a reason by itself to expand its scope or change its default policy.
   unless separately confirmed and reviewed. The check reports schematic
   topology only; it does not choose a sensor type, rating, application, or
   physical connection. No candidate project or proprietary source was used.
+- **PTC and US-style thermistor extension (2026-10-13):** A source review of
+  the official KiCad 10.0.5 [PTC][kicad-thermistor-ptc-symbol-10.0.5],
+  [US-style][kicad-thermistor-us-symbol-10.0.5],
+  [NTC US-style][kicad-thermistor-ntc-us-symbol-10.0.5], and
+  [PTC US-style][kicad-thermistor-ptc-us-symbol-10.0.5]
+  symbols confirmed each has exactly native pin numbers 1 and 2. LINT-051 now
+  recognizes those four exact identities in addition to `Device:Thermistor`
+  and `Device:Thermistor_NTC`. Each has source-hashed synthetic same-net and
+  distinct-net schematics, and the exact-version native fixture gate checks
+  the exports on KiCad 10.0.0 and 10.0.5. CLI/MCP parity covers the existing
+  NTC identity and the new PTC identity; direct regressions cover all six.
+  Unconfirmed variants, custom identities, and case drift remain excluded.
+  The finding still reports schematic topology only. No project board or
+  proprietary source was used.
 - **Hosted thermistor gate (2026-10-13):** The `v0.5.0rc233` acceptance run
   surfaced two Markdown table-alignment issues in the synthetic fixture README;
   both were corrected. The follow-up `v0.5.0rc234` acceptance (run
   `38370567749`) passed the focused LINT-051 tests, exact KiCad 10.0.0/10.0.5
   native fixture exports, installed-wheel check against a separate project
   checkout, and Ubuntu/macOS/Windows preview orchestration.
+- **PTC and US-style thermistor fixtures:** The synthetic fault/control sources
+  are retained in the same fixture directory with their individual hashes.
+  They embed only minimal symbol geometry and pin assignments; exact stock
+  symbol identity and native exports are checked separately by the pinned
+  KiCad lane.
 - **Verification (2026-10-13):** Focused synthetic rule and parity tests pass;
   source hashes and fixture selection are guarded by architecture tests. The
   digest-pinned native exports are delegated to the hosted lint-rule gate.
@@ -12708,3 +12729,7 @@ quality, or first-article continuity.
 [pcbdraft-rc-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/rc-1k-100nf/native/rc-1k-100nf-9e558fd9.kicad_sch
 [pcbdraft-i2c-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/i2c-3v3-pullups/native/i2c-3v3-pullups-a844fc2a.kicad_sch
 [pcbdraft-led-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/led-3v3-330r/native/led-3v3-330r-308123ef.kicad_sch
+[kicad-thermistor-ptc-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_PTC.kicad_sym>
+[kicad-thermistor-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_US.kicad_sym>
+[kicad-thermistor-ntc-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_NTC_US.kicad_sym>
+[kicad-thermistor-ptc-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_PTC_US.kicad_sym>

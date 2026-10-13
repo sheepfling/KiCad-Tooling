@@ -17,7 +17,14 @@ from kicad_tooling.hwrepo.two_pin_passives import two_pin_passives_on_same_net
 
 pytestmark = [pytest.mark.component_lint, pytest.mark.design_lint]
 RULE_ID = "component.two_pin_passive_same_net"
-SUPPORTED_SYMBOLS = ("Device:Thermistor", "Device:Thermistor_NTC")
+SUPPORTED_SYMBOLS = (
+    "Device:Thermistor",
+    "Device:Thermistor_NTC",
+    "Device:Thermistor_PTC",
+    "Device:Thermistor_US",
+    "Device:Thermistor_NTC_US",
+    "Device:Thermistor_PTC_US",
+)
 
 
 def thermistor_netlist(
@@ -32,8 +39,14 @@ def thermistor_netlist(
         nets = {"SHORT_TH1": ("TH1.1", "TH1.2")}
     else:
         nets = {"SENSE_A": ("TH1.1",), "SENSE_B": ("TH1.2",)}
+    value = {
+        "Device:Thermistor": "10k",
+        "Device:Thermistor_PTC": "10k PTC",
+        "Device:Thermistor_US": "10k",
+        "Device:Thermistor_PTC_US": "10k PTC",
+    }.get(symbol, "10k NTC")
     return NetlistContract(
-        components={"TH1": ComponentContract(value="10k NTC", footprint="Synthetic:Thermistor")},
+        components={"TH1": ComponentContract(value=value, footprint="Synthetic:Thermistor")},
         nets=nets,
         dnp_components=("TH1",) if dnp else (),
         component_symbols={"TH1": symbol},
@@ -53,7 +66,9 @@ def lint_report(observed: NetlistContract) -> object:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-@pytest.mark.parametrize("symbol", SUPPORTED_SYMBOLS)
+@pytest.mark.parametrize(
+    "symbol", SUPPORTED_SYMBOLS, ids=lambda symbol: symbol.removeprefix("Device:")
+)
 def test_detects_exact_supported_thermistors_on_one_net(symbol: str) -> None:
     observed = thermistor_netlist(symbol=symbol)
     candidates = two_pin_passives_on_same_net(observed)
@@ -73,9 +88,12 @@ def test_detects_exact_supported_thermistors_on_one_net(symbol: str) -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_distinct_net_and_dnp_controls_stay_quiet() -> None:
-    distinct = lint_report(thermistor_netlist(same_net=False))
-    dnp = lint_report(thermistor_netlist(dnp=True))
+@pytest.mark.parametrize(
+    "symbol", SUPPORTED_SYMBOLS, ids=lambda symbol: symbol.removeprefix("Device:")
+)
+def test_distinct_net_and_dnp_controls_stay_quiet(symbol: str) -> None:
+    distinct = lint_report(thermistor_netlist(symbol=symbol, same_net=False))
+    dnp = lint_report(thermistor_netlist(symbol=symbol, dnp=True))
     assert RULE_ID not in {item.rule_id for item in distinct.findings}
     assert RULE_ID not in {item.rule_id for item in dnp.findings}
     assert distinct.status == dnp.status == "PASS"
@@ -86,9 +104,8 @@ def test_skips_unconfirmed_thermistor_variants_and_case_drift() -> None:
     for symbol in (
         "Device:Thermistor_NTC_3wire",
         "Device:Thermistor_NTC_4wire",
-        "Device:Thermistor_NTC_US",
-        "Device:Thermistor_PTC",
-        "Device:Thermistor_US",
+        "Device:Thermistor_PTC_3wire",
+        "Device:Thermistor_PTC_4wire",
         "Device:thermistor",
         "Synthetic:Thermistor",
     ):
@@ -96,8 +113,11 @@ def test_skips_unconfirmed_thermistor_variants_and_case_drift() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_thermistor_finding_is_order_stable_and_a_split_clears_it() -> None:
-    source = thermistor_netlist()
+@pytest.mark.parametrize(
+    "symbol", SUPPORTED_SYMBOLS, ids=lambda symbol: symbol.removeprefix("Device:")
+)
+def test_thermistor_finding_is_order_stable_and_a_split_clears_it(symbol: str) -> None:
+    source = thermistor_netlist(symbol=symbol)
     original = lint_report(source)
     reordered_source = source.model_copy(
         update={
