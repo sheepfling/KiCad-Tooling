@@ -26,7 +26,7 @@ def two_pin_passives_on_same_net(
     observed: NetlistContract,
     component_role_map: ComponentRoleMap | None = None,
 ) -> tuple[TwoPinPassiveOnSameNet, ...]:
-    """Return supported resistor, capacitor, inductor, and varistor candidates."""
+    """Return supported resistor, capacitor, inductor, varistor, and thermistor candidates."""
     return tuple(
         TwoPinPassiveOnSameNet(
             reference=item.reference,
@@ -38,5 +38,5 @@ def two_pin_passives_on_same_net(
             role_binding=item.role_binding,
         )
         for item in two_pin_components_on_same_net(observed, component_role_map)
-        if item.kind in {"resistor", "capacitor", "inductor", "varistor"}
+        if item.kind in {"resistor", "capacitor", "inductor", "varistor", "thermistor"}
     )

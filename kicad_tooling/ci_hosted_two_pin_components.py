@@ -35,6 +35,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_passive_same_net",
         set(),
     ),
+    "same-net-thermistor": (
+        "two-pin-thermistors/same-net-thermistor.kicad_sch",
+        "component.two_pin_passive_same_net",
+        {"TH1 (10k NTC thermistor) has both pins on one net"},
+    ),
+    "distinct-nets-thermistor": (
+        "two-pin-thermistors/distinct-nets-thermistor.kicad_sch",
+        "component.two_pin_passive_same_net",
+        set(),
+    ),
     "same-net-mapped-capacitor": (
         "two-pin-components/custom-capacitor-same-net.kicad_sch",
         "component.two_pin_passive_same_net",

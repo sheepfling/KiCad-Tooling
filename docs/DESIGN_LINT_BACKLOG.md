@@ -3572,8 +3572,9 @@ is not a reason by itself to expand its scope or change its default policy.
   are assigned to the same schematic net. That topology can bypass a series
   element or short a shunt element while every pin remains connected.
 - **Predicate:** Recognize the `Device:R`, `Device:C`, and `Device:L` symbol
-  families and exact `Device:Varistor` and `Device:Varistor_US` identities, plus
-  custom capacitor symbols with an exact project-authored role binding, only
+  families; exact `Device:Varistor` and `Device:Varistor_US` identities; exact
+  `Device:Thermistor` and `Device:Thermistor_NTC` identities; and custom
+  capacitor symbols with an exact project-authored role binding, only
   when the native netlist contains exactly two distinct pin
   numbers, one unambiguous net per pin, a fitted component state, and the
   component value. The custom binding must match `PART_ID`, symbol, footprint,
@@ -3586,7 +3587,7 @@ is not a reason by itself to expand its scope or change its default policy.
   assignments are outside the predicate. The schematic netlist cannot prove
   copper connectivity, physical population, current behavior, or whether the
   symbol-to-footprint pin map is correct. Keep the default at `review`.
-- **Fixtures:** Synthetic same-net resistor/capacitor/inductor fault;
+- **Fixtures:** Synthetic same-net resistor/capacitor/inductor and thermistor faults;
   distinct-net control; DNP, custom-symbol, multi-pin, missing-inventory,
   unassigned, and ambiguous-assignment exclusions; review/block/off/exact
   ignore and stale-fingerprint lifecycle; CLI/MCP parity; repeated exports
@@ -3601,6 +3602,10 @@ is not a reason by itself to expand its scope or change its default policy.
   [synthetic varistor README](../tests/fixtures/design_lint/two-pin-varistors/README.md)
   records the source hashes, supported identities, fault/control topologies,
   and evidence boundary.
+- **Thermistor fixture inputs:** The
+  [synthetic thermistor README](../tests/fixtures/design_lint/two-pin-thermistors/README.md)
+  records the source hashes, exact supported identity, fault/control topology,
+  and evidence boundary.
 - **Exact varistor extension (2026-10-13):** The public
   [kicad-happy SP-001 analyzer][happy-analyzer] prompted a review of the local
   same-net two-pin symbol allowlist. The official
@@ -3614,6 +3619,21 @@ is not a reason by itself to expand its scope or change its default policy.
   code was copied, and no project design was used. This is a schematic
   topology review prompt; it does not establish protection requirements,
   ratings, orientation, footprint mapping, PCB copper, or physical population.
+- **Exact thermistor extension (2026-10-13):** A source review of the official
+  [KiCad 10.0.5 `Thermistor` symbol][kicad-thermistor-symbol-10.0.5] and
+  [`Thermistor_NTC` symbol][kicad-thermistor-ntc-symbol-10.0.5] confirmed each
+  has exactly native pin numbers 1 and 2. LINT-051 now includes only those two
+  exact identities after verifying the project netlist has two distinct pins
+  and an unambiguous assignment for each. The synthetic same-net fault and
+  distinct-net control are source-hashed, exercised through CLI/MCP parity,
+  and added to the exact KiCad 10.0.0/10.0.5 native fixture lane. NTC 3-wire,
+  NTC 4-wire, PTC, US variants, case drift, and custom symbols remain excluded
+  unless separately confirmed and reviewed. The check reports schematic
+  topology only; it does not choose a sensor type, rating, application, or
+  physical connection. No candidate project or proprietary source was used.
+- **Verification (2026-10-13):** Focused synthetic rule and parity tests pass;
+  source hashes and fixture selection are guarded by architecture tests. The
+  digest-pinned native exports are delegated to the hosted lint-rule gate.
 - **Verification (2026-10-13):** The focused rule selector passed 17 tests,
   including the same-net fault, distinct-net control, CLI/MCP parity, and
   repeated native exports on KiCad 10.0.0 and 10.0.5. The package acceptance
@@ -12649,6 +12669,8 @@ quality, or first-article continuity.
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
 [happy-analyzer]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L3633-L3673
 [kicad-device-library]: https://kicad.github.io/symbols/Device.html
+[kicad-thermistor-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor.kicad_sym>
+[kicad-thermistor-ntc-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_NTC.kicad_sym>
 [happy-thermal-v231]: <https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1>
 [happy-thermal-source]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/analyze_thermal.py>
 [happy-uc-releases]: https://github.com/aklofas/kicad-happy/releases

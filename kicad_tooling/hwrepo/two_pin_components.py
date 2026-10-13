@@ -10,7 +10,7 @@ from .component_roles import resolve_component_role_map
 from .models import NetlistContract
 
 _SUPPORTED_DEVICE_SYMBOL = re.compile(
-    r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead|Crystal|Varistor)"
+    r"^Device:(?P<kind>R|C|L|D|Fuse|Polyfuse|FerriteBead|Crystal|Varistor|Thermistor)"
     r"(?:_(?P<variant>[A-Za-z0-9_]+))?$",
     re.IGNORECASE,
 )
@@ -25,6 +25,7 @@ _KIND_NAMES = {
     "ferritebead": "ferrite_bead",
     "crystal": "crystal",
     "varistor": "varistor",
+    "thermistor": "thermistor",
 }
 
 
@@ -77,6 +78,11 @@ def two_pin_components_on_same_net(
             if native_kind == "varistor" and symbol not in {
                 "Device:Varistor",
                 "Device:Varistor_US",
+            }:
+                continue
+            if native_kind == "thermistor" and symbol not in {
+                "Device:Thermistor",
+                "Device:Thermistor_NTC",
             }:
                 continue
             kind = _KIND_NAMES[native_kind]

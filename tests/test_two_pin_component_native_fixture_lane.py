@@ -29,6 +29,8 @@ _EXPECTED_SOURCE_HASHES = {
     "two-pin-components/distinct-nets.kicad_sch": "338deb4b9194e37a80813b3a3c447d21c14fa59fef78b0925898f595a27fbdea",
     "two-pin-varistors/same-net-varistor.kicad_sch": "c8f563192569de181d597ae31528b4e64782445e69894b9c0c0d37acd7480abf",
     "two-pin-varistors/distinct-nets-varistor.kicad_sch": "60369d9cac30ade461b045c99b599b73821fbefc646a7c06f2ce552d31e871a0",
+    "two-pin-thermistors/same-net-thermistor.kicad_sch": "be417443337f223c51b6caa7305038544df0e5342e90cae91d5fce6a797ac26f",
+    "two-pin-thermistors/distinct-nets-thermistor.kicad_sch": "7a6753de56bf6985d4fd218b96e1f9b951541fd103920baaea503b8999f02a06",
     "two-pin-components/custom-capacitor-same-net.kicad_sch": "304c3eb9b979f807f99ee91fecec83e4688bb8d50207c298ff985688950e9fc2",
     "cohort-power-pin-dc/custom-capacitor-role-control.kicad_sch": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
     "two-pin-components/same-net-diode.kicad_sch": "c7b34973f881f5c8d8e8ac26b07c03dec70b061f66b8338d61fb085583c2aa8b",
@@ -50,7 +52,7 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     case_sources = {filename for filename, _, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
     assert case_sources == set(_EXPECTED_SOURCE_HASHES)
-    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 18
+    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 20
     for filename, expected_digest in _EXPECTED_SOURCE_HASHES.items():
         source = (fixture_root / filename).resolve()
         assert source.is_relative_to(fixture_root.resolve())
@@ -65,6 +67,8 @@ def test_passive_native_fixture_scope_contains_only_passive_faults_and_controls(
         "distinct-nets-passive",
         "same-net-varistor",
         "distinct-nets-varistor",
+        "same-net-thermistor",
+        "distinct-nets-thermistor",
         "same-net-mapped-capacitor",
         "distinct-nets-mapped-capacitor",
     }

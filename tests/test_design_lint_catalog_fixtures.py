@@ -84,10 +84,16 @@ _PARITY_FIXTURES_BY_RULE = {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_mapped_custom_passive",
             "test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity",
+        ) + _refs(
+            "tests.test_design_lint_mcp_parity_two_pin_thermistors",
+            "test_same_net_thermistor_lint_cli_mcp_parity",
         ),
         "valid_control_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_mapped_custom_passive",
             "test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity",
+        ) + _refs(
+            "tests.test_design_lint_mcp_parity_two_pin_thermistors",
+            "test_same_net_thermistor_lint_cli_mcp_parity",
         ),
     },
     "component.unconnected_power_output": {
