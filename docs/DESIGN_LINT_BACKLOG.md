@@ -52,6 +52,11 @@ from another or invent reviewer precision/time measurements. More example
 projects expand applicability evidence only when their source, license,
 supported topology, and ground truth can be checked.
 
+Use the reusable [review and cohort measurement worksheet](DESIGN_LINT_REVIEW_MEASUREMENT.md)
+when recording dispositions, supported-path denominators, seeded mutations, or
+review time. Rule-specific sections may add typed counts without changing the
+shared evidence boundaries.
+
 The first operational sweep found a stale active-rule fixture locator: the
 catalog named a removed three-case hosted validator, while the existing native
 fixture test validates four cases. The locator now points to that four-case
