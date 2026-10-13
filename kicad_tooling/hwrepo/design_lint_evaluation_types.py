@@ -41,7 +41,6 @@ from .models import (
     DesignLintMappedCheckRun,
     DesignLintPolicy,
     Digest,
-    PcbProtectionPathCoverageReport,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
     RepositoryPath,
@@ -56,6 +55,7 @@ from .pcb_drc_models import (
 from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
 )
+from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (

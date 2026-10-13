@@ -6,11 +6,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Literal
 
-from .models import (
-    DesignLintPolicy,
-    PcbProtectionPathCoverageReport,
-    PcbProtectionPathMap,
-)
+from .models import DesignLintPolicy
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
@@ -18,6 +14,10 @@ from .pcb_drc_models import (
 )
 from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
+)
+from .pcb_protection_path_models import (
+    PcbProtectionPathCoverageReport,
+    PcbProtectionPathMap,
 )
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport

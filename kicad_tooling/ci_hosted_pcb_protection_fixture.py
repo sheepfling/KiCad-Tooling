@@ -12,8 +12,11 @@ from .ci_hosted_pcb_fixture_support import (
     prepare_pcb_fixture,
 )
 from .hwrepo.evidence import digest
-from .hwrepo.models import PcbProtectionPathMap, PcbProtectionPathRequirement
 from .hwrepo.pcb_protection_path import pcb_protection_path_entries
+from .hwrepo.pcb_protection_path_models import (
+    PcbProtectionPathMap,
+    PcbProtectionPathRequirement,
+)
 
 if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog

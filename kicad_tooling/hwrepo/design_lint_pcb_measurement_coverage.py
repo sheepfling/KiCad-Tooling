@@ -13,15 +13,15 @@ from .design_lint_pcb_coverage_common import (
     PcbRuleMode,
     geometry_coverage_report,
 )
-from .models import (
-    Digest,
-    PcbProtectionPathCoverageReport,
-    PcbProtectionPathMap,
-)
+from .models import Digest
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_decoupling import pcb_decoupling_entries
 from .pcb_decoupling_models import PcbDecouplingCoverageReport, PcbDecouplingMap
 from .pcb_protection_path import pcb_protection_path_entries
+from .pcb_protection_path_models import (
+    PcbProtectionPathCoverageReport,
+    PcbProtectionPathMap,
+)
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_reference_planes import pcb_reference_plane_entries
 from .pcb_switching_loop_models import (

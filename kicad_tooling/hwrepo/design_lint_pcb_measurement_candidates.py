@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import (
-    PcbProtectionPathCoverageReport,
-)
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
+from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 

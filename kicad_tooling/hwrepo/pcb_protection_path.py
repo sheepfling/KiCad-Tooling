@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from math import isqrt
 
-from .models import PcbProtectionPathEntry, PcbProtectionPathMap
 from .pcb_connectivity_observations import PcbPadConnectivityObservation
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_protection_path_models import PcbProtectionPathEntry, PcbProtectionPathMap
 
 
 class _PadUnion:

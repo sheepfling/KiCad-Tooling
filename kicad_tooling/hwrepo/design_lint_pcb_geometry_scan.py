@@ -21,8 +21,6 @@ from .evidence import digest
 from .models import (
     ContractCoachReport,
     DesignLintPolicy,
-    PcbProtectionPathCoverageReport,
-    PcbProtectionPathMap,
     ProjectKind,
 )
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
@@ -35,6 +33,10 @@ from .pcb_drc_models import (
 from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
     PcbKeepoutMap,
+)
+from .pcb_protection_path_models import (
+    PcbProtectionPathCoverageReport,
+    PcbProtectionPathMap,
 )
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_return_path_capture import (

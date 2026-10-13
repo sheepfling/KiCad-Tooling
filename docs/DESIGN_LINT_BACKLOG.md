@@ -181,6 +181,12 @@ intended requirement.
   size, import boundary, registry ownership, and exports. The observation and
   report extraction removed 98 registry lines; moving the authored contract
   models removes another 62 without changing schemas.
+  PCB protection-path requirements, maps, entries, and source-bound reports
+  now live in `pcb_protection_path_models.py`; internal PCB and lint services
+  import from that owner, while `models.py` retains compatibility exports.
+  Architecture tests guard its size, registry ownership, and internal import
+  boundary. This removes another 160 lines from the shared model registry
+  without changing contract or report schemas.
   PCB track-width requirements, maps, and source-bound measurement reports now
   live in `pcb_track_width_models.py`; the PCB checks and lint evaluation
   services import that owner. Architecture tests enforce its size, import

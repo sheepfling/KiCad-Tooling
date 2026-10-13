@@ -19,6 +19,7 @@ from kicad_tooling.hwrepo import (
     pcb_drc_models,
     pcb_pad_net_comparison,
     pcb_pad_net_models,
+    pcb_protection_path_models,
     pcb_reference_plane_models,
     pcb_return_path_models,
     pcb_rf_antenna_models,
@@ -80,6 +81,13 @@ PCB_DECOUPLING_MODEL_NAMES = (
     "PcbDecouplingCoverageReport",
 )
 
+PCB_PROTECTION_PATH_MODEL_NAMES = (
+    "PcbProtectionPathRequirement",
+    "PcbProtectionPathMap",
+    "PcbProtectionPathEntry",
+    "PcbProtectionPathCoverageReport",
+)
+
 PCB_TRACK_WIDTH_MODEL_NAMES = (
     "PcbTrackWidthRequirement",
     "PcbTrackWidthMap",
@@ -128,7 +136,7 @@ SHARED_MODEL_PRIMITIVE_NAMES = (
     "NonNegativeCapacitancePf",
 )
 
-SHARED_MODEL_REGISTRY_MAX_LINES = 4_124
+SHARED_MODEL_REGISTRY_MAX_LINES = 3_964
 
 
 def _top_level_definitions(path: Path) -> set[str]:
@@ -200,6 +208,30 @@ def test_internal_pcb_decoupling_services_import_models_from_the_theme_owner() -
     assert not legacy_imports, (
         "Internal PCB decoupling services should import models from pcb_decoupling_models; "
         f"legacy imports: {legacy_imports}"
+    )
+
+
+def test_pcb_protection_path_models_have_a_theme_owner_and_compatibility_exports() -> None:
+    owner = HWREPO / "pcb_protection_path_models.py"
+    registry = HWREPO / "models.py"
+
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert set(PCB_PROTECTION_PATH_MODEL_NAMES) <= _top_level_definitions(owner)
+    registry_tree = ast.parse(registry.read_text(encoding="utf-8"), filename=registry.name)
+    registry_definitions = {
+        node.name for node in registry_tree.body if isinstance(node, ast.ClassDef)
+    }
+    assert not (set(PCB_PROTECTION_PATH_MODEL_NAMES) & registry_definitions)
+    for name in PCB_PROTECTION_PATH_MODEL_NAMES:
+        assert getattr(shared_models, name) is getattr(pcb_protection_path_models, name)
+
+
+def test_internal_pcb_protection_path_services_import_models_from_the_theme_owner() -> None:
+    legacy_imports = _legacy_shared_model_imports(PCB_PROTECTION_PATH_MODEL_NAMES)
+
+    assert not legacy_imports, (
+        "Internal PCB protection-path services should import models from "
+        f"pcb_protection_path_models; legacy imports: {legacy_imports}"
     )
 
 
