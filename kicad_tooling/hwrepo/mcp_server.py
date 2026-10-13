@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from subprocess import SubprocessError
 from threading import Lock
 from typing import Annotated, Literal
-from zipfile import BadZipFile
 
 from mcp.server import MCPServer
-from mcp.server.mcpserver.exceptions import ResourceError, ToolError
+from mcp.server.mcpserver.exceptions import ResourceError
 from mcp.types import ToolAnnotations
 from pydantic import Field, StrictInt
 
 from ..verify import Depth, verify
+from . import mcp_3d_workflow as workflow_3d
 from . import mcp_checks as checks
 from . import mcp_conversion as conversion
 from . import mcp_electrical as electrical
@@ -35,6 +33,7 @@ from .import_inventory import scan_imports as scan_designs
 from .importing import import_project as import_design
 from .inventory import inventory
 from .layout import layout, workflow_guide
+from .mcp_server_guardrails import import_path, service_operation
 from .models import (
     AutoCadReport,
     CadImportReport,
@@ -157,43 +156,6 @@ EXECUTION = ToolAnnotations(
     idempotent_hint=False,
     open_world_hint=True,
 )
-
-
-def import_path(
-    root: Path,
-    source: str,
-    scopes: tuple[Path, ...],
-    *,
-    directory: bool = False,
-) -> Path:
-    """Authorize a source before the importer resolves its parent or reads siblings."""
-    candidate = Path(source).expanduser()
-    if ".." in candidate.parts:
-        raise ValueError("Import source must not contain parent traversal")
-    candidate = candidate if candidate.is_absolute() else root / candidate
-    for scope in scopes:
-        if candidate.is_relative_to(scope):
-            relative = candidate.relative_to(scope).as_posix()
-            path = scope.resolve() if relative == "." else repo_path(scope, relative)
-            if directory:
-                if not path.is_dir():
-                    raise ValueError("Select an existing import source directory")
-            elif path.suffix != ".kicad_pro" or not path.is_file():
-                raise ValueError("Select an existing .kicad_pro file, not a directory")
-            return path
-    raise ValueError(
-        "Import source is outside the checkout and configured --import-root directories"
-    )
-
-
-@contextmanager
-def service_operation(operation: Lock) -> Generator[None, None, None]:
-    """Preserve actionable service/input errors in the MCP tool response."""
-    with operation:
-        try:
-            yield
-        except (OSError, ValueError, BadZipFile, SubprocessError) as exc:
-            raise ToolError(str(exc)) from exc
 
 
 def create_server(
@@ -554,7 +516,7 @@ def create_server(
         toolchain-dependent geometry; candidate filenames are not verified package matches.
         """
         with service_operation(operation):
-            return workflow.inspect_3d_models(root, project_id)
+            return workflow_3d.inspect_3d_models(root, project_id)
 
     server.tool(annotations=READ_ONLY)(inspect_3d_models)
 
@@ -579,7 +541,7 @@ def create_server(
                 )
                 for item in assignments
             )
-            return workflow.preview_model_population(root, project_id, board_sha256, reviewed)
+            return workflow_3d.preview_model_population(root, project_id, board_sha256, reviewed)
 
     server.tool(annotations=CREATE_ONLY)(preview_model_population)
 
@@ -777,7 +739,7 @@ def create_server(
             inspect geometry afterward. This neither selects models nor approves fit.
             """
             with service_operation(operation):
-                return workflow.apply_model_population(root, project_id, plan)
+                return workflow_3d.apply_model_population(root, project_id, plan)
 
         server.tool(annotations=EDIT)(apply_model_population)
 
@@ -904,7 +866,7 @@ def create_server(
                 actual images and geometry before making mechanical decisions.
                 """
                 with service_operation(operation):
-                    return workflow.export_3d(
+                    return workflow_3d.export_3d(
                         root, project_id, view_id, runner, assembly_variant, views
                     )
 

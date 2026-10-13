@@ -44,7 +44,7 @@ DEFAULT_TOOLS = {
     "read_project_file",
     "preview_project_edit",
     "inspect_contract",
-    "inspect_design_lint",
+    "inspect_design_lint", "reconcile_design_lint",
     "list_design_lint_rules",
     "check_release",
     "verify_package",

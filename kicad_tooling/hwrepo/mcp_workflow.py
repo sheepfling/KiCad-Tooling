@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-import stat
 import sys
-from collections.abc import Generator
-from contextlib import contextmanager
 from pathlib import Path
-
-from pydantic import TypeAdapter
 
 from ..check_toolchain import cli_executable
 from ..ci import static_pipeline
@@ -18,100 +13,54 @@ from . import (
     design_lint,
     diagnostics,
     generation,
-    model_inventory,
-    model_population,
     packaging,
     releasing,
     rescue,
-    three_d,
 )
+from . import mcp_3d_workflow as _mcp_3d_workflow
+from . import mcp_workflow_paths as _mcp_workflow_paths
+from . import model_population as _model_population
 from .contracts import read_model, repo_path, write_model
 from .design_lint_reconciliation import reconcile_design_lint_reports
 from .design_lint_reconciliation_models import DesignLintReconciliationReport
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
-from .diagnostic_journal import DiagnosticJournal
-from .discovery import load_config, load_registry
+from .discovery import load_config
 from .doctor import NativeRunner, doctor
-from .evidence import digest, source_state, verify_release_portable
+from .evidence import source_state, verify_release_portable
 from .exports import export as generate_exports
 from .exports import require_declared_variant, verify_exports
-from .mcp_files import artifact_path
+from .mcp_workflow_journal import journal
 from .models import (
     ContractCoachReport,
     DiagnosticReport,
-    Identifier,
     LocalRescueReport,
     McpGenerationReport,
     McpScopeReport,
-    ModelInventoryReport,
-    ModelMap,
-    ModelMapAssignment,
-    ModelPopulationReport,
-    ProjectConfig,
-    ProjectKind,
     ProjectManifest,
-    ProjectRecord,
     ReleaseClass,
     ReleaseExportReport,
     ReleaseManifest,
     ReleasePackageReport,
     ReleaseReadinessReport,
     ReleaseStatus,
-    ThreeDReport,
-    ThreeDView,
 )
 from .release import check as release_check
 from .selection import ProjectSelector, resolve_project_ids
 from .sharding import shard_projects
 
-_IDENTIFIER: TypeAdapter[str] = TypeAdapter(Identifier)
-
-
-def identifier(value: str) -> str:
-    """Validate a single path component using the repository's identifier contract."""
-    return _IDENTIFIER.validate_python(value, strict=True)
-
-
-def selected_project(root: Path, project_id: str) -> ProjectRecord:
-    identifier(project_id)
-    project = next((item for item in load_registry(root).projects if item.id == project_id), None)
-    if project is None:
-        raise ValueError(f"Unknown project ID: {project_id}. Call list_projects first.")
-    return project
-
-
-def artifact_file(root: Path, value: str) -> Path:
-    path = artifact_path(root, value)
-    if not path.is_file():
-        raise ValueError(f"Select an existing generated artifact file: {value}")
-    return path
-
-
-def native_summary_path(root: Path, value: str) -> Path:
-    """Constrain both the summary and sibling evidence read by existing coaches."""
-    path = artifact_path(root, value)
-    if path.is_dir():
-        path = artifact_file(root, (path / "summary.json").relative_to(root).as_posix())
-    elif not path.is_file():
-        raise ValueError(f"Select an existing native summary: {value}")
-    for name in ("erc.json", "drc.json", "netlist.xml", "netlist.command.json"):
-        sibling = artifact_path(root, (path.parent / name).relative_to(root).as_posix())
-        if sibling.exists() and not stat.S_ISREG(sibling.lstat().st_mode):
-            raise ValueError("Native evidence siblings must be regular files")
-    return path
-
-
-@contextmanager
-def journal(root: Path, project_id: str) -> Generator[DiagnosticJournal, None, None]:
-    """Validate receipt containment before creating a journal and retain failures."""
-    repo_path(root, "build/diagnostics")
-    receipt = DiagnosticJournal(root, project_id)
-    try:
-        yield receipt
-    except (Exception, KeyboardInterrupt) as exc:
-        receipt.fail(exc)
-        raise
+# Preserve the former import surface while implementation lives in owner modules.
+model_population = _model_population
+apply_model_population = _mcp_3d_workflow.apply_model_population
+export_3d = _mcp_3d_workflow.export_3d
+inspect_3d_models = _mcp_3d_workflow.inspect_3d_models
+pcb_config = _mcp_3d_workflow.pcb_config
+preview_model_population = _mcp_3d_workflow.preview_model_population
+artifact_file = _mcp_workflow_paths.artifact_file
+fresh_output = _mcp_workflow_paths.fresh_output
+identifier = _mcp_workflow_paths.identifier
+native_summary_path = _mcp_workflow_paths.native_summary_path
+selected_project = _mcp_workflow_paths.selected_project
 
 
 def diagnose_import(
@@ -263,13 +212,6 @@ def selected_cli(root: Path, project_id: str, runner: NativeRunner) -> str | Non
     if executable is None:
         raise ValueError("The selected local KiCad executable is no longer available")
     return executable
-
-
-def fresh_output(root: Path, directory: str, output_id: str, suffix: str = "") -> Path:
-    path = repo_path(root, f"build/{directory}/{identifier(output_id)}{suffix}")
-    if path.exists():
-        raise ValueError(f"Output already exists; choose a fresh ID: {path.relative_to(root)}")
-    return path
 
 
 def clean_source(root: Path) -> None:
@@ -544,83 +486,4 @@ def generate_views(
         status="PASS",
         directory=output.relative_to(root).as_posix(),
         files=tuple((output / name).relative_to(root).as_posix() for name in names),
-    )
-
-
-def pcb_config(root: Path, project_id: str) -> ProjectConfig:
-    """Resolve one registered PCB without creating outputs or choosing geometry."""
-    project = selected_project(root, project_id)
-    if project.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
-        raise ValueError("3D model inspection and export require a pcb or pcb_only project")
-    return load_config(root, project.config)
-
-
-def inspect_3d_models(root: Path, project_id: str) -> ModelInventoryReport:
-    """Inspect placed-footprint model references; candidates still require package review."""
-    return model_inventory.inspect_models(root, pcb_config(root, project_id))
-
-
-def export_3d(
-    root: Path,
-    project_id: str,
-    view_id: str,
-    runner: NativeRunner = "auto",
-    assembly_variant: str | None = None,
-    views: list[ThreeDView] | None = None,
-) -> ThreeDReport:
-    """Create source-bound 3D review artifacts under one fresh ignored destination."""
-    root = root.resolve()
-    pcb_config(root, project_id)
-    if runner not in {"auto", "local", "container"}:
-        raise ValueError(f"Unknown native runner: {runner}")
-    selected = three_d.selected_views(views)
-    output = fresh_output(root, "3d", view_id)
-    return three_d.generate(
-        root,
-        project_id,
-        runner=runner,
-        cli="kicad-cli",
-        output=output,
-        assembly_variant=assembly_variant,
-        views=selected,
-    )
-
-
-def preview_model_population(
-    root: Path,
-    project_id: str,
-    board_sha256: str,
-    assignments: tuple[ModelMapAssignment, ...],
-) -> ModelPopulationReport:
-    """Retain a source-bound plan for explicitly reviewed model assignments."""
-    root = root.resolve()
-    pcb_config(root, project_id)
-    project = selected_project(root, project_id)
-    spec = ModelMap(
-        project_id=project_id,
-        board_sha256=board_sha256,
-        manifest_sha256=digest(repo_path(root, project.config)),
-        assignments=assignments,
-    )
-    repo_path(root, "build/diagnostics")
-    return model_population.populate_models(root, project_id, spec)
-
-
-def apply_model_population(root: Path, project_id: str, plan: str) -> ModelPopulationReport:
-    """Apply the selected saved plan only while its source and exact edits still match."""
-    root = root.resolve()
-    pcb_config(root, project_id)
-    plan_path = artifact_file(root, plan)
-    reviewed = read_model(plan_path, ModelPopulationReport)
-    if reviewed.status != "PLAN" or reviewed.project_id != project_id:
-        raise ValueError(
-            "Select a PLAN receipt for the same project before applying model assignments"
-        )
-    map_path = artifact_file(
-        root, (plan_path.parent / "locked-model-map.json").relative_to(root).as_posix()
-    )
-    spec = read_model(map_path, ModelMap)
-    repo_path(root, "build/diagnostics")
-    return model_population.populate_models(
-        root, project_id, spec, apply=True, reviewed_plan=reviewed
     )

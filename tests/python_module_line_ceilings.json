@@ -12,7 +12,6 @@
     "kicad_tooling/hwrepo/hosted_governance.py": 738,
     "kicad_tooling/hwrepo/mcp_files.py": 539,
     "kicad_tooling/hwrepo/mcp_server.py": 1264,
-    "kicad_tooling/hwrepo/mcp_workflow.py": 608,
     "kicad_tooling/hwrepo/model_inventory.py": 513,
     "kicad_tooling/hwrepo/model_population.py": 620,
     "kicad_tooling/hwrepo/models.py": 4261,
