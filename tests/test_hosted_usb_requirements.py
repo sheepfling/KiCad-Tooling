@@ -27,6 +27,7 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         "usb-c-peer-reference-control",
         "usb-multiport-peer-reference-fault",
         "usb-multiport-peer-reference-control",
+        "intentional-isolation-boundary",
         "inline-component-ground-fault",
         "inline-component-control",
         "inline-component-peer-reference-fault",
