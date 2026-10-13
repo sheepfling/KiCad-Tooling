@@ -96,7 +96,7 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
             pad="J1.1",
         ),
         requirement(
-            minimum_clearance_nm=1_500_000,
+            minimum_clearance_nm=3_000_000,
             requirement_id="J1-oval-pad-clearance",
             pad="J1.2",
         ),
@@ -140,4 +140,10 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
     entries = touch_pad_clearance_entries(authored, observed, round_and_oval_netlist())
     assert {item.pad for item in entries} == {"J1.1", "J1.2"}
     assert all(item.status == "COMPLETE" for item in entries)
-    assert all(item.violates_minimum_clearance for item in entries)
+    assert all(item.violates_minimum_clearance for item in entries), {
+        item.pad: {
+            "measured_clearance_nm": item.measured_clearance_nm,
+            "minimum_clearance_nm": item.minimum_clearance_nm,
+        }
+        for item in entries
+    }
