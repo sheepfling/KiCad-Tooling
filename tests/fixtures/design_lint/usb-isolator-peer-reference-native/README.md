@@ -26,7 +26,8 @@ joined.
 
 The source SHA-256 is
 `d1a785a983b18315b402d003990056c2f3e5aab40e8bb937e3f44ffc901946d9`.
-The exact digest-pinned KiCad 10.0.0 and 10.0.5 acceptance runs through
-`tests/test_usb_data_path_native_fixture_lane.py` after the tagged fixture lane
-is pushed. A local no-native run cannot establish that KiCad exported this
+The exact digest-pinned KiCad 10.0.0 and 10.0.5 acceptance passed in tag
+`v0.5.0rc211` (GitHub run `38330024505`) through
+`tests/test_usb_data_path_native_fixture_lane.py`, including repeated normalized
+netlist exports. A local no-native run cannot establish that KiCad exported this
 schematic as expected.

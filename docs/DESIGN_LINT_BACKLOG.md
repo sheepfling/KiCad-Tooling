@@ -822,8 +822,10 @@ and optional ecosystem adapters are `P3`.
   finding and records two recognized connector groups, two incomplete PHY port
   groups, and zero supported data paths. The expected `INCOMPLETE` coverage
   makes the quiet result visibly unsupported; it is not counted as a negative.
-  The exact digest-pinned native acceptance is pending the tagged run. See the
-  [fixture contract and source hash](../tests/fixtures/design_lint/usb-isolator-peer-reference-native/README.md).
+  Exact digest-pinned native acceptance passed in tag `v0.5.0rc211` (GitHub run
+  `38330024505`) on KiCad 10.0.0 and 10.0.5, including repeated normalized
+  netlist exports. See the fixture contract and source hash at
+  `../tests/fixtures/design_lint/usb-isolator-peer-reference-native/README.md`.
 
   A public topology lead is the DStat Mainboard rev 1.2.3 PCB at pinned commit
   `b6b2bbfdb7f8b2997d3035b083edbab2348333dc`. Its board source declares CERN

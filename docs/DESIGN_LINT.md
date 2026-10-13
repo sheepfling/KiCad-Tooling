@@ -947,8 +947,7 @@ have been connected.
   remains outside the endpoint predicate: its recognized PHY port groups are
   `INCOMPLETE`, with no supported peer path. That quiet result is a partial
   screen, not evidence that the isolated returns should be joined or a supported
-  non-finding. See the synthetic fixture at
-  `tests/fixtures/design_lint/usb-isolator-peer-reference-native/README.md`.
+  non-finding. See the [synthetic two-port isolation boundary][usb-isolator].
 - `signal.named_pair_without_reviewed_requirement` looks for populated source
   nets with recognized `_P/_N`, `_DP/_DM`, `_TXP/_TXN`, `_RXP/_RXN`, `_H/_L`,
   `+/-`, `DP/DM`, `P/N`, or `H/L` suffixes. If the exact pair is absent from
@@ -4827,5 +4826,6 @@ passing result describes only the configured geometry around the selected PCB
 pad. Review the physical access path and first-article test separately.
 
 [chip-pro-symbol]: https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/25ef404b6a92de5a0cec203eb3270632136758e3/MCU_Module.kicad_sym
+[usb-isolator]: ../tests/fixtures/design_lint/usb-isolator-peer-reference-native/README.md
 [peer-open-fixture]: ../tests/fixtures/design_lint/named-peer-power-input-open/README.md
 [peer-all-open-fixture]: ../tests/fixtures/design_lint/named-peer-power-input-all-open/README.md
