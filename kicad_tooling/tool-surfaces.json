@@ -1236,6 +1236,7 @@
         "tests.test_design_lint_mcp_parity_two_pin_passives.test_same_net_two_pin_diode_lint_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_two_pin_crystal_fuse.test_same_net_two_pin_fuse_lint_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_two_pin_passives.test_same_net_two_pin_ferrite_lint_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_two_pin_varistors.test_same_net_varistor_lint_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_connector_returns.test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_connector_returns.test_numbered_pwm_return_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_schematic_geometry.test_schematic_geometry_opt_in_parity",

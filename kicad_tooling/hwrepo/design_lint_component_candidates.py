@@ -144,9 +144,8 @@ def component_candidates(
             message = (
                 "Both pins of this supported fitted two-pin passive are assigned to the "
                 "same schematic net, so the part is bypassed by that net assignment. "
-                "Review the intended topology, population state, and any deliberate jumper "
-                "or measurement use. This finding does not establish that the topology is "
-                "wrong."
+                "Review the intended topology and whether the same-net assignment is "
+                "deliberate. This finding does not establish that the topology is wrong."
             )
             kind_evidence = {"passive_kind": (component.kind,)}
         role_evidence = (

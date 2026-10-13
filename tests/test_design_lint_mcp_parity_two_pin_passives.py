@@ -6,6 +6,7 @@ import pytest
 
 pytestmark = [
     pytest.mark.parity_lint,
+    pytest.mark.component_lint,
     pytest.mark.slow,
     pytest.mark.template_checkout,
     pytest.mark.design_lint,

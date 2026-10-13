@@ -25,6 +25,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_passive_same_net",
         set(),
     ),
+    "same-net-varistor": (
+        "two-pin-varistors/same-net-varistor.kicad_sch",
+        "component.two_pin_passive_same_net",
+        {"RV1 (230V MOV varistor) has both pins on one net"},
+    ),
+    "distinct-nets-varistor": (
+        "two-pin-varistors/distinct-nets-varistor.kicad_sch",
+        "component.two_pin_passive_same_net",
+        set(),
+    ),
     "same-net-mapped-capacitor": (
         "two-pin-components/custom-capacitor-same-net.kicad_sch",
         "component.two_pin_passive_same_net",
@@ -276,7 +286,12 @@ def two_pin_component_fixture_lane(
             normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
             candidates = two_pin_components_on_same_net(observed, role_map)
             candidate_kinds = {
-                "component.two_pin_passive_same_net": {"resistor", "capacitor", "inductor"},
+                "component.two_pin_passive_same_net": {
+                    "resistor",
+                    "capacitor",
+                    "inductor",
+                    "varistor",
+                },
                 "component.two_pin_diode_same_net": {"diode"},
                 "component.two_pin_crystal_same_net": {"crystal"},
                 "component.two_pin_fuse_same_net": {"fuse", "polyfuse"},

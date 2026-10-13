@@ -3332,7 +3332,7 @@ is not a reason by itself to expand its scope or change its default policy.
   service.
 - **Verification state:** Unit, catalog, determinism, CLI/MCP, and fixture-lane
   wiring checks pass locally. The
-  `test_native_custom_mapped_capacitor_same_net_fault_and_control` fixture
+  `test_native_two_pin_passive_same_net_fault_and_control` fixture
   passed on digest-pinned KiCad 10.0.0 and 10.0.5 on 2026-10-07 (one test, ten
   subtests). The same-net diode fault reports REVIEW and its distinct-net
   control passes on both versions. Their source hashes are
@@ -3552,9 +3552,10 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Problem:** ERC can accept a resistor, capacitor, or inductor whose two pins
   are assigned to the same schematic net. That topology can bypass a series
   element or short a shunt element while every pin remains connected.
-- **Predicate:** Recognize exact `Device:R`, `Device:C`, and `Device:L` symbol
-  families, plus custom capacitor symbols with an exact project-authored role
-  binding, only when the native netlist contains exactly two distinct pin
+- **Predicate:** Recognize the `Device:R`, `Device:C`, and `Device:L` symbol
+  families and exact `Device:Varistor` and `Device:Varistor_US` identities, plus
+  custom capacitor symbols with an exact project-authored role binding, only
+  when the native netlist contains exactly two distinct pin
   numbers, one unambiguous net per pin, a fitted component state, and the
   component value. The custom binding must match `PART_ID`, symbol, footprint,
   and the full native pin number/function/electrical-type inventory. Report
@@ -3577,6 +3578,31 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Fixture inputs:** The
   [synthetic component README](../tests/fixtures/design_lint/two-pin-components/README.md)
   records the source hashes, fault/control topologies, and native export lane.
+- **Varistor fixture inputs:** The
+  [synthetic varistor README](../tests/fixtures/design_lint/two-pin-varistors/README.md)
+  records the source hashes, supported identities, fault/control topologies,
+  and evidence boundary.
+- **Exact varistor extension (2026-10-13):** The public
+  [kicad-happy SP-001 analyzer][happy-analyzer] prompted a review of the local
+  same-net two-pin symbol allowlist. The official
+  [KiCad Device library][kicad-device-library] includes `Device:Varistor` and
+  `Device:Varistor_US`, which this rule previously skipped. The first-party
+  predicate now recognizes only those two exact stock identities, with a
+  source-hashed synthetic same-net fault, distinct-net control, DNP and
+  unsupported-identity controls, metamorphic split/order coverage, and shared
+  CLI/MCP parity. Its native fixture lane targets KiCad 10.0.0 and 10.0.5.
+  The review was source-only: no candidate package was installed, no upstream
+  code was copied, and no project design was used. This is a schematic
+  topology review prompt; it does not establish protection requirements,
+  ratings, orientation, footprint mapping, PCB copper, or physical population.
+- **Verification (2026-10-13):** The focused rule selector passed 17 tests,
+  including the same-net fault, distinct-net control, CLI/MCP parity, and
+  repeated native exports on KiCad 10.0.0 and 10.0.5. The package acceptance
+  also passed against the separate public template at commit
+  `5ca79bedf665a9b6577d96b1d47f13ccd518c968`, including wheel installation,
+  external inventory/surface verification, and playtest. The remaining 3,278
+  tests were deselected by the rule scope. The local receipt is retained under
+  ignored `build/ci/run-yahhu9sd`; hosted tag acceptance is pending publication.
 - **Exact custom-capacitor extension (2026-10-09):** The public
   [kicad-happy changelog][happy-changelog] records SP-001 for same-net
   two-pin passives and diodes. The local baseline already covered common
@@ -12600,6 +12626,8 @@ quality, or first-article continuity.
 [happy-datasheets]: <https://github.com/aklofas/kicad-happy#-datasheets--sync-and-extract>
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
+[happy-analyzer]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L3633-L3673
+[kicad-device-library]: https://kicad.github.io/symbols/Device.html
 [happy-thermal-v231]: <https://github.com/aklofas/kicad-happy/releases/tag/v2.3.1>
 [happy-thermal-source]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/analyze_thermal.py>
 [happy-uc-releases]: https://github.com/aklofas/kicad-happy/releases

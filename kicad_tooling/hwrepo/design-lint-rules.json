@@ -1164,34 +1164,42 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted exact Device:R, Device:C, or Device:L symbol-family member, or an exact project-mapped custom capacitor, require exactly two native pin numbers and one unambiguous schematic net assignment per pin; report when both pins use the same net.",
+      "predicate": "For a fitted member of the exact Device:R, Device:C, or Device:L symbol families; the exact Device:Varistor or Device:Varistor_US symbols; or an exact project-mapped custom capacitor, require exactly two native pin numbers and one unambiguous schematic net assignment per pin; report when both pins use the same net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "A same-net two-terminal passive may be intentional; this is a review prompt and does not assert that the topology is wrong.",
-        "Custom symbols are recognized only as capacitors when an exact project-authored component_role_map entry matches PART_ID, symbol, footprint, and the complete native pin number/function/electrical-type inventory. Other custom, multi-pin, and incomplete symbols are outside the predicate.",
+        "Custom symbols are recognized only as capacitors when an exact project-authored component_role_map entry matches PART_ID, symbol, footprint, and the complete native pin number/function/electrical-type inventory. Varistors are limited to the exact stock identities Device:Varistor and Device:Varistor_US; other custom, multi-pin, and incomplete symbols are outside the predicate.",
         "The schematic netlist does not prove copper connectivity, current flow, component behavior, footprint pin mapping, or physical population. DNP components are excluded."
       ],
       "fault_fixtures": [
         "tests.test_two_pin_passives.test_detects_resistor_capacitor_and_inductor_on_their_same_net",
         "tests.test_two_pin_passives.test_custom_capacitor_requires_exact_role_map_for_same_net_review",
         "tests.test_two_pin_component_native_fixture_lane.test_passive_native_fixture_scope_contains_only_passive_faults_and_controls",
-        "tests.test_two_pin_component_native_fixture_lane.test_native_custom_mapped_capacitor_same_net_fault_and_control",
-        "tests.test_design_lint_mcp_parity_mapped_custom_passive.test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity"
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_passive_same_net_fault_and_control",
+        "tests.test_design_lint_mcp_parity_mapped_custom_passive.test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity",
+        "tests.test_two_pin_varistors.test_detects_supported_varistor_families_on_one_net",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_passive_same_net_fault_and_control",
+        "tests.test_design_lint_mcp_parity_two_pin_varistors.test_same_net_varistor_lint_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_passives.test_distinct_pin_nets_are_the_no_finding_control",
         "tests.test_two_pin_passives.test_mapped_custom_capacitor_distinct_net_and_dnp_controls_stay_quiet",
         "tests.test_two_pin_component_native_fixture_lane.test_passive_native_fixture_scope_contains_only_passive_faults_and_controls",
-        "tests.test_two_pin_component_native_fixture_lane.test_native_custom_mapped_capacitor_same_net_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_passive_same_net_fault_and_control",
         "tests.test_two_pin_passives.test_skips_dnp_incomplete_ambiguous_and_unsupported_symbols",
         "tests.test_two_pin_passives.test_override_exact_ignore_and_stale_fingerprint_lifecycle",
-        "tests.test_design_lint_mcp_parity_mapped_custom_passive.test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity"
+        "tests.test_design_lint_mcp_parity_mapped_custom_passive.test_mapped_custom_capacitor_same_net_lint_cli_mcp_parity",
+        "tests.test_two_pin_varistors.test_varistor_distinct_net_and_dnp_controls_stay_quiet",
+        "tests.test_two_pin_varistors.test_skips_dnp_and_unrecognized_varistor_identities",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_passive_same_net_fault_and_control",
+        "tests.test_design_lint_mcp_parity_two_pin_varistors.test_same_net_varistor_lint_cli_mcp_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_passives.test_same_net_passive_findings_are_order_stable_and_each_split_clears_one"
+        "tests.test_two_pin_passives.test_same_net_passive_findings_are_order_stable_and_each_split_clears_one",
+        "tests.test_two_pin_varistors.test_varistor_finding_is_order_stable_and_a_split_clears_it"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"

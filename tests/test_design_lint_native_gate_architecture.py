@@ -403,7 +403,7 @@ def test_two_pin_native_fault_control_cases_are_selectable_by_rule() -> None:
     fixture_module = "tests.test_two_pin_component_native_fixture_lane"
     test_refs = {
         "component.two_pin_passive_same_net": (
-            f"{fixture_module}.test_native_custom_mapped_capacitor_same_net_fault_and_control",
+            f"{fixture_module}.test_native_two_pin_passive_same_net_fault_and_control",
             f"{fixture_module}.test_passive_native_fixture_scope_contains_only_passive_faults_and_controls",
         ),
         "component.two_pin_fuse_same_net": (

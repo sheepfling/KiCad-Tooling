@@ -371,6 +371,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_mcp_parity_connector_named_power_peers.py",
             "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",
             "tests/test_design_lint_mcp_parity_peer_pins.py",
+            "tests/test_design_lint_mcp_parity_two_pin_varistors.py",
             "tests/test_design_lint_mcp_parity_unconnected_power_output.py",
             "tests/test_design_lint_i2c_parity.py",
             "tests/test_design_lint_serial_parity.py",
