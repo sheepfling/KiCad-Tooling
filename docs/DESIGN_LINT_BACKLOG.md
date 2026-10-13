@@ -6840,11 +6840,12 @@ is not a reason by itself to expand its scope or change its default policy.
   parity case carries the same typed candidate. The rule-scoped tag gate also
   requires the hosted native PCB fixture lane, which captures a hashed
   synthetic J2 board twice against the exact project-selected KiCad toolchain.
-  Local Docker access was unavailable for this run, so that native lane still
-  needs hosted confirmation. Local synthetic, static, packaging, and installed-
-  wheel checks passed. These tests establish the predicate and source boundary;
-  they do not measure field precision or reviewer effort. No proprietary
-  project source was used.
+  Hosted tag run `v0.5.0rc221` (`38349099362`) passed the scoped gate with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, including repeated native captures on
+  KiCad 10.0.0 and 10.0.5. Local synthetic, static, packaging, and installed-
+  wheel checks also passed. These tests establish the predicate and source
+  boundary; they do not measure field precision or reviewer effort. No
+  proprietary project source was used.
 - **Next:** Keep the rule default-off. Use independently reviewed, nonconfidential
   project outcomes to estimate which project classes benefit and how many
   intentional extras need ignores before considering any wider default.
