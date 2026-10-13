@@ -306,6 +306,9 @@ _LINT_AREA_MODULES = {
             "tests/test_hosted_pcb_lane_boundaries.py",
             "tests/test_pcb_rf_antenna.py",
             "tests/test_pcb_rf_antenna_mcp_parity.py",
+            "tests/test_pcb_touch_pad_clearance.py",
+            "tests/test_pcb_touch_pad_clearance_mcp_parity.py",
+            "tests/test_pcb_touch_pad_clearance_native.py",
             "tests/test_pcb_signal_path_coverage.py",
             "tests/test_pcb_signal_path_evidence.py",
             "tests/test_pcb_signal_path_hosted_schedule.py",
@@ -399,6 +402,7 @@ _LINT_AREA_MODULES = {
             "tests/test_pcb_component_inventory_mcp_parity.py",
             "tests/test_pcb_keepouts_mcp_parity.py",
             "tests/test_pcb_rf_antenna_mcp_parity.py",
+            "tests/test_pcb_touch_pad_clearance_mcp_parity.py",
             "tests/test_pcb_signal_path_mcp_parity.py",
         }
     ),

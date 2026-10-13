@@ -16,6 +16,7 @@ from .design_lint_connector_coverage import (
     external_protection_coverage_from_project,
 )
 from .design_lint_pcb_geometry_scan import scan_pcb_geometry
+from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_project_contexts import (
     control_input_bias_coverage_from_project,
     i2c_pullup_coverage_from_project,
@@ -33,7 +34,6 @@ from .design_lint_stm32_coverage import scan_stm32_pin_maps
 from .discovery import load_config, load_registry
 from .evidence import digest
 from .models import (
-    DesignLintPolicy,
     ProjectManifest,
 )
 from .pcb_drc_models import (
@@ -91,6 +91,7 @@ def inspect_design_lint_summary(
             pcb_signal_path_coverage,
             pcb_keepout_coverage,
             pcb_rf_module_antenna_coverage,
+            pcb_touch_pad_clearance_coverage,
             pcb_component_inventory_coverage,
         ) = scan_pcb_geometry(root, config, coach, policy, native_summary)
         pair_map: PcbDifferentialPairRuleMap | None = policy.pcb_differential_pair_rule_map
@@ -178,6 +179,7 @@ def inspect_design_lint_summary(
             pcb_signal_path_coverage=pcb_signal_path_coverage,
             pcb_keepout_coverage=pcb_keepout_coverage,
             pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
+            pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
             stm32_pin_map_coverage=stm32_pin_map_coverage,
             spi_roster=spi_roster,
             serial_peer_roster=serial_peer_roster,

@@ -30,6 +30,11 @@ from .pcb_rf_antenna_models import (
     PcbRfModuleAntennaCoverageReport,
     PcbRfModuleAntennaMap,
 )
+from .pcb_touch_pad_clearance import touch_pad_clearance_entries
+from .pcb_touch_pad_clearance_models import (
+    PcbTouchPadClearanceCoverageReport,
+    PcbTouchPadClearanceMap,
+)
 
 
 def layout_coverage_reports(
@@ -41,12 +46,14 @@ def layout_coverage_reports(
     signal_path_map: PcbSignalPathRuleMap | None,
     keepout_map: PcbKeepoutMap | None,
     rf_antenna_map: PcbRfModuleAntennaMap | None,
+    touch_pad_clearance_map: PcbTouchPadClearanceMap | None,
     modes: dict[str, PcbRuleMode],
     evidence: PcbGeometrySourceEvidence,
 ) -> tuple[
     PcbSignalPathRuleCoverageReport,
     PcbKeepoutCoverageReport,
     PcbRfModuleAntennaCoverageReport,
+    PcbTouchPadClearanceCoverageReport,
 ]:
     """Build layout and RF coverage from the already verified native snapshot."""
     if coach.netlist_sha256 is None:
@@ -118,4 +125,53 @@ def layout_coverage_reports(
                 evidence,
                 netlist_sha256,
             )
-    return signal_path_report, keepout_report, rf_antenna_report
+
+    touch_pad_clearance_mode = modes["pcb.touch_pad_reference_clearance"]
+    touch_pad_clearance_report = PcbTouchPadClearanceCoverageReport()
+    if touch_pad_clearance_map is not None:
+        authored_sha256 = map_sha256(touch_pad_clearance_map)
+        if touch_pad_clearance_mode == "off":
+            touch_pad_clearance_report = PcbTouchPadClearanceCoverageReport(
+                status="DISABLED",
+                mode=touch_pad_clearance_mode,
+                map_sha256=authored_sha256,
+            )
+        else:
+            request_sha256 = evidence.snapshot.touch_pad_clearance_requests_sha256
+            if request_sha256 is None:
+                raise ValueError("Native touch-pad measurement request digest is unavailable")
+            if coach.observed is None:
+                raise ValueError(
+                    "Source-bound native netlist is unavailable for touch-pad clearance"
+                )
+            entries = touch_pad_clearance_entries(
+                touch_pad_clearance_map,
+                evidence.snapshot,
+                coach.observed,
+            )
+            touch_pad_clearance_report = PcbTouchPadClearanceCoverageReport(
+                status=(
+                    "COMPLETE"
+                    if all(item.status == "COMPLETE" for item in entries)
+                    else "INCOMPLETE"
+                ),
+                mode=touch_pad_clearance_mode,
+                map_sha256=authored_sha256,
+                board_path=evidence.board_path,
+                board_sha256=evidence.board_sha256,
+                snapshot_path=evidence.snapshot_relative_path,
+                snapshot_sha256=evidence.snapshot_sha256,
+                probe_sha256=evidence.probe_sha256,
+                request_sha256=request_sha256,
+                kicad_version=evidence.snapshot.kicad_version,
+                image=evidence.snapshot.image,
+                netlist_sha256=netlist_sha256,
+                requirement_count=len(entries),
+                entries=entries,
+            )
+    return (
+        signal_path_report,
+        keepout_report,
+        rf_antenna_report,
+        touch_pad_clearance_report,
+    )

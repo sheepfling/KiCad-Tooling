@@ -70,6 +70,7 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
@@ -136,6 +137,7 @@ def candidates(
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None,
     peer_pin_assignment_scans: ComponentPeerPinAssignmentScans | None = None,
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
     i2c_peer_reference_scan: I2cPeerReferenceScan | None = None,
@@ -263,6 +265,7 @@ def candidates(
             pcb_signal_path_coverage=pcb_signal_path_coverage,
             pcb_keepout_coverage=pcb_keepout_coverage,
             pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
+            pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
         )
     )
     found.extend(stm32_candidates(stm32_pin_map_coverage))

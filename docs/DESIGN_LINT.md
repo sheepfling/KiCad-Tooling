@@ -1177,7 +1177,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 115 active rules. They
+`synthetic_validated`; the catalog currently contains 116 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and
@@ -2238,9 +2238,11 @@ rings, bound to the same board, exact KiCad image, and probe digest.
 Snapshot schema 10 adds target aperture shape and diameter to native access
 probe observations. Schema 11 adds rule-area evidence; schema 12 adds source-
 bound footprint identity, fitted state, board origin, canonical orientation,
-and board side; schema 13 adds native footprint value fields. Current
-source-bound KiCad 10 geometry captures use schema 13. These additions retain
-the earlier aperture and zone-contour evidence.
+and board side; schema 13 adds native footprint value fields. Schema 14 adds
+exact touch-pad-to-filled-copper clearance observations and the digest of the
+explicit requests supplied to the native probe. Current source-bound KiCad 10
+geometry captures use schema 14. These additions retain the earlier aperture
+and zone-contour evidence.
 The probe copies each native filled-zone polygon set and calls KiCad's
 `SHAPE_POLY_SET.Unfracture()` before recording its outlines and holes. This
 preserves clearances that KiCad's filled result represents as fractured outline
@@ -2254,6 +2256,56 @@ branched, ambiguous, or arc-containing chains remain incomplete. Candidate
 tracks come from KiCad's
 [`CONNECTIVITY_DATA.GetConnectedTracks`](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1CONNECTIVITY__DATA.html)
 API, then native effective track shapes are checked at the exact endpoint.
+
+## Review mapped capacitive touch-pad clearance
+
+Use `design_lint.pcb_touch_pad_clearance_map` only when an independent
+controller or layout requirement identifies the exact touch pad, its expected
+schematic net, a reference copper net, the copper layer, and a positive
+minimum clearance. The following example is synthetic and its distance is not
+a recommended design value:
+
+```json
+{
+  "design_lint": {
+    "pcb_touch_pad_clearance_map": {
+      "schema_version": "1",
+      "basis": "Synthetic controller layout requirement, revision 1",
+      "requirements": [
+        {
+          "id": "synthetic-touch-pad-gap",
+          "pad": "J1.1",
+          "expected_pad_net": "TOUCH_A",
+          "reference_net": "GND",
+          "layer": "F.Cu",
+          "minimum_clearance_nm": 1500000
+        }
+      ]
+    }
+  }
+}
+```
+
+The check verifies the schematic and native PCB pad assignments against the
+authored net, then measures the exact effective pad shape to matching filled
+zones on the authored net and layer. It uses the nearest such zone. A complete
+measurement below the authored minimum, or any missing or inconsistent
+evidence, produces a review candidate. The default is `review`; project
+policy can select `block` or `off`, and exact fingerprint ignores remain
+available.
+
+The native measurement is carried by source-bound PCB snapshot schema 14.
+The snapshot records the exact pad, requested nets and layer, matching-zone
+count, closest zone UUID, measured integer-nanometer distance, and a digest of
+the canonical probe request set. The request set is generated from the
+project map, so editing its requirement invalidates prior evidence.
+
+This check does not infer touch-pad identity from reference/value text, decide
+that connector grounds or other nets should be joined, or establish a required
+ground bond. It checks only the mapped geometric relationship. It does not
+validate controller sensitivity, sensing performance, native DRC settings,
+fabricated copper, or physical assembly; use the independently reviewed
+requirement and native design review for those decisions.
 
 ## Review adjacent reference-plane coverage
 
@@ -2582,7 +2634,7 @@ mechanical, fiducial, fabrication, logo, or other board-only footprints.
 The rule defaults to `off` because boards commonly contain intentional extras.
 Projects can opt in with `review` or `block`, then suppress a reviewed exact
 reference through the fingerprint-ignore lifecycle. The comparison uses the
-native footprint inventory snapshot schema 12 or 13 and binds each finding to
+native footprint inventory snapshot schema 12, 13, or 14 and binds each finding to
 the netlist, board, snapshot, KiCad version, image, and probe digests. Missing,
 stale, or unsupported evidence blocks coverage when the rule is enabled.
 
@@ -2641,9 +2693,10 @@ label or another approved value string.
 
 This check defaults to `review`; project policy can select `block`, `off`, or
 an exact fingerprint ignore. It requires source-bound footprint value fields
-from PCB snapshot schema 13. Schema 12 remains usable for footprint placement,
-identity, and population checks, while value coverage stays blocked until a
-schema 13 capture is available. Findings bind the netlist, board, snapshot,
+from PCB snapshot schema 13 or later. Schema 12 remains usable for footprint
+placement, identity, and population checks, while value coverage stays blocked
+until a schema 13-or-later capture is available. Findings bind the netlist,
+board, snapshot,
 KiCad version, image, and probe digests.
 
 The comparison excludes DNP components, references missing from either file,
@@ -2700,7 +2753,8 @@ and footprint restrictions. A missing or duplicate name, changed geometry,
 changed layer, changed restriction, or native snapshot older than schema 11 is
 incomplete. Snapshot schema 12 and later retain that keepout evidence and add
 source-bound footprint placement identity, origin, orientation, and board side.
-Snapshot schema 13 also records the native footprint value. The project
+Snapshot schema 13 adds the native footprint value; schema 14 retains that
+evidence. The project
 owner must author the digest, layers, flags, and basis
 from an independent approved source; do not generate the requirement by
 accepting whatever shape happens to be on the board.

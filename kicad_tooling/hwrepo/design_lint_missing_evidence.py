@@ -10,11 +10,11 @@ from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
 )
+from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .models import (
     ContractCoachReport,
-    DesignLintPolicy,
     RcFilterCoverageReport,
 )
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -152,6 +152,7 @@ def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintR
         pcb_signal_path_rules=pcb_input.signal_path,
         pcb_keepout_coverage=pcb_input.keepout or PcbKeepoutCoverageReport(),
         pcb_rf_module_antenna_coverage=(pcb_input.rf_antenna or PcbRfModuleAntennaCoverageReport()),
+        pcb_touch_pad_clearance_coverage=pcb_input.touch_pad_clearance,
         stm32_pin_map_coverage=data.stm32_pin_map_coverage,
         issues=missing_evidence_issues,
         next_actions=("Repair the native evidence, then rerun design lint.",),

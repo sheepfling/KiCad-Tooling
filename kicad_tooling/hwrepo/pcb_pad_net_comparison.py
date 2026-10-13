@@ -6,7 +6,7 @@ from .models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
-_SUPPORTED_SNAPSHOT_SCHEMAS = {"12", "13"}
+_SUPPORTED_SNAPSHOT_SCHEMAS = {"12", "13", "14"}
 
 
 def compare_schematic_pcb_pad_nets(
@@ -20,7 +20,7 @@ def compare_schematic_pcb_pad_nets(
     establish physical copper continuity.
     """
     if snapshot.schema_version not in _SUPPORTED_SNAPSHOT_SCHEMAS:
-        raise ValueError("PCB pad net comparison requires native snapshot schema 12 or 13")
+        raise ValueError("PCB pad net comparison requires native snapshot schema 12, 13, or 14")
 
     components: dict[str, tuple[str, str]] = {}
     for reference, component in netlist.components.items():
@@ -36,19 +36,7 @@ def compare_schematic_pcb_pad_nets(
             raise ValueError("Native PCB has duplicate case-insensitive footprint references")
         footprints[key] = (footprint.reference, footprint.footprint.strip())
 
-    schematic_nets: dict[tuple[str, str], str | None] = {}
-    for net, pins in netlist.nets.items():
-        for pin in pins:
-            key = _pin_key(pin, components)
-            if key in schematic_nets:
-                raise ValueError("Native netlist assigns one pin to multiple electrical states")
-            schematic_nets[key] = net
-    for pins in netlist.unconnected_nets.values():
-        for pin in pins:
-            key = _pin_key(pin, components)
-            if key in schematic_nets:
-                raise ValueError("Native netlist marks an assigned pin as unconnected")
-            schematic_nets[key] = None
+    schematic_nets = schematic_pad_net_assignments(netlist)
 
     board_pads = {item.pad.casefold(): item for item in snapshot.pads}
     mismatches: list[PcbSchematicBoardPadNetMismatch] = []
@@ -112,6 +100,32 @@ def compare_schematic_pcb_pad_nets(
             )
 
     return tuple(mismatches)
+
+
+def schematic_pad_net_assignments(
+    netlist: NetlistContract,
+) -> dict[tuple[str, str], str | None]:
+    """Return exact case-folded component/pin assignments from the native netlist."""
+    components: dict[str, tuple[str, str]] = {}
+    for reference in netlist.components:
+        key = reference.casefold()
+        if key in components:
+            raise ValueError("Native netlist has duplicate case-insensitive component references")
+        components[key] = (reference, "")
+    schematic_nets: dict[tuple[str, str], str | None] = {}
+    for net, pins in netlist.nets.items():
+        for pin in pins:
+            key = _pin_key(pin, components)
+            if key in schematic_nets:
+                raise ValueError("Native netlist assigns one pin to multiple electrical states")
+            schematic_nets[key] = net
+    for pins in netlist.unconnected_nets.values():
+        for pin in pins:
+            key = _pin_key(pin, components)
+            if key in schematic_nets:
+                raise ValueError("Native netlist marks an assigned pin as unconnected")
+            schematic_nets[key] = None
+    return schematic_nets
 
 
 def _pin_key(

@@ -20,6 +20,7 @@ _NATIVE_KICAD_MODULES = frozenset(
         "tests/test_power_path_native_fixture_lane.py",
         "tests/test_power_sequence_native_fixture_lane.py",
         "tests/test_pcb_keepouts_native.py",
+        "tests/test_pcb_touch_pad_clearance_native.py",
         "tests/test_pcb_signal_path_native.py",
         "tests/test_schematic_geometry_native_pin_connectivity.py",
         "tests/test_schematic_geometry_native_symbol_body.py",

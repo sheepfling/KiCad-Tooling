@@ -17,12 +17,15 @@ from .pcb_connectivity_observations import (
     PcbViaObservation,
     PcbZoneObservation,
 )
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceObservation
 
 
 class PcbConnectivitySnapshot(StrictModel):
     """Retained, deterministic native connectivity evidence for an exact board."""
 
-    schema_version: Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"] = "3"
+    schema_version: Literal[
+        "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"
+    ] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
     image: NonEmptyText
@@ -38,6 +41,8 @@ class PcbConnectivitySnapshot(StrictModel):
     copper_layers: tuple[NonEmptyText, ...] = ()
     rule_areas: tuple[PcbRuleAreaObservation, ...] = ()
     footprints: tuple[PcbFootprintPlacementObservation, ...] = ()
+    touch_pad_clearance_observations: tuple[PcbTouchPadClearanceObservation, ...] = ()
+    touch_pad_clearance_requests_sha256: Digest | None = None
 
     @model_validator(mode="after")
     def unique_observed_items(self) -> PcbConnectivitySnapshot:
@@ -51,6 +56,26 @@ class PcbConnectivitySnapshot(StrictModel):
         track_ids = [item.uuid.casefold() for item in self.tracks]
         if len(set(track_ids)) != len(track_ids):
             raise ValueError("Native PCB evidence contains duplicate track identities")
+        touch_requirement_ids = [
+            item.requirement_id.casefold() for item in self.touch_pad_clearance_observations
+        ]
+        if len(set(touch_requirement_ids)) != len(touch_requirement_ids):
+            raise ValueError("Native PCB evidence contains duplicate touch-pad requirements")
+        if self.schema_version == "14":
+            if (
+                "touch_pad_clearance_observations" not in self.model_fields_set
+                or "touch_pad_clearance_requests_sha256" not in self.model_fields_set
+            ):
+                raise ValueError("Native PCB schema v14 requires explicit touch-pad probe evidence")
+            if (self.touch_pad_clearance_requests_sha256 is None) != (
+                not self.touch_pad_clearance_observations
+            ):
+                raise ValueError("Native touch-pad request hash and observations must be paired")
+        elif (
+            self.touch_pad_clearance_requests_sha256 is not None
+            or self.touch_pad_clearance_observations
+        ):
+            raise ValueError("Touch-pad probe evidence requires native PCB schema v14")
         if self.schema_version in {
             "3",
             "4",
@@ -63,6 +88,7 @@ class PcbConnectivitySnapshot(StrictModel):
             "11",
             "12",
             "13",
+            "14",
         }:
             if "vias" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v3 requires an explicit via inventory")
@@ -132,6 +158,7 @@ class PcbConnectivitySnapshot(StrictModel):
             "11",
             "12",
             "13",
+            "14",
         }:
             for key, zone in zones_by_key.items():
                 expected_unanchored = set(range(zone.filled_island_count)) - (
@@ -153,6 +180,7 @@ class PcbConnectivitySnapshot(StrictModel):
             "11",
             "12",
             "13",
+            "14",
         }:
             if "access_probe_observations" not in self.model_fields_set:
                 raise ValueError("Native PCB schema v4+ requires explicit probe observations")
@@ -162,26 +190,26 @@ class PcbConnectivitySnapshot(StrictModel):
                 self.access_probe_requests_sha256 is not None
             ):
                 raise ValueError("Native PCB probe observations need matching request evidence")
-        if self.schema_version in {"5", "6", "7", "8", "9", "10", "11", "12", "13"} and any(
+        if self.schema_version in {"5", "6", "7", "8", "9", "10", "11", "12", "13", "14"} and any(
             "positions_nm" not in item.model_fields_set or not item.positions_nm
             for item in self.pads
         ):
             raise ValueError("Native PCB schema v5+ requires physical pad-center positions")
         if (
-            self.schema_version in {"6", "7", "8", "9", "10", "11", "12", "13"}
+            self.schema_version in {"6", "7", "8", "9", "10", "11", "12", "13", "14"}
             and "tracks" not in self.model_fields_set
         ):
             raise ValueError(
                 f"Native PCB schema v{self.schema_version} requires an explicit track inventory"
             )
-        if self.schema_version in {"7", "8", "9", "10", "11", "12", "13"}:
+        if self.schema_version in {"7", "8", "9", "10", "11", "12", "13", "14"}:
             if "copper_layers" not in self.model_fields_set or len(self.copper_layers) < 2:
                 raise ValueError(
                     f"Native PCB schema v{self.schema_version} requires the actual copper stack inventory"
                 )
             if len({item.casefold() for item in self.copper_layers}) != len(self.copper_layers):
                 raise ValueError("Native PCB copper stack contains duplicate layer names")
-        if self.schema_version in {"8", "9", "10", "11", "12", "13"}:
+        if self.schema_version in {"8", "9", "10", "11", "12", "13", "14"}:
             tracks_by_uuid = {item.uuid.casefold(): item for item in self.tracks}
             for track in self.tracks:
                 if any(
@@ -229,7 +257,7 @@ class PcbConnectivitySnapshot(StrictModel):
                     for contact in (*track.start_tracks, *track.end_tracks)
                 ):
                     raise ValueError("Native PCB track endpoint contact has a different net")
-        if self.schema_version in {"9", "10", "11", "12", "13"}:
+        if self.schema_version in {"9", "10", "11", "12", "13", "14"}:
             for zone in self.zones:
                 if "filled_islands" not in zone.model_fields_set:
                     raise ValueError(
@@ -260,14 +288,14 @@ class PcbConnectivitySnapshot(StrictModel):
                     )
                 if obstacle.net != item.obstacle_net:
                     raise ValueError("Native PCB probe obstacle net differs from its pad inventory")
-            if self.schema_version in {"10", "11", "12", "13"} and any(
+            if self.schema_version in {"10", "11", "12", "13", "14"} and any(
                 field not in item.model_fields_set
                 for field in ("target_aperture_shape", "target_aperture_diameter_nm")
             ):
                 raise ValueError(
                     "Native PCB schema v10+ requires explicit target aperture evidence"
                 )
-        if self.schema_version in {"11", "12", "13"}:
+        if self.schema_version in {"11", "12", "13", "14"}:
             if "rule_areas" not in self.model_fields_set:
                 raise ValueError(
                     f"Native PCB schema v{self.schema_version} requires explicit rule-area evidence"
@@ -281,7 +309,7 @@ class PcbConnectivitySnapshot(StrictModel):
                 copper_layers = {layer.casefold() for layer in self.copper_layers}
                 if any(layer.casefold() not in copper_layers for layer in area.layers):
                     raise ValueError("Native PCB rule-area layers are outside the copper stack")
-        if self.schema_version in {"12", "13"}:
+        if self.schema_version in {"12", "13", "14"}:
             if "footprints" not in self.model_fields_set:
                 raise ValueError(
                     f"Native PCB schema v{self.schema_version} requires explicit footprint placement evidence"
@@ -291,7 +319,7 @@ class PcbConnectivitySnapshot(StrictModel):
                 raise ValueError("Native PCB evidence contains duplicate footprint references")
             if any(item.side not in self.copper_layers for item in self.footprints):
                 raise ValueError("Native PCB footprint side is outside the copper stack")
-            if self.schema_version == "13" and any(
+            if self.schema_version in {"13", "14"} and any(
                 "value" not in item.model_fields_set or item.value is None
                 for item in self.footprints
             ):
@@ -303,6 +331,28 @@ class PcbConnectivitySnapshot(StrictModel):
                     raise ValueError("Native PCB pad refers to an unobserved footprint placement")
                 if footprint.footprint != pad.footprint or footprint.dnp != pad.dnp:
                     raise ValueError("Native PCB pad identity differs from its footprint placement")
+        if self.schema_version == "14":
+            for observation in self.touch_pad_clearance_observations:
+                if observation.status != "MEASURED":
+                    continue
+                pad = pads_by_name.get(observation.pad.casefold())
+                if pad is None or pad.net != observation.observed_pad_net:
+                    raise ValueError(
+                        "Measured touch-pad observation disagrees with native pad data"
+                    )
+                if observation.closest_zone_uuid is None:
+                    raise ValueError("Measured touch-pad observation has no reference zone UUID")
+                zone = zones_by_key.get(
+                    (observation.closest_zone_uuid.casefold(), observation.layer.casefold())
+                )
+                if (
+                    zone is None
+                    or zone.net != observation.reference_net
+                    or zone.filled_island_count == 0
+                ):
+                    raise ValueError(
+                        "Measured touch-pad observation disagrees with native zone data"
+                    )
         for tie in self.net_ties:
             for member in (pad for group in tie.pad_groups for pad in group):
                 observed = pads_by_name.get(member.casefold())

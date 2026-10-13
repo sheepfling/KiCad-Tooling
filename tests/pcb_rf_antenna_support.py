@@ -162,7 +162,7 @@ def snapshot(
                 positions_nm=((1_234_000, -5_000),),
             ),
         )
-        if schema_version in {"12", "13"} or pad_net is not None
+        if schema_version in {"12", "13", "14"} or pad_net is not None
         else (),
         net_ties=(),
         zones=(),
@@ -172,7 +172,9 @@ def snapshot(
         tracks=(),
         copper_layers=("F.Cu", "B.Cu"),
         rule_areas=(area(),) if rule_areas is None else rule_areas,
-        footprints=(module_placement,) if schema_version in {"12", "13"} else (),
+        footprints=(module_placement,) if schema_version in {"12", "13", "14"} else (),
+        touch_pad_clearance_observations=(),
+        touch_pad_clearance_requests_sha256=None,
     )
 
 

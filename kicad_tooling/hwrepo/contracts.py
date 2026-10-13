@@ -263,9 +263,13 @@ def read_kicad_import_summary(path: Path) -> KiCadForeignImportSummary:
 
 def write_model(path: Path, model: BaseModel) -> None:
     """Serialize a validated model with deterministic UTF-8 JSON formatting."""
-    path.write_text(
-        model.model_dump_json(by_alias=True, indent=2, exclude_none=True) + "\n",
-        encoding="utf-8",
+    path.write_bytes(model_json_bytes(model))
+
+
+def model_json_bytes(model: BaseModel) -> bytes:
+    """Return the exact deterministic UTF-8 document written by ``write_model``."""
+    return (model.model_dump_json(by_alias=True, indent=2, exclude_none=True) + "\n").encode(
+        "utf-8"
     )
 
 

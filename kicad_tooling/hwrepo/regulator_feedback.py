@@ -10,9 +10,8 @@ from .models import (
     NetlistContract,
     RegulatorFeedbackCoverageEntry,
     RegulatorFeedbackCoverageReport,
-    RegulatorFeedbackMap,
-    RegulatorFeedbackRequirement,
 )
+from .regulator_feedback_models import RegulatorFeedbackMap, RegulatorFeedbackRequirement
 from .resistor_paths import (
     direct_resistors,
     resistance_ohms,

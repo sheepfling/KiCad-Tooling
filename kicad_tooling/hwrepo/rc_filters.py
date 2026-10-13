@@ -14,9 +14,8 @@ from .models import (
     NetlistContract,
     RcFilterCoverageEntry,
     RcFilterCoverageReport,
-    RcFilterMap,
-    RcFilterRequirement,
 )
+from .rc_filter_models import RcFilterMap, RcFilterRequirement
 from .resistor_paths import (
     direct_resistors,
     resistance_ohms,

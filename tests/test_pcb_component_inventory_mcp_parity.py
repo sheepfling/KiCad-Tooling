@@ -44,6 +44,9 @@ from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
 )
 from kicad_tooling.hwrepo.pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from kicad_tooling.hwrepo.pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
+from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
+    PcbTouchPadClearanceCoverageReport,
+)
 from kicad_tooling.hwrepo.pcb_track_width_models import PcbTrackWidthCoverageReport
 from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import synthetic_design_lint_project
@@ -100,6 +103,7 @@ def test_component_inventory_findings_match_cli_and_mcp(
             PcbSignalPathRuleCoverageReport(),
             PcbKeepoutCoverageReport(),
             PcbRfModuleAntennaCoverageReport(),
+            PcbTouchPadClearanceCoverageReport(),
             PcbComponentInventoryCoverageReport(
                 status="COMPLETE",
                 mode="review",

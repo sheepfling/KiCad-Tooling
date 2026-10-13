@@ -25,6 +25,7 @@ from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
 )
+from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .design_lint_rule_types import DesignLintRuleId
@@ -39,7 +40,6 @@ from .models import (
     ConnectorCoverageReport,
     ContractCoachReport,
     DesignLintMappedCheckRun,
-    DesignLintPolicy,
     Digest,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
@@ -61,6 +61,7 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
 from .rs485_peer_reference_types import Rs485PeerReferenceContext
@@ -108,6 +109,7 @@ class DesignLintEvaluationRequest:
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None
 
 
 @dataclass(frozen=True)
@@ -131,6 +133,7 @@ class DesignLintResolvedCoverage:
     pcb_signal_path: PcbSignalPathRuleCoverageReport
     pcb_keepout: PcbKeepoutCoverageReport
     pcb_rf_module_antenna: PcbRfModuleAntennaCoverageReport
+    pcb_touch_pad_clearance: PcbTouchPadClearanceCoverageReport
     stm32_pin_map: Stm32PinMapCoverageReport
     control_input_bias: ControlInputBiasHeuristicCoverage | None
     i2c_pullup_heuristic: I2cPullupHeuristicCoverage | None
@@ -217,6 +220,7 @@ class DesignLintEvaluationReportInput:
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport
     pcb_keepout_coverage: PcbKeepoutCoverageReport
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport
     stm32_pin_map_coverage: Stm32PinMapCoverageReport
     mapped_check_runs: tuple[DesignLintMappedCheckRun, ...]
     connector_coverage: ConnectorCoverageReport | None

@@ -9,9 +9,9 @@ from typing import Literal
 
 from .contract_coach import ContractCoachReport
 from .contracts import repo_path
+from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
 from .models import (
-    DesignLintPolicy,
     SchematicGeometryCoverage,
     SchematicGeometryRuleCoverageStatus,
     SchematicGeometryRuleId,

@@ -6,7 +6,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Literal
 
-from .models import DesignLintPolicy
+from .design_lint_policy_models import DesignLintPolicy
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
@@ -25,6 +25,9 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
     PcbSwitchingLoopMap,
 )
+from .pcb_touch_pad_clearance_models import (
+    PcbTouchPadClearanceCoverageReport,
+)
 
 
 @dataclass(frozen=True)
@@ -34,6 +37,7 @@ class PcbInputCoveragePolicyState:
     signal_path: PcbSignalPathRuleCoverageReport
     keepout: PcbKeepoutCoverageReport
     rf_antenna: PcbRfModuleAntennaCoverageReport
+    touch_pad_clearance: PcbTouchPadClearanceCoverageReport
 
 
 @dataclass(frozen=True)
@@ -57,6 +61,7 @@ def normalize_pcb_input_coverage_policy(
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None,
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None,
 ) -> PcbInputCoveragePolicyState:
     """Apply modes and map identity to signal-path, keepout, and antenna coverage."""
     signal_path_map = policy.pcb_signal_path_rule_map
@@ -193,10 +198,55 @@ def normalize_pcb_input_coverage_policy(
         pcb_rf_module_antenna_coverage = pcb_rf_module_antenna_coverage.model_copy(
             update={"mode": rf_antenna_mode}
         )
+    touch_pad_clearance_map = policy.pcb_touch_pad_clearance_map
+    touch_pad_clearance_override = next(
+        (item for item in policy.rules if item.rule_id == "pcb.touch_pad_reference_clearance"),
+        None,
+    )
+    touch_pad_clearance_mode: Literal["review", "block", "off"] = (
+        "review" if touch_pad_clearance_override is None else touch_pad_clearance_override.mode
+    )
+    touch_pad_clearance_map_sha256 = (
+        hashlib.sha256(touch_pad_clearance_map.model_dump_json().encode("utf-8")).hexdigest()
+        if touch_pad_clearance_map is not None
+        else None
+    )
+    if touch_pad_clearance_map is None:
+        pcb_touch_pad_clearance_coverage = (
+            pcb_touch_pad_clearance_coverage or PcbTouchPadClearanceCoverageReport()
+        )
+    elif touch_pad_clearance_mode == "off":
+        pcb_touch_pad_clearance_coverage = PcbTouchPadClearanceCoverageReport(
+            status="DISABLED",
+            mode="off",
+            map_sha256=touch_pad_clearance_map_sha256,
+        )
+    elif pcb_touch_pad_clearance_coverage is None:
+        pcb_touch_pad_clearance_coverage = PcbTouchPadClearanceCoverageReport(
+            status="BLOCKED",
+            mode=touch_pad_clearance_mode,
+            map_sha256=touch_pad_clearance_map_sha256,
+            issue="Source-bound native PCB geometry was not supplied for the touch-pad clearance map",
+        )
+    elif (
+        pcb_touch_pad_clearance_coverage.map_sha256 != touch_pad_clearance_map_sha256
+        or pcb_touch_pad_clearance_coverage.status in {"NOT_REQUESTED", "DISABLED"}
+    ):
+        pcb_touch_pad_clearance_coverage = PcbTouchPadClearanceCoverageReport(
+            status="BLOCKED",
+            mode=touch_pad_clearance_mode,
+            map_sha256=touch_pad_clearance_map_sha256,
+            issue="Touch-pad clearance coverage does not bind the current project-authored map",
+        )
+    else:
+        pcb_touch_pad_clearance_coverage = pcb_touch_pad_clearance_coverage.model_copy(
+            update={"mode": touch_pad_clearance_mode}
+        )
     return PcbInputCoveragePolicyState(
         signal_path=pcb_signal_path_coverage,
         keepout=pcb_keepout_coverage,
         rf_antenna=pcb_rf_module_antenna_coverage,
+        touch_pad_clearance=pcb_touch_pad_clearance_coverage,
     )
 
 

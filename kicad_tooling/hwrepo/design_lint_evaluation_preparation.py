@@ -59,6 +59,7 @@ def prepare_evaluation(
         pcb_signal_path_coverage=request.pcb_signal_path_coverage,
         pcb_keepout_coverage=request.pcb_keepout_coverage,
         pcb_rf_module_antenna_coverage=request.pcb_rf_module_antenna_coverage,
+        pcb_touch_pad_clearance_coverage=request.pcb_touch_pad_clearance_coverage,
     )
     if request.i2c_pullup_heuristic_coverage is not None:
         i2c_coverage = request.i2c_pullup_heuristic_coverage
@@ -89,6 +90,7 @@ def prepare_evaluation(
                     pcb_signal_path_rules=input_pcb_coverage.signal_path,
                     pcb_keepout_coverage=input_pcb_coverage.keepout,
                     pcb_rf_module_antenna_coverage=input_pcb_coverage.rf_antenna,
+                    pcb_touch_pad_clearance_coverage=(input_pcb_coverage.touch_pad_clearance),
                     issues=(coverage_issue,),
                     next_actions=(
                         "Recreate I2C pull-up coverage from the current native netlist and contract.",
@@ -245,6 +247,7 @@ def prepare_evaluation(
             pcb_signal_path=input_pcb_coverage.signal_path,
             pcb_keepout=input_pcb_coverage.keepout,
             pcb_rf_module_antenna=input_pcb_coverage.rf_antenna,
+            pcb_touch_pad_clearance=input_pcb_coverage.touch_pad_clearance,
             stm32_pin_map=stm32_pin_map_coverage,
             control_input_bias=request.control_input_bias_coverage,
             i2c_pullup_heuristic=request.i2c_pullup_heuristic_coverage,

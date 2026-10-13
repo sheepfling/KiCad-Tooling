@@ -2,25 +2,24 @@
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 from uuid import uuid4
 
-from ..validate import hashes
-from .contract_coach import pinned_image
-from .contracts import repo_path, write_model
 from .design_lint_pcb_component_inventory_scan import (
     resolve_pcb_component_inventory_modes,
     scan_pcb_component_inventory,
 )
-from .design_lint_pcb_coverage_common import PcbGeometrySourceEvidence, PcbRuleMode
+from .design_lint_pcb_coverage_common import (
+    PcbRuleMode,
+    map_sha256,
+)
+from .design_lint_pcb_geometry_capture import capture_pcb_geometry_source
 from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
+from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
-from .evidence import digest
 from .models import (
     ContractCoachReport,
-    DesignLintPolicy,
     ProjectKind,
 )
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
@@ -39,11 +38,6 @@ from .pcb_protection_path_models import (
     PcbProtectionPathMap,
 )
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
-from .pcb_return_path_capture import (
-    capture_native_pcb_connectivity,
-    expected_probe_sha256,
-    native_pcb_command_matches,
-)
 from .pcb_rf_antenna_models import (
     PcbRfModuleAntennaCoverageReport,
     PcbRfModuleAntennaMap,
@@ -51,6 +45,11 @@ from .pcb_rf_antenna_models import (
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
     PcbSwitchingLoopMap,
+)
+from .pcb_touch_pad_clearance_models import (
+    PcbTouchPadClearanceCoverageReport,
+    PcbTouchPadClearanceMap,
+    PcbTouchPadClearanceRequestSet,
 )
 from .pcb_track_width_models import (
     PcbTrackWidthCoverageReport,
@@ -73,6 +72,7 @@ def scan_pcb_geometry(
     PcbSignalPathRuleCoverageReport,
     PcbKeepoutCoverageReport,
     PcbRfModuleAntennaCoverageReport,
+    PcbTouchPadClearanceCoverageReport,
     PcbComponentInventoryCoverageReport,
 ]:
     """Capture one native PCB snapshot for all configured geometry review maps."""
@@ -84,6 +84,7 @@ def scan_pcb_geometry(
     signal_path_map: PcbSignalPathRuleMap | None = policy.pcb_signal_path_rule_map
     keepout_map: PcbKeepoutMap | None = policy.pcb_keepout_map
     rf_antenna_map: PcbRfModuleAntennaMap | None = policy.pcb_rf_module_antenna_map
+    touch_pad_clearance_map: PcbTouchPadClearanceMap | None = policy.pcb_touch_pad_clearance_map
     inventory_modes = resolve_pcb_component_inventory_modes(policy)
     inventory_mode = inventory_modes.inventory
     population_mode = inventory_modes.population
@@ -102,6 +103,7 @@ def scan_pcb_geometry(
         and signal_path_map is None
         and keepout_map is None
         and rf_antenna_map is None
+        and touch_pad_clearance_map is None
         and not inventory_required
     ):
         return (
@@ -113,6 +115,7 @@ def scan_pcb_geometry(
             PcbSignalPathRuleCoverageReport(),
             PcbKeepoutCoverageReport(),
             PcbRfModuleAntennaCoverageReport(),
+            PcbTouchPadClearanceCoverageReport(),
             PcbComponentInventoryCoverageReport(
                 status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
                 mode=inventory_mode if config.kind is ProjectKind.PCB else None,
@@ -136,6 +139,10 @@ def scan_pcb_geometry(
     keepout_mode = "review" if keepout_override is None else keepout_override.mode
     rf_antenna_override = overrides.get("pcb.rf_module_antenna_keepout_coverage")
     rf_antenna_mode = "review" if rf_antenna_override is None else rf_antenna_override.mode
+    touch_pad_clearance_override = overrides.get("pcb.touch_pad_reference_clearance")
+    touch_pad_clearance_mode = (
+        "review" if touch_pad_clearance_override is None else touch_pad_clearance_override.mode
+    )
     reference_plane_override = overrides.get("pcb.reference_plane_coverage")
     reference_plane_mode = (
         "review" if reference_plane_override is None else reference_plane_override.mode
@@ -148,6 +155,9 @@ def scan_pcb_geometry(
     signal_path_disabled = signal_path_map is None or signal_path_mode == "off"
     keepout_disabled = keepout_map is None or keepout_mode == "off"
     rf_antenna_disabled = rf_antenna_map is None or rf_antenna_mode == "off"
+    touch_pad_clearance_disabled = (
+        touch_pad_clearance_map is None or touch_pad_clearance_mode == "off"
+    )
     inventory_disabled = not inventory_required
     if (
         decoupling_disabled
@@ -158,6 +168,7 @@ def scan_pcb_geometry(
         and signal_path_disabled
         and keepout_disabled
         and rf_antenna_disabled
+        and touch_pad_clearance_disabled
         and inventory_disabled
     ):
         return (
@@ -185,13 +196,15 @@ def scan_pcb_geometry(
             PcbRfModuleAntennaCoverageReport(status="DISABLED", mode=rf_antenna_mode)
             if rf_antenna_map is not None
             else PcbRfModuleAntennaCoverageReport(),
+            PcbTouchPadClearanceCoverageReport(status="DISABLED", mode=touch_pad_clearance_mode)
+            if touch_pad_clearance_map is not None
+            else PcbTouchPadClearanceCoverageReport(),
             PcbComponentInventoryCoverageReport(
                 status="DISABLED" if config.kind is ProjectKind.PCB else "NOT_APPLICABLE",
                 mode=inventory_mode if config.kind is ProjectKind.PCB else None,
             ),
         )
     board_relative = Path(config.project).with_suffix(".kicad_pcb").as_posix()
-    board_path = repo_path(root, board_relative)
     output = root / "build" / "design-lint" / f"pcb-geometry-{uuid4().hex[:12]}"
     board_hash: str | None = None
     inventory_report = PcbComponentInventoryCoverageReport(
@@ -199,56 +212,22 @@ def scan_pcb_geometry(
         mode=inventory_mode if config.kind is ProjectKind.PCB else None,
     )
     try:
-        if config.kind is not ProjectKind.PCB:
-            raise ValueError("PCB geometry requirements need an authoritative PCB project")
-        if coach.netlist_sha256 is None:
+        netlist_sha256 = coach.netlist_sha256
+        if netlist_sha256 is None:
             raise ValueError("Source-bound native netlist hash is unavailable")
-        board_hash = digest(board_path)
-        if coach.source_hashes.get(board_relative) != board_hash:
-            raise ValueError(
-                "Authoritative PCB is absent from, or differs from, native source hashes"
-            )
-        command, snapshot = capture_native_pcb_connectivity(root, config, output)
-        if snapshot is None:
-            raise ValueError(
-                "Native PCB geometry probe failed; inspect a native.command.json receipt under "
-                "build/design-lint/pcb-geometry-*"
-            )
-        if (
-            snapshot.schema_version not in {"10", "11", "12", "13"}
-            or snapshot.board_sha256 != board_hash
-            or snapshot.kicad_version != config.kicad_version
-            or snapshot.image != pinned_image(config.image)
-            or snapshot.probe_sha256 != expected_probe_sha256()
-            or not snapshot.zones_refilled
-            or not native_pcb_command_matches(command, config)
-        ):
-            raise ValueError(
-                "Native PCB geometry evidence does not match the reviewed source/toolchain"
-            )
-        snapshot_path = output / "snapshot.json"
-        write_model(snapshot_path, snapshot)
-        if (
-            digest(board_path) != board_hash
-            or hashes(root, config.source_roots) != coach.source_hashes
-        ):
-            raise ValueError("Project sources changed during native PCB geometry capture")
-        snapshot_relative = snapshot_path.relative_to(root).as_posix()
-        snapshot_hash = digest(snapshot_path)
-        probe_hash = expected_probe_sha256()
-        pcb_command_path = output / "native.command.json"
-        evidence = PcbGeometrySourceEvidence(
-            board_path=board_relative,
-            board_sha256=board_hash,
-            snapshot_relative_path=snapshot_relative,
-            snapshot_path=snapshot_path,
-            snapshot_sha256=snapshot_hash,
-            probe_sha256=probe_hash,
-            snapshot=snapshot,
-            command=command,
-            command_path=pcb_command_path,
-            command_sha256=digest(pcb_command_path),
+        touch_requests = (
+            PcbTouchPadClearanceRequestSet(requests=touch_pad_clearance_map.requirements)
+            if touch_pad_clearance_map is not None and not touch_pad_clearance_disabled
+            else None
         )
+        evidence = capture_pcb_geometry_source(
+            root,
+            config,
+            coach,
+            output,
+            touch_pad_clearance_requests=touch_requests,
+        )
+        board_hash = evidence.board_sha256
         if inventory_required:
             inventory_report = scan_pcb_component_inventory(
                 root,
@@ -273,6 +252,7 @@ def scan_pcb_geometry(
             "pcb.signal_path_rule_coverage": signal_path_mode,
             "pcb.keepout_intent_coverage": keepout_mode,
             "pcb.rf_module_antenna_keepout_coverage": rf_antenna_mode,
+            "pcb.touch_pad_reference_clearance": touch_pad_clearance_mode,
             "pcb.schematic_component_inventory": inventory_mode,
             "pcb.schematic_pcb_dnp_mismatch": population_mode,
             "pcb.schematic_pcb_value_mismatch": value_mode,
@@ -294,9 +274,14 @@ def scan_pcb_geometry(
             switching_loop_map=switching_loop_map,
             modes=modes,
             evidence=evidence,
-            netlist_sha256=coach.netlist_sha256,
+            netlist_sha256=netlist_sha256,
         )
-        signal_path_report, keepout_report, rf_antenna_report = layout_coverage_reports(
+        (
+            signal_path_report,
+            keepout_report,
+            rf_antenna_report,
+            touch_pad_clearance_report,
+        ) = layout_coverage_reports(
             root=root,
             config=config,
             coach=coach,
@@ -304,6 +289,7 @@ def scan_pcb_geometry(
             signal_path_map=signal_path_map,
             keepout_map=keepout_map,
             rf_antenna_map=rf_antenna_map,
+            touch_pad_clearance_map=touch_pad_clearance_map,
             modes=modes,
             evidence=evidence,
         )
@@ -316,6 +302,7 @@ def scan_pcb_geometry(
             signal_path_report,
             keepout_report,
             rf_antenna_report,
+            touch_pad_clearance_report,
             inventory_report,
         )
     except (OSError, ValueError, TypeError) as exc:
@@ -324,9 +311,7 @@ def scan_pcb_geometry(
             PcbDecouplingCoverageReport(
                 status="BLOCKED",
                 mode=decoupling_mode,
-                map_sha256=hashlib.sha256(
-                    decoupling_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(decoupling_map),
                 board_path=board_relative,
                 issue=issue,
             )
@@ -339,9 +324,7 @@ def scan_pcb_geometry(
             PcbProtectionPathCoverageReport(
                 status="BLOCKED",
                 mode=protection_path_mode,
-                map_sha256=hashlib.sha256(
-                    protection_path_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(protection_path_map),
                 board_path=board_relative,
                 issue=issue,
             )
@@ -354,9 +337,7 @@ def scan_pcb_geometry(
             PcbTrackWidthCoverageReport(
                 status="BLOCKED",
                 mode=track_width_mode,
-                map_sha256=hashlib.sha256(
-                    track_width_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(track_width_map),
                 board_path=board_relative,
                 issue=issue,
             )
@@ -369,9 +350,7 @@ def scan_pcb_geometry(
             PcbReferencePlaneCoverageReport(
                 status="BLOCKED",
                 mode=reference_plane_mode,
-                map_sha256=hashlib.sha256(
-                    reference_plane_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(reference_plane_map),
                 board_path=board_relative,
                 issue=issue,
             )
@@ -384,9 +363,7 @@ def scan_pcb_geometry(
             PcbSwitchingLoopCoverageReport(
                 status="BLOCKED",
                 mode=switching_loop_mode,
-                map_sha256=hashlib.sha256(
-                    switching_loop_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(switching_loop_map),
                 board_path=board_relative,
                 issue=issue,
             )
@@ -399,9 +376,7 @@ def scan_pcb_geometry(
             PcbSignalPathRuleCoverageReport(
                 status="BLOCKED",
                 mode=signal_path_mode,
-                map_sha256=hashlib.sha256(
-                    signal_path_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(signal_path_map),
                 issue=issue,
             )
             if signal_path_map is not None and not signal_path_disabled
@@ -413,9 +388,7 @@ def scan_pcb_geometry(
             PcbKeepoutCoverageReport(
                 status="BLOCKED",
                 mode=keepout_mode,
-                map_sha256=hashlib.sha256(
-                    keepout_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(keepout_map),
                 board_path=board_relative,
                 issue=issue,
             )
@@ -428,9 +401,7 @@ def scan_pcb_geometry(
             PcbRfModuleAntennaCoverageReport(
                 status="BLOCKED",
                 mode=rf_antenna_mode,
-                map_sha256=hashlib.sha256(
-                    rf_antenna_map.model_dump_json().encode("utf-8")
-                ).hexdigest(),
+                map_sha256=map_sha256(rf_antenna_map),
                 board_path=board_relative,
                 issue=issue,
             )
@@ -438,6 +409,21 @@ def scan_pcb_geometry(
             else PcbRfModuleAntennaCoverageReport(status="DISABLED", mode=rf_antenna_mode)
             if rf_antenna_map is not None
             else PcbRfModuleAntennaCoverageReport()
+        )
+        touch_pad_clearance_report = (
+            PcbTouchPadClearanceCoverageReport(
+                status="BLOCKED",
+                mode=touch_pad_clearance_mode,
+                map_sha256=map_sha256(touch_pad_clearance_map),
+                board_path=board_relative,
+                issue=issue,
+            )
+            if touch_pad_clearance_map is not None and not touch_pad_clearance_disabled
+            else PcbTouchPadClearanceCoverageReport(
+                status="DISABLED", mode=touch_pad_clearance_mode
+            )
+            if touch_pad_clearance_map is not None
+            else PcbTouchPadClearanceCoverageReport()
         )
         inventory_report = (
             PcbComponentInventoryCoverageReport(
@@ -476,5 +462,6 @@ def scan_pcb_geometry(
         signal_path_report,
         keepout_report,
         rf_antenna_report,
+        touch_pad_clearance_report,
         inventory_report,
     )

@@ -59,7 +59,7 @@ FIXTURE = Path(__file__).parent / "fixtures/design_lint/pcb-keepout-rule-area.ki
         ),
     ),
 )
-def test_native_schema_13_snapshot_records_keepout_and_footprint_evidence(
+def test_native_schema_14_snapshot_records_keepout_footprint_and_empty_touch_evidence(
     tmp_path: Path, expected_version: str, image: str
 ) -> None:
     root = tmp_path / "project"
@@ -97,7 +97,9 @@ def test_native_schema_13_snapshot_records_keepout_and_footprint_evidence(
     assert command.returncode == 0, command.stderr or command.error
     assert snapshot is not None
     assert snapshot.kicad_version == expected_version
-    assert snapshot.schema_version == "13"
+    assert snapshot.schema_version == "14"
+    assert snapshot.touch_pad_clearance_observations == ()
+    assert snapshot.touch_pad_clearance_requests_sha256 is None
     assert snapshot.board_sha256
     assert snapshot.probe_sha256 == expected_probe_sha256()
     assert len(snapshot.rule_areas) == 3

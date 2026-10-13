@@ -47,6 +47,7 @@ from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport
@@ -135,6 +136,9 @@ class DesignLintReport(StrictModel):
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport = Field(
         default_factory=PcbRfModuleAntennaCoverageReport
     )
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport = Field(
+        default_factory=PcbTouchPadClearanceCoverageReport
+    )
     stale_ignores: tuple[DesignLintIgnore, ...] = ()
     rule_overrides: tuple[DesignLintRuleOverride, ...] = ()
     issues: tuple[NonEmptyText, ...] = ()
@@ -210,6 +214,29 @@ class DesignLintReport(StrictModel):
             and self.netlist_sha256 != self.pcb_rf_module_antenna_coverage.netlist_sha256
         ):
             raise ValueError("RF module antenna coverage must use this report's native netlist")
+        if (
+            self.netlist_sha256 is not None
+            and self.pcb_touch_pad_clearance_coverage.netlist_sha256 is not None
+            and self.netlist_sha256 != self.pcb_touch_pad_clearance_coverage.netlist_sha256
+        ):
+            raise ValueError("Touch-pad clearance coverage must use this report's native netlist")
+        touch_clearance = self.pcb_touch_pad_clearance_coverage
+        if touch_clearance.status in {"COMPLETE", "INCOMPLETE", "BLOCKED"}:
+            expected_touch_clearance_findings = (
+                1
+                if touch_clearance.status == "BLOCKED"
+                else sum(
+                    entry.status == "INCOMPLETE" or entry.violates_minimum_clearance
+                    for entry in touch_clearance.entries
+                )
+            )
+            actual_touch_clearance_findings = sum(
+                finding.rule_id == "pcb.touch_pad_reference_clearance" for finding in self.findings
+            )
+            if actual_touch_clearance_findings != expected_touch_clearance_findings:
+                raise ValueError(
+                    "Touch-pad clearance findings must match source-bound coverage rows"
+                )
         run_ids = [item.rule_id for item in self.mapped_check_runs]
         if len(run_ids) != len(set(run_ids)):
             raise ValueError("Mapped-check execution entries must use unique rule IDs")

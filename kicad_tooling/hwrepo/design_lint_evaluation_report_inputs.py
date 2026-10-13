@@ -48,6 +48,7 @@ def evaluation_report_input(
         pcb_signal_path_coverage=coverage.pcb_signal_path,
         pcb_keepout_coverage=coverage.pcb_keepout,
         pcb_rf_module_antenna_coverage=coverage.pcb_rf_module_antenna,
+        pcb_touch_pad_clearance_coverage=coverage.pcb_touch_pad_clearance,
         stm32_pin_map_coverage=coverage.stm32_pin_map,
         mapped_check_runs=candidates.mapped_check_runs,
         connector_coverage=request.connector_coverage,
@@ -98,6 +99,7 @@ def blocked_wrong_ignore_report(
         pcb_signal_path_rules=coverage.pcb_signal_path,
         pcb_keepout_coverage=coverage.pcb_keepout,
         pcb_rf_module_antenna_coverage=coverage.pcb_rf_module_antenna,
+        pcb_touch_pad_clearance_coverage=coverage.pcb_touch_pad_clearance,
         stm32_pin_map_coverage=coverage.stm32_pin_map,
         control_input_bias_coverage=(
             coverage.control_input_bias or ControlInputBiasHeuristicCoverage()

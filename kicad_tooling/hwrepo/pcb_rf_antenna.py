@@ -161,8 +161,13 @@ def _append_keepout_issues(
     keepout = requirement.keepout
     if keepout is None:
         return (), None, None, (), (None, None, None, None, None)
-    if snapshot.schema_version not in {"12", "13"} or "footprints" not in snapshot.model_fields_set:
-        issues.append("native footprint-placement evidence requires PCB snapshot schema 12 or 13")
+    if (
+        snapshot.schema_version not in {"12", "13", "14"}
+        or "footprints" not in snapshot.model_fields_set
+    ):
+        issues.append(
+            "native footprint-placement evidence requires PCB snapshot schema 12, 13, or 14"
+        )
         return (), None, None, (), (None, None, None, None, None)
     if placement is None:
         issues.append("native PCB footprint placement is missing for the mapped RF module")

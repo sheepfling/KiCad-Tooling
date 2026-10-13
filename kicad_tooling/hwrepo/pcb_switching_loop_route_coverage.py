@@ -84,7 +84,7 @@ def _route_edge_coverage(
         )
     zone_uuid, island_index = next(iter(common_islands))
     contour_area_twice = None
-    if snapshot.schema_version in {"9", "10", "11", "12", "13"}:
+    if snapshot.schema_version in {"9", "10", "11", "12", "13", "14"}:
         zone = zones.get((zone_uuid, plane_layer.casefold()))
         island = (
             None

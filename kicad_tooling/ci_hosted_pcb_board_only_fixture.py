@@ -80,9 +80,9 @@ def pcb_board_only_footprint_fixture_lane(
             expected_board_sha256=expected_hashes["board"],
             purpose="board-only footprint PCB",
         )
-        if snapshot.schema_version not in {"12", "13"}:
+        if snapshot.schema_version not in {"12", "13", "14"}:
             raise ValueError(
-                "Board-only review requires native PCB footprint snapshot schema 12 or 13"
+                "Board-only review requires native PCB footprint snapshot schema 12, 13, or 14"
             )
         if retained_netlist is None:
             retained_netlist = observed

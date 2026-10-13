@@ -6,8 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .design_lint_pcb_coverage_common import PcbGeometrySourceEvidence, PcbRuleMode
+from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig
-from .models import ContractCoachReport, DesignLintPolicy
+from .models import ContractCoachReport
 from .pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_required_fitted_reference_models import PcbRequiredFittedReferenceMap

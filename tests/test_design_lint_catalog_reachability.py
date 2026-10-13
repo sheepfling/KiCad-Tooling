@@ -57,6 +57,9 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     PcbRfModuleAntennaMap,
 )
+from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
+    PcbTouchPadClearanceCoverageReport,
+)
 from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
@@ -481,5 +484,14 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id for item in candidates(rs485_source, rs485_peer_reference_scan=rs485_scan)
     )
+    touch_clearance_candidates = candidates(
+        NetlistContract(components={}, nets={}),
+        pcb_touch_pad_clearance_coverage=PcbTouchPadClearanceCoverageReport(
+            status="BLOCKED",
+            mode="review",
+            issue="Synthetic native geometry evidence is unavailable",
+        ),
+    )
+    emitted.update(item.rule_id for item in touch_clearance_candidates)
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

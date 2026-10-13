@@ -99,6 +99,7 @@ DesignLintRuleId = Literal[
     "pcb.signal_path_rule_coverage",
     "pcb.keepout_intent_coverage",
     "pcb.rf_module_antenna_keepout_coverage",
+    "pcb.touch_pad_reference_clearance",
     "pcb.schematic_component_inventory",
     "pcb.board_only_footprint",
     "pcb.required_fitted_reference",

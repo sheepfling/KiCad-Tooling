@@ -1,0 +1,132 @@
+"""Keep recent design-lint requirements in bounded theme-owned model modules."""
+
+from __future__ import annotations
+
+import ast
+
+import pytest
+
+from kicad_tooling.hwrepo import (
+    design_lint_policy_models,
+    pcb_touch_pad_clearance_models,
+    rc_filter_models,
+    regulator_feedback_models,
+    signal_pair_models,
+)
+from kicad_tooling.hwrepo import models as compatibility_models
+from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
+
+pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
+
+MODEL_OWNERS = {
+    "design_lint_policy_models.py": (
+        design_lint_policy_models,
+        ("DesignLintPolicy",),
+    ),
+    "rc_filter_models.py": (rc_filter_models, ("RcFilterRequirement", "RcFilterMap")),
+    "regulator_feedback_models.py": (
+        regulator_feedback_models,
+        (
+            "RegulatorDividerResistorRequirement",
+            "RegulatorFeedbackRequirement",
+            "RegulatorFeedbackMap",
+        ),
+    ),
+    "signal_pair_models.py": (
+        signal_pair_models,
+        ("ComplementaryPinFunctionAlias", "ComplementaryPinFunctionAliasMap"),
+    ),
+}
+NEW_THEME_MODELS = (
+    "PcbTouchPadClearanceRequirement",
+    "PcbTouchPadClearanceMap",
+    "PcbTouchPadClearanceRequestSet",
+    "PcbTouchPadClearanceObservation",
+    "PcbTouchPadClearanceCoverageEntry",
+    "PcbTouchPadClearanceCoverageReport",
+)
+
+
+def _top_level_definitions(path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+    return {
+        node.name
+        for node in tree.body
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+
+
+def test_lint_models_have_bounded_owners_and_compatible_exports() -> None:
+    registry = HWREPO / "models.py"
+    registry_classes = _top_level_definitions(registry)
+    for filename, (owner_module, model_names) in MODEL_OWNERS.items():
+        owner = HWREPO / filename
+        assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+        assert set(model_names) <= _top_level_definitions(owner)
+        assert not (set(model_names) & registry_classes)
+        for name in model_names:
+            assert getattr(compatibility_models, name) is getattr(owner_module, name)
+
+
+def test_new_touch_clearance_models_stay_in_their_theme_owner() -> None:
+    owner_path = HWREPO / "pcb_touch_pad_clearance_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(NEW_THEME_MODELS) <= _top_level_definitions(owner_path)
+    assert all(
+        getattr(pcb_touch_pad_clearance_models, name).__module__
+        == pcb_touch_pad_clearance_models.__name__
+        for name in NEW_THEME_MODELS
+    )
+    assert not (set(NEW_THEME_MODELS) & _top_level_definitions(HWREPO / "models.py"))
+    assert all(not hasattr(compatibility_models, name) for name in NEW_THEME_MODELS)
+
+
+def test_internal_services_import_lint_models_from_their_theme_owners() -> None:
+    moved_names = {name for _, names in MODEL_OWNERS.values() for name in names}
+    moved_names.update(NEW_THEME_MODELS)
+    legacy_imports: list[str] = []
+    for path in sorted(HWREPO.rglob("*.py")):
+        if path == HWREPO / "models.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module is not None
+                and (node.module == "models" or node.module.endswith(".models"))
+            ):
+                legacy_imports.extend(
+                    f"{path.relative_to(REPO_ROOT).as_posix()}:{alias.name}"
+                    for alias in node.names
+                    if alias.name in moved_names
+                )
+
+    assert not legacy_imports, (
+        "Internal services must import lint models from their owner modules; "
+        f"legacy imports: {sorted(legacy_imports)}"
+    )
+
+
+def test_design_lint_policy_imports_typed_maps_from_theme_owners() -> None:
+    policy_path = HWREPO / "design_lint_policy_models.py"
+    tree = ast.parse(policy_path.read_text(encoding="utf-8"), filename=policy_path.name)
+    imported = {
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        and node.module
+        in {
+            "pcb_touch_pad_clearance_models",
+            "rc_filter_models",
+            "regulator_feedback_models",
+            "signal_pair_models",
+        }
+        for alias in node.names
+    }
+
+    assert {
+        "PcbTouchPadClearanceMap",
+        "RcFilterMap",
+        "RegulatorFeedbackMap",
+        "ComplementaryPinFunctionAliasMap",
+    } <= imported

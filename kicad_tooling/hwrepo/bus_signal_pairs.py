@@ -8,10 +8,10 @@ import re
 from dataclasses import dataclass
 from typing import Literal, cast
 
-from .models import (
+from .models import NetlistContract
+from .signal_pair_models import (
     ComplementaryPinFunctionAlias,
     ComplementaryPinFunctionAliasMap,
-    NetlistContract,
 )
 
 _COMPLEMENTARY_FUNCTIONS: dict[str, tuple[str, str]] = {

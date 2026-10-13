@@ -30,6 +30,7 @@ from . import connector_return_distribution_models as _connector_return_distribu
 from . import control_input_models as _control_input_models
 from . import crystal_network_models as _crystal_network_models
 from . import design_lint_finding_models as _design_lint_finding_models
+from . import design_lint_policy_models as _design_lint_policy_models
 from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
 from . import digital_peer_voltage_models as _digital_peer_voltage_models
@@ -45,7 +46,6 @@ from . import pcb_drc_models as _pcb_drc_models
 from . import pcb_keepout_models as _pcb_keepout_models
 from . import pcb_protection_path_models as _pcb_protection_path_models
 from . import pcb_reference_plane_models as _pcb_reference_plane_models
-from . import pcb_required_fitted_reference_models as _pcb_required_fitted_reference_models
 from . import pcb_return_path_models as _pcb_return_path_models
 from . import pcb_rf_antenna_models as _pcb_rf_antenna_models
 from . import pcb_switching_loop_models as _pcb_switching_loop_models
@@ -54,11 +54,14 @@ from . import pin_connectivity_models as _pin_connectivity_models
 from . import power_connectivity_models as _power_connectivity_models
 from . import power_path_models as _power_path_models
 from . import power_sequence_models as _power_sequence_models
+from . import rc_filter_models as _rc_filter_models
 from . import reference_bond_models as _reference_bond_models
+from . import regulator_feedback_models as _regulator_feedback_models
 from . import rs485_models as _rs485_models
 from . import serial_logic_models as _serial_logic_models
 from . import serial_peer_models as _serial_peer_models
 from . import serial_peer_reference_models as _serial_peer_reference_models
+from . import signal_pair_models as _signal_pair_models
 from . import spi_models as _spi_models
 from . import stm32_pin_map_models as _stm32_pin_map_models
 from . import usb_c_models as _usb_c_models
@@ -117,7 +120,14 @@ Stm32CubeMxPinMap = _stm32_pin_map_models.Stm32CubeMxPinMap
 Stm32PinMapMismatch = _stm32_pin_map_models.Stm32PinMapMismatch
 Stm32UnmappedDevice = _stm32_pin_map_models.Stm32UnmappedDevice
 Stm32PinMapCoverageReport = _stm32_pin_map_models.Stm32PinMapCoverageReport
-
+RegulatorDividerResistorRequirement = _regulator_feedback_models.RegulatorDividerResistorRequirement
+RegulatorFeedbackRequirement = _regulator_feedback_models.RegulatorFeedbackRequirement
+RegulatorFeedbackMap = _regulator_feedback_models.RegulatorFeedbackMap
+RcFilterRequirement = _rc_filter_models.RcFilterRequirement
+RcFilterMap = _rc_filter_models.RcFilterMap
+ComplementaryPinFunctionAlias = _signal_pair_models.ComplementaryPinFunctionAlias
+ComplementaryPinFunctionAliasMap = _signal_pair_models.ComplementaryPinFunctionAliasMap
+DesignLintPolicy = _design_lint_policy_models.DesignLintPolicy
 ComponentVoltageRatingRequirement = _component_rating_models.ComponentVoltageRatingRequirement
 ComponentVoltageRatingAnalysis = _component_rating_models.ComponentVoltageRatingAnalysis
 ComponentPowerRatingRequirement = _component_rating_models.ComponentPowerRatingRequirement
@@ -708,292 +718,6 @@ SchematicGeometryRuleId = Literal[
 SchematicGeometryRuleCoverageStatus = Literal["DISABLED", "COMPLETE", "PARTIAL", "UNSUPPORTED"]
 
 
-class RegulatorDividerResistorRequirement(StrictModel):
-    """One explicitly mapped side of a conventional regulator feedback divider."""
-
-    reference: ResistorReference
-    expected_symbol: NonEmptyText
-    expected_footprint: NonEmptyText
-    feedback_pin: Reference
-    rail_pin: Reference
-    minimum_nominal_resistance_ohms: ElectricalPositive
-    maximum_nominal_resistance_ohms: ElectricalPositive
-
-    @model_validator(mode="after")
-    def local_distinct_pins_and_ordered_range(self) -> RegulatorDividerResistorRequirement:
-        prefix = f"{self.reference}.".casefold()
-        if any(not pin.casefold().startswith(prefix) for pin in (self.feedback_pin, self.rail_pin)):
-            raise ValueError("Regulator divider pins must belong to their declared resistor")
-        if self.feedback_pin.casefold() == self.rail_pin.casefold():
-            raise ValueError("Regulator divider feedback and rail pins must differ")
-        if self.minimum_nominal_resistance_ohms > self.maximum_nominal_resistance_ohms:
-            raise ValueError("Regulator divider nominal resistance range is reversed")
-        return self
-
-
-class RegulatorFeedbackRequirement(StrictModel):
-    """Reviewed identity, pin map, reference range, and output range for one regulator."""
-
-    id: Identifier
-    regulator_reference: Identifier
-    expected_regulator_value: NonEmptyText
-    expected_regulator_symbol: NonEmptyText
-    expected_regulator_footprint: NonEmptyText
-    output_pin: Reference
-    expected_output_pin_function: NonEmptyText
-    feedback_pin: Reference
-    expected_feedback_pin_function: NonEmptyText
-    output_net: NetName
-    reference_net: NetName
-    upper_resistor: RegulatorDividerResistorRequirement
-    lower_resistor: RegulatorDividerResistorRequirement
-    minimum_feedback_reference_voltage_v: ElectricalPositive
-    maximum_feedback_reference_voltage_v: ElectricalPositive
-    minimum_target_output_voltage_v: ElectricalPositive
-    maximum_target_output_voltage_v: ElectricalPositive
-    basis: NonEmptyText
-
-    @model_validator(mode="after")
-    def conventional_divider_is_complete(self) -> RegulatorFeedbackRequirement:
-        prefix = f"{self.regulator_reference}.".casefold()
-        if any(
-            not pin.casefold().startswith(prefix) for pin in (self.output_pin, self.feedback_pin)
-        ):
-            raise ValueError("Regulator output and feedback pins must belong to the regulator")
-        if self.output_pin.casefold() == self.feedback_pin.casefold():
-            raise ValueError("Regulator output and feedback pins must differ")
-        references = (
-            self.regulator_reference,
-            self.upper_resistor.reference,
-            self.lower_resistor.reference,
-        )
-        if len({reference.casefold() for reference in references}) != len(references):
-            raise ValueError("Regulator and divider component references must be unique")
-        pins = (
-            self.output_pin,
-            self.feedback_pin,
-            self.upper_resistor.feedback_pin,
-            self.upper_resistor.rail_pin,
-            self.lower_resistor.feedback_pin,
-            self.lower_resistor.rail_pin,
-        )
-        if len({pin.casefold() for pin in pins}) != len(pins):
-            raise ValueError("Regulator feedback pin mappings must be unique")
-        if self.output_net.casefold() == self.reference_net.casefold():
-            raise ValueError("Regulator output and reference nets must differ")
-        if self.minimum_feedback_reference_voltage_v > self.maximum_feedback_reference_voltage_v:
-            raise ValueError("Regulator feedback-reference voltage range is reversed")
-        if self.minimum_target_output_voltage_v > self.maximum_target_output_voltage_v:
-            raise ValueError("Regulator target output voltage range is reversed")
-        return self
-
-
-class RegulatorFeedbackMap(StrictModel):
-    """Project-authored scope for deterministic adjustable-regulator checks."""
-
-    basis: NonEmptyText
-    regulators: Annotated[tuple[RegulatorFeedbackRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_regulators_and_components(self) -> RegulatorFeedbackMap:
-        if len({item.id.casefold() for item in self.regulators}) != len(self.regulators):
-            raise ValueError("Regulator feedback IDs must be unique")
-        all_components = [
-            reference.casefold()
-            for item in self.regulators
-            for reference in (
-                item.regulator_reference,
-                item.upper_resistor.reference,
-                item.lower_resistor.reference,
-            )
-        ]
-        if len(set(all_components)) != len(all_components):
-            raise ValueError("A component can belong to only one regulator feedback map")
-        return self
-
-
-class RcFilterRequirement(StrictModel):
-    """Reviewed identity, topology, values, and corner range for one RC low-pass."""
-
-    id: Identifier
-    resistor_reference: ResistorReference
-    expected_resistor_symbol: NonEmptyText
-    expected_resistor_footprint: NonEmptyText
-    resistor_first_pin: Reference
-    resistor_second_pin: Reference
-    capacitor_reference: Identifier
-    expected_capacitor_symbol: NonEmptyText
-    expected_capacitor_footprint: NonEmptyText
-    capacitor_signal_pin: Reference
-    capacitor_reference_pin: Reference
-    input_net: NetName
-    filtered_net: NetName
-    reference_net: NetName
-    minimum_nominal_resistance_ohms: ElectricalPositive
-    maximum_nominal_resistance_ohms: ElectricalPositive
-    minimum_nominal_capacitance_pf: CapacitancePf
-    maximum_nominal_capacitance_pf: CapacitancePf
-    minimum_target_corner_hz: ElectricalPositive
-    maximum_target_corner_hz: ElectricalPositive
-    basis: NonEmptyText
-
-    @model_validator(mode="after")
-    def complete_first_order_map(self) -> RcFilterRequirement:
-        resistor_prefix = f"{self.resistor_reference}.".casefold()
-        capacitor_prefix = f"{self.capacitor_reference}.".casefold()
-        if any(
-            not pin.casefold().startswith(resistor_prefix)
-            for pin in (self.resistor_first_pin, self.resistor_second_pin)
-        ):
-            raise ValueError("RC filter resistor pins must belong to the declared resistor")
-        if any(
-            not pin.casefold().startswith(capacitor_prefix)
-            for pin in (self.capacitor_signal_pin, self.capacitor_reference_pin)
-        ):
-            raise ValueError("RC filter capacitor pins must belong to the declared capacitor")
-        pins = (
-            self.resistor_first_pin,
-            self.resistor_second_pin,
-            self.capacitor_signal_pin,
-            self.capacitor_reference_pin,
-        )
-        if len({pin.casefold() for pin in pins}) != len(pins):
-            raise ValueError("RC filter pin mappings must be unique")
-        if (
-            len(
-                {
-                    self.input_net.casefold(),
-                    self.filtered_net.casefold(),
-                    self.reference_net.casefold(),
-                }
-            )
-            != 3
-        ):
-            raise ValueError("RC filter input, filtered, and reference nets must be distinct")
-        if self.resistor_reference.casefold() == self.capacitor_reference.casefold():
-            raise ValueError("RC filter resistor and capacitor references must differ")
-        if self.minimum_nominal_resistance_ohms > self.maximum_nominal_resistance_ohms:
-            raise ValueError("RC filter resistance range is reversed")
-        if self.minimum_nominal_capacitance_pf > self.maximum_nominal_capacitance_pf:
-            raise ValueError("RC filter capacitance range is reversed")
-        if self.minimum_target_corner_hz > self.maximum_target_corner_hz:
-            raise ValueError("RC filter target corner range is reversed")
-        return self
-
-
-class RcFilterMap(StrictModel):
-    """Project-authored scope for deterministic first-order RC filter checks."""
-
-    filters: Annotated[tuple[RcFilterRequirement, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_filter_parts(self) -> RcFilterMap:
-        if len({item.id.casefold() for item in self.filters}) != len(self.filters):
-            raise ValueError("RC filter IDs must be unique")
-        references = [
-            reference.casefold()
-            for item in self.filters
-            for reference in (item.resistor_reference, item.capacitor_reference)
-        ]
-        if len(set(references)) != len(references):
-            raise ValueError("A component can belong to only one mapped RC filter")
-        return self
-
-
-class ComplementaryPinFunctionAlias(StrictModel):
-    """Project-owned pin-function aliases for one exact KiCad symbol pair."""
-
-    symbol: NonEmptyText
-    family: NonEmptyText
-    positive_functions: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
-    negative_functions: Annotated[tuple[NonEmptyText, ...], Field(min_length=1)]
-    basis: NonEmptyText
-
-    @model_validator(mode="after")
-    def unambiguous_function_aliases(self) -> ComplementaryPinFunctionAlias:
-        def key(value: str) -> str:
-            return re.sub(r"[\s_./]", "", value.casefold()).replace("−", "-")
-
-        positive = tuple(key(value) for value in self.positive_functions)
-        negative = tuple(key(value) for value in self.negative_functions)
-        if any(not value for value in (*positive, *negative)):
-            raise ValueError("Complementary pin-function aliases must contain a letter or symbol")
-        if len(set(positive)) != len(positive) or len(set(negative)) != len(negative):
-            raise ValueError("Complementary pin-function aliases must be unique within each side")
-        if set(positive) & set(negative):
-            raise ValueError("A complementary pin-function alias cannot name both pair sides")
-        return self
-
-
-class ComplementaryPinFunctionAliasMap(StrictModel):
-    """Opt-in function aliases scoped to exact native KiCad symbol identities."""
-
-    entries: Annotated[tuple[ComplementaryPinFunctionAlias, ...], Field(min_length=1)]
-
-    @model_validator(mode="after")
-    def unique_symbols_families_and_functions(self) -> ComplementaryPinFunctionAliasMap:
-        identities = tuple((item.symbol, item.family.casefold()) for item in self.entries)
-        if len(set(identities)) != len(identities):
-            raise ValueError("Complementary pin-function alias symbol/family pairs must be unique")
-        aliases: set[tuple[str, str]] = set()
-        for item in self.entries:
-            for function in (*item.positive_functions, *item.negative_functions):
-                key = re.sub(r"[\s_./]", "", function.casefold()).replace("−", "-")
-                identity = (item.symbol, key)
-                if identity in aliases:
-                    raise ValueError(
-                        "A symbol pin-function alias can belong to only one pair family and side"
-                    )
-                aliases.add(identity)
-        return self
-
-
-class DesignLintPolicy(StrictModel):
-    """Project-owned review decisions; no observed netlist values become requirements."""
-
-    schema_version: Literal["1"] = "1"
-    rules: tuple[DesignLintRuleOverride, ...] = ()
-    ignores: tuple[DesignLintIgnore, ...] = ()
-    component_role_map: ComponentRoleMap | None = None
-    complementary_pin_function_alias_map: ComplementaryPinFunctionAliasMap | None = None
-    stm32_pin_maps: tuple[Stm32CubeMxPinMap, ...] = ()
-    i2c_address_map: I2cAddressMap | None = None
-    external_protection_map: ExternalProtectionMap | None = None
-    usb_data_path_map: UsbDataPathMap | None = None
-    power_path_map: PowerPathMap | None = None
-    power_sequence_map: PowerSequenceMap | None = None
-    crystal_network_map: CrystalNetworkMap | None = None
-    regulator_feedback_map: RegulatorFeedbackMap | None = None
-    rc_filter_map: RcFilterMap | None = None
-    connector_return_distribution_map: ConnectorReturnDistributionMap | None = None
-    pcb_decoupling_map: PcbDecouplingMap | None = None
-    pcb_protection_path_map: PcbProtectionPathMap | None = None
-    pcb_track_width_map: PcbTrackWidthMap | None = None
-    pcb_reference_plane_map: PcbReferencePlaneMap | None = None
-    pcb_switching_loop_map: PcbSwitchingLoopMap | None = None
-    pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None
-    pcb_signal_path_rule_map: PcbSignalPathRuleMap | None = None
-    pcb_keepout_map: PcbKeepoutMap | None = None
-    pcb_rf_module_antenna_map: PcbRfModuleAntennaMap | None = None
-    pcb_required_fitted_reference_map: (
-        _pcb_required_fitted_reference_models.PcbRequiredFittedReferenceMap | None
-    ) = None
-
-    @model_validator(mode="after")
-    def unique_decisions(self) -> DesignLintPolicy:
-        if len({item.rule_id for item in self.rules}) != len(self.rules):
-            raise ValueError("design_lint rule overrides must be unique")
-        if len({item.fingerprint for item in self.ignores}) != len(self.ignores):
-            raise ValueError("design_lint ignores must have unique fingerprints")
-        if len({item.id.casefold() for item in self.stm32_pin_maps}) != len(self.stm32_pin_maps):
-            raise ValueError("STM32 CubeMX pin-map IDs must be unique")
-        if len({item.reference.casefold() for item in self.stm32_pin_maps}) != len(
-            self.stm32_pin_maps
-        ):
-            raise ValueError("An MCU reference can appear in only one CubeMX pin map")
-        return self
-
-
 class ConnectorInterfaceReview(StrictModel):
     """Project-owned pinout coverage decision for one schematic component."""
 
@@ -1072,6 +796,7 @@ class ProjectConfig(StrictModel):
                 or self.design_lint.pcb_signal_path_rule_map is not None
                 or self.design_lint.pcb_keepout_map is not None
                 or self.design_lint.pcb_rf_module_antenna_map is not None
+                or self.design_lint.pcb_touch_pad_clearance_map is not None
             )
             and self.kind is not ProjectKind.PCB
         ):
@@ -1175,6 +900,7 @@ class ProjectTestContract(StrictModel):
                 or self.design_lint.pcb_signal_path_rule_map is not None
                 or self.design_lint.pcb_keepout_map is not None
                 or self.design_lint.pcb_rf_module_antenna_map is not None
+                or self.design_lint.pcb_touch_pad_clearance_map is not None
             )
             and self.validation.kind is not ProjectKind.PCB
         ):

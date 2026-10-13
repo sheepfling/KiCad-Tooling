@@ -12,11 +12,13 @@ from .contracts import repo_path, write_model
 from .evidence import digest
 from .models import CommandEvidence, PcbAccessProbeRequestSet, ProjectConfig
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceRequestSet
 
 NATIVE_PROBE_SOURCE_PARTS = (
     "native_pcb_probe.py.in",
     "native_pcb_probe_access.py.in",
     "native_pcb_probe_geometry.py.in",
+    "native_pcb_probe_touch_clearance.py.in",
     "native_pcb_probe_scan.py.in",
 )
 
@@ -38,6 +40,7 @@ def capture_native_pcb_connectivity(
     config: ProjectConfig,
     output: Path,
     access_probe_requests: PcbAccessProbeRequestSet | None = None,
+    touch_pad_clearance_requests: PcbTouchPadClearanceRequestSet | None = None,
 ) -> tuple[CommandEvidence, PcbConnectivitySnapshot | None]:
     """Run the read-only KiCad 10 pcbnew probe in the project's digest-pinned image."""
     if not config.kicad_version.startswith("10."):
@@ -64,6 +67,24 @@ def capture_native_pcb_connectivity(
         request_path = output / "access-probe-requests.json"
         write_model(request_path, access_probe_requests)
         request_hash = digest(request_path)
+    touch_request_path: Path | None = None
+    touch_request_hash: str | None = None
+    if touch_pad_clearance_requests is not None:
+        touch_request_path = output / "touch-pad-clearance-requests.json"
+        write_model(touch_request_path, touch_pad_clearance_requests)
+        touch_request_hash = digest(touch_request_path)
+    probe_arguments: tuple[str, ...]
+    if touch_request_path is not None:
+        probe_arguments = (
+            str(request_path.relative_to(output)) if request_path is not None else "-",
+        ) + ("touch-pad-clearance-requests.json",)
+        probe_arguments = tuple(
+            f"/output/{item}" if item != "-" else item for item in probe_arguments
+        )
+    elif request_path is not None:
+        probe_arguments = ("/output/access-probe-requests.json",)
+    else:
+        probe_arguments = ()
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
         import os
@@ -97,7 +118,7 @@ def capture_native_pcb_connectivity(
         "/output/native_pcb_probe.py",
         f"/work/{relative_board}",
         "/output/snapshot.json",
-        *(("/output/access-probe-requests.json",) if request_path is not None else ()),
+        *probe_arguments,
     )
     command = run_command(root, argv, timeout=600)
     write_model(output / "native.command.json", command)
@@ -107,6 +128,8 @@ def capture_native_pcb_connectivity(
         raise ValueError("PCB source changed while native connectivity evidence was captured")
     if request_path is not None and digest(request_path) != request_hash:
         raise ValueError("Native PCB probe request changed while evidence was captured")
+    if touch_request_path is not None and digest(touch_request_path) != touch_request_hash:
+        raise ValueError("Native touch-pad probe request changed while evidence was captured")
     raw = snapshot_path.read_text(encoding="utf-8")
     observed = json.loads(raw)
     if observed.get("board_sha256") != source_hash:
@@ -115,6 +138,8 @@ def capture_native_pcb_connectivity(
     observed["probe_sha256"] = probe_hash
     if observed.get("access_probe_requests_sha256") != request_hash:
         raise ValueError("Native PCB probe evidence is bound to different access requests")
+    if observed.get("touch_pad_clearance_requests_sha256") != touch_request_hash:
+        raise ValueError("Native PCB probe evidence is bound to different touch-pad requests")
     snapshot = PcbConnectivitySnapshot.model_validate_json(
         json.dumps(observed, ensure_ascii=False, sort_keys=True), strict=True
     )
@@ -130,6 +155,7 @@ def native_pcb_command_matches(
     config: ProjectConfig,
     *,
     access_probes: bool = False,
+    touch_pad_clearance_probes: bool = False,
 ) -> bool:
     """Reject retained snapshots detached from the read-only pinned probe invocation."""
     try:
@@ -168,11 +194,21 @@ def native_pcb_command_matches(
     except (IndexError, ValueError):
         return False
     board_argument = "/work/" + Path(config.project).with_suffix(".kicad_pcb").as_posix()
-    expected_tail = (
-        (board_argument, "/output/snapshot.json", "/output/access-probe-requests.json")
-        if access_probes
-        else (board_argument, "/output/snapshot.json")
-    )
+    if touch_pad_clearance_probes:
+        expected_tail = (
+            board_argument,
+            "/output/snapshot.json",
+            "/output/access-probe-requests.json" if access_probes else "-",
+            "/output/touch-pad-clearance-requests.json",
+        )
+    elif access_probes:
+        expected_tail = (
+            board_argument,
+            "/output/snapshot.json",
+            "/output/access-probe-requests.json",
+        )
+    else:
+        expected_tail = (board_argument, "/output/snapshot.json")
     if argv[-len(expected_tail) :] != expected_tail:
         return False
     mounts = tuple(argv[index + 1] for index, item in enumerate(argv[:-1]) if item == "-v")

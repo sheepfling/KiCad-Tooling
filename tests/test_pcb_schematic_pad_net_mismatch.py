@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo import design_lint_pcb_geometry_scan
+from kicad_tooling.hwrepo import design_lint_pcb_geometry_capture, design_lint_pcb_geometry_scan
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_candidate_aggregation import fingerprint
@@ -333,23 +333,23 @@ def test_pad_net_only_policy_captures_and_compares_native_pad_assignments(
         returncode=0,
     )
 
-    def capture_snapshot(_root, _config, output, _access_probe_requests=None):
+    def capture_snapshot(_root, _config, output, _access_probe_requests=None, **_kwargs):
         output.mkdir(parents=True)
         write_model(output / "native.command.json", command)
         return command, native_snapshot
 
     monkeypatch.setattr(
-        design_lint_pcb_geometry_scan,
+        design_lint_pcb_geometry_capture,
         "capture_native_pcb_connectivity",
         capture_snapshot,
     )
     monkeypatch.setattr(
-        design_lint_pcb_geometry_scan,
+        design_lint_pcb_geometry_capture,
         "expected_probe_sha256",
         lambda: PROBE_SHA256,
     )
     monkeypatch.setattr(
-        design_lint_pcb_geometry_scan,
+        design_lint_pcb_geometry_capture,
         "native_pcb_command_matches",
         lambda *_args, **_kwargs: True,
     )

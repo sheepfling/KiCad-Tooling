@@ -13,8 +13,10 @@ def compare_schematic_pcb_values(
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[PcbComponentValueMismatch, ...]:
     """Review exact value-text differences for components fitted in both CAD sources."""
-    if snapshot.schema_version != "13":
-        raise ValueError("PCB component value comparison requires native snapshot schema 13")
+    if snapshot.schema_version not in {"13", "14"}:
+        raise ValueError(
+            "PCB component value comparison requires native snapshot schema 13 or later"
+        )
 
     board_footprints: dict[str, PcbFootprintPlacementObservation] = {}
     for footprint in snapshot.footprints:
@@ -22,7 +24,7 @@ def compare_schematic_pcb_values(
         if key in board_footprints:
             raise ValueError("Native PCB has duplicate case-insensitive footprint references")
         if footprint.value is None:
-            raise ValueError("Native PCB snapshot schema 13 lacks a footprint value field")
+            raise ValueError("Native PCB snapshot schema 13 or later lacks a footprint value field")
         board_footprints[key] = footprint
 
     schematic_references: set[str] = set()

@@ -24,8 +24,8 @@ def compare_required_fitted_references(
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[PcbRequiredFittedReferenceMismatch, ...]:
     """Return project-required references that are missing, DNP, or misidentified."""
-    if snapshot.schema_version not in {"12", "13"}:
-        raise ValueError("Required fitted PCB references need snapshot schema 12 or 13")
+    if snapshot.schema_version not in {"12", "13", "14"}:
+        raise ValueError("Required fitted PCB references need snapshot schema 12, 13, or 14")
 
     schematic = _unique_casefolded(
         netlist.components,

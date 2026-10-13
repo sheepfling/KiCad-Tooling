@@ -14,6 +14,8 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
+from .pcb_touch_pad_clearance import touch_pad_clearance_violations
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 
 
 def pcb_requirement_coverage_candidates(
@@ -23,6 +25,7 @@ def pcb_requirement_coverage_candidates(
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None,
 ) -> tuple[Candidate, ...]:
     """Translate authored PCB requirement coverage gaps into review candidates."""
     found: list[Candidate] = []
@@ -271,4 +274,6 @@ def pcb_requirement_coverage_candidates(
                     },
                 )
             )
+    if pcb_touch_pad_clearance_coverage is not None:
+        found.extend(touch_pad_clearance_violations(pcb_touch_pad_clearance_coverage))
     return tuple(found)

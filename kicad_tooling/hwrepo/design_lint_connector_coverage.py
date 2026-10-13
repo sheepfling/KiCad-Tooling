@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .connector_coverage import evaluate as evaluate_connector_coverage
 from .contracts import read_model, repo_path
+from .design_lint_policy_models import DesignLintPolicy
 from .discovery import ProjectConfig, load_registry
 from .electrical import load_analysis
 from .evidence import digest
@@ -13,7 +14,6 @@ from .external_protection import evaluate as evaluate_external_protection
 from .external_protection_models import ExternalProtectionCoverageReport
 from .models import (
     ConnectorCoverageReport,
-    DesignLintPolicy,
     InterfaceRecord,
     InterfacesCatalog,
     NetlistContract,

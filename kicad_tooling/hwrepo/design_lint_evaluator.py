@@ -14,6 +14,7 @@ from .design_lint_evaluation_report_inputs import (
 )
 from .design_lint_evaluation_types import DesignLintEvaluationRequest
 from .design_lint_finding_disposition import resolve_finding_dispositions
+from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
@@ -22,7 +23,6 @@ from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ConnectorCoverageReport,
     ContractCoachReport,
-    DesignLintPolicy,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,
     SchematicGeometryCoverage,
@@ -42,6 +42,7 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .schematic_geometry import SchematicGeometryScan
@@ -81,6 +82,7 @@ def evaluate(
     pcb_signal_path_coverage: PcbSignalPathRuleCoverageReport | None = None,
     pcb_keepout_coverage: PcbKeepoutCoverageReport | None = None,
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
+    pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None,
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
 ) -> DesignLintReport:
     """Apply project policy to findings while preserving the established call shape."""
@@ -114,6 +116,7 @@ def evaluate(
         pcb_signal_path_coverage=pcb_signal_path_coverage,
         pcb_keepout_coverage=pcb_keepout_coverage,
         pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
+        pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
         pcb_component_inventory_coverage=pcb_component_inventory_coverage,
     )
     result = prepare_evaluation(request)

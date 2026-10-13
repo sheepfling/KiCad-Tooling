@@ -79,10 +79,13 @@ def snapshot(
         "tracks": (),
         "copper_layers": ("F.Cu", "In1.Cu", "B.Cu"),
     }
-    if schema_version in {"11", "12", "13"}:
+    if schema_version in {"11", "12", "13", "14"}:
         values["rule_areas"] = areas
-    if schema_version in {"12", "13"}:
+    if schema_version in {"12", "13", "14"}:
         values["footprints"] = ()
+    if schema_version == "14":
+        values["touch_pad_clearance_observations"] = ()
+        values["touch_pad_clearance_requests_sha256"] = None
     return PcbConnectivitySnapshot.model_validate(values)
 
 
@@ -167,7 +170,7 @@ def incomplete_report(mapping: PcbKeepoutMap | None = None) -> PcbKeepoutCoverag
     return coverage_report(mapping, snapshot())
 
 
-@pytest.mark.parametrize("schema_version", ("11", "12", "13"))
+@pytest.mark.parametrize("schema_version", ("11", "12", "13", "14"))
 def test_exact_keepout_signature_matches_one_named_native_area(schema_version: str) -> None:
     expected = area()
 

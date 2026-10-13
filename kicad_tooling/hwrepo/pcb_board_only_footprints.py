@@ -12,8 +12,8 @@ def board_only_pcb_footprints(
     snapshot: PcbConnectivitySnapshot,
 ) -> tuple[PcbBoardOnlyFootprint, ...]:
     """Return native PCB footprint references with no case-insensitive netlist match."""
-    if snapshot.schema_version not in {"12", "13"}:
-        raise ValueError("Board-only PCB footprint review requires snapshot schema 12 or 13")
+    if snapshot.schema_version not in {"12", "13", "14"}:
+        raise ValueError("Board-only PCB footprint review requires snapshot schema 12, 13, or 14")
 
     schematic_references = {reference.casefold() for reference in netlist.components}
     if len(schematic_references) != len(netlist.components):

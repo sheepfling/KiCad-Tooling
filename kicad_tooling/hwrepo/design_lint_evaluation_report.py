@@ -14,6 +14,7 @@ from .pcb_keepout_models import (
     PcbKeepoutCoverageReport,
 )
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
+from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 
 
 def assemble_design_lint_report(
@@ -46,6 +47,7 @@ def assemble_design_lint_report(
     pcb_signal_path_coverage = context.pcb_signal_path_coverage
     pcb_keepout_coverage = context.pcb_keepout_coverage
     pcb_rf_module_antenna_coverage = context.pcb_rf_module_antenna_coverage
+    pcb_touch_pad_clearance_coverage = context.pcb_touch_pad_clearance_coverage
     stm32_pin_map_coverage = context.stm32_pin_map_coverage
     mapped_check_runs = context.mapped_check_runs
     connector_coverage = context.connector_coverage
@@ -85,6 +87,7 @@ def assemble_design_lint_report(
         or pcb_signal_path_coverage.status == "BLOCKED"
         or pcb_keepout_coverage.status == "BLOCKED"
         or pcb_rf_module_antenna_coverage.status == "BLOCKED"
+        or pcb_touch_pad_clearance_coverage.status == "BLOCKED"
         or stm32_pin_map_coverage.status == "BLOCKED"
         or any(item.status == "BLOCKED" for item in mapped_check_runs)
         else "FAIL"
@@ -108,6 +111,7 @@ def assemble_design_lint_report(
         or pcb_signal_path_coverage.status == "INCOMPLETE"
         or pcb_keepout_coverage.status == "INCOMPLETE"
         or pcb_rf_module_antenna_coverage.status == "INCOMPLETE"
+        or pcb_touch_pad_clearance_coverage.status == "INCOMPLETE"
         or stm32_pin_map_coverage.status == "INCOMPLETE"
         or (
             connector_peer_pin_coverage is not None
@@ -172,6 +176,11 @@ def assemble_design_lint_report(
             else (pcb_differential_pair_coverage.issue,)
         )
         + (() if pcb_signal_path_coverage.issue is None else (pcb_signal_path_coverage.issue,))
+        + (
+            ()
+            if pcb_touch_pad_clearance_coverage.issue is None
+            else (pcb_touch_pad_clearance_coverage.issue,)
+        )
         + (() if stm32_pin_map_coverage.issue is None else (stm32_pin_map_coverage.issue,))
         + tuple(
             item.reason
@@ -318,6 +327,14 @@ def assemble_design_lint_report(
         actions += (
             "Review each mapped RF module identity, fitted disposition, RF feed net, and placement-relative antenna keepout against its independent requirement.",
         )
+    if pcb_touch_pad_clearance_coverage.status == "BLOCKED":
+        actions += (
+            "Restore the source-bound native touch-pad-to-filled-zone measurement and rerun design lint.",
+        )
+    if pcb_touch_pad_clearance_coverage.status == "INCOMPLETE":
+        actions += (
+            "Review each exact touch pad, reference net, copper layer, measured gap, and project-authored minimum clearance; resolve missing or mismatched evidence.",
+        )
     if stm32_pin_map_coverage.status == "BLOCKED":
         actions += ("Repair the CubeMX source or pin-map evidence, then rerun design lint.",)
     if stm32_pin_map_coverage.status == "INCOMPLETE":
@@ -403,6 +420,9 @@ def assemble_design_lint_report(
         pcb_keepout_coverage=pcb_keepout_coverage or PcbKeepoutCoverageReport(),
         pcb_rf_module_antenna_coverage=(
             pcb_rf_module_antenna_coverage or PcbRfModuleAntennaCoverageReport()
+        ),
+        pcb_touch_pad_clearance_coverage=(
+            pcb_touch_pad_clearance_coverage or PcbTouchPadClearanceCoverageReport()
         ),
         stale_ignores=stale,
         rule_overrides=policy.rules,

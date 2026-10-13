@@ -334,7 +334,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 115 rules are implemented with synthetic regression coverage.
+The following 116 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -450,6 +450,7 @@ Their actual recognition limits are documented in
 - `pcb.schematic_pcb_pad_net_mismatch`
 - `pcb.board_only_footprint`
 - `pcb.required_fitted_reference`
+- `pcb.touch_pad_reference_clearance`
 - `connector.return_distribution`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
@@ -490,6 +491,18 @@ and optional ecosystem adapters are `P3`.
   comparison is partial until a current baseline is saved. This adopts the
   connectivity-delta review lesson from the pre-alpha Apache-2.0 `netspec`
   cohort; no cohort code or project data was imported.
+
+- **Configured touch-pad clearance (2026-10-13):** LINT-133 converts the
+  pinned CP-003 source audit into an opt-in project-authored geometry check.
+  It requires an exact pad, expected schematic/PCB net, reference copper net,
+  copper layer, and independently approved positive minimum. Native evidence
+  uses KiCad's effective pad shape and the filled matching zones, with the
+  authored request digest bound to snapshot schema 14. Synthetic fault,
+  boundary-control, missing-evidence, and CLI/MCP parity tests pass locally;
+  the digest-pinned native fixtures are implemented but still need hosted
+  acceptance. No board project, candidate implementation, or proprietary
+  fixture was imported. The gate supplies review evidence and does not infer
+  connector ground commoning, touch performance, or fabrication acceptance.
 
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
@@ -2545,7 +2558,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 115 active rules; CI requires every new
+- **Status:** Baseline complete for all 116 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2554,7 +2567,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 115 covered, 0 not applicable, 0 unreviewed.
+  audit: 116 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -5831,7 +5844,8 @@ is not a reason by itself to expand its scope or change its default policy.
   the placed identity. Projects can select `review`, `block`, or `off`.
 - **Priority:** P1 source consistency at the fabrication handoff.
 - **Predicate:** Compare case-insensitive component references from the
-  source-bound native schematic netlist and KiCad PCB snapshot schema 12 or 13. For
+  source-bound native schematic netlist and KiCad PCB snapshot schema 12, 13,
+  or 14. For
   each non-DNP schematic component with a nonempty assigned footprint, report
   a missing-placement candidate when no native board reference matches. When a
   board footprint is present, report a second candidate if its exact
@@ -6374,7 +6388,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Status:** Implemented as `pcb.schematic_pcb_value_mismatch`, default
   `REVIEW`, using source-bound schematic values and native PCB footprint values
-  from snapshot schema 13.
+  from snapshot schema 13 or later.
 - **Priority:** P1 fabrication-handoff consistency. The schematic component
   value and board footprint value can drift after separate edits or an
   incomplete board update.
@@ -6392,7 +6406,7 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Evidence:** Findings bind the netlist, board, native snapshot, KiCad
   version, image, and probe digests. Snapshot schema 12 remains supported for
   footprint inventory and population checks; it keeps value coverage blocked
-  until schema 13 is captured.
+  until schema 13 or later is captured.
 - **Fixtures:** Synthetic unit cases cover changed value text, matching
   trimmed values, DNP and incomplete-reference controls, case sensitivity,
   ordering, policy modes, and stale-ignore detection. CLI/MCP parity carries a
@@ -7119,6 +7133,42 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   python -I -m pytest tests/test_pcb_required_fitted_reference.py \
     -m 'design_lint_rule(rule_id="pcb.required_fitted_reference")'
+  ```
+
+#### LINT-133 — Configured capacitive touch-pad clearance
+
+- **Status:** Implemented as the opt-in `pcb.touch_pad_reference_clearance`
+  rule with default `REVIEW`; project policy can select `BLOCK`, `OFF`, or an
+  exact fingerprint ignore.
+- **Priority:** P2 geometry review. The pinned kicad-happy CP-003 source audit
+  identified a useful distance concept, but its naming guesses and sampled or
+  bounding-box fallbacks are not adopted. A project-owned map provides the
+  independently reviewed applicability and threshold.
+- **Predicate:** For every mapped exact pad, compare its expected net with the
+  source-bound schematic assignment and native PCB pad net. Measure the native
+  effective pad shape to all filled zones with the exact mapped reference net
+  and layer, then retain the closest zone and integer-nanometer clearance. A
+  subminimum measurement or incomplete evidence emits a review candidate.
+- **Boundary:** The check does not infer touch-pad identity from `TP`, values,
+  or footprint names; does not decide that similarly named returns should be
+  connected; and does not prove the reference zone is bonded to connector
+  ground. It does not establish sensing performance, electrical approval,
+  fabricated copper, or manufacturing readiness. The independently reviewed
+  map is the authority for the threshold and exact pad.
+- **Evidence:** Synthetic tests cover below-minimum fault, exact-boundary
+  control, threshold-only metamorphic behavior, schematic and board net
+  disagreement, absent filled copper, map constraints, source-bound request
+  coverage, and CLI/MCP parity. Exact-version KiCad 10.0.0 and 10.0.5 native
+  fixtures cover read-only pad-shape measurement and probe binding. They are
+  gated by `KICAD_RUN_NATIVE_PCB_FIXTURES`; this local environment has not run
+  them. Round/oval and rotated-pad geometries, comparison with native DRC,
+  project applicability, false-positive rate, and reviewer effort remain
+  follow-up evidence, not current claims.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_touch_pad_clearance.py \
+    -m 'design_lint and pcb_lint'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -10051,7 +10101,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 115 active rules. Each entry has a deterministic predicate, evidence
+contains 116 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin
@@ -12611,16 +12661,19 @@ design.
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | Compare an authored driver-output-to-string map with exact LED/current-control component pins and connectivity; test multi-channel and valid constant-current alternatives against current LED prompts.                                            | The proposed check merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied.                                           |
 | Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data. | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                |
 
-#### Conditional candidate: capacitive touch-pad clearance
+#### LINT-133 implementation status: capacitive touch-pad clearance
 
-Native DRC enforces configured copper spacing; LINT-096 checks project-authored
-keepout signatures. Neither validates that a controller-sourced touch-clearance
-requirement is configured and met. Use the pinned CP-003 source audit above to
-define a source-bound native distance observation and an exact project map.
-Test a controller-sourced minimum with synthetic fault/control and boundary
-cases, then compare the result with native DRC. Defer without a positive exact
-pad identity and an independent minimum. Do not use `TP` alone, a default
-millimeter value, or sampled/bounding-box measurements as a blocking predicate.
+LINT-133 now screens a project-mapped exact pad-to-filled-zone distance against
+an independently authored minimum. It uses the native effective pad shape and
+source-bound filled copper, and reports incomplete evidence instead of
+guessing from `TP`, a footprint name, a sampled point, or a bounding box. The
+synthetic fault/control, threshold metamorphic case, missing-evidence cases,
+and CLI/MCP parity are implemented. Exact-version native fixtures are coded
+for KiCad 10.0.0 and 10.0.5; hosted acceptance is still pending. The remaining
+work is to exercise round/oval/rotated geometries, compare measurements with
+native DRC, and gather independent public or synthetic applicability and
+reviewer-value evidence. No universal clearance value or new project
+requirement is inferred.
 
 #### Preliminary source audit: antenna keepout coverage (2026-10-08)
 
@@ -12808,9 +12861,10 @@ maintenance cost open wherever they were not measured.
    missed cases, localization effort, and maintenance cost before adopting a
    cohort implementation or adding the adapter contract in `LINT-032`. For new
    domain checks, LINT-075's no-CLI oscillator-output trial is recorded. The
-   next bounded PCB candidate is CP-003 touch-pad clearance; it remains
-   conditional on a source-backed minimum and an exact native pad-geometry
-   measurement. Any first-party path contract still needs native netlist
+   LINT-133 implements the bounded CP-003 touch-pad clearance concept behind
+   an exact project-authored minimum and native pad-geometry measurement;
+   hosted native acceptance and field applicability evidence remain pending.
+   Any first-party path contract still needs native netlist
    evidence and a project-authored requirement map before implementation. The
    other domain-specific cohort families above remain conditional research
    items.

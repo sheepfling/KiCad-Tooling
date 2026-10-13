@@ -102,8 +102,8 @@ def pcb_population_mismatch_fixture_lane(
                 expected_board_sha256=board_hash,
                 purpose=f"{case} population comparison PCB",
             )
-            if observed_snapshot.schema_version != "13":
-                raise ValueError("Native population acceptance requires PCB snapshot schema 13")
+            if observed_snapshot.schema_version != "14":
+                raise ValueError("Native population acceptance requires PCB snapshot schema 14")
             if retained_netlist is None:
                 retained_netlist = observed_netlist
                 retained_snapshot = observed_snapshot

@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import Literal
 
 from .contracts import repo_path
+from .design_lint_policy_models import DesignLintPolicy
 from .evidence import digest
 from .models import (
     ContractCoachReport,
-    DesignLintPolicy,
     NetlistContract,
 )
 from .stm32_pin_map import (

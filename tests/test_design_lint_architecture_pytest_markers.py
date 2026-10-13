@@ -112,6 +112,8 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_pcb_switching_loop_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_return_path_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
     "test_pcb_access_fixture_lane.py": {"pcb_lint"},
+    "test_pcb_touch_pad_clearance.py": {"pcb_lint"},
+    "test_pcb_touch_pad_clearance_native.py": {"pcb_lint"},
     "test_ci_hosted_pcb_fixture_schedule.py": {"pcb_lint", "return_path_lint"},
 }
 
@@ -180,6 +182,20 @@ def test_external_electrical_template_consumers_are_template_marked() -> None:
         )
         if uses_external_electrical_setup:
             assert "pytest.mark.template_checkout" in source, source_path.name
+
+
+def test_tests_using_hosted_reference_checkout_are_template_marked() -> None:
+    tests_root = Path(__file__).parent
+    for source_path in sorted(tests_root.glob("test_*.py")):
+        tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=source_path.name)
+        uses_hosted_reference_root = any(
+            isinstance(node, ast.arg) and node.arg == "hosted_reference_root"
+            for node in ast.walk(tree)
+        )
+        if uses_hosted_reference_root:
+            assert "pytest.mark.template_checkout" in source_path.read_text(encoding="utf-8"), (
+                source_path.name
+            )
 
 
 def test_native_digital_peer_suites_are_pytest_native_and_theme_scoped() -> None:

@@ -1,0 +1,128 @@
+# Exact pad-to-filled-zone clearance requests for the read-only native probe.
+
+def read_touch_pad_clearance_requests(
+    path: Path | None,
+) -> tuple[list[dict[str, Any]], str | None]:
+    if path is None:
+        return [], None
+    raw_bytes = path.read_bytes()
+    raw = json.loads(raw_bytes)
+    if not isinstance(raw, dict) or set(raw) != {"schema_version", "requests"}:
+        raise ValueError("Touch-pad probe request file has an invalid object shape")
+    if raw["schema_version"] != "1" or not isinstance(raw["requests"], list):
+        raise ValueError("Touch-pad probe request file has an unsupported schema")
+    required = {
+        "id",
+        "pad",
+        "expected_pad_net",
+        "reference_net",
+        "layer",
+        "minimum_clearance_nm",
+    }
+    requests: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for row in raw["requests"]:
+        if not isinstance(row, dict) or set(row) != required:
+            raise ValueError("Touch-pad probe request has an invalid shape")
+        if (
+            not all(isinstance(row[key], str) and row[key] for key in required - {"minimum_clearance_nm"})
+            or type(row["minimum_clearance_nm"]) is not int
+            or row["minimum_clearance_nm"] <= 0
+        ):
+            raise ValueError("Touch-pad probe request has invalid values")
+        key = row["id"].casefold()
+        if key in seen_ids:
+            raise ValueError("Touch-pad probe request IDs must be unique")
+        seen_ids.add(key)
+        requests.append(row)
+    return requests, hashlib.sha256(raw_bytes).hexdigest()
+
+
+def touch_pad_clearance_observations(
+    requests: list[dict[str, Any]],
+    pad_geometry: list[tuple[str, bool, Any]],
+    zone_objects: dict[tuple[str, str], Any],
+    filled_polygons: dict[tuple[str, str], Any],
+    board: Any,
+) -> list[dict[str, Any]]:
+    """Measure exact KiCad pad-shape clearance to matching filled copper zones."""
+    layer_ids = {
+        board.GetLayerName(layer).casefold(): layer
+        for layer in board.GetEnabledLayers().CuStack()
+    }
+    observations: list[dict[str, Any]] = []
+    for request in requests:
+        requested_pad = request["pad"]
+        matches = [
+            pad
+            for reference, _dnp, pad in pad_geometry
+            if reference.casefold() == requested_pad.casefold()
+        ]
+        base = {
+            "requirement_id": request["id"],
+            "pad": requested_pad,
+            "expected_pad_net": request["expected_pad_net"],
+            "observed_pad_net": None,
+            "reference_net": request["reference_net"],
+            "layer": request["layer"],
+            "matching_zone_count": 0,
+            "closest_zone_uuid": None,
+            "distance_nm": None,
+        }
+        if not matches:
+            observations.append({**base, "status": "PAD_MISSING"})
+            continue
+        if len(matches) != 1:
+            observations.append({**base, "status": "PAD_AMBIGUOUS"})
+            continue
+        pad = matches[0]
+        pad_net = pad.GetNetname() or None
+        base["observed_pad_net"] = pad_net
+        layer_id = layer_ids.get(request["layer"].casefold())
+        if layer_id is None:
+            observations.append({**base, "status": "UNSUPPORTED_LAYER"})
+            continue
+        if not pad.GetLayerSet().Contains(layer_id):
+            observations.append({**base, "status": "PAD_LAYER_ABSENT"})
+            continue
+        pad_shape = pad.GetEffectiveShape(layer_id)
+        if pad_shape is None or pad_shape.IsNull():
+            raise ValueError(f"KiCad returned no effective pad shape for {requested_pad}")
+
+        matching_zones = [
+            (uuid, zone, filled_polygons[identity])
+            for identity, zone in zone_objects.items()
+            if (uuid := zone.m_Uuid.AsString())
+            and board.GetLayerName(zone.GetLayer()).casefold() == request["layer"].casefold()
+            and (zone.GetNetname() or "").casefold() == request["reference_net"].casefold()
+        ]
+        base["matching_zone_count"] = len(matching_zones)
+        if not matching_zones:
+            observations.append({**base, "status": "NO_REFERENCE_ZONE"})
+            continue
+        measured: list[tuple[int, str, str]] = []
+        for uuid, _zone, filled in matching_zones:
+            if filled is None or filled.OutlineCount() == 0:
+                continue
+            if pad_shape.Collide(filled, 0):
+                distance_nm = 0
+            else:
+                distance_nm = int(pad_shape.GetClearance(filled))
+                if distance_nm < 0:
+                    raise ValueError(
+                        f"KiCad returned a negative pad-to-zone clearance for {requested_pad}"
+                    )
+            measured.append((distance_nm, uuid.casefold(), uuid))
+        if not measured:
+            observations.append({**base, "status": "NO_FILLED_REFERENCE_COPPER"})
+            continue
+        distance_nm, _uuid_key, closest_zone_uuid = min(measured)
+        observations.append(
+            {
+                **base,
+                "closest_zone_uuid": closest_zone_uuid,
+                "distance_nm": distance_nm,
+                "status": "MEASURED",
+            }
+        )
+    return observations

@@ -13,7 +13,11 @@ from kicad_tooling.hwrepo import electrical
 from kicad_tooling.hwrepo import pcb_return_path_capture as pcb_capture
 from tests.pcb_access_fixture_support import capture_synthetic_access_probe
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+    pytest.mark.template_checkout,
+]
 
 
 def test_probe_envelope_fixture_uses_repeatable_source_bound_requests(

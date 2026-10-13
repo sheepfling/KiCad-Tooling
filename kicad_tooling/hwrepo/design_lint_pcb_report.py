@@ -435,6 +435,39 @@ def pcb_coverage_report_lines(report: DesignLintReport) -> list[str]:
     if rf_antennas.issue is not None:
         lines.append(f"  Coverage issue: {rf_antennas.issue}")
 
+    touch_clearance = report.pcb_touch_pad_clearance_coverage
+    if touch_clearance.status != "NOT_REQUESTED":
+        lines.append(
+            f"PCB touch-pad reference clearance: {touch_clearance.status} "
+            f"(mode: {touch_clearance.mode or 'not configured'})"
+        )
+        if touch_clearance.board_path is not None:
+            lines.append(
+                f"  Board: {touch_clearance.board_path} "
+                f"(SHA-256 {touch_clearance.board_sha256 or 'unavailable'})"
+            )
+        if touch_clearance.snapshot_path is not None:
+            lines.append(
+                f"  Native PCB snapshot: {touch_clearance.snapshot_path} "
+                f"(SHA-256 {touch_clearance.snapshot_sha256 or 'unavailable'})"
+            )
+        for entry in touch_clearance.entries:
+            measured = (
+                "unavailable"
+                if entry.measured_clearance_nm is None
+                else f"{entry.measured_clearance_nm} nm"
+            )
+            lines.append(
+                f"  {entry.pad} to {entry.reference_net} on {entry.layer}: {entry.status}; "
+                f"schematic net {entry.schematic_pad_net or 'unassigned'}; "
+                f"board net {entry.observed_pad_net or 'unassigned'}; "
+                f"measured {measured}; minimum {entry.minimum_clearance_nm} nm"
+            )
+            for issue in entry.issues:
+                lines.append(f"    Coverage issue: {issue}")
+        if touch_clearance.issue is not None:
+            lines.append(f"  Coverage issue: {touch_clearance.issue}")
+
     inventory = report.pcb_component_inventory
     if inventory.status != "NOT_APPLICABLE":
         lines.append(
