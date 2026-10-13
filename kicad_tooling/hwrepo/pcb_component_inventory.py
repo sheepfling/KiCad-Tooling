@@ -21,6 +21,14 @@ from .pcb_component_values import compare_schematic_pcb_values
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_pad_net_comparison import compare_schematic_pcb_pad_nets
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
+from .pcb_required_fitted_reference_checks import (
+    compare_required_fitted_references,
+    required_fitted_reference_map_sha256,
+)
+from .pcb_required_fitted_reference_models import (
+    PcbRequiredFittedReferenceCoverage,
+    PcbRequiredFittedReferenceMap,
+)
 from .pcb_variant_population_capture import PcbVariantPopulationCapture
 
 
@@ -101,10 +109,21 @@ def evaluate_native_component_inventory_coverage(
     value_mode: Literal["review", "block", "off"] = "off",
     pad_net_mode: Literal["review", "block", "off"] = "off",
     board_only_mode: Literal["review", "block", "off"] = "off",
+    required_fitted_reference_map: PcbRequiredFittedReferenceMap | None = None,
+    required_fitted_reference_mode: Literal["review", "block", "off"] = "off",
     variant_population: PcbVariantPopulationCapture | None = None,
 ) -> PcbComponentInventoryCoverageReport:
     """Build complete inventory coverage or retain the precise comparison gap."""
-    if mode == "off" and value_mode == "off" and pad_net_mode == "off" and board_only_mode == "off":
+    if all(
+        item == "off"
+        for item in (
+            mode,
+            value_mode,
+            pad_net_mode,
+            board_only_mode,
+            required_fitted_reference_mode,
+        )
+    ):
         return PcbComponentInventoryCoverageReport(status="DISABLED", mode=mode)
 
     variant_coverage = (
@@ -118,7 +137,13 @@ def evaluate_native_component_inventory_coverage(
         next(
             (
                 value
-                for value in (mode, value_mode, pad_net_mode, board_only_mode)
+                for value in (
+                    mode,
+                    value_mode,
+                    pad_net_mode,
+                    board_only_mode,
+                    required_fitted_reference_mode,
+                )
                 if value != "off"
             ),
             "off",
@@ -147,6 +172,25 @@ def evaluate_native_component_inventory_coverage(
             issue="Board-only PCB footprint evidence is unavailable",
         )
     )
+    required_map_sha256 = (
+        None
+        if required_fitted_reference_map is None
+        else required_fitted_reference_map_sha256(required_fitted_reference_map)
+    )
+    required_fitted_coverage = (
+        PcbRequiredFittedReferenceCoverage()
+        if required_fitted_reference_mode == "off"
+        else PcbRequiredFittedReferenceCoverage(
+            status="BLOCKED",
+            mode=required_fitted_reference_mode,
+            map_sha256=required_map_sha256,
+            issue=(
+                "The enabled rule has no project-authored fitted-reference map"
+                if required_fitted_reference_map is None
+                else "Source-bound PCB inventory evidence is unavailable"
+            ),
+        )
+    )
     if netlist is None:
         issue = "Source-bound native schematic netlist is unavailable"
     elif netlist_sha256 is None:
@@ -162,6 +206,34 @@ def evaluate_native_component_inventory_coverage(
                     mode=board_only_mode,
                     footprints=board_only_pcb_footprints(netlist, snapshot),
                 )
+            if required_fitted_reference_mode != "off":
+                if required_fitted_reference_map is None:
+                    required_fitted_coverage = PcbRequiredFittedReferenceCoverage(
+                        status="BLOCKED",
+                        mode=required_fitted_reference_mode,
+                        issue="The enabled rule has no project-authored fitted-reference map",
+                    )
+                else:
+                    try:
+                        mismatches = compare_required_fitted_references(
+                            required_fitted_reference_map,
+                            netlist,
+                            snapshot,
+                        )
+                        required_fitted_coverage = PcbRequiredFittedReferenceCoverage(
+                            status="COMPLETE",
+                            mode=required_fitted_reference_mode,
+                            map_sha256=required_map_sha256,
+                            requirement_count=len(required_fitted_reference_map.requirements),
+                            mismatches=mismatches,
+                        )
+                    except ValueError as exc:
+                        required_fitted_coverage = PcbRequiredFittedReferenceCoverage(
+                            status="BLOCKED",
+                            mode=required_fitted_reference_mode,
+                            map_sha256=required_map_sha256,
+                            issue=str(exc),
+                        )
             population_mismatches = compare_schematic_pcb_population(
                 netlist,
                 snapshot,
@@ -223,6 +295,7 @@ def evaluate_native_component_inventory_coverage(
             pad_net_comparison_status=pad_net_comparison_status,
             pad_net_comparison_issue=pad_net_comparison_issue,
             board_only_footprint_coverage=board_only_coverage,
+            required_fitted_reference_coverage=required_fitted_coverage,
             variant_population=variant_coverage,
             issue=issue,
         )
@@ -254,4 +327,5 @@ def evaluate_native_component_inventory_coverage(
         pad_net_mismatches=pad_net_mismatches,
         pad_net_comparison_issue=pad_net_comparison_issue,
         board_only_footprint_coverage=board_only_coverage,
+        required_fitted_reference_coverage=required_fitted_coverage,
     )

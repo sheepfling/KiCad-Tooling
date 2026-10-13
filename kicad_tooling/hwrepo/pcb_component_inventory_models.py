@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
 from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
+from .pcb_required_fitted_reference_models import PcbRequiredFittedReferenceCoverage
 
 
 class PcbMissingFootprintPlacement(StrictModel):
@@ -174,6 +175,9 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     board_only_footprint_coverage: PcbBoardOnlyFootprintCoverage = Field(
         default_factory=PcbBoardOnlyFootprintCoverage
     )
+    required_fitted_reference_coverage: PcbRequiredFittedReferenceCoverage = Field(
+        default_factory=PcbRequiredFittedReferenceCoverage
+    )
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
@@ -219,6 +223,11 @@ class PcbComponentInventoryCoverageReport(StrictModel):
             raise ValueError("Complete board-only coverage needs complete source-bound inventory")
         if self.board_only_footprint_coverage.status == "BLOCKED" and self.status != "BLOCKED":
             raise ValueError("Blocked board-only coverage must block PCB inventory coverage")
+        required_fitted = self.required_fitted_reference_coverage
+        if required_fitted.status == "COMPLETE" and (
+            self.status != "COMPLETE" or self.snapshot_schema not in {"12", "13"}
+        ):
+            raise ValueError("Complete required-fitted coverage needs complete native inventory")
         if self.status == "COMPLETE":
             if any(
                 value is None

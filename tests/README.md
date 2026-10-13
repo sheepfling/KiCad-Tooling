@@ -180,6 +180,10 @@ python -I -B -m pytest -q -m "pcb_lint and not native_kicad and not slow"
 .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.board_only_footprint")' \
   tests/test_pcb_board_only_footprints.py tests/test_pcb_component_inventory_mcp_parity.py
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.required_fitted_reference")' \
+  tests/test_pcb_required_fitted_reference.py tests/test_pcb_component_inventory_mcp_parity.py \
+  tests/test_pcb_component_inventory_native_fixture_lane.py
 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
   .venv/bin/python -I -B -m pytest -q \
   -m 'design_lint_rule(rule_id="pcb.schematic_pcb_dnp_mismatch") and native_kicad' \

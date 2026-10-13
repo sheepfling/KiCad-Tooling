@@ -18,6 +18,10 @@ from .hwrepo.evidence import digest
 from .hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract, ProjectKind
 from .hwrepo.pcb_component_inventory import evaluate_native_component_inventory_coverage
 from .hwrepo.pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .hwrepo.pcb_required_fitted_reference_models import (
+    PcbRequiredFittedReference,
+    PcbRequiredFittedReferenceMap,
+)
 from .validate import read_netlist
 
 if TYPE_CHECKING:
@@ -55,6 +59,8 @@ def pcb_population_mismatch_fixture_lane(
     }
     runner = ContainerNetlistRunner()
     observed_outcomes: dict[str, tuple[str, ...]] = {}
+    required_outcomes: dict[str, tuple[str, ...]] = {}
+    required_violations: dict[str, tuple[str, ...]] = {}
     source_hashes: dict[str, str] = {}
     repeats_stable = True
 
@@ -162,6 +168,64 @@ def pcb_population_mismatch_fixture_lane(
                 f"Native {case} design-lint result changed: refs={finding_refs}, status={report.status}"
             )
 
+        required_map = PcbRequiredFittedReferenceMap(
+            basis="synthetic native fixture requires U1 in the base assembly",
+            requirements=(
+                PcbRequiredFittedReference(
+                    reference="U1",
+                    footprint="Synthetic:Probe_Module",
+                    basis="U1 must be fitted for this native fixture",
+                ),
+            ),
+        )
+        required_coverage = evaluate_native_component_inventory_coverage(
+            retained_netlist,
+            retained_snapshot,
+            mode="off",
+            netlist_sha256=retained_netlist_hash,
+            board_path=board.relative_to(context.root).as_posix(),
+            board_sha256=board_hash,
+            snapshot_path=retained_snapshot_path.relative_to(context.root).as_posix(),
+            snapshot_sha256=digest(retained_snapshot_path),
+            probe_sha256=retained_snapshot.probe_sha256,
+            required_fitted_reference_map=required_map,
+            required_fitted_reference_mode="block",
+        )
+        required_report = evaluate(
+            coach.project_id,
+            coach,
+            DesignLintPolicy(pcb_required_fitted_reference_map=required_map),
+            pcb_component_inventory_coverage=required_coverage,
+        )
+        required_findings = tuple(
+            item
+            for item in required_report.findings
+            if item.rule_id == "pcb.required_fitted_reference"
+        )
+        required_outcomes[case] = tuple(
+            item.subject.split(":", maxsplit=1)[0] for item in required_findings
+        )
+        if required_findings:
+            required_violations[case] = required_findings[0].evidence["violations"]
+        else:
+            required_violations[case] = ()
+
+    expected_required_outcomes = {
+        "board-only-dnp": ("U1",),
+        "schematic-only-dnp": ("U1",),
+        "both-fitted": (),
+        "both-dnp": ("U1",),
+    }
+    if required_outcomes != expected_required_outcomes:
+        raise ValueError(f"Native required fitted-reference results changed: {required_outcomes}")
+    if required_violations["both-dnp"] != (
+        "schematic_component_dnp",
+        "board_footprint_dnp",
+    ):
+        raise ValueError("Native required fitted-reference check did not catch the both-DNP fault")
+    if required_violations["both-fitted"]:
+        raise ValueError("Native required fitted-reference control produced a finding")
+
     log.event(
         "pcb-component-population-fixture/screen",
         "PASS",
@@ -171,6 +235,17 @@ def pcb_population_mismatch_fixture_lane(
         schematic_only_dnp=",".join(observed_outcomes["schematic-only-dnp"]),
         both_fitted=",".join(observed_outcomes["both-fitted"]),
         both_dnp=",".join(observed_outcomes["both-dnp"]),
+        native_evidence_repeated=str(repeats_stable).lower(),
+        source_hashes=json.dumps(source_hashes, sort_keys=True),
+    )
+    log.event(
+        "pcb-required-fitted-reference-fixture/screen",
+        "PASS",
+        project=context.project,
+        kicad_version=context.config.kicad_version,
+        both_dnp_violations=",".join(required_violations["both-dnp"]),
+        both_fitted_violations=",".join(required_violations["both-fitted"]),
+        consistency_rule_both_dnp_mismatches=",".join(observed_outcomes["both-dnp"]),
         native_evidence_repeated=str(repeats_stable).lower(),
         source_hashes=json.dumps(source_hashes, sort_keys=True),
     )

@@ -6850,6 +6850,41 @@ is not a reason by itself to expand its scope or change its default policy.
   project outcomes to estimate which project classes benefit and how many
   intentional extras need ignores before considering any wider default.
 
+#### LINT-130 — Explicitly required fitted PCB references are missing or DNP
+
+- **Status:** Implemented as `pcb.required_fitted_reference`. A project-owned
+  map activates the exact check in `BLOCK` mode by default; projects can select
+  `REVIEW` or `OFF`. Enabling the rule without a map blocks coverage.
+- **Priority:** P1 for projects with an independently reviewed base-assembly
+  list. The existing source-to-board inventory and DNP-consistency checks can
+  both be clean when a required component is absent from both sources or is
+  marked DNP in both.
+- **Predicate:** For each mapped reference, require a source schematic
+  component and native board footprint, both fitted, with exact footprint ID.
+  Optional symbol and PART_ID requirements are also compared exactly. Reference
+  lookup is case-insensitive; output ordering and map fingerprints are stable
+  when requirement order changes.
+- **Boundary:** The project map is the requirement. No peer similarity, naming
+  pattern, or repeated interface creates fitted intent. This release covers the
+  base assembly only; it does not resolve variants, validate the map against an
+  external BOM or approval record, or prove physical population. Missing map
+  or source evidence never counts as a pass.
+- **Evidence:** Synthetic faults cover a both-DNP reference, missing source and
+  board references, exact-footprint mismatch, optional symbol/PART_ID
+  differences, missing-map blocking, policy modes, exact ignores, stale
+  fingerprints, and order invariance. The both-DNP case is an explicit control
+  for LINT-111: the DNP-consistency check emits no mismatch, while LINT-130
+  catches the project requirement. CLI/MCP parity and architecture boundaries
+  are covered. The native fixture uses hashed synthetic sources, repeats
+  KiCad exports, and compares both-DNP and both-fitted cases; hosted exact-version
+  acceptance is pending.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_required_fitted_reference.py \
+    -m 'design_lint_rule(rule_id="pcb.required_fitted_reference")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.

@@ -9,7 +9,10 @@ from uuid import uuid4
 from ..validate import hashes
 from .contract_coach import pinned_image
 from .contracts import repo_path, write_model
-from .design_lint_pcb_component_inventory_scan import scan_pcb_component_inventory
+from .design_lint_pcb_component_inventory_scan import (
+    resolve_pcb_component_inventory_modes,
+    scan_pcb_component_inventory,
+)
 from .design_lint_pcb_coverage_common import PcbGeometrySourceEvidence, PcbRuleMode
 from .design_lint_pcb_layout_coverage import layout_coverage_reports
 from .design_lint_pcb_measurement_coverage import measurement_coverage_reports
@@ -80,38 +83,15 @@ def scan_pcb_geometry(
     signal_path_map: PcbSignalPathRuleMap | None = policy.pcb_signal_path_rule_map
     keepout_map: PcbKeepoutMap | None = policy.pcb_keepout_map
     rf_antenna_map: PcbRfModuleAntennaMap | None = policy.pcb_rf_module_antenna_map
+    inventory_modes = resolve_pcb_component_inventory_modes(policy)
+    inventory_mode = inventory_modes.inventory
+    population_mode = inventory_modes.population
+    value_mode = inventory_modes.value
+    pad_net_mode = inventory_modes.pad_net
+    board_only_mode = inventory_modes.board_only
+    required_fitted_reference_mode = inventory_modes.required_fitted_reference
+    inventory_required = config.kind is ProjectKind.PCB and inventory_modes.required
     overrides = {item.rule_id: item for item in policy.rules}
-    inventory_override = overrides.get("pcb.schematic_component_inventory")
-    inventory_mode: PcbRuleMode = (
-        "review" if inventory_override is None else inventory_override.mode
-    )
-    population_override = overrides.get("pcb.schematic_pcb_dnp_mismatch")
-    population_mode: PcbRuleMode = (
-        "review" if population_override is None else population_override.mode
-    )
-    value_override = overrides.get("pcb.schematic_pcb_value_mismatch")
-    value_mode: PcbRuleMode = "review" if value_override is None else value_override.mode
-    pad_net_override = overrides.get("pcb.schematic_pcb_pad_net_mismatch")
-    pad_net_mode: PcbRuleMode = "review" if pad_net_override is None else pad_net_override.mode
-    board_only_override = overrides.get("pcb.board_only_footprint")
-    board_only_mode: PcbRuleMode = (
-        "off" if board_only_override is None else board_only_override.mode
-    )
-    active_inventory_modes: tuple[PcbRuleMode, ...] = tuple(
-        mode
-        for mode in (inventory_mode, population_mode, value_mode, pad_net_mode, board_only_mode)
-        if mode != "off"
-    )
-    inventory_scan_mode: PcbRuleMode = (
-        active_inventory_modes[0] if active_inventory_modes else "off"
-    )
-    inventory_required = config.kind is ProjectKind.PCB and (
-        inventory_mode != "off"
-        or population_mode != "off"
-        or value_mode != "off"
-        or pad_net_mode != "off"
-        or board_only_mode != "off"
-    )
     if (
         decoupling_map is None
         and protection_path_map is None
@@ -275,11 +255,13 @@ def scan_pcb_geometry(
                 coach,
                 evidence,
                 output,
-                inventory_mode=inventory_scan_mode,
+                inventory_mode=inventory_modes.scan_mode,
                 population_mode=population_mode,
                 value_mode=value_mode,
                 pad_net_mode=pad_net_mode,
                 board_only_mode=board_only_mode,
+                required_fitted_reference_map=policy.pcb_required_fitted_reference_map,
+                required_fitted_reference_mode=required_fitted_reference_mode,
             )
         modes: dict[str, PcbRuleMode] = {
             "pcb.decoupling_proximity": decoupling_mode,
@@ -295,6 +277,7 @@ def scan_pcb_geometry(
             "pcb.schematic_pcb_value_mismatch": value_mode,
             "pcb.schematic_pcb_pad_net_mismatch": pad_net_mode,
             "pcb.board_only_footprint": board_only_mode,
+            "pcb.required_fitted_reference": required_fitted_reference_mode,
         }
         (
             decoupling_report,
@@ -458,7 +441,7 @@ def scan_pcb_geometry(
         inventory_report = (
             PcbComponentInventoryCoverageReport(
                 status="BLOCKED",
-                mode=inventory_scan_mode,
+                mode=inventory_modes.scan_mode,
                 netlist_sha256=coach.netlist_sha256,
                 board_path=board_relative,
                 board_sha256=board_hash,

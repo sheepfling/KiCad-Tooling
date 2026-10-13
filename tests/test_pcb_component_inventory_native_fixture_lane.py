@@ -33,6 +33,7 @@ pytestmark = [
 
 @pytest.mark.parametrize("project,version", NATIVE_KICAD_PROJECTS, ids=lambda value: value)
 @pytest.mark.design_lint_rule(rule_id="pcb.board_only_footprint")
+@pytest.mark.design_lint_rule(rule_id="pcb.required_fitted_reference")
 def test_native_component_inventory_fault_and_control_are_source_bound(
     tmp_path: Path,
     project: str,
@@ -93,6 +94,17 @@ def test_native_component_inventory_fault_and_control_are_source_bound(
         "schematic-only-dnp.schematic",
     }
     assert all(len(value) == 64 for value in source_hashes.values())
+
+    required = lane_event(log, "pcb-required-fitted-reference-fixture/screen")
+    assert required["status"] == "PASS"
+    assert required["kicad_version"] == version
+    assert required["both_dnp_violations"] == "schematic_component_dnp,board_footprint_dnp"
+    assert required["both_fitted_violations"] == ""
+    assert required["consistency_rule_both_dnp_mismatches"] == ""
+    assert required["native_evidence_repeated"] == "true"
+    required_hashes = json.loads(required["source_hashes"])
+    assert set(required_hashes) == set(source_hashes)
+    assert all(len(value) == 64 for value in required_hashes.values())
 
     values = lane_event(log, "pcb-component-value-fixture/screen")
     assert values["status"] == "PASS"

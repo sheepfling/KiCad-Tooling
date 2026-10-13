@@ -17,6 +17,9 @@ from .design_lint_finding_models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
 )
+from .design_lint_pcb_required_fitted_reference_report import (
+    validate_required_fitted_reference_findings,
+)
 from .design_lint_rule_models import DesignLintRuleCatalog
 from .digital_peer_voltage_models import DigitalPeerVoltageRuleCoverage
 from .external_protection_models import ExternalProtectionCoverageReport
@@ -179,6 +182,7 @@ class DesignLintReport(StrictModel):
             )
             if actual_board_only_findings != expected_board_only_findings:
                 raise ValueError("Board-only footprint findings must match coverage rows")
+        validate_required_fitted_reference_findings(inventory, self.findings)
         if (
             self.netlist_sha256 is not None
             and self.control_input_bias_coverage.netlist_sha256 is not None

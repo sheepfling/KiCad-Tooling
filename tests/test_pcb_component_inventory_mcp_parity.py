@@ -36,6 +36,12 @@ from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageRepo
 from kicad_tooling.hwrepo.pcb_drc_models import PcbSignalPathRuleCoverageReport
 from kicad_tooling.hwrepo.pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 from kicad_tooling.hwrepo.pcb_reference_plane_models import PcbReferencePlaneCoverageReport
+from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
+    PcbRequiredFittedReference,
+    PcbRequiredFittedReferenceCoverage,
+    PcbRequiredFittedReferenceMap,
+    PcbRequiredFittedReferenceMismatch,
+)
 from kicad_tooling.hwrepo.pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from kicad_tooling.hwrepo.pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
 from kicad_tooling.hwrepo.pcb_track_width_models import PcbTrackWidthCoverageReport
@@ -44,14 +50,26 @@ from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
 BOARD_ONLY_RULE = "pcb.board_only_footprint"
+REQUIRED_FITTED_RULE = "pcb.required_fitted_reference"
 
 
 @pytest.mark.design_lint_rule(rule_id=BOARD_ONLY_RULE)
+@pytest.mark.design_lint_rule(rule_id=REQUIRED_FITTED_RULE)
 def test_component_inventory_findings_match_cli_and_mcp(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    required_map = PcbRequiredFittedReferenceMap(
+        basis="synthetic parity assembly list",
+        requirements=(
+            PcbRequiredFittedReference(
+                reference="U1",
+                footprint="Package_QFP:TQFP-48",
+                basis="required for synthetic parity check",
+            ),
+        ),
+    )
     root, native = synthetic_design_lint_project(
         tmp_path,
         DesignLintPolicy(
@@ -61,7 +79,13 @@ def test_component_inventory_findings_match_cli_and_mcp(
                     mode="review",
                     reason="exercise cross-surface candidate parity",
                 ),
-            )
+                DesignLintRuleOverride(
+                    rule_id=REQUIRED_FITTED_RULE,
+                    mode="review",
+                    reason="exercise required fitted-reference parity",
+                ),
+            ),
+            pcb_required_fitted_reference_map=required_map,
         ),
     )
 
@@ -133,6 +157,24 @@ def test_component_inventory_findings_match_cli_and_mcp(
                         PcbBoardOnlyFootprint(
                             reference="H_MOUNT1",
                             footprint="MountingHole:NPTH",
+                        ),
+                    ),
+                ),
+                required_fitted_reference_coverage=PcbRequiredFittedReferenceCoverage(
+                    status="COMPLETE",
+                    mode="review",
+                    map_sha256="e" * 64,
+                    requirement_count=1,
+                    mismatches=(
+                        PcbRequiredFittedReferenceMismatch(
+                            reference="U1",
+                            basis="synthetic required fitted component",
+                            expected_footprint="Package_QFP:TQFP-48",
+                            schematic_footprint="Package_QFP:TQFP-48",
+                            board_footprint="Package_QFP:TQFP-48",
+                            schematic_dnp=False,
+                            board_dnp=True,
+                            violations=("board_footprint_dnp",),
                         ),
                     ),
                 ),
@@ -213,3 +255,8 @@ def test_component_inventory_findings_match_cli_and_mcp(
     )
     assert board_only_finding.subject == ("H_MOUNT1: PCB footprint has no schematic counterpart")
     assert board_only_finding.evidence["footprint"] == ("MountingHole:NPTH",)
+    (required_finding,) = tuple(
+        item for item in mcp_report.findings if item.rule_id == REQUIRED_FITTED_RULE
+    )
+    assert required_finding.subject == "U1: required fitted component does not match source"
+    assert required_finding.evidence["violations"] == ("board_footprint_dnp",)

@@ -15,6 +15,10 @@ from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbPopulationMismatch,
 )
 from kicad_tooling.hwrepo.pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
+from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
+    PcbRequiredFittedReferenceCoverage,
+    PcbRequiredFittedReferenceMismatch,
+)
 
 
 def pcb_component_inventory_rule_ids() -> set[str]:
@@ -64,6 +68,24 @@ def pcb_component_inventory_rule_ids() -> set[str]:
                 mismatch="net_assignment_differs",
                 schematic_net="SYNTHETIC_SIGNAL",
                 board_net="SYNTHETIC_OTHER",
+            ),
+        ),
+        required_fitted_reference_coverage=PcbRequiredFittedReferenceCoverage(
+            status="COMPLETE",
+            mode="block",
+            map_sha256="f" * 64,
+            requirement_count=1,
+            mismatches=(
+                PcbRequiredFittedReferenceMismatch(
+                    reference="U5",
+                    basis="synthetic assembly requirement",
+                    expected_footprint="Package_QFP:TQFP-48",
+                    schematic_footprint="Package_QFP:TQFP-48",
+                    board_footprint="Package_QFP:TQFP-48",
+                    schematic_dnp=True,
+                    board_dnp=True,
+                    violations=("schematic_component_dnp", "board_footprint_dnp"),
+                ),
             ),
         ),
     )

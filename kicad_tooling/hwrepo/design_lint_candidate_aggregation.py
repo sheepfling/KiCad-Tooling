@@ -27,6 +27,9 @@ from .design_lint_pcb_component_inventory_candidates import (
 )
 from .design_lint_pcb_measurement_candidates import pcb_measurement_coverage_candidates
 from .design_lint_pcb_pad_net_candidates import pcb_pad_net_candidates
+from .design_lint_pcb_required_fitted_reference_candidates import (
+    pcb_required_fitted_reference_candidates,
+)
 from .design_lint_pcb_requirement_candidates import pcb_requirement_coverage_candidates
 from .design_lint_peer_candidates import peer_candidates
 from .design_lint_power_candidates import power_candidates
@@ -170,6 +173,7 @@ def candidates(
     found.extend(return_distribution_candidates(connector_return_distribution))
     found.extend(pcb_component_inventory_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_board_only_footprint_candidates(pcb_component_inventory_coverage))
+    found.extend(pcb_required_fitted_reference_candidates(pcb_component_inventory_coverage))
     found.extend(pcb_pad_net_candidates(pcb_component_inventory_coverage))
     control_findings, control_pin_keys = control_candidates(
         observed,

@@ -43,6 +43,7 @@ from . import pcb_decoupling_models as _pcb_decoupling_models
 from . import pcb_drc_models as _pcb_drc_models
 from . import pcb_keepout_models as _pcb_keepout_models
 from . import pcb_reference_plane_models as _pcb_reference_plane_models
+from . import pcb_required_fitted_reference_models as _pcb_required_fitted_reference_models
 from . import pcb_return_path_models as _pcb_return_path_models
 from . import pcb_rf_antenna_models as _pcb_rf_antenna_models
 from . import pcb_switching_loop_models as _pcb_switching_loop_models
@@ -1208,6 +1209,9 @@ class DesignLintPolicy(StrictModel):
     pcb_signal_path_rule_map: PcbSignalPathRuleMap | None = None
     pcb_keepout_map: PcbKeepoutMap | None = None
     pcb_rf_module_antenna_map: PcbRfModuleAntennaMap | None = None
+    pcb_required_fitted_reference_map: (
+        _pcb_required_fitted_reference_models.PcbRequiredFittedReferenceMap | None
+    ) = None
 
     @model_validator(mode="after")
     def unique_decisions(self) -> DesignLintPolicy:

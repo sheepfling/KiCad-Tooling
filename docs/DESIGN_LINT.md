@@ -2565,6 +2565,45 @@ electrical role, assembly state, or manufacturing intent. A project may decide
 that one unmatched reference is an error and another is intentional; the
 checker only supplies the review prompt.
 
+## Require selected base-assembly references to be fitted
+
+`pcb.required_fitted_reference` checks a project-authored list of exact
+references that must be fitted in the base assembly. The map is a requirement;
+component similarity, a repeated design pattern, or a matching DNP state does
+not create one.
+
+```json
+{
+  "design_lint": {
+    "pcb_required_fitted_reference_map": {
+      "schema_version": "1",
+      "basis": "Reviewed base-assembly requirements",
+      "requirements": [
+        {
+          "reference": "U1",
+          "footprint": "Package_QFP:TQFP-48",
+          "basis": "Required interface controller"
+        }
+      ]
+    }
+  }
+}
+```
+
+For every listed reference, the checker requires a non-DNP source schematic
+component and a non-DNP native PCB footprint with the exact footprint ID. A
+map entry may also require exact symbol and PART_ID identity. This catches a
+required part omitted from both sources or marked DNP in both, while the
+schematic-to-PCB DNP consistency check correctly sees no disagreement.
+
+A configured map activates the rule in `block` mode by default. A project can
+select `review` or `off` with the normal rule override; an explicitly enabled
+rule without a map blocks coverage. Findings bind the canonical requirement
+map, netlist, board, native snapshot, KiCad version, image, and probe. The rule
+supports the base assembly only; it does not resolve named variants, validate
+the requirement against an external BOM or approval record, or establish
+physical population. Exact ignores follow the standard fingerprint lifecycle.
+
 ## Review schematic and PCB component-value differences
 
 `pcb.schematic_pcb_value_mismatch` compares the schematic netlist value with

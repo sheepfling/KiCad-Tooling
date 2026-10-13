@@ -76,6 +76,7 @@ def assemble_design_lint_report(
         or connector_return_distribution_coverage.status == "BLOCKED"
         or pcb_decoupling_coverage.status == "BLOCKED"
         or pcb_component_inventory_coverage.status == "BLOCKED"
+        or pcb_component_inventory_coverage.required_fitted_reference_coverage.status == "BLOCKED"
         or pcb_protection_path_coverage.status == "BLOCKED"
         or pcb_track_width_coverage.status == "BLOCKED"
         or pcb_reference_plane_coverage.status == "BLOCKED"
@@ -143,6 +144,11 @@ def assemble_design_lint_report(
             ()
             if pcb_component_inventory_coverage.issue is None
             else (pcb_component_inventory_coverage.issue,)
+        )
+        + (
+            ()
+            if pcb_component_inventory_coverage.required_fitted_reference_coverage.issue is None
+            else (pcb_component_inventory_coverage.required_fitted_reference_coverage.issue,)
         )
         + (
             ()
