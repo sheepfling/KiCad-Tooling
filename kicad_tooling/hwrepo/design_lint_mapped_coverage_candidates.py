@@ -14,11 +14,11 @@ from .design_lint_usb_data_path_candidates import usb_data_path_candidates
 from .external_protection_models import ExternalProtectionCoverageReport
 from .models import (
     NetlistContract,
-    RcFilterCoverageReport,
-    RegulatorFeedbackCoverageReport,
 )
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
+from .rc_filter_models import RcFilterCoverageReport
+from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .usb_data_path_models import UsbDataPathMap
 
 

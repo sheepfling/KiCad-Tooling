@@ -32,8 +32,6 @@ from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
 from .models import (
     DesignLintMappedCheckRun,
-    RcFilterCoverageReport,
-    RegulatorFeedbackCoverageReport,
     register_design_lint_report,
 )
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
@@ -48,6 +46,8 @@ from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .rc_filter_models import RcFilterCoverageReport
+from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .rs485_peer_reference_models import Rs485PeerReferenceCoverageReport
 from .schematic_geometry_models import SchematicGeometryCoverage
 from .serial_peer_reference_models import SerialPeerReferenceCoverageReport

@@ -172,6 +172,12 @@ intended requirement.
   Architecture tests enforce owner size, imports, and class identity; the move
   shrinks `models.py` from 3,567 to 3,514 lines without changing source-coverage
   policy or report schema.
+  Regulator-feedback and RC-filter coverage entries and reports now live beside
+  their requirement maps in `regulator_feedback_models.py` and
+  `rc_filter_models.py`. Internal lint services import those owners directly,
+  while `models.py` keeps identity-compatible exports. Architecture checks
+  enforce owner sizes, import boundaries, and compatibility; the registry
+  shrank from 3,514 to 3,424 lines without changing schemas or check behavior.
   Differential-pair and signal-path DRC text rendering now lives in the
   focused `design_lint_pcb_drc_report.py` owner, keeping the broader PCB
   coverage report below the architecture review limit without changing output.

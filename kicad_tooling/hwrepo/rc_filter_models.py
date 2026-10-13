@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from collections.abc import Mapping
+from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
 from .model_primitives import (
     CapacitancePf,
+    Digest,
     ElectricalPositive,
     Identifier,
     NetName,
@@ -16,6 +18,52 @@ from .model_primitives import (
     ResistorReference,
     StrictModel,
 )
+
+
+class RcFilterCoverageEntry(StrictModel):
+    """One explicitly mapped first-order RC filter checked against the native netlist."""
+
+    id: Identifier
+    resistor_reference: ResistorReference
+    capacitor_reference: Identifier
+    status: Literal["COMPLETE", "INCOMPLETE", "OUT_OF_RANGE"]
+    input_net: NetName
+    filtered_net: NetName
+    reference_net: NetName
+    formula: Literal["1/(2*pi*R*C)"] = "1/(2*pi*R*C)"
+    resistance_ohms: ElectricalPositive | None = None
+    capacitance_pf: CapacitancePf | None = None
+    calculated_corner_hz: ElectricalPositive | None = None
+    target_minimum_corner_hz: ElectricalPositive
+    target_maximum_corner_hz: ElectricalPositive
+    nominal_resistance_range_ohms: tuple[ElectricalPositive, ElectricalPositive]
+    nominal_capacitance_range_pf: tuple[CapacitancePf, CapacitancePf]
+    pin_nets: Mapping[Reference, tuple[NetName, ...]] = Field(default_factory=dict)
+    unlisted_parallel_components: tuple[Identifier, ...] = ()
+    basis: NonEmptyText
+    issues: tuple[NonEmptyText, ...] = ()
+
+
+class RcFilterCoverageReport(StrictModel):
+    """Coverage of authored RC filter requirements against source-bound netlists."""
+
+    status: Literal["NOT_REQUESTED", "COMPLETE", "INCOMPLETE", "BLOCKED"] = "NOT_REQUESTED"
+    scope: NonEmptyText = (
+        "Only explicitly mapped first-order series-resistor/shunt-capacitor low-pass networks "
+        "are checked. Nominal cutoff estimates do not model source/load impedance, tolerances, "
+        "transient behavior, or higher-order filters."
+    )
+    netlist_sha256: Digest | None = None
+    entries: tuple[RcFilterCoverageEntry, ...] = ()
+    issue: NonEmptyText | None = None
+
+    @model_validator(mode="after")
+    def source_bound_when_configured(self) -> RcFilterCoverageReport:
+        if self.status in {"COMPLETE", "INCOMPLETE"} and self.netlist_sha256 is None:
+            raise ValueError("Configured RC filter coverage must bind a native netlist hash")
+        if self.status == "BLOCKED" and self.issue is None:
+            raise ValueError("Blocked RC filter coverage must explain the evidence gap")
+        return self
 
 
 class RcFilterRequirement(StrictModel):

@@ -49,11 +49,7 @@ from .i2c_address_models import (
 )
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import (
-    NetlistContract,
-    RcFilterCoverageReport,
-    RegulatorFeedbackCoverageReport,
-)
+from .models import NetlistContract
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
@@ -74,6 +70,8 @@ from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
+from .rc_filter_models import RcFilterCoverageReport
+from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .schematic_geometry import (
     SchematicGeometryScan,

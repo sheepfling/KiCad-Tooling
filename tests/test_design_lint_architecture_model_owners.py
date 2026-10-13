@@ -1,4 +1,4 @@
-"""Keep recent design-lint requirements in bounded theme-owned model modules."""
+"""Keep design-lint contracts and results in bounded theme-owned model modules."""
 
 from __future__ import annotations
 
@@ -45,13 +45,23 @@ MODEL_OWNERS = {
         design_lint_policy_models,
         ("DesignLintPolicy",),
     ),
-    "rc_filter_models.py": (rc_filter_models, ("RcFilterRequirement", "RcFilterMap")),
+    "rc_filter_models.py": (
+        rc_filter_models,
+        (
+            "RcFilterRequirement",
+            "RcFilterMap",
+            "RcFilterCoverageEntry",
+            "RcFilterCoverageReport",
+        ),
+    ),
     "regulator_feedback_models.py": (
         regulator_feedback_models,
         (
             "RegulatorDividerResistorRequirement",
             "RegulatorFeedbackRequirement",
             "RegulatorFeedbackMap",
+            "RegulatorFeedbackCoverageEntry",
+            "RegulatorFeedbackCoverageReport",
         ),
     ),
     "return_net_models.py": (return_net_models, ("ReturnNetGroup",)),

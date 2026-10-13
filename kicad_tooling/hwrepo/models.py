@@ -73,7 +73,6 @@ from . import usb_data_path_models as _usb_data_path_models
 from . import usb_peer_reference_models as _usb_peer_reference_models
 from . import usb_reference_pin_models as _usb_reference_pin_models
 from .model_primitives import (
-    CapacitancePf,
     Digest,
     ElectricalPositive,
     FiniteMeasure,
@@ -88,7 +87,6 @@ from .model_primitives import (
     PositiveMeasure,
     Reference,
     RepositoryPath,
-    ResistorReference,
     Stm32PortPin,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     Stm32SymbolPin,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     StrictModel,
@@ -129,6 +127,10 @@ RegulatorFeedbackRequirement = _regulator_feedback_models.RegulatorFeedbackRequi
 RegulatorFeedbackMap = _regulator_feedback_models.RegulatorFeedbackMap
 RcFilterRequirement = _rc_filter_models.RcFilterRequirement
 RcFilterMap = _rc_filter_models.RcFilterMap
+RcFilterCoverageEntry = _rc_filter_models.RcFilterCoverageEntry
+RcFilterCoverageReport = _rc_filter_models.RcFilterCoverageReport
+RegulatorFeedbackCoverageEntry = _regulator_feedback_models.RegulatorFeedbackCoverageEntry
+RegulatorFeedbackCoverageReport = _regulator_feedback_models.RegulatorFeedbackCoverageReport
 ComplementaryPinFunctionAlias = _signal_pair_models.ComplementaryPinFunctionAlias
 ComplementaryPinFunctionAliasMap = _signal_pair_models.ComplementaryPinFunctionAliasMap
 DesignLintPolicy = _design_lint_policy_models.DesignLintPolicy
@@ -2061,98 +2063,6 @@ class ContractCoachReport(StrictModel):
 ConnectorMappedPinEvidence = _connector_coverage_models.ConnectorMappedPinEvidence
 ConnectorCoverageEntry = _connector_coverage_models.ConnectorCoverageEntry
 ConnectorCoverageReport = _connector_coverage_models.ConnectorCoverageReport
-
-
-class RegulatorFeedbackCoverageEntry(StrictModel):
-    """One authored adjustable-regulator divider compared with native netlist evidence."""
-
-    id: Identifier
-    regulator_reference: Identifier
-    status: Literal["COMPLETE", "INCOMPLETE", "OUT_OF_RANGE"]
-    output_net: NetName
-    reference_net: NetName
-    feedback_net: NetName | None = None
-    formula: Literal["Vref*(1+Rupper/Rlower)"] = "Vref*(1+Rupper/Rlower)"
-    feedback_reference_minimum_v: ElectricalPositive
-    feedback_reference_maximum_v: ElectricalPositive
-    target_output_minimum_v: ElectricalPositive
-    target_output_maximum_v: ElectricalPositive
-    nominal_resistance_ohms: Mapping[Identifier, ElectricalPositive] = Field(default_factory=dict)
-    calculated_output_minimum_v: ElectricalPositive | None = None
-    calculated_output_maximum_v: ElectricalPositive | None = None
-    pin_nets: Mapping[Reference, tuple[NetName, ...]] = Field(default_factory=dict)
-    basis: NonEmptyText
-    issues: tuple[NonEmptyText, ...] = ()
-
-
-class RegulatorFeedbackCoverageReport(StrictModel):
-    """Coverage of authored regulator-feedback requirements against native evidence."""
-
-    status: Literal["NOT_REQUESTED", "COMPLETE", "INCOMPLETE", "BLOCKED"] = "NOT_REQUESTED"
-    scope: NonEmptyText = (
-        "Only explicitly mapped conventional two-resistor adjustable feedback dividers are "
-        "checked. The nominal DC estimate does not establish stability, compensation, startup, "
-        "load response, resistor tolerance, IC ratings, or PCB feedback routing."
-    )
-    netlist_sha256: Digest | None = None
-    entries: tuple[RegulatorFeedbackCoverageEntry, ...] = ()
-    issue: NonEmptyText | None = None
-
-    @model_validator(mode="after")
-    def source_bound_when_configured(self) -> RegulatorFeedbackCoverageReport:
-        if self.status in {"COMPLETE", "INCOMPLETE"} and self.netlist_sha256 is None:
-            raise ValueError(
-                "Configured regulator feedback coverage must bind a native netlist hash"
-            )
-        if self.status == "BLOCKED" and self.issue is None:
-            raise ValueError("Blocked regulator feedback coverage must explain the evidence gap")
-        return self
-
-
-class RcFilterCoverageEntry(StrictModel):
-    """One explicitly mapped first-order RC filter checked against the native netlist."""
-
-    id: Identifier
-    resistor_reference: ResistorReference
-    capacitor_reference: Identifier
-    status: Literal["COMPLETE", "INCOMPLETE", "OUT_OF_RANGE"]
-    input_net: NetName
-    filtered_net: NetName
-    reference_net: NetName
-    formula: Literal["1/(2*pi*R*C)"] = "1/(2*pi*R*C)"
-    resistance_ohms: ElectricalPositive | None = None
-    capacitance_pf: CapacitancePf | None = None
-    calculated_corner_hz: ElectricalPositive | None = None
-    target_minimum_corner_hz: ElectricalPositive
-    target_maximum_corner_hz: ElectricalPositive
-    nominal_resistance_range_ohms: tuple[ElectricalPositive, ElectricalPositive]
-    nominal_capacitance_range_pf: tuple[CapacitancePf, CapacitancePf]
-    pin_nets: Mapping[Reference, tuple[NetName, ...]] = Field(default_factory=dict)
-    unlisted_parallel_components: tuple[Identifier, ...] = ()
-    basis: NonEmptyText
-    issues: tuple[NonEmptyText, ...] = ()
-
-
-class RcFilterCoverageReport(StrictModel):
-    """Coverage of authored RC filter requirements against source-bound netlists."""
-
-    status: Literal["NOT_REQUESTED", "COMPLETE", "INCOMPLETE", "BLOCKED"] = "NOT_REQUESTED"
-    scope: NonEmptyText = (
-        "Only explicitly mapped first-order series-resistor/shunt-capacitor low-pass networks "
-        "are checked. Nominal cutoff estimates do not model source/load impedance, tolerances, "
-        "transient behavior, or higher-order filters."
-    )
-    netlist_sha256: Digest | None = None
-    entries: tuple[RcFilterCoverageEntry, ...] = ()
-    issue: NonEmptyText | None = None
-
-    @model_validator(mode="after")
-    def source_bound_when_configured(self) -> RcFilterCoverageReport:
-        if self.status in {"COMPLETE", "INCOMPLETE"} and self.netlist_sha256 is None:
-            raise ValueError("Configured RC filter coverage must bind a native netlist hash")
-        if self.status == "BLOCKED" and self.issue is None:
-            raise ValueError("Blocked RC filter coverage must explain the evidence gap")
-        return self
 
 
 class DesignLintMappedCheckRun(StrictModel):

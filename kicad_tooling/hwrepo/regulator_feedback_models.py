@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from collections.abc import Mapping
+from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
 from .model_primitives import (
+    Digest,
     ElectricalPositive,
     Identifier,
     NetName,
@@ -15,6 +17,52 @@ from .model_primitives import (
     ResistorReference,
     StrictModel,
 )
+
+
+class RegulatorFeedbackCoverageEntry(StrictModel):
+    """One authored adjustable-regulator divider compared with native netlist evidence."""
+
+    id: Identifier
+    regulator_reference: Identifier
+    status: Literal["COMPLETE", "INCOMPLETE", "OUT_OF_RANGE"]
+    output_net: NetName
+    reference_net: NetName
+    feedback_net: NetName | None = None
+    formula: Literal["Vref*(1+Rupper/Rlower)"] = "Vref*(1+Rupper/Rlower)"
+    feedback_reference_minimum_v: ElectricalPositive
+    feedback_reference_maximum_v: ElectricalPositive
+    target_output_minimum_v: ElectricalPositive
+    target_output_maximum_v: ElectricalPositive
+    nominal_resistance_ohms: Mapping[Identifier, ElectricalPositive] = Field(default_factory=dict)
+    calculated_output_minimum_v: ElectricalPositive | None = None
+    calculated_output_maximum_v: ElectricalPositive | None = None
+    pin_nets: Mapping[Reference, tuple[NetName, ...]] = Field(default_factory=dict)
+    basis: NonEmptyText
+    issues: tuple[NonEmptyText, ...] = ()
+
+
+class RegulatorFeedbackCoverageReport(StrictModel):
+    """Coverage of authored regulator-feedback requirements against native evidence."""
+
+    status: Literal["NOT_REQUESTED", "COMPLETE", "INCOMPLETE", "BLOCKED"] = "NOT_REQUESTED"
+    scope: NonEmptyText = (
+        "Only explicitly mapped conventional two-resistor adjustable feedback dividers are "
+        "checked. The nominal DC estimate does not establish stability, compensation, startup, "
+        "load response, resistor tolerance, IC ratings, or PCB feedback routing."
+    )
+    netlist_sha256: Digest | None = None
+    entries: tuple[RegulatorFeedbackCoverageEntry, ...] = ()
+    issue: NonEmptyText | None = None
+
+    @model_validator(mode="after")
+    def source_bound_when_configured(self) -> RegulatorFeedbackCoverageReport:
+        if self.status in {"COMPLETE", "INCOMPLETE"} and self.netlist_sha256 is None:
+            raise ValueError(
+                "Configured regulator feedback coverage must bind a native netlist hash"
+            )
+        if self.status == "BLOCKED" and self.issue is None:
+            raise ValueError("Blocked regulator feedback coverage must explain the evidence gap")
+        return self
 
 
 class RegulatorDividerResistorRequirement(StrictModel):

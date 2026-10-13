@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import RegulatorFeedbackCoverageReport
+from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 
 
 def regulator_feedback_candidates(

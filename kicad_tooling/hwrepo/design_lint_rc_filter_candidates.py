@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
-from .models import RcFilterCoverageReport
+from .rc_filter_models import RcFilterCoverageReport
 
 
 def rc_filter_candidates(

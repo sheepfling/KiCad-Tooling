@@ -13,10 +13,7 @@ from .design_lint_pcb_coverage_policy import (
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
 from .design_lint_rule_models import DesignLintRuleCatalog
-from .models import (
-    ContractCoachReport,
-    RcFilterCoverageReport,
-)
+from .models import ContractCoachReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport
 from .pcb_keepout_models import (
@@ -27,6 +24,7 @@ from .pcb_switching_loop_models import (
     PcbSwitchingLoopCoverageReport,
 )
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .rc_filter_models import RcFilterCoverageReport
 from .stm32_pin_map_models import Stm32PinMapCoverageReport
 
 

@@ -21,11 +21,7 @@ from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .models import (
-    ContractCoachReport,
-    RcFilterCoverageReport,
-    RegulatorFeedbackCoverageReport,
-)
+from .models import ContractCoachReport
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
@@ -43,6 +39,8 @@ from .pcb_switching_loop_models import (
 )
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
+from .rc_filter_models import RcFilterCoverageReport
+from .regulator_feedback_models import RegulatorFeedbackCoverageReport
 from .rs485_peer_reference_types import Rs485PeerReferenceContext
 from .schematic_geometry import SchematicGeometryScan
 from .schematic_geometry_models import SchematicGeometryCoverage

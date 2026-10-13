@@ -21,13 +21,11 @@ from .i2c_addressing import scan_i2c_address_map
 from .models import (
     Digest,
     NetlistContract,
-    RcFilterCoverageReport,
-    RegulatorFeedbackCoverageReport,
 )
-from .rc_filter_models import RcFilterMap
+from .rc_filter_models import RcFilterCoverageReport, RcFilterMap
 from .rc_filters import scan_rc_filter_map
 from .regulator_feedback import scan_regulator_feedback_map
-from .regulator_feedback_models import RegulatorFeedbackMap
+from .regulator_feedback_models import RegulatorFeedbackCoverageReport, RegulatorFeedbackMap
 
 
 @dataclass(frozen=True)
