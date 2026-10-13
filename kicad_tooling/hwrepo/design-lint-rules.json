@@ -4350,6 +4350,53 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_component_inventory.py#compare_fitted_schematic_pcb_inventory"
     },
     {
+      "rule_id": "pcb.board_only_footprint",
+      "title": "PCB footprint reference has no schematic counterpart",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "Source-bound native schematic netlist compared with exact KiCad native PCB footprint snapshot schema 12 or 13",
+      "predicate": "For each native PCB footprint with a nonempty reference, compare its reference case-insensitively with all source-bound schematic netlist component references. Report a review candidate when no schematic component has the same reference.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native pcbnew API; exact project version and digest-pinned image are checked"
+      ],
+      "limitations": [
+        "This is an opt-in review heuristic. It cannot determine whether an unmatched board footprint is an error or an intentional mechanical, fabrication, fiducial, or other board-only item.",
+        "The check compares reference identity only. It does not infer electrical role, assembly state, footprint correctness, or manufacturing intent. Project owners can suppress an intentional reference with the existing exact-fingerprint ignore lifecycle.",
+        "The check requires a source-bound schematic netlist and native PCB footprint inventory snapshot schema 12 or 13. Missing, stale, or unsupported evidence is a coverage gap and never a clean result."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_board_only_footprints.test_extra_board_reference_is_reported_without_classifying_its_intent",
+        "tests.test_pcb_board_only_footprints.test_missing_or_unsupported_native_evidence_blocks_board_only_coverage",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_board_only_footprints.test_matching_board_references_are_a_quiet_control",
+        "tests.test_pcb_board_only_footprints.test_board_only_review_is_opt_in_and_supports_policy_and_exact_ignore",
+        "tests.test_pcb_component_inventory_mcp_parity.test_component_inventory_findings_match_cli_and_mcp",
+        "tests.test_pcb_component_inventory_native_fixture_lane.test_native_component_inventory_fault_and_control_are_source_bound"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_board_only_footprints.test_schematic_reference_case_and_input_order_do_not_change_results"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_board_only_footprints.py#board_only_pcb_footprints",
+        "kicad_tooling/hwrepo/pcb_component_inventory.py#evaluate_native_component_inventory_coverage",
+        "kicad_tooling/hwrepo/design_lint_pcb_component_inventory_scan.py#scan_pcb_component_inventory",
+        "kicad_tooling/hwrepo/design_lint_pcb_board_only_candidates.py#pcb_board_only_footprint_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_board_only_report.py#board_only_footprint_report_lines",
+        "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
+        "kicad_tooling/ci_hosted_pcb_component_inventory_fixture.py#pcb_component_inventory_fixture_lane"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_board_only_footprints.py#board_only_pcb_footprints"
+    },
+    {
       "rule_id": "pcb.schematic_pcb_dnp_mismatch",
       "title": "Schematic and PCB DNP states differ",
       "status": "active",

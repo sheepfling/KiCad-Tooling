@@ -6131,9 +6131,9 @@ is not a reason by itself to expand its scope or change its default policy.
   independent review is still needed to measure whether a finding is
   actionable; no reviewer-time or field-precision claim is made. No project
   source or proprietary fixture is stored.
-- **Next:** Keep the default at REVIEW. Evaluate separate coverage for
-  board-only footprints and explicitly required fitted references; do not infer
-  assembly intent from component similarity alone.
+- **Next:** Keep the default at REVIEW. Board-only footprint coverage is tracked
+  separately by LINT-129; evaluate explicitly required fitted-reference
+  coverage without inferring assembly intent from component similarity alone.
 
 #### LINT-112 — Schematic and PCB component value fields differ
 
@@ -6816,6 +6816,38 @@ is not a reason by itself to expand its scope or change its default policy.
   Ubuntu, Windows, and macOS preview jobs passed.
 
 ### P2 — PCB geometry and schematic review assistance
+
+#### LINT-129 — PCB footprint reference has no schematic counterpart
+
+- **Status:** Implemented as the opt-in, default-`OFF` rule
+  `pcb.board_only_footprint`; projects can select `REVIEW`, `BLOCK`, or `OFF`.
+- **Priority:** P2 fabrication-source consistency. The existing inventory
+  comparison found schematic references missing from the board but did not
+  surface unmatched PCB footprint references.
+- **Predicate:** Compare each nonempty native PCB footprint reference against
+  every source-bound schematic netlist component reference, case-insensitively.
+  Emit one review candidate per PCB reference with no schematic counterpart.
+- **Boundary:** This is a review heuristic, not an error classification.
+  Mechanical, fabrication, fiducial, logo, and other board-only items can be
+  intentional. The rule does not infer electrical role, assembly population,
+  or manufacturing intent; projects choose its mode and can suppress a reviewed
+  exact finding through the fingerprint-ignore lifecycle. The predicate checks
+  reference identity only.
+- **Evidence:** Synthetic cases cover extra connectors and mounting-hole
+  references, exact-reference controls, case-insensitive matching, stable
+  ordering, duplicate-reference rejection, missing/unsupported evidence,
+  `OFF`/`REVIEW`/`BLOCK`, exact ignores and stale-ignore behavior. A CLI/MCP
+  parity case carries the same typed candidate. The rule-scoped tag gate also
+  requires the hosted native PCB fixture lane, which captures a hashed
+  synthetic J2 board twice against the exact project-selected KiCad toolchain.
+  Local Docker access was unavailable for this run, so that native lane still
+  needs hosted confirmation. Local synthetic, static, packaging, and installed-
+  wheel checks passed. These tests establish the predicate and source boundary;
+  they do not measure field precision or reviewer effort. No proprietary
+  project source was used.
+- **Next:** Keep the rule default-off. Use independently reviewed, nonconfidential
+  project outcomes to estimate which project classes benefit and how many
+  intentional extras need ignores before considering any wider default.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

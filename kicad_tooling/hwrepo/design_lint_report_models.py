@@ -169,6 +169,16 @@ class DesignLintReport(StrictModel):
                 )
                 if actual_value_findings != expected_value_findings:
                     raise ValueError("PCB value findings must match their comparison rows")
+        board_only = inventory.board_only_footprint_coverage
+        if board_only.status in {"COMPLETE", "BLOCKED"}:
+            expected_board_only_findings = (
+                len(board_only.footprints) if board_only.status == "COMPLETE" else 1
+            )
+            actual_board_only_findings = sum(
+                finding.rule_id == "pcb.board_only_footprint" for finding in self.findings
+            )
+            if actual_board_only_findings != expected_board_only_findings:
+                raise ValueError("Board-only footprint findings must match coverage rows")
         if (
             self.netlist_sha256 is not None
             and self.control_input_bias_coverage.netlist_sha256 is not None

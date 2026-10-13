@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
+from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_pad_net_models import PcbSchematicBoardPadNetMismatch
 
 
@@ -170,6 +171,9 @@ class PcbComponentInventoryCoverageReport(StrictModel):
     )
     pad_net_mismatches: tuple[PcbSchematicBoardPadNetMismatch, ...] = ()
     pad_net_comparison_issue: NonEmptyText | None = None
+    board_only_footprint_coverage: PcbBoardOnlyFootprintCoverage = Field(
+        default_factory=PcbBoardOnlyFootprintCoverage
+    )
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
@@ -209,6 +213,12 @@ class PcbComponentInventoryCoverageReport(StrictModel):
             raise ValueError("Only blocked PCB pad net comparison may include an issue")
         if self.pad_net_comparison_status != "COMPLETE" and self.pad_net_mismatches:
             raise ValueError("Only complete PCB pad net comparison can report mismatch rows")
+        if self.board_only_footprint_coverage.status == "COMPLETE" and (
+            self.status != "COMPLETE" or self.snapshot_schema not in {"12", "13"}
+        ):
+            raise ValueError("Complete board-only coverage needs complete source-bound inventory")
+        if self.board_only_footprint_coverage.status == "BLOCKED" and self.status != "BLOCKED":
+            raise ValueError("Blocked board-only coverage must block PCB inventory coverage")
         if self.status == "COMPLETE":
             if any(
                 value is None
@@ -238,6 +248,7 @@ class PcbComponentInventoryCoverageReport(StrictModel):
             or self.population_mismatches
             or self.value_comparison_status == "COMPLETE"
             or self.pad_net_comparison_status == "COMPLETE"
+            or self.board_only_footprint_coverage.status == "COMPLETE"
         ):
             raise ValueError("Only complete PCB component inventory can report comparison findings")
         return self

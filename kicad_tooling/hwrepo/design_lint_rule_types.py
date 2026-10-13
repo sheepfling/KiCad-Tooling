@@ -100,6 +100,7 @@ DesignLintRuleId = Literal[
     "pcb.keepout_intent_coverage",
     "pcb.rf_module_antenna_keepout_coverage",
     "pcb.schematic_component_inventory",
+    "pcb.board_only_footprint",
     "pcb.schematic_pcb_dnp_mismatch",
     "pcb.schematic_pcb_value_mismatch",
     "pcb.schematic_pcb_pad_net_mismatch",

@@ -32,6 +32,7 @@ pytestmark = [
 
 
 @pytest.mark.parametrize("project,version", NATIVE_KICAD_PROJECTS, ids=lambda value: value)
+@pytest.mark.design_lint_rule(rule_id="pcb.board_only_footprint")
 def test_native_component_inventory_fault_and_control_are_source_bound(
     tmp_path: Path,
     project: str,
@@ -111,3 +112,13 @@ def test_native_component_inventory_fault_and_control_are_source_bound(
         "fault.schematic",
     }
     assert all(len(value) == 64 for value in value_source_hashes.values())
+
+    board_only = lane_event(log, "pcb-board-only-footprint-fixture/screen")
+    assert board_only["status"] == "PASS"
+    assert board_only["kicad_version"] == version
+    assert board_only["candidate_reference"] == "J2"
+    assert board_only["native_netlist_and_board_evidence"] == "true"
+    assert board_only["repeated_evidence"] == "stable"
+    assert len(board_only["schematic_sha256"]) == 64
+    assert len(board_only["board_sha256"]) == 64
+    assert len(board_only["snapshot_sha256"]) == 64

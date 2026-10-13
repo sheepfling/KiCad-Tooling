@@ -2545,6 +2545,26 @@ electrical connectivity. Schematic/PCB value text has a separate review rule
 described below. A matching footprint ID does not prove the fabricated board
 matches the source.
 
+## Review PCB footprints with no schematic reference
+
+`pcb.board_only_footprint` compares every nonempty native PCB footprint
+reference with references in the source-bound schematic netlist, ignoring case.
+It prompts when a PCB reference has no schematic counterpart. This can surface
+an accidental extra connector or component, while also prompting on intentional
+mechanical, fiducial, fabrication, logo, or other board-only footprints.
+
+The rule defaults to `off` because boards commonly contain intentional extras.
+Projects can opt in with `review` or `block`, then suppress a reviewed exact
+reference through the fingerprint-ignore lifecycle. The comparison uses the
+native footprint inventory snapshot schema 12 or 13 and binds each finding to
+the netlist, board, snapshot, KiCad version, image, and probe digests. Missing,
+stale, or unsupported evidence blocks coverage when the rule is enabled.
+
+This is a reference-identity heuristic. It cannot determine the item's
+electrical role, assembly state, or manufacturing intent. A project may decide
+that one unmatched reference is an error and another is intentional; the
+checker only supplies the review prompt.
+
 ## Review schematic and PCB component-value differences
 
 `pcb.schematic_pcb_value_mismatch` compares the schematic netlist value with

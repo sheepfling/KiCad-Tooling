@@ -23,6 +23,7 @@ from .models import (
     PcbProtectionPathMap,
     ProjectKind,
 )
+from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
@@ -92,9 +93,13 @@ def scan_pcb_geometry(
     value_mode: PcbRuleMode = "review" if value_override is None else value_override.mode
     pad_net_override = overrides.get("pcb.schematic_pcb_pad_net_mismatch")
     pad_net_mode: PcbRuleMode = "review" if pad_net_override is None else pad_net_override.mode
+    board_only_override = overrides.get("pcb.board_only_footprint")
+    board_only_mode: PcbRuleMode = (
+        "off" if board_only_override is None else board_only_override.mode
+    )
     active_inventory_modes: tuple[PcbRuleMode, ...] = tuple(
         mode
-        for mode in (inventory_mode, population_mode, value_mode, pad_net_mode)
+        for mode in (inventory_mode, population_mode, value_mode, pad_net_mode, board_only_mode)
         if mode != "off"
     )
     inventory_scan_mode: PcbRuleMode = (
@@ -105,6 +110,7 @@ def scan_pcb_geometry(
         or population_mode != "off"
         or value_mode != "off"
         or pad_net_mode != "off"
+        or board_only_mode != "off"
     )
     if (
         decoupling_map is None
@@ -273,6 +279,7 @@ def scan_pcb_geometry(
                 population_mode=population_mode,
                 value_mode=value_mode,
                 pad_net_mode=pad_net_mode,
+                board_only_mode=board_only_mode,
             )
         modes: dict[str, PcbRuleMode] = {
             "pcb.decoupling_proximity": decoupling_mode,
@@ -287,6 +294,7 @@ def scan_pcb_geometry(
             "pcb.schematic_pcb_dnp_mismatch": population_mode,
             "pcb.schematic_pcb_value_mismatch": value_mode,
             "pcb.schematic_pcb_pad_net_mismatch": pad_net_mode,
+            "pcb.board_only_footprint": board_only_mode,
         }
         (
             decoupling_report,
@@ -458,6 +466,15 @@ def scan_pcb_geometry(
                     "BLOCKED" if pad_net_mode != "off" else "NOT_APPLICABLE"
                 ),
                 pad_net_comparison_issue=issue if pad_net_mode != "off" else None,
+                board_only_footprint_coverage=(
+                    PcbBoardOnlyFootprintCoverage(
+                        status="BLOCKED",
+                        mode=board_only_mode,
+                        issue=issue,
+                    )
+                    if board_only_mode != "off"
+                    else PcbBoardOnlyFootprintCoverage()
+                ),
                 issue=issue,
             )
             if inventory_required

@@ -6,6 +6,8 @@ from typing import Literal, cast
 
 from .model_primitives import Digest, RepositoryPath
 from .models import NetlistContract
+from .pcb_board_only_footprint_models import PcbBoardOnlyFootprintCoverage
+from .pcb_board_only_footprints import board_only_pcb_footprints
 from .pcb_component_inventory_models import (
     PcbComponentInventoryComparison,
     PcbComponentInventoryCoverageReport,
@@ -98,10 +100,11 @@ def evaluate_native_component_inventory_coverage(
     probe_sha256: Digest,
     value_mode: Literal["review", "block", "off"] = "off",
     pad_net_mode: Literal["review", "block", "off"] = "off",
+    board_only_mode: Literal["review", "block", "off"] = "off",
     variant_population: PcbVariantPopulationCapture | None = None,
 ) -> PcbComponentInventoryCoverageReport:
     """Build complete inventory coverage or retain the precise comparison gap."""
-    if mode == "off" and value_mode == "off" and pad_net_mode == "off":
+    if mode == "off" and value_mode == "off" and pad_net_mode == "off" and board_only_mode == "off":
         return PcbComponentInventoryCoverageReport(status="DISABLED", mode=mode)
 
     variant_coverage = (
@@ -112,7 +115,14 @@ def evaluate_native_component_inventory_coverage(
 
     coverage_mode: Literal["review", "block", "off"] = cast(
         Literal["review", "block", "off"],
-        next((value for value in (mode, value_mode, pad_net_mode) if value != "off"), "off"),
+        next(
+            (
+                value
+                for value in (mode, value_mode, pad_net_mode, board_only_mode)
+                if value != "off"
+            ),
+            "off",
+        ),
     )
 
     issue: str | None = None
@@ -128,6 +138,15 @@ def evaluate_native_component_inventory_coverage(
         "DISABLED" if pad_net_mode == "off" else "BLOCKED"
     )
     pad_net_comparison_issue: str | None = None
+    board_only_coverage = (
+        PcbBoardOnlyFootprintCoverage()
+        if board_only_mode == "off"
+        else PcbBoardOnlyFootprintCoverage(
+            status="BLOCKED",
+            mode=board_only_mode,
+            issue="Board-only PCB footprint evidence is unavailable",
+        )
+    )
     if netlist is None:
         issue = "Source-bound native schematic netlist is unavailable"
     elif netlist_sha256 is None:
@@ -137,6 +156,12 @@ def evaluate_native_component_inventory_coverage(
     else:
         try:
             comparison = compare_fitted_schematic_pcb_inventory(netlist, snapshot)
+            if board_only_mode != "off":
+                board_only_coverage = PcbBoardOnlyFootprintCoverage(
+                    status="COMPLETE",
+                    mode=board_only_mode,
+                    footprints=board_only_pcb_footprints(netlist, snapshot),
+                )
             population_mismatches = compare_schematic_pcb_population(
                 netlist,
                 snapshot,
@@ -176,6 +201,12 @@ def evaluate_native_component_inventory_coverage(
                 pad_net_comparison_issue = str(exc)
 
     if issue is not None:
+        if board_only_mode != "off":
+            board_only_coverage = PcbBoardOnlyFootprintCoverage(
+                status="BLOCKED",
+                mode=board_only_mode,
+                issue=issue,
+            )
         return PcbComponentInventoryCoverageReport(
             status="BLOCKED",
             mode=coverage_mode,
@@ -191,6 +222,7 @@ def evaluate_native_component_inventory_coverage(
             value_comparison_issue=value_comparison_issue,
             pad_net_comparison_status=pad_net_comparison_status,
             pad_net_comparison_issue=pad_net_comparison_issue,
+            board_only_footprint_coverage=board_only_coverage,
             variant_population=variant_coverage,
             issue=issue,
         )
@@ -221,4 +253,5 @@ def evaluate_native_component_inventory_coverage(
         pad_net_comparison_status=pad_net_comparison_status,
         pad_net_mismatches=pad_net_mismatches,
         pad_net_comparison_issue=pad_net_comparison_issue,
+        board_only_footprint_coverage=board_only_coverage,
     )

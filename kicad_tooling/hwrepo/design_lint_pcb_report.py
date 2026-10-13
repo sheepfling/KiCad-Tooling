@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .design_lint_pcb_board_only_report import board_only_footprint_report_lines
 from .design_lint_report_models import DesignLintReport
 
 
@@ -458,4 +459,5 @@ def pcb_coverage_report_lines(report: DesignLintReport) -> list[str]:
             )
         if inventory.issue is not None:
             lines.append(f"  Coverage issue: {inventory.issue}")
+    lines.extend(board_only_footprint_report_lines(inventory))
     return lines

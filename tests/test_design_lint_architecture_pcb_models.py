@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo import (
     models as shared_models,
 )
 from kicad_tooling.hwrepo import (
+    pcb_board_only_footprint_models,
     pcb_component_inventory_models,
     pcb_component_population,
     pcb_component_values,
@@ -427,3 +428,17 @@ def test_shared_model_primitives_have_one_definition_owner() -> None:
     assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
     assert set(SHARED_MODEL_PRIMITIVE_NAMES) <= defined_names(owner)
     assert not (set(SHARED_MODEL_PRIMITIVE_NAMES) & defined_names(registry))
+
+
+def test_board_only_footprint_models_have_a_theme_owner() -> None:
+    names = ("PcbBoardOnlyFootprint", "PcbBoardOnlyFootprintCoverage")
+    owner = HWREPO / "pcb_board_only_footprint_models.py"
+
+    assert all(
+        getattr(pcb_board_only_footprint_models, name).__module__.endswith(
+            "pcb_board_only_footprint_models"
+        )
+        for name in names
+    )
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert all(not hasattr(shared_models, name) for name in names)

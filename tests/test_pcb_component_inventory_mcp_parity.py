@@ -17,8 +17,13 @@ from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
+    DesignLintRuleOverride,
     PcbKeepoutCoverageReport,
     PcbProtectionPathCoverageReport,
+)
+from kicad_tooling.hwrepo.pcb_board_only_footprint_models import (
+    PcbBoardOnlyFootprint,
+    PcbBoardOnlyFootprintCoverage,
 )
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
@@ -38,14 +43,27 @@ from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.pcb_lint, pytest.mark.parity_lint]
+BOARD_ONLY_RULE = "pcb.board_only_footprint"
 
 
+@pytest.mark.design_lint_rule(rule_id=BOARD_ONLY_RULE)
 def test_component_inventory_findings_match_cli_and_mcp(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    root, native = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
+    root, native = synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=BOARD_ONLY_RULE,
+                    mode="review",
+                    reason="exercise cross-surface candidate parity",
+                ),
+            )
+        ),
+    )
 
     def synthetic_geometry_scan(root, config, coach, policy, native_summary):
         del root, policy, native_summary
@@ -106,6 +124,16 @@ def test_component_inventory_findings_match_cli_and_mcp(
                         mismatch="net_assignment_differs",
                         schematic_net="SYNTHETIC_RETURN",
                         board_net="SYNTHETIC_RETURN_2",
+                    ),
+                ),
+                board_only_footprint_coverage=PcbBoardOnlyFootprintCoverage(
+                    status="COMPLETE",
+                    mode="review",
+                    footprints=(
+                        PcbBoardOnlyFootprint(
+                            reference="H_MOUNT1",
+                            footprint="MountingHole:NPTH",
+                        ),
                     ),
                 ),
             ),
@@ -180,3 +208,8 @@ def test_component_inventory_findings_match_cli_and_mcp(
     assert pad_net_finding.subject == ("U5.4: schematic and PCB net assignments differ")
     assert pad_net_finding.evidence["schematic_net"] == ("SYNTHETIC_RETURN",)
     assert pad_net_finding.evidence["board_net"] == ("SYNTHETIC_RETURN_2",)
+    (board_only_finding,) = tuple(
+        item for item in mcp_report.findings if item.rule_id == BOARD_ONLY_RULE
+    )
+    assert board_only_finding.subject == ("H_MOUNT1: PCB footprint has no schematic counterpart")
+    assert board_only_finding.evidence["footprint"] == ("MountingHole:NPTH",)

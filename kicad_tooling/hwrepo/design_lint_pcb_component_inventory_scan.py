@@ -23,6 +23,7 @@ def scan_pcb_component_inventory(
     population_mode: PcbRuleMode,
     value_mode: PcbRuleMode,
     pad_net_mode: PcbRuleMode,
+    board_only_mode: PcbRuleMode = "off",
 ) -> PcbComponentInventoryCoverageReport:
     """Compare inventory evidence and capture named variants when enabled."""
     variant_population = (
@@ -48,5 +49,6 @@ def scan_pcb_component_inventory(
         probe_sha256=evidence.probe_sha256,
         value_mode=value_mode,
         pad_net_mode=pad_net_mode,
+        board_only_mode=board_only_mode,
         variant_population=variant_population,
     )

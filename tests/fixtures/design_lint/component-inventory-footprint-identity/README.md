@@ -9,8 +9,10 @@ They do not model a real package or assert pad-geometry equivalence.
   schematic's `Synthetic identity probe` value.
 - `fault.kicad_sch` assigns `Synthetic:Wrong_Footprint` to U1 while leaving the
   board unchanged. The expected result is one review candidate for U1.
-- The board also contains U2 and U3, which are intentionally board-only controls
-  outside this comparison.
+- `board-only-reference.kicad_pcb` adds a synthetic J2 footprint to the U1
+  control board while leaving the source schematic with U1 only. The native
+  rule reports J2 for review but does not claim that it is an error; mechanical,
+  fabrication, and other intentional board-only items need project review.
 - `population-schematic-dnp.kicad_sch` marks U1 DNP; `population-board-dnp.kicad_pcb`
   marks the placed U1 footprint DNP. The native acceptance lane compares both
   mismatch directions and the matching fitted and DNP controls. It checks only
@@ -38,6 +40,8 @@ Pinned source hashes:
 - `fault.kicad_sch`: `3a66be0b39af5f2a065de3b10e9476a53838042bc4e87f8618e711b31ad59e2b`
 - `control.kicad_sch`: `3acf612f93c0f2f48c6b469928ab9366fc2374644966b9bf07087c8a4cd808f8`
 - `control.kicad_pcb`: `23a19d40848ad3b6136f163ccf3ab64c53fef9185d696cde96323b66415d8913`
+- `board-only-reference.kicad_pcb`:
+  `756ea1d3c6ef11343d91323e7f97e4baf90ec62bcd2adee022ad58c901cada30`
 - `value-fault.kicad_pcb`: `08a35eee9763c93501167098fcdf8b7484c9c539f5d0c649b58b64fb99feb1c0`
 - `population-schematic-dnp.kicad_sch`
   SHA-256: `7f185318b3941f10901f8e27bc29b13030ca771e4ff7d3418c09e18a6428c269`

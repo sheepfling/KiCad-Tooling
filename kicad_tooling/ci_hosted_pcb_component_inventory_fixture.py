@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .ci_hosted_pcb_board_only_fixture import pcb_board_only_footprint_fixture_lane
 from .ci_hosted_pcb_component_value_fixture import pcb_component_value_fixture_lane
 from .ci_hosted_pcb_fixture_support import (
     HostedPcbFixtureFailure,
@@ -397,3 +398,14 @@ def pcb_component_inventory_fixture_lane(
         )
         raise HostedPcbFixtureFailure(str(exc)) from exc
     pcb_component_value_fixture_lane(context, log=log)
+    try:
+        pcb_board_only_footprint_fixture_lane(context, log=log)
+    except Exception as exc:
+        log.event(
+            "pcb-board-only-footprint-fixture/screen",
+            "FAIL",
+            project=project,
+            kicad_version=config.kicad_version,
+            error=str(exc),
+        )
+        raise HostedPcbFixtureFailure(str(exc)) from exc
