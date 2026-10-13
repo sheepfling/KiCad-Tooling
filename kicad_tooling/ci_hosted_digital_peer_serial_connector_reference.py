@@ -2,13 +2,36 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from .ci_hosted_digital_peer_context import DigitalPeerFixtureContext
 from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_connectivity_snapshot import capture_connectivity_snapshot
+from .hwrepo.design_lint_connectivity_snapshot_models import (
+    DesignLintConnectivitySnapshot,
+    NativePinMetadata,
+)
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
 )
+
+
+def _connectivity_snapshot(
+    ctx: DigitalPeerFixtureContext, case: str, run: str
+) -> DesignLintConnectivitySnapshot:
+    """Capture pin-role metadata from one exact-version native export."""
+    source_path = ctx.serial_connector_reference_fixtures[case]
+    source_key = source_path.relative_to(Path(__file__).resolve().parents[1]).as_posix()
+    return capture_connectivity_snapshot(
+        project_id="serial-reference-fixture",
+        observed=ctx.contracts[case][run],
+        source_hashes={source_key: ctx.serial_connector_reference_source_hashes[case]},
+        netlist_sha256=ctx.hashes[case][run],
+        kicad_version=ctx.config.kicad_version,
+        toolchain_image=ctx.pinned,
+    )
 
 
 def verify_serial_connector_reference_cases(
@@ -42,6 +65,23 @@ def verify_serial_connector_reference_cases(
             "U1.3": "power_in",
             "U1.4": "power_in",
         }
+        expected_pin_metadata = {
+            pin: NativePinMetadata(function=function, electrical_type=expected_pin_types[pin])
+            for pin, function in expected_functions.items()
+        }
+        snapshot = _connectivity_snapshot(ctx, case, "first")
+        repeated_snapshot = _connectivity_snapshot(ctx, case, "repeat")
+        if (
+            snapshot.schema_version != "2"
+            or snapshot.coverage != "COMPLETE"
+            or snapshot.pin_metadata_coverage != "COMPLETE"
+            or dict(snapshot.pin_metadata) != expected_pin_metadata
+            or dict(repeated_snapshot.pin_metadata) != expected_pin_metadata
+            or snapshot.pin_states != repeated_snapshot.pin_states
+        ):
+            raise ValueError(
+                f"Native UART {case} export did not retain repeatable complete pin-role metadata"
+            )
         expected_symbols = {"J1": "Synthetic:UartHeader", "U1": "Synthetic:UartController"}
         expected_pin_numbers = {"J1": ("1", "2", "3", "4"), "U1": ("1", "2", "3", "4")}
         expected_references = (
@@ -137,6 +177,12 @@ def verify_serial_connector_reference_cases(
             pin_types=";".join(
                 f"{pin}={name}"
                 for (pin, name) in sorted(peer_observed.pin_electrical_types.items())
+            ),
+            connectivity_snapshot_schema_version=snapshot.schema_version,
+            pin_metadata_coverage=snapshot.pin_metadata_coverage,
+            pin_role_metadata=";".join(
+                f"{pin}={metadata.function}/{metadata.electrical_type}"
+                for pin, metadata in sorted(snapshot.pin_metadata.items())
             ),
             signal_assignments=";".join(
                 f"{net}={','.join(peer_observed.nets[net])}" for net in sorted(expected_signal_nets)

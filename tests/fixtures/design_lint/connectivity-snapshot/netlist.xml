@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <components>
+    <comp ref="J1">
+      <value>UART header</value>
+      <footprint>Synthetic:Header_1x04</footprint>
+      <libsource lib="Synthetic" part="UartHeader" />
+    </comp>
+    <comp ref="U1">
+      <value>UART controller</value>
+      <footprint>Synthetic:UartController</footprint>
+      <libsource lib="Synthetic" part="UartController" />
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Synthetic" part="UartHeader">
+      <pins>
+        <pin num="1" name="UART1_RX" type="input" />
+        <pin num="2" name="UART1_TX" type="output" />
+        <pin num="3" name="VDD" type="passive" />
+        <pin num="4" name="GND" type="passive" />
+      </pins>
+    </libpart>
+    <libpart lib="Synthetic" part="UartController">
+      <pins>
+        <pin num="1" name="UART1_TX" type="output" />
+        <pin num="2" name="UART1_RX" type="input" />
+        <pin num="3" name="VDD" type="power_in" />
+        <pin num="4" name="GND" type="power_in" />
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net code="1" name="GND">
+      <node ref="J1" pin="4" />
+      <node ref="U1" pin="4" />
+    </net>
+    <net code="2" name="VDD">
+      <node ref="J1" pin="3" />
+      <node ref="U1" pin="3" />
+    </net>
+    <net code="3" name="UART_RX">
+      <node ref="J1" pin="1" />
+      <node ref="U1" pin="2" />
+    </net>
+    <net code="4" name="UART_TX">
+      <node ref="J1" pin="2" />
+      <node ref="U1" pin="1" />
+    </net>
+  </nets>
+</export>

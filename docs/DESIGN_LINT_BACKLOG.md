@@ -3412,15 +3412,18 @@ is not a reason by itself to expand its scope or change its default policy.
   unchanged topology with a changed native electrical type; stable mapping
   order; incomplete metadata with field-scoped comparisons; legacy schema-1
   baseline; exact-toolchain mismatch; and CLI/MCP output parity. Synthetic
-  netlist inputs only.
+  netlist inputs for mutation and adapter parity. The exact-version UART
+  connector fixture lane also captures pin-role snapshots from its repeated
+  native KiCad 10.0.0 and 10.0.5 exports and checks complete, stable metadata.
 - **Cohort input:** The Apache-2.0, pre-alpha
   [`heibench/netspec`](https://github.com/heibench/netspec) repository
   documents pin-swap and connectivity-delta review. This increment
   retains native pin metadata with the delta; no cohort code, board, or project
   data was imported.
-- **Verification:** The focused reconciliation and architecture suites pass
-  locally. The CLI/MCP parity suite asserts the new fields but requires a
-  separate public template checkout and was not run in this workspace. This
+- **Verification:** Focused reconciliation, architecture, and self-contained
+  CLI/MCP parity suites pass locally. The exact-version UART connector
+  acceptance lane checks snapshot capture on digest-pinned KiCad 10.0.0 and
+  10.0.5 exports; it is selected with LINT-074's native fixture lane. This
   changes review evidence only; no physical electrical acceptance is claimed.
 
 ### P1 — Netlist and interface-pattern checks

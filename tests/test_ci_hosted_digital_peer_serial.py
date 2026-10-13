@@ -17,10 +17,12 @@ pytestmark = [
     pytest.mark.slow,
 ]
 
+NativeDigitalPeerResults = dict[str, dict[str, dict[str, object]]]
+
 
 @pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
 def test_serial_peer_voltage_fault_and_controls_by_native_version(
-    native_digital_peer_results, project: str, version: str
+    native_digital_peer_results: NativeDigitalPeerResults, project: str, version: str
 ) -> None:
     results = native_digital_peer_results[project]
     control = results["spi-participant-fixture/serial-control"]
@@ -53,7 +55,7 @@ def test_serial_peer_voltage_fault_and_controls_by_native_version(
 
 @pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
 def test_serial_connector_and_optical_isolation_boundaries_by_native_version(
-    native_digital_peer_results, project: str, version: str
+    native_digital_peer_results: NativeDigitalPeerResults, project: str, version: str
 ) -> None:
     results = native_digital_peer_results[project]
     control = results["spi-participant-fixture/serial-connector-control"]
@@ -64,6 +66,14 @@ def test_serial_connector_and_optical_isolation_boundaries_by_native_version(
     assert control["lint_status"] == "REVIEW"
     assert control["peer_reference_findings"] == "none"
     assert control["reference_assignments"] == "GND_A=J1.4,U1.4"
+    expected_pin_role_metadata = (
+        "J1.1=UART1_RX/input;J1.2=UART1_TX/output;J1.3=VDD/passive;J1.4=GND/passive;"
+        "U1.1=UART1_TX/output;U1.2=UART1_RX/input;U1.3=VDD/power_in;U1.4=GND/power_in"
+    )
+    for result in (control, fault):
+        assert result["connectivity_snapshot_schema_version"] == "2"
+        assert result["pin_metadata_coverage"] == "COMPLETE"
+        assert result["pin_role_metadata"] == expected_pin_role_metadata
     assert fault["lint_status"] == "REVIEW"
     assert fault["peer_reference_findings"] == "bus.serial_peer_reference_review"
     assert fault["reference_assignments"] == "GND_A=U1.4;GND_B=J1.4"
@@ -82,7 +92,7 @@ def test_serial_connector_and_optical_isolation_boundaries_by_native_version(
 
 @pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
 def test_serial_label_alias_fault_and_control_by_native_version(
-    native_digital_peer_results, project: str, version: str
+    native_digital_peer_results: NativeDigitalPeerResults, project: str, version: str
 ) -> None:
     results = native_digital_peer_results[project]
     control = results["spi-participant-fixture/serial-label-control"]
@@ -108,7 +118,7 @@ def test_serial_label_alias_fault_and_control_by_native_version(
 
 
 def test_serial_peer_normalized_netlists_match_across_native_versions(
-    native_digital_peer_results,
+    native_digital_peer_results: NativeDigitalPeerResults,
 ) -> None:
     stage_groups = (
         ("serial-control", "serial-fault", "serial-reference-fault"),
