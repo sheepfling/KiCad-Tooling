@@ -1350,6 +1350,11 @@ Each netlist rule defaults to `review`. Schematic geometry rules default to
 `block`. A project can set `block` to make an open finding a policy failure or
 `off` to disable a rule across that project; both require a reason, and the
 report still shows findings under `RULE_OFF`.
+In the shipped catalog, `pcb.required_fitted_reference` is the only rule that
+defaults to `block`; it compares a project-authored population requirement
+against source-bound native evidence. Heuristic rules default to `review` or
+`off`; a project may promote a reviewed heuristic to `block` under its own
+policy.
 An exact ignore suppresses only one observed finding and remains visible with
 its reason. Prefer exact ignores when only one pattern is intentional. A `PASS`
 means all current lint findings were reviewed or disabled according to this
