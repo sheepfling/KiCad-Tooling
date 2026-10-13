@@ -2071,11 +2071,18 @@ is not a reason by itself to expand its scope or change its default policy.
   `38297901205` (`v0.5.0rc187`) and `38297901239` (`v0.5.0rc188`) passed their
   focused lint and installed-wheel checks against the separate project plus
   all three portability previews; their package jobs were skipped by RC policy.
-  The remaining 7 test functions across 7 modules cover CAN termination,
-  component ratings, empty-netlist evidence, I2C pull-up arrays, connector
-  return domains, and PCB test access and return paths.
-  Review each test against a rule predicate before indexing it; the inventory
-  identifies selection gaps, not proof that every test belongs to a lint rule.
+  **Native test scope audit (2026-10-12):** Six unindexed test functions across
+  six modules remain after the rule links above. The inventory architecture
+  test now requires each centrally registered native design-lint test function
+  to either name an active rule or have an explicit scope disposition. Five
+  are separate authored-requirement
+  or evidence lanes: CAN termination topology, component ratings, empty-netlist
+  export integrity, PCB probe envelopes, and PCB copper continuity. The sixth
+  is the public KiCad 10.0.6 connector-ground cohort sample, retained for
+  analyzer comparison; its fault/control behavior is already covered by the
+  rule-selectable KiCad 10.0.0/10.0.5 return-net lane. I2C pull-up arrays are
+  already catalogued under their active rule. These distinctions keep a
+  rule-scoped tag from claiming coverage of a different authored contract.
 - **Status:** Implemented for demonstrated gaps. `mapped_check_runs`
   distinguishes an optional mapped check that was not configured from one
   that ran with zero findings. It covers USB data-path, series power-path, and
