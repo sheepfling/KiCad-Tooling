@@ -3653,6 +3653,12 @@ is not a reason by itself to expand its scope or change its default policy.
   `38370567749`) passed the focused LINT-051 tests, exact KiCad 10.0.0/10.0.5
   native fixture exports, installed-wheel check against a separate project
   checkout, and Ubuntu/macOS/Windows preview orchestration.
+- **Expanded native thermistor gate (2026-10-13):** The first expanded run
+  exposed duplicate `thermistor` wording in the PTC fixture values. After
+  normalizing all four new fixture pairs, `v0.5.0rc237` (run `38374391149`)
+  passed the focused LINT-051 gate, KiCad 10.0.0/10.0.5 native fixtures,
+  installed-wheel check against a separate project checkout, and all three
+  portable preview lanes.
 - **PTC and US-style thermistor fixtures:** The synthetic fault/control sources
   are retained in the same fixture directory with their individual hashes.
   They embed only minimal symbol geometry and pin assignments; exact stock
