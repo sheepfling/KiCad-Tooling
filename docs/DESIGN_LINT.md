@@ -2300,6 +2300,9 @@ count, closest zone UUID, measured integer-nanometer distance, and a digest of
 the canonical probe request set. The request set is generated from the
 project map, so editing its requirement invalidates prior evidence.
 
+The synthetic round- and oval-pad regression is documented in its
+[fixture README](../tests/fixtures/design_lint/pcb-touch-pad-clearance/README.md).
+
 This check does not infer touch-pad identity from reference/value text, decide
 that connector grounds or other nets should be joined, or establish a required
 ground bond. It checks only the mapped geometric relationship. It does not

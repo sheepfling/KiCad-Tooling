@@ -499,10 +499,13 @@ and optional ecosystem adapters are `P3`.
   uses KiCad's effective pad shape and the filled matching zones, with the
   authored request digest bound to snapshot schema 14. Synthetic fault,
   boundary-control, missing-evidence, and CLI/MCP parity tests pass locally;
-  the digest-pinned native fixtures are implemented but still need hosted
-  acceptance. No board project, candidate implementation, or proprietary
-  fixture was imported. The gate supplies review evidence and does not infer
-  connector ground commoning, touch performance, or fabrication acceptance.
+  digest-pinned KiCad 10.0.0 and 10.0.5 fixtures passed the hosted native
+  stage on `v0.5.0rc248`. That tag's full scoped gate then failed at MDR101
+  because this fixture README was unreachable from the documentation graph;
+  `DESIGN_LINT.md` now links it and the next tag will rerun the full gate. No
+  board project, candidate implementation, or proprietary fixture was
+  imported. The gate supplies review evidence and does not infer connector
+  ground commoning, touch performance, or fabrication acceptance.
 
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
@@ -7159,11 +7162,14 @@ is not a reason by itself to expand its scope or change its default policy.
   control, threshold-only metamorphic behavior, schematic and board net
   disagreement, absent filled copper, map constraints, source-bound request
   coverage, and CLI/MCP parity. Exact-version KiCad 10.0.0 and 10.0.5 native
-  fixtures cover read-only pad-shape measurement and probe binding. They are
-  gated by `KICAD_RUN_NATIVE_PCB_FIXTURES`; this local environment has not run
-  them. Round/oval and rotated-pad geometries, comparison with native DRC,
-  project applicability, false-positive rate, and reviewer effort remain
-  follow-up evidence, not current claims.
+  fixtures for round and oval pads passed the hosted native test stage in
+  `v0.5.0rc248` (GitHub Actions run `38394572077`).
+  The full tag gate then stopped at MDR101 because the new fixture README was
+  unreachable; this change links it from `DESIGN_LINT.md`, and the next tag
+  reruns the full gate. The fixtures are gated by
+  `KICAD_RUN_NATIVE_PCB_FIXTURES`. Rotated-pad geometry, comparison with
+  native DRC, project applicability, false-positive rate, and reviewer effort
+  remain follow-up evidence, not current claims.
 - **Focused selection:**
 
   ```sh
@@ -12669,11 +12675,14 @@ source-bound filled copper, and reports incomplete evidence instead of
 guessing from `TP`, a footprint name, a sampled point, or a bounding box. The
 synthetic fault/control, threshold metamorphic case, missing-evidence cases,
 and CLI/MCP parity are implemented. Exact-version native fixtures are coded
-for KiCad 10.0.0 and 10.0.5; hosted acceptance is still pending. The remaining
-work is to exercise round/oval/rotated geometries, compare measurements with
-native DRC, and gather independent public or synthetic applicability and
-reviewer-value evidence. No universal clearance value or new project
-requirement is inferred.
+for KiCad 10.0.0 and 10.0.5; both versions passed the hosted native fixture
+stage on `v0.5.0rc248` (GitHub Actions run `38394572077`).
+The full scoped gate then failed at MDR101 because the fixture README was not
+linked into the documentation graph; this change adds that link, and the next
+tag reruns full acceptance. Remaining work is to exercise rotated-pad
+geometry, compare measurements with native DRC, and gather independent public
+or synthetic applicability and reviewer-value evidence. No universal
+clearance value or new project requirement is inferred.
 
 #### Preliminary source audit: antenna keepout coverage (2026-10-08)
 
