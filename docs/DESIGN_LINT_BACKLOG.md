@@ -6876,8 +6876,9 @@ is not a reason by itself to expand its scope or change its default policy.
   for LINT-111: the DNP-consistency check emits no mismatch, while LINT-130
   catches the project requirement. CLI/MCP parity and architecture boundaries
   are covered. The native fixture uses hashed synthetic sources, repeats
-  KiCad exports, and compares both-DNP and both-fitted cases; hosted exact-version
-  acceptance is pending.
+  KiCad exports, and compares both-DNP and both-fitted cases. Hosted
+  exact-version acceptance passed on `v0.5.0rc222` (GitHub Actions run
+  `38351032396`).
 - **Focused selection:**
 
   ```sh
