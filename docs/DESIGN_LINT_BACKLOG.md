@@ -502,10 +502,11 @@ and optional ecosystem adapters are `P3`.
   digest-pinned KiCad 10.0.0 and 10.0.5 fixtures passed the hosted native
   stage on `v0.5.0rc248`. The full scoped gate passed on `v0.5.0rc249`
   (run `38395063701`), including the external installed-wheel test and all
-  three platform preview jobs. No
-  board project, candidate implementation, or proprietary fixture was
-  imported. The gate supplies review evidence and does not infer connector
-  ground commoning, touch performance, or fabrication acceptance.
+  three platform preview jobs. The rotated-pad geometry regression also
+  passed on both pinned KiCad versions in `v0.5.0rc250` (run `38396108362`). No
+  board project or proprietary fixture was imported. The gate supplies review
+  evidence and does not infer connector ground commoning, touch performance,
+  or fabrication acceptance.
 
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
@@ -7167,8 +7168,10 @@ is not a reason by itself to expand its scope or change its default policy.
   on `v0.5.0rc249` (run `38395063701`), including the installed-wheel check and
   three platform preview jobs. A new synthetic native case now compares a
   rotated and unrotated oval pad at matching straight zone edges and asserts
-  the expected 0.5 mm clearance change; exact-version hosted confirmation is
-  pending. The fixtures are gated by `KICAD_RUN_NATIVE_PCB_FIXTURES`.
+  the expected 0.5 mm clearance change. It passed on both pinned KiCad versions
+  in `v0.5.0rc250` (run `38396108362`), along with the full scoped gate and
+  installed-wheel check and three platform previews. The fixtures are gated by
+  `KICAD_RUN_NATIVE_PCB_FIXTURES`.
   Comparison with native DRC, project applicability, false-positive rate, and
   reviewer effort remain follow-up evidence, not current claims.
 - **Focused selection:**
@@ -12873,8 +12876,10 @@ maintenance cost open wherever they were not measured.
    domain checks, LINT-075's no-CLI oscillator-output trial is recorded. The
    LINT-133 implements the bounded CP-003 touch-pad clearance concept behind
    an exact project-authored minimum and native pad-geometry measurement;
-   the round/oval native lane and full scoped acceptance passed on `v0.5.0rc249`.
-   Rotated-pad geometry and field applicability are still being evaluated.
+   the round/oval native lane and full scoped acceptance passed on
+   `v0.5.0rc249`; the rotated-pad geometry regression passed on both pinned
+   KiCad versions in `v0.5.0rc250`. Project applicability evidence remains
+   open.
    Any first-party path contract still needs native netlist
    evidence and a project-authored requirement map before implementation. The
    other domain-specific cohort families above remain conditional research
