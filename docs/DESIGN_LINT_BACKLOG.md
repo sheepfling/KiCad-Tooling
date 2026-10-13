@@ -160,6 +160,12 @@ intended requirement.
   owner directly while the shared registry preserves identity-compatible
   exports for external callers. This extraction shrank `models.py` from 3,598
   to 3,575 lines without changing connector-review behavior.
+  Return-net and numbered-power-rail observations now live in their respective
+  `return_net_models.py` and `power_rail_models.py` theme owners. The analyzers
+  import the owner types directly, while `models.py` retains identity-compatible
+  exports for existing callers; architecture tests check both owners, imports,
+  and compatibility. The extraction shrinks the registry without changing
+  report schemas or the advisory status of name-based observations.
   Differential-pair and signal-path DRC text rendering now lives in the
   focused `design_lint_pcb_drc_report.py` owner, keeping the broader PCB
   coverage report below the architecture review limit without changing output.

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import re
 
-from .models import NetlistContract, NumberedPowerRailGroup
+from .models import NetlistContract
+from .power_rail_models import NumberedPowerRailGroup
 
 _NUMBERED_RAIL = re.compile(r"^(?P<stem>.+?)[\s_./-]+(?P<index>\d+)$")
 _CHANNEL_NUMBERED_RAIL = re.compile(

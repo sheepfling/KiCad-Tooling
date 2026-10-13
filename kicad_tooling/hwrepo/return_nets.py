@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import re
 
-from .models import NetlistContract, ReturnNetGroup
+from .models import NetlistContract
+from .return_net_models import ReturnNetGroup
 
 _RETURN_WORDS = r"0V|GND[A-Z]?|AGND|DGND|PGND|VSS|RTN|RETURN|GROUND"
 _INDEXED_NET = re.compile(r"^(?P<stem>.*?\D)[\s_./-]*(?P<index>\d+)$")

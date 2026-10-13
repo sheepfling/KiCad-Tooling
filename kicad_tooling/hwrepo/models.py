@@ -53,10 +53,12 @@ from . import pcb_track_width_models as _pcb_track_width_models
 from . import pin_connectivity_models as _pin_connectivity_models
 from . import power_connectivity_models as _power_connectivity_models
 from . import power_path_models as _power_path_models
+from . import power_rail_models as _power_rail_models
 from . import power_sequence_models as _power_sequence_models
 from . import rc_filter_models as _rc_filter_models
 from . import reference_bond_models as _reference_bond_models
 from . import regulator_feedback_models as _regulator_feedback_models
+from . import return_net_models as _return_net_models
 from . import rs485_models as _rs485_models
 from . import schematic_geometry_models as _schematic_geometry_models
 from . import serial_logic_models as _serial_logic_models
@@ -1869,18 +1871,8 @@ class NetlistContract(StrictModel):
         return normalized
 
 
-class ReturnNetGroup(StrictModel):
-    """Unreviewed, similarly named return nets observed in a native export."""
-
-    stem: NonEmptyText
-    nets: Mapping[NetName, tuple[Reference, ...]]
-
-
-class NumberedPowerRailGroup(StrictModel):
-    """Unreviewed, similarly named numbered positive supply nets."""
-
-    stem: NonEmptyText
-    nets: Mapping[NetName, tuple[Reference, ...]]
+ReturnNetGroup = _return_net_models.ReturnNetGroup
+NumberedPowerRailGroup = _power_rail_models.NumberedPowerRailGroup
 
 
 class ValidationSummary(StrictModel):

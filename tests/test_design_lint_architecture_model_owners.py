@@ -10,8 +10,10 @@ from kicad_tooling.hwrepo import (
     connector_peer_pin_models,
     design_lint_policy_models,
     pcb_touch_pad_clearance_models,
+    power_rail_models,
     rc_filter_models,
     regulator_feedback_models,
+    return_net_models,
     schematic_geometry_models,
     signal_pair_models,
 )
@@ -29,6 +31,7 @@ MODEL_OWNERS = {
             "SimilarConnectorPinGroup",
         ),
     ),
+    "power_rail_models.py": (power_rail_models, ("NumberedPowerRailGroup",)),
     "design_lint_policy_models.py": (
         design_lint_policy_models,
         ("DesignLintPolicy",),
@@ -42,6 +45,7 @@ MODEL_OWNERS = {
             "RegulatorFeedbackMap",
         ),
     ),
+    "return_net_models.py": (return_net_models, ("ReturnNetGroup",)),
     "schematic_geometry_models.py": (
         schematic_geometry_models,
         ("SchematicGeometrySourceBinding", "SchematicGeometryCoverage"),
