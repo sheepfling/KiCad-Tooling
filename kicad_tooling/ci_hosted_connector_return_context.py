@@ -279,6 +279,7 @@ def prepare_connector_return_fixture_context(
         "connector-named-power-input-open-fault": "48eae0285f76c61668dbe58e33ee00bf9480a3064f5a45c2e122b12d2f91ec7c",
         "connector-named-power-input-open-control": "401fda583c25519540d427b1e24e320e5843c3aab5e99407378497e7dc475717",
         "connector-named-power-input-all-open-fault": "b17443d0e3db891ca9946f032561dabe57d29e17bd9396668b0398a70ac2fdeb",
+        "connector-named-power-input-divergent-fault": "fcbe8aba85c991d73f2daa19443749a440b7eef8cb5532ec3e2d09352b6d998c",
         "connector-named-power-output-open-fault": "ef721f666d540f3ce99598fcf9e52a494729e6cdbd56b57798fd260c10bc40be",
         "connector-named-power-output-open-control": "e5621a2b8f8660db341ffe5a4088c1b802c28d1b624e522434516f0235de7d71",
         "connector-named-power-output-all-open-fault": "e16ae20d4f198fdf648049f7571bdf4db0842518bd54f8c7536d89655e93b12b",
