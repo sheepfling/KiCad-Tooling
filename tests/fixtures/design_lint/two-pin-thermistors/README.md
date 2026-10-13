@@ -23,7 +23,7 @@ not establish electrical or manufacturing approval.
 
 Source SHA-256 values:
 
-| Fixture                              | SHA-256 |
-| ------------------------------------ | ------- |
+| Fixture                              | SHA-256                                                            |
+| ------------------------------------ | ------------------------------------------------------------------ |
 | `same-net-thermistor.kicad_sch`      | `be417443337f223c51b6caa7305038544df0e5342e90cae91d5fce6a797ac26f` |
 | `distinct-nets-thermistor.kicad_sch` | `7a6753de56bf6985d4fd218b96e1f9b951541fd103920baaea503b8999f02a06` |
