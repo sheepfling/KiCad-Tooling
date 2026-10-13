@@ -6677,7 +6677,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Status:** Implemented as the default-`REVIEW` rule
   `connector.peer_power_input_named_assignment_divergence`; hosted native
-  acceptance is pending.
+  acceptance passed in tagged run `38326684651` (`v0.5.0rc209`).
 - **Priority:** P1 connector pinout review. The input alias checks cover mixed
   assigned/open and all-open cases; LINT-120 covers non-connector peers. All
   connector aliases assigned to different nets previously returned `PASS`.
@@ -6700,8 +6700,14 @@ is not a reason by itself to expand its scope or change its default policy.
   metadata, stable finding fingerprints, project policy and exact-ignore
   behavior, and CLI/MCP parity. A tooling-owned native fixture extends the
   existing mixed, all-open, and common-net cases with a two-rail fault. The
-  source is hashed; hosted acceptance on digest-pinned KiCad 10.0.0 and 10.0.5
-  is pending.
+  source is hashed. Hosted tag `v0.5.0rc209` passed with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and a rule-scoped pytest selector;
+  the native fixtures ran on the digest-pinned KiCad 10.0.0 and 10.0.5 lanes.
+  The initial `v0.5.0rc208` run exposed a missing expected-source digest entry;
+  registering the fixture hash fixed the harness and the corrected tagged run
+  passed. The unit gate, lint and type checks, Markdown checks, wheel/sdist and
+  installed-wheel checks against a separate project checkout, playtest, and
+  Ubuntu, Windows, and macOS preview jobs passed.
 
 ### P2 — PCB geometry and schematic review assistance
 
