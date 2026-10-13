@@ -9,6 +9,7 @@ pytestmark = [
     pytest.mark.slow,
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
+    pytest.mark.power_lint,
 ]
 
 import xml.etree.ElementTree as ET

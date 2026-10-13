@@ -30,6 +30,7 @@ pytestmark = [
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
+    pytest.mark.power_lint,
     pytest.mark.native_kicad,
     pytest.mark.return_path_lint,
     pytest.mark.slow,

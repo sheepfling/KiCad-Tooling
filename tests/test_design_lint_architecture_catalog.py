@@ -33,16 +33,14 @@ RULE_TYPE_NAMES = ("DesignLintRuleId", "DesignLintTheme")
 LEGACY_MODEL_IMPORTS = {*RULE_MODEL_NAMES, *RULE_TYPE_NAMES}
 RULE_OWNER_MODULES = ("design_lint_rule_models.py", "design_lint_rule_types.py")
 RULE_FIXTURE_FIELDS = ("fault_fixtures", "valid_control_fixtures", "metamorphic_fixtures")
-FOCUSED_LINT_MARKERS = {
-    "component_lint",
-    "connector_lint",
-    "interface_lint",
-    "power_lint",
-    "evidence_lint",
-    "return_path_lint",
-    "schematic_lint",
-    "pcb_lint",
-    "parity_lint",
+RULE_THEME_MARKERS = {
+    "components": "component_lint",
+    "connectors": "connector_lint",
+    "interfaces": "interface_lint",
+    "power": "power_lint",
+    "returns": "return_path_lint",
+    "schematic": "schematic_lint",
+    "pcb": "pcb_lint",
 }
 
 
@@ -133,23 +131,28 @@ def test_internal_services_import_rule_types_from_their_owner() -> None:
     )
 
 
-def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
+def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> None:
     catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
-    references = {
-        reference
-        for rule in catalog["rules"]
-        if rule.get("status") == "active"
-        for field in RULE_FIXTURE_FIELDS
-        for reference in rule.get(field, [])
-    }
     modules: dict[Path, set[str]] = {}
+    required_theme_markers: dict[Path, set[str]] = {}
     unresolved: list[str] = []
-    for reference in references:
-        module = _fixture_module_path(reference)
-        if module is None:
-            unresolved.append(reference)
-        else:
-            modules.setdefault(module, set()).add(reference)
+    unmapped_themes: dict[str, str] = {}
+    for rule in catalog["rules"]:
+        if rule.get("status") != "active":
+            continue
+        theme = rule.get("theme")
+        theme_marker = RULE_THEME_MARKERS.get(theme)
+        if theme_marker is None:
+            unmapped_themes[rule["rule_id"]] = str(theme)
+        for field in RULE_FIXTURE_FIELDS:
+            for reference in rule.get(field, []):
+                module = _fixture_module_path(reference)
+                if module is None:
+                    unresolved.append(reference)
+                    continue
+                modules.setdefault(module, set()).add(reference)
+                if theme_marker is not None:
+                    required_theme_markers.setdefault(module, set()).add(theme_marker)
 
     markers_by_module = {path: _module_pytest_markers(path) for path in modules}
     unmarked = {
@@ -157,20 +160,28 @@ def test_active_rule_fixture_modules_have_the_design_lint_marker() -> None:
         for path, references_for_module in modules.items()
         if "design_lint" not in markers_by_module[path]
     }
-    unfocused = {
-        path.relative_to(REPO_ROOT).as_posix(): sorted(references_for_module)
+    missing_theme_markers = {
+        path.relative_to(REPO_ROOT).as_posix(): {
+            "missing_markers": sorted(required_theme_markers[path] - markers_by_module[path]),
+            "fixtures": sorted(references_for_module),
+        }
         for path, references_for_module in modules.items()
-        if not markers_by_module[path] & FOCUSED_LINT_MARKERS
+        if required_theme_markers[path] - markers_by_module[path]
     }
 
+    assert not unmapped_themes, (
+        "Every active design-lint rule theme must map to a focused pytest marker: "
+        f"{unmapped_themes}"
+    )
     assert not unresolved, f"Active rule fixtures must resolve to Python test modules: {unresolved}"
     assert not unmarked, (
         "Every active rule fault, control, and metamorphic fixture module must carry "
         f"pytest.mark.design_lint so focused runs select it: {unmarked}"
     )
-    assert not unfocused, (
-        "Active rule fixture modules need a theme or parity marker for focused selection: "
-        f"{unfocused}"
+    assert not missing_theme_markers, (
+        "Active rule fixture modules need the area marker for each catalogued rule theme; "
+        "parity_lint does not replace an area marker: "
+        f"{missing_theme_markers}"
     )
 
 

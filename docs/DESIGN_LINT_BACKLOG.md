@@ -653,6 +653,16 @@ and optional ecosystem adapters are `P3`.
   an explicit reasoned `off` override for PCB component inventory, since they
   do not supply that check's exact native board evidence; LINT-102 remains
   covered by its dedicated fixture and acceptance lane.
+  The active-rule fixture guard now derives the required area marker from each
+  catalogued rule theme; `parity_lint` supplements rather than replaces that
+  marker. The audit found six fixture modules missing at least one required
+  area marker, including the serial and power-path CLI/MCP parity suites. Their
+  markers are corrected, and the architecture check now prevents the same
+  selector gap. The architecture slice passed 58 tests; the affected synthetic
+  return/power slice passed 36 with two environment-gated skips. Collection
+  confirmed that the power-path parity, serial parity, and exact-native
+  connector suites are selected by their rule-theme markers. No lint predicate
+  or native result changed.
 
 - **Repository module architecture — Prevent new god files while shrinking
   legacy modules.** The `architecture` pytest marker covers module-boundary

@@ -23,7 +23,9 @@ from tests.design_lint_fixtures import (
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.component_lint,
+    pytest.mark.connector_lint,
     pytest.mark.power_lint,
+    pytest.mark.return_path_lint,
 ]
 
 

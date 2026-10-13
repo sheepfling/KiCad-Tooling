@@ -21,7 +21,12 @@ from tests.synthetic_design_lint_project import (
     synthetic_design_lint_project,
 )
 
-pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.power_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.component_lint,
+    pytest.mark.power_lint,
+    pytest.mark.return_path_lint,
+]
 
 
 def test_component_named_return_pin_lane_exports_only_its_fault_and_control(
