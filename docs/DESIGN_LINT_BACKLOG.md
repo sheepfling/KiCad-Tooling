@@ -2129,8 +2129,11 @@ is not a reason by itself to expand its scope or change its default policy.
   [kicad-happy v2.2.1 changelog](https://github.com/aklofas/kicad-happy/blob/v2.2.1/CHANGELOG.md)
   describes a `checks_run` manifest with run/skip reasons and examined counts,
   plus explicit diagnostics where connectivity-graph construction fails or
-  conditional DRC rules are skipped. This is an observability idea, not a
-  proposal to adopt its analyzer or its data model.
+  conditional DRC rules are skipped. The pure cross-analysis function was
+  exercised against synthetic empty inputs at the pinned commit; its ten-entry
+  manifest and exact results are recorded under LINT-031. The run confirms
+  deterministic skip observability, with no nonzero item counts or findings.
+  This is not a proposal to adopt its analyzer or its data model.
 - **Problem:** Before v1, the report contained no machine-readable distinction
   between an absent optional USB data-path, series power-path, or power-sequence
   map and a configured map that matched. Other geometry and contract lanes
@@ -7654,7 +7657,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v19; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v20; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below. The UART peer heuristic now
@@ -7682,6 +7685,26 @@ is not a reason by itself to expand its scope or change its default policy.
   follow-up also records a GPIO-to-regulator-enable false-positive boundary for
   the voltage-domain analyzer; local LINT-066 remains protocol-specific and
   now has a synthetic non-applicability control.
+- **Recorded runtime trial — kicad-happy `checks_run` (2026-10-12):** Tested
+  release tag `v2.2.1` at commit
+  [`d5fd7da585fce7e59329b68fd065384216d4ff0a`](https://github.com/aklofas/kicad-happy/commit/d5fd7da585fce7e59329b68fd065384216d4ff0a);
+  the pinned `LICENSE` declares MIT. Ten downloaded implementation/dependency
+  files were checked against the official Git tree blob SHAs and kept in a
+  temporary directory, outside this repository. Under Python 3.11.16, the
+  pure `run_all_checks` function was called twice for each of two synthetic
+  inputs: an empty schematic without PCB data, and the same schematic with an
+  empty PCB structure. Both pairs returned identical findings and manifests.
+  Each manifest had ten fixed-order check entries with `ran`, skip reason,
+  examined-item count, and finding count. With no PCB, one check ran and nine
+  were skipped; with the empty PCB, three ran and seven were skipped. Every
+  examined-item and finding count was zero. This verifies reproducible
+  observability of absent prerequisites, not detector behavior, useful item
+  counting, or incremental fault detection. The candidate is not installed;
+  its CLI and full workflow were not run. Compared with LINT-076's bounded,
+  source-bound mapped-check receipts, the candidate exposes a broader aggregate
+  cross-analysis skip ledger, but the empty-input trial establishes no unique
+  review or detection value. Keep the global-ledger deferral; reopen only with
+  a concrete missed-coverage regression.
 - **References:** [kicad-happy](https://github.com/aklofas/kicad-happy),
   [pcb-inspector](https://github.com/takzen/pcb-inspector),
   [kilint](https://github.com/romkey/kilint),
@@ -12225,9 +12248,14 @@ runtime trials remain open.
   synthetic fault/control evidence. Its v2.2.1 changelog also describes a
   `checks_run` manifest for cross-analysis, with explicit reasons for skipped
   checks and examined-item counts, plus surfaced connectivity-graph errors and
-  skipped conditional DRC rules. This is the candidate input for LINT-076;
-  Tooling has not installed or run that release for this feature. Its broader
-  installation and review workflow is not required for these typed checks.
+  skipped conditional DRC rules. The pure `run_all_checks` function was run
+  from source at the pinned v2.2.1 commit on two empty synthetic inputs; it
+  returned deterministic ten-entry manifests with explicit skip reasons but
+  zero examined items and findings. The trial confirmed observability only and
+  added no demonstrated local detection or review coverage. It is recorded
+  under LINT-076; Tooling did not install the candidate or run its CLI/workflow.
+  Its broader installation and review workflow is not required for these typed
+  checks.
   Other detector families are not considered verified from documentation
   alone.
 - **[pcb-inspector](https://github.com/takzen/pcb-inspector):** Documents
