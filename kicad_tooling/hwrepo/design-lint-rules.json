@@ -321,6 +321,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_named_power_input_divergence.test_named_power_input_divergence_is_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_connector_named_power_aliases.test_named_power_alias_faults_and_controls_are_stable_across_hash_seeds",
         "tests.test_connector_named_power_input_native_fixture_lane.test_named_connector_power_input_alias_fixture_sources_match_reviewed_digests",
         "tests.test_connector_named_power_input_native_fixture_lane.test_native_connector_named_power_input_alias_fault_and_control_are_repeatable"
       ],
@@ -469,6 +470,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_named_power_output_divergence.test_named_power_output_divergence_is_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_connector_named_power_aliases.test_named_power_alias_faults_and_controls_are_stable_across_hash_seeds",
         "tests.test_connector_named_power_output_native_fixture_lane.test_named_connector_power_output_fixture_sources_match_reviewed_digests",
         "tests.test_connector_named_power_output_native_fixture_lane.test_native_connector_named_power_output_alias_fault_and_control_are_repeatable"
       ],

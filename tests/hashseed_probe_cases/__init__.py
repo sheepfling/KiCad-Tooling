@@ -3,6 +3,7 @@
 HASHSEED_REPORT_FAMILIES = (
     "returns",
     "connectors",
+    "connector_named_power_aliases",
     "component_peers",
     "components",
     "power_connectivity",

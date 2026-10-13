@@ -60,6 +60,10 @@ REPORT_ORDER = (
     "peer_power_output_part_id_dedup_control",
     "peer_power_assignment_part_id_fault",
     "peer_power_assignment_part_id_control",
+    "named_connector_power_input_divergence_fault",
+    "named_connector_power_input_common_control",
+    "named_connector_power_output_divergence_fault",
+    "named_connector_power_output_common_control",
     "peer_power_input_assignment_fault",
     "peer_power_input_assignment_control",
     "generic_peer_pin_all_open_fault",
@@ -189,6 +193,7 @@ REPORT_ORDER = (
 REPORT_BUILDERS = {
     "returns": "tests.hashseed_probe_cases.returns",
     "connectors": "tests.hashseed_probe_cases.connectors",
+    "connector_named_power_aliases": "tests.hashseed_probe_cases.connector_named_power_aliases",
     "component_peers": "tests.hashseed_probe_cases.component_peers",
     "components": "tests.hashseed_probe_cases.components",
     "power_connectivity": "tests.hashseed_probe_cases.power_connectivity",
