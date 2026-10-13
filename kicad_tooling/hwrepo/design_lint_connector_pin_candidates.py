@@ -14,6 +14,7 @@ from .connector_peer_pin_findings import (
     connector_peer_pin_assignment_divergences,
     connector_peer_pin_assignment_outliers,
 )
+from .connector_peer_pin_models import SimilarConnectorPinGroup
 from .connector_peer_power_input import (
     connector_named_power_input_all_open,
     connector_named_power_input_assignment_divergence,
@@ -35,7 +36,6 @@ from .models import (
     ConnectorCoverageReport,
     ConnectorMappedPinEvidence,
     NetlistContract,
-    SimilarConnectorPinGroup,
 )
 
 

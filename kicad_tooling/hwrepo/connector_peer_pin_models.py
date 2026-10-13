@@ -2,11 +2,44 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Literal
 
 from pydantic import model_validator
 
-from .model_primitives import Digest, NonEmptyText, NonNegativeCount, Reference, StrictModel
+from .model_primitives import (
+    Digest,
+    Identifier,
+    NetName,
+    NonEmptyText,
+    NonNegativeCount,
+    Reference,
+    StrictModel,
+)
+
+ConnectorPinRole = Literal["signal", "return", "supply", "shield", "other"]
+
+
+class SimilarConnectorPinGroup(StrictModel):
+    """Unreviewed repeated connector pin functions with differing schematic nets."""
+
+    symbol: NonEmptyText
+    function: NonEmptyText
+    pins: Mapping[Reference, tuple[NetName, ...]]
+    reviewed_role: ConnectorPinRole | None = None
+    reviewed_voltage_domain: NonEmptyText | None = None
+    peer_assignment_group: Identifier | None = None
+    peer_assignment_basis: tuple[NonEmptyText, ...] = ()
+
+    @model_validator(mode="after")
+    def mapped_supply_has_domain(self) -> SimilarConnectorPinGroup:
+        if (self.reviewed_role == "supply") != (self.reviewed_voltage_domain is not None):
+            raise ValueError("Mapped supply connector groups require an exact voltage domain")
+        if self.reviewed_voltage_domain is not None and self.reviewed_role != "supply":
+            raise ValueError("Only mapped supply connector groups carry a voltage domain")
+        if (self.peer_assignment_group is None) != (not self.peer_assignment_basis):
+            raise ValueError("Scoped connector comparisons need their reviewed group basis")
+        return self
 
 
 class ConnectorPartIdPeerPinCoverage(StrictModel):

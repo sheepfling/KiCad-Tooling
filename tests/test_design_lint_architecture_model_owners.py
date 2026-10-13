@@ -7,6 +7,7 @@ import ast
 import pytest
 
 from kicad_tooling.hwrepo import (
+    connector_peer_pin_models,
     design_lint_policy_models,
     pcb_touch_pad_clearance_models,
     rc_filter_models,
@@ -20,6 +21,14 @@ from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, RE
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 MODEL_OWNERS = {
+    "connector_peer_pin_models.py": (
+        connector_peer_pin_models,
+        (
+            "ConnectorPartIdPeerPinCoverage",
+            "ConnectorPeerPinHeuristicCoverage",
+            "SimilarConnectorPinGroup",
+        ),
+    ),
     "design_lint_policy_models.py": (
         design_lint_policy_models,
         ("DesignLintPolicy",),
@@ -54,6 +63,7 @@ SCHEMATIC_GEOMETRY_RULE_TYPES = (
     "SchematicGeometryRuleId",
     "SchematicGeometryRuleCoverageStatus",
 )
+CONNECTOR_PEER_PIN_TYPES = ("ConnectorPinRole",)
 
 
 def _top_level_definitions(path) -> set[str]:
@@ -108,10 +118,19 @@ def test_schematic_geometry_rule_types_have_theme_owner_and_compatible_exports()
         assert getattr(compatibility_models, name) is getattr(schematic_geometry_models, name)
 
 
+def test_connector_peer_pin_role_has_theme_owner_and_compatible_export() -> None:
+    owner_path = HWREPO / "connector_peer_pin_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(CONNECTOR_PEER_PIN_TYPES) <= _top_level_assignment_names(owner_path)
+    for name in CONNECTOR_PEER_PIN_TYPES:
+        assert getattr(compatibility_models, name) is getattr(connector_peer_pin_models, name)
+
+
 def test_internal_services_import_lint_models_from_their_theme_owners() -> None:
     moved_names = {name for _, names in MODEL_OWNERS.values() for name in names}
     moved_names.update(NEW_THEME_MODELS)
     moved_names.update(SCHEMATIC_GEOMETRY_RULE_TYPES)
+    moved_names.update(CONNECTOR_PEER_PIN_TYPES)
     legacy_imports: list[str] = []
     for path in sorted(HWREPO.rglob("*.py")):
         if path == HWREPO / "models.py":

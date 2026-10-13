@@ -184,6 +184,8 @@ ExternalProtectionMap = _external_protection_models.ExternalProtectionMap
 ExternalProtectionCoverageEntry = _external_protection_models.ExternalProtectionCoverageEntry
 ExternalProtectionCoverageReport = _external_protection_models.ExternalProtectionCoverageReport
 ComponentPeerPinRuleCoverage = _component_peer_pin_models.ComponentPeerPinRuleCoverage
+ConnectorPinRole = _connector_peer_pin_models.ConnectorPinRole
+SimilarConnectorPinGroup = _connector_peer_pin_models.SimilarConnectorPinGroup
 ConnectorPartIdPeerPinCoverage = _connector_peer_pin_models.ConnectorPartIdPeerPinCoverage
 ConnectorPeerPinHeuristicCoverage = _connector_peer_pin_models.ConnectorPeerPinHeuristicCoverage
 DigitalPeerVoltageRuleCoverage = _digital_peer_voltage_models.DigitalPeerVoltageRuleCoverage
@@ -469,9 +471,6 @@ class PartRecord(StrictModel):
 class PartsCatalog(StrictModel):
     schema_version: NonEmptyText
     parts: tuple[PartRecord, ...]
-
-
-ConnectorPinRole = Literal["signal", "return", "supply", "shield", "other"]
 
 
 class InterfacePin(StrictModel):
@@ -1882,28 +1881,6 @@ class NumberedPowerRailGroup(StrictModel):
 
     stem: NonEmptyText
     nets: Mapping[NetName, tuple[Reference, ...]]
-
-
-class SimilarConnectorPinGroup(StrictModel):
-    """Unreviewed repeated connector pin functions with differing schematic nets."""
-
-    symbol: NonEmptyText
-    function: NonEmptyText
-    pins: Mapping[Reference, tuple[NetName, ...]]
-    reviewed_role: ConnectorPinRole | None = None
-    reviewed_voltage_domain: NonEmptyText | None = None
-    peer_assignment_group: Identifier | None = None
-    peer_assignment_basis: tuple[NonEmptyText, ...] = ()
-
-    @model_validator(mode="after")
-    def mapped_supply_has_domain(self) -> SimilarConnectorPinGroup:
-        if (self.reviewed_role == "supply") != (self.reviewed_voltage_domain is not None):
-            raise ValueError("Mapped supply connector groups require an exact voltage domain")
-        if self.reviewed_voltage_domain is not None and self.reviewed_role != "supply":
-            raise ValueError("Only mapped supply connector groups carry a voltage domain")
-        if (self.peer_assignment_group is None) != (not self.peer_assignment_basis):
-            raise ValueError("Scoped connector comparisons need their reviewed group basis")
-        return self
 
 
 class ValidationSummary(StrictModel):

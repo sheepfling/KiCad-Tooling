@@ -5,7 +5,8 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 
-from .models import ConnectorMappedPinEvidence, NetlistContract, SimilarConnectorPinGroup
+from .connector_peer_pin_models import SimilarConnectorPinGroup
+from .models import ConnectorMappedPinEvidence, NetlistContract
 
 _CONNECTOR_REFERENCE = re.compile(r"^(?:J|P|X|CN)[0-9]+$", re.IGNORECASE)
 

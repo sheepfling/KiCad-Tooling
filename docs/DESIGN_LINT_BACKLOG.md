@@ -155,6 +155,11 @@ intended requirement.
   owner directly; architecture tests guard its size, internal import boundary,
   and identity-compatible registry exports. This extraction shrank
   `models.py` from 3,690 to 3,598 lines without changing report behavior.
+  Connector peer comparison groups and the reviewed pin-role type now live in
+  `connector_peer_pin_models.py`. Connector analysis services import the theme
+  owner directly while the shared registry preserves identity-compatible
+  exports for external callers. This extraction shrank `models.py` from 3,598
+  to 3,575 lines without changing connector-review behavior.
   Differential-pair and signal-path DRC text rendering now lives in the
   focused `design_lint_pcb_drc_report.py` owner, keeping the broader PCB
   coverage report below the architecture review limit without changing output.
