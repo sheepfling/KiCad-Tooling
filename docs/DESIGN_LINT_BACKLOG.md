@@ -455,6 +455,17 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
+- **Test selection and hosted gate follow-up (2026-10-12):** Hosted run
+  `38333207786` for tag `v0.5.0rc213` passed its full unit stage but failed the
+  repository-wide Ruff format step on the oversized MCP integration suite.
+  Follow-up work split that suite by API, import, verification, model, and CLI
+  behavior, with shared isolated setup in `tests/mcp_test_support.py`. The
+  former 1,073-line suite is now 195 lines, and its stale size ceiling was
+  removed. The MCP modules are selectable with `slow and template_checkout`.
+  Local evidence passed: 27 MCP tests with 76 subtests, 49 package smoke and
+  selected MCP parity tests, five module/suite architecture tests, and Ruff
+  format/check across the checkout. No lint predicate or rule behavior changed.
+
 - **Named connector power-pin evidence:** The existing
   `connector.unconnected_supply_pin` and `connector.unconnected_return_pin`
   rules retain default `REVIEW` semantics. Each now has a focused exact-native
