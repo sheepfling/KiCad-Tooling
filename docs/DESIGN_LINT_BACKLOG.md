@@ -3414,9 +3414,9 @@ is not a reason by itself to expand its scope or change its default policy.
   baseline; exact-toolchain mismatch; and CLI/MCP output parity. Synthetic
   netlist inputs for mutation and adapter parity are documented in the
   [connectivity snapshot fixture README](../tests/fixtures/design_lint/connectivity-snapshot/README.md).
-  The exact-version UART
-  connector fixture lane also captures pin-role snapshots from its repeated
-  native KiCad 10.0.0 and 10.0.5 exports and checks complete, stable metadata.
+  The exact-version UART connector fixture lane also captures pin-role
+  snapshots from repeated native KiCad 10.0.0 and 10.0.5 exports and checks
+  complete, stable metadata.
 - **Cohort input:** The Apache-2.0, pre-alpha
   [`heibench/netspec`](https://github.com/heibench/netspec) repository
   documents pin-swap and connectivity-delta review. This increment
@@ -3425,8 +3425,11 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Verification:** Focused reconciliation, architecture, and self-contained
   CLI/MCP parity suites pass locally. The exact-version UART connector
   acceptance lane checks snapshot capture on digest-pinned KiCad 10.0.0 and
-  10.0.5 exports; it is selected with LINT-074's native fixture lane. This
-  changes review evidence only; no physical electrical acceptance is claimed.
+  10.0.5 exports. Its capture-specific test has a function-level
+  `evidence_lint` marker so the evidence selector can run it independently; the
+  scoped tag declares `Native-Fixture: KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES`
+  to execute those native exports. This changes review evidence only; no
+  physical electrical acceptance is claimed.
 
 ### P1 — Netlist and interface-pattern checks
 

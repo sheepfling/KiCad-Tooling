@@ -154,6 +154,7 @@ def test_cross_theme_architecture_suites_do_not_claim_area_markers() -> None:
                 for target in node.targets
             )
         )
+        assert isinstance(pytestmark, ast.List)
         marker_names = {ast.unparse(marker) for marker in pytestmark.elts}
         assert marker_names == {"pytest.mark.design_lint", "pytest.mark.architecture"}
 
@@ -206,6 +207,18 @@ def test_native_digital_peer_suites_are_pytest_native_and_theme_scoped() -> None
         assert "pytest.mark.native_kicad" in source
         for marker in area_markers:
             assert f"pytest.mark.{marker}" in source
+
+    serial_path = Path(__file__).with_name("test_ci_hosted_digital_peer_serial.py")
+    serial_tree = ast.parse(serial_path.read_text(encoding="utf-8"))
+    snapshot_test = next(
+        node
+        for node in serial_tree.body
+        if isinstance(node, ast.FunctionDef)
+        and node.name == "test_native_connectivity_snapshot_captures_pin_roles_by_version"
+    )
+    assert "pytest.mark.evidence_lint" in {
+        ast.unparse(decorator) for decorator in snapshot_test.decorator_list
+    }
 
     support_path = Path(__file__).with_name("digital_peer_native_acceptance.py")
     support_tree = ast.parse(support_path.read_text(encoding="utf-8"))

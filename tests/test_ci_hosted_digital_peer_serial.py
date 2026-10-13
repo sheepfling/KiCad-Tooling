@@ -18,6 +18,10 @@ pytestmark = [
 ]
 
 NativeDigitalPeerResults = dict[str, dict[str, dict[str, object]]]
+_SERIAL_CONNECTOR_PIN_ROLE_METADATA = (
+    "J1.1=UART1_RX/input;J1.2=UART1_TX/output;J1.3=VDD/passive;J1.4=GND/passive;"
+    "U1.1=UART1_TX/output;U1.2=UART1_RX/input;U1.3=VDD/power_in;U1.4=GND/power_in"
+)
 
 
 @pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
@@ -66,14 +70,6 @@ def test_serial_connector_and_optical_isolation_boundaries_by_native_version(
     assert control["lint_status"] == "REVIEW"
     assert control["peer_reference_findings"] == "none"
     assert control["reference_assignments"] == "GND_A=J1.4,U1.4"
-    expected_pin_role_metadata = (
-        "J1.1=UART1_RX/input;J1.2=UART1_TX/output;J1.3=VDD/passive;J1.4=GND/passive;"
-        "U1.1=UART1_TX/output;U1.2=UART1_RX/input;U1.3=VDD/power_in;U1.4=GND/power_in"
-    )
-    for result in (control, fault):
-        assert result["connectivity_snapshot_schema_version"] == "2"
-        assert result["pin_metadata_coverage"] == "COMPLETE"
-        assert result["pin_role_metadata"] == expected_pin_role_metadata
     assert fault["lint_status"] == "REVIEW"
     assert fault["peer_reference_findings"] == "bus.serial_peer_reference_review"
     assert fault["reference_assignments"] == "GND_A=U1.4;GND_B=J1.4"
@@ -88,6 +84,22 @@ def test_serial_connector_and_optical_isolation_boundaries_by_native_version(
     )
     assert isolation["peer_reference_findings"] == "none"
     assert isolation["reference_assignments"] == ("GND_DEVICE=U2.4,U3.8;GND_HOST=U1.4,U3.6")
+
+
+@pytest.mark.evidence_lint
+@pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
+def test_native_connectivity_snapshot_captures_pin_roles_by_version(
+    native_digital_peer_results: NativeDigitalPeerResults, project: str, version: str
+) -> None:
+    results = native_digital_peer_results[project]
+    control = results["spi-participant-fixture/serial-connector-control"]
+    fault = results["spi-participant-fixture/serial-connector-fault"]
+
+    for result in (control, fault):
+        assert result["kicad_version"] == version
+        assert result["connectivity_snapshot_schema_version"] == "2"
+        assert result["pin_metadata_coverage"] == "COMPLETE"
+        assert result["pin_role_metadata"] == _SERIAL_CONNECTOR_PIN_ROLE_METADATA
 
 
 @pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
