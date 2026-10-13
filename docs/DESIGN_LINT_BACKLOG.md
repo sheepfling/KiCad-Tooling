@@ -3364,12 +3364,12 @@ is not a reason by itself to expand its scope or change its default policy.
   coverage; ready native-summary state missing its netlist digest;
   missing legacy snapshot; exact-toolchain mismatch; CLI/MCP parity. See
   `tests/test_design_lint_connectivity_reconciliation.py`.
-- **Cohort input:** The Apache-2.0 [`heibench/netspec`](https://github.com/heibench/netspec) repository documents
-  source-to-source connectivity deltas and pin-swap review, including a
-  polarized-capacitor reversal that native ERC does not distinguish. Its
-  published project is pre-alpha. Local exact pin-to-net contracts already
-  express reviewed polarity requirements, so this increment adopts only the
-  baseline-diff idea; it does not add a runtime dependency or copy cohort code.
+- **Cohort input:** The Apache-2.0 [`heibench/netspec`](https://github.com/heibench/netspec)
+  repository is pre-alpha and documents connectivity deltas and pin-swap
+  review, including a polarized-capacitor reversal that native ERC does not
+  distinguish. Local exact pin-to-net contracts already express reviewed
+  polarity requirements, so this increment adopts only the baseline-diff idea;
+  it adds no runtime dependency and imports no cohort code or board data.
 
 ### P1 — Netlist and interface-pattern checks
 
