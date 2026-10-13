@@ -1920,32 +1920,41 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A fitted pin with native open_collector type and a native input/input_low peer share one uniquely assigned non-rail net; no fitted conventional two-terminal resistor is assigned directly between that signal and a recognized positive rail.",
+      "predicate": "A fitted pin with native open_collector type and a native input/input_low peer share one uniquely assigned non-rail net; no direct or unbranched fitted conventional two-terminal resistor path connects that signal to a recognized positive rail.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Native output and input types are bounded symbol metadata; they do not prove that the input requires a local bias or that the output is used in this operating mode.",
-        "Only direct fitted conventional two-terminal resistors to recognized positive or return nets are recognized. Series paths, resistor arrays, jumpers, active networks, custom rail names, and unrecognized component identities can produce review prompts.",
+        "Direct resistors and unbranched series paths of fitted conventional two-terminal resistors are recognized without a resistance window. Branched or ambiguous junctions, resistor arrays, jumpers, active networks, custom rail names, and unrecognized component identities can produce review prompts.",
         "Internal bias, off-board bias, receiver thresholds, resistor adequacy, runtime behavior, and PCB copper continuity are not modeled. I2C, recognized reset/enable/boot inputs, and active-low SPI chip-select lines remain with their narrower rules."
       ],
       "fault_fixtures": [
-        "tests.test_open_drain_heuristics.test_open_collector_signal_without_visible_pullup_is_review_candidate"
+        "tests.test_open_drain_heuristics.test_open_collector_signal_without_visible_pullup_is_review_candidate",
+        "tests.test_open_drain_heuristics.test_branched_or_unfitted_series_bias_path_remains_a_review_candidate",
+        "tests.test_open_drain_heuristics.test_series_resistor_path_does_not_satisfy_the_opposite_bias_polarity",
+        "tests.test_open_drain_bias_fixture_lane.test_native_exports_distinguish_bias_polarity_and_dnp_faults"
       ],
       "valid_control_fixtures": [
         "tests.test_open_drain_heuristics.test_expected_bias_polarity_clears_only_matching_open_output",
-        "tests.test_open_drain_heuristics.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules"
+        "tests.test_open_drain_heuristics.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules",
+        "tests.test_open_drain_heuristics.test_unbranched_series_bias_path_satisfies_visible_bias_review",
+        "tests.test_open_drain_bias_fixture_lane.test_native_exports_distinguish_bias_polarity_and_dnp_faults"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_open_drain_heuristics.test_net_order_does_not_change_open_output_bias_rule_identity"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/resistor_paths.py#visible_resistor_paths",
         "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps"
+      "implementation_owner": "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_OPEN_DRAIN_FIXTURES"
+      ]
     },
     {
       "rule_id": "signal.open_emitter_input_without_visible_bias",
@@ -1954,32 +1963,41 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A fitted pin with native open_emitter type and a native input/input_low peer share one uniquely assigned non-rail net; no fitted conventional two-terminal resistor is assigned directly between that signal and a recognized return.",
+      "predicate": "A fitted pin with native open_emitter type and a native input/input_low peer share one uniquely assigned non-rail net; no direct or unbranched fitted conventional two-terminal resistor path connects that signal to a recognized return.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Native output and input types are bounded symbol metadata; they do not prove that the input requires a local bias or that the output is used in this operating mode.",
-        "Only direct fitted conventional two-terminal resistors to recognized positive or return nets are recognized. Series paths, resistor arrays, jumpers, active networks, custom rail names, and unrecognized component identities can produce review prompts.",
+        "Direct resistors and unbranched series paths of fitted conventional two-terminal resistors are recognized without a resistance window. Branched or ambiguous junctions, resistor arrays, jumpers, active networks, custom rail names, and unrecognized component identities can produce review prompts.",
         "Internal bias, off-board bias, receiver thresholds, resistor adequacy, runtime behavior, and PCB copper continuity are not modeled. I2C, recognized reset/enable/boot inputs, and active-low SPI chip-select lines remain with their narrower rules."
       ],
       "fault_fixtures": [
-        "tests.test_open_drain_heuristics.test_open_emitter_has_an_independent_policy_and_ignore_identity"
+        "tests.test_open_drain_heuristics.test_open_emitter_has_an_independent_policy_and_ignore_identity",
+        "tests.test_open_drain_heuristics.test_branched_or_unfitted_series_bias_path_remains_a_review_candidate",
+        "tests.test_open_drain_heuristics.test_series_resistor_path_does_not_satisfy_the_opposite_bias_polarity",
+        "tests.test_open_drain_bias_fixture_lane.test_native_exports_distinguish_bias_polarity_and_dnp_faults"
       ],
       "valid_control_fixtures": [
         "tests.test_open_drain_heuristics.test_expected_bias_polarity_clears_only_matching_open_output",
-        "tests.test_open_drain_heuristics.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules"
+        "tests.test_open_drain_heuristics.test_specialized_buses_and_dnp_outputs_stay_with_existing_rules",
+        "tests.test_open_drain_heuristics.test_unbranched_series_bias_path_satisfies_visible_bias_review",
+        "tests.test_open_drain_bias_fixture_lane.test_native_exports_distinguish_bias_polarity_and_dnp_faults"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_open_drain_heuristics.test_net_order_does_not_change_open_output_bias_rule_identity"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/resistor_paths.py#visible_resistor_paths",
         "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps"
+      "implementation_owner": "kicad_tooling.hwrepo.open_drain_heuristics#open_output_bias_gaps",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_OPEN_DRAIN_FIXTURES"
+      ]
     },
     {
       "rule_id": "bus.i2c_unconnected_pin",

@@ -16,10 +16,14 @@ _STANDARD_VALUE = re.compile(r"^(?P<amount>[0-9]+(?:\.[0-9]+)?)(?P<unit>[krm]?)$
 
 
 @dataclass(frozen=True)
-class VisiblePullupPath:
+class VisibleResistorPath:
     references: tuple[str, ...]
     resistance_ohms: float
     rail_net: str
+
+
+# Compatibility name retained for existing bus-analysis callers.
+VisiblePullupPath = VisibleResistorPath
 
 
 @dataclass(frozen=True)
@@ -118,18 +122,50 @@ def positive_power_net_families(observed: NetlistContract) -> dict[str, str]:
 
 def visible_resistor_pullups(observed: NetlistContract) -> dict[str, list[VisiblePullupPath]]:
     """Find direct or unbranched fitted resistor chains from a signal net to a named rail."""
-    positive_rails = positive_power_nets(observed)
+    return visible_resistor_paths(
+        observed,
+        positive_power_nets(observed),
+        minimum_resistor_ohms=1_000,
+        maximum_resistor_ohms=100_000,
+        minimum_path_ohms=1_000,
+        maximum_path_ohms=100_000,
+    )
+
+
+def visible_resistor_paths(
+    observed: NetlistContract,
+    target_nets: set[str],
+    *,
+    minimum_resistor_ohms: float | None = None,
+    maximum_resistor_ohms: float | None = None,
+    minimum_path_ohms: float | None = None,
+    maximum_path_ohms: float | None = None,
+) -> dict[str, list[VisibleResistorPath]]:
+    """Find direct or unbranched fitted resistor chains to explicit target nets.
+
+    Optional bounds preserve the I2C pull-up heuristic's conservative resistor
+    window. Other review heuristics can ask only whether a conventional fitted
+    resistor path is visible without assigning an electrical value requirement.
+    """
+    targets = {net.casefold(): net for net in target_nets}
+    actual_net_names = {net.casefold(): net for net in observed.nets}
     resistors = {
         item.reference: item
         for item in direct_resistors(observed)
-        if 1_000 <= item.resistance_ohms <= 100_000
+        if (minimum_resistor_ohms is None or item.resistance_ohms >= minimum_resistor_ohms)
+        and (maximum_resistor_ohms is None or item.resistance_ohms <= maximum_resistor_ohms)
     }
     by_net: dict[str, list[DirectResistor]] = {}
     for resistor in resistors.values():
-        by_net.setdefault(resistor.first_net, []).append(resistor)
-        by_net.setdefault(resistor.second_net, []).append(resistor)
+        by_net.setdefault(resistor.first_net.casefold(), []).append(resistor)
+        by_net.setdefault(resistor.second_net.casefold(), []).append(resistor)
 
-    pullups: dict[str, dict[tuple[tuple[str, ...], str], VisiblePullupPath]] = {}
+    paths: dict[str, dict[tuple[tuple[str, ...], str], VisibleResistorPath]] = {}
+
+    def within_path_bounds(resistance_ohms: float) -> bool:
+        return (minimum_path_ohms is None or resistance_ohms >= minimum_path_ohms) and (
+            maximum_path_ohms is None or resistance_ohms <= maximum_path_ohms
+        )
 
     def visit(
         start_net: str,
@@ -142,25 +178,29 @@ def visible_resistor_pullups(observed: NetlistContract) -> dict[str, list[Visibl
             if resistor.reference in visited:
                 continue
             next_net = (
-                resistor.second_net if resistor.first_net == current_net else resistor.first_net
+                resistor.second_net.casefold()
+                if resistor.first_net.casefold() == current_net
+                else resistor.first_net.casefold()
             )
             path_references = (*references, resistor.reference)
             path_resistance = resistance_ohms + resistor.resistance_ohms
-            if next_net in positive_rails:
-                if 1_000 <= path_resistance <= 100_000:
-                    path = VisiblePullupPath(
+            if next_net in targets:
+                if within_path_bounds(path_resistance):
+                    path = VisibleResistorPath(
                         references=path_references,
                         resistance_ohms=path_resistance,
-                        rail_net=next_net,
+                        rail_net=targets[next_net],
                     )
-                    pullups.setdefault(start_net, {})[(path_references, next_net)] = path
+                    actual_start_net = actual_net_names.get(start_net, start_net)
+                    paths.setdefault(actual_start_net, {})[(path_references, next_net)] = path
                 continue
             if next_net == start_net:
                 continue
 
             # Only traverse a series junction with exactly two assigned pins,
             # both belonging to recognized fitted two-terminal resistors.
-            junction_pins = tuple(observed.nets.get(next_net, ()))
+            actual_net = actual_net_names.get(next_net, next_net)
+            junction_pins = tuple(observed.nets.get(actual_net, ()))
             if len(junction_pins) != 2 or len(set(junction_pins)) != 2:
                 continue
             junction_references = {pin.rsplit(".", 1)[0] for pin in junction_pins}
@@ -172,8 +212,8 @@ def visible_resistor_pullups(observed: NetlistContract) -> dict[str, list[Visibl
             next_reference = next(iter(next_references))
             next_resistor = resistors.get(next_reference)
             if next_resistor is None or next_net not in {
-                next_resistor.first_net,
-                next_resistor.second_net,
+                next_resistor.first_net.casefold(),
+                next_resistor.second_net.casefold(),
             }:
                 continue
             visit(
@@ -185,14 +225,14 @@ def visible_resistor_pullups(observed: NetlistContract) -> dict[str, list[Visibl
             )
 
     for start_net in sorted(by_net):
-        if start_net in positive_rails:
+        if start_net in targets:
             continue
         visit(start_net, start_net, (), 0.0, frozenset())
 
     return {
         net: sorted(
-            paths.values(),
-            key=lambda item: (item.rail_net, item.references, item.resistance_ohms),
+            net_paths.values(),
+            key=lambda item: (item.rail_net.casefold(), item.references, item.resistance_ohms),
         )
-        for net, paths in sorted(pullups.items())
+        for net, net_paths in sorted(paths.items())
     }

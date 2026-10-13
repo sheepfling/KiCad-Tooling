@@ -49,15 +49,43 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
             "pull-up to a recognized positive rail",
             "+3V3",
             False,
+            False,
         ),
         "collector-fault": (
             "open_collector",
             "pull-up to a recognized positive rail",
             "+3V3",
             True,
+            False,
         ),
-        "emitter-control": ("open_emitter", "pull-down to a recognized return", "GND", False),
-        "emitter-fault": ("open_emitter", "pull-down to a recognized return", "GND", True),
+        "emitter-control": (
+            "open_emitter",
+            "pull-down to a recognized return",
+            "GND",
+            False,
+            False,
+        ),
+        "emitter-fault": (
+            "open_emitter",
+            "pull-down to a recognized return",
+            "GND",
+            True,
+            False,
+        ),
+        "collector-series-control": (
+            "open_collector",
+            "pull-up through an unbranched resistor series path",
+            "+3V3",
+            False,
+            True,
+        ),
+        "emitter-series-control": (
+            "open_emitter",
+            "pull-down through an unbranched resistor series path",
+            "GND",
+            False,
+            True,
+        ),
     }
     source_hashes = {case: digest(fixture_root / f"{case}.kicad_sch") for case in cases}
     expected_source_hashes = {
@@ -65,6 +93,8 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
         "collector-fault": "bb4d7075d2892bf2991a3b840ba1db956cdf6a2f6caba1538ef1381c0d937714",
         "emitter-control": "3f2bcdb733865867bef38ba1fe790518e8aa35225e04117220dcac07e53645f0",
         "emitter-fault": "b987e6f281edc13de3587614cb3bb19ed80bfeeaccde783dcf1492ef598826e1",
+        "collector-series-control": "48fdf3c5f0ab6b37e9a90bfc5d97b9c37c76f27f87f84dbe07601803ac5d52fb",
+        "emitter-series-control": "c4953af0ec31cf3ea0b71b0b6397698867d5d5e217632ff20d83c97f76d3e0c3",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Open-output bias fixture sources differ from their reviewed hashes")
@@ -149,7 +179,7 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
             f"Native open-output bias fixture command failed: {command.stderr or command.error}"
         )
 
-    for case, (output_type, bias_description, rail, is_fault) in cases.items():
+    for case, (output_type, bias_description, rail, is_fault, is_series) in cases.items():
         is_emitter = output_type == "open_emitter"
         observations: dict[str, NetlistContract] = {}
         normalized_netlist_hashes: dict[str, str] = {}
@@ -236,7 +266,15 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
             observed.pin_functions.get(pin) != value for pin, value in expected_functions.items()
         ):
             raise ValueError(f"Native open-output {case} lost exact pin functions")
-        expected_nets = {"ALERT_N": {"U2.1", "U1.2", "R1.1"}, rail: {"R1.2"}}
+        expected_nets = (
+            {
+                "ALERT_N": {"U2.1", "U1.2", "R1.1"},
+                "BIAS_MID": {"R1.2", "R2.1"},
+                rail: {"R2.2"},
+            }
+            if is_series
+            else {"ALERT_N": {"U2.1", "U1.2", "R1.1"}, rail: {"R1.2"}}
+        )
         actual_nets = {net: set(observed.nets.get(net, ())) for net in expected_nets}
         if actual_nets != expected_nets:
             raise ValueError(
@@ -248,6 +286,8 @@ def open_drain_bias_fixture_lane(root: Path, *, project: str, image: str, log: H
             raise ValueError(f"Native open-output {case} changed DNP resistor evidence")
         if observed.component_pin_numbers.get("R1") != ("1", "2"):
             raise ValueError(f"Native open-output {case} lost the complete resistor pin inventory")
+        if is_series and observed.component_pin_numbers.get("R2") != ("1", "2"):
+            raise ValueError(f"Native open-output {case} lost its series resistor pin inventory")
         expected_erc_warning_types = {
             "footprint_link_issues",
             "isolated_pin_label",

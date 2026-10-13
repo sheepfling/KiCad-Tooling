@@ -11688,40 +11688,47 @@ it does not claim field validation or effectiveness against private boards.
   exact net. A candidate needs one or more `open_collector` outputs with at
   least one `input`/`input_low` peer, or one or more `open_emitter` outputs with
   such a peer. Collector candidates emit the collector rule ID and emitter
-  candidates emit the emitter rule ID. A direct fitted conventional two-terminal
-  resistor to a recognized positive rail satisfies the visible open-collector
-  pull-up; a direct resistor to a recognized return satisfies the visible
-  open-emitter pull-down. Nets that are themselves recognized rails are excluded.
+  candidates emit the emitter rule ID. A direct or unbranched series path of
+  fitted conventional two-terminal resistors to a recognized positive rail
+  satisfies the visible open-collector pull-up; the corresponding path to a
+  recognized return satisfies the visible open-emitter pull-down. These checks
+  do not apply a resistor value window. Nets that are themselves recognized
+  rails are excluded.
   Specialized I2C, recognized reset/enable/boot, and active-low SPI chip-select
   functions remain with their more specific rules. Mixed
   open-collector/open-emitter driver types and pins with ambiguous net
   assignments are outside the check.
 - **Boundary:** Native pin types do not prove that a local bias is required or
-  that the output is used in that mode. Internal bias, off-board bias, series
-  paths, arrays, jumpers, active circuits, custom rail names, resistor values,
-  receiver thresholds, runtime behavior, and PCB connectivity are not
-  verified. The result remains a review question; a project contract must
-  state any required local topology or operating limits.
+  that the output is used in that mode. Branched or ambiguous resistor paths,
+  arrays, jumpers, active circuits, internal or off-board bias, custom rail
+  names, resistor adequacy, receiver thresholds, runtime behavior, and PCB
+  connectivity are not verified. The result remains a review question; a
+  project contract must state any required local topology or operating limits.
 - **Fixtures and value:** Tooling-owned netlist tests cover missing expected
   pull-up and pull-down paths, opposite-polarity resistors, DNP outputs,
   specialized-bus exclusions, missing input peers, and input-order stability.
   A synthetic native-XML report fixture asserts both distinct rule identities
   through CLI and MCP. Separate netlist tests exercise independent policy
-  overrides and exact ignores. Four tooling-owned native schematic fixtures
-  pair an open-
-  collector or open-emitter output with a separate input peer and test fitted
-  pull-up/pull-down controls against otherwise identical DNP-resistor faults.
-  The digest-pinned KiCad 10.0.0/10.0.5 lane exports netlists and ERC twice,
+  overrides and exact ignores. Six tooling-owned native schematic fixtures
+  pair an open-collector or open-emitter output with a separate input peer and
+  test fitted direct pull-up/pull-down controls against otherwise identical DNP-resistor
+  faults. Two more native controls test unbranched series paths to a positive
+  rail and return. The digest-pinned KiCad 10.0.0/10.0.5 lane exports netlists and ERC twice,
   checks native pin types, net assignments, DNP state, expected lint evidence,
   zero ERC errors, and repeatability. A local run passed on both versions; the
   normalized netlist hashes matched across versions and repeated exports. The
-  source and normalized netlist hashes and fixture boundaries are recorded in the
+  new series controls have normalized netlist hashes
+  `733358edc49524e860512a0f4a8ac6afd45b09c4533053218d6a6cf841364fb9` and
+  `f7069b305c31262710ea29e895ac470fe79455a5d1b4c31ee2324732164fa880`; both
+  report zero ERC errors and no bias finding. Branched and DNP series paths
+  remain review candidates in synthetic tests. Source and normalized netlist
+  hashes and fixture boundaries are recorded in the
   [native fixture README](../tests/fixtures/design_lint/open-drain-native/README.md).
-- **Remaining:** The local digest-pinned lane passed on KiCad 10.0.0 and 10.0.5
-  on 2026-10-01; the source hashes and repeated normalized exports are recorded
-  in the fixture README. This checkout has no hosted workflow result. Record one
-  after a CI-eligible ref runs, then measure applicability and false-positive
-  behavior on approved nonconfidential projects before any policy promotion.
+- **Remaining:** The complete six-case local digest-pinned lane passed on KiCad
+  10.0.0 and 10.0.5 on 2026-10-13; tagged hosted acceptance for this extension
+  is pending. The source hashes and repeated normalized exports are recorded in
+  the fixture README. Measure applicability and false-positive behavior on
+  approved nonconfidential projects before considering any policy promotion.
 
 #### LINT-073 — MOSFET operating-state terminal-stress coverage
 

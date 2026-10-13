@@ -745,16 +745,18 @@ The first rules are:
   intent; it does not independently verify that physical or firmware behavior.
 - `signal.open_collector_input_without_visible_bias` asks for review when a
   fitted native `open_collector` output and an `input` or `input_low` pin share
-  a non-rail net without a direct fitted conventional resistor to a recognized
-  positive rail. `signal.open_emitter_input_without_visible_bias` does the
-  same for a fitted native `open_emitter` output without a direct fitted
-  resistor to a recognized return. Each prompt defaults to `review` and has
+  a non-rail net without a direct or unbranched series path of fitted
+  conventional resistors to a recognized positive rail.
+  `signal.open_emitter_input_without_visible_bias` does the same for a fitted
+  native `open_emitter` output without a direct or unbranched series resistor
+  path to a recognized return. Each prompt defaults to `review` and has
   an independent project override and exact-ignore identity. DNP outputs are
   excluded. I2C, recognized reset/enable/boot inputs, and active-low SPI chip
-  selects stay with their narrower rules. Internal or off-board bias, series
-  paths, resistor arrays, custom rail names, resistor adequacy, receiver
-  thresholds, runtime state, and PCB continuity are outside these heuristics;
-  they do not infer that a local resistor is required.
+  selects stay with their narrower rules. Branched paths, resistor arrays,
+  jumpers, active networks, internal or off-board bias, custom rail names,
+  resistor adequacy, receiver thresholds, runtime state, and PCB continuity
+  are outside these heuristics; they do not infer that a local resistor is
+  required.
 - `bus.i2c_unconnected_pin`, `bus.spi_unconnected_chip_select`,
   `bus.usb_c_unconnected_cc_pin`, and `bus.can_unconnected_line` flag unassigned
   SDA/SCL, recognized SPI chip-select, USB-C CC1/CC2, and CANH/CANL pins. These

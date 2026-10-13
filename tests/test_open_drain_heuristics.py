@@ -71,6 +71,50 @@ def signal_netlist(
     )
 
 
+def series_bias_netlist(
+    *,
+    output_type: str = "open_collector",
+    rail: str = "+3V3",
+    branch: bool = False,
+    dnp: tuple[str, ...] = (),
+) -> NetlistContract:
+    observed = signal_netlist(output_type=output_type)
+    components = dict(observed.components)
+    components["R1"] = ComponentContract(value="4.7k", footprint="Synthetic:Resistor")
+    components["R2"] = ComponentContract(value="10k", footprint="Synthetic:Resistor")
+    nets = {
+        "ALERT_N": ("U1.1", "U2.1", "R1.1"),
+        "BIAS_MID": ("R1.2", "R2.1"),
+        rail: ("R2.2",),
+    }
+    pin_functions = dict(observed.pin_functions)
+    pin_functions.update({"R2.1": "1", "R2.2": "2"})
+    pin_types = dict(observed.pin_electrical_types)
+    pin_types.update({"R2.1": "passive", "R2.2": "passive"})
+    pin_numbers = dict(observed.component_pin_numbers)
+    pin_numbers["R2"] = ("1", "2")
+    symbols = dict(observed.component_symbols)
+    symbols["R2"] = "Device:R"
+    if branch:
+        components["U3"] = ComponentContract(value="Synthetic branch", footprint="Synthetic:Probe")
+        nets["BIAS_MID"] = (*nets["BIAS_MID"], "U3.1")
+        pin_functions["U3.1"] = "BIAS_BRANCH"
+        pin_types["U3.1"] = "input"
+        pin_numbers["U3"] = ("1",)
+        symbols["U3"] = "Synthetic:Input"
+    return observed.model_copy(
+        update={
+            "components": components,
+            "nets": nets,
+            "dnp_components": dnp,
+            "component_symbols": symbols,
+            "pin_functions": pin_functions,
+            "pin_electrical_types": pin_types,
+            "component_pin_numbers": pin_numbers,
+        }
+    )
+
+
 def test_open_collector_signal_without_visible_pullup_is_review_candidate() -> None:
     observed = signal_netlist()
 
@@ -210,6 +254,57 @@ def test_expected_bias_polarity_clears_only_matching_open_output() -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("output_type", "rail", "rule_id"),
+    (
+        ("open_collector", "+3V3", "signal.open_collector_input_without_visible_bias"),
+        ("open_emitter", "GND", "signal.open_emitter_input_without_visible_bias"),
+    ),
+)
+def test_unbranched_series_bias_path_satisfies_visible_bias_review(
+    output_type: str, rail: str, rule_id: str
+) -> None:
+    observed = series_bias_netlist(output_type=output_type, rail=rail)
+
+    assert open_output_bias_gaps(observed) == ()
+    assert rule_id not in {item.rule_id for item in candidates(observed, rule_catalog())}
+
+
+@pytest.mark.parametrize(
+    ("output_type", "rail", "expected_bias"),
+    (
+        ("open_collector", "+3V3", "pull_up"),
+        ("open_emitter", "GND", "pull_down"),
+    ),
+)
+def test_branched_or_unfitted_series_bias_path_remains_a_review_candidate(
+    output_type: str, rail: str, expected_bias: str
+) -> None:
+    branched = series_bias_netlist(output_type=output_type, rail=rail, branch=True)
+    unfitted = series_bias_netlist(output_type=output_type, rail=rail, dnp=("R2",))
+
+    assert open_output_bias_gaps(branched)[0].bias == expected_bias
+    assert open_output_bias_gaps(unfitted)[0].bias == expected_bias
+
+
+@pytest.mark.parametrize(
+    ("output_type", "rail", "expected_bias"),
+    (
+        ("open_collector", "GND", "pull_up"),
+        ("open_emitter", "+3V3", "pull_down"),
+    ),
+)
+def test_series_resistor_path_does_not_satisfy_the_opposite_bias_polarity(
+    output_type: str, rail: str, expected_bias: str
+) -> None:
+    observed = series_bias_netlist(output_type=output_type, rail=rail)
+
+    gaps = open_output_bias_gaps(observed)
+
+    assert len(gaps) == 1
+    assert gaps[0].bias == expected_bias
+
+
 def test_specialized_buses_and_dnp_outputs_stay_with_existing_rules() -> None:
     i2c = signal_netlist(output_function="SDA", input_function="I2C_SDA", output_net="I2C_SDA")
     reset = signal_netlist(output_function="RESET_N", input_function="RESET_N")
@@ -246,3 +341,10 @@ def test_net_order_does_not_change_open_output_bias_rule_identity(
         item.rule_id for item in reversed_findings
     )
     assert tuple(item.rule_id for item in findings) == (expected_rule,)
+
+    rail = "GND" if output_type == "open_emitter" else "+3V3"
+    series = series_bias_netlist(output_type=output_type, rail=rail)
+    reordered_series = series.model_copy(
+        update={"nets": dict(reversed(tuple(series.nets.items())))}
+    )
+    assert open_output_bias_gaps(series) == open_output_bias_gaps(reordered_series) == ()

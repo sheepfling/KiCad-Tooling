@@ -15,6 +15,7 @@ from .models import NetlistContract
 from .resistor_paths import (
     DirectResistor,
     direct_resistors,
+    visible_resistor_paths,
 )
 from .return_nets import is_return_like_net_name
 
@@ -72,6 +73,10 @@ def open_output_bias_gaps(
         or any(is_return_like_net_name(pin_functions.get(pin.casefold(), "")) for pin in pins)
     }
     resistors = direct_resistors(observed)
+    visible_bias_nets = {
+        "pull_up": {net.casefold() for net in visible_resistor_paths(observed, positive_rails)},
+        "pull_down": {net.casefold() for net in visible_resistor_paths(observed, return_rails)},
+    }
     gaps: list[OpenOutputBiasGap] = []
 
     for net_key, assigned_pins in pins_by_net.items():
@@ -108,18 +113,12 @@ def open_output_bias_gaps(
         bias: Literal["pull_up", "pull_down"] = (
             "pull_up" if driver_types == {"open_collector"} else "pull_down"
         )
-        target_rails = positive_rails if bias == "pull_up" else return_rails
         signal_resistors = tuple(
             item
             for item in resistors
             if net_key in {item.first_net.casefold(), item.second_net.casefold()}
         )
-        has_expected_bias = any(
-            (item.first_net.casefold() == net_key and item.second_net.casefold() in target_rails)
-            or (item.second_net.casefold() == net_key and item.first_net.casefold() in target_rails)
-            for item in signal_resistors
-        )
-        if has_expected_bias:
+        if net_key in visible_bias_nets[bias]:
             continue
         gaps.append(
             OpenOutputBiasGap(

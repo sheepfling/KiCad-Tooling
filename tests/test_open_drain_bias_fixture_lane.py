@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
-import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -16,32 +14,52 @@ import pytest
 from kicad_tooling.ci_hosted import HostedLog, open_drain_bias_fixture_lane
 from kicad_tooling.hwrepo.contracts import KiCadErcReport, KiCadErcViolation
 from kicad_tooling.hwrepo.models import CommandEvidence, ComponentContract, NetlistContract
-from tests.support import reference_root
 
 pytestmark = [
     pytest.mark.design_lint,
+    pytest.mark.interface_lint,
     pytest.mark.power_lint,
 ]
 
 
-def bias_netlist(*, output_type: str, rail: str, dnp: bool) -> NetlistContract:
-    return NetlistContract(
-        components={
-            "U1": ComponentContract(
-                value="Synthetic open-output driver", footprint="Synthetic:SOIC"
-            ),
-            "U2": ComponentContract(value="Synthetic digital input", footprint="Synthetic:SOIC"),
-            "R1": ComponentContract(value="10k", footprint="Synthetic:0603"),
-        },
-        nets={
+def bias_netlist(
+    *, output_type: str, rail: str, dnp: bool, series: bool = False
+) -> NetlistContract:
+    components = {
+        "U1": ComponentContract(value="Synthetic open-output driver", footprint="Synthetic:SOIC"),
+        "U2": ComponentContract(value="Synthetic digital input", footprint="Synthetic:SOIC"),
+        "R1": ComponentContract(value="10k", footprint="Synthetic:0603"),
+    }
+    if series:
+        components["R1"] = ComponentContract(value="4.7k", footprint="Synthetic:0603")
+        components["R2"] = ComponentContract(value="10k", footprint="Synthetic:0603")
+        nets = {
+            "ALERT_N": ("U2.1", "U1.2", "R1.1"),
+            "BIAS_MID": ("R1.2", "R2.1"),
+            rail: ("R2.2",),
+        }
+        extra_components = {"R2": "Device:R"}
+        extra_functions = {"R2.1": "~", "R2.2": "~"}
+        extra_types = {"R2.1": "passive", "R2.2": "passive"}
+        extra_pin_numbers = {"R2": ("1", "2")}
+    else:
+        nets = {
             "ALERT_N": ("U2.1", "U1.2", "R1.1"),
             rail: ("R1.2",),
-        },
+        }
+        extra_components = {}
+        extra_functions = {}
+        extra_types = {}
+        extra_pin_numbers = {}
+    return NetlistContract(
+        components=components,
+        nets=nets,
         dnp_components=("R1",) if dnp else (),
         component_symbols={
             "U1": "Synthetic:OpenOutputProbe",
             "U2": "Synthetic:OpenOutputProbe",
             "R1": "Device:R",
+            **extra_components,
         },
         pin_functions={
             "U2.1": "OPEN_OUTPUT",
@@ -49,6 +67,7 @@ def bias_netlist(*, output_type: str, rail: str, dnp: bool) -> NetlistContract:
             "U2.2": "INPUT_PEER",
             "R1.1": "~",
             "R1.2": "~",
+            **extra_functions,
         },
         pin_electrical_types={
             "U2.1": output_type,
@@ -56,11 +75,13 @@ def bias_netlist(*, output_type: str, rail: str, dnp: bool) -> NetlistContract:
             "U2.2": "input",
             "R1.1": "passive",
             "R1.2": "passive",
+            **extra_types,
         },
         component_pin_numbers={
             "U1": ("1", "2"),
             "U2": ("1", "2"),
             "R1": ("1", "2"),
+            **extra_pin_numbers,
         },
     )
 
@@ -74,6 +95,12 @@ def test_native_lane_checks_both_bias_polarities_and_dnp_faults(tmp_path: Path) 
         "collector-fault": bias_netlist(output_type="open_collector", rail="+3V3", dnp=True),
         "emitter-control": bias_netlist(output_type="open_emitter", rail="GND", dnp=False),
         "emitter-fault": bias_netlist(output_type="open_emitter", rail="GND", dnp=True),
+        "collector-series-control": bias_netlist(
+            output_type="open_collector", rail="+3V3", dnp=False, series=True
+        ),
+        "emitter-series-control": bias_netlist(
+            output_type="open_emitter", rail="GND", dnp=False, series=True
+        ),
     }
 
     def fake_run_command(root_arg: Path, argv: tuple[str, ...], timeout: int) -> CommandEvidence:
@@ -195,7 +222,6 @@ def test_native_lane_checks_both_bias_polarities_and_dnp_faults(tmp_path: Path) 
         assert result["normalized_erc_sha256"] == result["repeat_normalized_erc_sha256"]
 
 
-@pytest.mark.template_checkout
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.skipif(
@@ -222,32 +248,30 @@ def test_native_lane_checks_both_bias_polarities_and_dnp_faults(tmp_path: Path) 
     ),
 )
 def test_native_exports_distinguish_bias_polarity_and_dnp_faults(
-    project: str, version: str, image: str
+    project: str, version: str, image: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from kicad_tooling.ci_hosted import HostedLog, open_drain_bias_fixture_lane
-    from kicad_tooling.hwrepo.electrical import selected_config
 
-    repository = Path(__file__).resolve().parents[1]
-    acceptance = repository / "build/ci"
-    acceptance.mkdir(parents=True, exist_ok=True)
-    root = Path(tempfile.mkdtemp(prefix=f"native-open-drain-project-{project}-", dir=acceptance))
-    shutil.copytree(
-        reference_root(),
-        root,
-        dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(".git", "build", "__pycache__"),
+    root = tmp_path
+    monkeypatch.setattr(
+        "kicad_tooling.hwrepo.electrical.selected_config",
+        lambda *_: SimpleNamespace(image=image, kicad_version=version),
     )
     expected_hashes = {
         "collector-control": "bdb0b34256ef9bac90b7fba687abe5998400c29da2f2467cd1a43e8b1029c177",
         "collector-fault": "bb4d7075d2892bf2991a3b840ba1db956cdf6a2f6caba1538ef1381c0d937714",
         "emitter-control": "3f2bcdb733865867bef38ba1fe790518e8aa35225e04117220dcac07e53645f0",
         "emitter-fault": "b987e6f281edc13de3587614cb3bb19ed80bfeeaccde783dcf1492ef598826e1",
+        "collector-series-control": "48fdf3c5f0ab6b37e9a90bfc5d97b9c37c76f27f87f84dbe07601803ac5d52fb",
+        "emitter-series-control": "c4953af0ec31cf3ea0b71b0b6397698867d5d5e217632ff20d83c97f76d3e0c3",
     }
     expected_netlist_hashes = {
         "collector-control": "bb5b9b6e92a414fd42ee6afe6318e341a6a535bd7d4e1983dc69d3c977758e34",
         "collector-fault": "6913b490585e072c7641a1800540bb4859b0009d68d4e4428ad2925417f85b20",
         "emitter-control": "4dce56e48d3b8082026f65dad1d9dd69b7466224ad617786566396aae6f74c9d",
         "emitter-fault": "6efc7bd50862e1190ebd70962b50dfbfe813f74d51aa8f88d2b7f2f3bc385588",
+        "collector-series-control": "733358edc49524e860512a0f4a8ac6afd45b09c4533053218d6a6cf841364fb9",
+        "emitter-series-control": "f7069b305c31262710ea29e895ac470fe79455a5d1b4c31ee2324732164fa880",
     }
     expected_cases = {
         "collector-control": ("none", "open_collector", "none"),
@@ -262,12 +286,11 @@ def test_native_exports_distinguish_bias_polarity_and_dnp_faults(
             "open_emitter",
             "R1",
         ),
+        "collector-series-control": ("none", "open_collector", "none"),
+        "emitter-series-control": ("none", "open_emitter", "none"),
     }
-    config = selected_config(root, project)
-    assert config.kicad_version == version
-    assert config.image == image
     log = HostedLog(root, f"native-open-drain-{project}")
-    open_drain_bias_fixture_lane(root, project=project, image=config.image, log=log)
+    open_drain_bias_fixture_lane(root, project=project, image=image, log=log)
     events = tuple(json.loads(line) for line in log.events.read_text().splitlines())
     results = {
         item["stage"]: item
