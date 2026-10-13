@@ -301,6 +301,7 @@ def two_pin_component_fixture_lane(
                     "capacitor",
                     "inductor",
                     "varistor",
+                        "thermistor",
                 },
                 "component.two_pin_diode_same_net": {"diode"},
                 "component.two_pin_crystal_same_net": {"crystal"},
