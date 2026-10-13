@@ -475,8 +475,11 @@ and optional ecosystem adapters are `P3`.
   selection then passed 214 tests with 3,082 deselected after fixing one
   internal import to use its theme-owned model and registering native
   variant-probe JSON as an explicit source-bound adapter. The focused
-  variant-capture and affected architecture tests passed 12 tests. No lint
-  predicate behavior changed.
+  variant-capture and affected architecture tests passed 12 tests. Hosted tag
+  acceptance `v0.5.0rc230` (run `38366989584`) passed the architecture
+  selector, external installed-wheel check, and Ubuntu, macOS, and Windows
+  preview jobs; the prerelease package job was skipped. No lint predicate
+  behavior changed.
 
 - **Test selection and hosted gate follow-up (2026-10-12):** Hosted run
   `38333207786` for tag `v0.5.0rc213` passed its full unit stage but failed the
