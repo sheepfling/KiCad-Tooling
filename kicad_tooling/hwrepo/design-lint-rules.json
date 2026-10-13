@@ -2910,10 +2910,13 @@
         "The check only runs when a project explicitly sets this rule to review or block; its catalog default is off."
       ],
       "fault_fixtures": [
-        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_fault_is_localized_to_the_native_unconnected_pin"
+        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_fault_is_localized_to_the_native_unconnected_pin",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_near_miss_matches_native_netlist_and_erc_fault_and_control"
       ],
       "valid_control_fixtures": [
-        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_connected_control_and_non_native_open_pin_are_excluded"
+        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_connected_control_and_non_native_open_pin_are_excluded",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_near_miss_matches_native_netlist_and_erc_fault_and_control",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_free_dangling_wire_is_already_localized_by_native_erc"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -2925,7 +2928,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_pin_geometry.py#unconnected_pin_wire_near_misses"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_pin_geometry.py#unconnected_pin_wire_near_misses",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.pin_tip_on_wire_interior",
@@ -2946,11 +2952,16 @@
       ],
       "fault_fixtures": [
         "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_pin_on_wire_middle_without_junction_is_localized",
-        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_pin_tip_on_wire_interior_tracks_all_supported_symbol_transforms"
+        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_pin_tip_on_wire_interior_tracks_all_supported_symbol_transforms",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_pin_on_wire_middle_without_junction_matches_native_open_pin_and_erc",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_all_supported_symbol_transforms_match_native_open_pin_netlists"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_junction_control_is_excluded_when_native_netlist_marks_pin_connected",
-        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_no_connect_marker_excludes_pin_tip_on_wire_interior"
+        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_no_connect_marker_excludes_pin_tip_on_wire_interior",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_no_connect_marker_on_wire_crossing_preserves_native_pin_isolation",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_pin_on_wire_middle_junction_control_matches_native_connectivity",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_all_supported_symbol_transforms_match_native_open_pin_netlists"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -2963,7 +2974,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_pin_geometry.py#unconnected_pin_wire_near_misses"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_pin_geometry.py#unconnected_pin_wire_near_misses",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.wire_endpoint_near_pin_tip",
@@ -2984,11 +2998,16 @@
       ],
       "fault_fixtures": [
         "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_wire_endpoint_just_short_of_pin_tip_is_localized",
-        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_wire_endpoint_near_pin_tip_tracks_all_supported_symbol_transforms"
+        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_wire_endpoint_near_pin_tip_tracks_all_supported_symbol_transforms",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_near_pin_endpoint_transforms_match_native_netlist_and_erc",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_wire_endpoint_near_pin_tip_matches_native_erc_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_wire_endpoint_gap_boundary_and_controls",
-        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_no_connect_marker_excludes_wire_endpoint_near_pin_tip"
+        "tests.test_schematic_geometry_pin_proximity.SchematicGeometryPinProximityTests.test_no_connect_marker_excludes_wire_endpoint_near_pin_tip",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_near_pin_endpoint_transforms_match_native_netlist_and_erc",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_wire_endpoint_near_pin_tip_matches_native_erc_fault_and_control",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_no_connect_marker_on_wire_crossing_preserves_native_pin_isolation"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3001,7 +3020,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_pin_geometry.py#unconnected_pin_wire_near_misses"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_pin_geometry.py#unconnected_pin_wire_near_misses",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.label_near_wire_endpoint",
@@ -3022,11 +3044,13 @@
         "The check only runs when a project explicitly sets this rule to review or block; its catalog default is off. It never moves labels or edits schematic geometry."
       ],
       "fault_fixtures": [
-        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_label_near_wire_endpoint_is_localized"
+        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_label_near_wire_endpoint_is_localized",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_label_near_wire_endpoint_matches_native_erc_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_attached_interior_and_far_labels_are_excluded",
-        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_label_endpoint_search_radius_includes_boundary_only"
+        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_label_endpoint_search_radius_includes_boundary_only",
+        "tests.test_schematic_geometry_native_pin_connectivity.NativeSchematicGeometryPinConnectivityTests.test_label_near_wire_endpoint_matches_native_erc_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3038,7 +3062,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_wire_geometry.py#labels_near_wire_endpoints"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_wire_geometry.py#labels_near_wire_endpoints",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.unmarked_wire_crossing",
@@ -3059,10 +3086,13 @@
         "This rule is review-only by default and may be configured or exactly ignored per project; it never inserts junctions or edits schematic geometry."
       ],
       "fault_fixtures": [
-        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_unmarked_orthogonal_wire_interiors_are_review_candidates"
+        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_unmarked_orthogonal_wire_interiors_are_review_candidates",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_unmarked_crossing_has_native_wire_diagnostics_and_marked_control_does_not_lint"
       ],
       "valid_control_fixtures": [
-        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_explicit_junction_and_endpoint_touch_are_excluded"
+        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_explicit_junction_and_endpoint_touch_are_excluded",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_unmarked_crossing_has_native_wire_diagnostics_and_marked_control_does_not_lint",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_graphical_polyline_crossing_preserves_native_connectivity_and_erc"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3074,7 +3104,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_wire_geometry.py#unmarked_orthogonal_crossings"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_wire_geometry.py#unmarked_orthogonal_crossings",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.unmarked_t_junction",
@@ -3096,12 +3129,16 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_unmarked_t_junction_is_review_candidate",
         "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_t_junction_tolerance_and_segment_endpoint_boundary",
-        "tests.test_schematic_geometry_hierarchy.SchematicGeometryHierarchyTests.test_reused_sheet_tree_maps_geometry_to_each_instance_reference"
+        "tests.test_schematic_geometry_hierarchy.SchematicGeometryHierarchyTests.test_reused_sheet_tree_maps_geometry_to_each_instance_reference",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_unmarked_t_junction_matches_native_netlist_and_erc_control",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_reused_child_sheet_netlist_expansion_and_erc_fault_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_explicit_t_junction_marker_is_excluded",
         "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_t_junction_tolerance_and_segment_endpoint_boundary",
-        "tests.test_schematic_geometry_hierarchy.SchematicGeometryHierarchyTests.test_reused_sheet_tree_maps_geometry_to_each_instance_reference"
+        "tests.test_schematic_geometry_hierarchy.SchematicGeometryHierarchyTests.test_reused_sheet_tree_maps_geometry_to_each_instance_reference",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_unmarked_t_junction_matches_native_netlist_and_erc_control",
+        "tests.test_schematic_geometry_native_wire_topology.NativeSchematicGeometryWireTopologyTests.test_reused_child_sheet_netlist_expansion_and_erc_fault_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3113,7 +3150,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_wire_geometry.py#unmarked_t_junctions"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_wire_geometry.py#unmarked_t_junctions",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.coincident_text_anchors",
@@ -3136,10 +3176,12 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_coincident_free_text_anchors_are_reported",
         "tests.test_schematic_geometry_hierarchy.SchematicGeometryHierarchyTests.test_reused_sheet_tree_maps_geometry_to_each_instance_reference",
-        "tests.test_design_lint_schematic_text.test_coincident_text_anchor_rule_is_configurable_and_review_only_by_default"
+        "tests.test_design_lint_schematic_text.test_coincident_text_anchor_rule_is_configurable_and_review_only_by_default",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_coincident_text_anchor_fixture_adds_no_native_erc_diagnostic"
       ],
       "valid_control_fixtures": [
-        "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_separate_free_text_anchors_are_not_reported"
+        "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_separate_free_text_anchors_are_not_reported",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_coincident_text_anchor_fixture_adds_no_native_erc_diagnostic"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3151,7 +3193,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_text_geometry.py#coincident_text_anchors"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_text_geometry.py#coincident_text_anchors",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.free_text_overlap",
@@ -3172,13 +3217,20 @@
       ],
       "fault_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_distinct_free_text_overlap_is_reported",
-        "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_measured_electrical_glyphs_have_fault_control_and_translation_coverage"
+        "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_measured_electrical_glyphs_have_fault_control_and_translation_coverage",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_free_text_overlap_matches_native_svg_and_erc_control",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_schematic_text_metrics_match_native_svg_for_calibrated_glyphs"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_separated_free_text_overlap_control_is_clear",
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_coincident_free_text_anchors_are_reported",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_unsupported_free_text_variants_leave_geometry_coverage_partial",
-        "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_measured_electrical_glyphs_have_fault_control_and_translation_coverage"
+        "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_measured_electrical_glyphs_have_fault_control_and_translation_coverage",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_free_text_overlap_matches_native_svg_and_erc_control",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_horizontal_justification_matches_native_svg_and_erc_control",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_empty_justification_matches_native_default_centering",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_unsupported_free_text_variants_preserve_native_connectivity",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_schematic_text_metrics_match_native_svg_for_calibrated_glyphs"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3191,7 +3243,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_text_geometry.py#free_text_overlaps"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_text_geometry.py#free_text_overlaps",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.free_text_over_wire",
@@ -3213,11 +3268,15 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_free_text_crossing_wire_is_reported",
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_free_text_wire_overlap_uses_guard_and_minimum_length",
-        "tests.test_design_lint_schematic_text.test_free_text_over_wire_rule_is_configurable_and_review_only_by_default"
+        "tests.test_design_lint_schematic_text.test_free_text_over_wire_rule_is_configurable_and_review_only_by_default",
+        "tests.test_schematic_geometry_native_wire_body.NativeSchematicGeometryWireBodyTests.test_free_text_over_wire_matches_native_svg_and_erc_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_text.SchematicGeometryTextTests.test_free_text_clear_of_wire_is_valid_control",
-        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_unsupported_free_text_variants_leave_geometry_coverage_partial"
+        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_unsupported_free_text_variants_leave_geometry_coverage_partial",
+        "tests.test_schematic_geometry_native_wire_body.NativeSchematicGeometryWireBodyTests.test_free_text_over_wire_matches_native_svg_and_erc_control",
+        "tests.test_schematic_geometry_native_wire_body.NativeSchematicGeometryWireBodyTests.test_multiline_text_spacing_and_wire_geometry_match_native_svg",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_unsupported_free_text_variants_preserve_native_connectivity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3229,7 +3288,10 @@
         "kicad_tooling/hwrepo/design_lint_schematic_coverage.py#scan_schematic_geometry"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_obstruction_geometry.py#free_text_wire_overlaps"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_obstruction_geometry.py#free_text_wire_overlaps",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.free_text_over_symbol_body",
@@ -3251,12 +3313,16 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_over_symbol_body_is_reported_with_clear_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_uses_area_threshold",
-        "tests.test_design_lint_schematic_text.test_free_text_over_symbol_body_rule_is_configurable_and_off_by_default"
+        "tests.test_design_lint_schematic_text.test_free_text_over_symbol_body_rule_is_configurable_and_off_by_default",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_matches_native_svg_and_erc_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_over_symbol_body_is_reported_with_clear_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_uses_area_threshold",
-        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_unsupported_free_text_variants_leave_geometry_coverage_partial"
+        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_unsupported_free_text_variants_leave_geometry_coverage_partial",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_matches_native_svg_and_erc_control",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_unsupported_formatted_text_does_not_reduce_native_wire_body_coverage",
+        "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_unsupported_free_text_variants_preserve_native_connectivity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3267,7 +3333,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_obstruction_geometry.py#free_text_over_symbol_bodies"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_obstruction_geometry.py#free_text_over_symbol_bodies",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "schematic.wire_through_symbol_body",
@@ -3289,12 +3358,16 @@
       "fault_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_wire_through_symbol_body_is_reported_and_clear_control_is_valid",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_overlap_uses_guard_and_minimum_length",
-        "tests.test_design_lint_schematic_readability.test_wire_through_symbol_body_review_has_source_evidence"
+        "tests.test_design_lint_schematic_readability.test_wire_through_symbol_body_review_has_source_evidence",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_symbol_body_wire_matches_native_svg_and_erc_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_wire_through_symbol_body_is_reported_and_clear_control_is_valid",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_overlap_uses_guard_and_minimum_length",
-        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_peer_connector_contacts_inside_symbol_body_remain_review_candidates"
+        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_symbol_body_wire_matches_native_svg_and_erc_control",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_valid_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_unsupported_formatted_text_does_not_reduce_native_wire_body_coverage"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3307,7 +3380,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "schematic",
-      "implementation_owner": "kicad_tooling/hwrepo/schematic_obstruction_geometry.py#wire_through_symbol_bodies"
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_obstruction_geometry.py#wire_through_symbol_bodies",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"
+      ]
     },
     {
       "rule_id": "bus.i2c_address_mismatch",

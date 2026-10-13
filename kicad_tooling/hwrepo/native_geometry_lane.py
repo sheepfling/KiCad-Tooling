@@ -151,6 +151,7 @@ def run(root: Path, output: Path, stage: Callable[..., CompletedProcess[str]]) -
                     "KICAD_GEOMETRY_TEST_CONTAINER": container,
                     "KICAD_GEOMETRY_TEST_USER": uid_gid,
                     "KICAD_GEOMETRY_TEST_VERSION": version,
+                    "KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY": "1",
                     "TMPDIR": str(temporary_root.resolve()),
                 }
             )

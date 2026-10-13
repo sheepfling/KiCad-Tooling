@@ -8,6 +8,10 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
 )
+from kicad_tooling.hwrepo.pcb_board_only_footprint_models import (
+    PcbBoardOnlyFootprint,
+    PcbBoardOnlyFootprintCoverage,
+)
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
     PcbComponentValueMismatch,
@@ -68,6 +72,16 @@ def pcb_component_inventory_rule_ids() -> set[str]:
                 mismatch="net_assignment_differs",
                 schematic_net="SYNTHETIC_SIGNAL",
                 board_net="SYNTHETIC_OTHER",
+            ),
+        ),
+        board_only_footprint_coverage=PcbBoardOnlyFootprintCoverage(
+            status="COMPLETE",
+            mode="review",
+            footprints=(
+                PcbBoardOnlyFootprint(
+                    reference="J6",
+                    footprint="Synthetic:Board_Only_Connector",
+                ),
             ),
         ),
         required_fitted_reference_coverage=PcbRequiredFittedReferenceCoverage(

@@ -326,7 +326,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 113 rules are implemented with synthetic regression coverage.
+The following 115 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -440,6 +440,8 @@ Their actual recognition limits are documented in
 - `pcb.schematic_pcb_dnp_mismatch`
 - `pcb.schematic_pcb_value_mismatch`
 - `pcb.schematic_pcb_pad_net_mismatch`
+- `pcb.board_only_footprint`
+- `pcb.required_fitted_reference`
 - `connector.return_distribution`
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
@@ -2483,7 +2485,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 113 active rules; CI requires every new
+- **Status:** Baseline complete for all 115 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2492,7 +2494,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 113 covered, 0 not applicable, 0 unreviewed.
+  audit: 115 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7674,6 +7676,16 @@ is not a reason by itself to expand its scope or change its default policy.
   supported sheet scope, native netlist/ERC behavior is checked, and no
   auto-fixes occur. Duplicate ERC findings are recorded as review
   improvement, not new detection.
+- **Catalog-bound native gate (2026-10-13):** All eleven geometry rules now
+  declare `KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY` and list their relevant exact-
+  native fault/control tests. Architecture checks bind those references to
+  the required lane and ensure native tests cannot be silently omitted from
+  rule-scoped tag gates. The five split native suites require the exact-tool
+  fixture; they skip unless the lane switch is set, and the native runner
+  explicitly passes that switch into pytest. Local focused verification passed
+  111 tests; 36 exact-native cases, including the 25 schematic geometry cases,
+  skipped because no KiCad CLI was configured. The hosted two-version gate is
+  pending.
 
 #### LINT-025 — PCB return-reference and connector-ground path evidence
 
@@ -9768,7 +9780,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 113 active rules. Each entry has a deterministic predicate, evidence
+contains 115 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

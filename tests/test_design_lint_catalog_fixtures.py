@@ -168,8 +168,13 @@ _PARITY_FIXTURES_BY_RULE = {
 
 
 def _pytest_collects_class(owner: type) -> bool:
-    return owner.__name__.startswith("Test") or any(
-        base.__module__ == "unittest.case" and base.__name__ == "TestCase" for base in owner.__mro__
+    return (
+        owner.__name__.startswith("Test")
+        or owner.__name__.endswith("Tests")
+        or any(
+            base.__module__ == "unittest.case" and base.__name__ == "TestCase"
+            for base in owner.__mro__
+        )
     )
 
 

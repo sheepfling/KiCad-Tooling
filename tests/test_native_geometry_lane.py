@@ -47,9 +47,11 @@ def test_lane_runs_every_split_suite_through_pytest(tmp_path: Path, monkeypatch)
     ]
     assert len(test_stages) == 2
     expected_paths = tuple(str(checkout / "tests" / name) for name in expected_files)
-    for _name, command, _environment in test_stages:
+    for _name, command, environment in test_stages:
         assert command[3:6] == ("-m", "pytest", "-q")
         assert command[6:] == expected_paths
+        assert environment is not None
+        assert environment["KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY"] == "1"
 
     receipt_path = checkout / "build/ci/native-schematic-geometry/lanes.json"
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))

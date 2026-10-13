@@ -26,6 +26,7 @@ pytestmark = [
     pytest.mark.schematic_text_lint,
     pytest.mark.native_kicad,
     pytest.mark.slow,
+    pytest.mark.usefixtures("native_schematic_geometry_lane_enabled"),
 ]
 
 

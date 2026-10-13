@@ -50,6 +50,13 @@ def native_schematic_geometry_toolchain() -> tuple[Path, str]:
     return cli, expected_version
 
 
+@pytest.fixture(scope="session")
+def native_schematic_geometry_lane_enabled() -> None:
+    """Require the geometry suite's explicit native-lane switch."""
+    if os.environ.get("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY") != "1":
+        pytest.skip("set KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY=1 for native geometry tests")
+
+
 @pytest.fixture
 def hosted_reference_root(tmp_path: Path) -> Path:
     """Provide a disposable public-template checkout to focused hosted tests."""
