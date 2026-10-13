@@ -50,6 +50,12 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_power_sequence_native_fixture_lane.py": {"power_lint"},
     "test_electrical_component_evidence.py": {"component_lint", "evidence_lint"},
     "test_electrical_connector_evidence.py": {"connector_lint", "evidence_lint"},
+    "test_electrical_connector_return_parity.py": {
+        "connector_lint",
+        "return_path_lint",
+        "parity_lint",
+    },
+    "test_pin_connectivity_acceptance.py": {"connector_lint"},
     "test_electrical_pcb_return_evidence.py": {"return_path_lint", "evidence_lint"},
     "test_electrical_test_access_evidence.py": {"pcb_lint", "evidence_lint"},
     "test_design_lint_i2c_missing_pullups.py": {"interface_lint"},

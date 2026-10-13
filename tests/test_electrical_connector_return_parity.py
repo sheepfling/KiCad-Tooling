@@ -16,6 +16,7 @@ from tests.electrical_parity_support import parity_harness  # noqa: F401
 pytestmark = [
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
+    pytest.mark.connector_lint,
     pytest.mark.return_path_lint,
     pytest.mark.parity_lint,
     pytest.mark.slow,

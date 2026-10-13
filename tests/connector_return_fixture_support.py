@@ -8,6 +8,9 @@ from tests.component_peer_power_input_support import (
     generic_peer_power_input_netlist,
     named_peer_power_input_netlist,
 )
+from tests.design_lint_fixtures.connector_named_power_peer_cases import (
+    named_connector_power_peer_cases,
+)
 from tests.design_lint_fixtures.connector_peer_pin_cases import peer_pin_case_contracts
 from tests.design_lint_fixtures.connector_power_cases import (
     connector_power_case_contracts,
@@ -32,6 +35,7 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
     observed.update(pwm_return_case_contracts())
     observed.update(return_positive_rail_case_contracts())
     observed.update(peer_pin_case_contracts())
+    observed.update(named_connector_power_peer_cases())
     observed.update(connector_power_case_contracts())
     observed.update(named_connector_power_pin_cases())
     observed.update(named_component_supply_pin_cases())

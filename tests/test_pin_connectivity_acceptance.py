@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from kicad_tooling.hwrepo.electrical import pin_relationship_checks
 from kicad_tooling.hwrepo.models import PinConnectivityAnalysis, PinRelationshipRule
 from kicad_tooling.validate import read_netlist
+
+pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
 
 
 def export(component: str, *, nets: str = "") -> str:
