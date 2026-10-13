@@ -160,7 +160,7 @@ class _McpParityProjectsCases(McpParityHarness):
     async def _case_test_native_scope_failure_parity(self) -> None:
         # Invalid native version fails the real CLI runner before any CAD command.
         # This exercises check_all on both surfaces, not a mocked service report.
-        from tests.test_contract_coach import fake_executable
+        from tests.contract_coach_support import fake_executable
 
         binary = self.base / "bin"
         binary.mkdir()

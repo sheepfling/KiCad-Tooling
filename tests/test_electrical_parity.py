@@ -29,6 +29,7 @@ from kicad_tooling.hwrepo.models import (
     TemplateDoctorReport,
 )
 from kicad_tooling.hwrepo.spice import expanded_deck
+from tests.contract_coach_support import fake_executable
 from tests.electrical_parity_support import ElectricalParityHarness
 from tests.electrical_simulation_support import (
     ISLAND,
@@ -36,7 +37,6 @@ from tests.electrical_simulation_support import (
     install_fixture,
 )
 from tests.support import initialize_git
-from tests.test_contract_coach import fake_executable
 from tests.test_source_parity import source_bytes
 
 pytestmark = [pytest.mark.template_checkout, pytest.mark.parity_lint, pytest.mark.slow]

@@ -84,6 +84,15 @@ metamorphic, CLI/MCP, and native cases can be selected together. Execution-cost
 markers live in `tests/execution_test_markers.py`; mixed modules mark only the
 test functions that actually run the exact native tool:
 
+The source-bound contract-coach tests are split by inspection/reporting and
+capture/runner behavior. Select them without running unrelated tests with:
+
+```sh
+.venv/bin/python -I -B -m pytest -q -m 'design_lint and evidence_lint and slow' \
+  tests/test_contract_coach_evidence.py tests/test_contract_coach_capture.py \
+  --durations=10
+```
+
 ```sh
 python -I -B -m pytest -q -m \
   "design_lint and not native_kicad and not slow and not template_checkout" \

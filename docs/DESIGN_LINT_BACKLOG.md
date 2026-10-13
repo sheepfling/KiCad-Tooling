@@ -471,6 +471,15 @@ and optional ecosystem adapters are `P3`.
   selected MCP parity tests, five module/suite architecture tests, and Ruff
   format/check across the checkout. No lint predicate or rule behavior changed.
 
+- **Pytest-native contract-coach evidence suites:** The 654-line `unittest`
+  suite is split into focused pytest modules for source-bound inspection and
+  reporting, and for native capture and runner behavior. The suites use the
+  `evidence_lint` and `slow` markers and contain 26 individually selectable
+  cases; their shared public-template workspace and fake runner now live in one
+  test-support module used by CLI/MCP and electrical parity consumers. The
+  old test-module size exception is removed. The change affects test structure
+  and selection only; contract-coach behavior and evidence policy are unchanged.
+
 - **Named connector power-pin evidence:** The existing
   `connector.unconnected_supply_pin` and `connector.unconnected_return_pin`
   rules retain default `REVIEW` semantics. Each now has a focused exact-native

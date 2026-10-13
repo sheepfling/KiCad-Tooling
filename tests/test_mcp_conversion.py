@@ -20,8 +20,8 @@ from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import ForeignFormat, ForeignPcbReport
 from tests import test_artifact_parity
+from tests.contract_coach_support import fake_executable
 from tests.support import SOURCE_ROOT, initialize_git, reference_root
-from tests.test_contract_coach import fake_executable
 
 
 class McpConversionTests(unittest.IsolatedAsyncioTestCase):

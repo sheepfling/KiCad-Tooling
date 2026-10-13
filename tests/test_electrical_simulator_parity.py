@@ -13,12 +13,12 @@ from mcp import Client
 
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import ElectricalAnalysisReport
+from tests.contract_coach_support import fake_executable
 from tests.electrical_parity_support import (
     ElectricalParityHarness,
     parity_harness,  # noqa: F401
 )
 from tests.electrical_simulation_support import PROJECT
-from tests.test_contract_coach import fake_executable
 from tests.test_source_parity import source_bytes
 
 pytestmark = [

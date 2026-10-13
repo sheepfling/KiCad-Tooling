@@ -29,7 +29,6 @@
     "scripts/playtest.py": 553,
     "tests/test_artifact_parity.py": 705,
     "tests/test_ci_driver.py": 530,
-    "tests/test_contract_coach.py": 654,
     "tests/test_diagnostics.py": 613,
     "tests/test_part_picker.py": 618,
     "tests/test_parts_assistant.py": 917,

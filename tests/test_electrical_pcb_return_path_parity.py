@@ -20,9 +20,9 @@ from kicad_tooling.hwrepo.models import (
     PcbReturnEndpointRequirement,
     PcbReturnPathsAnalysis,
 )
+from tests.contract_coach_support import fake_executable
 from tests.electrical_parity_support import parity_harness  # noqa: F401
 from tests.electrical_simulation_support import ISLAND, PROJECT
-from tests.test_contract_coach import fake_executable
 from tests.test_source_parity import source_bytes
 
 pytestmark = [

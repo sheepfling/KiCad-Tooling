@@ -21,7 +21,7 @@ from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import ContractCoachReport, ModelMap, ModelPopulationReport
 from kicad_tooling.validate import hashes
 from tests import test_model_population as population_fixture
-from tests.test_contract_coach import NETLIST, fake_executable
+from tests.contract_coach_support import NETLIST, fake_executable
 
 
 def source_bytes(root: Path) -> dict[str, bytes]:

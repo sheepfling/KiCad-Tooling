@@ -24,7 +24,8 @@ from kicad_tooling.hwrepo.models import (
     ReleaseStatus,
     TemplateDoctorReport,
 )
-from tests import test_contract_coach, test_release_evidence, test_visualize
+from tests import test_release_evidence, test_visualize
+from tests.contract_coach_support import FakeRunner, create_contract_coach_workspace
 from tests.support import initialize_git, reference_root
 
 
@@ -76,9 +77,8 @@ class McpWorkflowTests(unittest.TestCase):
         return fixture
 
     def contract_fixture(self):
-        fixture = test_contract_coach.ContractCoachTests()
-        fixture.setUp()
-        self.addCleanup(fixture.doCleanups)
+        fixture = create_contract_coach_workspace()
+        self.addCleanup(fixture.cleanup)
         return fixture
 
     def test_diagnosis_runs_selected_checks_and_preserves_full_receipt(self) -> None:
@@ -170,7 +170,7 @@ class McpWorkflowTests(unittest.TestCase):
         fixture = self.contract_fixture()
         contract = fixture.root / "examples/projects/controller/tests/contract.json"
         before = contract.read_bytes()
-        runner = test_contract_coach.FakeRunner("10.0.0")
+        runner = FakeRunner("10.0.0")
         with patch(
             "kicad_tooling.hwrepo.mcp_workflow.contract_coach.LocalNetlistRunner",
             return_value=runner,

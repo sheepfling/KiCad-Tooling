@@ -239,6 +239,8 @@ _LINT_AREA_MODULES = {
     ),
     "evidence_lint": frozenset(
         {
+            "tests/test_contract_coach_capture.py",
+            "tests/test_contract_coach_evidence.py",
             "tests/test_empty_netlist_evidence_native_fixture_lane.py",
             "tests/test_electrical_component_evidence.py",
             "tests/test_electrical_connector_evidence.py",

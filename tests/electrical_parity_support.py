@@ -24,7 +24,7 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
     ValidationSummary,
 )
-from tests import test_contract_coach as coach_fixture
+from tests.contract_coach_support import create_contract_coach_workspace
 from tests.electrical_simulation_support import ISLAND, NA, PROJECT, install_fixture
 
 
@@ -85,8 +85,7 @@ class ElectricalParityHarness:
     """Create isolated template-backed CLI and MCP projects for parity cases."""
 
     def __init__(self) -> None:
-        self.fixture = coach_fixture.ContractCoachTests()
-        self.fixture.setUp()
+        self.fixture = create_contract_coach_workspace()
         self.root = self.fixture.root
         self.mcp_root = self.root.parent / "mcp-repository"
         try:
@@ -96,7 +95,7 @@ class ElectricalParityHarness:
             raise
 
     def close(self) -> None:
-        self.fixture.doCleanups()
+        self.fixture.cleanup()
 
     async def cli(self, module: str, *arguments: str) -> subprocess.CompletedProcess[str]:
         return await asyncio.to_thread(

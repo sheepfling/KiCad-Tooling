@@ -21,7 +21,11 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.releasing import reference
-from tests import test_contract_coach as coaching
+from tests.contract_coach_support import (
+    ContractCoachWorkspace,
+    create_contract_coach_workspace,
+    fake_executable,
+)
 from tests.electrical_simulation_support import ISLAND, NA, PROJECT, install_fixture
 from tests.support import initialize_git
 
@@ -30,7 +34,7 @@ from tests.support import initialize_git
 class ElectricalEvidenceWorkspace:
     """A disposable source-bound electrical report and native-summary pair."""
 
-    fixture: coaching.ContractCoachTests
+    fixture: ContractCoachWorkspace
     root: Path
     contract: ElectricalAnalysisContract
     native: EvidenceFile
@@ -40,7 +44,7 @@ class ElectricalEvidenceWorkspace:
     path: Path
 
     def cleanup(self) -> None:
-        self.fixture.doCleanups()
+        self.fixture.cleanup()
 
     def verify(self) -> ElectricalAnalysisReport:
         return verify_electrical(
@@ -115,8 +119,7 @@ class ElectricalEvidenceWorkspace:
 
 def create_electrical_evidence_workspace() -> ElectricalEvidenceWorkspace:
     """Build the public-template synthetic repo used by electrical evidence tests."""
-    fixture = coaching.ContractCoachTests()
-    fixture.setUp()
+    fixture = create_contract_coach_workspace()
     try:
         root = fixture.root
         native = reference(root, fixture.native / "summary.json")
@@ -145,7 +148,7 @@ def create_electrical_evidence_workspace() -> ElectricalEvidenceWorkspace:
             "Variables:\n0 time time\n1 v(out) voltage\nValues:\n"
             "0 0\n0\n1 0.001\n4.9\n2 0.004\n4.95\n3 0.005\n5\n"
         )
-        simulator = coaching.fake_executable(
+        simulator = fake_executable(
             root.parent / "ngspice",
             (
                 "from pathlib import Path\nimport sys\n"
@@ -170,7 +173,7 @@ def create_electrical_evidence_workspace() -> ElectricalEvidenceWorkspace:
             path=output / "electrical.json",
         )
     except BaseException:
-        fixture.doCleanups()
+        fixture.cleanup()
         raise
 
 

@@ -31,13 +31,13 @@ from kicad_tooling.hwrepo.models import (
     TestAccessProbeEnvelope as AccessProbeEnvelope,
 )
 from kicad_tooling.validate import hashes
+from tests.contract_coach_support import fake_executable
 from tests.electrical_parity_support import (
     ElectricalParityHarness,
     contract_netlist_xml,
     parity_harness,  # noqa: F401
 )
 from tests.electrical_simulation_support import ISLAND, PROJECT
-from tests.test_contract_coach import fake_executable
 from tests.test_control_inputs import control_netlist
 
 pytestmark = [

@@ -33,7 +33,7 @@ from kicad_tooling.hwrepo.models import (
     ThreeDReport,
 )
 from tests import test_release_evidence, test_visualize
-from tests.test_contract_coach import fake_executable
+from tests.contract_coach_support import fake_executable
 
 
 class ArtifactParityTests(unittest.IsolatedAsyncioTestCase):
