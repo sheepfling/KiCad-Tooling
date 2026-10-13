@@ -3631,6 +3631,12 @@ is not a reason by itself to expand its scope or change its default policy.
   unless separately confirmed and reviewed. The check reports schematic
   topology only; it does not choose a sensor type, rating, application, or
   physical connection. No candidate project or proprietary source was used.
+- **Hosted thermistor gate (2026-10-13):** The `v0.5.0rc233` acceptance run
+  surfaced two Markdown table-alignment issues in the synthetic fixture README;
+  both were corrected. The follow-up `v0.5.0rc234` acceptance (run
+  `38370567749`) passed the focused LINT-051 tests, exact KiCad 10.0.0/10.0.5
+  native fixture exports, installed-wheel check against a separate project
+  checkout, and Ubuntu/macOS/Windows preview orchestration.
 - **Verification (2026-10-13):** Focused synthetic rule and parity tests pass;
   source hashes and fixture selection are guarded by architecture tests. The
   digest-pinned native exports are delegated to the hosted lint-rule gate.
