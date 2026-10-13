@@ -3337,8 +3337,16 @@ is not a reason by itself to expand its scope or change its default policy.
   `4765e426824bd009258f2ccae3ce118de6b585c3eddebb2437f09287d8cf6929` and
   `6b22eec75df4f715174590f577358d7205a958c1c23b6b09a6bd1875dbb90175`,
   respectively, matching across versions and repeats. This lane exports and
-  parses native netlists; it does not run ERC or DRC. No hosted GitHub result is
-  recorded.
+  parses native netlists; it does not run ERC or DRC. The first annotated
+  selector tag, `v0.5.0rc226`, was canceled after scope inspection showed it
+  omitted the existing diode CLI/MCP parity regression. The catalog now names
+  that combined fault/control test; the corrected selector collects ten cases
+  (3,279 unrelated tests deselected). All ten passed locally against the pinned
+  public template at `5ca79bedf665a9b6577d96b1d47f13ccd518c968` and
+  digest-pinned KiCad 10.0.0/10.0.5 fixtures. Tag `v0.5.0rc227` passed hosted
+  GitHub Actions run `38357427541`, including the scoped gate with installed-
+  wheel acceptance against the separate template and all Linux, macOS, and
+  Windows preview jobs.
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets
 
