@@ -11710,14 +11710,14 @@ it does not claim field validation or effectiveness against private boards.
   A synthetic native-XML report fixture asserts both distinct rule identities
   through CLI and MCP. Separate netlist tests exercise independent policy
   overrides and exact ignores. Six tooling-owned native schematic fixtures
-  pair an open-collector or open-emitter output with a separate input peer and
-  test fitted direct pull-up/pull-down controls against otherwise identical DNP-resistor
-  faults. Two more native controls test unbranched series paths to a positive
-  rail and return. The digest-pinned KiCad 10.0.0/10.0.5 lane exports netlists and ERC twice,
-  checks native pin types, net assignments, DNP state, expected lint evidence,
-  zero ERC errors, and repeatability. A local run passed on both versions; the
-  normalized netlist hashes matched across versions and repeated exports. The
-  new series controls have normalized netlist hashes
+  pair an open-collector or open-emitter output with a separate input peer.
+  Direct pull-up/pull-down controls pair with otherwise identical DNP-resistor
+  faults; two more controls test unbranched series paths to positive and return
+  rails. The digest-pinned KiCad 10.0.0/10.0.5 lane exports netlists and ERC
+  twice, checks native pin types, net assignments, DNP state, expected lint
+  evidence, zero ERC errors, and repeatability. A local run passed on both
+  versions; normalized netlist hashes matched across versions and repeated
+  exports. The new series controls have normalized netlist hashes
   `733358edc49524e860512a0f4a8ac6afd45b09c4533053218d6a6cf841364fb9` and
   `f7069b305c31262710ea29e895ac470fe79455a5d1b4c31ee2324732164fa880`; both
   report zero ERC errors and no bias finding. Branched and DNP series paths
@@ -11725,10 +11725,15 @@ it does not claim field validation or effectiveness against private boards.
   hashes and fixture boundaries are recorded in the
   [native fixture README](../tests/fixtures/design_lint/open-drain-native/README.md).
 - **Remaining:** The complete six-case local digest-pinned lane passed on KiCad
-  10.0.0 and 10.0.5 on 2026-10-13; tagged hosted acceptance for this extension
-  is pending. The source hashes and repeated normalized exports are recorded in
-  the fixture README. Measure applicability and false-positive behavior on
-  approved nonconfidential projects before considering any policy promotion.
+  10.0.0 and 10.0.5 on 2026-10-13. Tagged hosted acceptance passed at
+  `v0.5.0rc225` (GitHub Actions run 38355497027).
+  It included the focused pytest selection and installed-wheel check against a
+  separate project checkout. The first attempt at `v0.5.0rc224` exposed a stale
+  USB fixture inventory assertion; follow-up commit `be2649d` added the already
+  registered `intentional-isolation-boundary` case, and the rerun passed. Source
+  hashes and repeated native exports are recorded in the fixture README.
+  Measure applicability and false-positive behavior on approved
+  nonconfidential projects before considering any policy promotion.
 
 #### LINT-073 — MOSFET operating-state terminal-stress coverage
 
