@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from .connector_coverage_models import ConnectorCoverageReport
 from .design_lint_connector_pin_candidates import connector_pin_candidates
 from .design_lint_return_domain_candidates import return_domain_candidates
 from .design_lint_types import Candidate
-from .models import ConnectorCoverageReport, NetlistContract
+from .models import NetlistContract
 
 
 def connector_candidates(

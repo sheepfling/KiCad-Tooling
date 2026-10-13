@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution import scan_connector_return_distribution_map
 from .connector_return_distribution_models import (
     ConnectorReturnDistributionCoverageReport,
@@ -18,7 +19,6 @@ from .i2c_address_models import (
 )
 from .i2c_addressing import scan_i2c_address_map
 from .models import (
-    ConnectorCoverageReport,
     Digest,
     NetlistContract,
     RcFilterCoverageReport,

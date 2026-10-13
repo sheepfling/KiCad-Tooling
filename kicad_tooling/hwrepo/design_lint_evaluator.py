@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
@@ -21,7 +22,6 @@ from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
-    ConnectorCoverageReport,
     ContractCoachReport,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,

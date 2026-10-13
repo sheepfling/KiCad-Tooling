@@ -5,13 +5,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Literal
 
-from .connector_identity import connector_candidate_references
-from .models import (
+from .connector_coverage_models import (
     ConnectorCoverageEntry,
     ConnectorCoverageReport,
+    ConnectorMappedPinEvidence,
+)
+from .connector_identity import connector_candidate_references
+from .models import (
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
-    ConnectorMappedPinEvidence,
     InterfacePin,
     InterfaceRecord,
     NetlistContract,

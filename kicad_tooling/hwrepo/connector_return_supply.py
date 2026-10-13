@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .connector_coverage import source_matched_connector_pin_evidence
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_identity import (
     connector_candidate_references,
     is_return_function,
@@ -10,7 +11,7 @@ from .connector_identity import (
     pin_function_is_generic,
 )
 from .design_lint_types import Candidate
-from .models import ConnectorCoverageReport, NetlistContract
+from .models import NetlistContract
 from .resistor_paths import positive_power_nets
 
 

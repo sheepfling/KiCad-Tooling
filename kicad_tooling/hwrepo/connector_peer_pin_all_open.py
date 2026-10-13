@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_identity import (
     connector_candidate_references,
     partition_peer_assignments,
@@ -14,7 +15,7 @@ from .connector_peer_pin_scan import (
     scan_connector_part_id_peer_pins,
 )
 from .design_lint_types import Candidate
-from .models import ConnectorMappedPinEvidence, NetlistContract
+from .models import NetlistContract
 
 _GENERIC_PEER_PIN_TYPES = frozenset(
     {

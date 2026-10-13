@@ -166,6 +166,12 @@ intended requirement.
   exports for existing callers; architecture tests check both owners, imports,
   and compatibility. The extraction shrinks the registry without changing
   report schemas or the advisory status of name-based observations.
+  Connector inventory, pin-mapping, and coverage records now live in
+  `connector_coverage_models.py`. Connector and lint services import this owner
+  directly while the compatibility registry preserves existing exports.
+  Architecture tests enforce owner size, imports, and class identity; the move
+  shrinks `models.py` from 3,567 to 3,514 lines without changing source-coverage
+  policy or report schema.
   Differential-pair and signal-path DRC text rendering now lives in the
   focused `design_lint_pcb_drc_report.py` owner, keeping the broader PCB
   coverage report below the architecture review limit without changing output.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_identity import (
     connector_candidate_references,
     has_meaningful_pin_function,
@@ -17,10 +18,7 @@ from .connector_peer_pin_models import (
 from .connector_peer_pin_scan import (
     scan_connector_part_id_peer_pins,
 )
-from .models import (
-    ConnectorMappedPinEvidence,
-    NetlistContract,
-)
+from .models import NetlistContract
 
 
 def connector_peer_pin_heuristic_coverage(

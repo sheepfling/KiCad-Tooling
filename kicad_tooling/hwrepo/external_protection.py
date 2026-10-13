@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .connector_coverage_models import ConnectorCoverageReport
 from .external_protection_models import (
     ExternalProtectionCoverageEntry,
     ExternalProtectionCoverageReport,
@@ -10,7 +11,6 @@ from .external_protection_models import (
 )
 from .models import (
     ComponentContract,
-    ConnectorCoverageReport,
     NetlistContract,
 )
 

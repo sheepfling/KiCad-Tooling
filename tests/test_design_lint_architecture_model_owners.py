@@ -7,6 +7,7 @@ import ast
 import pytest
 
 from kicad_tooling.hwrepo import (
+    connector_coverage_models,
     connector_peer_pin_models,
     design_lint_policy_models,
     pcb_touch_pad_clearance_models,
@@ -23,6 +24,14 @@ from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, RE
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 MODEL_OWNERS = {
+    "connector_coverage_models.py": (
+        connector_coverage_models,
+        (
+            "ConnectorMappedPinEvidence",
+            "ConnectorCoverageEntry",
+            "ConnectorCoverageReport",
+        ),
+    ),
     "connector_peer_pin_models.py": (
         connector_peer_pin_models,
         (

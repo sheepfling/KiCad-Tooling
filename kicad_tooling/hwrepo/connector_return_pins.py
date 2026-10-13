@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from .connector_coverage_models import ConnectorMappedPinEvidence
 from .connector_identity import (
     connector_candidate_references,
     is_named_supply_function,
@@ -12,7 +13,7 @@ from .connector_identity import (
     is_shield_function,
     pin_function_is_generic,
 )
-from .models import ConnectorMappedPinEvidence, NetlistContract
+from .models import NetlistContract
 
 
 @dataclass(frozen=True)

@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from decimal import ROUND_CEILING, Decimal, localcontext
 
+from .connector_coverage_models import ConnectorCoverageEntry, ConnectorCoverageReport
 from .connector_peer_pin_models import ConnectorPinRole
 from .connector_return_distribution_models import (
     ConnectorReturnDistributionCoverageReport,
     ConnectorReturnDistributionEntry,
     ConnectorReturnDistributionMap,
     ConnectorReturnDistributionRequirement,
-)
-from .models import (
-    ConnectorCoverageEntry,
-    ConnectorCoverageReport,
 )
 
 

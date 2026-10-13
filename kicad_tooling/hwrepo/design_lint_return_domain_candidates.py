@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from .connector_coverage import source_matched_connector_pin_evidence
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_pins import (
     connectors_without_connected_return,
     unconnected_named_connector_pins,
 )
 from .connector_return_supply import return_pin_positive_rail_candidates
 from .design_lint_types import Candidate
-from .models import ConnectorCoverageReport, NetlistContract
+from .models import NetlistContract
 from .return_nets import (
     is_return_like_net_name,
     return_label_groups_without_pin_roles,

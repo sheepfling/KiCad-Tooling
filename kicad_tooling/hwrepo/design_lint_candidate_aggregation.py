@@ -12,6 +12,7 @@ from .can_peer_reference_scan import CanPeerReferenceScan
 from .component_peer_pin_evaluation import component_peer_pin_assignment_scans
 from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .component_role_models import ComponentRoleMap
+from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
@@ -49,7 +50,6 @@ from .i2c_address_models import (
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
-    ConnectorCoverageReport,
     NetlistContract,
     RcFilterCoverageReport,
     RegulatorFeedbackCoverageReport,

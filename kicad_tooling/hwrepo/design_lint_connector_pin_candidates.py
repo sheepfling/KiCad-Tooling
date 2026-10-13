@@ -8,6 +8,10 @@ from .connector_coverage import (
     source_matched_connector_peer_assignment_groups,
     source_matched_connector_pin_evidence,
 )
+from .connector_coverage_models import (
+    ConnectorCoverageReport,
+    ConnectorMappedPinEvidence,
+)
 from .connector_identity import power_function_key, similar_connector_pin_groups
 from .connector_peer_pin_all_open import all_open_generic_connector_peer_pin_candidates
 from .connector_peer_pin_findings import (
@@ -32,11 +36,7 @@ from .connector_return_pins import (
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import (
-    ConnectorCoverageReport,
-    ConnectorMappedPinEvidence,
-    NetlistContract,
-)
+from .models import NetlistContract
 
 
 def _connector_group_message(group: SimilarConnectorPinGroup) -> str:
