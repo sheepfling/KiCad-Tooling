@@ -7685,7 +7685,10 @@ is not a reason by itself to expand its scope or change its default policy.
   explicitly passes that switch into pytest. Local focused verification passed
   111 tests; 36 exact-native cases, including the 25 schematic geometry cases,
   skipped because no KiCad CLI was configured. The hosted two-version gate is
-  pending.
+  complete: tag `v0.5.0rc223` (GitHub run `38352816037`) passed catalog-scope
+  resolution, both digest-pinned native KiCad geometry matrices (10.0.5 and
+  10.0.6), installed-wheel acceptance against the separate public template,
+  wheel/sdist checks, and Linux/macOS/Windows preview jobs.
 
 #### LINT-025 — PCB return-reference and connector-ground path evidence
 
