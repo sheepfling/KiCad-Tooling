@@ -43,7 +43,10 @@ from .pcb_drc_models import (
     PcbDifferentialPairRuleMap,
 )
 from .pcb_drc_source_scan import scan_source_bound_rule_map
-from .pcb_dru_rule_review import ignored_custom_drc_rule_candidates
+from .pcb_dru_rule_review import (
+    excluded_custom_drc_rule_candidates,
+    ignored_custom_drc_rule_candidates,
+)
 
 
 def inspect_design_lint_summary(
@@ -79,10 +82,9 @@ def inspect_design_lint_summary(
             raise ValueError("Native netlist hash is unavailable for connectivity snapshot capture")
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared source changed while reading design-lint policy")
-        pcb_dru_rule_candidates = ignored_custom_drc_rule_candidates(
-            root,
-            config,
-            coach.source_hashes,
+        pcb_dru_rule_candidates = (
+            *ignored_custom_drc_rule_candidates(root, config, coach.source_hashes),
+            *excluded_custom_drc_rule_candidates(root, config, coach.source_hashes),
         )
         pcb_native_drc_candidates = (
             *ignored_core_native_drc_check_candidates(root, config, coach.source_hashes),

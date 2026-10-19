@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
 from .model_inventory import _atoms, _children, _Span  # pyright: ignore[reportPrivateUsage]
 from .pcb_drc_models import PcbDrcConstraintName
@@ -61,6 +61,18 @@ class NativeIgnoredDrcRule:
 
     name: str
     ordinal: int
+
+
+NativeDrcRuleSeverity = Literal["error", "warning", "ignore", "exclusion"]
+
+
+@dataclass(frozen=True, slots=True)
+class NativeDrcRuleWithSeverity:
+    """A named custom DRC rule with one supported direct severity declaration."""
+
+    name: str
+    ordinal: int
+    severity: NativeDrcRuleSeverity
 
 
 def _length_nm(value: str) -> int:
@@ -178,11 +190,14 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
     return tuple(result)
 
 
-def native_ignored_rules(source: str) -> tuple[NativeIgnoredDrcRule, ...]:
-    """Return named rules that explicitly contain `(severity ignore)`.
+def native_rules_with_severity(
+    source: str,
+    severity: NativeDrcRuleSeverity,
+) -> tuple[NativeDrcRuleWithSeverity, ...]:
+    """Return named rules with the requested direct severity declaration.
 
     This parser only identifies authored severity declarations. It does not
-    execute KiCad expressions or infer that an ignored rule should be active.
+    execute KiCad expressions or infer that a rule should use another severity.
     """
     if not source.strip():
         return ()
@@ -190,7 +205,7 @@ def native_ignored_rules(source: str) -> tuple[NativeIgnoredDrcRule, ...]:
     versions = [_atoms(source, node) for node in nodes if _atoms(source, node)[:1] == ("version",)]
     if len(versions) != 1 or versions[0] != ("version", "1"):
         raise ValueError("Expected one version 1 root atom in the native DRC rules file")
-    result: list[NativeIgnoredDrcRule] = []
+    result: list[NativeDrcRuleWithSeverity] = []
     ordinal = 0
     for node in nodes:
         header = _atoms(source, node)
@@ -200,9 +215,23 @@ def native_ignored_rules(source: str) -> tuple[NativeIgnoredDrcRule, ...]:
         if len(header) != 2:
             raise ValueError("Malformed named rule in the native DRC rules file")
         children = _children(source, node.start + 1, node.end - 1)
-        if any(_atoms(source, child) == ("severity", "ignore") for child in children):
-            result.append(NativeIgnoredDrcRule(name=header[1], ordinal=ordinal))
+        if any(_atoms(source, child) == ("severity", severity) for child in children):
+            result.append(
+                NativeDrcRuleWithSeverity(
+                    name=header[1],
+                    ordinal=ordinal,
+                    severity=severity,
+                )
+            )
     return tuple(result)
+
+
+def native_ignored_rules(source: str) -> tuple[NativeIgnoredDrcRule, ...]:
+    """Return named rules that explicitly contain `(severity ignore)`."""
+    return tuple(
+        NativeIgnoredDrcRule(name=rule.name, ordinal=rule.ordinal)
+        for rule in native_rules_with_severity(source, "ignore")
+    )
 
 
 def drc_pad_selector(pad: str) -> str:

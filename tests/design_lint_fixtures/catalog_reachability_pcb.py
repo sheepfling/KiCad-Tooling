@@ -122,12 +122,18 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic saved PCB DRC exclusion requires review.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
     )
+    excluded_custom_rule = Candidate(
+        rule_id="pcb.custom_drc_rule_excluded",
+        subject="projects/synthetic/controller.kicad_dru#rule[2] SyntheticExcludedRule",
+        message="Synthetic custom DRC rule assigns exclusion severity.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
     report = evaluate(
         coach.project_id,
         coach,
         DesignLintPolicy(),
         pcb_component_inventory_coverage=inventory,
-        pcb_dru_rule_candidates=(ignored_rule,),
+        pcb_dru_rule_candidates=(ignored_rule, excluded_custom_rule),
         pcb_native_drc_candidates=(ignored_core_check, persisted_drc_exclusion),
     )
     return {finding.rule_id for finding in report.findings}

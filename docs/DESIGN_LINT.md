@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 123 active rules. They
+`synthetic_validated`; the catalog currently contains 124 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2592,6 +2592,25 @@ conditions or limits, or create requirements for other rules. Mapped DRC rule
 coverage and the native compilation probe remain separate checks. The
 tooling-owned parser inputs are documented in
 [`tests/fixtures/design_lint/pcb-dru-ignored-rules/`](../tests/fixtures/design_lint/pcb-dru-ignored-rules/README.md).
+
+## Review custom PCB rules that assign exclusion severity
+
+`pcb.custom_drc_rule_excluded` prompts when a PCB project's source-bound
+`.kicad_dru` contains a named top-level rule with an explicit
+`(severity exclusion)` clause. The finding identifies the rule file, SHA-256,
+declaration ordinal and name, the exclusion severity, and the project's exact
+configured KiCad version. Its default mode is `review`; projects may choose
+`block`, `off`, or an exact-fingerprint ignore.
+
+KiCad treats `exclusion` as a distinct severity from `ignore`: excluded
+violations remain available in the DRC results when the matching filter is
+selected. The finding therefore asks whether excluding violations matching
+that rule is intentional. It does not claim a matching violation exists, that
+the rule is too broad, or that it should use another severity. The check does
+not evaluate conditions, limits, board geometry, or DRC output. See the
+[KiCad 10 PCB Editor DRC documentation](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)
+and the tooling-owned synthetic fixtures in
+[`tests/fixtures/design_lint/pcb-dru-severity-exclusions/`](../tests/fixtures/design_lint/pcb-dru-severity-exclusions/README.md).
 
 ## Review suppressed core native PCB DRC checks
 

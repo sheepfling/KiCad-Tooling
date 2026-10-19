@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 123 rules are implemented with synthetic regression coverage.
+The following 124 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -478,6 +478,7 @@ Their actual recognition limits are documented in
 - `pcb.differential_pair_rule_coverage`
 - `pcb.signal_path_rule_coverage`
 - `pcb.custom_drc_rule_ignored`
+- `pcb.custom_drc_rule_excluded`
 - `pcb.core_drc_check_ignored`
 - `pcb.drc_exclusion_present`
 - `pcb.rf_module_antenna_keepout_coverage`
@@ -2631,7 +2632,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 123 active rules; CI requires every new
+- **Status:** Baseline complete for all 124 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2640,7 +2641,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 123 covered, 0 not applicable, 0 unreviewed.
+  audit: 124 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7683,6 +7684,44 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and pcb_lint'
   ```
 
+#### LINT-142 — Review custom PCB rules that assign exclusion severity
+
+- **Status:** Implemented as `pcb.custom_drc_rule_excluded`, a source-bound
+  default-review prompt for each named version-1 `.kicad_dru` rule with a
+  direct `(severity exclusion)` clause.
+- **Gap:** LINT-139 prompts for custom rules with `ignore` severity. A custom
+  rule can instead mark every matching violation as an exclusion. This differs
+  from saving an individual exclusion in `.kicad_pro` (LINT-141), and authored
+  exclusions merit review even when a rule is intentionally conditional.
+- **Predicate:** Parse the supported version-1 custom-rule syntax and emit one
+  finding for each named top-level rule with a direct exact
+  `(severity exclusion)` clause. Bind each candidate to the current rule-file
+  hash, declaration ordinal and name, exclusion severity, and exact
+  project-configured KiCad version.
+- **Policy boundary:** The finding asks whether excluding matching violations
+  through this rule is intentional. It does not claim a violation exists, that
+  the condition is broad or wrong, or that exclusion severity should be
+  changed. It does not evaluate conditions or limits, run DRC, inspect board
+  geometry, or replace LINT-139, LINT-141, or mapped project-authored DRC
+  coverage. Projects may use `review`, `block`, `off`, or exact-fingerprint
+  ignore.
+- **Evidence:** Synthetic fault/control fragments cover one exclusion rule and
+  active error, warning, and ignored rules. Tests cover source hash failures,
+  unsupported KiCad majors and `.kicad_dru` file versions, deterministic output,
+  default review disposition, and CLI/MCP parity. This static parser does not
+  claim native DRC execution or electrical approval.
+- **Source basis:** KiCad 10 documentation describes `exclusion` as distinct
+  from `ignore`; excluded violations remain visible under the corresponding
+  DRC filter. The check reviews authored use of that behavior rather than
+  asserting it is wrong.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_dru_severity_exclusion_review.py \
+    tests/test_design_lint_mcp_parity_pcb_dru_severity_exclusion.py \
+    -m 'design_lint and pcb_lint'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -10630,7 +10669,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 123 active rules. Each entry has a deterministic predicate, evidence
+contains 124 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

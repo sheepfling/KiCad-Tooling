@@ -4568,6 +4568,46 @@
       ]
     },
     {
+      "rule_id": "pcb.custom_drc_rule_excluded",
+      "title": "Custom PCB rules assigning exclusion severity need intentional review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_rule_review.py#excluded_custom_drc_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact project .kicad_dru source path and SHA-256, declaration name and ordinal, exclusion severity, and exact configured KiCad version from project inspection",
+      "predicate": "For a PCB project with a source-bound version-1 .kicad_dru file, emit one review candidate for each named top-level rule that contains an exact direct (severity exclusion) clause. Identify the declaration by its file path, source hash, one-based rule ordinal, rule name, and configured KiCad version.",
+      "supported_kicad_versions": [
+        "KiCad 10.x version-1 .kicad_dru syntax; the exact configured patch version is recorded as source context, not independently executed by this heuristic"
+      ],
+      "limitations": [
+        "Exclusion severity is a review prompt, not evidence that a matching violation exists or that the rule should use another severity; excluded results may be intentional.",
+        "Only a named top-level rule with a direct exact (severity exclusion) clause is reported. Ignore severity, persisted per-violation exclusions, global core-check settings, and unlisted requirements remain separate checks.",
+        "The finding records the authored declaration but does not evaluate its condition, limits, applicability, or effect on board geometry. Native DRC and mapped project-authored rule coverage remain separate checks."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_severity_exclusion_review.test_exclusion_severity_creates_a_source_bound_review_candidate",
+        "tests.test_pcb_dru_severity_exclusion_review.test_source_hash_is_required_and_stale_rule_bytes_fail_closed",
+        "tests.test_pcb_dru_severity_exclusion_review.test_unsupported_custom_rule_file_version_fails_closed",
+        "tests.test_pcb_dru_severity_exclusion_review.test_exclusion_review_uses_standard_default_review_policy",
+        "tests.test_design_lint_mcp_parity_pcb_dru_severity_exclusion.test_custom_drc_exclusion_severity_finding_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_severity_exclusion_review.test_error_warning_and_ignore_severities_are_valid_controls",
+        "tests.test_pcb_dru_severity_exclusion_review.test_unreviewed_kicad_major_versions_are_out_of_scope"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_severity_exclusion_review.test_scan_is_deterministic_and_appended_warning_stays_quiet"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_rule_review.py#excluded_custom_drc_rule_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_rules_with_severity",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.core_drc_check_ignored",
       "title": "Suppressed core PCB DRC checks need intentional review",
       "theme": "pcb",
