@@ -4606,6 +4606,44 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_exclusion_present",
+      "title": "Persisted PCB DRC exclusions need intentional review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_exclusion_review.py#source_bound_pcb_drc_exclusion_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro DRC exclusion marker, optional comment, and configured patch version",
+      "predicate": "For a PCB or PCB-only project configured for KiCad 10.0.x settings schema 2, emit one review candidate for each persisted per-violation DRC exclusion, whether or not it has a comment.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.x project JSON board.design_settings.drc_exclusions with settings schema version 2; exact configured patch version is recorded and unsupported schema versions are rejected"
+      ],
+      "limitations": [
+        "A saved exclusion is a review prompt, not proof that the violation is still present or that its exception is wrong; a saved comment is evidence but not approval.",
+        "The rule reads project settings only. It does not run DRC, resolve marker UUIDs against board objects, inspect current board geometry, or determine whether the excluded condition is acceptable.",
+        "The rule does not establish electrical correctness, manufacturing readiness, or project-authored intent. A project may disable or exactly ignore a reviewed candidate."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_exclusion_review.test_saved_exclusions_report_rule_key_comment_and_source_binding",
+        "tests.test_design_lint_mcp_parity_pcb_drc_exclusions.test_saved_drc_exclusions_match_between_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_exclusion_review.test_empty_or_absent_exclusion_lists_are_valid_controls",
+        "tests.test_pcb_drc_exclusion_review.test_non_pcb_and_other_minor_versions_are_out_of_scope",
+        "tests.test_pcb_drc_exclusion_review.test_unknown_settings_schema_fails_closed"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_exclusion_review.test_exclusion_order_does_not_change_candidate_identity"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_exclusion_review.py#source_bound_pcb_drc_exclusion_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#pcb_drc_exclusions",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.keepout_intent_coverage",
       "title": "Named PCB keepout areas differ from reviewed geometry intent",
       "status": "active",

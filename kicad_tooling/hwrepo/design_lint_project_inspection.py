@@ -36,6 +36,7 @@ from .evidence import digest
 from .models import (
     ProjectManifest,
 )
+from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
 from .pcb_drc_global_severity_review import ignored_core_native_drc_check_candidates
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -83,10 +84,9 @@ def inspect_design_lint_summary(
             config,
             coach.source_hashes,
         )
-        pcb_native_drc_candidates = ignored_core_native_drc_check_candidates(
-            root,
-            config,
-            coach.source_hashes,
+        pcb_native_drc_candidates = (
+            *ignored_core_native_drc_check_candidates(root, config, coach.source_hashes),
+            *source_bound_pcb_drc_exclusion_candidates(root, config, coach.source_hashes),
         )
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)

@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 122 rules are implemented with synthetic regression coverage.
+The following 123 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -479,6 +479,7 @@ Their actual recognition limits are documented in
 - `pcb.signal_path_rule_coverage`
 - `pcb.custom_drc_rule_ignored`
 - `pcb.core_drc_check_ignored`
+- `pcb.drc_exclusion_present`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
@@ -2630,7 +2631,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 122 active rules; CI requires every new
+- **Status:** Baseline complete for all 123 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2639,7 +2640,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 122 covered, 0 not applicable, 0 unreviewed.
+  audit: 123 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7580,7 +7581,8 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Policy boundary:** The finding asks an engineer to confirm the suppression
   is intentional. It does not treat Ignore as an electrical defect, infer that
   every custom rule should be active, inspect global `.kicad_pro` ignored
-  checks (the bounded core-check review is separate LINT-140), or evaluate
+  checks (LINT-140 covers global core checks; LINT-141 covers per-violation
+  exclusions), or evaluate
   custom-rule conditions and limits. Projects may select
   `review`, `block`, `off`, or an exact-fingerprint ignore.
 - **Evidence:** Tooling-owned synthetic fault/control fragments cover explicit
@@ -7638,6 +7640,48 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Focused selection:** Run `tests/test_pcb_drc_global_severity_review.py` and
   `tests/test_design_lint_mcp_parity_pcb_drc_global_severity_review.py` with
   `-m 'design_lint and pcb_lint'`.
+
+#### LINT-141 — Review persisted per-violation PCB DRC exclusions
+
+- **Status:** Implemented as `pcb.drc_exclusion_present`, a source-bound
+  default-review prompt for each persisted KiCad 10.0.x DRC exclusion.
+- **Gap:** LINT-139 reviews ignored custom rules and LINT-140 reviews globally
+  ignored core checks. KiCad also lets a reviewer exclude one individual DRC
+  violation, optionally with a comment, and remembers exclusions between DRC
+  runs. Excluded violations are hidden unless the Exclusions view is enabled.
+  A saved exception can therefore persist after the original review context is
+  forgotten or the board changes.
+- **Predicate:** For PCB and PCB-only projects configured for exact KiCad
+  `10.0.<patch>` versions, read `board.design_settings.drc_exclusions` from the
+  source-hashed `.kicad_pro`. Support schema 2 string records and
+  marker/comment pairs, reject an explicitly different settings schema, sort
+  records deterministically, and emit one candidate for each unique marker.
+  Record the marker, stable marker hash, optional comment, file hash, and exact
+  configured patch version.
+- **Policy boundary:** The finding asks an engineer to confirm that the
+  individual exception remains intentional. It does not assert that the DRC
+  violation is still present, that the exception is wrong, or that a saved
+  comment constitutes approval. It does not run DRC, resolve marker UUIDs
+  against current board objects, inspect copper, or infer electrical intent.
+  Project policy can use `review`, `block`, `off`, or an exact-fingerprint
+  ignore.
+- **Synthetic evidence:** Separate fault and control `.kicad_pro` fragments
+  cover multiple exclusions with and without comments, empty/absent lists,
+  legacy marker strings, stable identity under list reordering, malformed and
+  duplicate entries, duplicate JSON keys, source-hash failures, unsupported
+  settings schemas and KiCad minor versions, policy dispositions, and CLI/MCP
+  parity. No product board or private source is used.
+- **Source basis:** KiCad 10 [documents individual exclusions and optional
+  comments][kicad-10-drc-exclusions]. The [tagged 10.0.7 source][kicad-10-project-drc-exclusions]
+  writes them to `board.design_settings.drc_exclusions` as marker/comment pairs.
+  These sources establish serialization and UI behavior, not field precision.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_drc_exclusion_review.py \
+    tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py \
+    -m 'design_lint and pcb_lint'
+  ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
@@ -10586,7 +10630,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 122 active rules. Each entry has a deterministic predicate, evidence
+contains 123 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin
@@ -13486,3 +13530,5 @@ quality, or first-article continuity.
 [kicad-thermistor-ptc-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_PTC_US.kicad_sym>
 
 [kicad-10-drc]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration
+[kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
+[kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp

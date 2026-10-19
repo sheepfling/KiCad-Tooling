@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 122 active rules. They
+`synthetic_validated`; the catalog currently contains 123 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2607,12 +2607,39 @@ The finding asks an engineer to confirm the suppression. It does not claim the
 board is defective or that every project must enable every check. The rule
 leaves KiCad's documented default-ignore footprint and presentation checks
 quiet, and it does not inspect per-violation exclusions, Warning settings,
-custom rules, or PCB geometry. Projects can use the usual `review`, `block`,
+custom rules, or PCB geometry. The separate `pcb.drc_exclusion_present` rule
+reviews saved per-violation exclusions. Projects can use the usual `review`, `block`,
 `off`, or exact-fingerprint ignore policy. Tooling-owned fault and control
 settings are in
 [`tests/fixtures/design_lint/pcb-core-drc-disabled/`](../tests/fixtures/design_lint/pcb-core-drc-disabled/README.md).
 
 [kicad-10-drc]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration
+
+## Review persisted per-violation PCB DRC exclusions
+
+`pcb.drc_exclusion_present` prompts when a KiCad 10.0.x PCB project's
+source-hashed `.kicad_pro` contains an individual saved DRC exclusion. The
+finding includes the serialized marker, a stable marker hash, any saved comment,
+and the exact project-configured KiCad patch version. The check reads the
+`board.design_settings.drc_exclusions` list and accepts the KiCad 10.0 schema 2
+string or marker/comment-pair forms.
+
+The prompt asks an engineer to confirm that the exception is still intentional.
+It does not assert that the excluded violation still exists or that the
+exception is wrong. KiCad hides excluded violations unless the Exclusions view
+is enabled; an absent comment is identified in the prompt. This check does not
+run DRC, resolve the marker against current board objects, or inspect copper
+geometry. Project policy can select `review`, `block`, `off`, or an
+exact-fingerprint ignore. Tooling-owned synthetic settings are in
+[`tests/fixtures/design_lint/pcb-drc-exclusions/`](../tests/fixtures/design_lint/pcb-drc-exclusions/README.md).
+
+KiCad documents individual exclusions and their optional comments in the
+[PCB Editor DRC reference][kicad-10-drc-exclusions]. Its tagged 10.0.7 source
+stores marker/comment records under the project settings path
+[`board.design_settings.drc_exclusions`][kicad-10-project-drc-exclusions].
+
+[kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
+[kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
 
 ## Review mapped PCB signal-path length and bundle skew
 
