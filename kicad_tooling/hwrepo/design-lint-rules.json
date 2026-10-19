@@ -4704,7 +4704,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_component_value_mismatch.test_value_comparison_is_order_independent_and_values_are_case_sensitive"
+        "tests.test_pcb_component_value_mismatch.test_value_comparison_is_order_independent_and_values_are_case_sensitive",
+        "tests.test_design_lint_determinism_pcb_value.test_value_mismatch_source_mutations_and_matching_control_are_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

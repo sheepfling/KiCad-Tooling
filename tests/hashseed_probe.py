@@ -196,6 +196,9 @@ REPORT_ORDER = (
     "pcb_dnp_board_only_mismatch",
     "pcb_dnp_schematic_only_mismatch",
     "pcb_dnp_fitted_control",
+    "pcb_value_board_only_mismatch",
+    "pcb_value_schematic_only_mismatch",
+    "pcb_value_matching_control",
 )
 
 
@@ -220,6 +223,7 @@ REPORT_BUILDERS = {
     "pcb_required_fitted_reference": ("tests.hashseed_probe_cases.pcb_required_fitted_reference"),
     "pcb_board_only_footprints": "tests.hashseed_probe_cases.pcb_board_only_footprints",
     "pcb_dnp_mismatch": "tests.hashseed_probe_cases.pcb_dnp_mismatch",
+    "pcb_value_mismatch": "tests.hashseed_probe_cases.pcb_value_mismatch",
 }
 
 

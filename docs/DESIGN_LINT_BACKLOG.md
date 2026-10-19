@@ -2769,8 +2769,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v66. The cross-process probe supports themed report
-  selectors and retains the complete 184-report inventory gate. Fault/control
+- **Status:** Implemented v67. The cross-process probe supports themed report
+  selectors and retains the complete 187-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2800,7 +2800,9 @@ is not a reason by itself to expand its scope or change its default policy.
   fitted, explicitly bonded-return control, plus an unstitched front/back
   return-plane fault and through-via control. The v66 extension adds both
   schematic/PCB DNP mismatch directions and a fitted control to the three-
-  process source-bound report comparison; the rule remains REVIEW.
+  process source-bound report comparison; the rule remains REVIEW. The v67
+  extension adds schematic-only and board-only component-value mutations plus
+  an exact-value control, with each source digest changing only on its side.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -6481,6 +6483,11 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Cohort context:** The kicad-happy XV schematic/PCB consistency family
   motivated the audit. The local predicate is first-party and uses native
   KiCad evidence; no cohort implementation was copied or executed.
+- **Determinism:** LINT-080 compares schematic-side and board-side value
+  changes against a matching control across three isolated processes. Each
+  mismatch remains a source-bound REVIEW finding; a value match is quiet. This
+  tests CAD text consistency and does not establish part identity or assembly
+  intent.
 
 #### LINT-113 — Schematic pin and PCB pad net assignments differ
 

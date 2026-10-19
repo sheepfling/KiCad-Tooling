@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from hashlib import sha256
-
-from kicad_tooling.hwrepo.contracts import model_json_bytes
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
-from kicad_tooling.hwrepo.models import ContractCoachReport
-from kicad_tooling.hwrepo.pcb_component_inventory import (
-    evaluate_native_component_inventory_coverage,
+from tests.design_lint_fixtures.pcb_component_inventory import (
+    netlist,
+    snapshot,
+    source_bound_component_inventory,
 )
-from tests.design_lint_fixtures.pcb_component_inventory import netlist, snapshot
 
 RULE_ID = "pcb.schematic_pcb_dnp_mismatch"
 FOOTPRINT = "Synthetic:Probe_Module"
@@ -30,27 +27,12 @@ def dnp_report(*, schematic_dnp: bool, board_dnp: bool) -> dict[str, object]:
         footprint_by_reference={"U1": FOOTPRINT},
         dnp_by_reference={"U1": board_dnp},
     )
-    netlist_sha256 = sha256(model_json_bytes(source_netlist)).hexdigest()
-    board_sha256 = sha256(f"synthetic-dnp-board:{board_dnp}".encode()).hexdigest()
-    board = board.model_copy(update={"board_sha256": board_sha256})
-    snapshot_sha256 = sha256(model_json_bytes(board)).hexdigest()
-    coverage = evaluate_native_component_inventory_coverage(
+    evidence = source_bound_component_inventory(
         source_netlist,
         board,
-        mode="review",
-        netlist_sha256=netlist_sha256,
-        board_path="projects/synthetic-dnp/board.kicad_pcb",
-        board_sha256=board_sha256,
-        snapshot_path="build/design-lint/synthetic-dnp.json",
-        snapshot_sha256=snapshot_sha256,
-        probe_sha256=board.probe_sha256,
-    )
-    coach = ContractCoachReport(
-        status="READY_FOR_REVIEW",
         project_id="synthetic-dnp",
-        source_hashes={},
-        netlist_sha256=netlist_sha256,
-        observed=source_netlist,
+        board_source=f"synthetic-dnp-board:{board_dnp}".encode(),
+        mode="review",
     )
     policy = DesignLintPolicy(
         rules=(
@@ -63,14 +45,14 @@ def dnp_report(*, schematic_dnp: bool, board_dnp: bool) -> dict[str, object]:
     )
     report = evaluate(
         "synthetic-dnp",
-        coach,
+        evidence.coach,
         policy,
-        pcb_component_inventory_coverage=coverage,
+        pcb_component_inventory_coverage=evidence.coverage,
     )
     return {
-        "board_sha256": board_sha256,
-        "snapshot_sha256": snapshot_sha256,
-        "netlist_sha256": netlist_sha256,
+        "board_sha256": evidence.board_sha256,
+        "snapshot_sha256": evidence.snapshot_sha256,
+        "netlist_sha256": evidence.netlist_sha256,
         "report": report.model_dump(mode="json"),
     }
 

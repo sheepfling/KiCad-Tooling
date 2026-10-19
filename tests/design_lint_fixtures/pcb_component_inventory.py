@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from hashlib import sha256
 from typing import Literal
 
+from kicad_tooling.hwrepo.contracts import model_json_bytes
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -12,7 +15,10 @@ from kicad_tooling.hwrepo.models import (
     PcbFootprintPlacementObservation,
     PcbPadConnectivityObservation,
 )
-from kicad_tooling.hwrepo.pcb_component_inventory import compare_fitted_schematic_pcb_inventory
+from kicad_tooling.hwrepo.pcb_component_inventory import (
+    compare_fitted_schematic_pcb_inventory,
+    evaluate_native_component_inventory_coverage,
+)
 from kicad_tooling.hwrepo.pcb_component_inventory_models import (
     PcbComponentInventoryCoverageReport,
 )
@@ -26,6 +32,59 @@ PROBE_SHA256 = "d" * 64
 IMAGE = "registry.example/kicad:10.0.5@sha256:" + "e" * 64
 SnapshotSchema = Literal["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]
 ReviewMode = Literal["review", "block", "off"]
+
+
+@dataclass(frozen=True, slots=True)
+class SourceBoundPcbComponentInventory:
+    """Hash-bound native coverage inputs shared by report-level probes."""
+
+    coverage: PcbComponentInventoryCoverageReport
+    coach: ContractCoachReport
+    netlist_sha256: str
+    board_sha256: str
+    snapshot_sha256: str
+
+
+def source_bound_component_inventory(
+    source_netlist: NetlistContract,
+    board: PcbConnectivitySnapshot,
+    *,
+    project_id: str,
+    board_source: bytes,
+    mode: ReviewMode,
+    value_mode: ReviewMode = "off",
+) -> SourceBoundPcbComponentInventory:
+    """Bind synthetic native snapshots to exact schematic and board inputs."""
+    netlist_sha256 = sha256(model_json_bytes(source_netlist)).hexdigest()
+    board_sha256 = sha256(board_source).hexdigest()
+    board = board.model_copy(update={"board_sha256": board_sha256})
+    snapshot_sha256 = sha256(model_json_bytes(board)).hexdigest()
+    coverage = evaluate_native_component_inventory_coverage(
+        source_netlist,
+        board,
+        mode=mode,
+        netlist_sha256=netlist_sha256,
+        board_path=f"projects/{project_id}/board.kicad_pcb",
+        board_sha256=board_sha256,
+        snapshot_path=f"build/design-lint/{project_id}.json",
+        snapshot_sha256=snapshot_sha256,
+        probe_sha256=board.probe_sha256,
+        value_mode=value_mode,
+    )
+    coach = ContractCoachReport(
+        status="READY_FOR_REVIEW",
+        project_id=project_id,
+        source_hashes={},
+        netlist_sha256=netlist_sha256,
+        observed=source_netlist,
+    )
+    return SourceBoundPcbComponentInventory(
+        coverage=coverage,
+        coach=coach,
+        netlist_sha256=netlist_sha256,
+        board_sha256=board_sha256,
+        snapshot_sha256=snapshot_sha256,
+    )
 
 
 def netlist(
