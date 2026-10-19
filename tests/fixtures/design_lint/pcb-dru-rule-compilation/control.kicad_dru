@@ -1,0 +1,4 @@
+(version 1)
+(rule "synthetic-control-lowercase-type"
+  (condition "A.Type == 'track'")
+  (constraint track_width (min 0.25mm)))

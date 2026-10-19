@@ -2547,6 +2547,35 @@ When no pair map is present, `pcb.differential_pair_rule_coverage` remains
 common complementary net-name patterns and ask for review; it does not convert
 those names into requirements or geometric limits.
 
+## Verify that custom PCB rules load in native DRC
+
+During exact-version native validation, a PCB project that contains a
+`.kicad_dru` file receives an additional `drc_rule_compilation` check. The
+tooling copies the rule file and optional `.kicad_pro` settings into a temporary
+directory, appends a uniquely named terminal rule that must flag a track on a
+tooling-owned synthetic board, then runs KiCad DRC using the project's pinned
+image. The retained receipt records source hashes, the observed KiCad version,
+the sentinel violation count, and the native report; the temporary source
+copies are removed after the command. This adapts the terminal-rule probe idea
+from [kicad-druid](https://github.com/Cimos/kicad-druid) without importing its
+implementation or project data.
+
+The check fails if the exact native version cannot be confirmed or the final
+sentinel is not reported. This catches malformed custom-rule files that stop
+DRC from running. KiCad documents that custom-rule syntax errors prevent DRC
+from running and recommends checking rule syntax in the editor; the automated
+probe supplies a source-bound native execution check for the same failure
+class ([KiCad 10 PCB Editor documentation](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)).
+
+This is a compilation/load check, not a semantic audit of every project rule.
+A syntactically valid condition or layer typo can load while failing to match
+the intended board objects; the terminal sentinel still passes in that case.
+Use the mapped DRC-coverage checks for independently authored limits and the
+normal board DRC run for board geometry. Neither result establishes electrical
+approval or fabrication readiness. The tooling-owned synthetic control and
+fault, plus the exact-version native lane, are documented in
+[`tests/fixtures/design_lint/pcb-dru-rule-compilation/`](../tests/fixtures/design_lint/pcb-dru-rule-compilation/README.md).
+
 ## Review mapped PCB signal-path length and bundle skew
 
 Use `design_lint.pcb_signal_path_rule_map` when a reviewed interface or timing

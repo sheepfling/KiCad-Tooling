@@ -33,6 +33,7 @@ from .hwrepo.models import (
     SchematicValidationContract,
     ValidationSummary,
 )
+from .hwrepo.pcb_dru_compilation import run_pcb_dru_compilation_probe
 from .hwrepo.return_nets import return_net_groups
 
 
@@ -380,6 +381,7 @@ def validate(
     config: ProjectConfig | None = None
     profile: Literal["training", "development", "production"] | None = None
     not_for_manufacture: bool | None = None
+    drc_rules_required = False
     selected_config = root / (
         Path("examples/projects/controller/project.json") if config_path is None else config_path
     )
@@ -673,6 +675,43 @@ def validate(
                 checks[name] = evidence.model_copy(update={"status": "PASS"})
             except (OSError, ValueError, TypeError, KeyError, ET.ParseError) as exc:
                 checks[name] = evidence.model_copy(update={"error": str(exc)})
+        if config.kind in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
+            rules_path = base.with_suffix(".kicad_dru")
+            if rules_path.is_file():
+                drc_rules_required = True
+                try:
+                    report = run_pcb_dru_compilation_probe(
+                        rules_path=rules_path,
+                        project_path=base.with_suffix(".kicad_pro"),
+                        repository_root=root,
+                        output=output,
+                        cli=executable,
+                        expected_kicad_version=config.kicad_version,
+                        image=config.image,
+                        execute=execute,
+                    )
+                    source_hashes = {report.rules_path: report.rules_sha256}
+                    if report.project_path is not None and report.project_sha256 is not None:
+                        source_hashes[report.project_path] = report.project_sha256
+                    checks["drc_rule_compilation"] = CheckEvidence(
+                        status=report.status,
+                        returncode=report.native_returncode,
+                        error=report.issue,
+                        findings=report.sentinel_matches,
+                        files=(
+                            "drc-rule-compilation.json",
+                            "drc-rule-compilation/probe-drc.json",
+                            "drc-rule-compilation/native-command.command.json",
+                        ),
+                        source_hashes=source_hashes,
+                        observed_version=report.observed_kicad_version,
+                        image=report.image,
+                    )
+                except (OSError, ValueError, TypeError, KeyError) as exc:
+                    checks["drc_rule_compilation"] = CheckEvidence(
+                        status="FAIL",
+                        error=str(exc),
+                    )
     except (OSError, ValueError) as exc:
         checks["preflight"] = CheckEvidence(status="FAIL", error=str(exc))
 
@@ -696,6 +735,8 @@ def validate(
             required.add("system_contract")
         elif config is not None and config.kind is ProjectKind.HARNESS_INTERFACE:
             required.add("harness_contract")
+    if drc_rules_required:
+        required.add("drc_rule_compilation")
     if config is not None and config.electrical is not None:
         required.add("grounding")
     if config is not None and (

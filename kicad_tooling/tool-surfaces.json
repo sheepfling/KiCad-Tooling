@@ -1107,7 +1107,7 @@
         "check_project"
       ],
       "alignment": "aligned",
-      "reason": "Both dispatch the same portable/native/electrical project verification, preserve repeated pin plus cross-symbol return, named supply, numbered supply rail, and missing connector return hints on failed native contract checks, run design lint on PCB and schematic native checks including complementary-pair assignment review, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
+      "reason": "Both dispatch the same portable/native/electrical project verification, preserve repeated pin plus cross-symbol return, named supply, numbered supply rail, and missing connector return hints on failed native contract checks, run design lint on PCB and schematic native checks including complementary-pair assignment review, run the source-bound terminal-rule compilation probe when a PCB project has a .kicad_dru file, and flag full electrical analysis omitted by a passing portable/native PCB or schematic check.",
       "scope": "core",
       "gaps": [],
       "constraints": [

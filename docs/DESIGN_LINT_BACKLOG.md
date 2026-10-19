@@ -7528,6 +7528,41 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_all_open")'
   ```
 
+#### LINT-138 — Native compilation proof for project custom DRC rules
+
+- **Status:** Implemented as the native `drc_rule_compilation` verification
+  check when a PCB project contains `.kicad_dru`. It is a verification gate,
+  not a DesignLint catalog heuristic: no project-specific electrical intent is
+  inferred, and no rule is added to the design-lint catalog.
+- **Problem:** A custom rule file can be present in the project while its
+  syntax prevents KiCad DRC from running. Ordinary board validation does not
+  retain a direct check that KiCad evaluated the complete authored rule file.
+- **Predicate:** In a temporary workspace, copy the project rule file and
+  optional settings, append a uniquely named terminal track-width rule, and
+  run native DRC on a packaged synthetic board containing one track. Require
+  the exact configured KiCad version and a report containing the terminal
+  rule's violation. Retain only source hashes, command evidence, and the
+  synthetic native report; remove temporary source copies.
+- **Boundary:** This proves that the rule parser reached the appended rule. It
+  does not prove that each authored condition or layer matches its intended
+  objects, that a rule has appropriate limits, or that the design satisfies an
+  electrical requirement. Syntactically valid but nonmatching rules require
+  separate semantic and project-authored coverage checks.
+- **Evidence:** Tooling-owned fixtures include a valid but deliberately
+  nonmatching source rule and malformed syntax. Synthetic tests cover version,
+  report, sentinel, source-hash, and validation integration behavior. The
+  exact-version native test is registered for KiCad 10.0.0 and 10.0.5; hosted
+  acceptance is pending the `pcb_lint` scoped tag run. No product project or
+  private source is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_dru_compilation.py \
+    tests/test_pcb_dru_compilation_architecture.py \
+    tests/test_validate_drc_rule_compilation.py \
+    -m 'design_lint and pcb_lint'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
