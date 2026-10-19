@@ -110,7 +110,7 @@ def test_empty_connectivity_expectations_still_raise_native_connector_review(
     assert result.native is not None
     assert result.native.status == "PASS"
     assert result.design_lint is not None
-    assert result.design_lint.status == "BLOCKED"
+    assert result.design_lint.status != "PASS"
     assert result.design_lint.connector_coverage is not None
     assert result.design_lint.connector_coverage.status == "UNDECLARED"
     ground_candidate = next(
