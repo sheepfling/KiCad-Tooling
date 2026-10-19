@@ -59,7 +59,7 @@ from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 class DesignLintReport(StrictModel):
     """Source-bound heuristic findings; neither a pinout nor electrical approval."""
 
-    schema_version: Literal["1", "2", "3"] = "3"
+    schema_version: Literal["1", "2", "3", "4"] = "4"
     lane: Literal["DESIGN_LINT"] = "DESIGN_LINT"
     status: Literal["PASS", "REVIEW", "FAIL", "BLOCKED"]
     project_id: Identifier
@@ -380,6 +380,14 @@ class DesignLintReport(StrictModel):
             if footprint_open_findings != item.footprint_alias_coverage.open_outlier_finding_count:
                 raise ValueError(
                     "Connector footprint-alias open-peer coverage count must match findings"
+                )
+            footprint_all_open_findings = sum(
+                finding.rule_id == "connector.footprint_peer_pin_all_open"
+                for finding in self.findings
+            )
+            if footprint_all_open_findings != item.footprint_alias_coverage.all_open_finding_count:
+                raise ValueError(
+                    "Connector footprint-alias all-open coverage count must match findings"
                 )
             part_id_expected_counts = (
                 (

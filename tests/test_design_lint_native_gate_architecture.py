@@ -307,6 +307,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.unconnected_return_pin": {
             "tests.test_ci_hosted_connector_returns.test_native_unconnected_named_connector_return_pin_cases_repeat",
         },
+        "connector.footprint_peer_pin_all_open": {
+            "tests.test_ci_hosted_connector_returns.test_footprint_alias_all_open_peer_is_validated_on_pinned_native_versions",
+        },
         "connector.unconnected_power_input": {
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },

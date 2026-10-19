@@ -2,9 +2,19 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
-from kicad_tooling.hwrepo.models import DesignLintIgnore, DesignLintPolicy, DesignLintRuleOverride
+from kicad_tooling.hwrepo.models import (
+    DesignLintIgnore,
+    DesignLintPolicy,
+    DesignLintReport,
+    DesignLintRuleOverride,
+)
+from tests.connector_footprint_peer_support import (
+    FOOTPRINT_ALL_OPEN_RULE_ID as ALL_OPEN_RULE_ID,
+)
 from tests.connector_footprint_peer_support import (
     FOOTPRINT_OPEN_RULE_ID as RULE_ID,
 )
@@ -14,6 +24,164 @@ from tests.connector_footprint_peer_support import (
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
+
+
+def test_all_generic_contacts_open_across_footprint_aliases_is_opt_in_review() -> None:
+    source = peer_netlist(assignments=(("GND", "GND"), (None, None)))
+    default_report = lint_report(source)
+    finding = next(item for item in default_report.findings if item.rule_id == ALL_OPEN_RULE_ID)
+
+    assert default_report.status == "PASS"
+    assert finding.mode == "off"
+    assert finding.disposition == "RULE_OFF"
+    assert finding.evidence["assignments"] == (
+        "J1.2=<unassigned>",
+        "J2.2=<unassigned>",
+    )
+    assert finding.evidence["open_pins"] == ("J1.2", "J2.2")
+    assert finding.evidence["common_anchor_pin_numbers"] == ("1",)
+    assert "do not establish that the contact must connect" in finding.message
+    coverage = default_report.connector_peer_pin_coverage
+    assert coverage is not None
+    alias = coverage.footprint_alias_coverage
+    assert alias.all_open_peer_pin_group_count == 1
+    assert alias.unanchored_all_open_peer_pin_group_count == 0
+    assert alias.all_open_finding_count == 1
+
+    reviewed = lint_report(
+        source,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=ALL_OPEN_RULE_ID,
+                    mode="review",
+                    reason="Synthetic project chooses to review every generic alias contact.",
+                ),
+            )
+        ),
+    )
+    assert reviewed.status == "REVIEW"
+    reviewed_finding = next(item for item in reviewed.findings if item.rule_id == ALL_OPEN_RULE_ID)
+    assert reviewed_finding.mode == "review"
+    assert reviewed_finding.disposition == "OPEN"
+
+
+def test_version_three_report_defaults_new_footprint_coverage_counts() -> None:
+    report = lint_report(peer_netlist(assignments=(("GND", "GND"), ("DATA", "DATA"))))
+    payload = report.model_dump(mode="json")
+    payload["schema_version"] = "3"
+    alias = payload["connector_peer_pin_coverage"]["footprint_alias_coverage"]
+    for field in (
+        "all_open_peer_pin_group_count",
+        "unanchored_all_open_peer_pin_group_count",
+        "all_open_finding_count",
+    ):
+        alias.pop(field)
+
+    restored = DesignLintReport.model_validate_json(json.dumps(payload))
+
+    assert restored.schema_version == "3"
+    assert restored.connector_peer_pin_coverage is not None
+    assert restored.connector_peer_pin_coverage.footprint_alias_coverage.all_open_finding_count == 0
+
+
+def test_all_open_footprint_alias_requires_a_shared_anchor_and_eligible_generic_metadata() -> None:
+    unanchored = lint_report(
+        peer_netlist(assignments=(("GND_A", "GND_B"), (None, None)))
+    ).connector_peer_pin_coverage
+    assert unanchored is not None
+    assert unanchored.footprint_alias_coverage.all_open_peer_pin_group_count == 1
+    assert unanchored.footprint_alias_coverage.unanchored_all_open_peer_pin_group_count == 1
+    assert unanchored.footprint_alias_coverage.all_open_finding_count == 0
+
+    named = peer_netlist(
+        assignments=(("GND", "GND"), (None, None)),
+        functions=("Pin_1", "SIGNAL"),
+    )
+    non_signal = peer_netlist(assignments=(("GND", "GND"), (None, None))).model_copy(
+        update={
+            "pin_electrical_types": {
+                **peer_netlist(assignments=(("GND", "GND"), (None, None))).pin_electrical_types,
+                "J1.2": "power_in",
+                "J2.2": "power_in",
+            }
+        }
+    )
+    common = peer_netlist(assignments=(("GND", "GND"), ("DATA", "DATA")))
+    for source in (named, non_signal, common):
+        report = lint_report(source)
+        assert not any(item.rule_id == ALL_OPEN_RULE_ID for item in report.findings)
+
+
+def test_all_open_footprint_alias_is_stable_under_mapping_order() -> None:
+    source = peer_netlist(assignments=(("GND", "GND"), (None, None)))
+    reordered = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+        }
+    )
+    original = next(
+        item for item in lint_report(source).findings if item.rule_id == ALL_OPEN_RULE_ID
+    )
+    shuffled = next(
+        item for item in lint_report(reordered).findings if item.rule_id == ALL_OPEN_RULE_ID
+    )
+    assert (shuffled.fingerprint, shuffled.evidence) == (original.fingerprint, original.evidence)
+
+
+def test_all_open_footprint_alias_obeys_block_off_and_exact_ignore_policy() -> None:
+    source = peer_netlist(assignments=(("GND", "GND"), (None, None)))
+    review_policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id=ALL_OPEN_RULE_ID,
+                mode="review",
+                reason="Synthetic project opts into this all-open alias review.",
+            ),
+        )
+    )
+    finding = next(
+        item
+        for item in lint_report(source, review_policy).findings
+        if item.rule_id == ALL_OPEN_RULE_ID
+    )
+    blocked = lint_report(
+        source,
+        DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=ALL_OPEN_RULE_ID,
+                    mode="block",
+                    reason="Synthetic policy exercises configurable blocking.",
+                ),
+            )
+        ),
+    )
+    assert blocked.status == "FAIL"
+    assert (
+        next(item for item in blocked.findings if item.rule_id == ALL_OPEN_RULE_ID).mode == "block"
+    )
+
+    ignored = lint_report(
+        source,
+        DesignLintPolicy(
+            rules=review_policy.rules,
+            ignores=(
+                DesignLintIgnore(
+                    rule_id=ALL_OPEN_RULE_ID,
+                    fingerprint=finding.fingerprint,
+                    reason="Synthetic policy records an intentionally unused contact.",
+                ),
+            ),
+        ),
+    )
+    ignored_finding = next(item for item in ignored.findings if item.rule_id == ALL_OPEN_RULE_ID)
+    assert ignored_finding.disposition == "IGNORED"
 
 
 def test_generic_open_contact_on_one_footprint_peer_is_reviewed() -> None:

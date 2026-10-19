@@ -196,6 +196,15 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
     assert open_coverage["open_peer_pin_group_count"] == 1
     assert open_coverage["common_anchor_group_count"] == 1
     assert open_coverage["open_outlier_finding_count"] == 1
+    all_open = results["connector-return-fixture/footprint-alias-all-open-fault"]
+    assert all_open["lint_status"] == "REVIEW"
+    assert all_open["findings"] == "connector.footprint_peer_pin_all_open"
+    assert (
+        json.loads(all_open["connector_peer_pin_coverage"])["footprint_alias_coverage"][
+            "all_open_finding_count"
+        ]
+        == 1
+    )
     numeric_fault = results["connector-return-fixture/footprint-alias-numeric-fault"]
     numeric_control = results["connector-return-fixture/footprint-alias-numeric-control"]
     numeric_open = results["connector-return-fixture/footprint-alias-numeric-open-fault"]
@@ -436,6 +445,7 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
         "footprint-alias-fault",
         "footprint-alias-control",
         "footprint-alias-open-fault",
+        "footprint-alias-all-open-fault",
         "footprint-alias-numeric-fault",
         "footprint-alias-numeric-control",
         "footprint-alias-numeric-open-fault",

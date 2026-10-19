@@ -8,6 +8,7 @@ from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 
 RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
 OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
+ALL_OPEN_RULE_ID = "connector.footprint_peer_pin_all_open"
 
 
 def verify_footprint_alias_peer_assignments(
@@ -142,6 +143,68 @@ def verify_footprint_alias_peer_open_outlier(
                 raise ValueError("Native footprint-alias open fault lost its exact peer evidence")
         elif alias.open_outlier_finding_count != 0:
             raise ValueError("Native footprint-alias common control produced an open-peer prompt")
+
+        receipts[case] = json.dumps(
+            coverage.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+    return receipts
+
+
+def verify_footprint_alias_peer_all_open(
+    ctx: ConnectorReturnFixtureContext,
+) -> dict[str, str]:
+    """Validate the all-open generic alias fault against an assigned control."""
+    receipts: dict[str, str] = {}
+    cases = (
+        ("footprint-alias-all-open-fault", "REVIEW", 1),
+        ("footprint-alias-control", "PASS", 0),
+    )
+    for case, expected_status, expected_count in cases:
+        report = ctx.reports[case, "first"]
+        observed = ctx.observed_contracts[case, "first"]
+        coverage = report.connector_peer_pin_coverage
+        findings = tuple(item for item in report.findings if item.rule_id == ALL_OPEN_RULE_ID)
+        assigned = {pin for pins in observed.nets.values() for pin in pins}
+        if (
+            report.status != expected_status
+            or len(findings) != expected_count
+            or coverage is None
+            or coverage.netlist_sha256 != ctx.netlist_hashes[case, "first"]
+            or observed.components["J1"].part_id is not None
+            or observed.components["J2"].part_id is not None
+            or observed.component_symbols["J1"] == observed.component_symbols["J2"]
+            or any(
+                observed.pin_functions.get(f"{reference}.{number}") != function
+                or observed.pin_electrical_types.get(f"{reference}.{number}") != "passive"
+                for reference in ("J1", "J2")
+                for number, function in (("1", "Pin_1"), ("2", "Pin_2"))
+            )
+        ):
+            raise ValueError(f"Native {case} lost its PART_ID-free all-open alias evidence")
+
+        alias = coverage.footprint_alias_coverage
+        if expected_count:
+            if (
+                not {"2"} <= set(observed.component_pin_numbers.get("J1", ()))
+                or not {"2"} <= set(observed.component_pin_numbers.get("J2", ()))
+                or {"J1.2", "J2.2"} & assigned
+                or alias.candidate_group_count != 1
+                or alias.eligible_peer_group_count != 1
+                or alias.peer_scope_group_count != 1
+                or alias.unassigned_assignment_pin_group_count != 1
+                or alias.common_anchor_group_count != 1
+                or alias.all_open_peer_pin_group_count != 1
+                or alias.unanchored_all_open_peer_pin_group_count != 0
+                or alias.all_open_finding_count != 1
+                or findings[0].evidence.get("open_pins") != ("J1.2", "J2.2")
+                or findings[0].evidence.get("common_anchor_pin_numbers") != ("1",)
+            ):
+                raise ValueError("Native all-open footprint-alias fault lost exact pin evidence")
+        elif alias.all_open_finding_count != 0:
+            raise ValueError("Native assigned control produced an all-open alias finding")
 
         receipts[case] = json.dumps(
             coverage.model_dump(mode="json"),

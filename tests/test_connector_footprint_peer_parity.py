@@ -9,6 +9,9 @@ from pathlib import Path
 import pytest
 from mcp import Client
 
+from kicad_tooling.hwrepo.connector_footprint_peer_pins import (
+    scan_connector_footprint_peer_pin_assignments,
+)
 from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.evidence import digest
@@ -23,6 +26,7 @@ from kicad_tooling.hwrepo.models import (
     ProjectManifest,
     ValidationSummary,
 )
+from kicad_tooling.validate import read_netlist
 from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
 from tests.mcp_parity_support import semantic_design_lint_report
 from tests.synthetic_design_lint_project import (
@@ -39,12 +43,14 @@ pytestmark = [
 
 RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
 OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
+ALL_OPEN_RULE_ID = "connector.footprint_peer_pin_all_open"
 
 
 def _observed(
     *,
     fault: bool,
     open_peer: bool = False,
+    all_open: bool = False,
     functions: tuple[str, str] = ("Pin_1", "Pin_2"),
 ) -> NetlistContract:
     components = {
@@ -58,9 +64,13 @@ def _observed(
         components=components,
         nets={
             "SYNTHETIC_GROUND": ("J1.1", "J2.1"),
-            "SYNTHETIC_SIGNAL_A": ("J1.2",),
+            **({"SYNTHETIC_SIGNAL_A": ("J1.2",)} if not all_open else {}),
             **({"SYNTHETIC_SIGNAL_B": ("J2.2",)} if fault and not open_peer else {}),
-            **({"SYNTHETIC_SIGNAL_A": ("J1.2", "J2.2")} if not fault and not open_peer else {}),
+            **(
+                {"SYNTHETIC_SIGNAL_A": ("J1.2", "J2.2")}
+                if not fault and not open_peer and not all_open
+                else {}
+            ),
         },
         component_symbols={
             "J1": "Synthetic:GenericPort",
@@ -101,6 +111,11 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
                 mode="review",
                 reason="Synthetic parity fixture explicitly opts in to this heuristic.",
             ),
+            DesignLintRuleOverride(
+                rule_id=ALL_OPEN_RULE_ID,
+                mode="review",
+                reason="Synthetic parity fixture explicitly opts in to the all-open prompt.",
+            ),
         )
     )
     root, summary_path = synthetic_design_lint_project(tmp_path, policy)
@@ -140,17 +155,28 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for fault, open_peer, functions, rule_id, expected_status, expected_findings in (
-        (True, False, ("Pin_1", "Pin_2"), RULE_ID, "REVIEW", 1),
-        (False, False, ("Pin_1", "Pin_2"), RULE_ID, "PASS", 0),
-        (False, True, ("Pin_1", "Pin_2"), OPEN_RULE_ID, "REVIEW", 1),
-        (False, False, ("Pin_1", "Pin_2"), OPEN_RULE_ID, "PASS", 0),
-        (True, False, ("1", "7"), RULE_ID, "REVIEW", 1),
-        (False, False, ("1", "7"), RULE_ID, "PASS", 0),
-        (False, True, ("1", "7"), OPEN_RULE_ID, "REVIEW", 1),
+    for fault, open_peer, all_open, functions, rule_id, expected_status, expected_findings in (
+        (True, False, False, ("Pin_1", "Pin_2"), RULE_ID, "REVIEW", 1),
+        (False, False, False, ("Pin_1", "Pin_2"), RULE_ID, "PASS", 0),
+        (False, True, False, ("Pin_1", "Pin_2"), OPEN_RULE_ID, "REVIEW", 1),
+        (False, False, False, ("Pin_1", "Pin_2"), OPEN_RULE_ID, "PASS", 0),
+        (True, False, False, ("1", "7"), RULE_ID, "REVIEW", 1),
+        (False, False, False, ("1", "7"), RULE_ID, "PASS", 0),
+        (False, True, False, ("1", "7"), OPEN_RULE_ID, "REVIEW", 1),
+        (False, False, True, ("Pin_1", "Pin_2"), ALL_OPEN_RULE_ID, "REVIEW", 1),
+        (False, False, False, ("Pin_1", "Pin_2"), ALL_OPEN_RULE_ID, "PASS", 0),
     ):
-        observed = _observed(fault=fault, open_peer=open_peer, functions=functions)
+        observed = _observed(
+            fault=fault,
+            open_peer=open_peer,
+            all_open=all_open,
+            functions=functions,
+        )
         netlist_path.write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
+        if all_open:
+            parsed = read_netlist(netlist_path)
+            scan = scan_connector_footprint_peer_pin_assignments(parsed)
+            assert scan.all_open_finding_count == 1, (scan, parsed.model_dump())
         write_model(
             summary_path,
             summary.model_copy(
@@ -177,5 +203,7 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
         assert alias.netlist_sha256 == digest(netlist_path)
         if rule_id == RULE_ID:
             assert alias.divergence_finding_count == expected_findings
-        else:
+        elif rule_id == OPEN_RULE_ID:
             assert alias.open_outlier_finding_count == expected_findings
+        else:
+            assert alias.all_open_finding_count == expected_findings

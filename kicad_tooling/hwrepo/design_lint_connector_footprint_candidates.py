@@ -64,6 +64,7 @@ def connector_footprint_peer_pin_candidates(
     return (
         *divergence_candidates,
         *_footprint_peer_pin_open_candidates(scan),
+        *_footprint_peer_pin_all_open_candidates(scan),
     )
 
 
@@ -111,4 +112,51 @@ def _footprint_peer_pin_open_candidates(
             },
         )
         for item in scan.open_outliers
+    )
+
+
+def _footprint_peer_pin_all_open_candidates(
+    scan: ConnectorFootprintPeerPinScan,
+) -> tuple[Candidate, ...]:
+    """Create opt-in review prompts for generic contacts open on every alias peer."""
+    return tuple(
+        Candidate(
+            rule_id="connector.footprint_peer_pin_all_open",
+            subject=f"{item.value} [{item.footprint}] pin {item.pin_number}",
+            message=(
+                "Fitted connector instances with distinct native symbols share the same value, "
+                "footprint, complete pin inventory, and matching pin-function and electrical-type "
+                "metadata. This generic contact is unassigned on every compared peer, while a "
+                "separate contact has one common assigned net. Review the approved pinout for an "
+                "intentionally unused contact or a missing connection; these similarity clues do "
+                "not establish that the contact must connect."
+                + (
+                    " The comparison is scoped to a source-reviewed peer-assignment group."
+                    if item.peer_assignment_group is not None
+                    else ""
+                )
+            ),
+            evidence={
+                "value": (item.value,),
+                "footprint": (item.footprint,),
+                "pin_number": (item.pin_number,),
+                "pin_function": (item.pin_function,),
+                "assignments": tuple(
+                    f"{pin}={','.join(nets) if nets else '<unassigned>'}"
+                    for pin, nets in item.assignments.items()
+                ),
+                "open_pins": tuple(item.assignments),
+                "symbols": item.symbols,
+                "common_anchor_pin_numbers": item.common_anchor_pin_numbers,
+                **(
+                    {}
+                    if item.peer_assignment_group is None
+                    else {
+                        "peer_assignment_group": (item.peer_assignment_group,),
+                        "peer_assignment_basis": item.peer_assignment_basis,
+                    }
+                ),
+            },
+        )
+        for item in scan.all_open
     )

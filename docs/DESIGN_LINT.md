@@ -184,6 +184,18 @@ The first rules are:
   and [cross-symbol PART_ID fixture
   record](../tests/fixtures/design_lint/connector-peer-part-id-native/README.md).
   The schematic assignment does not establish routed copper continuity or off-board wiring.
+- connector.footprint_peer_pin_all_open extends this prompt to fitted,
+  PART_ID-free connector aliases only when distinct native symbols have exact
+  nonempty value and footprint matches, complete identical pin inventories,
+  matching native pin functions and electrical types, and another pin with
+  one exact shared net assignment. Generic passive or signal contacts left
+  open on every peer become an opt-in, default-off finding. A shared footprint
+  and net anchor are review clues, not proof of identical roles or required
+  wiring. DNP, named pins, native power/free/unspecified types, incomplete or
+  ambiguous evidence, and unanchored groups are excluded. The project can
+  select review, block, or off and use exact-fingerprint ignores. The
+  [tooling-owned fixture record](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md)
+  covers assigned, mixed-open, and all-open cases on KiCad 10.0.0 and 10.0.5.
 - `connector.peer_power_input_open_assignment` and
   `connector.peer_power_input_named_all_open` compare an explicit, unrecognized
   native `power_in` pin across distinct connector symbols with a guarded shared
@@ -1185,10 +1197,10 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 119 active rules. They
+`synthetic_validated`; the catalog currently contains 120 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
-`review`; schematic geometry rules and the generic all-open connector and
+`review`; schematic geometry rules and generic all-open connector and
 component peer heuristics default to `off`. These prompts need project-specific
 review because a generic contact may be intentionally unused. Both connector
 and component generic-peer heuristics remain default-off, including the

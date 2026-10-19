@@ -13,6 +13,7 @@ from kicad_tooling.hwrepo.models import (
 
 FOOTPRINT_PEER_RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
 FOOTPRINT_OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
+FOOTPRINT_ALL_OPEN_RULE_ID = "connector.footprint_peer_pin_all_open"
 NETLIST_SHA256 = "a" * 64
 
 
@@ -78,6 +79,7 @@ def peer_pin_reachability_netlists() -> tuple[NetlistContract, NetlistContract]:
     return (
         peer_netlist(assignments=(("GND", "GND"), ("DATA_A", "DATA_B"))),
         peer_netlist(assignments=(("GND", "GND"), ("DATA_A", None))),
+        peer_netlist(assignments=(("GND", "GND"), (None, None))),
     )
 
 

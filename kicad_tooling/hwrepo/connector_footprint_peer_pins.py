@@ -12,6 +12,18 @@ from .connector_identity import (
 )
 from .models import NetlistContract
 
+_GENERIC_ALL_OPEN_PIN_TYPES = frozenset(
+    {
+        "passive",
+        "input",
+        "output",
+        "bidirectional",
+        "tri_state",
+        "open_collector",
+        "open_emitter",
+    }
+)
+
 
 @dataclass(frozen=True)
 class ConnectorFootprintPeerPinDivergence:
@@ -45,6 +57,21 @@ class ConnectorFootprintPeerPinOpenOutlier:
 
 
 @dataclass(frozen=True)
+class ConnectorFootprintPeerPinAllOpen:
+    """A generic contact left unassigned on every footprint-alias peer."""
+
+    footprint: str
+    value: str
+    pin_number: str
+    pin_function: str
+    assignments: dict[str, tuple[str, ...]]
+    symbols: tuple[str, ...]
+    common_anchor_pin_numbers: tuple[str, ...]
+    peer_assignment_group: str | None = None
+    peer_assignment_basis: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ConnectorFootprintPeerPinScan:
     """Coverage and review candidates derived from one native netlist snapshot."""
 
@@ -67,8 +94,12 @@ class ConnectorFootprintPeerPinScan:
     open_peer_pin_group_count: int
     unanchored_open_peer_pin_group_count: int
     open_outlier_finding_count: int
+    all_open_peer_pin_group_count: int
+    unanchored_all_open_peer_pin_group_count: int
+    all_open_finding_count: int
     divergences: tuple[ConnectorFootprintPeerPinDivergence, ...]
     open_outliers: tuple[ConnectorFootprintPeerPinOpenOutlier, ...]
+    all_open: tuple[ConnectorFootprintPeerPinAllOpen, ...]
 
 
 def _observed_pin_numbers(observed: NetlistContract) -> dict[str, set[str]]:
@@ -162,8 +193,11 @@ def scan_connector_footprint_peer_pin_assignments(
     unanchored_different_assignment_pin_group_count = 0
     open_peer_pin_group_count = 0
     unanchored_open_peer_pin_group_count = 0
+    all_open_peer_pin_group_count = 0
+    unanchored_all_open_peer_pin_group_count = 0
     divergences: list[ConnectorFootprintPeerPinDivergence] = []
     open_outliers: list[ConnectorFootprintPeerPinOpenOutlier] = []
+    all_open: list[ConnectorFootprintPeerPinAllOpen] = []
 
     for identity, peers in candidate_groups:
         folded_inventories = {
@@ -247,6 +281,7 @@ def scan_connector_footprint_peer_pin_assignments(
             anchors: list[str] = []
             generic_differences: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             generic_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
+            generic_all_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             for pin_number in pin_numbers:
                 assignments = {
                     f"{reference}.{pin_number}": tuple(
@@ -263,7 +298,18 @@ def scan_connector_footprint_peer_pin_assignments(
                     unassigned_assignment_pin_group_count += 1
                     assigned_signatures = tuple(signature for signature in signatures if signature)
                     function = functions[f"{scope_references[0]}.{pin_number}".casefold()]
-                    if (
+                    pin_type = (
+                        electrical_types[f"{scope_references[0]}.{pin_number}".casefold()]
+                        .strip()
+                        .casefold()
+                    )
+                    if not assigned_signatures and (
+                        pin_type in _GENERIC_ALL_OPEN_PIN_TYPES
+                        and pin_function_is_generic(function)
+                    ):
+                        all_open_peer_pin_group_count += 1
+                        generic_all_open_assignments.append((pin_number, assignments))
+                    elif (
                         assigned_signatures
                         and len(set(assigned_signatures)) == 1
                         and pin_function_is_generic(function)
@@ -326,9 +372,26 @@ def scan_connector_footprint_peer_pin_assignments(
                             peer_assignment_basis=basis,
                         )
                     )
+                for pin_number, assignments in generic_all_open_assignments:
+                    all_open.append(
+                        ConnectorFootprintPeerPinAllOpen(
+                            footprint=footprint_display,
+                            value=value_display,
+                            pin_number=pin_number,
+                            pin_function=functions[
+                                f"{scope_references[0]}.{pin_number}".casefold()
+                            ],
+                            assignments=dict(sorted(assignments.items())),
+                            symbols=peer_symbols,
+                            common_anchor_pin_numbers=tuple(sorted(anchors)),
+                            peer_assignment_group=peer_group,
+                            peer_assignment_basis=basis,
+                        )
+                    )
             else:
                 unanchored_different_assignment_pin_group_count += len(generic_differences)
                 unanchored_open_peer_pin_group_count += len(generic_open_assignments)
+                unanchored_all_open_peer_pin_group_count += len(generic_all_open_assignments)
 
     divergences.sort(
         key=lambda item: (
@@ -340,6 +403,15 @@ def scan_connector_footprint_peer_pin_assignments(
         )
     )
     open_outliers.sort(
+        key=lambda item: (
+            item.footprint.casefold(),
+            item.value.casefold(),
+            item.pin_number.casefold(),
+            (item.peer_assignment_group or "").casefold(),
+            tuple(pin.casefold() for pin in item.assignments),
+        )
+    )
+    all_open.sort(
         key=lambda item: (
             item.footprint.casefold(),
             item.value.casefold(),
@@ -372,6 +444,10 @@ def scan_connector_footprint_peer_pin_assignments(
         open_peer_pin_group_count=open_peer_pin_group_count,
         unanchored_open_peer_pin_group_count=unanchored_open_peer_pin_group_count,
         open_outlier_finding_count=len(open_outliers),
+        all_open_peer_pin_group_count=all_open_peer_pin_group_count,
+        unanchored_all_open_peer_pin_group_count=unanchored_all_open_peer_pin_group_count,
+        all_open_finding_count=len(all_open),
         divergences=tuple(divergences),
         open_outliers=tuple(open_outliers),
+        all_open=tuple(all_open),
     )

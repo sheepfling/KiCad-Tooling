@@ -118,6 +118,32 @@ _PARITY_FIXTURES_BY_RULE = {
             "test_all_open_generic_peer_pin_lint_cli_mcp_parity",
         ),
     },
+    "connector.footprint_peer_pin_all_open": {
+        "fault_fixtures": _refs(
+            "tests.test_connector_footprint_peer_open",
+            "test_all_generic_contacts_open_across_footprint_aliases_is_opt_in_review",
+        )
+        + _refs(
+            "tests.test_connector_footprint_peer_parity",
+            "test_footprint_alias_review_matches_cli_and_mcp",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_connector_footprint_peer_open",
+            "test_all_open_footprint_alias_requires_a_shared_anchor_and_eligible_generic_metadata",
+        )
+        + _refs(
+            "tests.test_connector_footprint_peer_parity",
+            "test_footprint_alias_review_matches_cli_and_mcp",
+        ),
+        "metamorphic_fixtures": _refs(
+            "tests.test_connector_footprint_peer_open",
+            "test_all_open_footprint_alias_is_stable_under_mapping_order",
+        )
+        + _refs(
+            "tests.test_connector_footprint_peer_parity",
+            "test_footprint_alias_review_matches_cli_and_mcp",
+        ),
+    },
     "connector.unconnected_power_output": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_connector_power_output",

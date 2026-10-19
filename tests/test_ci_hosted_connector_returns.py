@@ -71,6 +71,7 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/footprint-alias-fault",
     "connector-return-fixture/footprint-alias-control",
     "connector-return-fixture/footprint-alias-open-fault",
+    "connector-return-fixture/footprint-alias-all-open-fault",
     "connector-return-fixture/footprint-alias-numeric-fault",
     "connector-return-fixture/footprint-alias-numeric-control",
     "connector-return-fixture/footprint-alias-numeric-open-fault",
@@ -106,6 +107,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/ground-contract-isolated-control",
     "connector-return-fixture/pin-connectivity-contract-common-fault",
     "connector-return-fixture/pin-connectivity-contract-common-control",
+    "connector-return-fixture/pin-connectivity-contract-assignment-only-split-control",
+    "connector-return-fixture/pin-connectivity-contract-assignment-only-common-control",
     "connector-return-fixture/pin-connectivity-contract-isolated-fault",
     "connector-return-fixture/pin-connectivity-contract-isolated-control",
     "connector-return-fixture/pin-connectivity-contract-peer-common-open-fault",
@@ -280,6 +283,37 @@ def test_footprint_alias_open_peer_is_validated_on_pinned_native_versions(
     assert fault_coverage["open_peer_pin_group_count"] == 1
     assert fault_coverage["open_outlier_finding_count"] == 1
     for result in (fault, control, numeric_fault):
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+def test_footprint_alias_all_open_peer_is_validated_on_pinned_native_versions(
+    connector_return_results_by_version, version
+):
+    results = connector_return_results_by_version[version]
+    fault = results["connector-return-fixture/footprint-alias-all-open-fault"]
+    control = results["connector-return-fixture/footprint-alias-control"]
+    assert fault["lint_status"] == "REVIEW"
+    assert fault["findings"] == "connector.footprint_peer_pin_all_open"
+    assert fault["subjects"] == ("Synthetic two-contact connector [Synthetic:Connector_2x1] pin 2")
+    assert control["lint_status"] == "PASS"
+    assert control["findings"] == "none"
+
+    fault_coverage = json.loads(fault["connector_peer_pin_coverage"])["footprint_alias_coverage"]
+    control_coverage = json.loads(control["connector_peer_pin_coverage"])[
+        "footprint_alias_coverage"
+    ]
+    assert fault_coverage["status"] == "PARTIALLY_EVALUATED"
+    assert fault_coverage["netlist_sha256"] == fault["netlist_sha256"]
+    assert fault_coverage["candidate_group_count"] == 1
+    assert fault_coverage["common_anchor_group_count"] == 1
+    assert fault_coverage["all_open_peer_pin_group_count"] == 1
+    assert fault_coverage["all_open_finding_count"] == 1
+    assert control_coverage["all_open_finding_count"] == 0
+    for result in (fault, control):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
