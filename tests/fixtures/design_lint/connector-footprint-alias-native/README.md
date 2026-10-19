@@ -23,6 +23,13 @@ The hosted native lane exports each schematic twice with pinned KiCad 10.0.0
 and 10.0.5, then verifies source hashes, normalized-netlist repeatability, and
 review outcomes.
 
+Hosted acceptance passed on 2026-10-19 in tag `v0.5.1rc25` (GitHub Actions run
+`39297613246`). The tag-selected connector lint gate enabled native fixtures and
+exercised the numeric fault/control and open-fault cases on both pinned KiCad
+versions. This confirms deterministic schematic-export and lint behavior; it
+does not establish that similar connectors have the same electrical role or
+require common nets.
+
 The matching footprint and value are clues for review, not proof that the
 connectors have the same electrical role. The rule does not require common
 nets. A project may disable or ignore it with an authored reason, and a

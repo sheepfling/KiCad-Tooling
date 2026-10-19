@@ -7319,8 +7319,13 @@ is not a reason by itself to expand its scope or change its default policy.
   unanchored splits, DNP and PART_ID exclusions, peer-group isolation,
   deterministic ordering, project policy, exact ignores, and CLI/MCP parity.
   The exact-version native fixture lane covers both label styles on KiCad
-  10.0.0 and 10.0.5; its hosted result is pending. No external project source
-  or expectation is used.
+  10.0.0 and 10.0.5. Hosted acceptance passed in `v0.5.1rc25` (commit
+  `334fba64822dd8f31365e1306998fd36066a367c`, GitHub Actions run
+  `39297613246`). The tag selected `design_lint and connector_lint` and enabled
+  native connector fixtures; the version-parameterized fault/control cases
+  verified numeric-only pin-function evidence and repeatable normalized
+  netlists on both pinned KiCad versions. No external project source or
+  expectation is used.
 - **Focused selection:**
 
   ```sh
@@ -7356,7 +7361,11 @@ is not a reason by itself to expand its scope or change its default policy.
   KiCad 10.0.0 and 10.0.5.
   The fixture source is tooling-owned; see the
   [fixture README](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md).
-  Hosted native acceptance for this checkpoint is pending.
+  Hosted native acceptance passed in `v0.5.1rc25` (commit
+  `334fba64822dd8f31365e1306998fd36066a367c`, GitHub Actions run
+  `39297613246`). The tag selected `design_lint and connector_lint` and enabled
+  native connector fixtures; the version-parameterized open-contact faults and
+  connected controls repeated on KiCad 10.0.0 and 10.0.5.
 - **Focused selection:**
 
   ```sh
