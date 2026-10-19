@@ -8341,23 +8341,22 @@ is not a reason by itself to expand its scope or change its default policy.
   uses outline samples; absent that data, the code falls back to filled or
   authored zone bounding boxes and labels the basis as heuristic. The rule
   supplies no minimum clearance or project-specific sensitivity requirement.
-- **Local overlap and gap:** LINT-096 can check a project-authored keepout
-  signature, and native DRC enforces configured copper spacing. Neither
-  validates that a controller-sourced touch-clearance requirement is configured
-  and met. Our native PCB snapshot retains filled-zone contours and pad nets,
-  but not pad-outline geometry. A cohort-style measurement therefore needs a
-  source-bound native geometry adapter; bounding-box or reference-name guesses
-  are not an acceptable substitute.
-- **Disposition:** This is a candidate for a configurable PCB review/contract
-  check, not an adopted detector or a confirmed defect class. Do not add a
-  universal clearance value. Advance only with an exact mapped pad, same-layer
-  ground net, and independently sourced minimum. A tooling-owned synthetic
-  comparison should cover circle and oval pads, a non-rectangular fill edge,
-  rotated placement, test-point and DNP controls, absent/unfilled zones, and a
-  below/at/above-minimum boundary. Compare against native DRC and retain the
-  exact measurement basis. No runtime trial, project example, reviewer
-  disposition, or precision measurement is claimed here; no cohort code or
-  board fixture was copied.
+- **Local overlap and gap:** LINT-096 checks a project-authored keepout
+  signature, and native DRC enforces configured copper spacing. The general
+  native PCB snapshot retains filled-zone contours and pad nets, but not
+  arbitrary pad outlines. LINT-133 now addresses the bounded requirement case:
+  a project-authored exact pad/net/layer/minimum request is measured by a
+  read-only native probe using KiCad's effective pad shape and filled-zone
+  clearance API. Its tooling-owned circle, oval, and rotated-pad controls run
+  against pinned KiCad 10.0.0 and 10.0.5. This does not add a generic name-based
+  detector or universal clearance default.
+- **Disposition:** The cohort's sampled GP-001 implementation remains deferred;
+  its fixed 2 mm sampling missed the narrow synthetic midpoint void. LINT-133
+  supplies a first-party, project-authored contract check for exact mapped
+  pads and independently reviewed minimums, with native DRC comparison. It
+  does not establish applicability or reviewer value on production boards.
+  No cohort code or board fixture was copied, and no universal clearance
+  requirement is adopted.
 - **Recorded runtime trial — kicad-happy `checks_run` (2026-10-12):** Tested
   release tag `v2.2.1` at commit
   [`d5fd7da585fce7e59329b68fd065384216d4ff0a`](https://github.com/aklofas/kicad-happy/commit/d5fd7da585fce7e59329b68fd065384216d4ff0a);
