@@ -248,7 +248,7 @@ def inspect_design_lint_summary(
         connectivity_snapshot = capture_connectivity_snapshot(
             project_id=project_id,
             observed=coach.observed,
-            source_hashes=coach.source_hashes,
+            source_hashes=report.source_hashes,
             netlist_sha256=coach.netlist_sha256,
             kicad_version=config.kicad_version,
             toolchain_image=config.image,

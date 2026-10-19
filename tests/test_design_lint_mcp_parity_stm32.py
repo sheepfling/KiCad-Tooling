@@ -155,6 +155,11 @@ class _DesignLintMcpParityStm32Cases(McpParityHarness):
             self.assertEqual(valid.stm32_pin_map_coverage.status, "COMPLETE")
             self.assertEqual(valid.stm32_pin_map_coverage.mismatches, ())
             self.assertEqual(valid.source_hashes["firmware/controller.ioc"], digest(ioc_path))
+            assert valid.connectivity_snapshot is not None
+            self.assertEqual(
+                valid.connectivity_snapshot.source_hashes["firmware/controller.ioc"],
+                digest(ioc_path),
+            )
 
             ioc_path.write_text(
                 ioc_path.read_text(encoding="utf-8").replace(

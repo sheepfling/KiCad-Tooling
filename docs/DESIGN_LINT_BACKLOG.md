@@ -10238,7 +10238,9 @@ it does not claim field validation or effectiveness against private boards.
   pin; semantically equivalent valid assignments in reordered lines with
   changed source hashes; unmapped fitted STM32 prompt with DNP control; source hash
   mutation; review/block/off/exact-ignore lifecycle; and CLI/MCP parity. The
-  [synthetic input README](../tests/fixtures/design_lint/stm32-pin-map/README.md)
+  parity case also asserts that the mapped `.ioc` digest is carried by both the
+  report and its connectivity snapshot, preventing partial source provenance.
+  The [synthetic input README](../tests/fixtures/design_lint/stm32-pin-map/README.md)
   documents the invented signal assignments and fixture scope.
 - **Pinned native fixtures:** A valid synthetic four-pin MCU map, a schematic
   net drift, and a CubeMX signal drift each export twice and normalize to the
