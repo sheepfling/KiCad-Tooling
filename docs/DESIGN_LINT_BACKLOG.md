@@ -2769,8 +2769,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v62. The cross-process probe supports themed report
-  selectors and retains the complete 175-report inventory gate. Fault/control
+- **Status:** Implemented v63. The cross-process probe supports themed report
+  selectors and retains the complete 177-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3271,6 +3271,13 @@ is not a reason by itself to expand its scope or change its default policy.
   `design_lint_rule` selector includes it. The report inventory grows from 171
   to 175. This strengthens deterministic regression evidence without adding a
   rule or asserting that the aliases must share a net.
+- The v63 extension adds source-bound reports for the configured touch-pad to
+  reference-copper clearance rule. It compares a 500 µm fault against the exact
+  800 µm project minimum, with the same authored requirement and schematic
+  netlist, across three independently randomized Python processes. The rule
+  catalog links the regression as metamorphic coverage, and the complete report
+  inventory grows from 175 to 177. This adds process-stability evidence only;
+  it does not establish general applicability or electrical approval.
 - Tagged acceptance for `v0.5.0rc191` passed on 2026-10-12 (GitHub Actions run
   `38305303770`). The scoped unit gate used the
   `component.generic_peer_pin_all_open` selector with

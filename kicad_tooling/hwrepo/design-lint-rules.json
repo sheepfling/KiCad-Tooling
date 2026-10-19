@@ -4448,7 +4448,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_touch_pad_clearance.test_raising_project_minimum_alone_changes_candidate"
+        "tests.test_pcb_touch_pad_clearance.test_raising_project_minimum_alone_changes_candidate",
+        "tests.test_design_lint_determinism_pcb_touch_pad_clearance.test_touch_pad_clearance_fault_and_boundary_reports_are_source_bound_and_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

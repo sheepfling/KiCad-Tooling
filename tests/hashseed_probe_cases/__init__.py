@@ -13,6 +13,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_drc",
     "pcb_return_paths",
     "pcb_component_inventory",
+    "pcb_touch_pad_clearance",
     "pcb_measurements",
     "interfaces",
     "analog",
