@@ -190,6 +190,9 @@ def test_common_return_across_symbols_keeps_shield_separate() -> None:
 def test_return_functions_across_connector_symbols_need_review() -> None:
     report = evaluate("synthetic-ports", coach(cross_symbol_returns()), DesignLintPolicy())
     assert report.status == "REVIEW"
+    rule_ids = {item.rule_id for item in report.findings}
+    assert "connector.repeated_pin_function" in rule_ids
+    assert "net.return_labels_without_pin_roles" not in rule_ids
     returns = [
         item
         for item in report.findings

@@ -26,6 +26,7 @@
       "fault_fixtures": [
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
         "tests.test_design_lint_connector_returns.test_return_pin_disagreement_within_one_connector_needs_review",
+        "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_connector_peer_pin_coverage.test_split_meaningful_returns_are_reported_and_counted",
         "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
@@ -2874,6 +2875,7 @@
       "valid_control_fixtures": [
         "tests.test_design_lint_return_label_groups.test_native_return_pin_roles_suppress_unroled_label_hint",
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
+        "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",
         "tests.test_return_net_lint.test_longer_non_return_tokens_do_not_match_letter_suffix_rule",
         "tests.test_design_lint_return_label_groups.test_one_unindexed_return_label_is_not_a_group_hint"
       ],

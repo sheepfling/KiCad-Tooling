@@ -3322,7 +3322,9 @@ is not a reason by itself to expand its scope or change its default policy.
   groups attach only to pins without a recognized return function, the rule
   asks for review. Numbered-return groups are left to
   `net.numbered_returns`; explicitly named return pins are left to the
-  connector pin-function rule. The bounded return vocabulary now accepts a
+  connector pin-function rule. When those functions differ across connector
+  nets, that separate rule keeps a review prompt; it does not require common
+  returns. The bounded return vocabulary now accepts a
   one-letter suffix on `GND`, including `GNDA` and `GNDD`, which KiCad's
   [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
   lists as a net matched by `GND*`. Matching names remain review-only and do
@@ -3336,7 +3338,8 @@ is not a reason by itself to expand its scope or change its default policy.
   exact-ignore support.
 - **Fixtures:** Two unnumbered return-like nets on numeric pins and distinct
   connector symbols; explicit GND/RTN pin-function control; one return-like
-  net; ordinary signal nets; a numbered sibling pair alone and alongside an
+  net; ordinary signal nets; explicit return functions split across connector
+  symbols, reviewed by the peer-function rule; a numbered sibling pair alone and alongside an
   unnumbered pair; review/block/off/exact ignore and stale fingerprint; catalog
   reachability.
 - **Done:** Synthetic fault/control cases, policy lifecycle, catalog entry,

@@ -123,6 +123,10 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
             "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
         ),
         (
+            "connector.repeated_pin_function",
+            "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES",
+        ),
+        (
             "component.peer_power_output_unconnected",
             "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
         ),
