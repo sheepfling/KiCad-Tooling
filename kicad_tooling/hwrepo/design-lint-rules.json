@@ -4544,7 +4544,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_board_only_footprints.test_schematic_reference_case_and_input_order_do_not_change_results"
+        "tests.test_pcb_board_only_footprints.test_schematic_reference_case_and_input_order_do_not_change_results",
+        "tests.test_design_lint_determinism_pcb_board_only.test_board_only_candidate_and_matched_control_are_source_bound_and_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

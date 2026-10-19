@@ -191,6 +191,8 @@ REPORT_ORDER = (
     "pcb_touch_pad_clearance_boundary_control",
     "pcb_required_fitted_reference_dnp_fault",
     "pcb_required_fitted_reference_fitted_control",
+    "pcb_board_only_mounting_hole_candidate",
+    "pcb_board_only_matched_inventory_control",
 )
 
 
@@ -213,6 +215,7 @@ REPORT_BUILDERS = {
     "pcb_component_inventory": "tests.hashseed_probe_cases.pcb_component_inventory",
     "pcb_touch_pad_clearance": "tests.hashseed_probe_cases.pcb_touch_pad_clearance",
     "pcb_required_fitted_reference": ("tests.hashseed_probe_cases.pcb_required_fitted_reference"),
+    "pcb_board_only_footprints": "tests.hashseed_probe_cases.pcb_board_only_footprints",
 }
 
 

@@ -2769,8 +2769,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v64. The cross-process probe supports themed report
-  selectors and retains the complete 179-report inventory gate. Fault/control
+- **Status:** Implemented v65. The cross-process probe supports themed report
+  selectors and retains the complete 181-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3285,6 +3285,12 @@ is not a reason by itself to expand its scope or change its default policy.
   fault/control pair raises the complete report inventory from 177 to 179.
   This guards report stability for a project-authored fabrication requirement;
   it does not infer the required assembly list.
+- The v65 extension adds an opt-in board-only footprint review candidate and a
+  matched-inventory control. The candidate is an unmatched mounting-hole
+  reference, explicitly kept at `REVIEW` because a board-only footprint may be
+  intentional. Full source-bound reports are compared across three randomized
+  Python processes; the inventory grows from 179 to 181. This tests report
+  stability without classifying the footprint as a defect.
 - Tagged acceptance for `v0.5.0rc191` passed on 2026-10-12 (GitHub Actions run
   `38305303770`). The scoped unit gate used the
   `component.generic_peer_pin_all_open` selector with
@@ -7148,6 +7154,11 @@ is not a reason by itself to expand its scope or change its default policy.
   wheel checks also passed. These tests establish the predicate and source
   boundary; they do not measure field precision or reviewer effort. No
   proprietary project source was used.
+- **Determinism:** LINT-080 compares the unmatched mounting-hole review
+  candidate with a matched-reference control across three independent Python
+  hash seeds. The rule remains default-off; this synthetic fixture explicitly
+  enables review mode and does not measure whether real board-only footprints
+  are intentional.
 - **Next:** Keep the rule default-off. Use independently reviewed, nonconfidential
   project outcomes to estimate which project classes benefit and how many
   intentional extras need ignores before considering any wider default.

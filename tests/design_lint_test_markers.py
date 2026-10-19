@@ -287,6 +287,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_determinism_pcb_antenna.py",
             "tests/test_design_lint_determinism_pcb_touch_pad_clearance.py",
             "tests/test_design_lint_determinism_pcb_required_fitted_reference.py",
+            "tests/test_design_lint_determinism_pcb_board_only.py",
             "tests/test_design_lint_determinism_pcb_drc.py",
             "tests/test_design_lint_determinism_pcb_protection.py",
             "tests/test_design_lint_determinism_pcb_track_width.py",
