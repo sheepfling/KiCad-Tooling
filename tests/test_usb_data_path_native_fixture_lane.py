@@ -104,7 +104,14 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         unmapped_inline["netlist_sha256"]
         == results["usb-data-path-fixture/inline-component-control"]["netlist_sha256"]
     )
-    assert unmapped_inline["repeat_netlist_sha256"] == unmapped_inline["netlist_sha256"]
+    assert (
+        unmapped_inline["normalized_netlist_sha256"]
+        == unmapped_inline["repeat_normalized_netlist_sha256"]
+    )
+    assert (
+        unmapped_inline["normalized_netlist_sha256"]
+        == results["usb-data-path-fixture/inline-component-control"]["normalized_netlist_sha256"]
+    )
     assert unmapped_inline["coverage_status"] == "NO_SUPPORTED_PEER_PATHS"
     assert unmapped_inline["supported_data_paths"] == 0
     assert unmapped_inline["unsupported_component_references"] == "U2"
