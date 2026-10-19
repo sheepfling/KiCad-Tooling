@@ -117,9 +117,7 @@ class _DesignLintMcpParityIcDecouplingCases(McpParityHarness):
         write_model(
             contract_path,
             contract.model_copy(
-                update={
-                    "design_lint": DesignLintPolicy(ic_decoupling_map=ic_decoupling_map())
-                }
+                update={"design_lint": DesignLintPolicy(ic_decoupling_map=ic_decoupling_map())}
             ),
         )
 

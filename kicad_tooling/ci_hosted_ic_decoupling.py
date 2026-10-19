@@ -49,11 +49,7 @@ def source_backed_ic_decoupling_result(
             observed=observed,
             netlist_sha256=netlist_sha256,
         ),
-        DesignLintPolicy(
-            ic_decoupling_map=IcDecouplingMap(requirements=(requirement,))
-        ),
+        DesignLintPolicy(ic_decoupling_map=IcDecouplingMap(requirements=(requirement,))),
     )
-    subjects = tuple(
-        sorted(item.subject for item in report.findings if item.rule_id == RULE_ID)
-    )
+    subjects = tuple(sorted(item.subject for item in report.findings if item.rule_id == RULE_ID))
     return report.status, subjects

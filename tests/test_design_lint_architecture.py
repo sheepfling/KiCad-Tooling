@@ -382,9 +382,7 @@ def test_each_active_rule_declares_a_source_owner_function() -> None:
             or not path.startswith("kicad_tooling/hwrepo/")
             or path in coordinators
             or (filename.startswith("design_lint_") and not theme_owned_lint)
-            or not (
-                filename.startswith(THEME_OWNER_PREFIXES.get(theme, ())) or theme_owned_lint
-            )
+            or not (filename.startswith(THEME_OWNER_PREFIXES.get(theme, ())) or theme_owned_lint)
             or not function
         ):
             invalid_owners.append(

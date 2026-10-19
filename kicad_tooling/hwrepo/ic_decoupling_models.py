@@ -58,9 +58,7 @@ class IcDecouplingRequirement(StrictModel):
             raise ValueError("Mapped IC power and return nets must differ")
         references = tuple(item.reference.casefold() for item in self.capacitors)
         pins = tuple(
-            pin.casefold()
-            for item in self.capacitors
-            for pin in (item.power_pin, item.return_pin)
+            pin.casefold() for item in self.capacitors for pin in (item.power_pin, item.return_pin)
         )
         if self.ic_reference.casefold() in references:
             raise ValueError("The IC cannot also be a mapped decoupling capacitor")
