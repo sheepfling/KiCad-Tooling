@@ -119,6 +119,12 @@ def prepare_connector_return_fixture_context(
         / "connector-footprint-alias-native/control.kicad_sch",
         "footprint-alias-open-fault": fixture_root
         / "connector-footprint-alias-native/open-fault.kicad_sch",
+        "footprint-alias-numeric-fault": fixture_root
+        / "connector-footprint-alias-native/numeric-fault.kicad_sch",
+        "footprint-alias-numeric-control": fixture_root
+        / "connector-footprint-alias-native/numeric-control.kicad_sch",
+        "footprint-alias-numeric-open-fault": fixture_root
+        / "connector-footprint-alias-native/numeric-open-fault.kicad_sch",
         "peer-pin-minority-fault": fixture_root
         / "generic-peer-pin-assignment-native/minority-fault.kicad_sch",
         "peer-pin-divergence-fault": fixture_root
@@ -249,6 +255,9 @@ def prepare_connector_return_fixture_context(
         "footprint-alias-fault": "e45b8069603078c1a26198b962b96b20d8a7f9dff39b195b7bb6399e00b323c0",
         "footprint-alias-control": "d5c77a1b8de808ab82c9f98f0172af7f6f933ce43536dabe00c6fbf83e048e28",
         "footprint-alias-open-fault": "ba6fd627b7a8e994ca554dbb9f3a1d67197f8a48d5302c5ee6c78318be424605",
+        "footprint-alias-numeric-fault": "505a7b2d1eaa74c54d476c5cab9cfcc41649ed51a64f2da4ebd9f5beb6a74f94",
+        "footprint-alias-numeric-control": "c8140e9cf9030ccb646121631d186cef97b7d9c76b0d994c2cb3648aaae28a27",
+        "footprint-alias-numeric-open-fault": "1a011151f612ba45769e859e0ada0cf67da46dea50d062e0559e4591f537d270",
         "peer-pin-minority-fault": "a071543178ad7668d20a3653fea5196cf556c3b96338b81dbeac97a6360ede2c",
         "peer-pin-divergence-fault": "c278b2ff86c869a6dba7c19ee08f064a863d282d251be44fd47c1e8a71254e57",
         "generic-placeholder-divergence-fault": "f6f4c9b419ab590366ca329b1ac0749706b29536017f2f24145de7ef6bdfaf30",

@@ -196,6 +196,14 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
     assert open_coverage["open_peer_pin_group_count"] == 1
     assert open_coverage["common_anchor_group_count"] == 1
     assert open_coverage["open_outlier_finding_count"] == 1
+    numeric_fault = results["connector-return-fixture/footprint-alias-numeric-fault"]
+    numeric_control = results["connector-return-fixture/footprint-alias-numeric-control"]
+    numeric_open = results["connector-return-fixture/footprint-alias-numeric-open-fault"]
+    assert numeric_fault["findings"] == "connector.footprint_peer_pin_assignment_divergence"
+    assert numeric_control["findings"] == "none"
+    assert numeric_open["findings"] == "connector.footprint_peer_pin_open_outlier"
+    for result in (numeric_fault, numeric_control, numeric_open):
+        assert result["pin_functions"] == "J1.1=1;J1.2=7;J2.1=1;J2.2=7"
     for (
         case,
         expected_open,
@@ -417,6 +425,9 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
         "footprint-alias-fault",
         "footprint-alias-control",
         "footprint-alias-open-fault",
+        "footprint-alias-numeric-fault",
+        "footprint-alias-numeric-control",
+        "footprint-alias-numeric-open-fault",
         "two-peer-open-fault",
         "two-peer-no-connect-fault",
         "two-peer-common-control",

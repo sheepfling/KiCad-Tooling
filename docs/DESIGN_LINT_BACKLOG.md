@@ -7313,14 +7313,14 @@ is not a reason by itself to expand its scope or change its default policy.
   copper continuity or off-board wiring.
 - **Evidence:** Tooling-owned synthetic fault and control schematics use
   distinct symbols with matching passive pin metadata and no PART_ID. Unit
-  tests cover both `Pin_N` and numeric-only pin-function labels, shared-anchor
-  fault detection, common and named-pin
-  controls, incomplete inventory and metadata, open and ambiguous assignments,
+  tests cover `Pin_N` and numeric-only pin-function labels, shared-anchor
+  fault detection, common and named-pin controls, incomplete inventory and
+  metadata, open and ambiguous assignments,
   unanchored splits, DNP and PART_ID exclusions, peer-group isolation,
   deterministic ordering, project policy, exact ignores, and CLI/MCP parity.
-  The exact-version native fixture lane is registered for KiCad 10.0.0 and
-  10.0.5; its hosted result is pending. No external project source or
-  expectation is used.
+  The exact-version native fixture lane covers both label styles on KiCad
+  10.0.0 and 10.0.5; its hosted result is pending. No external project source
+  or expectation is used.
 - **Focused selection:**
 
   ```sh
@@ -7349,10 +7349,11 @@ is not a reason by itself to expand its scope or change its default policy.
   trigger this rule. Coverage records open but unanchored groups. No copper
   continuity or off-board wiring is established.
 - **Evidence:** Synthetic fault/control schematics and typed netlist cases cover
-  `Pin_N` and numeric-only pin-function labels,
-  the anchored open contact, common assignment, all-open and unanchored cases,
+  `Pin_N` and numeric-only pin-function labels, the anchored open contact,
+  common assignment, all-open and unanchored cases,
   named/incomplete/ineligible peers, stable ordering, policy/ignore behavior,
-  CLI/MCP parity, and exact-version native exports for KiCad 10.0.0 and 10.0.5.
+  CLI/MCP parity, and exact-version native exports for both label styles on
+  KiCad 10.0.0 and 10.0.5.
   The fixture source is tooling-owned; see the
   [fixture README](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md).
   Hosted native acceptance for this checkpoint is pending.

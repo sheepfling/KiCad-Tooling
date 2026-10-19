@@ -13,11 +13,13 @@ OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
 def verify_footprint_alias_peer_assignments(
     ctx: ConnectorReturnFixtureContext,
 ) -> dict[str, str]:
-    """Require the PART_ID-free fault and common-net control on native netlists."""
+    """Validate Pin_N and numeric-label split faults and controls from native netlists."""
     receipts: dict[str, str] = {}
-    for case, expected_status, expected_finding_count in (
-        ("footprint-alias-fault", "REVIEW", 1),
-        ("footprint-alias-control", "PASS", 0),
+    for case, expected_status, expected_finding_count, expected_functions in (
+        ("footprint-alias-fault", "REVIEW", 1, ("Pin_1", "Pin_2")),
+        ("footprint-alias-control", "PASS", 0, ("Pin_1", "Pin_2")),
+        ("footprint-alias-numeric-fault", "REVIEW", 1, ("1", "7")),
+        ("footprint-alias-numeric-control", "PASS", 0, ("1", "7")),
     ):
         report = ctx.reports[case, "first"]
         observed = ctx.observed_contracts[case, "first"]
@@ -36,7 +38,8 @@ def verify_footprint_alias_peer_assignments(
             or parts[0].footprint != parts[1].footprint
             or observed.component_symbols["J1"] == observed.component_symbols["J2"]
             or any(
-                observed.pin_functions.get(f"{reference}.{number}") != f"Pin_{number}"
+                observed.pin_functions.get(f"{reference}.{number}")
+                != expected_functions[int(number) - 1]
                 or observed.pin_electrical_types.get(f"{reference}.{number}") != "passive"
                 for reference in ("J1", "J2")
                 for number in ("1", "2")
@@ -64,6 +67,10 @@ def verify_footprint_alias_peer_assignments(
             "1",
         ):
             raise ValueError("Native footprint-alias fault lost its exact shared anchor")
+        if expected_finding_count and findings[0].evidence.get("pin_function") != (
+            expected_functions[1],
+        ):
+            raise ValueError(f"Native {case} lost its generic pin-function evidence")
         receipts[case] = json.dumps(
             coverage.model_dump(mode="json"),
             sort_keys=True,
@@ -76,11 +83,12 @@ def verify_footprint_alias_peer_assignments(
 def verify_footprint_alias_peer_open_outlier(
     ctx: ConnectorReturnFixtureContext,
 ) -> dict[str, str]:
-    """Require a mixed assigned/open alias fault and common-assignment control."""
+    """Validate Pin_N and numeric-label open faults and a common-assignment control."""
     receipts: dict[str, str] = {}
-    for case, expected_status, expected_finding_count in (
-        ("footprint-alias-open-fault", "REVIEW", 1),
-        ("footprint-alias-control", "PASS", 0),
+    for case, expected_status, expected_finding_count, expected_functions in (
+        ("footprint-alias-open-fault", "REVIEW", 1, ("Pin_1", "Pin_2")),
+        ("footprint-alias-numeric-open-fault", "REVIEW", 1, ("1", "7")),
+        ("footprint-alias-control", "PASS", 0, ("Pin_1", "Pin_2")),
     ):
         report = ctx.reports[case, "first"]
         observed = ctx.observed_contracts[case, "first"]
@@ -97,8 +105,21 @@ def verify_footprint_alias_peer_open_outlier(
             or observed.components["J1"].part_id is not None
             or observed.components["J2"].part_id is not None
             or observed.component_symbols["J1"] == observed.component_symbols["J2"]
-            or (case == "footprint-alias-open-fault" and "J2.2" in assigned_pins)
-            or (case == "footprint-alias-open-fault" and "J2.2" not in unconnected_pins)
+            or any(
+                observed.pin_functions.get(f"{reference}.{number}")
+                != expected_functions[int(number) - 1]
+                or observed.pin_electrical_types.get(f"{reference}.{number}") != "passive"
+                for reference in ("J1", "J2")
+                for number in ("1", "2")
+            )
+            or (
+                case in {"footprint-alias-open-fault", "footprint-alias-numeric-open-fault"}
+                and "J2.2" in assigned_pins
+            )
+            or (
+                case in {"footprint-alias-open-fault", "footprint-alias-numeric-open-fault"}
+                and "J2.2" not in unconnected_pins
+            )
         ):
             raise ValueError(f"Native {case} lost expected PART_ID-free open-peer evidence")
 
@@ -116,6 +137,7 @@ def verify_footprint_alias_peer_open_outlier(
                 or alias.open_outlier_finding_count != 1
                 or findings[0].evidence.get("open_pins") != ("J2.2",)
                 or findings[0].evidence.get("common_anchor_pin_numbers") != ("1",)
+                or findings[0].evidence.get("pin_function") != (expected_functions[1],)
             ):
                 raise ValueError("Native footprint-alias open fault lost its exact peer evidence")
         elif alias.open_outlier_finding_count != 0:

@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
+from tests.design_lint_fixtures.connector_footprint_alias_numeric_cases import (
+    footprint_alias_numeric_peer_pin_cases,
+)
 
 
 def _all_open_generic_peer_pin_cases() -> dict[str, NetlistContract]:
@@ -218,6 +221,7 @@ def peer_pin_case_contracts() -> dict[str, NetlistContract]:
     return {
         **_all_open_generic_peer_pin_cases(),
         **_footprint_alias_peer_pin_cases(),
+        **footprint_alias_numeric_peer_pin_cases(),
         **_all_open_generic_signal_peer_pin_cases(),
         **_all_open_generic_signal_type_cases(),
         "peer-power-fault": NetlistContract(
