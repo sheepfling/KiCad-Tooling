@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TypeVar
 
+from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .models import NetlistContract
 from .power_sequence_models import PowerSequenceMap, PowerSequenceStageRequirement
-
-_Value = TypeVar("_Value")
 
 
 @dataclass(frozen=True)
@@ -29,13 +26,6 @@ class PowerSequenceObservedCycle:
 
     stage_ids: tuple[str, ...]
     edges: tuple[str, ...]
-
-
-def _lookup(mapping: Mapping[str, _Value], key: str) -> _Value | None:
-    matches = [
-        value for candidate, value in mapping.items() if candidate.casefold() == key.casefold()
-    ]
-    return matches[0] if len(matches) == 1 else None
 
 
 def _pin_nets(observed: NetlistContract, pin: str) -> tuple[str, ...]:

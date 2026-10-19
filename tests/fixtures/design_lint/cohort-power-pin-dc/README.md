@@ -10,6 +10,8 @@ They do not represent a product board and contain no proprietary source.
 | `control.kicad_sch`                            | Same pin and capacitor arrangement, with the supply net named `+3V3`. No source component is shown.                             | No `PP-001`; isolates the rail-name branch and is not a valid source control.  |
 | `no-cap.kicad_sch`                             | Fitted `U1.1` is assigned to recognized positive rail `+3V3`; no capacitor component is placed on that schematic net.           | `DO-DET` review observation                                                    |
 | `source-backed-control.kicad_sch`              | `U1.1`, synthetic `power_out` pin `U2.1`, and `C1.1` share `+3V3`.                                                              | Native ERC control; cohort reports capacitor coverage.                         |
+| `source-backed-minimum-control.kicad_sch`      | Exact mapped `U1.1` and `C1` are connected across `+3V3` and `GND`; nominal `C1` is 100 nF.                                   | Synthetic LINT-136 inclusive-boundary control.                                |
+| `source-backed-below-minimum.kicad_sch`        | Same exact mapped topology, with nominal `C1` at 47 nF.                                                                        | Synthetic LINT-136 below-minimum fault.                                       |
 | `source-backed-no-cap.kicad_sch`               | `U1.1` and synthetic `power_out` pin `U2.1` share `+3V3`; no capacitor is present.                                              | Native ERC / LINT-046 comparison; cohort flags missing decoupling.             |
 | `source-backed-dnp-capacitor.kicad_sch`        | `U1.1`, `U2.1`, and DNP `C1.1` share `+3V3`; `C1.2` connects to `GND`.                                                          | LINT-046 DNP regression; kicad_skills treats the unpopulated part as coverage. |
 | `custom-capacitor-role-control.kicad_sch`      | Exact opaque `Vendor:CAP123` identity is on `+3V3` and `GND`; `PART_ID`, footprint, and passive pins `1`/`2` are explicit.      | LINT-091 exact project-role control.                                           |
@@ -21,6 +23,8 @@ They do not represent a product board and contain no proprietary source.
 | `control.kicad_sch`                            | `2e67336b13f8ff9b62dd4e40bd45a4116e4d825d78f361537ea3693d4e18d4a2` |
 | `no-cap.kicad_sch`                             | `09ec95768fb247b1ec781a078f585b27eee66ae7e40bc0251cefb7ebef511e7a` |
 | `source-backed-control.kicad_sch`              | `2a3632b71b5c7bc01b282cb2d23a5b49df5759364a99e588b98b659654c9d45f` |
+| `source-backed-minimum-control.kicad_sch`      | `d622f7cfa2536b1d093b530de46a8e2b93419d29dcb25f58adf6607025d94472` |
+| `source-backed-below-minimum.kicad_sch`        | `e52e3a9f920c823f05df1ac4293019b39b200ba67bba85c6920afb7af28b46d6` |
 | `source-backed-no-cap.kicad_sch`               | `5db3396470f1e3b8101e428dc25b41c4166f1748e4a68ad88a3ac2757173952a` |
 | `source-backed-dnp-capacitor.kicad_sch`        | `8184bd9c297b40d0192af1e446206939ec7d5466bc8e306a0292472da7424b6c` |
 | `custom-capacitor-role-control.kicad_sch`      | `338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d` |
@@ -159,7 +163,7 @@ candidate predicate, not proof that a particular product requires a capacitor.
 
 ## Native Tooling regression
 
-The eight Tooling-owned fixtures are exported twice with the digest-pinned
+The ten Tooling-owned fixtures are exported twice with the digest-pinned
 KiCad 10.0.0 and 10.0.5 images. The regression asserts each source hash,
 normalized parsed-netlist and ERC repeatability, and these outcomes:
 
@@ -169,6 +173,8 @@ normalized parsed-netlist and ERC repeatability, and these outcomes:
 | `control.kicad_sch`                            | Fitted `C1` connects `+3V3` to `GND`, but no source is shown. ERC reports `power_pin_not_driven`; this is only a name-branch control.  | No prompt                                    | No prompt; recognized rail name is an anchor |
 | `fault.kicad_sch`                              | `U1.1` is on unrecognized `LOCAL_A`; `C1` connects it to `GND`. ERC reports `power_pin_not_driven`.                                    | No prompt because the rail is not recognized | Source-anchor coverage REVIEW for `LOCAL_A`  |
 | `source-backed-control.kicad_sch`              | `U1.1`, `U2.1` (`power_out`), and `C1.1` share `+3V3`. ERC has no `power_pin_not_driven` violation.                                    | No prompt                                    | No prompt; fitted `power_out` is an anchor   |
+| `source-backed-minimum-control.kicad_sch`      | Exact mapped synthetic U1/C1 identities connect `U1.1`/`C1.1` to `+3V3` and `C1.2` to `GND`; C1 is 100 nF.                    | No prompt                                    | No prompt                                    |
+| `source-backed-below-minimum.kicad_sch`        | Same exact topology with C1 at 47 nF.                                                                                            | No prompt                                    | No prompt                                    |
 | `source-backed-no-cap.kicad_sch`               | `U1.1` and `U2.1` (`power_out`) share `+3V3`; no capacitor is present. ERC has no power-source error or capacitor-presence diagnostic. | One default-review prompt for `+3V3`         | No prompt; no fitted capacitor-to-return     |
 | `source-backed-dnp-capacitor.kicad_sch`        | `U1.1`, `U2.1`, and DNP `C1.1` share `+3V3`; native netlist preserves DNP state; no `power_pin_not_driven`.                            | One default-review prompt for `+3V3`         | No prompt; fitted `power_out` is an anchor   |
 | `custom-capacitor-role-control.kicad_sch`      | Opaque `Vendor:CAP123` has exact `PART_ID`, footprint, passive pin inventory, and `+3V3`/`GND` assignments; native ERC has no errors.  | No prompt with its exact project role map    | No prompt                                    |
@@ -186,6 +192,14 @@ KiCad versions. The normalized ERC hashes are
 KiCad 10.0.0 and
 `1dc9beb6f7751346d643dd91f2059c35e7059cee10c644cb22c6328a8daabc99` for
 KiCad 10.0.5. Repeated exports match within each version.
+
+The LINT-136 extension to this native lane checks two additional tooling-owned
+schematics against an explicitly authored synthetic 100 nF minimum for `U1.1`.
+The 100 nF control is quiet; the 47 nF fixture produces one below-minimum
+review. The threshold exists only to test inclusive-boundary behavior and is
+not a suggested value. Both fixtures have exact symbols, footprints, passive
+capacitor pins, supply/return nets, and source hashes. Their result is
+reported separately from LINT-046's capacitor-presence result.
 
 LINT-056's prompt on `fault.kicad_sch` is a source-anchor coverage review, not
 an additional defect detection: native ERC already reports

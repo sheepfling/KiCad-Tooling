@@ -4707,6 +4707,63 @@ pass is not proof of a physical supply path. Findings default to `review`; set
 `power.mapped_series_path_mismatch` to `block` or `off` only with a project
 reason, or record an exact fingerprint ignore for a reviewed exception.
 
+## Require a project-authored IC decoupling minimum
+
+Use `design_lint.ic_decoupling_map` when a reviewed electrical requirement sets
+a minimum total nominal capacitance for one exact IC power pin. The map names
+the IC identity, supply and return nets, every capacitor counted toward the
+minimum, and the source basis. No required IC, rail, capacitor, or threshold is
+inferred from a design:
+
+```json
+{
+  "design_lint": {
+    "ic_decoupling_map": {
+      "schema_version": "1",
+      "requirements": [
+        {
+          "id": "controller-vdd-decoupling",
+          "basis": "Example only; replace with the reviewed source and requirement",
+          "ic_reference": "U1",
+          "expected_ic_value": "Synthetic controller",
+          "expected_ic_symbol": "Synthetic:Controller",
+          "expected_ic_footprint": "Synthetic:QFN",
+          "power_pin": "U1.1",
+          "power_net": "+3V3",
+          "return_net": "GND",
+          "minimum_total_capacitance_pf": 100000.0,
+          "capacitors": [
+            {
+              "reference": "C1",
+              "expected_symbol": "Device:C",
+              "expected_footprint": "Synthetic:0603",
+              "power_pin": "C1.1",
+              "return_pin": "C1.2"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+For each mapped requirement, the check verifies exact component identity,
+power-pin type and assignment, capacitor identity, fitted state, exact two-pin
+inventory, passive pin types, and supply/return assignments. It parses explicit
+capacitance units, sums mapped nominal values in pF, and reviews a total below
+the authored inclusive minimum. Stale identity or topology also produces a
+review before a capacitance comparison can be relied on. Findings default to
+`REVIEW`; the normal rule override and exact-fingerprint ignore lifecycle
+applies.
+
+The example values are synthetic and are not design guidance. The check does
+not choose a universal capacitor value, discover missing map entries, validate
+the source requirement, apply tolerance or DC-bias derating, evaluate voltage
+rating or transient response, check PCB placement, or prove copper/return-path
+continuity. Pair it with the separate PCB decoupling and return-path checks
+where those requirements apply.
+
 ## Require mapped power-sequence dependencies
 
 Use `design_lint.power_sequence_map` when an approved requirement says one

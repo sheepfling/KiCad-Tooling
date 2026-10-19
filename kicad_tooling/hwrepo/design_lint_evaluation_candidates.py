@@ -104,6 +104,7 @@ def scan_evaluation_candidates(
         peer_pin_assignment_scans=peer_evidence.peer_pin_assignment_scans,
         peer_power_output_review_enabled=peer_power_output_mode != "off",
         connector_power_output_review_enabled=connector_power_output_mode != "off",
+        ic_decoupling_map=policy.ic_decoupling_map,
     )
     i2c_peer_coverage = None
     spi_peer_coverage = None

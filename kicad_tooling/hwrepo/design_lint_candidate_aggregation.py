@@ -47,6 +47,7 @@ from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
 )
+from .ic_decoupling_models import IcDecouplingMap
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import NetlistContract
@@ -144,6 +145,7 @@ def candidates(
     rs485_peer_reference_scan: Rs485PeerReferenceScan | None = None,
     peer_power_output_review_enabled: bool = True,
     connector_power_output_review_enabled: bool = True,
+    ic_decoupling_map: IcDecouplingMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -194,6 +196,7 @@ def candidates(
             power_path_map=power_path_map,
             reviewed_connector_references=reviewed_connector_references,
             peer_unconnected_power_output_pins=peer_unconnected_power_output_pins,
+            ic_decoupling_map=ic_decoupling_map,
         )
     )
     component_peer_findings = component_peer_candidates(

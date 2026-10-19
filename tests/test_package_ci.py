@@ -36,6 +36,7 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/power_path_models.py",
         "kicad_tooling/hwrepo/power_sequence_models.py",
         "kicad_tooling/hwrepo/power_connectivity_models.py",
+        "kicad_tooling/hwrepo/ic_decoupling_models.py",
         "kicad_tooling/hwrepo/analysis_state_models.py",
         "kicad_tooling/hwrepo/crystal_network_models.py",
         "kicad_tooling/hwrepo/pcb_keepout_models.py",
@@ -51,6 +52,7 @@ from scripts.lint_gate_scope import (
         "power-path-models",
         "power-sequence-models",
         "power-connectivity-models",
+        "ic-decoupling-models",
         "analysis-state-models",
         "crystal-network-models",
         "pcb-keepout-models",
@@ -137,6 +139,10 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
         (
             "bus.i2c_missing_pullup",
             "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES",
+        ),
+        (
+            "power.ic_decoupling_below_project_minimum",
+            "KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES",
         ),
     ),
 )

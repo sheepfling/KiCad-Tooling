@@ -144,6 +144,16 @@ _PARITY_FIXTURES_BY_RULE = {
             "test_named_supply_pin_on_negative_rail_cli_mcp_parity",
         ),
     },
+    "power.ic_decoupling_below_project_minimum": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_ic_decoupling",
+            "test_ic_decoupling_review_matches_between_cli_and_mcp",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_ic_decoupling",
+            "test_ic_decoupling_review_matches_between_cli_and_mcp",
+        ),
+    },
     "pcb.keepout_intent_coverage": {
         "valid_control_fixtures": _refs(
             "tests.test_pcb_keepouts_mcp_parity",

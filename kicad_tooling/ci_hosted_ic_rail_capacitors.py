@@ -19,6 +19,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
     import hashlib
     import os
 
+    from .ci_hosted_ic_decoupling import source_backed_ic_decoupling_result
     from .hwrepo.component_role_models import (
         ComponentRoleBinding,
         ComponentRoleMap,
@@ -50,6 +51,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "positive-rail-cap-control": "control.kicad_sch",
         "unrecognized-rail-control": "fault.kicad_sch",
         "source-backed-control": "source-backed-control.kicad_sch",
+        "source-backed-minimum-control": "source-backed-minimum-control.kicad_sch",
+        "source-backed-below-minimum": "source-backed-below-minimum.kicad_sch",
         "source-backed-no-cap": "source-backed-no-cap.kicad_sch",
         "source-backed-dnp-capacitor": "source-backed-dnp-capacitor.kicad_sch",
         "custom-capacitor-role-control": "custom-capacitor-role-control.kicad_sch",
@@ -147,6 +150,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "positive-rail-cap-control": set(),
         "unrecognized-rail-control": set(),
         "source-backed-control": set(),
+        "source-backed-minimum-control": set(),
+        "source-backed-below-minimum": set(),
         "source-backed-no-cap": {("+3V3", ("U1.1",), ("U1",))},
         "source-backed-dnp-capacitor": {("+3V3", ("U1.1",), ("U1",))},
         "custom-capacitor-role-control": set(),
@@ -157,6 +162,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "positive-rail-cap-control": set(),
         "unrecognized-rail-control": set(),
         "source-backed-control": set(),
+        "source-backed-minimum-control": set(),
+        "source-backed-below-minimum": set(),
         "source-backed-no-cap": {"+3V3: IC supply decoupling review"},
         "source-backed-dnp-capacitor": {"+3V3: IC supply decoupling review"},
         "custom-capacitor-role-control": set(),
@@ -167,6 +174,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "positive-rail-cap-control": set(),
         "unrecognized-rail-control": {"LOCAL_A: power-input source-path review"},
         "source-backed-control": set(),
+        "source-backed-minimum-control": set(),
+        "source-backed-below-minimum": set(),
         "source-backed-no-cap": set(),
         "source-backed-dnp-capacitor": set(),
         "custom-capacitor-role-control": set(),
@@ -197,6 +206,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
     erc_types: dict[tuple[str, str], tuple[str, ...]] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
     reports: dict[tuple[str, str], DesignLintReport] = {}
+    ic_decoupling_results: dict[tuple[str, str], tuple[str, tuple[str, ...]]] = {}
     for case in cases:
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -304,6 +314,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 )
             if case in {
                 "source-backed-control",
+                "source-backed-minimum-control",
+                "source-backed-below-minimum",
                 "source-backed-no-cap",
                 "source-backed-dnp-capacitor",
                 "custom-capacitor-role-control",
@@ -355,6 +367,12 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 netlist_sha256=raw_hashes[(case, run)],
             )
             reports[(case, run)] = evaluate(project_id, coach, policy)
+            if case in {"source-backed-minimum-control", "source-backed-below-minimum"}:
+                ic_decoupling_results[(case, run)] = source_backed_ic_decoupling_result(
+                    observed,
+                    project_id=project_id,
+                    netlist_sha256=raw_hashes[(case, run)],
+                )
 
     if any(
         normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")] for case in cases
@@ -367,6 +385,9 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         for case in cases
     ):
         raise ValueError("Native IC power-rail ERC reports differ after normalization")
+    for case in ("source-backed-minimum-control", "source-backed-below-minimum"):
+        if ic_decoupling_results[(case, "first")] != ic_decoupling_results[(case, "repeat")]:
+            raise ValueError(f"Native {case} decoupling findings differ between repeated exports")
     for case in cases:
         findings = {
             item.subject
@@ -423,6 +444,15 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
             power_pin_not_driven=("true" if case in expected_power_pin_not_driven else "false"),
             lint_status=reports[(case, "first")].status,
             capacitor_findings=";".join(sorted(findings)) or "none",
+            ic_decoupling_status=ic_decoupling_results.get(
+                (case, "first"), ("not_run", ())
+            )[0],
+            ic_decoupling_findings=(
+                ";".join(ic_decoupling_results[(case, "first")][1])
+                if (case, "first") in ic_decoupling_results
+                else "not_run"
+            )
+            or "none",
             source_path_findings=";".join(sorted(source_path_findings)) or "none",
             repeatable="true",
             repeatability_basis="normalized_netlist_and_erc",

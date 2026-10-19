@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
-from typing import TypeVar
 
+from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .models import (
     NetlistContract,
 )
@@ -19,15 +18,6 @@ from .resistor_paths import (
     direct_resistors,
     resistance_ohms,
 )
-
-_Value = TypeVar("_Value")
-
-
-def _lookup(mapping: Mapping[str, _Value], key: str) -> _Value | None:
-    matches = [
-        value for candidate, value in mapping.items() if candidate.casefold() == key.casefold()
-    ]
-    return matches[0] if len(matches) == 1 else None
 
 
 def _pin_nets(observed: NetlistContract) -> dict[str, set[str]]:

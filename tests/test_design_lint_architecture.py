@@ -373,14 +373,18 @@ def test_each_active_rule_declares_a_source_owner_function() -> None:
         owner = rule.get("implementation_owner", "")
         path = _implementation_path(owner)
         theme = rule.get("theme", "")
+        filename = path.rsplit("/", maxsplit=1)[-1] if path is not None else ""
+        theme_owned_lint = filename.startswith(f"design_lint_{theme}_")
         function = owner.split("#", 1)[1] if "#" in owner else ""
         if (
             owner not in rule.get("implementation_refs", [])
             or path is None
             or not path.startswith("kicad_tooling/hwrepo/")
             or path in coordinators
-            or path.rsplit("/", maxsplit=1)[-1].startswith("design_lint_")
-            or not path.rsplit("/", maxsplit=1)[-1].startswith(THEME_OWNER_PREFIXES.get(theme, ()))
+            or (filename.startswith("design_lint_") and not theme_owned_lint)
+            or not (
+                filename.startswith(THEME_OWNER_PREFIXES.get(theme, ())) or theme_owned_lint
+            )
             or not function
         ):
             invalid_owners.append(

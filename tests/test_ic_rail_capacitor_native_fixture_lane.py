@@ -21,6 +21,7 @@ pytestmark = [
     os.environ.get("KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES") != "1",
     reason="native IC rail-capacitor fixtures run in the digest-pinned package acceptance lane",
 )
+@pytest.mark.design_lint_rule(rule_id="power.ic_decoupling_below_project_minimum")
 @pytest.mark.parametrize(
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
@@ -43,6 +44,8 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "positive-rail-cap-control": "2e67336b13f8ff9b62dd4e40bd45a4116e4d825d78f361537ea3693d4e18d4a2",
         "unrecognized-rail-control": "0d42a2f557d2488425a7b1767e7e3b782c4bfe2c2e11bc2344f41513c49c7fb9",
         "source-backed-control": "2a3632b71b5c7bc01b282cb2d23a5b49df5759364a99e588b98b659654c9d45f",
+        "source-backed-minimum-control": "d622f7cfa2536b1d093b530de46a8e2b93419d29dcb25f58adf6607025d94472",
+        "source-backed-below-minimum": "e52e3a9f920c823f05df1ac4293019b39b200ba67bba85c6920afb7af28b46d6",
         "source-backed-no-cap": "5db3396470f1e3b8101e428dc25b41c4166f1748e4a68ad88a3ac2757173952a",
         "source-backed-dnp-capacitor": "8184bd9c297b40d0192af1e446206939ec7d5466bc8e306a0292472da7424b6c",
         "custom-capacitor-role-control": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
@@ -53,6 +56,8 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "positive-rail-cap-control": ("PASS", set()),
         "unrecognized-rail-control": ("REVIEW", set()),
         "source-backed-control": ("PASS", set()),
+        "source-backed-minimum-control": ("PASS", set()),
+        "source-backed-below-minimum": ("PASS", set()),
         "source-backed-no-cap": ("REVIEW", {"+3V3: IC supply decoupling review"}),
         "source-backed-dnp-capacitor": (
             "REVIEW",
@@ -69,6 +74,8 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "positive-rail-cap-control": "none",
         "unrecognized-rail-control": ("LOCAL_A: power-input source-path review"),
         "source-backed-control": "none",
+        "source-backed-minimum-control": "none",
+        "source-backed-below-minimum": "none",
         "source-backed-no-cap": "none",
         "source-backed-dnp-capacitor": "none",
         "custom-capacitor-role-control": "none",
@@ -101,6 +108,8 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "ic-rail-cap-fixture/positive-rail-cap-control",
         "ic-rail-cap-fixture/unrecognized-rail-control",
         "ic-rail-cap-fixture/source-backed-control",
+        "ic-rail-cap-fixture/source-backed-minimum-control",
+        "ic-rail-cap-fixture/source-backed-below-minimum",
         "ic-rail-cap-fixture/source-backed-no-cap",
         "ic-rail-cap-fixture/source-backed-dnp-capacitor",
         "ic-rail-cap-fixture/custom-capacitor-role-control",
@@ -144,3 +153,19 @@ def test_missing_capacitor_and_controls_export_repeatably(
         assert len(mounts) == 2
         assert sum(item.endswith(":/fixtures:ro") for item in mounts) == 1
         assert sum(item.endswith(":/output:rw") for item in mounts) == 1
+    assert (
+        results["ic-rail-cap-fixture/source-backed-minimum-control"]["ic_decoupling_status"]
+        == "PASS"
+    )
+    assert (
+        results["ic-rail-cap-fixture/source-backed-minimum-control"]["ic_decoupling_findings"]
+        == "none"
+    )
+    assert (
+        results["ic-rail-cap-fixture/source-backed-below-minimum"]["ic_decoupling_status"]
+        == "REVIEW"
+    )
+    assert (
+        results["ic-rail-cap-fixture/source-backed-below-minimum"]["ic_decoupling_findings"]
+        == "synthetic-u1-vdd-decoupling: U1.1"
+    )

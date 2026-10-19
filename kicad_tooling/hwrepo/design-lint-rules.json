@@ -5120,6 +5120,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/power_decoupling.py#ic_power_rails_without_fitted_capacitors"
     },
     {
+      "rule_id": "power.ic_decoupling_below_project_minimum",
+      "title": "Mapped IC decoupling capacitance is below the project minimum",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each project-authored IC power-pin requirement, verify the exact IC identity, mapped power-pin type and net, and every fitted two-pin capacitor identity, passive pin inventory, pin type, and power/return net assignment. Parse the mapped capacitors' nominal values with the bounded capacitance parser, sum them in pF, and report when the sum is below the independently authored inclusive minimum.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The project must explicitly map the IC identity, one power pin and net, one return net, every capacitor counted toward the requirement, a positive minimum, and the source basis. No IC, rail, capacitor, or threshold is inferred.",
+        "Only fitted, exact two-pin capacitors with explicitly supported nominal value spellings count. The result does not apply tolerance, DC-bias derating, voltage rating, temperature behavior, placement, current demand, transient response, or PCB return-path evidence.",
+        "A passing result establishes only the authored nominal schematic comparison. It does not establish that the source basis is correct, that the map covers every relevant IC pin, or that the physical design meets an electrical requirement."
+      ],
+      "fault_fixtures": [
+        "tests.test_design_lint_ic_decoupling.test_project_minimum_reports_below_range_with_source_bound_evidence",
+        "tests.test_design_lint_ic_decoupling.test_mapped_identity_topology_dnp_and_unknown_value_faults_are_reviewed",
+        "tests.test_design_lint_mcp_parity_ic_decoupling.test_ic_decoupling_review_matches_between_cli_and_mcp",
+        "tests.test_ic_rail_capacitor_native_fixture_lane.test_missing_capacitor_and_controls_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_design_lint_ic_decoupling.test_exact_minimum_and_parallel_caps_are_valid_controls",
+        "tests.test_design_lint_mcp_parity_ic_decoupling.test_ic_decoupling_review_matches_between_cli_and_mcp",
+        "tests.test_ic_rail_capacitor_native_fixture_lane.test_missing_capacitor_and_controls_export_repeatably"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_design_lint_ic_decoupling.test_ic_decoupling_input_order_does_not_change_findings",
+        "tests.test_design_lint_ic_decoupling.test_ic_decoupling_rule_obeys_review_block_off_and_exact_ignore"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_power_decoupling.py#ic_decoupling_candidates",
+        "kicad_tooling/hwrepo/ic_decoupling_models.py#IcDecouplingMap",
+        "kicad_tooling/hwrepo/capacitance_values.py#parse_capacitance_pf",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_power_decoupling.py#ic_decoupling_candidates"
+    },
+    {
       "rule_id": "power.mapped_series_path_mismatch",
       "title": "Mapped series power path differs from the schematic",
       "status": "active",

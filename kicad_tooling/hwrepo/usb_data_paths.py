@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TypeVar
-
 from .bus_signal_pairs import (
     usb_data_function_identity,
 )
+from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .models import (
     ComponentContract,
     NetlistContract,
@@ -25,15 +23,6 @@ from .usb_data_path_models import (
 from .usb_data_path_protection_shunts import protection_shunt_mismatches
 from .usb_data_path_types import UsbDataPathMismatch
 from .usb_peer_endpoint_analysis import usb_endpoint_reference_pins
-
-_Value = TypeVar("_Value")
-
-
-def _lookup(mapping: Mapping[str, _Value], key: str) -> _Value | None:
-    matches = [
-        value for candidate, value in mapping.items() if candidate.casefold() == key.casefold()
-    ]
-    return matches[0] if len(matches) == 1 else None
 
 
 def _pin_nets(observed: NetlistContract, pin: str) -> tuple[str, ...]:

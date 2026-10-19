@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import math
 import re
-from collections.abc import Mapping
 from decimal import Decimal, DecimalException, localcontext
-from typing import TypeVar
 
-from .crystal_networks import parse_capacitance_pf
+from .capacitance_values import parse_capacitance_pf
+from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .models import (
     ComponentContract,
     NetlistContract,
@@ -24,16 +23,8 @@ from .resistor_paths import (
     resistance_ohms,
 )
 
-_Value = TypeVar("_Value")
 _TAU = Decimal("6.2831853071795864769252867665590057683943387987502")
 _CAPACITOR_REFERENCE = re.compile(r"^C[A-Z]*[0-9]+$", re.IGNORECASE)
-
-
-def _lookup(mapping: Mapping[str, _Value], key: str) -> _Value | None:
-    matches = [
-        value for candidate, value in mapping.items() if candidate.casefold() == key.casefold()
-    ]
-    return matches[0] if len(matches) == 1 else None
 
 
 def _pin_nets(observed: NetlistContract, pin: str) -> tuple[str, ...]:

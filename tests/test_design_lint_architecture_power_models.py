@@ -6,12 +6,13 @@ import ast
 
 import pytest
 
-from kicad_tooling.hwrepo import models as shared_models
 from kicad_tooling.hwrepo import (
+    ic_decoupling_models,
     power_connectivity_models,
     power_path_models,
     power_sequence_models,
 )
+from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import (
     HWREPO,
     IMPLEMENTATION_MAX_LINES,
@@ -39,6 +40,11 @@ POWER_CONNECTIVITY_MODEL_NAMES = (
     "PowerLoadConnectivityRequirement",
     "PowerConnectivityRailRequirement",
     "PowerConnectivityAnalysis",
+)
+IC_DECOUPLING_MODEL_NAMES = (
+    "IcDecouplingCapacitorRequirement",
+    "IcDecouplingRequirement",
+    "IcDecouplingMap",
 )
 
 
@@ -72,6 +78,7 @@ def test_internal_power_services_import_models_from_theme_owners() -> None:
         set(POWER_PATH_MODEL_NAMES)
         | set(POWER_SEQUENCE_MODEL_NAMES)
         | set(POWER_CONNECTIVITY_MODEL_NAMES)
+        | set(IC_DECOUPLING_MODEL_NAMES)
     )
     legacy_imports: list[str] = []
     for scope in (REPO_ROOT / "kicad_tooling", REPO_ROOT / "tests"):
@@ -95,3 +102,15 @@ def test_internal_power_services_import_models_from_theme_owners() -> None:
         "Power services and regression tests must import models from their theme owners; "
         f"compatibility imports: {legacy_imports}"
     )
+
+
+def test_ic_decoupling_models_have_a_bounded_theme_owner() -> None:
+    owner = HWREPO / "ic_decoupling_models.py"
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES
+    tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    definitions = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
+    assert set(IC_DECOUPLING_MODEL_NAMES) <= definitions
+    for name in IC_DECOUPLING_MODEL_NAMES:
+        model = getattr(ic_decoupling_models, name)
+        assert model.__module__ == "kicad_tooling.hwrepo.ic_decoupling_models"
+        assert not hasattr(shared_models, name)

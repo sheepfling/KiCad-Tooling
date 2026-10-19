@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 118 rules are implemented with synthetic regression coverage.
+The following 119 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -412,6 +412,7 @@ Their actual recognition limits are documented in
 - `component.unconnected_return_pin`
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
+- `power.ic_decoupling_below_project_minimum`
 - `power.ic_rail_without_fitted_capacitor`
 - `power.pin_function_net_role_conflict`
 - `power.named_supply_pin_on_negative_rail`
@@ -7373,6 +7374,43 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and connector_lint'
   ```
 
+#### LINT-136 — Project-authored IC decoupling minimum
+
+- **Status:** Implemented as `power.ic_decoupling_below_project_minimum`,
+  defaulting to `REVIEW`. Project policy supports `BLOCK`, `OFF`, and exact
+  fingerprint ignores.
+- **Priority:** P2 deterministic comparison for projects that have an approved
+  nominal capacitance minimum for a specific IC supply pin.
+- **Predicate:** The project maps exact IC identity, one `power_in` pin and its
+  net, a separate return net, every fitted two-pin capacitor counted toward
+  the requirement, a positive minimum in pF, and the independent basis. The
+  source-bound native netlist must match component identity, pin inventory,
+  pin electrical type, fitted state, and all mapped assignments. Supported
+  nominal capacitance spellings are parsed and summed; only a total below the
+  authored inclusive minimum is reported as insufficient.
+- **Boundary:** No component or threshold is inferred. An absent or stale map
+  entry cannot detect an undeclared requirement. Unsupported values, DNP
+  parts, identity drift, or pin/net divergence produce mapping review and do
+  not count as capacitance. The comparison does not establish source accuracy,
+  tolerance, DC-bias derating, voltage rating, placement, current demand,
+  transient response, PCB connectivity, or physical return adequacy. LINT-046
+  continues to cover selected capacitor-presence prompts; LINT-020 handles its
+  separately mapped PCB placement question.
+- **Evidence:** Tooling-owned synthetic tests cover the below-minimum fault,
+  exact inclusive boundary, summed parallel capacitors, identity/topology/DNP
+  faults, unsupported values, stable ordering, project policy, and exact
+  ignores. CLI/MCP parity exercises the same fault and control. Source-backed
+  KiCad 10.0.0/10.0.5 fixtures are coded for a synthetic 47 nF fault and 100
+  nF control; hosted exact-version acceptance remains pending. These values
+  are test boundaries only, not recommended design limits. No project source
+  or cohort fixture is imported.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_design_lint_ic_decoupling.py \
+    -m 'design_lint and power_lint'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -12822,7 +12860,7 @@ candidate commit and installation inputs before any new runtime comparison.
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | CC-001 connector/contact current versus PCB copper | LINT-021 measures project-mapped net track widths; LINT-071 checks authored component power dissipation. LINT-077 now checks owner-authored current against an exact per-contact rating. Neither local check calculates copper ampacity. | The contact slice is implemented in LINT-077 with exact identity/pin binding; hosted native pass, run 38143123091. Defer copper-capacity work until an independently reviewed model defines stack-up, temperature, vias/zones, route topology, branching, and current allocation. Do not infer ratings or current sharing from net names or a net-wide minimum width. The public candidate implementation was not installed or runtime-tested; only its documented question informed this narrower local contract. |
 | EG-001 external-connector ESD coverage             | LINT-034 requires a reviewed protection disposition per scoped connector pin; LINT-060 checks mapped PCB entry and return-via geometry.                                                                                                  | Pinned source review found no bounded gap beyond LINT-034; retain no new rule. See the source-review note below.                                                                                                                                                                                                                                                                                                                                                                                                   |
-| DA-001 decoupling strategy adequacy                | LINT-046 prompts on selected schematic power-input rails without a fitted capacitor; LINT-020 measures project-mapped PCB capacitor placement and optional connected return-via distance.                                                | Pinned source review found only a generic capacitor-count hint; no requirement-independent gap beyond LINT-046/LINT-020. See source-review note below.                                                                                                                                                                                                                                                                                                                                                             |
+| DA-001 decoupling strategy adequacy                | LINT-046 reviews fitted-capacitor presence; LINT-020 measures project-mapped PCB placement; LINT-136 compares exact mapped capacitors with an authored nominal minimum for one IC power pin.                                                                                           | LINT-136 closes a narrow explicit-requirement gap without adopting the cohort's inferred one-capacitor-per-IC suggestion. Native fixture coverage is coded; hosted exact-version acceptance remains pending. The rule does not choose a universal value or replace placement/return checks.                                                                                                                                                                                                                              |
 | XV-001..003 schematic/PCB consistency              | Existing verification binds native schematic/netlist and PCB artifacts.                                                                                                                                                                  | LINT-102 compares fitted schematic references and assigned footprint identities; LINT-111 compares default DNP flags; LINT-112 compares fitted schematic/PCB value fields. Board-only footprint classification and variant-aware comparisons remain deferred. Cohort source review informed the audit; no code was imported or executed.                                                                                                                                                                           |
 | CC-001 style ampacity-target net-class proposal    | LINT-021 accepts project-authored minimum widths and records exact native track measurements.                                                                                                                                            | Treat the public [kicad-tools ampacity-target proposal](https://github.com/rjwalters/kicad-tools/issues/4216) as an unimplemented research lead, not a cohort feature to import. Any future derivation needs a documented, licensed/available calculation basis, explicit copper and temperature assumptions, boundary tests, and comparison with an independent reference. Preserve authored widths as screens until that evidence exists.                                                                        |
 | Mapped bundle route length and inter-signal skew   | LINT-095 audits project-authored exact endpoints, bundle membership, and active native DRC length/skew rules; LINT-022 covers differential-pair constraint coverage.                                                                     | Keep using native DRC for route measurement and LINT-095 for authored intent and rule coverage. Reconsider a separate geometry engine only if it adds independently confirmed coverage or materially clearer localization beyond those checks.                                                                                                                                                                                                                                                                     |
@@ -12845,12 +12883,12 @@ field precision.
 counts decoupling capacitors and ICs on each reported rail, then recommends at
 least one 100 nF capacitor per IC when the counts differ. It does not evaluate
 capacitance value, pin-pair coverage, fitted state, shared banks, placement, or
-project-approved alternatives in this predicate. LINT-046 already prompts on
-selected input rails without fitted capacitors, and LINT-020 measures
-project-mapped placement and optional connected return-via distance. A generic
-one-cap-per-IC rule would turn a layout heuristic into a universal requirement
-without a project-owned capacitance strategy. No candidate code was installed
-or run; no duplicate rule is planned.
+project-approved alternatives in this predicate. LINT-046 reviews capacitor
+presence and LINT-020 measures project-mapped placement and optional connected
+return-via distance. LINT-136 adds a distinct opt-in comparison only when a
+project authors the exact IC power pin, capacitor set, source basis, and
+minimum. It does not adopt the cohort's universalized threshold. No candidate
+code was installed or run.
 
 No candidate code, installation workflow, project design, or example fixture
 is adopted by this audit. Candidate runtime evidence remains under LINT-031;

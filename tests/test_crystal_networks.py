@@ -12,7 +12,6 @@ from kicad_tooling.hwrepo.crystal_network_models import (
     CrystalNetworkMap,
     CrystalNetworkRequirement,
 )
-from kicad_tooling.hwrepo.crystal_networks import parse_capacitance_pf
 from kicad_tooling.hwrepo.design_lint import evaluate, text_report
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -332,13 +331,3 @@ def test_unmapped_internal_oscillator_is_not_inferred() -> None:
     assert not any(
         item.rule_id == "oscillator.crystal_load_network_mismatch" for item in result.findings
     )
-
-
-def test_capacitance_parser_accepts_explicit_units_only() -> None:
-    assert parse_capacitance_pf("18 pF") == 18
-    assert parse_capacitance_pf("0.018 nF") == 18
-    assert parse_capacitance_pf("0.000018 uF") == 18
-    assert parse_capacitance_pf("18p") == 18
-    assert parse_capacitance_pf("18") is None
-    assert parse_capacitance_pf("Cload") is None
-    assert parse_capacitance_pf(f"{'9' * 129}pF") is None

@@ -12,6 +12,7 @@ from .crystal_network_models import CrystalNetworkMap
 from .design_lint_finding_models import DesignLintIgnore, DesignLintRuleOverride
 from .external_protection_models import ExternalProtectionMap
 from .i2c_address_models import I2cAddressMap
+from .ic_decoupling_models import IcDecouplingMap
 from .model_primitives import StrictModel
 from .pcb_decoupling_models import PcbDecouplingMap
 from .pcb_drc_models import PcbDifferentialPairRuleMap, PcbSignalPathRuleMap
@@ -46,6 +47,7 @@ class DesignLintPolicy(StrictModel):
     usb_data_path_map: UsbDataPathMap | None = None
     power_path_map: PowerPathMap | None = None
     power_sequence_map: PowerSequenceMap | None = None
+    ic_decoupling_map: IcDecouplingMap | None = None
     crystal_network_map: CrystalNetworkMap | None = None
     regulator_feedback_map: RegulatorFeedbackMap | None = None
     rc_filter_map: RcFilterMap | None = None

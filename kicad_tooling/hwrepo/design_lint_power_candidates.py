@@ -10,6 +10,8 @@ from .component_power_output_candidates import unconnected_power_output_candidat
 from .component_role_models import ComponentRoleMap
 from .component_roles import resolve_component_role_map
 from .design_lint_types import Candidate
+from .design_lint_power_decoupling import ic_decoupling_candidates
+from .ic_decoupling_models import IcDecouplingMap
 from .models import NetlistContract
 from .net_dc_reference import connector_capacitor_only_nets
 from .power_decoupling import ic_power_rails_without_fitted_capacitors
@@ -27,6 +29,7 @@ def power_candidates(
     power_path_map: PowerPathMap | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
     peer_unconnected_power_output_pins: frozenset[str] = frozenset(),
+    ic_decoupling_map: IcDecouplingMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Build review prompts for rails, fitted supplies, and visible source paths."""
     found: list[Candidate] = []
@@ -36,6 +39,7 @@ def power_candidates(
             reviewed_connector_references=reviewed_connector_references,
         )
     )
+    found.extend(ic_decoupling_candidates(observed, ic_decoupling_map))
     found.extend(positive_supply_pins_on_negative_rails(observed))
     mapped_capacitor_references = tuple(
         reference

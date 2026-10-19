@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import re
-from collections.abc import Mapping
-from decimal import Decimal, DecimalException, InvalidOperation, localcontext
-from typing import TypeVar
+from decimal import Decimal, DecimalException, localcontext
 
+from .capacitance_values import parse_capacitance_pf
+from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
 from .crystal_network_models import (
     CrystalNetworkCoverageEntry,
     CrystalNetworkCoverageReport,
@@ -14,52 +13,6 @@ from .crystal_network_models import (
     CrystalNetworkRequirement,
 )
 from .models import NetlistContract
-
-_CAPACITANCE_VALUE = re.compile(
-    r"^\s*(?P<number>(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))\s*"
-    r"(?P<unit>pf|nf|uf|μf|µf|p|n|u)\s*$",
-    re.IGNORECASE,
-)
-_PICO_FARADS_PER_UNIT = {
-    "p": Decimal(1),
-    "pf": Decimal(1),
-    "n": Decimal(1000),
-    "nf": Decimal(1000),
-    "u": Decimal(1000000),
-    "uf": Decimal(1000000),
-    "μf": Decimal(1000000),
-    "µf": Decimal(1000000),
-}
-_Value = TypeVar("_Value")
-
-
-def parse_capacitance_pf(value: str) -> Decimal | None:
-    """Parse an intentionally small set of explicit KiCad capacitance spellings."""
-    if len(value) > 128:
-        return None
-    match = _CAPACITANCE_VALUE.fullmatch(value)
-    if match is None:
-        return None
-    try:
-        number = Decimal(match.group("number"))
-    except InvalidOperation:
-        return None
-    if not number.is_finite() or number <= 0:
-        return None
-    unit = match.group("unit").casefold()
-    try:
-        with localcontext() as context:
-            context.prec = 50
-            return number * _PICO_FARADS_PER_UNIT[unit]
-    except DecimalException:
-        return None
-
-
-def _lookup(mapping: Mapping[str, _Value], key: str) -> _Value | None:
-    matches = [
-        value for candidate, value in mapping.items() if candidate.casefold() == key.casefold()
-    ]
-    return matches[0] if len(matches) == 1 else None
 
 
 def _pin_nets(observed: NetlistContract, pin: str) -> tuple[str, ...]:

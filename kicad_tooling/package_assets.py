@@ -17,6 +17,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/power_path_models.py",
         "kicad_tooling/hwrepo/power_sequence_models.py",
         "kicad_tooling/hwrepo/power_connectivity_models.py",
+        "kicad_tooling/hwrepo/ic_decoupling_models.py",
         "kicad_tooling/hwrepo/analysis_state_models.py",
         "kicad_tooling/hwrepo/crystal_network_models.py",
         "kicad_tooling/hwrepo/pcb_keepout_models.py",

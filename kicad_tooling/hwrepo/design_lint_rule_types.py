@@ -51,6 +51,7 @@ DesignLintRuleId = Literal[
     "component.led_directly_across_supply_and_return",
     "component.led_directly_driven_from_output",
     "power.ic_rail_without_fitted_capacitor",
+    "power.ic_decoupling_below_project_minimum",
     "power.mapped_series_path_mismatch",
     "power.mapped_sequence_dependency_mismatch",
     "power.input_without_supported_source_path",

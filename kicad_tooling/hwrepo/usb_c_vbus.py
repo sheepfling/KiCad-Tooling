@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from .crystal_networks import parse_capacitance_pf
+from .capacitance_values import parse_capacitance_pf
 from .models import (
     ComponentContract,
     ElectricalCheck,

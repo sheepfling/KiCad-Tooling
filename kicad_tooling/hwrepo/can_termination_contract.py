@@ -6,7 +6,7 @@ from .can_termination_models import (
     CanTerminationAnalysis,
     CanTerminationMidpointCapacitorRequirement,
 )
-from .crystal_networks import parse_capacitance_pf
+from .capacitance_values import parse_capacitance_pf
 from .models import ElectricalCheck, NetlistContract
 from .resistor_paths import (
     RESISTOR_REFERENCE_PATTERN,
