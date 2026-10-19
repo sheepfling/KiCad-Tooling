@@ -19,6 +19,7 @@ def _mismatches(observed: NetlistContract) -> tuple[str, ...]:
             "U2": "Synthetic:SignalInputModule",
         },
         references=("U1", "U2"),
+        pin_1_function="IO",
         pin_type="input",
         pin_function="IN",
     )
@@ -28,11 +29,6 @@ def _native_metadata_control() -> NetlistContract:
     observed = peer_signal_input_netlist()
     return observed.model_copy(
         update={
-            "pin_functions": {
-                **observed.pin_functions,
-                "U1.1": "Pin_1",
-                "U2.1": "Pin_1",
-            },
             "pin_electrical_types": {
                 **observed.pin_electrical_types,
                 "U1.1": "passive",
@@ -52,6 +48,7 @@ def test_complete_native_peer_metadata_matches_synthetic_control() -> None:
         ("component_symbols", "U2", "Synthetic:DifferentModule"),
         ("component_pin_numbers", "U2", ("1",)),
         ("pin_electrical_types", "U2.2", "passive"),
+        ("pin_functions", "U2.1", "Pin_1"),
         ("pin_functions", "U2.2", "OUT"),
     ),
 )

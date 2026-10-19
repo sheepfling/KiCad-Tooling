@@ -168,9 +168,18 @@ def _component_peer_pin_assignment_fixture_lane(
         "generic-all-open": "Pin_2",
         "generic-mixed-open": "Pin_2",
     }
+    first_pin_functions = {
+        "power-output": "IO",
+        "signal-output": "IO",
+        "signal-input": "IO",
+        "bidirectional": "IO",
+        "generic-all-open": "Pin_1",
+        "generic-mixed-open": "Pin_1",
+    }
     native_pin_type = native_pin_types[kind]
     rule_id = rule_ids[kind]
     fixture_symbol = fixture_symbols[kind]
+    first_pin_function = first_pin_functions[kind]
     pin_function = functions[kind]
     signal_name = {
         "signal-input": "INPUT",
@@ -327,6 +336,7 @@ def _component_peer_pin_assignment_fixture_lane(
                 observed,
                 expected_symbols=expected_symbols,
                 references=expected_references,
+                pin_1_function=first_pin_function,
                 pin_type=native_pin_type,
                 pin_function=pin_function,
             )

@@ -14,6 +14,7 @@ def native_peer_metadata_mismatches(
     *,
     expected_symbols: Mapping[str, str],
     references: tuple[str, ...],
+    pin_1_function: str,
     pin_type: str,
     pin_function: str,
 ) -> tuple[str, ...]:
@@ -27,7 +28,7 @@ def native_peer_metadata_mismatches(
     expected_pin_functions = {
         f"{reference}.{number}": expected_function
         for reference in references
-        for number, expected_function in (("1", "Pin_1"), ("2", pin_function))
+        for number, expected_function in (("1", pin_1_function), ("2", pin_function))
     }
     checks = (
         ("component_symbols", observed.component_symbols, dict(expected_symbols)),
