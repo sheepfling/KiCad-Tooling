@@ -13,6 +13,29 @@ import pytest
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
 
+def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
+    environment = os.environ.copy()
+    environment.pop("KICAD_TEMPLATE_ROOT", None)
+    return subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "pytest",
+            "-q",
+            "--collect-only",
+            "-m",
+            f'design_lint_rule(rule_id="{rule_id}")',
+        ),
+        cwd=Path(__file__).resolve().parents[1],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+
 def test_native_connector_acceptance_uses_version_parameterized_pytest() -> None:
     source_path = Path(__file__).with_name("test_ci_hosted_connector_returns.py")
     tree = ast.parse(source_path.read_text(encoding="utf-8"))
@@ -218,27 +241,7 @@ def test_rule_marker_selects_catalogued_cases_without_external_checkout(
     rule_id: str,
     expected_node: str,
 ) -> None:
-    environment = os.environ.copy()
-    environment.pop("KICAD_TEMPLATE_ROOT", None)
-    result = subprocess.run(
-        (
-            sys.executable,
-            "-I",
-            "-m",
-            "pytest",
-            "-q",
-            "--collect-only",
-            "-m",
-            f'design_lint_rule(rule_id="{rule_id}")',
-        ),
-        cwd=Path(__file__).resolve().parents[1],
-        env=environment,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-
+    result = _collect_rule_nodes(rule_id)
     assert result.returncode == 0, result.stdout + result.stderr
     assert expected_node in result.stdout
     assert "tests/test_power_paths.py::" not in result.stdout
@@ -269,27 +272,7 @@ def test_peer_pin_rule_selector_collects_only_its_parity_case(
     rule_id: str,
     selected_node: str,
 ) -> None:
-    environment = os.environ.copy()
-    environment.pop("KICAD_TEMPLATE_ROOT", None)
-    result = subprocess.run(
-        (
-            sys.executable,
-            "-I",
-            "-m",
-            "pytest",
-            "-q",
-            "--collect-only",
-            "-m",
-            f'design_lint_rule(rule_id="{rule_id}")',
-        ),
-        cwd=Path(__file__).resolve().parents[1],
-        env=environment,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-
+    result = _collect_rule_nodes(rule_id)
     assert result.returncode == 0, result.stdout + result.stderr
     selected_peer_cases = {
         line
@@ -299,29 +282,25 @@ def test_peer_pin_rule_selector_collects_only_its_parity_case(
     assert selected_peer_cases == {selected_node}
 
 
-def test_serial_reference_rule_selects_its_exact_native_regressions() -> None:
-    environment = os.environ.copy()
-    environment.pop("KICAD_TEMPLATE_ROOT", None)
-    rule_id = "bus.serial_peer_reference_review"
-    result = subprocess.run(
-        (
-            sys.executable,
-            "-I",
-            "-m",
-            "pytest",
-            "-q",
-            "--collect-only",
-            "-m",
-            f'design_lint_rule(rule_id="{rule_id}")',
-        ),
-        cwd=Path(__file__).resolve().parents[1],
-        env=environment,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
+def test_rule_selector_filters_parametrized_peer_identity_cases() -> None:
+    result = _collect_rule_nodes("component.peer_signal_input_unconnected")
+    assert result.returncode == 0, result.stdout + result.stderr
+    selected_identity_cases = {
+        line
+        for line in result.stdout.splitlines()
+        if line.startswith("tests/test_peer_component_pin_identity.py::")
+    }
+    assert selected_identity_cases == {
+        "tests/test_peer_component_pin_identity.py::test_shared_part_id_aliases_cover_each_typed_peer_rule[input-IN-component.peer_signal_input_unconnected]",
+        "tests/test_peer_component_pin_identity.py::test_shared_part_id_peer_pin_assignment_matches_between_cli_and_mcp[signal-input]",
+        "tests/test_peer_component_pin_identity.py::test_shared_part_id_aliases_accept_identical_generic_pin_metadata[input-component.peer_signal_input_unconnected]",
+        "tests/test_peer_component_pin_identity.py::test_shared_part_id_aliases_skip_mismatched_pin_functions[input-IN-component.peer_signal_input_unconnected]",
+    }
 
+
+def test_serial_reference_rule_selects_its_exact_native_regressions() -> None:
+    rule_id = "bus.serial_peer_reference_review"
+    result = _collect_rule_nodes(rule_id)
     assert result.returncode == 0, result.stdout + result.stderr
     for function in (
         "test_serial_peer_voltage_fault_and_controls_by_native_version",

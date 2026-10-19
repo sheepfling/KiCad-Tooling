@@ -84,11 +84,17 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         test_class = getattr(item, "cls", None)
         class_name = getattr(test_class, "__qualname__", None)
         function_name = getattr(item, "originalname", item.name.partition("[")[0])
-        for rule_id in design_lint_rule_ids_for_test(
+        catalogued_rule_ids = design_lint_rule_ids_for_test(
             module_name,
             class_name,
             function_name,
-        ):
+        )
+        callspec = getattr(item, "callspec", None)
+        parameters = getattr(callspec, "params", {})
+        parameter_rule_id = parameters.get("rule_id")
+        if isinstance(parameter_rule_id, str) and parameter_rule_id in catalogued_rule_ids:
+            catalogued_rule_ids = (parameter_rule_id,)
+        for rule_id in catalogued_rule_ids:
             item.add_marker(pytest.mark.design_lint_rule(rule_id=rule_id))
         for marker in execution_markers_for_path(path):
             item.add_marker(getattr(pytest.mark, marker))
