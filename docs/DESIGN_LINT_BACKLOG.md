@@ -2769,8 +2769,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v63. The cross-process probe supports themed report
-  selectors and retains the complete 177-report inventory gate. Fault/control
+- **Status:** Implemented v64. The cross-process probe supports themed report
+  selectors and retains the complete 179-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3278,6 +3278,13 @@ is not a reason by itself to expand its scope or change its default policy.
   catalog links the regression as metamorphic coverage, and the complete report
   inventory grows from 175 to 177. This adds process-stability evidence only;
   it does not establish general applicability or electrical approval.
+- The v64 extension adds source-bound reports for `pcb.required_fitted_reference`:
+  a project-required component marked DNP in both source and board, plus a
+  matching fitted control. The rule's blocking finding and full typed coverage
+  are compared across three independently randomized Python processes. Its
+  fault/control pair raises the complete report inventory from 177 to 179.
+  This guards report stability for a project-authored fabrication requirement;
+  it does not infer the required assembly list.
 - Tagged acceptance for `v0.5.0rc191` passed on 2026-10-12 (GitHub Actions run
   `38305303770`). The scoped unit gate used the
   `component.generic_peer_pin_all_open` selector with
@@ -7174,6 +7181,10 @@ is not a reason by itself to expand its scope or change its default policy.
   KiCad exports, and compares both-DNP and both-fitted cases. Hosted
   exact-version acceptance passed on `v0.5.0rc222` (GitHub Actions run
   `38351032396`).
+- **Determinism:** LINT-080 compares the both-DNP fault against a matching
+  fitted control across three independent Python hash seeds. The unchanged
+  generic population comparison does not report the fault; the exact
+  project-authored fitted-reference rule remains the sole blocking finding.
 - **Focused selection:**
 
   ```sh

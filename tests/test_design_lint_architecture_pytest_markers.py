@@ -114,6 +114,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_pcb_access_fixture_lane.py": {"pcb_lint"},
     "test_pcb_touch_pad_clearance.py": {"pcb_lint"},
     "test_design_lint_determinism_pcb_touch_pad_clearance.py": {"pcb_lint"},
+    "test_design_lint_determinism_pcb_required_fitted_reference.py": {"pcb_lint"},
     "test_pcb_touch_pad_clearance_native.py": {"pcb_lint"},
     "test_ci_hosted_pcb_fixture_schedule.py": {"pcb_lint", "return_path_lint"},
 }
