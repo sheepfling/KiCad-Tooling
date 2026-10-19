@@ -10293,7 +10293,13 @@ is not a reason by itself to expand its scope or change its default policy.
   `0e181b461e407af820a73335ea092d42488868231a58ed9bffef62dffb3fdbc0`
   (control) and `469f8970fe5e699172071d9771712b3e9b2e5a2cbb51e4d67b681d55a161bce9`
   (fault). A hosted repeat lane now runs the fault/control pair on the pinned
-  KiCad 10.0.0 and 10.0.5 images; those exact-version results remain pending.
+  KiCad 10.0.0 and 10.0.5 images. The first-party LINT-058 native lane passed
+  in tag `v0.5.0rc193` (GitHub Actions run `38308617935`); the tag resolved to
+  `pcb.reference_plane_coverage` and enabled native PCB fixtures. Its tests
+  repeated the via-antipad and narrow-void native fault/control cases on both
+  pinned versions. This closes source-to-native repeatability for our mapped
+  geometry check. The kicad-happy GP-001 runtime trial itself remains the
+  separately recorded v2.3.1 run; it was not rerun on those KiCad images.
 - **Disposition and limits:** The selected cohort heuristic misses this
   deliberately narrow defect; this comparison justifies retaining the
   first-party exact-geometry rule and regression pair. It does not establish a
