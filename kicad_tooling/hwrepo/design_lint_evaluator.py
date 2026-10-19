@@ -84,6 +84,7 @@ def evaluate(
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None,
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
     pcb_dru_rule_candidates: tuple[Candidate, ...] = (),
+    pcb_native_drc_candidates: tuple[Candidate, ...] = (),
 ) -> DesignLintReport:
     """Apply project policy to findings while preserving the established call shape."""
     request = DesignLintEvaluationRequest(
@@ -119,6 +120,7 @@ def evaluate(
         pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
         pcb_component_inventory_coverage=pcb_component_inventory_coverage,
         pcb_dru_rule_candidates=pcb_dru_rule_candidates,
+        pcb_native_drc_candidates=pcb_native_drc_candidates,
     )
     result = prepare_evaluation(request)
     if result.report is not None:

@@ -108,7 +108,7 @@ def scan_evaluation_candidates(
     )
     items = tuple(
         sorted(
-            (*items, *request.pcb_dru_rule_candidates),
+            (*items, *request.pcb_dru_rule_candidates, *request.pcb_native_drc_candidates),
             key=lambda item: (item.rule_id, item.subject),
         )
     )

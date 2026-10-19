@@ -111,6 +111,7 @@ class DesignLintEvaluationRequest:
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None
     pcb_dru_rule_candidates: tuple[Candidate, ...] = ()
+    pcb_native_drc_candidates: tuple[Candidate, ...] = ()
 
 
 @dataclass(frozen=True)

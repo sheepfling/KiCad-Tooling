@@ -1,0 +1,17 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "clearance": "error",
+        "copper_edge_clearance": "error",
+        "footprint_type_mismatch": "ignore",
+        "missing_courtyard": "ignore",
+        "shorting_items": "error",
+        "tracks_crossing": "error",
+        "tuning_profile_track_geometries": "ignore",
+        "unconnected_items": "error"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}

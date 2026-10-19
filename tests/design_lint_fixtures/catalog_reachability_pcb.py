@@ -110,11 +110,18 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic custom DRC rule explicitly declares Ignore.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
     )
+    ignored_core_check = Candidate(
+        rule_id="pcb.core_drc_check_ignored",
+        subject="projects/synthetic/controller.kicad_pro#unconnected_items",
+        message="Synthetic native DRC check explicitly declares Ignore.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
+    )
     report = evaluate(
         coach.project_id,
         coach,
         DesignLintPolicy(),
         pcb_component_inventory_coverage=inventory,
         pcb_dru_rule_candidates=(ignored_rule,),
+        pcb_native_drc_candidates=(ignored_core_check,),
     )
     return {finding.rule_id for finding in report.findings}

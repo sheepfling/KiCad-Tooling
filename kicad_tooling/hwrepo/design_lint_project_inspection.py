@@ -36,6 +36,7 @@ from .evidence import digest
 from .models import (
     ProjectManifest,
 )
+from .pcb_drc_global_severity_review import ignored_core_native_drc_check_candidates
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
@@ -78,6 +79,11 @@ def inspect_design_lint_summary(
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared source changed while reading design-lint policy")
         pcb_dru_rule_candidates = ignored_custom_drc_rule_candidates(
+            root,
+            config,
+            coach.source_hashes,
+        )
+        pcb_native_drc_candidates = ignored_core_native_drc_check_candidates(
             root,
             config,
             coach.source_hashes,
@@ -195,6 +201,7 @@ def inspect_design_lint_summary(
             i2c_pullup_heuristic_coverage=i2c_pullup_coverage,
             digital_peer_voltage_context=digital_peer_voltage_context,
             pcb_dru_rule_candidates=pcb_dru_rule_candidates,
+            pcb_native_drc_candidates=pcb_native_drc_candidates,
         )
         connector_catalog = report.connector_coverage
         if (

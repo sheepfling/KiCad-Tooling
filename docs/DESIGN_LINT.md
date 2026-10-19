@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 121 active rules. They
+`synthetic_validated`; the catalog currently contains 122 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2592,6 +2592,27 @@ conditions or limits, or create requirements for other rules. Mapped DRC rule
 coverage and the native compilation probe remain separate checks. The
 tooling-owned parser inputs are documented in
 [`tests/fixtures/design_lint/pcb-dru-ignored-rules/`](../tests/fixtures/design_lint/pcb-dru-ignored-rules/README.md).
+
+## Review suppressed core native PCB DRC checks
+
+`pcb.core_drc_check_ignored` prompts when a KiCad 10.x PCB project's
+source-hashed `.kicad_pro` sets one of five core checks to `ignore`:
+`unconnected_items`, `shorting_items`, `tracks_crossing`, `clearance`, or
+`copper_edge_clearance`. KiCad stores these settings under
+`board.design_settings.rule_severities`; the exact project-configured patch
+version is recorded in the finding. The supported checks have Error defaults
+in the [KiCad 10 DRC reference][kicad-10-drc].
+
+The finding asks an engineer to confirm the suppression. It does not claim the
+board is defective or that every project must enable every check. The rule
+leaves KiCad's documented default-ignore footprint and presentation checks
+quiet, and it does not inspect per-violation exclusions, Warning settings,
+custom rules, or PCB geometry. Projects can use the usual `review`, `block`,
+`off`, or exact-fingerprint ignore policy. Tooling-owned fault and control
+settings are in
+[`tests/fixtures/design_lint/pcb-core-drc-disabled/`](../tests/fixtures/design_lint/pcb-core-drc-disabled/README.md).
+
+[kicad-10-drc]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration
 
 ## Review mapped PCB signal-path length and bundle skew
 

@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 121 rules are implemented with synthetic regression coverage.
+The following 122 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -478,6 +478,7 @@ Their actual recognition limits are documented in
 - `pcb.differential_pair_rule_coverage`
 - `pcb.signal_path_rule_coverage`
 - `pcb.custom_drc_rule_ignored`
+- `pcb.core_drc_check_ignored`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
@@ -2629,7 +2630,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 121 active rules; CI requires every new
+- **Status:** Baseline complete for all 122 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2638,7 +2639,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 121 covered, 0 not applicable, 0 unreviewed.
+  audit: 122 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7579,7 +7580,8 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Policy boundary:** The finding asks an engineer to confirm the suppression
   is intentional. It does not treat Ignore as an electrical defect, infer that
   every custom rule should be active, inspect global `.kicad_pro` ignored
-  checks, or evaluate custom-rule conditions and limits. Projects may select
+  checks (the bounded core-check review is separate LINT-140), or evaluate
+  custom-rule conditions and limits. Projects may select
   `review`, `block`, `off`, or an exact-fingerprint ignore.
 - **Evidence:** Tooling-owned synthetic fault/control fragments cover explicit
   Ignore versus error, warning, and exclusion severities. Tests cover source
@@ -7593,6 +7595,49 @@ is not a reason by itself to expand its scope or change its default policy.
     tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py \
     -m 'design_lint and pcb_lint'
   ```
+
+#### LINT-140 — Review suppressed core native PCB DRC checks
+
+- **Status:** Implemented as `pcb.core_drc_check_ignored`, a default-review
+  predicate over source-bound KiCad 10.x `.kicad_pro` settings.
+- **Gap:** LINT-139 recognizes ignored custom `.kicad_dru` rules. A project can
+  also set built-in DRC severities in
+  `board.design_settings.rule_severities`; KiCad documents Ignore as disabling
+  the selected check. A suppressed unconnected-items check can hide unconnected
+  copper in a board DRC run, even though this does not solve schematic net-domain
+  intent such as deciding whether two separately named returns should be common.
+- **Predicate:** Emit one finding for each source-bound `ignore` setting among
+  `unconnected_items`, `shorting_items`, `tracks_crossing`, `clearance`, and
+  `copper_edge_clearance`. These checks have Error defaults in the
+  [KiCad 10 DRC reference][kicad-10-drc].
+  Record the settings-file hash, check ID, configured severity, and exact
+  project-configured KiCad version. Scan only KiCad 10.x project settings.
+- **Policy boundary:** The finding asks whether the suppression is intentional;
+  it does not state that the check must be enabled or that a defect exists.
+  The bounded list leaves documented default-ignore footprint and presentation
+  checks quiet. Per-violation exclusions, Warning settings, custom-rule
+  severities, DRC applicability, and board geometry are outside this rule.
+  Project policy can choose `review`, `block`, `off`, or exact-fingerprint
+  ignore.
+- **Synthetic evidence:** Fault and valid-control `.kicad_pro` fragments cover
+  an ignored unconnected-items check, active core checks, documented
+  non-core ignores, Warning severity, malformed/duplicate JSON, stale source
+  hashes, unsupported major versions, deterministic key order, policy
+  dispositions, and CLI/MCP parity. No native KiCad process is required for
+  this settings parser, and no electrical approval is inferred.
+- **Public-example screen:** A read-only scan of six distinct settings files in
+  the pinned public reference-template checkout at revision
+  `ed89536f0dbbcb013145af2994fef41b2250143e` found no Ignore value among the
+  five covered checks (`0/6` settings files). Two files used five other ignored
+  checks (`footprint_filters_mismatch`, `footprint_type_mismatch`,
+  `missing_courtyard`, `track_not_centered_on_via`, and
+  `tuning_profile_track_geometries`); all stayed outside this rule. This is a
+  bounded quiet-screen, not a field-precision estimate. Source files were not
+  copied into Tooling.
+- Reference: [KiCad 10 DRC documentation][kicad-10-drc].
+- **Focused selection:** Run `tests/test_pcb_drc_global_severity_review.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_global_severity_review.py` with
+  `-m 'design_lint and pcb_lint'`.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
@@ -10541,7 +10586,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 121 active rules. Each entry has a deterministic predicate, evidence
+contains 122 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin
@@ -13439,3 +13484,5 @@ quality, or first-article continuity.
 [kicad-thermistor-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_US.kicad_sym>
 [kicad-thermistor-ntc-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_NTC_US.kicad_sym>
 [kicad-thermistor-ptc-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_PTC_US.kicad_sym>
+
+[kicad-10-drc]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration

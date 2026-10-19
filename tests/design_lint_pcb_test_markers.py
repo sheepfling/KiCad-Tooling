@@ -69,6 +69,7 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_track_width.py",
         "tests/test_pcb_track_width_native_fixture_lane.py",
         "tests/test_pcb_dru_rule_review.py",
+        "tests/test_pcb_drc_global_severity_review.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py",
     }
 )

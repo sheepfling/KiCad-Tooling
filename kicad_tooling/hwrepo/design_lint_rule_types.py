@@ -111,6 +111,7 @@ DesignLintRuleId = Literal[
     "pcb.schematic_pcb_value_mismatch",
     "pcb.schematic_pcb_pad_net_mismatch",
     "pcb.custom_drc_rule_ignored",
+    "pcb.core_drc_check_ignored",
     "connector.return_distribution",
     "net.numbered_returns",
     "net.numbered_power_rails",

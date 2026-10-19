@@ -355,6 +355,7 @@ _LINT_AREA_MODULES = {
             "tests/test_pcb_touch_pad_clearance_mcp_parity.py",
             "tests/test_pcb_signal_path_mcp_parity.py",
             "tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py",
+            "tests/test_design_lint_mcp_parity_pcb_drc_global_severity_review.py",
         }
     ),
 }
