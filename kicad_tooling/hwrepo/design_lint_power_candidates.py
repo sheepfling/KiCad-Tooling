@@ -9,8 +9,8 @@ from .component_pin_patterns import (
 from .component_power_output_candidates import unconnected_power_output_candidates
 from .component_role_models import ComponentRoleMap
 from .component_roles import resolve_component_role_map
-from .design_lint_types import Candidate
 from .design_lint_power_decoupling import ic_decoupling_candidates
+from .design_lint_types import Candidate
 from .ic_decoupling_models import IcDecouplingMap
 from .models import NetlistContract
 from .net_dc_reference import connector_capacitor_only_nets
