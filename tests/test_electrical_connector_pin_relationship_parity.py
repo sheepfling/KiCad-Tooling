@@ -12,10 +12,12 @@ from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
+    ComponentContract,
     ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     GroundDomain,
     GroundingAnalysis,
+    NetlistContract,
     PinConnectivityAnalysis,
     PinRelationshipRule,
     ValidationSummary,
@@ -150,3 +152,44 @@ async def _run_connector_pin_relationships_match_cli_and_mcp(parity) -> None:
 
 def test_connector_pin_relationships_match_cli_and_mcp_analysis(parity) -> None:
     asyncio.run(_run_connector_pin_relationships_match_cli_and_mcp(parity))
+
+
+async def _run_required_pin_assignment_matches_cli_and_mcp(parity) -> None:
+    from kicad_tooling.hwrepo.models import PinConnectivityAnalysis, PinRelationshipRule
+
+    parity.configured()
+    requirement = PinConnectivityAnalysis(
+        basis="Approved synthetic connector pinout requires both power contacts to be wired",
+        rules=(
+            PinRelationshipRule(
+                id="assigned-power-contacts",
+                basis="Each reviewed contact must have one net assignment",
+                topology="assigned",
+                pins=("J1.1", "J2.1"),
+            ),
+        ),
+    )
+    observed = NetlistContract(
+        components={
+            reference: ComponentContract(value="Synthetic power port", footprint="")
+            for reference in ("J1", "J2")
+        },
+        nets={"PORT1_PWR": ("J1.1",)},
+        component_symbols={"J1": "Synthetic:Port", "J2": "Synthetic:Port"},
+        component_pin_numbers={"J1": ("1",), "J2": ("1",)},
+    )
+    parity.install_netlist_contract(observed, {"pin_connectivity": requirement})
+    cli_report, mcp_report, returncode = await parity.analyze_electrical("required-pin-assignment")
+
+    assert returncode == 1
+    assert cli_report.checks == mcp_report.checks
+    for report in (cli_report, mcp_report):
+        check = next(
+            item for item in report.checks if item.id == "pin-connectivity/assigned-power-contacts"
+        )
+        assert check.status == "FAIL"
+        assert "J2.1" in check.detail
+
+
+def test_required_pin_assignment_matches_cli_and_mcp(parity) -> None:
+    asyncio.run(_run_required_pin_assignment_matches_cli_and_mcp(parity))

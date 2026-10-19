@@ -226,6 +226,23 @@ power, returns, and other reviewed connector functions. The separate
 `grounding` section still covers declared ground domains and component
 ground-pin review.
 
+Use `"topology": "assigned"` when each exact pin must have one schematic net
+assignment but the project does not require those pins to share a net or name a
+specific rail. It accepts either shared or different nets and fails for an open
+pin or a pin assigned to multiple nets. If a required pin is open, native symbol
+pin inventory must establish that the pin exists; an observed net assignment
+itself identifies a connected pin. This makes the assignment requirement
+explicit without inferring commoning from similar connectors or pin names.
+
+```json
+{
+  "id": "required-port-contacts",
+  "basis": "Each approved port power contact is wired",
+  "topology": "assigned",
+  "pins": ["J1.1", "J2.1"]
+}
+```
+
 ```json
 {
   "id": "reserved-mode-pin",
@@ -259,9 +276,10 @@ release:
 kicad-team verify --project <board-id> --depth electrical --format text
 ```
 
-The checks establish schematic net membership or an explicitly required
-unconnected disposition. A specified net tie or bond needs its own schematic
-and PCB review; a direct `common_net` rule does not describe an indirect path.
+The checks establish schematic net membership, per-pin net assignment, or an
+explicitly required unconnected disposition. A specified net tie or bond needs
+its own schematic and PCB review; a direct `common_net` rule does not describe
+an indirect path.
 Review connector pads, planes, and reference points on the PCB, then test
 first-article continuity according to the approved pinout before production
 acceptance.

@@ -150,23 +150,29 @@ def assert_grounding_contract_cases(results, version):
         results["connector-return-fixture/pin-connectivity-contract-peer-common-open-fault"][
             "checks"
         ]
-        == "pin-connectivity/peer-common-power=FAIL"
+        == "pin-connectivity/peer-common-power=FAIL;"
+        "pin-connectivity/peer-power-contacts-assigned=FAIL"
     )
     assert (
         results["connector-return-fixture/pin-connectivity-contract-peer-common-control"]["checks"]
-        == "pin-connectivity/peer-common-power=PASS"
+        == "pin-connectivity/peer-common-power=PASS;"
+        "pin-connectivity/peer-power-contacts-assigned=PASS"
     )
     assert (
         results["connector-return-fixture/pin-connectivity-contract-peer-independent-control"][
             "checks"
         ]
-        == "pin-connectivity/peer-independent-power-outputs=PASS;pin-connectivity/peer-j3-power-unused=PASS"
+        == "pin-connectivity/peer-independent-outputs-assigned=PASS;"
+        "pin-connectivity/peer-independent-power-outputs=PASS;"
+        "pin-connectivity/peer-j3-power-unused=PASS"
     )
     assert (
         results[
             "connector-return-fixture/pin-connectivity-contract-peer-independent-common-net-mismatch"
         ]["checks"]
-        == "pin-connectivity/peer-independent-power-outputs=FAIL;pin-connectivity/peer-j3-power-unused=FAIL"
+        == "pin-connectivity/peer-independent-outputs-assigned=PASS;"
+        "pin-connectivity/peer-independent-power-outputs=FAIL;"
+        "pin-connectivity/peer-j3-power-unused=FAIL"
     )
     stale_pin = results["connector-return-fixture/pin-connectivity-contract-stale-pin-reference"]
     assert stale_pin["relationship"] == "stale-symbol-pin"

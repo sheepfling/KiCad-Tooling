@@ -60,6 +60,11 @@ def _connector_lint_policy(*, ignores: tuple[DesignLintIgnore, ...] = ()) -> Des
                 mode="off",
                 reason="Synthetic connector-verification tests have no native PCB value snapshot",
             ),
+            DesignLintRuleOverride(
+                rule_id="pcb.schematic_pcb_pad_net_mismatch",
+                mode="off",
+                reason="Synthetic connector-verification tests have no native PCB snapshot",
+            ),
         ),
     )
 

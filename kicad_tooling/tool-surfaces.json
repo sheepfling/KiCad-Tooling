@@ -1812,6 +1812,7 @@
         "tests.test_electrical_parity.ElectricalParityTests.test_saved_native_analysis_is_root_relative_and_preserves_native_failure",
         "tests.test_electrical_pcb_return_path_parity.test_pcb_return_path_contract_matches_cli_and_mcp_for_pass_and_fault",
         "tests.test_electrical_connector_pin_relationship_parity.test_connector_pin_relationships_match_cli_and_mcp_analysis",
+        "tests.test_electrical_connector_pin_relationship_parity.test_required_pin_assignment_matches_cli_and_mcp",
         "tests.test_electrical_control_input_parity.test_control_input_requirements_match_cli_mcp_and_retained_evidence",
         "tests.test_electrical_connector_return_parity.test_db9_grounding_requirement_matrix_matches_cli_and_mcp",
         "tests.test_electrical_bus_contract_parity.test_bus_requirements_match_cli_and_mcp_analysis",

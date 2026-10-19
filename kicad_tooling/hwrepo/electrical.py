@@ -233,7 +233,8 @@ def pin_relationship_checks(
             {
                 pin.rsplit(".", 1)[0]
                 for pin in rule.pins
-                if rule.topology == "unconnected"
+                if rule.topology in {"assigned", "unconnected"}
+                and (rule.topology == "unconnected" or not actual[pin])
                 and pin.rsplit(".", 1)[0] in observed.components
                 and pin.rsplit(".", 1)[0] not in observed.component_pin_numbers
             }
@@ -249,6 +250,9 @@ def pin_relationship_checks(
         elif rule.topology == "separate_nets":
             passed = connected and len(set(single.values())) == len(rule.pins)
             requirement = "a distinct net for each pin"
+        elif rule.topology == "assigned":
+            passed = connected and not missing_pin_inventory
+            requirement = "exactly one assigned net for each pin"
         else:
             passed = (
                 not unknown
@@ -259,7 +263,7 @@ def pin_relationship_checks(
             requirement = "no net assignment (intentionally unused)"
         inventory_detail = (
             f"; missing symbol pin inventory={missing_pin_inventory}"
-            if rule.topology == "unconnected"
+            if missing_pin_inventory
             else ""
         )
         results.append(

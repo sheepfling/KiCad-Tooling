@@ -108,6 +108,76 @@ def test_same_connector_power_labels_can_require_separate_nets() -> None:
         )
 
 
+def test_pin_relationship_can_require_assignment_without_naming_or_commoning_nets() -> None:
+    observed = NetlistContract(
+        components={
+            reference: ComponentContract(value="Synthetic port", footprint="")
+            for reference in ("J1", "J2")
+        },
+        nets={"PORT1_PWR": ("J1.1",), "PORT2_PWR": ("J2.1",)},
+        component_pin_numbers={"J1": ("1",), "J2": ("1",)},
+    )
+    requirement = PinConnectivityAnalysis(
+        basis="Approved synthetic connector pinout requires both contacts to be wired",
+        rules=(
+            PinRelationshipRule(
+                id="assigned-power-contacts",
+                basis="Each contact must have a source-bound net assignment",
+                topology="assigned",
+                pins=("J1.1", "J2.1"),
+            ),
+        ),
+    )
+
+    observed_result = pin_relationship_checks(requirement, observed)
+    assert observed_result[0].status == "PASS"
+    reordered = observed.model_copy(
+        update={
+            "components": dict(reversed(tuple(observed.components.items()))),
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+        }
+    )
+    assert pin_relationship_checks(requirement, reordered) == observed_result
+
+    open_contact = observed.model_copy(update={"nets": {"PORT1_PWR": ("J1.1",)}})
+    failed = pin_relationship_checks(requirement, open_contact)[0]
+    assert failed.status == "FAIL"
+    assert "J2.1': ()" in failed.detail
+
+    shared_contact_net = observed.model_copy(update={"nets": {"PORT_PWR": ("J1.1", "J2.1")}})
+    assert pin_relationship_checks(requirement, shared_contact_net)[0].status == "PASS"
+
+    ambiguous = observed.model_copy(
+        update={
+            "nets": {
+                "PORT1_PWR": ("J1.1", "J2.1"),
+                "PORT2_PWR": ("J2.1",),
+            }
+        }
+    )
+    assert pin_relationship_checks(requirement, ambiguous)[0].status == "FAIL"
+
+    missing_inventory = observed.model_copy(
+        update={
+            "nets": {"PORT1_PWR": ("J1.1",)},
+            "component_pin_numbers": {"J1": ("1",)},
+        }
+    )
+    missing = pin_relationship_checks(requirement, missing_inventory)[0]
+    assert missing.status == "FAIL"
+    assert "missing symbol pin inventory=['J2']" in missing.detail
+
+    with pytest.raises(ValueError, match="Only common-net relationships can name one net"):
+        PinRelationshipRule(
+            id="assigned-with-net",
+            basis="An assigned-contact requirement does not prescribe a net name",
+            topology="assigned",
+            pins=("J1.1",),
+            net="PORT1_PWR",
+        )
+
+
 def test_pin_relationship_can_require_an_intentionally_unconnected_pin() -> None:
     observed = NetlistContract(
         components={"J1": ComponentContract(value="Synthetic port", footprint="")},

@@ -103,6 +103,10 @@ def test_combined_grounding_verifier_keeps_peer_power_and_stale_pin_cases() -> N
     assert results["pin-connectivity-contract-peer-common-open-fault"]["contract_status"] == "FAIL"
     assert results["pin-connectivity-contract-peer-common-control"]["contract_status"] == "PASS"
     assert (
+        results["pin-connectivity-contract-peer-independent-control"]["checks"].split(";")[0]
+        == "pin-connectivity/peer-independent-outputs-assigned=PASS"
+    )
+    assert (
         results["pin-connectivity-contract-peer-independent-control"]["contract_status"] == "PASS"
     )
     assert (

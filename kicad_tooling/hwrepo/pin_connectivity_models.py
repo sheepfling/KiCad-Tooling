@@ -12,7 +12,7 @@ from .model_primitives import Identifier, NetName, NonEmptyText, Reference, Stri
 class PinRelationshipRule(StrictModel):
     id: Identifier
     basis: NonEmptyText
-    topology: Literal["common_net", "separate_nets", "unconnected"]
+    topology: Literal["common_net", "separate_nets", "assigned", "unconnected"]
     pins: Annotated[tuple[Reference, ...], Field(min_length=1)]
     net: NetName | None = None
 

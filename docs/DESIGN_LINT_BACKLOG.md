@@ -543,6 +543,19 @@ and optional ecosystem adapters are `P3`.
   The gate supplies review evidence and does not infer connector ground
   commoning, touch performance, or fabrication acceptance.
 
+- **Pin-assignment-only contract (2026-10-19):** `pin_connectivity` now has
+  an `assigned` topology for exact project-reviewed pins that must each have
+  one native net assignment without prescribing a net name or commoning the
+  pins. Native source evidence must establish pin identity; an observed
+  assignment confirms a wired pin, while an open pin needs symbol inventory.
+  Open, stale, and ambiguously assigned pins fail closed. Synthetic checks cover
+  separate-net and shared-net controls, an open-pin fault, duplicate
+  assignment, and missing inventory.
+  The connector native fixture reuses its existing three-port peer fault and
+  control to show the assignment-only requirement passing on independent nets
+  and failing on an open pin. A CLI/MCP parity case is registered. This extends
+  the explicit project-authored contract; it adds no inferred electrical rule.
+
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
   `tests/test_design_lint_architecture_pytest_markers.py` and
@@ -1556,8 +1569,8 @@ is not a reason by itself to expand its scope or change its default policy.
 [kicad-symbol-library-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/tree/10.0.5>
 [kicad10-pad]: <https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1PAD.html>
 
-- **Status:** Implemented v2 for exact `common_net`, `separate_nets`, and
-  intentionally `unconnected` relationships through the existing
+- **Status:** Implemented v3 for exact `common_net`, `separate_nets`,
+  assignment-only, and intentionally `unconnected` relationships through the existing
   `pin_connectivity` contract. Explicit PCB net-tie and physical bond-path
   comparisons are implemented in LINT-025 because the schematic netlist cannot
   prove copper continuity. The native acceptance harness is wired to compare
@@ -1581,10 +1594,12 @@ is not a reason by itself to expand its scope or change its default policy.
   about their intended relationship.
 - **Evidence and check:** For an exact project-authored list of component pins,
   `pin_connectivity` compares exported schematic net assignments to a required
-  common net, distinct nets, or no assignment. An `unconnected` requirement
-  also requires native symbol pin inventory; missing inventory fails closed,
-  and stale pin references fail with their exact reference. `grounding`
-  continues to check named ground domains and coverage.
+  common net, distinct nets, one assignment per pin without prescribing a net,
+  or no assignment. An observed net assignment establishes a wired pin for
+  `assigned`; an open `assigned` or `unconnected` pin requires native symbol pin
+  inventory. Missing inventory fails closed, and stale pin references fail with
+  their exact reference. `grounding` continues to check named ground domains
+  and coverage.
 - **Boundary:** Connector similarity is only a candidate generator. It is not
   the requirement. Do not silently add or alter project contracts to clear a
   finding. Keep accepted isolation explicit. Population-dependent connector
@@ -1594,7 +1609,10 @@ is not a reason by itself to expand its scope or change its default policy.
   independent-return pass and newly common fault; named wrong-net fault;
   intentionally unconnected pin pass and newly assigned-net fault; stale symbol
   pin reference fault; and missing symbol-pin-inventory fault for an otherwise
-  unassigned component. A fitted-versus-DNP connector pair also checks that
+  unassigned component. Assignment-only checks pass for pins on different or
+  shared nets, fail when one required pin is open or has ambiguous multiple
+  assignments, and fail when native pin inventory is unavailable. A
+  fitted-versus-DNP connector pair also checks that
   population-dependent pin hints ignore DNP peers while preserving findings on
   fitted connectors. These check the project-authored relationship contract.
 - **Related heuristic regressions:** A four-connector synthetic case uses

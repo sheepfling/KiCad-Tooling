@@ -281,6 +281,12 @@ def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
                 pins=("J1.1", "J2.1", "J3.1"),
                 net="+5V",
             ),
+            PinRelationshipRule(
+                id="peer-power-contacts-assigned",
+                basis="Each reviewed connector power contact must be wired",
+                topology="assigned",
+                pins=("J1.1", "J2.1", "J3.1"),
+            ),
         ),
     )
     peer_independent_power = PinConnectivityAnalysis(
@@ -290,6 +296,12 @@ def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
                 id="peer-independent-power-outputs",
                 basis="J1 and J2 power contacts are separate switched outputs",
                 topology="separate_nets",
+                pins=("J1.1", "J2.1"),
+            ),
+            PinRelationshipRule(
+                id="peer-independent-outputs-assigned",
+                basis="Both reviewed switched outputs must have a net assignment",
+                topology="assigned",
                 pins=("J1.1", "J2.1"),
             ),
             PinRelationshipRule(
@@ -319,6 +331,7 @@ def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
             "common-net",
             {
                 "pin-connectivity/peer-common-power": "FAIL",
+                "pin-connectivity/peer-power-contacts-assigned": "FAIL",
             },
         ),
         (
@@ -328,6 +341,7 @@ def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
             "common-net",
             {
                 "pin-connectivity/peer-common-power": "PASS",
+                "pin-connectivity/peer-power-contacts-assigned": "PASS",
             },
         ),
         (
@@ -337,6 +351,7 @@ def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
             "independent-outputs-plus-unused-contact",
             {
                 "pin-connectivity/peer-independent-power-outputs": "PASS",
+                "pin-connectivity/peer-independent-outputs-assigned": "PASS",
                 "pin-connectivity/peer-j3-power-unused": "PASS",
             },
         ),
@@ -347,6 +362,7 @@ def verify_peer_power_pin_contracts(ctx: ConnectorReturnFixtureContext) -> None:
             "independent-outputs-plus-unused-contact",
             {
                 "pin-connectivity/peer-independent-power-outputs": "FAIL",
+                "pin-connectivity/peer-independent-outputs-assigned": "PASS",
                 "pin-connectivity/peer-j3-power-unused": "FAIL",
             },
         ),
