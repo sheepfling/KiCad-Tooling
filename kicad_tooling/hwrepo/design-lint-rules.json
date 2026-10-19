@@ -61,7 +61,9 @@
         "tests.test_design_lint_numbered_returns.test_neutral_net_renaming_preserves_repeated_pin_review",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
-        "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering"
+        "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering",
+        "tests.test_design_lint_determinism_connector_peers.test_connector_peer_reports_remain_deterministic",
+        "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"
@@ -1260,7 +1262,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_diodes.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+        "tests.test_two_pin_diodes.test_order_is_stable_and_splitting_one_component_clears_only_its_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
@@ -1303,7 +1306,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_crystals.test_order_is_stable_and_splitting_one_crystal_clears_only_its_finding"
+        "tests.test_two_pin_crystals.test_order_is_stable_and_splitting_one_crystal_clears_only_its_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
@@ -1347,7 +1351,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_fuses.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+        "tests.test_two_pin_fuses.test_order_is_stable_and_splitting_one_component_clears_only_its_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
@@ -1389,7 +1394,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_ferrites.test_order_is_stable_and_splitting_one_component_clears_only_its_finding"
+        "tests.test_two_pin_ferrites.test_order_is_stable_and_splitting_one_component_clears_only_its_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
@@ -1432,7 +1438,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_switches.test_order_is_stable_and_splitting_the_switch_clears_the_finding"
+        "tests.test_two_pin_switches.test_order_is_stable_and_splitting_the_switch_clears_the_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
@@ -1477,7 +1484,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_connector_returns.test_connector_return_fingerprint_is_order_stable_and_repair_clears_candidate"
+        "tests.test_design_lint_connector_returns.test_connector_return_fingerprint_is_order_stable_and_repair_clears_candidate",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#connectors_without_connected_return",
@@ -1643,7 +1651,8 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_type_is_order_stable",
-        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_connected_generic_power_input_clears_the_candidate"
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_connected_generic_power_input_clears_the_candidate",
+        "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_input_connector_pins",
@@ -1732,7 +1741,8 @@
         "tests.test_component_power_input_native_fixture_lane.test_native_generic_component_power_input_cases_are_focused_and_repeatable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_is_order_stable"
+        "tests.test_design_lint_component_power_pins.test_generic_component_power_input_is_order_stable",
+        "tests.test_design_lint_determinism_component_peers.test_component_peer_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_pin_patterns.py#unconnected_generic_power_input_component_pins",
@@ -1893,7 +1903,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_control_input_candidates_are_order_stable_and_each_assignment_clears_one"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_control_input_candidates_are_order_stable_and_each_assignment_clears_one",
+        "tests.test_design_lint_determinism_control_inputs.test_control_input_fault_and_valid_control_reports_are_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/control_input_inventory.py#unconnected_control_inputs",
@@ -2094,7 +2105,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path"
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups",
@@ -2208,7 +2220,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_i2c_peer_reference_review.test_split_reference_candidate_is_stable_under_mapping_order",
-        "tests.test_i2c_peer_reference_review.test_project_override_and_exact_ignore_change_disposition_not_detection"
+        "tests.test_i2c_peer_reference_review.test_project_override_and_exact_ignore_change_disposition_not_detection",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_I2C_PEER_REFERENCE_FIXTURES"
@@ -2253,7 +2266,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_spi_peer_reference_review.test_split_candidate_is_stable_under_mapping_order",
-        "tests.test_spi_peer_reference_review.test_report_coverage_tracks_candidate_and_policy_disposition"
+        "tests.test_spi_peer_reference_review.test_report_coverage_tracks_candidate_and_policy_disposition",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES"
@@ -2460,7 +2474,8 @@
         "tests.test_usb_data_paths.test_missing_path_evidence_is_order_stable_and_repair_clears_it",
         "tests.test_usb_data_path_reference_bonds.test_bonded_reference_fault_evidence_is_order_stable",
         "tests.test_usb_inline_component_paths.test_inline_component_findings_are_order_stable_and_repair_clears_them",
-        "tests.test_usb_data_path_protection_shunts.test_shunt_path_evidence_is_stable_under_native_mapping_order"
+        "tests.test_usb_data_path_protection_shunts.test_shunt_path_evidence_is_stable_under_native_mapping_order",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
@@ -2566,7 +2581,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_can.test_can_peer_pair_divergence_is_order_stable_and_dnp_aware"
+        "tests.test_design_lint_can.test_can_peer_pair_divergence_is_order_stable_and_dnp_aware",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CAN_PEER_FIXTURES"
@@ -2606,7 +2622,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_can_peer_reference_review.test_component_peer_duplicate_suppression_requires_every_reference_assignment",
-        "tests.test_can_peer_reference_review.test_rule_policy_ignore_and_mapping_order_are_deterministic"
+        "tests.test_can_peer_reference_review.test_rule_policy_ignore_and_mapping_order_are_deterministic",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES"
@@ -2651,7 +2668,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_rs485_peer_reference_review.test_exact_component_peer_duplicate_suppression_and_review_policy",
-        "tests.test_rs485_peer_reference_review.test_source_and_mapping_order_preserve_the_candidate_fingerprint"
+        "tests.test_rs485_peer_reference_review.test_source_and_mapping_order_preserve_the_candidate_fingerprint",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_RS485_PEER_REFERENCE_FIXTURES"
@@ -2728,7 +2746,8 @@
         "tests.test_design_lint_named_pairs.test_named_complementary_nets_prompt_for_reviewed_pair_requirements"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_named_pairs.test_named_pair_hint_is_stable_and_reviewed_map_suppresses_only_the_hint"
+        "tests.test_design_lint_named_pairs.test_named_pair_hint_is_stable_and_reviewed_map_suppresses_only_the_hint",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "metamorphic_status": "covered",
       "implementation_refs": [
@@ -2798,7 +2817,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_external_protection_review.test_mapped_protection_mismatch_is_order_stable_and_native_repair_clears_it"
+        "tests.test_external_protection_review.test_mapped_protection_mismatch_is_order_stable_and_native_repair_clears_it",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/external_protection.py#evaluate",
@@ -2885,7 +2905,9 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_return_label_groups.test_unindexed_return_label_order_does_not_change_finding",
-        "tests.test_design_lint_return_label_groups.test_unindexed_return_ignore_is_exact_and_becomes_stale_after_source_change"
+        "tests.test_design_lint_return_label_groups.test_unindexed_return_ignore_is_exact_and_becomes_stale_after_source_change",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic",
+        "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/return_nets.py#return_label_groups_without_pin_roles",
@@ -3140,7 +3162,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_unmarked_crossing_is_stable_under_wire_order_and_marker_repairs_it"
+        "tests.test_schematic_geometry_wire_topology.SchematicGeometryWireTopologyTests.test_unmarked_crossing_is_stable_under_wire_order_and_marker_repairs_it",
+        "tests.test_design_lint_determinism_schematic_geometry.test_schematic_wire_crossing_fault_and_control_reports_are_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/schematic_wire_geometry.py#unmarked_orthogonal_crossings",
@@ -3453,7 +3476,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_i2c_address_straps.test_strap_mismatch_is_order_stable_and_corrected_strap_clears_it"
+        "tests.test_i2c_address_straps.test_strap_mismatch_is_order_stable_and_corrected_strap_clears_it",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_addressing.py#scan_i2c_address_map",
@@ -3487,7 +3511,8 @@
         "tests.test_i2c_address_collisions.test_not_fitted_responder_does_not_create_a_collision"
       ],
       "metamorphic_fixtures": [
-        "tests.test_i2c_address_collisions.test_collision_order_is_stable_and_separate_segments_clear_it"
+        "tests.test_i2c_address_collisions.test_collision_order_is_stable_and_separate_segments_clear_it",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_addressing.py#scan_i2c_address_map",
@@ -3523,7 +3548,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_i2c_address_coverage.test_unmapped_responder_prompt_is_order_stable_and_map_entry_clears_it"
+        "tests.test_i2c_address_coverage.test_unmapped_responder_prompt_is_order_stable_and_map_entry_clears_it",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_addressing.py#unmapped_i2c_responders",
@@ -3566,7 +3592,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_serial_participants.test_unmapped_endpoints_are_deterministic_and_exact_mapped_pairs_clear",
-        "tests.test_serial_participant_net_labels.test_net_label_discovery_is_order_stable_and_does_not_duplicate_pin_function_findings"
+        "tests.test_serial_participant_net_labels.test_net_label_discovery_is_order_stable_and_does_not_duplicate_pin_function_findings",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/serial_participants.py#unmapped_serial_peers",
@@ -3644,7 +3671,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_peer_voltage.test_spi_peer_voltage_prompt_is_stable_and_project_configurable"
+        "tests.test_design_lint_peer_voltage.test_spi_peer_voltage_prompt_is_stable_and_project_configurable",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/digital_peer_voltage_scan.py#unmapped_spi_peer_voltage_reviews",
@@ -3681,7 +3709,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_serial_peer_voltage.test_serial_peer_voltage_prompt_is_stable_and_project_configurable"
+        "tests.test_design_lint_serial_peer_voltage.test_serial_peer_voltage_prompt_is_stable_and_project_configurable",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/digital_peer_voltage_scan.py#unmapped_serial_peer_voltage_reviews",
@@ -3747,7 +3776,8 @@
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_peer_review_is_order_stable",
         "tests.test_serial_peer_reference_maps.SerialPeerReferenceMapTests.test_reference_domain_finding_is_order_stable_and_exact_map_clears_it",
         "tests.test_serial_peer_reference_boundaries.SerialPeerReferenceBoundaryTests.test_channel_label_candidate_is_order_stable",
-        "tests.test_ci_hosted_digital_peer_serial.test_serial_peer_normalized_netlists_match_across_native_versions"
+        "tests.test_ci_hosted_digital_peer_serial.test_serial_peer_normalized_netlists_match_across_native_versions",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES"
@@ -3889,7 +3919,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_crystal_networks.test_load_mismatch_is_order_stable_and_corrected_values_clear_it"
+        "tests.test_crystal_networks.test_load_mismatch_is_order_stable_and_corrected_values_clear_it",
+        "tests.test_design_lint_determinism_analog.test_mapped_analog_reports_remain_source_bound_and_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/crystal_networks.py#scan_crystal_network_map",
@@ -3927,7 +3958,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_regulator_feedback.test_feedback_mismatch_is_order_stable_and_corrected_value_clears_it"
+        "tests.test_regulator_feedback.test_feedback_mismatch_is_order_stable_and_corrected_value_clears_it",
+        "tests.test_design_lint_determinism_regulator.test_mapped_regulator_feedback_reports_remain_source_bound_and_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/regulator_feedback.py#scan_regulator_feedback_map",
@@ -3963,7 +3995,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_rc_filters.test_corner_mismatch_is_order_stable_and_corrected_value_clears_it"
+        "tests.test_rc_filters.test_corner_mismatch_is_order_stable_and_corrected_value_clears_it",
+        "tests.test_design_lint_determinism_analog.test_mapped_analog_reports_remain_source_bound_and_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/rc_filters.py#scan_rc_filter_map",
@@ -4036,7 +4069,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_protection_path.test_pad_and_via_inventory_order_does_not_change_results"
+        "tests.test_pcb_protection_path.test_pad_and_via_inventory_order_does_not_change_results",
+        "tests.test_design_lint_determinism_pcb_protection.test_mapped_protection_path_reports_remain_source_bound_and_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_protection_path.py#pcb_protection_path_entries",
@@ -4075,7 +4109,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_decoupling.test_pad_inventory_order_preserves_distance_finding_and_boundary_repair_clears_it",
-        "tests.test_pcb_decoupling_return_vias.test_return_via_order_is_stable_and_moving_it_past_limit_clears_candidate"
+        "tests.test_pcb_decoupling_return_vias.test_return_via_order_is_stable_and_moving_it_past_limit_clears_candidate",
+        "tests.test_design_lint_determinism_pcb_power.test_pcb_and_power_map_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_decoupling.py#pcb_decoupling_entries",
@@ -4112,7 +4147,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_track_width.test_track_order_preserves_measurement_and_finding_but_boundary_repair_clears_it"
+        "tests.test_pcb_track_width.test_track_order_preserves_measurement_and_finding_but_boundary_repair_clears_it",
+        "tests.test_design_lint_determinism_pcb_track_width.test_mapped_track_width_reports_remain_source_bound_and_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_track_width.py#pcb_track_width_entries",
@@ -4170,7 +4206,8 @@
         "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_signal_via_antipad_is_measured_as_uncovered_review_area",
         "tests.test_pcb_reference_plane_layers.PcbReferencePlaneLayerTests.test_merged_clearance_hole_does_not_assign_hole_ownership_to_endpoint_via",
         "tests.test_pcb_reference_plane_layers.PcbReferencePlaneLayerTests.test_excluded_short_track_review_is_opt_in_and_cli_text_keeps_ids_visible",
-        "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_branched_route_reports_only_the_branch_crossing_a_reference_gap"
+        "tests.test_pcb_reference_plane_geometry.PcbReferencePlaneGeometryTests.test_branched_route_reports_only_the_branch_crossing_a_reference_gap",
+        "tests.test_design_lint_determinism_pcb_power.test_pcb_and_power_map_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
@@ -4279,7 +4316,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_drc_coverage.test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_detected"
+        "tests.test_pcb_drc_coverage.test_rule_and_requirement_order_preserve_coverage_but_bound_mutation_is_detected",
+        "tests.test_design_lint_determinism_pcb_drc.test_differential_pair_drc_coverage_reports_remain_source_bound_and_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_rule_coverage.py#compare_native_rules",
@@ -4406,7 +4444,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_rf_antenna.test_module_and_keepout_moving_together_preserves_exact_coverage",
-        "tests.test_pcb_rf_antenna.test_moving_only_the_module_leaves_keepout_coverage_incomplete"
+        "tests.test_pcb_rf_antenna.test_moving_only_the_module_leaves_keepout_coverage_incomplete",
+        "tests.test_design_lint_determinism_pcb_antenna.test_rf_antenna_keepout_reports_remain_source_bound_and_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
@@ -4501,7 +4540,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_comparison"
+        "tests.test_pcb_component_inventory.test_reference_and_inventory_order_do_not_change_comparison",
+        "tests.test_design_lint_determinism_pcb_component_inventory.test_component_inventory_fault_and_control_reports_are_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
@@ -4837,7 +4877,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_led_output_heuristics.test_output_led_finding_is_order_stable_and_clears_on_series_path",
-        "tests.test_led_output_heuristics.test_custom_led_role_fingerprint_is_order_stable_and_basis_bound"
+        "tests.test_led_output_heuristics.test_custom_led_role_fingerprint_is_order_stable_and_basis_bound",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/led_heuristics.py#leds_directly_driven_without_visible_series_resistor",
@@ -5014,7 +5055,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_power_paths.test_map_order_is_stable_and_fixing_path_clears_finding"
+        "tests.test_power_paths.test_map_order_is_stable_and_fixing_path_clears_finding",
+        "tests.test_design_lint_determinism_pcb_power.test_pcb_and_power_map_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_POWER_PATH_FIXTURES"
@@ -5066,7 +5108,8 @@
       "metamorphic_fixtures": [
         "tests.test_power_sequences.test_netlist_order_is_stable_and_repair_clears_finding",
         "tests.test_power_sequence_cycles.test_mapped_output_to_enable_cycle_is_detected_with_acyclic_requirement_graph",
-        "tests.test_power_sequence_native_fixture_lane.test_control_fault_and_cycle_repeat_on_pinned_kicad_versions"
+        "tests.test_power_sequence_native_fixture_lane.test_control_fault_and_cycle_repeat_on_pinned_kicad_versions",
+        "tests.test_design_lint_determinism_pcb_power.test_pcb_and_power_map_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES"
@@ -5208,7 +5251,8 @@
         "tests.test_stm32_pin_map.test_ioc_pin_assignment_order_preserves_coverage_and_source_binding"
       ],
       "metamorphic_fixtures": [
-        "tests.test_stm32_pin_map.test_ioc_pin_assignment_order_preserves_coverage_and_source_binding"
+        "tests.test_stm32_pin_map.test_ioc_pin_assignment_order_preserves_coverage_and_source_binding",
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/stm32_pin_map.py#parse_cubemx_ioc",

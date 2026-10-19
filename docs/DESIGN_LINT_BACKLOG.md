@@ -2769,7 +2769,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v70. The cross-process probe supports themed report
+- **Status:** Implemented v71. The cross-process probe supports themed report
   selectors and retains the complete 194-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
@@ -2809,6 +2809,8 @@ is not a reason by itself to expand its scope or change its default policy.
   assigned-contact control with exact synthetic netlist hashes.
   The v70 extension adds the spaced `0V PWM 1` through `0V PWM 4` split-return
   fault and common `0V PWM` control to the isolated-process report matrix.
+  The v71 extension links every directly asserted lint rule to its
+  process-level report test and guards those links in the catalog suite.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized

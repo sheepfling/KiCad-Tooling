@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import re
 from importlib.resources import files
@@ -233,6 +234,32 @@ def test_metamorphic_status_requires_fixture_or_reasoned_not_applicability() -> 
     )
     validated = DesignLintRuleMetadata.model_validate(entry)
     assert validated.metamorphic_status == "not_applicable"
+
+
+def test_hashseed_report_tests_are_linked_to_each_rule_they_assert() -> None:
+    repository = Path(__file__).parents[1]
+    rules = {rule.rule_id: rule for rule in rule_catalog().rules}
+
+    for path in sorted((repository / "tests").glob("test_design_lint_determinism_*.py")):
+        module = ".".join(path.relative_to(repository).with_suffix("").parts)
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if not node.name.startswith("test_"):
+                continue
+            rule_ids = {
+                item.value
+                for item in ast.walk(node)
+                if isinstance(item, ast.Constant)
+                and isinstance(item.value, str)
+                and item.value in rules
+            }
+            reference = f"{module}.{node.name}"
+            for rule_id in sorted(rule_ids):
+                assert reference in rules[rule_id].metamorphic_fixtures, (
+                    f"{reference} asserts {rule_id} but is not linked from its rule catalog entry"
+                )
 
 
 def test_metamorphic_coverage_inventory_matches_the_backlog() -> None:
