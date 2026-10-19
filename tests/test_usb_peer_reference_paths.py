@@ -146,11 +146,39 @@ def test_exact_mapped_inline_component_path_reviews_split_references() -> None:
     unmapped_report = lint_report(observed)
     assert RULE_ID not in {item.rule_id for item in unmapped_report.findings}
     assert unmapped_report.usb_peer_reference_coverage.supported_data_path_count == 0
+    unsupported = unmapped_report.usb_peer_reference_coverage.unsupported_multi_pin_paths
+    assert unsupported is not None
+    assert len(unsupported) == 1
+    assert (
+        unsupported[0].connector_reference,
+        unsupported[0].phy_reference,
+        unsupported[0].component_reference,
+        unsupported[0].component_pin_count,
+    ) == ("J1", "U1", "U2", 6)
+    assert unsupported[0].positive_connector_net == "USB_DP_PORT"
+    assert unsupported[0].positive_phy_net == "USB_DP_PHY"
+    assert unsupported[0].positive_connector_component_pins == ("U2.1",)
+    assert unsupported[0].positive_phy_component_pins == ("U2.2",)
+    assert unsupported[0].negative_connector_net == "USB_DM_PORT"
+    assert unsupported[0].negative_phy_net == "USB_DM_PHY"
+    assert unsupported[0].negative_connector_component_pins == ("U2.3",)
+    assert unsupported[0].negative_phy_component_pins == ("U2.4",)
+    reordered = observed.model_copy(update={"nets": dict(reversed(tuple(observed.nets.items())))})
+    reordered_coverage = lint_report(reordered).usb_peer_reference_coverage
+    assert reordered_coverage.unsupported_multi_pin_paths == unsupported
+    assert (
+        "Unsupported multi-pin topology candidates (coverage only; not a confirmed path or defect):"
+        in text_report(unmapped_report)
+    )
+    assert "An exact project-authored data-path map is required" in text_report(unmapped_report)
+
+    assert report.usb_peer_reference_coverage.unsupported_multi_pin_paths == ()
 
     peer_observed, peer_map = usb_inline_peer_case(extra_data_peer=True)
     peer_report = lint_report(peer_observed, path_map=peer_map)
     assert RULE_ID not in {item.rule_id for item in peer_report.findings}
     assert peer_report.usb_peer_reference_coverage.supported_data_path_count == 0
+    assert peer_report.usb_peer_reference_coverage.unsupported_multi_pin_paths == ()
 
 
 def test_series_resistor_recognition_rejects_dnp_incomplete_and_extra_peers() -> None:

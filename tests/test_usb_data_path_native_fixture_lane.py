@@ -87,6 +87,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/usb-multiport-peer-reference-control",
         "usb-data-path-fixture/intentional-isolation-boundary",
         "usb-data-path-fixture/inline-component-control",
+        "usb-data-path-fixture/inline-component-unmapped-coverage",
         "usb-data-path-fixture/inline-component-ground-fault",
         "usb-data-path-fixture/inline-component-peer-reference-fault",
         "usb-data-path-fixture/inline-component-peer-reference-map-control",
@@ -96,6 +97,18 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/protection-shunt-common-reference",
         "usb-data-path-fixture/protection-shunt-pin-fault",
     }
+    unmapped_inline = results["usb-data-path-fixture/inline-component-unmapped-coverage"]
+    assert unmapped_inline["status"] == "PASS"
+    assert unmapped_inline["source_sha256"] == expected_source_hashes["inline-component-control"]
+    assert (
+        unmapped_inline["netlist_sha256"]
+        == results["usb-data-path-fixture/inline-component-control"]["netlist_sha256"]
+    )
+    assert unmapped_inline["repeat_netlist_sha256"] == unmapped_inline["netlist_sha256"]
+    assert unmapped_inline["coverage_status"] == "NO_SUPPORTED_PEER_PATHS"
+    assert unmapped_inline["supported_data_paths"] == 0
+    assert unmapped_inline["unsupported_component_references"] == "U2"
+    assert unmapped_inline["usb_reference_findings"] == "none"
     for case in (
         "integrated-direct",
         "external-series",

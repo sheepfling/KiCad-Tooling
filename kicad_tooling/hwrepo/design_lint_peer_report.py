@@ -157,6 +157,36 @@ def peer_reference_report_lines(report: DesignLintReport) -> list[str]:
                         f"        mapped protection shunt: {shunt.reference} "
                         f"({shunt.symbol}; {shunt.footprint}) [{assignments}]"
                     )
+        if usb_peer_coverage.unsupported_multi_pin_paths:
+            lines.append(
+                "    Unsupported multi-pin topology candidates (coverage only; "
+                "not a confirmed path or defect):"
+            )
+            for item in usb_peer_coverage.unsupported_multi_pin_paths:
+                port_group = (
+                    f"port {item.port_group}" if item.port_group is not None else "unnumbered port"
+                )
+                lines.append(
+                    f"      {item.connector_reference} / {item.phy_reference} ({port_group}): "
+                    f"{item.component_reference} ({item.component_symbol}; "
+                    f"{item.component_footprint}; {item.component_pin_count} native pins)"
+                )
+                lines.append(
+                    f"        D+: {item.positive_connector_net} "
+                    f"[{', '.join(item.positive_connector_component_pins)}] / "
+                    f"{item.positive_phy_net} "
+                    f"[{', '.join(item.positive_phy_component_pins)}]"
+                )
+                lines.append(
+                    f"        D-: {item.negative_connector_net} "
+                    f"[{', '.join(item.negative_connector_component_pins)}] / "
+                    f"{item.negative_phy_net} "
+                    f"[{', '.join(item.negative_phy_component_pins)}]"
+                )
+            lines.append(
+                "      An exact project-authored data-path map is required to evaluate "
+                "these multi-pin topologies."
+            )
         if usb_peer_coverage.usb_data_path_map_sha256 is not None:
             lines.append(
                 f"    USB data-path map SHA-256: {usb_peer_coverage.usb_data_path_map_sha256}"

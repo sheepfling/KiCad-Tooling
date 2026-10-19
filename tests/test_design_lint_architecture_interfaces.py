@@ -15,6 +15,7 @@ from kicad_tooling.hwrepo import (
     i2c_peer_reference_models,
     serial_peer_reference_models,
     usb_peer_reference_models,
+    usb_peer_unsupported_models,
 )
 from kicad_tooling.hwrepo import models as shared_models
 from tests.lint_architecture_support import (
@@ -85,6 +86,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_protection_shunt_analysis.py",
     "usb_peer_reference_contract.py",
     "usb_peer_reference_scan.py",
+    "usb_peer_unsupported_topology.py",
 )
 
 
@@ -176,6 +178,19 @@ def test_usb_inline_component_coverage_model_stays_in_its_theme_owner() -> None:
     assert not hasattr(shared_models, "UsbPeerDataProtectionShuntPinCoverage")
 
 
+def test_usb_unsupported_path_coverage_model_stays_in_its_theme_owner() -> None:
+    owner = HWREPO / "usb_peer_unsupported_models.py"
+    owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    owner_definitions = {node.name for node in owner_tree.body if isinstance(node, ast.ClassDef)}
+
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert "UsbPeerUnsupportedMultiPinPathCoverage" in owner_definitions
+    assert not hasattr(shared_models, "UsbPeerUnsupportedMultiPinPathCoverage")
+    assert usb_peer_unsupported_models.UsbPeerUnsupportedMultiPinPathCoverage.__module__.endswith(
+        "usb_peer_unsupported_models"
+    )
+
+
 def test_bus_heuristics_compatibility_facade_stays_small() -> None:
     facade = HWREPO / "bus_heuristics.py"
 
@@ -246,6 +261,10 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
     )
     assert (
         "kicad_tooling/hwrepo/usb_peer_path_analysis.py#usb_superspeed_direct_data_link"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/usb_peer_unsupported_topology.py#unsupported_usb_multi_pin_path_candidates"
         in rule.implementation_refs
     )
     assert references <= {

@@ -175,6 +175,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     normalized_hashes: dict[tuple[str, str], str] = {}
     reports: dict[tuple[str, str], DesignLintReport] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
+    unmapped_inline_coverage: DesignLintReport | None = None
     for case in cases:
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -240,6 +241,12 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                 coach,
                 DesignLintPolicy(usb_data_path_map=requirements[case]),
             )
+            if case == "inline-component-control" and run == "first":
+                unmapped_inline_coverage = evaluate(
+                    project_id,
+                    coach,
+                    DesignLintPolicy(),
+                )
 
     if any(
         normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")] for case in cases
@@ -247,6 +254,50 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         raise ValueError(
             "Native USB exports differ after normalization to parsed netlist contracts"
         )
+
+    if unmapped_inline_coverage is None:
+        raise ValueError("Native inline-component fixture omitted its unmapped coverage report")
+    unsupported_paths = unmapped_inline_coverage.usb_peer_reference_coverage
+    if unsupported_paths is None or tuple(
+        (
+            item.connector_reference,
+            item.phy_reference,
+            item.component_reference,
+            item.positive_connector_net,
+            item.positive_phy_net,
+            item.negative_connector_net,
+            item.negative_phy_net,
+        )
+        for item in unsupported_paths.unsupported_multi_pin_paths or ()
+    ) != (("J1", "U1", "U2", "USB_DP_PORT", "USB_DP_PHY", "USB_DM_PORT", "USB_DM_PHY"),):
+        raise ValueError(
+            "Native unmapped inline-component coverage did not retain exact U2 pin/net topology"
+        )
+    if unsupported_paths.supported_data_path_count != 0 or any(
+        item.rule_id in {"bus.usb_peer_reference_review", "bus.usb_data_path_mismatch"}
+        for item in unmapped_inline_coverage.findings
+    ):
+        raise ValueError(
+            "Native unsupported-topology coverage must not promote the candidate to a path or finding"
+        )
+    log.event(
+        "usb-data-path-fixture/inline-component-unmapped-coverage",
+        "PASS",
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+        source_sha256=source_hashes["inline-component-control"],
+        netlist_sha256=raw_hashes[("inline-component-control", "first")],
+        repeat_netlist_sha256=raw_hashes[("inline-component-control", "repeat")],
+        normalized_netlist_sha256=normalized_hashes[("inline-component-control", "first")],
+        repeat_normalized_netlist_sha256=normalized_hashes[("inline-component-control", "repeat")],
+        coverage_status=unsupported_paths.status,
+        supported_data_paths=unsupported_paths.supported_data_path_count,
+        unsupported_component_references=";".join(
+            item.component_reference for item in unsupported_paths.unsupported_multi_pin_paths or ()
+        ),
+        usb_reference_findings="none",
+    )
 
     fault = reports[("external-bypass", "first")]
     fault_findings = tuple(

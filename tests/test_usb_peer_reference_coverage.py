@@ -125,9 +125,11 @@ def test_coverage_marks_missing_usb_endpoints_and_incomplete_groups() -> None:
     legacy_payload = incomplete_coverage.model_dump()
     legacy_payload.pop("endpoint_groups")
     legacy_payload.pop("path_entries")
+    legacy_payload.pop("unsupported_multi_pin_paths")
     legacy = UsbPeerReferenceCoverageReport.model_validate(legacy_payload)
     assert (legacy.endpoint_groups) is None
     assert (legacy.path_entries) is None
+    assert (legacy.unsupported_multi_pin_paths) is None
     inconsistent_payload = incomplete_coverage.model_dump()
     inconsistent_payload["incomplete_group_count"] = 0
     with pytest.raises(ValidationError, match="incomplete group count"):
@@ -214,6 +216,7 @@ def test_ud_phy_aliases_retain_split_fault_and_common_reference_control() -> Non
     assert split_coverage.recognized_phy_group_count == 1
     assert split_coverage.supported_phy_group_count == 1
     assert split_coverage.supported_data_path_count == 1
+    assert split_coverage.unsupported_multi_pin_paths == ()
     assert split_coverage.separate_reference_path_count == 1
     assert split_coverage.path_entries[0].reference_disposition == "SEPARATE_REFERENCE_REVIEW"
     assert sum(item.rule_id == RULE_ID for item in split.findings) == 1

@@ -16,6 +16,7 @@ from .model_primitives import (
     StrictModel,
     UsbDataPortGroup,
 )
+from .usb_peer_unsupported_models import UsbPeerUnsupportedMultiPinPathCoverage
 
 
 class UsbPeerEndpointGroupCoverage(StrictModel):
@@ -332,6 +333,7 @@ class UsbPeerReferenceCoverageReport(StrictModel):
     separate_reference_path_count: NonNegativeCount = 0
     mapped_separate_reference_path_count: NonNegativeCount = 0
     candidate_group_count: NonNegativeCount = 0
+    unsupported_multi_pin_paths: tuple[UsbPeerUnsupportedMultiPinPathCoverage, ...] | None = None
 
     @model_validator(mode="after")
     def counts_match_scope(self) -> UsbPeerReferenceCoverageReport:
@@ -409,6 +411,23 @@ class UsbPeerReferenceCoverageReport(StrictModel):
                 for item in self.path_entries
             ):
                 raise ValueError("USB review candidates must match path coverage entries")
+        if self.unsupported_multi_pin_paths is not None:
+            unsupported_keys = tuple(
+                (
+                    item.connector_reference.casefold(),
+                    item.connector_reference,
+                    item.phy_reference.casefold(),
+                    item.phy_reference,
+                    item.port_group or "",
+                    item.component_reference.casefold(),
+                    item.component_reference,
+                )
+                for item in self.unsupported_multi_pin_paths
+            )
+            if len(set(unsupported_keys)) != len(unsupported_keys):
+                raise ValueError("USB unsupported multi-pin path candidates must be unique")
+            if unsupported_keys != tuple(sorted(unsupported_keys)):
+                raise ValueError("USB unsupported multi-pin path candidates must be ordered")
         recognized_groups = self.recognized_connector_group_count + self.recognized_phy_group_count
         supported_groups = self.supported_connector_group_count + self.supported_phy_group_count
         if supported_groups > recognized_groups:

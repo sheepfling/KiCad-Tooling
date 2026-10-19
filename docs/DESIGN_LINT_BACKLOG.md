@@ -4833,7 +4833,8 @@ is not a reason by itself to expand its scope or change its default policy.
   bond, or intentionally isolated. This rule asks for review; it does not say
   grounds must be tied. It does not infer unlisted or multi-hop bond paths,
   multiple series components,
-  arbitrary extra peers, unmapped multi-pin protection arrays, lane-indexed
+  arbitrary extra peers, unmapped multi-pin protection arrays as supported
+  paths, lane-indexed
   USB-C pairs, muxes, retimers, other SuperSpeed multi-lane paths, off-board
   wiring, or PCB copper. It does not infer resistor suitability or protection
   performance. `data_port_group` scopes numbered USB 2.0 PHY inventory to one
@@ -4849,6 +4850,14 @@ is not a reason by itself to expand its scope or change its default policy.
   `bonded`, `bus.usb_data_path_mismatch` separately reports a missing, DNP,
   identity-mismatched, or incorrectly assigned bond; this netlist comparison
   does not prove component conduction or PCB copper.
+- **Unsupported-topology coverage:** When one unmapped multi-pin component has
+  assigned native pins on both connector-side and PHY-side nets for both
+  D+/D−, the typed coverage report records the endpoint pair, component
+  identity, inventory size, port group, and exact component pins/net names.
+  This is coverage-only evidence: it does not claim that the component passes
+  USB data, count the pair as a supported path, or create an electrical
+  finding. Other unsupported arrangements can remain unreported. A current
+  exact project-authored map remains necessary to evaluate this topology.
 - **Fixtures:** Synthetic split-reference fault and common-reference control,
   including native `UD+`/`UD−` PHY-pin aliases;
   exact mapped inline-protection split-reference fault, common-reference and
@@ -4887,7 +4896,12 @@ is not a reason by itself to expand its scope or change its default policy.
   common-reference control, and a wrong shunt-pin assignment are now registered
   in the digest-pinned KiCad 10.0.0/10.0.5 lane. Exact local native execution
   is unavailable in the current environment; the hosted result is recorded in
-  Evidence history below.
+  Evidence history below. The existing six-pin inline-protection source is also
+  evaluated with its exact map and again without a map: the mapped control stays
+  supported, while the unmapped report is expected to retain exact U2/D+/D−
+  pin/net evidence, zero supported paths, and no USB peer-reference or data-path
+  finding. This source-hashed comparison is registered for both pinned KiCad
+  versions; hosted acceptance is pending.
 - **Evidence history:**
 
   The predicate, tests, and native fixture sources were already in this branch

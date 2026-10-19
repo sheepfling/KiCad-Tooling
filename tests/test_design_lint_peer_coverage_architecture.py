@@ -86,6 +86,10 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
             "usb_peer_reference_models": set(
                 INTERFACE_COVERAGE_MODEL_OWNERS["usb_peer_reference_models.py"]
             ),
+            "usb_peer_unsupported_models": {"UsbPeerUnsupportedMultiPinPathCoverage"},
+        },
+        "usb_peer_reference_models.py": {
+            "usb_peer_unsupported_models": {"UsbPeerUnsupportedMultiPinPathCoverage"},
         },
         "design_lint_evaluation_types.py": {
             "component_peer_pin_models": {"ComponentPeerPinRuleCoverage"},
@@ -107,9 +111,11 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
             "i2c_peer_reference_models": {"I2cPeerReferenceCoverageReport"},
         },
     }
-    model_names = {
-        name for names in INTERFACE_COVERAGE_MODEL_OWNERS.values() for name in names
-    } | I2C_PEER_REFERENCE_MODELS
+    model_names = (
+        {name for names in INTERFACE_COVERAGE_MODEL_OWNERS.values() for name in names}
+        | I2C_PEER_REFERENCE_MODELS
+        | {"UsbPeerUnsupportedMultiPinPathCoverage"}
+    )
     legacy_imports: list[str] = []
     for filename, expected_imports in expected_by_service.items():
         source = HWREPO / filename

@@ -28,7 +28,9 @@ from .usb_peer_reference_types import (
     UsbPeerDataShuntBranch,
     UsbPeerReferencePathCoverage,
     UsbPeerReferenceScan,
+    UsbPeerUnsupportedMultiPinPath,
 )
+from .usb_peer_unsupported_models import UsbPeerUnsupportedMultiPinPathCoverage
 
 
 def _usb_peer_reference_path_entry(
@@ -164,6 +166,29 @@ def _usb_peer_reference_path_entry(
     )
 
 
+def _unsupported_multi_pin_path_entry(
+    item: UsbPeerUnsupportedMultiPinPath,
+) -> UsbPeerUnsupportedMultiPinPathCoverage:
+    """Serialize one coverage-only, unmapped multi-pin data-path candidate."""
+    return UsbPeerUnsupportedMultiPinPathCoverage(
+        connector_reference=item.connector_reference,
+        phy_reference=item.phy_reference,
+        component_reference=item.component_reference,
+        component_symbol=item.component_symbol,
+        component_footprint=item.component_footprint,
+        component_pin_count=item.component_pin_count,
+        port_group=item.port_group,
+        positive_connector_net=item.positive_connector_net,
+        positive_phy_net=item.positive_phy_net,
+        positive_connector_component_pins=item.positive_connector_component_pins,
+        positive_phy_component_pins=item.positive_phy_component_pins,
+        negative_connector_net=item.negative_connector_net,
+        negative_phy_net=item.negative_phy_net,
+        negative_connector_component_pins=item.negative_connector_component_pins,
+        negative_phy_component_pins=item.negative_phy_component_pins,
+    )
+
+
 def usb_peer_reference_coverage(
     scan: UsbPeerReferenceScan,
     default_modes: Mapping[DesignLintRuleId, Literal["review", "block", "off"]],
@@ -220,4 +245,8 @@ def usb_peer_reference_coverage(
         separate_reference_path_count=item.separate_reference_path_count,
         mapped_separate_reference_path_count=item.mapped_separate_reference_path_count,
         candidate_group_count=item.review_candidate_group_count,
+        unsupported_multi_pin_paths=tuple(
+            _unsupported_multi_pin_path_entry(candidate)
+            for candidate in item.unsupported_multi_pin_paths
+        ),
     )

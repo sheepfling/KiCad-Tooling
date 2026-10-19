@@ -27,7 +27,9 @@ from .usb_peer_reference_types import (
     UsbPeerReferenceReview,
     UsbPeerReferenceScan,
     UsbPeerSignalFamily,
+    UsbPeerUnsupportedMultiPinPath,
 )
+from .usb_peer_unsupported_topology import unsupported_usb_multi_pin_path_candidates
 
 
 def scan_usb_peer_reference_reviews(
@@ -183,6 +185,7 @@ def scan_usb_peer_reference_reviews(
 
     findings: list[UsbPeerReferenceReview] = []
     path_entries: list[UsbPeerReferencePathCoverage] = []
+    unsupported_multi_pin_paths: list[UsbPeerUnsupportedMultiPinPath] = []
     for connector in connectors:
         for phy in phy_endpoints:
             if connector.signal_family == phy.signal_family == "USB 2.0 data":
@@ -209,6 +212,15 @@ def scan_usb_peer_reference_reviews(
             else:
                 data_link = None
             if data_link is None:
+                unsupported_multi_pin_paths.extend(
+                    unsupported_usb_multi_pin_path_candidates(
+                        connector,
+                        phy,
+                        observed,
+                        net_members,
+                        mapped_path_component_references,
+                    )
+                )
                 continue
             common_reference = connector.reference_net.casefold() == phy.reference_net.casefold()
             mapped_separate_reference = not common_reference and usb_reference_map_matches(
@@ -320,6 +332,20 @@ def scan_usb_peer_reference_reviews(
             separate_reference_path_count=separate_reference_path_count,
             mapped_separate_reference_path_count=mapped_separate_reference_path_count,
             review_candidate_group_count=len(reviews),
+            unsupported_multi_pin_paths=tuple(
+                sorted(
+                    set(unsupported_multi_pin_paths),
+                    key=lambda item: (
+                        item.connector_reference.casefold(),
+                        item.connector_reference,
+                        item.phy_reference.casefold(),
+                        item.phy_reference,
+                        item.port_group or "",
+                        item.component_reference.casefold(),
+                        item.component_reference,
+                    ),
+                )
+            ),
         ),
     )
 

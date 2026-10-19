@@ -149,6 +149,28 @@ class UsbPeerReferenceCoverage:
     separate_reference_path_count: int
     mapped_separate_reference_path_count: int
     review_candidate_group_count: int
+    unsupported_multi_pin_paths: tuple[UsbPeerUnsupportedMultiPinPath, ...] = ()
+
+
+@dataclass(frozen=True)
+class UsbPeerUnsupportedMultiPinPath:
+    """Coverage-only evidence for one unmapped multi-pin USB data topology candidate."""
+
+    connector_reference: str
+    phy_reference: str
+    component_reference: str
+    component_symbol: str
+    component_footprint: str
+    component_pin_count: int
+    port_group: str | None
+    positive_connector_net: str
+    positive_phy_net: str
+    positive_connector_component_pins: tuple[str, ...]
+    positive_phy_component_pins: tuple[str, ...]
+    negative_connector_net: str
+    negative_phy_net: str
+    negative_connector_component_pins: tuple[str, ...]
+    negative_phy_component_pins: tuple[str, ...]
 
 
 @dataclass(frozen=True)
