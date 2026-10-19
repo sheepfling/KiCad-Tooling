@@ -115,6 +115,22 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
             "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
         ),
         (
+            "component.peer_signal_input_unconnected",
+            "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
+        ),
+        (
+            "component.peer_signal_output_unconnected",
+            "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
+        ),
+        (
+            "component.peer_power_output_unconnected",
+            "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
+        ),
+        (
+            "component.peer_bidirectional_pin_unconnected",
+            "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
+        ),
+        (
             "bus.i2c_missing_pullup",
             "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES",
         ),

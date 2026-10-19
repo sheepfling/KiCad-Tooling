@@ -244,6 +244,61 @@ def test_rule_marker_selects_catalogued_cases_without_external_checkout(
     assert "tests/test_power_paths.py::" not in result.stdout
 
 
+@pytest.mark.parametrize(
+    ("rule_id", "selected_node"),
+    (
+        (
+            "component.peer_power_output_unconnected",
+            "tests/test_design_lint_mcp_parity_peer_pins.py::test_peer_power_output_unconnected_lint_cli_mcp_parity",
+        ),
+        (
+            "component.peer_signal_output_unconnected",
+            "tests/test_design_lint_mcp_parity_peer_pins.py::test_peer_signal_output_unconnected_lint_cli_mcp_parity",
+        ),
+        (
+            "component.peer_signal_input_unconnected",
+            "tests/test_design_lint_mcp_parity_peer_pins.py::test_peer_signal_input_unconnected_lint_cli_mcp_parity",
+        ),
+        (
+            "component.peer_bidirectional_pin_unconnected",
+            "tests/test_design_lint_mcp_parity_peer_pins.py::test_peer_bidirectional_pin_unconnected_lint_cli_mcp_parity",
+        ),
+    ),
+)
+def test_peer_pin_rule_selector_collects_only_its_parity_case(
+    rule_id: str,
+    selected_node: str,
+) -> None:
+    environment = os.environ.copy()
+    environment.pop("KICAD_TEMPLATE_ROOT", None)
+    result = subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "pytest",
+            "-q",
+            "--collect-only",
+            "-m",
+            f'design_lint_rule(rule_id="{rule_id}")',
+        ),
+        cwd=Path(__file__).resolve().parents[1],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    selected_peer_cases = {
+        line
+        for line in result.stdout.splitlines()
+        if line.startswith("tests/test_design_lint_mcp_parity_peer_pins.py::test_peer_")
+    }
+    assert selected_peer_cases == {selected_node}
+
+
 def test_serial_reference_rule_selects_its_exact_native_regressions() -> None:
     environment = os.environ.copy()
     environment.pop("KICAD_TEMPLATE_ROOT", None)

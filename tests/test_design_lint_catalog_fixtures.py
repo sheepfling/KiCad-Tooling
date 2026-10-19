@@ -43,41 +43,41 @@ _PARITY_FIXTURES_BY_RULE = {
     "component.peer_power_output_unconnected": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_power_output_unconnected_lint_cli_mcp_parity",
         ),
         "valid_control_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_power_output_unconnected_lint_cli_mcp_parity",
         ),
     },
     "component.peer_signal_input_unconnected": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_signal_input_unconnected_lint_cli_mcp_parity",
         ),
         "valid_control_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_signal_input_unconnected_lint_cli_mcp_parity",
         ),
     },
     "component.peer_signal_output_unconnected": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_signal_output_unconnected_lint_cli_mcp_parity",
         ),
         "valid_control_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_signal_output_unconnected_lint_cli_mcp_parity",
         ),
     },
     "component.peer_bidirectional_pin_unconnected": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_bidirectional_pin_unconnected_lint_cli_mcp_parity",
         ),
         "valid_control_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_peer_pins",
-            "test_peer_component_pin_unconnected_lint_cli_mcp_parity",
+            "test_peer_bidirectional_pin_unconnected_lint_cli_mcp_parity",
         ),
     },
     "component.two_pin_passive_same_net": {

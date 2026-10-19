@@ -77,7 +77,9 @@ Pull requests, main pushes, and stable version tags keep the full package accept
 suite. A prerelease tag containing `rc` runs the same packaging, static checks, and
 external-template rehearsal with a selected design-lint pytest scope and declared
 native fixture lanes. Use an annotated tag with exactly one `Lint-Area` or
-`Lint-Rule` line. A rule selector must name an active rule in the packaged catalog;
+`Lint-Rule` line. Prefer `Lint-Rule` for a single-rule change, and use
+`Lint-Area` when a change spans rules within a theme. A rule selector must name
+an active rule in the packaged catalog;
 its catalogued fault, valid-control, metamorphic, parity, and native regressions are
 selected together. Each optional `Native-Fixture` line must name a switch already
 covered by the full acceptance job:

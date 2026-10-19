@@ -133,18 +133,52 @@ class _DesignLintMcpParityPeerPinsCases(McpParityHarness):
                     self.assertEqual(len(peer_findings), 2 if split_domains else 0)
 
 
-@pytest.mark.template_checkout
-@pytest.mark.parametrize(
-    ("electrical_type", "pin_function", "rule_id"),
-    (
-        ("power_out", "OUT", "component.peer_power_output_unconnected"),
-        ("output", "OUT", "component.peer_signal_output_unconnected"),
-        ("input", "IN", "component.peer_signal_input_unconnected"),
-        ("bidirectional", "DATA_IO", "component.peer_bidirectional_pin_unconnected"),
-    ),
-)
-def test_peer_component_pin_unconnected_lint_cli_mcp_parity(
-    tmp_path: Path, electrical_type: str, pin_function: str, rule_id: str
+@pytest.mark.design_lint_rule(rule_id="component.peer_power_output_unconnected")
+def test_peer_power_output_unconnected_lint_cli_mcp_parity(tmp_path: Path) -> None:
+    _peer_component_pin_unconnected_lint_cli_mcp_parity(
+        tmp_path,
+        electrical_type="power_out",
+        pin_function="OUT",
+        rule_id="component.peer_power_output_unconnected",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id="component.peer_signal_output_unconnected")
+def test_peer_signal_output_unconnected_lint_cli_mcp_parity(tmp_path: Path) -> None:
+    _peer_component_pin_unconnected_lint_cli_mcp_parity(
+        tmp_path,
+        electrical_type="output",
+        pin_function="OUT",
+        rule_id="component.peer_signal_output_unconnected",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id="component.peer_signal_input_unconnected")
+def test_peer_signal_input_unconnected_lint_cli_mcp_parity(tmp_path: Path) -> None:
+    _peer_component_pin_unconnected_lint_cli_mcp_parity(
+        tmp_path,
+        electrical_type="input",
+        pin_function="IN",
+        rule_id="component.peer_signal_input_unconnected",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id="component.peer_bidirectional_pin_unconnected")
+def test_peer_bidirectional_pin_unconnected_lint_cli_mcp_parity(tmp_path: Path) -> None:
+    _peer_component_pin_unconnected_lint_cli_mcp_parity(
+        tmp_path,
+        electrical_type="bidirectional",
+        pin_function="DATA_IO",
+        rule_id="component.peer_bidirectional_pin_unconnected",
+    )
+
+
+def _peer_component_pin_unconnected_lint_cli_mcp_parity(
+    tmp_path: Path,
+    *,
+    electrical_type: str,
+    pin_function: str,
+    rule_id: str,
 ) -> None:
     root, island, _ = parity_workspace(tmp_path)
     native = parity_native_evidence(root, island)
