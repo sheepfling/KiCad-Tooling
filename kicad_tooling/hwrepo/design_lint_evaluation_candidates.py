@@ -198,6 +198,10 @@ def scan_evaluation_candidates(
                 and item.evidence.get("peer_identity_basis") == ("part_id",)
                 for item in items
             ),
+            footprint_peer_pin_divergence_finding_count=sum(
+                item.rule_id == "connector.footprint_peer_pin_assignment_divergence"
+                for item in items
+            ),
         )
     )
     component_peer_pin_coverage = (

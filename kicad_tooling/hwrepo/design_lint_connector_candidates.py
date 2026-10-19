@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from .connector_coverage import source_matched_connector_peer_assignment_groups
 from .connector_coverage_models import ConnectorCoverageReport
+from .design_lint_connector_footprint_candidates import (
+    connector_footprint_peer_pin_candidates,
+)
 from .design_lint_connector_pin_candidates import connector_pin_candidates
 from .design_lint_return_domain_candidates import return_domain_candidates
 from .design_lint_types import Candidate
@@ -23,6 +27,11 @@ def connector_candidates(
             connector_coverage=connector_coverage,
             reviewed_connector_references=reviewed_connector_references,
             power_output_review_enabled=power_output_review_enabled,
+        ),
+        *connector_footprint_peer_pin_candidates(
+            observed,
+            reviewed_connector_references,
+            source_matched_connector_peer_assignment_groups(observed, connector_coverage),
         ),
         *return_domain_candidates(
             observed,

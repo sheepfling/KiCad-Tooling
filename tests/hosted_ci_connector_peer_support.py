@@ -190,6 +190,8 @@ def assert_connector_peer_pin_cases(results, version):
             "peer-pin-part-id-open-fault",
             "peer-pin-part-id-common-control",
             "peer-pin-part-id-split-fault",
+            "footprint-alias-fault",
+            "footprint-alias-control",
             "two-peer-open-fault",
             "two-peer-no-connect-fault",
             "two-peer-common-control",

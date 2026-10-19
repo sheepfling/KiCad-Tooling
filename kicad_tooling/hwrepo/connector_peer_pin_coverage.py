@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_footprint_peer_pins import scan_connector_footprint_peer_pin_assignments
 from .connector_identity import (
     connector_candidate_references,
     has_meaningful_pin_function,
@@ -12,6 +13,7 @@ from .connector_identity import (
     similar_connector_pin_groups,
 )
 from .connector_peer_pin_models import (
+    ConnectorFootprintPeerPinCoverage,
     ConnectorPartIdPeerPinCoverage,
     ConnectorPeerPinHeuristicCoverage,
 )
@@ -34,8 +36,9 @@ def connector_peer_pin_heuristic_coverage(
     generic_peer_pin_all_open_finding_count: int = 0,
     part_id_peer_pin_outlier_finding_count: int = 0,
     part_id_peer_pin_divergence_finding_count: int = 0,
+    footprint_peer_pin_divergence_finding_count: int = 0,
 ) -> ConnectorPeerPinHeuristicCoverage:
-    """Summarize exact-symbol and guarded PART_ID connector comparisons."""
+    """Summarize exact-symbol, PART_ID, and footprint-alias comparisons."""
     candidate_references = connector_candidate_references(observed, declared_references)
     unpopulated = {reference.casefold() for reference in observed.dnp_components}
     fitted_references = tuple(
@@ -256,6 +259,64 @@ def connector_peer_pin_heuristic_coverage(
         outlier_finding_count=part_id_peer_pin_outlier_finding_count,
         divergence_finding_count=part_id_peer_pin_divergence_finding_count,
     )
+    footprint_scan = scan_connector_footprint_peer_pin_assignments(
+        observed,
+        declared_references,
+        peer_assignment_groups,
+    )
+    footprint_incomplete_count = sum(
+        (
+            footprint_scan.incomplete_pin_inventory_group_count,
+            footprint_scan.incomplete_pin_metadata_group_count,
+            footprint_scan.unassigned_assignment_pin_group_count,
+            footprint_scan.ambiguous_assignment_pin_group_count,
+        )
+    )
+    footprint_status = (
+        "NO_CANDIDATES"
+        if footprint_scan.candidate_group_count == 0
+        else "INCOMPLETE_EVIDENCE"
+        if footprint_scan.eligible_peer_group_count == 0
+        else "NO_PEER_SCOPES"
+        if footprint_scan.peer_scope_group_count == 0
+        else "NO_COMPARABLE_ASSIGNMENTS"
+        if footprint_scan.evaluated_pin_group_count == 0
+        else "NO_SHARED_ASSIGNMENT_ANCHOR"
+        if footprint_scan.common_anchor_group_count == 0
+        else "PARTIALLY_EVALUATED"
+        if footprint_incomplete_count > 0
+        else "NO_DIVERGENT_ASSIGNMENTS"
+        if footprint_scan.generic_different_assignment_pin_group_count == 0
+        else "EVALUATED"
+    )
+    footprint_alias_coverage = ConnectorFootprintPeerPinCoverage(
+        status=footprint_status,
+        netlist_sha256=netlist_sha256,
+        candidate_group_count=footprint_scan.candidate_group_count,
+        incomplete_pin_inventory_group_count=(footprint_scan.incomplete_pin_inventory_group_count),
+        incomplete_pin_metadata_group_count=footprint_scan.incomplete_pin_metadata_group_count,
+        eligible_peer_group_count=footprint_scan.eligible_peer_group_count,
+        peer_scope_group_count=footprint_scan.peer_scope_group_count,
+        evaluated_pin_group_count=footprint_scan.evaluated_pin_group_count,
+        compared_pin_group_count=footprint_scan.compared_pin_group_count,
+        common_assignment_pin_group_count=footprint_scan.common_assignment_pin_group_count,
+        different_assignment_pin_group_count=footprint_scan.different_assignment_pin_group_count,
+        unassigned_assignment_pin_group_count=(
+            footprint_scan.unassigned_assignment_pin_group_count
+        ),
+        ambiguous_assignment_pin_group_count=(footprint_scan.ambiguous_assignment_pin_group_count),
+        generic_different_assignment_pin_group_count=(
+            footprint_scan.generic_different_assignment_pin_group_count
+        ),
+        non_generic_different_assignment_pin_group_count=(
+            footprint_scan.non_generic_different_assignment_pin_group_count
+        ),
+        common_anchor_group_count=footprint_scan.common_anchor_group_count,
+        unanchored_different_assignment_pin_group_count=(
+            footprint_scan.unanchored_different_assignment_pin_group_count
+        ),
+        divergence_finding_count=footprint_peer_pin_divergence_finding_count,
+    )
 
     if not candidate_references:
         status = "NO_CONNECTOR_CANDIDATES"
@@ -276,7 +337,9 @@ def connector_peer_pin_heuristic_coverage(
             "Named connector functions are compared only by the existing bounded role or exact "
             "symbol/function rules. Generic peer assignments compare exact symbol and pin number; "
             "cross-symbol comparisons require a shared PART_ID plus matching component, inventory, "
-            "function, and electrical-type evidence. "
+            "function, and electrical-type evidence. PART_ID-free footprint aliases require exact "
+            "value, footprint, inventory, matching generic pin metadata, and a common assigned "
+            "anchor before a differing pin receives a review prompt. "
             "Coverage records evaluated evidence; it does not assert that peer nets must match."
         ),
         connector_candidate_count=len(candidate_references),
@@ -300,6 +363,7 @@ def connector_peer_pin_heuristic_coverage(
             peer_pin_groups_with_open_assignment_count
         ),
         part_id_alias_coverage=part_id_alias_coverage,
+        footprint_alias_coverage=footprint_alias_coverage,
         incomplete_pin_inventory_references=incomplete_inventory_references,
         repeated_function_group_count=len(repeated_function_groups),
         repeated_function_groups_with_common_assignment_count=(

@@ -163,6 +163,24 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
     assert part_id_split["lint_status"] == "REVIEW"
     assert part_id_split["findings"] == "connector.peer_pin_assignment_divergence"
     assert part_id_split["subjects"] == "PART_ID SYNTHETIC-CONNECTOR-2PIN-001 pin 2"
+    footprint_alias_fault = results["connector-return-fixture/footprint-alias-fault"]
+    footprint_alias_control = results["connector-return-fixture/footprint-alias-control"]
+    assert footprint_alias_fault["lint_status"] == "REVIEW"
+    assert footprint_alias_fault["findings"] == (
+        "connector.footprint_peer_pin_assignment_divergence"
+    )
+    assert footprint_alias_fault["subjects"] == (
+        "Synthetic two-contact connector [Synthetic:Connector_2x1] pin 2"
+    )
+    assert footprint_alias_control["lint_status"] == "PASS"
+    assert footprint_alias_control["findings"] == "none"
+    footprint_alias_coverage = json.loads(footprint_alias_fault["connector_peer_pin_coverage"])[
+        "footprint_alias_coverage"
+    ]
+    assert footprint_alias_coverage["status"] == "EVALUATED"
+    assert footprint_alias_coverage["candidate_group_count"] == 1
+    assert footprint_alias_coverage["common_anchor_group_count"] == 1
+    assert footprint_alias_coverage["divergence_finding_count"] == 1
     for (
         case,
         expected_open,
@@ -381,6 +399,8 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
         "part-id-all-open-generic-peer-fault",
         "peer-pin-part-id-common-control",
         "peer-pin-part-id-split-fault",
+        "footprint-alias-fault",
+        "footprint-alias-control",
         "two-peer-open-fault",
         "two-peer-no-connect-fault",
         "two-peer-common-control",

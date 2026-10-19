@@ -24,6 +24,7 @@ pytestmark = [
 INTERFACE_COVERAGE_MODEL_OWNERS = {
     "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
     "connector_peer_pin_models.py": (
+        "ConnectorFootprintPeerPinCoverage",
         "ConnectorPartIdPeerPinCoverage",
         "ConnectorPeerPinHeuristicCoverage",
     ),
@@ -61,6 +62,7 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
     expected_by_service = {
         "connector_peer_pin_coverage.py": {
             "connector_peer_pin_models": {
+                "ConnectorFootprintPeerPinCoverage",
                 "ConnectorPartIdPeerPinCoverage",
                 "ConnectorPeerPinHeuristicCoverage",
             }

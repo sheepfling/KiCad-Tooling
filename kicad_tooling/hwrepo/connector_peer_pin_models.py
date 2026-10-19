@@ -127,6 +127,102 @@ class ConnectorPartIdPeerPinCoverage(StrictModel):
         return self
 
 
+class ConnectorFootprintPeerPinCoverage(StrictModel):
+    """Applicability evidence for cross-symbol connector footprint candidates."""
+
+    status: Literal[
+        "NO_CANDIDATES",
+        "INCOMPLETE_EVIDENCE",
+        "NO_PEER_SCOPES",
+        "NO_COMPARABLE_ASSIGNMENTS",
+        "NO_SHARED_ASSIGNMENT_ANCHOR",
+        "NO_DIVERGENT_ASSIGNMENTS",
+        "PARTIALLY_EVALUATED",
+        "EVALUATED",
+    ]
+    netlist_sha256: Digest
+    candidate_group_count: NonNegativeCount
+    incomplete_pin_inventory_group_count: NonNegativeCount
+    incomplete_pin_metadata_group_count: NonNegativeCount
+    eligible_peer_group_count: NonNegativeCount
+    peer_scope_group_count: NonNegativeCount
+    evaluated_pin_group_count: NonNegativeCount
+    compared_pin_group_count: NonNegativeCount
+    common_assignment_pin_group_count: NonNegativeCount
+    different_assignment_pin_group_count: NonNegativeCount
+    unassigned_assignment_pin_group_count: NonNegativeCount
+    ambiguous_assignment_pin_group_count: NonNegativeCount
+    generic_different_assignment_pin_group_count: NonNegativeCount
+    non_generic_different_assignment_pin_group_count: NonNegativeCount
+    common_anchor_group_count: NonNegativeCount
+    unanchored_different_assignment_pin_group_count: NonNegativeCount
+    divergence_finding_count: NonNegativeCount
+
+    @model_validator(mode="after")
+    def coverage_counts_match_scope(self) -> ConnectorFootprintPeerPinCoverage:
+        if (
+            self.incomplete_pin_inventory_group_count
+            + self.incomplete_pin_metadata_group_count
+            + self.eligible_peer_group_count
+            != self.candidate_group_count
+        ):
+            raise ValueError("Footprint alias groups must have one evidence outcome")
+        if self.compared_pin_group_count != (
+            self.common_assignment_pin_group_count + self.different_assignment_pin_group_count
+        ):
+            raise ValueError("Compared footprint alias pin groups must have one assignment state")
+        if self.evaluated_pin_group_count != (
+            self.compared_pin_group_count
+            + self.unassigned_assignment_pin_group_count
+            + self.ambiguous_assignment_pin_group_count
+        ):
+            raise ValueError(
+                "Evaluated footprint alias pin groups must have one assignment outcome"
+            )
+        if self.peer_scope_group_count < self.common_anchor_group_count:
+            raise ValueError("Footprint alias anchor scopes cannot exceed peer scopes")
+        if self.different_assignment_pin_group_count != (
+            self.generic_different_assignment_pin_group_count
+            + self.non_generic_different_assignment_pin_group_count
+        ):
+            raise ValueError("Footprint alias differences must separate generic and named pins")
+        if self.unanchored_different_assignment_pin_group_count > (
+            self.generic_different_assignment_pin_group_count
+        ):
+            raise ValueError("Unanchored differences must be generic differing pin groups")
+        if self.divergence_finding_count + self.unanchored_different_assignment_pin_group_count != (
+            self.generic_different_assignment_pin_group_count
+        ):
+            raise ValueError("Generic footprint alias differences must be anchored or unanchored")
+
+        incomplete_count = (
+            self.incomplete_pin_inventory_group_count
+            + self.incomplete_pin_metadata_group_count
+            + self.unassigned_assignment_pin_group_count
+            + self.ambiguous_assignment_pin_group_count
+        )
+        expected_status = (
+            "NO_CANDIDATES"
+            if self.candidate_group_count == 0
+            else "INCOMPLETE_EVIDENCE"
+            if self.eligible_peer_group_count == 0
+            else "NO_PEER_SCOPES"
+            if self.peer_scope_group_count == 0
+            else "NO_COMPARABLE_ASSIGNMENTS"
+            if self.evaluated_pin_group_count == 0
+            else "NO_SHARED_ASSIGNMENT_ANCHOR"
+            if self.common_anchor_group_count == 0
+            else "PARTIALLY_EVALUATED"
+            if incomplete_count > 0
+            else "NO_DIVERGENT_ASSIGNMENTS"
+            if self.generic_different_assignment_pin_group_count == 0
+            else "EVALUATED"
+        )
+        if self.status != expected_status:
+            raise ValueError("Footprint alias peer status does not match its counts")
+        return self
+
+
 class ConnectorPeerPinHeuristicCoverage(StrictModel):
     """Source-bound applicability counts for connector pin peer heuristics."""
 
@@ -151,6 +247,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
     exact_symbol_pin_groups_all_unassigned_count: NonNegativeCount
     exact_symbol_pin_groups_with_open_assignment_count: NonNegativeCount
     part_id_alias_coverage: ConnectorPartIdPeerPinCoverage
+    footprint_alias_coverage: ConnectorFootprintPeerPinCoverage
     incomplete_pin_inventory_references: tuple[Reference, ...] = ()
     repeated_function_group_count: NonNegativeCount
     repeated_function_groups_with_common_assignment_count: NonNegativeCount
@@ -173,6 +270,10 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
         if self.part_id_alias_coverage.netlist_sha256 != self.netlist_sha256:
             raise ValueError(
                 "Connector PART_ID alias coverage must use this report's native netlist"
+            )
+        if self.footprint_alias_coverage.netlist_sha256 != self.netlist_sha256:
+            raise ValueError(
+                "Connector footprint alias coverage must use this report's native netlist"
             )
         if self.exact_symbol_pin_group_count != (
             self.exact_symbol_pin_groups_with_common_assignment_count
@@ -211,6 +312,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             self.peer_pin_outlier_finding_count + self.peer_pin_divergence_finding_count
             > self.exact_symbol_pin_group_count
             + self.part_id_alias_coverage.compared_pin_group_count
+            + self.footprint_alias_coverage.compared_pin_group_count
         ):
             raise ValueError("Peer-pin findings cannot exceed compared connector pin groups")
         if self.generic_peer_pin_all_open_finding_count > (

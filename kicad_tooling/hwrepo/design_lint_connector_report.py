@@ -88,6 +88,20 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"findings: {part_id_coverage.outlier_finding_count}/"
             f"{part_id_coverage.divergence_finding_count}"
         )
+        footprint_coverage = peer_coverage.footprint_alias_coverage
+        lines.append(
+            f"  PART_ID-free footprint aliases: {footprint_coverage.status}; candidate/eligible "
+            f"groups: {footprint_coverage.candidate_group_count}/"
+            f"{footprint_coverage.eligible_peer_group_count}; peer scopes: "
+            f"{footprint_coverage.peer_scope_group_count}; evaluated/comparable pin groups: "
+            f"{footprint_coverage.evaluated_pin_group_count}/"
+            f"{footprint_coverage.compared_pin_group_count}; open/ambiguous assignments: "
+            f"{footprint_coverage.unassigned_assignment_pin_group_count}/"
+            f"{footprint_coverage.ambiguous_assignment_pin_group_count}; anchor/difference "
+            f"groups: {footprint_coverage.common_anchor_group_count}/"
+            f"{footprint_coverage.generic_different_assignment_pin_group_count}; findings: "
+            f"{footprint_coverage.divergence_finding_count}"
+        )
         lines.append(
             f"  Repeated function groups: {peer_coverage.repeated_function_group_count}; "
             f"common assignments: "
@@ -103,7 +117,8 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"{peer_coverage.repeated_function_finding_count}; peer outliers "
             f"{peer_coverage.peer_pin_outlier_finding_count}; peer divergences "
             f"{peer_coverage.peer_pin_divergence_finding_count}; all-open generic peer pins "
-            f"{peer_coverage.generic_peer_pin_all_open_finding_count}"
+            f"{peer_coverage.generic_peer_pin_all_open_finding_count}; footprint-alias "
+            f"divergences {footprint_coverage.divergence_finding_count}"
         )
         lines.append(f"  Scope: {peer_coverage.scope}")
         for reference in peer_coverage.incomplete_pin_inventory_references:

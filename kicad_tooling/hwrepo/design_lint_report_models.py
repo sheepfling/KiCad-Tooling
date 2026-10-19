@@ -365,6 +365,14 @@ class DesignLintReport(StrictModel):
                     raise ValueError(
                         f"Connector peer-pin coverage count must match {rule_id} findings"
                     )
+            footprint_findings = sum(
+                finding.rule_id == "connector.footprint_peer_pin_assignment_divergence"
+                for finding in self.findings
+            )
+            if footprint_findings != item.footprint_alias_coverage.divergence_finding_count:
+                raise ValueError(
+                    "Connector footprint-alias peer coverage count must match findings"
+                )
             part_id_expected_counts = (
                 (
                     "connector.peer_pin_assignment_outlier",

@@ -7284,6 +7284,46 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and pcb_lint'
   ```
 
+#### LINT-134 — Generic pin divergence across footprint-similar connector aliases
+
+- **Status:** Implemented as `connector.footprint_peer_pin_assignment_divergence`,
+  defaulting to `REVIEW`. Project policy can select `BLOCK`, `OFF`, or an exact
+  fingerprint ignore.
+- **Priority:** P2 discovery heuristic for connector instances whose custom
+  symbol identities differ even though their native value, footprint, pin
+  inventory, and per-pin metadata match. This extends the exact-symbol and
+  PART_ID alias coverage without treating visual or naming similarity as a
+  connectivity requirement.
+- **Predicate:** Compare only fitted connectors with no native `PART_ID`,
+  exact nonempty value and footprint, complete identical pin inventories, and
+  matching nonempty native pin functions and electrical types. Honor a current
+  source-matched peer-assignment group when one is available; otherwise keep
+  the comparison unscoped. Every compared pin must have exactly one assigned
+  schematic net. Review a differing generic `Pin_N` contact only when another
+  pin in the same scope has an exact common-net assignment.
+- **Boundary:** Equal value, footprint, pin metadata, and a common assigned
+  anchor are only a reason to review. They do not prove identical electrical
+  roles or require any nets to be tied. Open and ambiguous pins, incomplete
+  inventories or metadata, DNP components, and PART_ID-bearing components do
+  not become divergences; coverage records those evidence gaps. Named pin
+  functions remain with the existing role checks. The result cannot prove PCB
+  copper continuity or off-board wiring.
+- **Evidence:** Tooling-owned synthetic fault and control schematics use
+  distinct symbols with matching passive `Pin_1`/`Pin_2` metadata and no
+  PART_ID. Unit tests cover shared-anchor fault detection, common and named-pin
+  controls, incomplete inventory and metadata, open and ambiguous assignments,
+  unanchored splits, DNP and PART_ID exclusions, peer-group isolation,
+  deterministic ordering, project policy, exact ignores, and CLI/MCP parity.
+  The exact-version native fixture lane is registered for KiCad 10.0.0 and
+  10.0.5; its hosted result is pending. No external project source or
+  expectation is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_connector_footprint_peer_pins.py \
+    -m 'design_lint and connector_lint'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.

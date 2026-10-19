@@ -189,6 +189,11 @@ def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> Non
     ("module_name", "expected_markers"),
     (
         ("test_connector_peer_pin_coverage.py", {"design_lint", "connector_lint"}),
+        ("test_connector_footprint_peer_pins.py", {"design_lint", "connector_lint"}),
+        (
+            "test_connector_footprint_peer_parity.py",
+            {"design_lint", "connector_lint", "parity_lint"},
+        ),
         (
             "test_design_lint_numbered_returns.py",
             {"design_lint", "connector_lint", "return_path_lint"},
