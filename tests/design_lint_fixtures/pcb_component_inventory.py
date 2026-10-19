@@ -53,6 +53,7 @@ def source_bound_component_inventory(
     board_source: bytes,
     mode: ReviewMode,
     value_mode: ReviewMode = "off",
+    pad_net_mode: ReviewMode = "off",
 ) -> SourceBoundPcbComponentInventory:
     """Bind synthetic native snapshots to exact schematic and board inputs."""
     netlist_sha256 = sha256(model_json_bytes(source_netlist)).hexdigest()
@@ -70,6 +71,7 @@ def source_bound_component_inventory(
         snapshot_sha256=snapshot_sha256,
         probe_sha256=board.probe_sha256,
         value_mode=value_mode,
+        pad_net_mode=pad_net_mode,
     )
     coach = ContractCoachReport(
         status="READY_FOR_REVIEW",

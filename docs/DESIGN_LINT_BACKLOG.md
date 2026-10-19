@@ -2769,8 +2769,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v67. The cross-process probe supports themed report
-  selectors and retains the complete 187-report inventory gate. Fault/control
+- **Status:** Implemented v68. The cross-process probe supports themed report
+  selectors and retains the complete 190-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2803,6 +2803,8 @@ is not a reason by itself to expand its scope or change its default policy.
   process source-bound report comparison; the rule remains REVIEW. The v67
   extension adds schematic-only and board-only component-value mutations plus
   an exact-value control, with each source digest changing only on its side.
+  The v68 extension adds schematic-side and PCB-side pad-net changes plus a
+  matching control, preserving the exact source-side hash distinction.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -6529,6 +6531,11 @@ is not a reason by itself to expand its scope or change its default policy.
   common-ground requirement when both schematic and PCB consistently encode
   separate grounds; connector/interface peer heuristics and project-authored
   grounding contracts address that different question.
+- **Determinism:** LINT-080 compares schematic-side and PCB-side net changes
+  against an exact matching control across three isolated processes. Each
+  mismatch remains a source-bound REVIEW finding with its reference, pin,
+  exact net names, and native evidence hashes; the control is quiet. It does
+  not establish routed copper continuity.
 
 #### LINT-114 — All generic connector peers leave a contact open
 

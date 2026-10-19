@@ -4751,7 +4751,8 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_pcb_schematic_pad_net_mismatch.test_pad_net_comparison_is_order_independent_and_net_names_are_exact"
+        "tests.test_pcb_schematic_pad_net_mismatch.test_pad_net_comparison_is_order_independent_and_net_names_are_exact",
+        "tests.test_design_lint_determinism_pcb_pad_net.test_pad_net_source_mutations_and_matching_control_are_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

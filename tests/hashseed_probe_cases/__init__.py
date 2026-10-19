@@ -18,6 +18,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_board_only_footprints",
     "pcb_dnp_mismatch",
     "pcb_value_mismatch",
+    "pcb_pad_net_mismatch",
     "pcb_measurements",
     "interfaces",
     "analog",
