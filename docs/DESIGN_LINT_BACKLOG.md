@@ -7946,7 +7946,12 @@ is not a reason by itself to expand its scope or change its default policy.
   orthogonal rotation/mirror combinations, text and wire consumers, and a
   collinear-point case that remains partial. The matching native SVG, netlist,
   and ERC regression is registered in the exact KiCad 10.0.5/10.0.6 lane; its
-  hosted acceptance result will be recorded with the lint-gate tag.
+  hosted acceptance passed in `v0.5.1rc39` (GitHub Actions run
+  `39316485001`). The focused rule selection passed 9 tests with 4 host-only
+  skips; the full schematic-geometry suite passed 87 tests on each pinned
+  KiCad 10.0.5 and 10.0.6 image. The installed wheel, external-project
+  verification/playtest, and Linux, macOS, and Windows preview jobs passed.
+  The prerelease package job was skipped as configured.
 - **Typography boundary evidence:** Synthetic controls cover custom face, bold,
   italic, thick stroke, vertical or mirrored justification, rotation, formatted
   text, and a non-ASCII glyph. These remain partial with no text-overlap
