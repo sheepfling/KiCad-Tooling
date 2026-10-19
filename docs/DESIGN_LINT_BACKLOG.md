@@ -553,8 +553,11 @@ and optional ecosystem adapters are `P3`.
   assignment, and missing inventory.
   The connector native fixture reuses its existing three-port peer fault and
   control to show the assignment-only requirement passing on independent nets
-  and failing on an open pin. A CLI/MCP parity case is registered. This extends
-  the explicit project-authored contract; it adds no inferred electrical rule.
+  and failing on an open pin. The DB9 native contract also shows assignment-only
+  passing on both split-return and common-return exports; only the separately
+  authored common-net requirement rejects split returns. A CLI/MCP parity case
+  is registered. This extends the explicit project-authored contract; it adds
+  no inferred electrical rule.
 
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
@@ -1578,6 +1581,8 @@ is not a reason by itself to expand its scope or change its default policy.
   both `GroundingAnalysis` and `PinConnectivityAnalysis`. It also compares a
   native open peer-power contact and common control against an authored shared
   +5V requirement, plus an independently powered/unused-contact control pair.
+  An assignment-only DB9 rule passes on both split-domain and common-domain
+  exports; the separate `common_net` rule rejects only the split-domain case.
   These are synthetic test requirements, not project contract files. The
   focused connector gate passed locally on 2026-10-13 with 518 passed, 16
   skipped, and 2,755 deselected; both pinned native connector fixture switches

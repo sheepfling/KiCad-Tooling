@@ -294,6 +294,8 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
         "common-control": "PASS",
         "isolated-fault": "PASS",
         "isolated-control": "FAIL",
+        "assignment-only-split-control": "PASS",
+        "assignment-only-common-control": "PASS",
         "peer-common-open-fault": "FAIL",
         "peer-common-control": "PASS",
         "peer-independent-control": "PASS",
@@ -323,6 +325,11 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
     ] == ";".join(
         f"pin-connectivity/db9-{reference}-isolated-return=FAIL" for reference in range(1, 5)
     )
+    for case in ("assignment-only-split-control", "assignment-only-common-control"):
+        assert (
+            results[f"connector-return-fixture/pin-connectivity-contract-{case}"]["checks"]
+            == "pin-connectivity/db9-returns-assigned=PASS"
+        )
     assert (
         results["connector-return-fixture/pin-connectivity-contract-peer-common-open-fault"][
             "checks"
@@ -452,6 +459,8 @@ def test_pinned_native_export_checks_fault_control_hashes_and_mount_scope(
         "pin-connectivity-contract-common-control",
         "pin-connectivity-contract-isolated-fault",
         "pin-connectivity-contract-isolated-control",
+        "pin-connectivity-contract-assignment-only-split-control",
+        "pin-connectivity-contract-assignment-only-common-control",
         "pin-connectivity-contract-peer-common-open-fault",
         "pin-connectivity-contract-peer-common-control",
         "pin-connectivity-contract-peer-independent-control",

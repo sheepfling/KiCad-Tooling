@@ -207,6 +207,17 @@ def verify_db9_return_contracts(
             for reference in range(1, 5)
         ),
     )
+    assigned_connectivity = PinConnectivityAnalysis(
+        basis="Synthetic approved DB9 pinout requires every return contact to be wired",
+        rules=(
+            PinRelationshipRule(
+                id="db9-returns-assigned",
+                basis="Each reviewed DB9 return contact has one schematic net assignment",
+                topology="assigned",
+                pins=expected_pins,
+            ),
+        ),
+    )
     pin_cases = (
         (
             "common-fault",
@@ -249,6 +260,20 @@ def verify_db9_return_contracts(
                     for reference in range(1, 5)
                 },
             },
+        ),
+        (
+            "assignment-only-split-control",
+            assigned_connectivity,
+            "four-db9-fault",
+            "assignment-only",
+            {"pin-connectivity/db9-returns-assigned": "PASS"},
+        ),
+        (
+            "assignment-only-common-control",
+            assigned_connectivity,
+            "four-db9-control",
+            "assignment-only",
+            {"pin-connectivity/db9-returns-assigned": "PASS"},
         ),
     )
     for case, spec, source_case, relationship, expected in pin_cases:

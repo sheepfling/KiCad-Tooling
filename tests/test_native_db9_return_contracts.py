@@ -38,6 +38,8 @@ def _assert_db9_contract_results(results: dict[str, dict[str, str]], version: st
         "pin-connectivity-contract-common-control": "PASS",
         "pin-connectivity-contract-isolated-fault": "PASS",
         "pin-connectivity-contract-isolated-control": "FAIL",
+        "pin-connectivity-contract-assignment-only-split-control": "PASS",
+        "pin-connectivity-contract-assignment-only-common-control": "PASS",
     }
     for stage, expected_status in expected_contracts.items():
         result = results[f"{prefix}{stage}"]
@@ -180,6 +182,8 @@ def test_db9_return_lane_exports_only_fault_and_control(
         "pin-connectivity-contract-common-control",
         "pin-connectivity-contract-isolated-fault",
         "pin-connectivity-contract-isolated-control",
+        "pin-connectivity-contract-assignment-only-split-control",
+        "pin-connectivity-contract-assignment-only-common-control",
     }
     assert results[f"{prefix}four-db9-fault"]["lint_status"] == "REVIEW"
     assert results[f"{prefix}four-db9-control"]["lint_status"] == "PASS"
@@ -230,7 +234,14 @@ def test_native_db9_return_contracts_are_source_bound_and_repeatable(
         ),
         *(
             f"{prefix}pin-connectivity-contract-{case}"
-            for case in ("common-fault", "common-control", "isolated-fault", "isolated-control")
+            for case in (
+                "common-fault",
+                "common-control",
+                "isolated-fault",
+                "isolated-control",
+                "assignment-only-split-control",
+                "assignment-only-common-control",
+            )
         ),
     }
     assert set(results) == expected_stages

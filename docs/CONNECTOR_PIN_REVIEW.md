@@ -268,6 +268,9 @@ The tooling regressions use only synthetic connector symbols and netlists:
   one stray pin fail the exact ground-domain requirement.
 - Two connector supplies are intentionally independent; separate nets pass
   and a newly shared net fails the reviewed relationship.
+- The four-port DB9 return fixture is checked both as a common-net contract
+  and as assignment-only. Its split-domain case passes assignment-only while
+  failing the common-net requirement; the shared control passes both.
 
 Run native and electrical verification against the exact source intended for
 release:
