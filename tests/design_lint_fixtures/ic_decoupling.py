@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
+from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.ic_decoupling_models import (
     IcDecouplingCapacitorRequirement,
     IcDecouplingMap,
     IcDecouplingRequirement,
 )
-from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
+from kicad_tooling.hwrepo.models import ComponentContract, DesignLintPolicy, NetlistContract
+from tests.design_lint_fixtures import coach
 
 
 def ic_decoupling_netlist(
@@ -81,3 +83,13 @@ def ic_decoupling_map(
             ),
         )
     )
+
+
+def catalog_reachability_rule_ids() -> set[str]:
+    """Return rule IDs reached by the synthetic below-minimum requirement."""
+    report = evaluate(
+        "synthetic-catalog-ic-decoupling",
+        coach(ic_decoupling_netlist(("47nF",))),
+        DesignLintPolicy(ic_decoupling_map=ic_decoupling_map()),
+    )
+    return {item.rule_id for item in report.findings}

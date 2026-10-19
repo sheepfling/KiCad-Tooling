@@ -17,6 +17,7 @@ import tests.design_lint_fixtures.connector_named_power_aliases as _connector_na
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
+import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_fixtures
 import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
@@ -67,9 +68,7 @@ from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_m
 from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
 from tests.design_lint_fixtures.catalog_reachability import schematic_geometry_rule_ids
-from tests.design_lint_fixtures.catalog_reachability_pcb import (
-    pcb_component_inventory_rule_ids,
-)
+from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_component_inventory_rule_ids
 from tests.power_sequence_support import (
     power_sequence_map as synthetic_power_sequence_map,
 )
@@ -200,6 +199,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             power_path_map=_tests_test_power_paths.power_path_map(),
         )
     )
+    emitted.update(_ic_decoupling_fixtures.catalog_reachability_rule_ids())
     emitted.update(
         item.rule_id
         for item in candidates(

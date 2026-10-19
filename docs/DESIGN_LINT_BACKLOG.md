@@ -2597,7 +2597,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 118 active rules; CI requires every new
+- **Status:** Baseline complete for all 119 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2606,7 +2606,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 118 covered, 0 not applicable, 0 unreviewed.
+  audit: 119 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -10347,7 +10347,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 118 active rules. Each entry has a deterministic predicate, evidence
+contains 119 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin
@@ -11937,7 +11937,11 @@ it does not claim field validation or effectiveness against private boards.
   value resistor between an intermediate return-like LED net and a distinct
   recognized return net suppresses the candidate. The resistor check uses the
   shared deterministic two-terminal resistor inventory and does not certify
-  value adequacy.
+  value adequacy. An exact project-authored `power_path_map` can suppress this
+  prompt only when a `Device:LED` A-to-K path terminates at a
+  `current_controlled_sink` endpoint whose `PART_ID`, native pin function,
+  electrical type, symbol, footprint, pin, and net match the source-bound
+  netlist.
 - **Boundary:** Default is `review`; project policy may block, disable, or
   fingerprint-ignore an exact finding. This does not infer that a resistor is
   required, current limits, polarity, output-drive capability, off-board paths,
@@ -11945,12 +11949,14 @@ it does not claim field validation or effectiveness against private boards.
   LED identity, known native output-capable pin types, and recognized rail
   roles participate. Unmapped or stale custom identities, DNP devices, missing
   pin metadata, ambiguous assignments, and unrecognized rails remain outside
-  the predicate; stale mapped identities block lint.
+  the predicate; stale mapped identities block lint. The current-controlled
+  sink role is explicit project metadata; a matching path does not prove
+  current regulation or electrical suitability.
 - **Fixtures:** Synthetic native-netlist faults cover direct output-to-LED and
   a resistor parallel to that path. Controls cover a series resistor on either
   side, non-output and unknown pin types, DNP endpoints, custom symbols, and
-  unrecognized rails. CLI/MCP parity uses the same typed service. Eight
-  tooling-owned schematics are exported twice on digest-pinned KiCad 10.0.0 and
+  unrecognized rails. CLI/MCP parity uses the same typed service. The eight
+  existing tooling-owned schematics are exported twice on digest-pinned KiCad 10.0.0 and
   10.0.5; direct-output, parallel-output-resistor, and mapped custom-symbol
   cases report, while both standard and custom return-side series-resistor
   controls do not. Without the role map, the custom symbol stays outside the
@@ -11961,6 +11967,11 @@ it does not claim field validation or effectiveness against private boards.
   topology used by the public status-LED training examples. The public project
   files remain in their template repository; this regression uses only the
   minimal tooling-owned synthetic netlist.
+  A ninth synthetic schematic now covers a constant-current-sink LED path.
+  The native lane checks the unmapped prompt, then requires the exact mapped
+  driver `PART_ID`/pin signature and LED A-to-K path to match before that
+  prompt is suppressed; local native execution remains pending the pinned CI
+  lane.
 - **Public-template applicability check (2026-10-01):** The clean public
   KiCad-Team-Workflow-Template checkout at
   `ed89536f0dbbcb013145af2994fef41b2250143e` documents its Arduino status LED
@@ -12910,7 +12921,7 @@ design.
 | Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                        | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                       | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                              |
 | Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts       | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.  | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings. |
 | Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps         | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.     | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                             |
-| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | Compare an authored driver-output-to-string map with exact LED/current-control component pins and connectivity; test multi-channel and valid constant-current alternatives against current LED prompts.                                            | The proposed check merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied.                                           |
+| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | First step implemented in the existing explicit power map: a synthetic constant-current-sink endpoint can suppress only its exact `Device:LED` A-to-K path after source-bound identity and connectivity match. Extend to multi-channel maps only with separate fault/control evidence. | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
 | Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data. | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                |
 
 #### LINT-133 implementation status: capacitive touch-pad clearance

@@ -47,9 +47,9 @@ from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
 )
-from .ic_decoupling_models import IcDecouplingMap
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
+from .ic_decoupling_models import IcDecouplingMap
 from .models import NetlistContract
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -186,6 +186,7 @@ def candidates(
         component_candidates(
             observed,
             component_role_map=component_role_map,
+            power_path_map=power_path_map,
             reviewed_connector_references=reviewed_connector_references,
         )
     )

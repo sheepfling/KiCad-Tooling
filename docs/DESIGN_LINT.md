@@ -560,7 +560,12 @@ The first rules are:
   symbols remain outside these rules, including a same-value unrelated
   symbol. A `capacitor` role affects only the decoupling-presence hint; it does
   not classify the part for other checks.
-  It is a default review heuristic, not proof that current limiting is missing. It does not
+  It is a default review heuristic, not proof that current limiting is missing.
+  A project-authored `power_path_map` may suppress the prompt only for an exact
+  `Device:LED` A-to-K path ending at a mapped `current_controlled_sink` endpoint
+  whose native `PART_ID`, pin function, electrical type, and net topology match.
+  This explicit map is not an inference and does not establish that the device
+  actually regulates current or is electrically adequate. The rule does not
   infer LED polarity, output limits, off-board paths, board copper, population,
   or runtime behavior. Its native synthetic direct-output fault,
   return-side-series control, and parallel-resistor fault are exported twice on
@@ -654,7 +659,9 @@ The first rules are:
 - `power.mapped_series_path_mismatch` runs only when a project supplies
   `design_lint.power_path_map`. It compares an authored ordered chain of exact
   endpoint and two-terminal component identities, pin inventories, DNP state,
-  and net assignments. Each element must be fitted and connect the two
+  and net assignments. An endpoint may additionally bind exact `PART_ID`,
+  native pin function, and electrical type; the `current_controlled_sink` role
+  requires all three and serves only as explicit LED review metadata. Each element must be fitted and connect the two
   adjacent mapped nets. This does not infer that two grounds or supplies
   should be joined, determine current direction, prove the component conducts,
   detect unlisted parallel paths, or establish PCB copper continuity. The rule
@@ -1177,7 +1184,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 118 active rules. They
+`synthetic_validated`; the catalog currently contains 119 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and the generic all-open connector and

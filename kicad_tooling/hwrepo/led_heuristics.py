@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .component_roles import (
     component_role_binding_digest,
@@ -11,6 +12,8 @@ from .component_roles import (
 )
 from .connector_identity import power_function_key
 from .models import NetlistContract
+from .power_path_models import PowerPathMap
+from .power_paths import power_path_mismatches
 from .resistor_paths import (
     direct_resistors,
 )
@@ -89,6 +92,41 @@ def _canonical_return_net_name(net: str) -> bool:
     return compact in _CANONICAL_RETURN_NET_NAMES
 
 
+def _mapped_current_sink_led_paths(
+    observed: NetlistContract, power_path_map: PowerPathMap | None
+) -> frozenset[tuple[str, str, str]]:
+    """Return exact LED/output/supply triples covered by a valid sink-path map."""
+    if power_path_map is None:
+        return frozenset()
+    mismatched_paths = {
+        item.path_id.casefold() for item in power_path_mismatches(power_path_map, observed)
+    }
+    covered: set[tuple[str, str, str]] = set()
+    for path in power_path_map.paths:
+        if (
+            path.id.casefold() in mismatched_paths
+            or path.end.role != "current_controlled_sink"
+            or len(path.elements) != 1
+        ):
+            continue
+        element = path.elements[0]
+        if element.symbol.casefold() != "device:led":
+            continue
+        first_function = lookup_unique_casefold(observed.pin_functions, element.side_a_pin)
+        second_function = lookup_unique_casefold(observed.pin_functions, element.side_b_pin)
+        if (
+            first_function is None
+            or first_function.casefold() != "a"
+            or second_function is None
+            or second_function.casefold() != "k"
+        ):
+            continue
+        if element.side_a_net != path.start.net or element.side_b_net != path.end.net:
+            continue
+        covered.add((element.reference.casefold(), path.end.pin.casefold(), path.start.net))
+    return frozenset(covered)
+
+
 def leds_directly_between_positive_and_return_nets(
     observed: NetlistContract,
 ) -> tuple[DirectLedRailBridge, ...]:
@@ -135,6 +173,7 @@ def leds_directly_between_positive_and_return_nets(
 def leds_directly_driven_without_visible_series_resistor(
     observed: NetlistContract,
     component_role_map: ComponentRoleMap | None = None,
+    power_path_map: PowerPathMap | None = None,
 ) -> tuple[LedOutputWithoutVisibleSeriesResistor, ...]:
     """Find exact two-pin LEDs directly sharing an output net and a rail.
 
@@ -144,6 +183,7 @@ def leds_directly_driven_without_visible_series_resistor(
     """
     dnp = {reference.casefold() for reference in observed.dnp_components}
     roles = resolve_component_role_map(observed, component_role_map).by_reference
+    mapped_current_sink_paths = _mapped_current_sink_led_paths(observed, power_path_map)
     pin_nets, net_pins = _net_assignments(observed)
     resistors_by_net: dict[str, list[str]] = {}
     for resistor in direct_resistors(observed):
@@ -243,5 +283,16 @@ def leds_directly_driven_without_visible_series_resistor(
                 )
             )
         if len(matches) == 1:
-            findings.append(matches[0])
+            finding = matches[0]
+            if (
+                len(finding.output_pins) == 1
+                and (
+                    finding.reference.casefold(),
+                    finding.output_pins[0].casefold(),
+                    finding.opposite_net,
+                )
+                in mapped_current_sink_paths
+            ):
+                continue
+            findings.append(finding)
     return tuple(findings)

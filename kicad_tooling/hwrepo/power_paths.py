@@ -38,6 +38,9 @@ def _component_issues(
     expected_footprint: str,
     pins: tuple[tuple[str, str], ...],
     expected_pin_count: int | None = None,
+    expected_part_id: str | None = None,
+    expected_pin_function: str | None = None,
+    expected_pin_electrical_type: str | None = None,
 ) -> list[str]:
     issues: list[str] = []
     component = _lookup(observed.components, reference)
@@ -48,6 +51,13 @@ def _component_issues(
             f"{reference} footprint is {component.footprint or '<empty>'}; "
             f"expected {expected_footprint}"
         )
+    if expected_part_id is not None:
+        actual_part_id = None if component is None else component.part_id
+        if actual_part_id is None or actual_part_id.casefold() != expected_part_id.casefold():
+            issues.append(
+                f"{reference} PART_ID is {actual_part_id or '<missing>'}; "
+                f"expected {expected_part_id}"
+            )
 
     symbol = _lookup(observed.component_symbols, reference)
     if symbol != expected_symbol:
@@ -74,6 +84,23 @@ def _component_issues(
             if actual_nets != (expected_net,):
                 assigned = ", ".join(actual_nets) if actual_nets else "unconnected"
                 issues.append(f"{pin} is assigned to {assigned}; expected {expected_net}")
+    if expected_pin_function is not None:
+        actual_function = _lookup(observed.pin_functions, pins[0][0])
+        if (
+            actual_function is None
+            or actual_function.casefold() != expected_pin_function.casefold()
+        ):
+            issues.append(
+                f"{pins[0][0]} native pin function is {actual_function or '<unknown>'}; "
+                f"expected {expected_pin_function}"
+            )
+    if expected_pin_electrical_type is not None:
+        actual_type = _lookup(observed.pin_electrical_types, pins[0][0])
+        if actual_type is None or actual_type.casefold() != expected_pin_electrical_type.casefold():
+            issues.append(
+                f"{pins[0][0]} native electrical type is {actual_type or '<unknown>'}; "
+                f"expected {expected_pin_electrical_type}"
+            )
     return issues
 
 
@@ -87,6 +114,9 @@ def _path_issues(path: PowerPathRequirement, observed: NetlistContract) -> tuple
                 endpoint.symbol,
                 endpoint.footprint,
                 ((endpoint.pin, endpoint.net),),
+                expected_part_id=endpoint.part_id,
+                expected_pin_function=endpoint.pin_function,
+                expected_pin_electrical_type=endpoint.pin_electrical_type,
             )
         )
     for element in path.elements:

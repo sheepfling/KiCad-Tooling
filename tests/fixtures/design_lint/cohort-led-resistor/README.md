@@ -155,6 +155,27 @@ The table filters to the LED-audit classifier; each full report also contains
 unrelated sourcing, datasheet, and lifecycle findings for the intentionally
 sparse synthetic schematic.
 
+## Explicit current-controlled-sink path
+
+`control-current-sink-output.kicad_sch` is a tooling-owned native source
+fixture with synthetic identities only. U1.1 directly drives D1's K pin while
+D1's A pin connects to `+5V`. Without a project-authored path map, LINT-063
+keeps its review prompt. A map that names the exact U1 `PART_ID`, native pin
+function and electrical type, and the source-to-LED A-to-K topology suppresses
+only that exact prompt. A stale driver identity, changed pin signature, or
+reversed LED polarity leaves the review visible in the typed regression tests.
+
+Fixture SHA-256:
+
+| Fixture                                 | SHA-256                                                            |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `control-current-sink-output.kicad_sch` | `642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184` |
+
+The synthetic map tests explicit project metadata and native connectivity; it
+does not establish current regulation, safe operating limits, brightness,
+component suitability, or physical board behavior. The exact-source export is
+registered in the digest-pinned native LED fixture lane.
+
 Reproduce the read-only comparison from the repository root:
 
 ```sh

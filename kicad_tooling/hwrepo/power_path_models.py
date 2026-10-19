@@ -17,6 +17,10 @@ class PowerPathEndpointRequirement(StrictModel):
     symbol: NonEmptyText
     footprint: NonEmptyText
     net: NetName
+    role: Literal["endpoint", "current_controlled_sink"] = "endpoint"
+    part_id: Identifier | None = None
+    pin_function: NonEmptyText | None = None
+    pin_electrical_type: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def endpoint_pin_belongs_to_component(self) -> PowerPathEndpointRequirement:
@@ -25,6 +29,30 @@ class PowerPathEndpointRequirement(StrictModel):
             or self.pin.rsplit(".", 1)[0].casefold() != self.reference.casefold()
         ):
             raise ValueError("Power-path endpoint pin must belong to its declared component")
+        exact_signature = (self.part_id, self.pin_function, self.pin_electrical_type)
+        if any(item is not None for item in exact_signature) and not all(
+            item is not None for item in exact_signature
+        ):
+            raise ValueError(
+                "Power-path endpoint part ID, pin function, and electrical type must be supplied together"
+            )
+        if self.role == "current_controlled_sink":
+            if not all(item is not None for item in exact_signature):
+                raise ValueError(
+                    "A current-controlled sink endpoint requires exact part ID, pin function, "
+                    "and electrical type evidence"
+                )
+            if self.pin_electrical_type.casefold() not in {
+                "output",
+                "bidirectional",
+                "tri_state",
+                "open_collector",
+                "open_emitter",
+                "open_drain",
+            }:
+                raise ValueError(
+                    "A current-controlled sink endpoint requires an output-capable native pin type"
+                )
         return self
 
 
@@ -62,6 +90,8 @@ class PowerPathRequirement(StrictModel):
 
     @model_validator(mode="after")
     def continuous_unique_path(self) -> PowerPathRequirement:
+        if self.start.role == "current_controlled_sink":
+            raise ValueError("A current-controlled sink must terminate a mapped power path")
         if self.start.pin.casefold() == self.end.pin.casefold():
             raise ValueError("Power-path endpoint pins must be distinct")
         if self.start.net == self.end.net:

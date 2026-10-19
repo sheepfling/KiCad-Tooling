@@ -25,6 +25,7 @@ pytestmark = [
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
 )
+@pytest.mark.design_lint_rule(rule_id="component.led_directly_driven_from_output")
 def test_direct_rail_and_output_driven_led_faults_with_series_controls(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
@@ -47,6 +48,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "parallel-output-resistor": "1c37d1e6c7a70f460f4525f25c1d0ebe89dd8db0cbe8e17b415a15827a9422a0",
         "custom-direct-output": "2e2d6909d49c5815c5254aea14125ac6243fba0d45307d875c2563d657bc4f7b",
         "custom-series-return-control": "c5a254ead0887da399cd2ace46db4fde8231711abdb602304eac7e1be68ff047",
+        "current-sink-output": "642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184",
     }
     expected_findings: dict[str, set[str]] = {
         "direct-rails": {"D1: LED directly spans supply and return"},
@@ -57,6 +59,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "parallel-output-resistor": set(),
         "custom-direct-output": set(),
         "custom-series-return-control": set(),
+        "current-sink-output": set(),
     }
     expected_output_findings: dict[str, set[str]] = {
         "direct-rails": set(),
@@ -67,6 +70,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "parallel-output-resistor": {"D1: LED directly shares an output net and a rail"},
         "custom-direct-output": {"D1: LED directly shares an output net and a rail"},
         "custom-series-return-control": set(),
+        "current-sink-output": set(),
     }
     config = selected_config(root, project)
     assert config.kicad_version == version
@@ -94,6 +98,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "led-rail-fixture/parallel-output-resistor",
         "led-rail-fixture/custom-direct-output",
         "led-rail-fixture/custom-series-return-control",
+        "led-rail-fixture/current-sink-output",
     }
     assert results["led-rail-fixture/native-export"]["status"] == "PASS"
     for case, expected in expected_findings.items():

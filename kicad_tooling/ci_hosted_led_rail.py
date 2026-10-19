@@ -34,6 +34,12 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         leds_directly_driven_without_visible_series_resistor,
     )
     from .hwrepo.models import ContractCoachReport, DesignLintPolicy
+    from .hwrepo.power_path_models import (
+        PowerPathElementRequirement,
+        PowerPathEndpointRequirement,
+        PowerPathMap,
+        PowerPathRequirement,
+    )
     from .validate import read_netlist
 
     root = root.resolve()
@@ -56,6 +62,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         "parallel-output-resistor": "fault-output-parallel-resistor.kicad_sch",
         "custom-direct-output": "fault-custom-direct-output.kicad_sch",
         "custom-series-return-control": "control-custom-output-series-return-resistor.kicad_sch",
+        "current-sink-output": "control-current-sink-output.kicad_sch",
     }
     source_hashes = {case: digest(fixture_root / name) for case, name in cases.items()}
     scratch = Path(tempfile.mkdtemp(prefix=f"led-rail-{project}-", dir=log.directory.resolve()))
@@ -144,6 +151,7 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         "parallel-output-resistor": set(),
         "custom-direct-output": set(),
         "custom-series-return-control": set(),
+        "current-sink-output": set(),
     }
     expected_output_findings: dict[str, set[str]] = {
         "direct-rails": set(),
@@ -154,10 +162,12 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
         "parallel-output-resistor": {"D1: LED directly shares an output net and a rail"},
         "custom-direct-output": set(),
         "custom-series-return-control": set(),
+        "current-sink-output": {"D1: LED directly shares an output net and a rail"},
     }
     expected_mapped_output_findings: dict[str, set[str]] = {
         "custom-direct-output": {"D1: LED directly shares an output net and a rail"},
         "custom-series-return-control": set(),
+        "current-sink-output": set(),
     }
     custom_led_role_map = ComponentRoleMap(
         entries=(
@@ -173,6 +183,44 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
                 basis="Synthetic native fixture reviewed its exact custom LED symbol identity",
             ),
         )
+    )
+    current_sink_path_map = PowerPathMap(
+        basis="Synthetic project-approved constant-current sink LED path",
+        paths=(
+            PowerPathRequirement(
+                id="led-channel-0",
+                basis="Synthetic source-bound identity for the current sink output and LED path",
+                start=PowerPathEndpointRequirement(
+                    reference="U2",
+                    pin="U2.1",
+                    symbol="Lint:PowerSource",
+                    footprint="Synthetic:Source",
+                    net="+5V",
+                ),
+                end=PowerPathEndpointRequirement(
+                    reference="U1",
+                    pin="U1.1",
+                    symbol="Synthetic:CurrentSink",
+                    footprint="Synthetic:QFN",
+                    net="LED_SINK",
+                    role="current_controlled_sink",
+                    part_id="synthetic-cc-sink",
+                    pin_function="OUT0",
+                    pin_electrical_type="output",
+                ),
+                elements=(
+                    PowerPathElementRequirement(
+                        reference="D1",
+                        symbol="Device:LED",
+                        footprint="Synthetic:LED",
+                        side_a_pin="D1.1",
+                        side_b_pin="D1.2",
+                        side_a_net="+5V",
+                        side_b_net="LED_SINK",
+                    ),
+                ),
+            ),
+        ),
     )
     normalized_hashes: dict[tuple[str, str], str] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
@@ -208,6 +256,20 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
                     "Native custom LED export changed its PART_ID, symbol, footprint, "
                     "or complete pin signature"
                 )
+            if case == "current-sink-output" and (
+                observed.components.get("U1") is None
+                or observed.components["U1"].part_id != "synthetic-cc-sink"
+                or observed.component_symbols.get("U1") != "Synthetic:CurrentSink"
+                or observed.components["U1"].footprint != "Synthetic:QFN"
+                or observed.pin_functions.get("U1.1") != "OUT0"
+                or observed.pin_electrical_types.get("U1.1") != "output"
+                or observed.pin_functions.get("D1.1") != "A"
+                or observed.pin_functions.get("D1.2") != "K"
+            ):
+                raise ValueError(
+                    "Native current-sink LED export changed its driver identity, output "
+                    "pin signature, or LED polarity"
+                )
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -237,10 +299,14 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
             policy = (
                 DesignLintPolicy(component_role_map=custom_led_role_map)
                 if case.startswith("custom-")
-                else DesignLintPolicy()
+                else (
+                    DesignLintPolicy(power_path_map=current_sink_path_map)
+                    if case == "current-sink-output"
+                    else DesignLintPolicy()
+                )
             )
             mapped_output = leds_directly_driven_without_visible_series_resistor(
-                observed, policy.component_role_map
+                observed, policy.component_role_map, policy.power_path_map
             )
             mapped_output_findings = {
                 f"{item.reference}: LED directly shares an output net and a rail"
@@ -292,6 +358,18 @@ def led_rail_fixture_lane(root: Path, *, project: str, image: str, log: HostedLo
                 f"Native {case} lint result differs from its output-driven LED expectation: "
                 f"{sorted(output_findings)}"
             )
+        if case == "current-sink-output":
+            path_runs = [
+                item
+                for item in reports[(case, "first")].mapped_check_runs
+                if item.rule_id == "power.mapped_series_path_mismatch"
+            ]
+            if len(path_runs) != 1 or (
+                path_runs[0].status,
+                path_runs[0].requirement_count,
+                path_runs[0].finding_count,
+            ) != ("EVALUATED", 1, 0):
+                raise ValueError("Native current-sink LED path map did not match its source")
         log.event(
             f"led-rail-fixture/{case}",
             "PASS",

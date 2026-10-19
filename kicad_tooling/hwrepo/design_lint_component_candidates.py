@@ -13,6 +13,7 @@ from .led_heuristics import (
     leds_directly_driven_without_visible_series_resistor,
 )
 from .models import NetlistContract
+from .power_path_models import PowerPathMap
 from .two_pin_components import two_pin_components_on_same_net
 
 
@@ -37,6 +38,7 @@ def component_candidates(
     observed: NetlistContract,
     *,
     component_role_map: ComponentRoleMap | None = None,
+    power_path_map: PowerPathMap | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
     """Build review prompts for component polarity, role, and same-net patterns."""
@@ -62,7 +64,9 @@ def component_candidates(
             )
         )
 
-    for led in leds_directly_driven_without_visible_series_resistor(observed, component_role_map):
+    for led in leds_directly_driven_without_visible_series_resistor(
+        observed, component_role_map, power_path_map
+    ):
         role_evidence = (
             {} if led.role_binding is None else component_role_binding_evidence(led.role_binding)
         )
