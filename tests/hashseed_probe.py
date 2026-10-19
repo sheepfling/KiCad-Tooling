@@ -202,6 +202,8 @@ REPORT_ORDER = (
     "pcb_pad_net_board_only_mismatch",
     "pcb_pad_net_schematic_only_mismatch",
     "pcb_pad_net_matching_control",
+    "connector_generic_peer_pin_all_open_fault",
+    "connector_generic_peer_pin_all_open_control",
 )
 
 
@@ -228,6 +230,7 @@ REPORT_BUILDERS = {
     "pcb_dnp_mismatch": "tests.hashseed_probe_cases.pcb_dnp_mismatch",
     "pcb_value_mismatch": "tests.hashseed_probe_cases.pcb_value_mismatch",
     "pcb_pad_net_mismatch": "tests.hashseed_probe_cases.pcb_pad_net_mismatch",
+    "connector_peer_pins": "tests.hashseed_probe_cases.connector_peer_pins",
 }
 
 

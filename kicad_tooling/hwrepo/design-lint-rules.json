@@ -535,7 +535,8 @@
       "metamorphic_fixtures": [
         "tests.test_connector_peer_pin_all_open.test_candidate_fingerprint_is_stable_under_input_reordering",
         "tests.test_connector_peer_pin_all_open.test_part_id_candidate_fingerprint_is_stable_under_input_reordering",
-        "tests.test_connector_signal_peer_pin_all_open.test_signal_candidate_fingerprint_is_stable_under_input_reordering"
+        "tests.test_connector_signal_peer_pin_all_open.test_signal_candidate_fingerprint_is_stable_under_input_reordering",
+        "tests.test_design_lint_determinism_connector_all_open.test_generic_connector_all_open_reports_are_source_bound_and_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_peer_pin_all_open.py#all_open_generic_connector_peer_pin_candidates",

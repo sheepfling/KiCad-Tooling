@@ -2769,8 +2769,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v68. The cross-process probe supports themed report
-  selectors and retains the complete 190-report inventory gate. Fault/control
+- **Status:** Implemented v69. The cross-process probe supports themed report
+  selectors and retains the complete 192-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2805,6 +2805,8 @@ is not a reason by itself to expand its scope or change its default policy.
   an exact-value control, with each source digest changing only on its side.
   The v68 extension adds schematic-side and PCB-side pad-net changes plus a
   matching control, preserving the exact source-side hash distinction.
+  The v69 extension adds the opt-in generic connector all-open fault and
+  assigned-contact control with exact synthetic netlist hashes.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -6601,6 +6603,10 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Applicability evidence:** More examples can test boundary diversity, but
   do not establish precision or reviewer value without an independent pinout
   disposition. No field-review time or false-positive rate is claimed.
+- **Determinism:** LINT-080 compares the all-open generic-contact prompt and a
+  connected-contact control across three isolated processes. The finding stays
+  opt-in REVIEW evidence with the exact peer anchor; this does not declare the
+  contact required or infer that similar pins must be joined.
 - **Next:** Keep the heuristic opt-in. The `PART_ID` extension uses the same
   strict identity and pin-metadata gate as existing connector peer checks.
   Collect sanitized, independently reviewed public or synthetic boundary
