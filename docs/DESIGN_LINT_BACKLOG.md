@@ -4901,8 +4901,20 @@ is not a reason by itself to expand its scope or change its default policy.
   supported, while the unmapped report is expected to retain exact U2/D+/D−
   pin/net evidence, zero supported paths, and no USB peer-reference or data-path
   finding. This source-hashed comparison is registered for both pinned KiCad
-  versions; hosted acceptance is pending.
+  versions; its tagged hosted acceptance is recorded in Evidence history below.
 - **Evidence history:**
+
+  **Tagged hosted acceptance (2026-10-19):** `v0.5.1rc50` (commit `8dacb2a`)
+  passed GitHub Actions run `39334092708`. The scoped
+  `bus.usb_peer_reference_review` gate passed, including the source-hashed
+  inline-component fixture on digest-pinned KiCad 10.0.0 and 10.0.5. The
+  unmapped U2 case remained coverage-only, with zero supported data paths and
+  no USB peer-reference or data-path finding. Its repeated normalized netlist
+  contract matched the mapped control; the synthetic typed-netlist regression
+  checks the exact D+/D− pin and net assignments. Wheel, sdist, fresh install,
+  and external-project inventory, surface, verification, and playtest stages
+  passed. This accepts the bounded synthetic check, not arbitrary multi-pin
+  path behavior or PCB/physical continuity.
 
   The predicate, tests, and native fixture sources were already in this branch
   before the alias extension. The pinned lane was wired into the existing USB
