@@ -90,6 +90,45 @@ def test_unreviewed_connector_findings_fail_verify_and_ci(synthetic_project: Pat
     assert (synthetic_project / "build/native-lint-open/controller/design-lint.json").is_file()
 
 
+def test_empty_connectivity_expectations_still_raise_native_connector_review(
+    synthetic_project: Path,
+) -> None:
+    # A blank pin/net contract is a coverage gap; heuristic review must remain independent.
+    contract_path = synthetic_project / "examples/projects/controller/tests/contract.json"
+    contract = read_model(contract_path, ProjectTestContract)
+    incomplete_validation = contract.validation.model_copy(update={"components": {}, "nets": {}})
+    write_model(
+        contract_path,
+        contract.model_copy(update={"validation": incomplete_validation, "design_lint": None}),
+    )
+
+    result = verify_with_synthetic_connector_evidence(synthetic_project)
+
+    assert result.status == "FAIL", result.error
+    assert result.portable is not None
+    assert result.portable.status == "PASS"
+    assert result.native is not None
+    assert result.native.status == "PASS"
+    assert result.design_lint is not None
+    assert result.design_lint.status == "BLOCKED"
+    assert result.design_lint.connector_coverage is not None
+    assert result.design_lint.connector_coverage.status == "UNDECLARED"
+    ground_candidate = next(
+        item
+        for item in result.design_lint.findings
+        if item.rule_id == "connector.repeated_pin_function"
+        and item.subject == "Synthetic:Port: ground/return"
+    )
+    assert ground_candidate.evidence == {"J1.7": ("GND1",), "J2.7": ("GND2",)}
+    assert ground_candidate.mode == "review"
+    assert ground_candidate.disposition == "OPEN"
+    unchanged = read_model(contract_path, ProjectTestContract)
+    assert unchanged.validation.components == {}
+    assert unchanged.validation.nets == {}
+    assert unchanged.design_lint is None
+    assert (Path(result.run_directory) / "design-lint.json").is_file()
+
+
 def test_exact_ignores_do_not_clear_unreviewed_connector_coverage(
     synthetic_project: Path,
 ) -> None:

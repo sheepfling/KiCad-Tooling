@@ -1564,6 +1564,12 @@ is not a reason by itself to expand its scope or change its default policy.
   in version-parameterized pytest cases in `tests.test_ci_hosted_connector_returns`.
   Native verify and CLI/MCP regressions assert that incomplete or undeclared coverage stays
   visible.
+- **Empty-contract integration regression:** The synthetic project in
+  `tests/test_verify_design_lint.py::test_empty_connectivity_expectations_still_raise_native_connector_review`
+  clears the authored component/net expectations and lint policy. Native lint
+  still reports the exact `J1.7=GND1` versus `J2.7=GND2` return candidate with
+  `UNDECLARED` connector coverage, and verification stays `FAIL` without
+  filling in project expectations.
 - **Remaining:** Physical connector inventory and symbols with custom library
   aliases remain human-authored scope decisions. Keep `UNASSESSED` distinct in
   reports; do not describe the candidate scan as exhaustive discovery.
