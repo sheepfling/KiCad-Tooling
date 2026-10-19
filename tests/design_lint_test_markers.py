@@ -20,6 +20,8 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_architecture_catalog.py",
             "tests/test_design_lint_native_gate_architecture.py",
             "tests/test_design_lint_native_fixture_inventory_architecture.py",
+            "tests/test_design_lint_architecture_pytest_markers.py",
+            "tests/test_design_lint_architecture_pytest_collection.py",
         }
     ),
     "schematic_lint": frozenset(

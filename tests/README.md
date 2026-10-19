@@ -376,6 +376,24 @@ separate cross-process determinism slice:
   tests/test_design_lint_determinism_power_connectivity.py
 ```
 
+Shared hash-seed report tests can cover rules from several themes. Their catalog
+references make the process-level report selectable with each asserted rule ID;
+the module also carries every applicable area marker. Select one rule or one
+theme slice without collecting unrelated tests:
+
+```sh
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and design_lint_rule(rule_id="connector.peer_pin_assignment_outlier")' \
+  --durations=10
+.venv/bin/python -I -B -m pytest -q \
+  -m 'design_lint and connector_lint and slow' \
+  tests/test_design_lint_determinism_component_peers.py --durations=10
+```
+
+The marker and collection architecture tests run in the focused `catalog_lint`
+gate, so CI checks both catalog reachability and the selectors used to keep
+that gate narrow.
+
 The native decoupling fixture runs separately with:
 
 ```sh

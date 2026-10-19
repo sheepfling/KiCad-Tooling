@@ -10,7 +10,17 @@ from pathlib import Path
 
 import pytest
 
+from tests.design_lint_test_markers import design_lint_markers_for_path
+
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
+
+
+def test_selector_architecture_suites_are_in_the_catalog_gate() -> None:
+    for module in (
+        "tests/test_design_lint_architecture_pytest_markers.py",
+        "tests/test_design_lint_architecture_pytest_collection.py",
+    ):
+        assert "catalog_lint" in design_lint_markers_for_path(module)
 
 
 def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:

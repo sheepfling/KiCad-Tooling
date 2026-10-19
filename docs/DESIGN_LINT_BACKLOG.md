@@ -2769,7 +2769,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v72. The cross-process probe supports themed report
+- **Status:** Implemented v73. The cross-process probe supports themed report
   selectors and retains the complete 194-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
@@ -2814,6 +2814,9 @@ is not a reason by itself to expand its scope or change its default policy.
   The v72 extension adds every required theme marker to those shared report
   modules and guards the cross-theme marker sets. The `v0.5.1rc18` hosted
   selector exposed four missing marker declarations before the correction.
+  The v73 extension keeps the marker and collection architecture tests inside
+  the focused `catalog_lint` gate and documents rule/theme selectors for shared
+  hash-seed reports.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
