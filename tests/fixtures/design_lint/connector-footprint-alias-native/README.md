@@ -5,11 +5,11 @@ PART_ID-free connector symbols that share the same value, footprint, complete
 pin inventory, and native pin metadata. Both symbols use generic passive
 `Pin_1` and `Pin_2` contacts. Pin 1 is the common assignment anchor.
 
-| Fixture | J1 pin 2 | J2 pin 2 | Expected result |
-| --- | --- | --- | --- |
-| `fault.kicad_sch` | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence` |
-| `control.kicad_sch` | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence |
-| `open-fault.kicad_sch` | `SYNTHETIC_NET_2` | unassigned | `REVIEW` for `connector.footprint_peer_pin_open_outlier` |
+| Fixture                | J1 pin 2          | J2 pin 2          | Expected result                                                   |
+| ---------------------- | ----------------- | ----------------- | ----------------------------------------------------------------- |
+| `fault.kicad_sch`      | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence` |
+| `control.kicad_sch`    | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                     |
+| `open-fault.kicad_sch` | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`          |
 
 The open-pin case is also only a review prompt: J1 and J2 have one exact common
 anchor on pin 1, and J2 pin 2 is open while J1 pin 2 is assigned. It does not

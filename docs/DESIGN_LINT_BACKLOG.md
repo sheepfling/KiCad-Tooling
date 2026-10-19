@@ -7349,8 +7349,9 @@ is not a reason by itself to expand its scope or change its default policy.
   the anchored open contact, common assignment, all-open and unanchored cases,
   named/incomplete/ineligible peers, stable ordering, policy/ignore behavior,
   CLI/MCP parity, and exact-version native exports for KiCad 10.0.0 and 10.0.5.
-  The fixture source is tooling-owned. Hosted native acceptance for this
-  checkpoint is pending.
+  The fixture source is tooling-owned; see the
+  [fixture README](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md).
+  Hosted native acceptance for this checkpoint is pending.
 - **Focused selection:**
 
   ```sh
