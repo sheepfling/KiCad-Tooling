@@ -659,15 +659,14 @@ The first rules are:
   as coverage. See the
   [fixture trial and native regression record](../tests/fixtures/design_lint/cohort-power-pin-dc/README.md).
 - `power.mapped_series_path_mismatch` runs only when a project supplies
-  `design_lint.power_path_map`. It compares an authored ordered chain of exact
-  endpoint and two-terminal component identities, pin inventories, DNP state,
-  and net assignments. An endpoint may additionally bind exact `PART_ID`,
-  native pin function, and electrical type; the `current_controlled_sink` role
-  requires all three and serves only as explicit LED review metadata. Each element must be fitted and connect the two
-  adjacent mapped nets. This does not infer that two grounds or supplies
-  should be joined, determine current direction, prove the component conducts,
-  detect unlisted parallel paths, or establish PCB copper continuity. The rule
-  defaults to `review` and supports project `block`, `off`, and exact ignores.
+  `design_lint.power_path_map`. It compares an authored ordered chain of exact endpoint and
+  two-terminal component identities, pin inventories, DNP state, and net assignments. An endpoint
+  may additionally bind exact `PART_ID`, native pin function, and electrical type; the
+  `current_controlled_sink` role requires all three and serves only as explicit LED review metadata.
+  Each element must be fitted and connect the two adjacent mapped nets. This does not infer that two
+  grounds or supplies should be joined, determine current direction, prove the component conducts,
+  detect unlisted parallel paths, or establish PCB copper continuity. The rule defaults to `review`
+  and supports project `block`, `off`, and exact ignores.
 - `power.mapped_sequence_dependency_mismatch` runs only when a project supplies
   `design_lint.power_sequence_map`. The map names exact rail-stage output pins,
   optional power-good and enable pins, each stage's control context, and the

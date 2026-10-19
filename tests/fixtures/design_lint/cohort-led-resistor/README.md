@@ -170,9 +170,9 @@ matching review visible in the typed regression tests.
 
 Fixture SHA-256:
 
-| Fixture                                 | SHA-256                                                            |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| `control-current-sink-output.kicad_sch` | `642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184` |
+| Fixture                                      | SHA-256                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------ |
+| `control-current-sink-output.kicad_sch`      | `642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184` |
 | `control-current-sink-two-channel.kicad_sch` | `e8640c8799542a499b7b7b1792e03512f114cabc8cd8a1a600059cd593f718c4` |
 
 The synthetic map tests explicit project metadata and native connectivity; it
