@@ -4531,6 +4531,43 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_rule_coverage.py#compare_native_signal_path_rules"
     },
     {
+      "rule_id": "pcb.custom_drc_rule_ignored",
+      "title": "Explicitly ignored custom PCB rules need intentional review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_rule_review.py#ignored_custom_drc_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact project .kicad_dru source path and SHA-256, declaration name and ordinal, and exact configured KiCad version from project inspection",
+      "predicate": "For a PCB project with a source-bound .kicad_dru file, emit one review candidate for each named top-level rule that contains an exact direct (severity ignore) clause. Identify the declaration by its file path, source hash, one-based rule ordinal, rule name, and configured KiCad version.",
+      "supported_kicad_versions": [
+        "KiCad 10 version-1 .kicad_dru rule syntax; the exact project-configured patch version is recorded as source context, not independently executed by this heuristic"
+      ],
+      "limitations": [
+        "An explicit Ignore severity is a review prompt, not evidence that the rule should be enabled or that the board has an electrical defect; suppression may be intentional.",
+        "Only a named top-level rule with a direct exact (severity ignore) clause is reported. This does not inspect globally ignored .kicad_pro checks or infer requirements for unlisted custom rules.",
+        "The finding records the authored declaration but does not evaluate its condition, limits, applicability, or effect on board geometry. Native DRC and mapped project-authored rule coverage remain separate checks."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_rule_review.test_explicit_ignore_rule_creates_a_source_bound_review_candidate",
+        "tests.test_design_lint_mcp_parity_pcb_dru_rule_review.test_ignored_custom_drc_rule_finding_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_rule_review.test_active_error_warning_and_exclusion_severities_are_valid_controls",
+        "tests.test_pcb_dru_rule_review.test_missing_rules_file_and_non_pcb_projects_are_out_of_scope"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_rule_review.test_scan_is_deterministic_and_an_appended_active_rule_stays_quiet"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_rule_review.py#ignored_custom_drc_rule_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_ignored_rules",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.keepout_intent_coverage",
       "title": "Named PCB keepout areas differ from reviewed geometry intent",
       "status": "active",

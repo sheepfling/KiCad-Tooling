@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 120 active rules. They
+`synthetic_validated`; the catalog currently contains 121 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2575,6 +2575,23 @@ normal board DRC run for board geometry. Neither result establishes electrical
 approval or fabrication readiness. The tooling-owned synthetic control and
 fault, plus the exact-version native lane, are documented in
 [`tests/fixtures/design_lint/pcb-dru-rule-compilation/`](../tests/fixtures/design_lint/pcb-dru-rule-compilation/README.md).
+
+## Review explicitly ignored custom PCB rules
+
+`pcb.custom_drc_rule_ignored` prompts for review when a PCB project's
+source-bound `.kicad_dru` contains a named top-level rule with an explicit
+`(severity ignore)` clause. The finding identifies the rule file, SHA-256,
+declaration ordinal and name, and the project's exact configured KiCad version.
+Its default mode is `review`; a project may use the usual `block`, `off`, or
+exact-fingerprint ignore policy.
+
+This is an intent check. Some rules are intentionally ignored, so the finding
+does not claim the board is defective or that the rule should be enabled. It
+does not inspect global `.kicad_pro` ignored checks, evaluate custom-rule
+conditions or limits, or create requirements for other rules. Mapped DRC rule
+coverage and the native compilation probe remain separate checks. The
+tooling-owned parser inputs are documented in
+[`tests/fixtures/design_lint/pcb-dru-ignored-rules/`](../tests/fixtures/design_lint/pcb-dru-ignored-rules/README.md).
 
 ## Review mapped PCB signal-path length and bundle skew
 

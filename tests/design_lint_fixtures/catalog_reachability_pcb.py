@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
@@ -25,8 +26,8 @@ from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
 )
 
 
-def pcb_component_inventory_rule_ids() -> set[str]:
-    """Emit the fitted schematic component placement finding through evaluation."""
+def pcb_rule_ids() -> set[str]:
+    """Emit representative PCB inventory and custom-rule candidates."""
     netlist_sha256 = "a" * 64
     observed = NetlistContract(components={}, nets={})
     coach = ContractCoachReport(
@@ -103,10 +104,17 @@ def pcb_component_inventory_rule_ids() -> set[str]:
             ),
         ),
     )
+    ignored_rule = Candidate(
+        rule_id="pcb.custom_drc_rule_ignored",
+        subject="projects/synthetic/controller.kicad_dru#rule[1] SyntheticIgnoredRule",
+        message="Synthetic custom DRC rule explicitly declares Ignore.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
     report = evaluate(
         coach.project_id,
         coach,
         DesignLintPolicy(),
         pcb_component_inventory_coverage=inventory,
+        pcb_dru_rule_candidates=(ignored_rule,),
     )
     return {finding.rule_id for finding in report.findings}

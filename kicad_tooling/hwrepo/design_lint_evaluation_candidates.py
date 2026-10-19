@@ -106,6 +106,12 @@ def scan_evaluation_candidates(
         connector_power_output_review_enabled=connector_power_output_mode != "off",
         ic_decoupling_map=policy.ic_decoupling_map,
     )
+    items = tuple(
+        sorted(
+            (*items, *request.pcb_dru_rule_candidates),
+            key=lambda item: (item.rule_id, item.subject),
+        )
+    )
     i2c_peer_coverage = None
     spi_peer_coverage = None
     can_peer_coverage = None

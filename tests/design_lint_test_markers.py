@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from tests.design_lint_component_test_markers import COMPONENT_LINT_TEST_MODULES
+from tests.design_lint_pcb_test_markers import PCB_LINT_TEST_MODULES
 
 # Keep the area catalog explicit. Adding a lint test module here also includes
 # it in the portable design_lint selection derived below.
@@ -266,76 +267,7 @@ _LINT_AREA_MODULES = {
             "tests/test_electrical_test_access_parity.py",
         }
     ),
-    "pcb_lint": frozenset(
-        {
-            "tests/test_electrical_test_access_parity.py",
-            "tests/test_electrical_test_access_evidence.py",
-            "tests/test_pcb_component_inventory.py",
-            "tests/test_pcb_population_mismatch.py",
-            "tests/test_native_pcb_variant_probe.py",
-            "tests/test_pcb_variant_population_capture.py",
-            "tests/test_pcb_schematic_pad_net_mismatch.py",
-            "tests/test_pcb_schematic_pad_net_native_fixture_lane.py",
-            "tests/test_pcb_component_inventory_mcp_parity.py",
-            "tests/test_pcb_component_inventory_native_fixture_lane.py",
-            "tests/test_pcb_variant_population_native_fixture_lane.py",
-            "tests/test_design_lint_determinism_pcb_component_inventory.py",
-            "tests/test_native_connector_return_lint.py",
-            "tests/test_pcb_access_native_fixture_lane.py",
-            "tests/test_pcb_access_fixture_lane.py",
-            "tests/test_pcb_decoupling.py",
-            "tests/test_pcb_decoupling_return_vias.py",
-            "tests/test_pcb_decoupling_native_fixture_lane.py",
-            "tests/test_pcb_drc_coverage.py",
-            "tests/test_pcb_footprint_observations.py",
-            "tests/test_pcb_keepouts.py",
-            "tests/test_pcb_keepouts_mcp_parity.py",
-            "tests/test_pcb_keepouts_native.py",
-            "tests/test_pcb_protection_path.py",
-            "tests/test_pcb_protection_path_native_fixture_lane.py",
-            "tests/test_design_lint_determinism_pcb_antenna.py",
-            "tests/test_design_lint_determinism_pcb_touch_pad_clearance.py",
-            "tests/test_design_lint_determinism_pcb_required_fitted_reference.py",
-            "tests/test_design_lint_determinism_pcb_board_only.py",
-            "tests/test_design_lint_determinism_pcb_dnp.py",
-            "tests/test_design_lint_determinism_pcb_value.py",
-            "tests/test_design_lint_determinism_pcb_pad_net.py",
-            "tests/test_design_lint_determinism_pcb_drc.py",
-            "tests/test_design_lint_determinism_pcb_protection.py",
-            "tests/test_design_lint_determinism_pcb_track_width.py",
-            "tests/test_design_lint_mcp_parity_pcb_layout.py",
-            "tests/test_design_lint_mcp_parity_pcb_pairs.py",
-            "tests/test_design_lint_mcp_parity_protection.py",
-            "tests/test_design_lint_mcp_parity_usb_data.py",
-            "tests/test_pcb_reference_plane_lint.py",
-            "tests/test_ci_hosted_pcb_fixture_schedule.py",
-            "tests/test_pcb_reference_plane_native_fixture_lane.py",
-            "tests/test_pcb_switching_loop_native_fixture_lane.py",
-            "tests/test_pcb_return_path_native_fixture_lane.py",
-            "tests/test_pcb_reference_plane_geometry.py",
-            "tests/test_pcb_reference_plane_layers.py",
-            "tests/test_pcb_reference_plane_contract.py",
-            "tests/test_ci_hosted_pcb_reference_planes.py",
-            "tests/test_ci_hosted_pcb_return_paths.py",
-            "tests/test_pcb_return_paths.py",
-            "tests/test_hosted_pcb_lane_boundaries.py",
-            "tests/test_pcb_rf_antenna.py",
-            "tests/test_pcb_rf_antenna_mcp_parity.py",
-            "tests/test_pcb_touch_pad_clearance.py",
-            "tests/test_pcb_touch_pad_clearance_mcp_parity.py",
-            "tests/test_pcb_touch_pad_clearance_native.py",
-            "tests/test_pcb_signal_path_coverage.py",
-            "tests/test_pcb_signal_path_evidence.py",
-            "tests/test_pcb_signal_path_hosted_schedule.py",
-            "tests/test_pcb_signal_path_lane.py",
-            "tests/test_pcb_signal_path_mcp_parity.py",
-            "tests/test_pcb_signal_path_native.py",
-            "tests/test_pcb_switching_loop_geometry.py",
-            "tests/test_pcb_switching_loop_routes.py",
-            "tests/test_pcb_track_width.py",
-            "tests/test_pcb_track_width_native_fixture_lane.py",
-        }
-    ),
+    "pcb_lint": PCB_LINT_TEST_MODULES,
     "return_path_lint": frozenset(
         {
             "tests/test_electrical_connector_return_parity.py",
@@ -422,6 +354,7 @@ _LINT_AREA_MODULES = {
             "tests/test_pcb_rf_antenna_mcp_parity.py",
             "tests/test_pcb_touch_pad_clearance_mcp_parity.py",
             "tests/test_pcb_signal_path_mcp_parity.py",
+            "tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py",
         }
     ),
 }

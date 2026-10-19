@@ -17,6 +17,7 @@ from .design_lint_evaluation_types import DesignLintEvaluationRequest
 from .design_lint_finding_disposition import resolve_finding_dispositions
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_report_models import DesignLintReport
+from .design_lint_types import Candidate
 from .digital_peer_voltage_types import DigitalPeerVoltageLintContext
 from .external_protection_models import ExternalProtectionCoverageReport
 from .i2c_address_models import I2cAddressCoverageReport
@@ -82,6 +83,7 @@ def evaluate(
     pcb_rf_module_antenna_coverage: PcbRfModuleAntennaCoverageReport | None = None,
     pcb_touch_pad_clearance_coverage: PcbTouchPadClearanceCoverageReport | None = None,
     pcb_component_inventory_coverage: PcbComponentInventoryCoverageReport | None = None,
+    pcb_dru_rule_candidates: tuple[Candidate, ...] = (),
 ) -> DesignLintReport:
     """Apply project policy to findings while preserving the established call shape."""
     request = DesignLintEvaluationRequest(
@@ -116,6 +118,7 @@ def evaluate(
         pcb_rf_module_antenna_coverage=pcb_rf_module_antenna_coverage,
         pcb_touch_pad_clearance_coverage=pcb_touch_pad_clearance_coverage,
         pcb_component_inventory_coverage=pcb_component_inventory_coverage,
+        pcb_dru_rule_candidates=pcb_dru_rule_candidates,
     )
     result = prepare_evaluation(request)
     if result.report is not None:

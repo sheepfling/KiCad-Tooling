@@ -51,8 +51,9 @@ def synthetic_design_lint_project(
     project_id: str = "controller",
     kicad_version: str = "10.0.5",
     image: str = _IMAGE,
+    custom_rules_source: str | None = None,
 ) -> tuple[Path, Path]:
-    """Create source-bound, explicitly synthetic evidence without a template checkout."""
+    """Create source-bound synthetic evidence, optionally including custom DRC rules."""
     root = base / "repository"
     catalog = root / "catalog"
     project_dir = root / "projects" / project_id
@@ -70,6 +71,10 @@ def synthetic_design_lint_project(
         source_paths[1]: b"synthetic schematic source\n",
         source_paths[2]: b"synthetic PCB source\n",
     }
+    if custom_rules_source is not None:
+        rules_relative = f"kicad/{project_id}.kicad_dru"
+        source_paths = (*source_paths, rules_relative)
+        source_bytes[rules_relative] = custom_rules_source.encode("utf-8")
     for relative, content in source_bytes.items():
         (project_dir / relative).write_bytes(content)
 

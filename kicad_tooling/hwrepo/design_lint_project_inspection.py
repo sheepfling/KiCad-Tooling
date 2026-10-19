@@ -41,6 +41,7 @@ from .pcb_drc_models import (
     PcbDifferentialPairRuleMap,
 )
 from .pcb_drc_source_scan import scan_source_bound_rule_map
+from .pcb_dru_rule_review import ignored_custom_drc_rule_candidates
 
 
 def inspect_design_lint_summary(
@@ -76,6 +77,11 @@ def inspect_design_lint_summary(
             raise ValueError("Native netlist hash is unavailable for connectivity snapshot capture")
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared source changed while reading design-lint policy")
+        pcb_dru_rule_candidates = ignored_custom_drc_rule_candidates(
+            root,
+            config,
+            coach.source_hashes,
+        )
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)
         rs485_peer_context = rs485_peer_reference_context(root, config)
@@ -188,6 +194,7 @@ def inspect_design_lint_summary(
             control_input_bias_coverage=control_bias_coverage,
             i2c_pullup_heuristic_coverage=i2c_pullup_coverage,
             digital_peer_voltage_context=digital_peer_voltage_context,
+            pcb_dru_rule_candidates=pcb_dru_rule_candidates,
         )
         connector_catalog = report.connector_coverage
         if (

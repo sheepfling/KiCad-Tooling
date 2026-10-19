@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 120 rules are implemented with synthetic regression coverage.
+The following 121 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -477,6 +477,7 @@ Their actual recognition limits are documented in
 - `pcb.switching_loop_geometry`
 - `pcb.differential_pair_rule_coverage`
 - `pcb.signal_path_rule_coverage`
+- `pcb.custom_drc_rule_ignored`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
@@ -2628,7 +2629,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 120 active rules; CI requires every new
+- **Status:** Baseline complete for all 121 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2637,7 +2638,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 120 covered, 0 not applicable, 0 unreviewed.
+  audit: 121 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7563,6 +7564,36 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and pcb_lint'
   ```
 
+#### LINT-139 — Review explicitly ignored custom PCB rules
+
+- **Status:** Implemented as the default-review rule
+  `pcb.custom_drc_rule_ignored` for source-bound, named `.kicad_dru` rules.
+- **Gap:** Mapped DRC coverage reports an Ignore severity only when a project
+  has authored a matching requirement map. The native compilation probe proves
+  that KiCad reaches the rule file, but neither check prompts for an ignored
+  custom rule with no mapped requirement.
+- **Predicate:** Parse the supported version-1 custom-rule syntax and emit one
+  finding for each named top-level rule with an explicit direct
+  `(severity ignore)` clause. Bind each candidate to the current rule-file hash,
+  declaration ordinal and name, and exact project-configured KiCad version.
+- **Policy boundary:** The finding asks an engineer to confirm the suppression
+  is intentional. It does not treat Ignore as an electrical defect, infer that
+  every custom rule should be active, inspect global `.kicad_pro` ignored
+  checks, or evaluate custom-rule conditions and limits. Projects may select
+  `review`, `block`, `off`, or an exact-fingerprint ignore.
+- **Evidence:** Tooling-owned synthetic fault/control fragments cover explicit
+  Ignore versus error, warning, and exclusion severities. Tests cover source
+  hashes, stale/out-of-scope/symlink inputs, deterministic output, standard
+  policy dispositions, and CLI/MCP parity. These fixtures are parser tests,
+  not native KiCad acceptance or electrical requirements.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_dru_rule_review.py \
+    tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py \
+    -m 'design_lint and pcb_lint'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -10510,7 +10541,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 120 active rules. Each entry has a deterministic predicate, evidence
+contains 121 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

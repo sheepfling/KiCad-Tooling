@@ -55,6 +55,14 @@ class NativePcbDrcFixtureReport:
     violation_records_sha256: str
 
 
+@dataclass(frozen=True, slots=True)
+class NativeIgnoredDrcRule:
+    """A named custom DRC rule with an explicit Ignore severity declaration."""
+
+    name: str
+    ordinal: int
+
+
 def _length_nm(value: str) -> int:
     match = _LENGTH.fullmatch(value)
     if match is None:
@@ -167,6 +175,33 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
             )
             if parsed is not None:
                 result.append(parsed)
+    return tuple(result)
+
+
+def native_ignored_rules(source: str) -> tuple[NativeIgnoredDrcRule, ...]:
+    """Return named rules that explicitly contain `(severity ignore)`.
+
+    This parser only identifies authored severity declarations. It does not
+    execute KiCad expressions or infer that an ignored rule should be active.
+    """
+    if not source.strip():
+        return ()
+    nodes = _children(source, 0, len(source))
+    versions = [_atoms(source, node) for node in nodes if _atoms(source, node)[:1] == ("version",)]
+    if len(versions) != 1 or versions[0] != ("version", "1"):
+        raise ValueError("Expected one version 1 root atom in the native DRC rules file")
+    result: list[NativeIgnoredDrcRule] = []
+    ordinal = 0
+    for node in nodes:
+        header = _atoms(source, node)
+        if not header or header[0] != "rule":
+            continue
+        ordinal += 1
+        if len(header) != 2:
+            raise ValueError("Malformed named rule in the native DRC rules file")
+        children = _children(source, node.start + 1, node.end - 1)
+        if any(_atoms(source, child) == ("severity", "ignore") for child in children):
+            result.append(NativeIgnoredDrcRule(name=header[1], ordinal=ordinal))
     return tuple(result)
 
 
