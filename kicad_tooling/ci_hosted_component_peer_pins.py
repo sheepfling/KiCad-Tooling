@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from .ci_hosted_component_peer_metadata import native_peer_metadata_mismatches
 from .hwrepo.contracts import write_model
 
 if TYPE_CHECKING:
@@ -322,26 +323,17 @@ def _component_peer_pin_assignment_fixture_lane(
                 if kind == "power-output"
                 else {reference: fixture_symbol for reference in expected_references}
             )
-            if (
-                observed.component_symbols != expected_symbols
-                or any(
-                    observed.component_pin_numbers.get(reference) != ("1", "2")
-                    for reference in expected_references
-                )
-                or any(
-                    observed.pin_electrical_types.get(f"{reference}.{number}") != expected_type
-                    for reference in expected_references
-                    for number, expected_type in (("1", "passive"), ("2", native_pin_type))
-                )
-                or any(
-                    observed.pin_functions.get(f"{reference}.{number}") != expected_function
-                    for reference in expected_references
-                    for number, expected_function in (("1", "Pin_1"), ("2", pin_function))
-                )
-            ):
+            metadata_mismatches = native_peer_metadata_mismatches(
+                observed,
+                expected_symbols=expected_symbols,
+                references=expected_references,
+                pin_type=native_pin_type,
+                pin_function=pin_function,
+            )
+            if metadata_mismatches:
                 raise ValueError(
-                    f"Native {case} export omitted the exact peer symbol, pin inventory, "
-                    f"or native {native_pin_type} pin types and {pin_function} functions"
+                    f"Native {case} {display_name} metadata mismatch: "
+                    f"{'; '.join(metadata_mismatches)}"
                 )
             if kind == "power-output" and {
                 reference: component.part_id for reference, component in observed.components.items()
