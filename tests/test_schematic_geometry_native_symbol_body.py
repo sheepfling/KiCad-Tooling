@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import json
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
 
+from tests.design_lint_fixtures.schematic_geometry_arc_fixtures import (
+    symbol_arc_body_text_fixture,
+)
 from tests.design_lint_fixtures.schematic_geometry_fixtures import (
     enclosed_connector_body_wire_fixture,
     free_text_symbol_body_fixture,
@@ -35,6 +39,69 @@ pytestmark = [
 
 
 class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
+    def test_arc_symbol_body_wire_and_text_match_native_svg_and_clear_control(self) -> None:
+        fault_source = symbol_arc_body_text_fixture(
+            text_point=(76.2, 73.66),
+            local_wire_y=2.54,
+        )
+        control_source = symbol_arc_body_text_fixture(
+            text_point=(76.2, 80.01),
+            local_wire_y=-7.62,
+        )
+        fault, fault_netlist, fault_erc = self.native_scan(
+            fault_source,
+            source_name="symbol-arc-body.kicad_sch",
+        )
+        control, control_netlist, control_erc = self.native_scan(
+            control_source,
+            source_name="symbol-arc-body.kicad_sch",
+        )
+
+        assert fault.status == "COMPLETE"
+        assert len(fault.wires_through_symbol_bodies) == 1
+        assert len(fault.free_text_symbol_body_overlaps) == 1
+        assert control.status == "COMPLETE"
+        assert control.wires_through_symbol_bodies == ()
+        assert control.free_text_symbol_body_overlaps == ()
+        assert _netlist_components_without_sheetfile(fault_netlist) == (
+            _netlist_components_without_sheetfile(control_netlist)
+        )
+        fault_nets = fault_netlist.find("./nets")
+        control_nets = control_netlist.find("./nets")
+        assert fault_nets is not None
+        assert control_nets is not None
+        assert ET.tostring(fault_nets) == ET.tostring(control_nets)
+
+        def violation_signatures(report: dict[str, object]) -> tuple[tuple[object, ...], ...]:
+            violations = [
+                violation
+                for sheet in report.get("sheets", [])
+                for violation in sheet.get("violations", [])
+            ]
+            return tuple(
+                sorted(
+                    (
+                        violation["type"],
+                        violation["severity"],
+                        tuple(item.get("uuid") for item in violation["items"]),
+                    )
+                    for violation in violations
+                )
+            )
+
+        assert violation_signatures(fault_erc) == violation_signatures(control_erc)
+        fault_svg = self.native_svg(fault_source, source_name="symbol-arc-fault.kicad_sch")
+        control_svg = self.native_svg(
+            control_source,
+            source_name="symbol-arc-control.kicad_sch",
+        )
+        for svg_root in (fault_svg, control_svg):
+            assert any(
+                "A" in re.findall(r"[A-Za-z]", path.attrib.get("d", ""))
+                for path in svg_root.iter()
+                if path.tag.endswith("}path")
+            )
+
     def test_symbol_body_wire_matches_native_svg_and_erc_control(self) -> None:
         fault_source = symbol_body_wire_fixture()
         control_source = symbol_body_wire_fixture(((71.12, 82.55), (81.28, 82.55)))

@@ -3470,28 +3470,34 @@
       ],
       "limitations": [
         "Only top-level free text using the standard KiCad stroke font, 95 printable ASCII glyphs and measured U+00B0, U+00B1, U+00B5, U+00D7, U+03A9, and U+2014 glyphs, positive explicit font sizes, horizontal text, and centered/left/right justification is measured. Plain KiCad escaped line breaks are supported. Unsupported text styles, other characters, unsupported justifications, or rotations leave geometry coverage partial. KiCad serialized \\n and \\r line-break escapes are detected before metric lookup.",
-        "Both text and symbol geometry use axis-aligned envelopes. Disjoint or non-rectangular symbol primitives and gaps between glyph strokes can produce candidates; intentional annotations over symbols remain possible.",
+        "Symbol-body envelopes support rectangles, polylines, Bezier curves, circles, and non-degenerate three-point arcs. Unsupported or degenerate symbol primitives leave geometry coverage partial. Both text and symbol geometry use axis-aligned envelopes; disjoint or non-rectangular primitives and gaps between glyph strokes can produce candidates, including intentional annotations over symbols.",
         "Labels, symbol fields, pin names, sheet text, and other text objects are outside this rule. It is a graphical review hint, off by default, and does not establish connectivity or design intent."
       ],
       "fault_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_over_symbol_body_is_reported_with_clear_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_uses_area_threshold",
+        "tests.test_schematic_geometry_symbol_arc_body.test_free_text_arc_body_overlap_has_fault_and_moved_control",
         "tests.test_design_lint_schematic_text.test_free_text_over_symbol_body_rule_is_configurable_and_off_by_default",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_arc_symbol_body_wire_and_text_match_native_svg_and_clear_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_matches_native_svg_and_erc_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_over_symbol_body_is_reported_with_clear_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_uses_area_threshold",
+        "tests.test_schematic_geometry_symbol_arc_body.test_free_text_arc_body_overlap_has_fault_and_moved_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_unsupported_free_text_variants_leave_geometry_coverage_partial",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_arc_symbol_body_wire_and_text_match_native_svg_and_clear_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_free_text_symbol_body_overlap_matches_native_svg_and_erc_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_unsupported_formatted_text_does_not_reduce_native_wire_body_coverage",
         "tests.test_schematic_geometry_native_text.NativeSchematicGeometryTextTests.test_unsupported_free_text_variants_preserve_native_connectivity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_text_body_overlap_is_root_order_stable_and_moving_text_clears_candidate"
+        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_text_body_overlap_is_root_order_stable_and_moving_text_clears_candidate",
+        "tests.test_schematic_geometry_symbol_arc_body.test_collinear_arc_keeps_symbol_body_coverage_partial"
       ],
       "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_symbol_geometry.py#symbol_body_envelope_for_instance",
         "kicad_tooling/hwrepo/schematic_obstruction_geometry.py#free_text_over_symbol_bodies",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -3508,26 +3514,30 @@
       "maturity": "synthetic_validated",
       "default_mode": "off",
       "evidence_adapter": "Source-bound KiCad 10.0.5 or 10.0.6 schematic wire geometry and supported embedded symbol graphics",
-      "predicate": "For supported single-unit, single-conversion symbols with rectangle, polyline, bezier, or circle graphics, report a native wire centerline that remains at least 0.2 mm inside the axis-aligned body envelope and overlaps it for at least 0.3 mm.",
+      "predicate": "For supported single-unit, single-conversion symbols with rectangle, polyline, bezier, circle, or non-degenerate three-point arc graphics, report a native wire centerline that remains at least 0.2 mm inside the axis-aligned body envelope and overlaps it for at least 0.3 mm.",
       "supported_kicad_versions": [
         "10.0.5",
         "10.0.6"
       ],
       "limitations": [
         "The envelope bounds supported embedded symbol graphics after orthogonal rotation and x/y mirroring. Bounding several disjoint or non-rectangular primitives can include empty space; valid connector contacts inside a symbol outline and other intentional wire crossings can be review candidates.",
-        "Arcs, text graphics, multi-unit or multi-conversion symbols, unsupported transforms, or unrecognized body primitives leave geometry coverage partial. The rule does not infer pin connectivity, intended isolation, or schematic electrical meaning.",
+        "Text graphics, collinear or degenerate arcs, multi-unit or multi-conversion symbols, unsupported transforms, or unrecognized body primitives leave geometry coverage partial. The rule does not infer pin connectivity, intended isolation, or schematic electrical meaning.",
         "This is a graphical review hint only. It is off by default and supports project review, block, off, and exact-ignore dispositions; it never edits the schematic or replaces native ERC."
       ],
       "fault_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_wire_through_symbol_body_is_reported_and_clear_control_is_valid",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_overlap_uses_guard_and_minimum_length",
+        "tests.test_schematic_geometry_symbol_arc_body.test_arc_wire_candidate_uses_the_swept_arc_envelope_and_clear_control",
         "tests.test_design_lint_schematic_readability.test_wire_through_symbol_body_review_has_source_evidence",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_arc_symbol_body_wire_and_text_match_native_svg_and_clear_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_symbol_body_wire_matches_native_svg_and_erc_control"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_wire_through_symbol_body_is_reported_and_clear_control_is_valid",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_overlap_uses_guard_and_minimum_length",
+        "tests.test_schematic_geometry_symbol_arc_body.test_arc_wire_candidate_uses_the_swept_arc_envelope_and_clear_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
+        "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_arc_symbol_body_wire_and_text_match_native_svg_and_clear_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_symbol_body_wire_matches_native_svg_and_erc_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_valid_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_unsupported_formatted_text_does_not_reduce_native_wire_body_coverage"
@@ -3535,7 +3545,10 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_tracks_all_supported_orthogonal_transforms",
-        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_peer_connector_contacts_inside_symbol_body_remain_review_candidates"
+        "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
+        "tests.test_schematic_geometry_symbol_arc_body.test_major_arc_contains_only_extrema_that_lie_on_its_selected_sweep",
+        "tests.test_schematic_geometry_symbol_arc_body.test_arc_envelope_is_stable_across_orthogonal_transforms",
+        "tests.test_schematic_geometry_symbol_arc_body.test_collinear_arc_keeps_symbol_body_coverage_partial"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/schematic_symbol_geometry.py#symbol_body_envelope_for_instance",

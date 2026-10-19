@@ -119,6 +119,78 @@ def pins_for_instance(
     return tuple(pins), None
 
 
+def _arc_primitive_points(
+    source: str,
+    primitive: _Span,
+) -> tuple[tuple[float, float], ...]:
+    """Return a conservative envelope's points for a three-point symbol arc."""
+    point_sections = {
+        name: schematic_nodes(source, primitive, name) for name in ("start", "mid", "end")
+    }
+    if any(len(sections) != 1 for sections in point_sections.values()):
+        raise ValueError("symbol arc needs one start, mid, and end point")
+
+    points: dict[str, tuple[float, float]] = {}
+    for name, sections in point_sections.items():
+        atoms = _atoms(source, sections[0])
+        if len(atoms) != 3:
+            raise ValueError(f"symbol arc has malformed {name} coordinates")
+        points[name] = (
+            schematic_number(atoms[1], "symbol arc x coordinate"),
+            schematic_number(atoms[2], "symbol arc y coordinate"),
+        )
+
+    start, mid, end = points["start"], points["mid"], points["end"]
+    (ax, ay), (bx, by), (cx, cy) = start, mid, end
+    determinant = 2.0 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
+    scale_squared = max(ax * ax + ay * ay, bx * bx + by * by, cx * cx + cy * cy, 1.0)
+    if abs(determinant) <= 1e-12 * scale_squared:
+        raise ValueError("symbol arc points are collinear or degenerate")
+
+    a_squared, b_squared, c_squared = ax * ax + ay * ay, bx * bx + by * by, cx * cx + cy * cy
+    center = (
+        (a_squared * (by - cy) + b_squared * (cy - ay) + c_squared * (ay - by)) / determinant,
+        (a_squared * (cx - bx) + b_squared * (ax - cx) + c_squared * (bx - ax)) / determinant,
+    )
+    radius = math.dist(center, start)
+    if not math.isfinite(radius) or radius <= 0.0:
+        raise ValueError("symbol arc radius is not finite and positive")
+
+    angles = {
+        name: math.atan2(point[1] - center[1], point[0] - center[0])
+        for name, point in points.items()
+    }
+    tau = math.tau
+    counterclockwise_end = (angles["end"] - angles["start"]) % tau
+    counterclockwise_mid = (angles["mid"] - angles["start"]) % tau
+    if 0.0 < counterclockwise_mid < counterclockwise_end:
+        direction = 1.0
+        sweep = counterclockwise_end
+    else:
+        clockwise_end = (angles["start"] - angles["end"]) % tau
+        clockwise_mid = (angles["start"] - angles["mid"]) % tau
+        if not 0.0 < clockwise_mid < clockwise_end:
+            raise ValueError("symbol arc midpoint does not select a unique sweep")
+        direction = -1.0
+        sweep = clockwise_end
+
+    def lies_on_sweep(angle: float) -> bool:
+        offset = (
+            (angle - angles["start"]) % tau if direction > 0.0 else (angles["start"] - angle) % tau
+        )
+        return offset <= sweep + 1e-12
+
+    extrema = tuple(
+        (
+            center[0] + radius * math.cos(angle),
+            center[1] + radius * math.sin(angle),
+        )
+        for angle in (0.0, math.pi / 2.0, math.pi, 3.0 * math.pi / 2.0)
+        if lies_on_sweep(angle)
+    )
+    return (start, mid, end, *extrema)
+
+
 def body_primitive_points(
     source: str,
     primitive: _Span,
@@ -181,6 +253,8 @@ def body_primitive_points(
             (x + radius, y - radius),
             (x + radius, y + radius),
         )
+    if kind == "arc":
+        return _arc_primitive_points(source, primitive)
     raise ValueError(f"symbol body primitive {kind!r} is outside the measured geometry")
 
 
@@ -241,7 +315,7 @@ def symbol_body_envelope_for_instance(
 
     local_points: list[tuple[float, float]] = []
     saw_primitive = False
-    supported = {"rectangle", "polyline", "bezier", "circle"}
+    supported = {"rectangle", "polyline", "bezier", "circle", "arc"}
     for unit, _, subsymbol in parsed_subsymbols:
         if unit not in {0, 1}:
             continue

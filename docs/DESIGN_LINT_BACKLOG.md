@@ -7929,7 +7929,7 @@ is not a reason by itself to expand its scope or change its default policy.
   metadata. The rule improves drawing localization and does not establish
   electrical intent. A bounded envelope can include empty areas between
   disjoint or curved primitives, and intentional wire crossings remain review
-  candidates. Arcs, text graphics, and unsupported symbol units leave geometry
+  candidates. Text graphics and unsupported symbol units leave geometry
   coverage partial.
   An eleventh rule, `schematic.free_text_over_symbol_body`, intersects a
   supported top-level free-text envelope with a supported symbol-body envelope.
@@ -7940,6 +7940,13 @@ is not a reason by itself to expand its scope or change its default policy.
   identical. This is a localized drawing prompt; labels, fields, and
   unsupported text remain outside its scope, and axis-aligned bounds can
   include empty space.
+  Symbol-body parsing now supports a bounded three-point arc by finding its
+  circle and selected sweep, then including only the cardinal extrema on that
+  sweep. Synthetic fault/control cases cover minor and major arcs, all 12
+  orthogonal rotation/mirror combinations, text and wire consumers, and a
+  collinear-point case that remains partial. The matching native SVG, netlist,
+  and ERC regression is registered in the exact KiCad 10.0.5/10.0.6 lane; its
+  hosted acceptance result will be recorded with the lint-gate tag.
 - **Typography boundary evidence:** Synthetic controls cover custom face, bold,
   italic, thick stroke, vertical or mirrored justification, rotation, formatted
   text, and a non-ASCII glyph. These remain partial with no text-overlap

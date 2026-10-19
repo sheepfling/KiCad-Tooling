@@ -258,12 +258,12 @@ class SchematicGeometrySymbolBodyTests(SchematicGeometryHelpers):
         assert (above.free_text_symbol_body_overlaps[0].overlap_area_mm2) >= (0.1)
 
     def test_unsupported_symbol_body_primitive_makes_coverage_partial(self) -> None:
-        source = symbol_body_wire_fixture().replace(b"(rectangle", b"(arc", 1)
+        source = symbol_body_wire_fixture().replace(b"(rectangle", b"(text", 1)
         result = self.scan(source, unconnected_pins=frozenset())
 
         assert (result.status) == ("PARTIAL")
         assert (result.wires_through_symbol_bodies) == (())
-        assert any("primitive 'arc' is unsupported" in item for item in result.unsupported)
+        assert any("primitive 'text' is unsupported" in item for item in result.unsupported)
 
     def test_unsupported_free_text_variants_leave_geometry_coverage_partial(self) -> None:
         overlap = (25.4, 25.4)

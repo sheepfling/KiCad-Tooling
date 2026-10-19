@@ -3103,6 +3103,11 @@ orthogonal rotations, and x/y mirrors. Every reachable child schematic must
 remain inside the project source directory and match the native snapshot's
 source hashes. Reused child files are scanned once per sheet instance using
 the exact KiCad project and hierarchy path to resolve component references.
+Symbol-body geometry supports rectangles, polylines, Bezier curves, circles,
+and non-degenerate three-point arcs. The arc bounds derive from its start,
+midpoint, and endpoint; only cardinal extrema on the selected sweep enter the
+envelope. Collinear or degenerate point triples leave body-dependent rules
+partial.
 The native acceptance lane runs the full geometry suite on both exact,
 digest-pinned versions. The text-metric resource records its KiCad 10.0.6
 calibration source; its SVG comparisons also pass on 10.0.5. Other KiCad
@@ -3211,19 +3216,22 @@ project overrides and exact ignores, and never edits the schematic.
 
 A `wire_through_symbol_body` candidate records an electrical wire centerline
 inside a supported embedded symbol's axis-aligned body envelope. It supports
-single-unit, single-conversion symbols with rectangle, polyline, Bezier, or
-circle graphics, plus orthogonal rotations and x/y mirrors. It reports only
-after the centerline stays 0.2 mm inside the envelope and overlaps it for at
-least 0.3 mm. Envelopes around disjoint, curved, or non-rectangular graphics
-can include empty space, so intentional crossings can be candidates. Arcs,
-text graphics, multi-unit symbols, and other unsupported primitives leave
-this rule's coverage partial when enabled. The finding identifies the symbol, wire, source
-hash, sheet instance, body box, and clipped segment; it does not establish pin
-connectivity or intent. The synthetic KiCad 10.0.6 fault and clear control
-retain identical net assignments and ERC signatures, so this rule adds a
-localized drawing review prompt rather than electrical detection. It is off by
-default, supports project review, block, off, and exact ignores, and never
-changes the schematic.
+single-unit, single-conversion symbols with rectangle, polyline, Bezier,
+circle, or non-degenerate three-point arc graphics, plus orthogonal rotations
+and x/y mirrors. It reports only after the centerline stays 0.2 mm inside the
+envelope and overlaps it for at least 0.3 mm. Envelopes around disjoint,
+curved, or non-rectangular graphics can include empty space, so intentional
+crossings can be candidates. Text graphics, collinear or degenerate arcs,
+multi-unit symbols, and other unsupported primitives leave this rule's
+coverage partial when enabled. The finding identifies the symbol, wire,
+source hash, sheet instance, body box, and clipped segment; it does not
+establish pin connectivity or intent. The synthetic KiCad 10.0.6 fault and
+clear control retain identical net assignments and ERC signatures, so this
+rule adds a localized drawing review prompt rather than electrical detection.
+The arc fault/control pair is also registered in the exact-version native
+suite, which checks native SVG rendering and unchanged netlist/ERC evidence.
+It is off by default, supports project review, block, off, and exact ignores,
+and never changes the schematic.
 
 A `free_text_over_symbol_body` candidate records a top-level, supported
 free-text glyph envelope overlapping a supported symbol-body envelope. It
