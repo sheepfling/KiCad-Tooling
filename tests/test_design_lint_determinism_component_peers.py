@@ -10,6 +10,7 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.slow,
     pytest.mark.component_lint,
+    pytest.mark.connector_lint,
     pytest.mark.power_lint,
 ]
 

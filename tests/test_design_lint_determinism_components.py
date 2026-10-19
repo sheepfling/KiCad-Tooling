@@ -11,6 +11,7 @@ pytestmark = [
     pytest.mark.slow,
     pytest.mark.component_lint,
     pytest.mark.power_lint,
+    pytest.mark.return_path_lint,
 ]
 
 

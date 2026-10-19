@@ -26,6 +26,8 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_component_named_peer_power_input_all_open_native.py",
         "tests/test_component_peer_power_input_native_fixture_lane.py",
         "tests/test_design_lint_determinism_component_peers.py",
+        "tests/test_design_lint_determinism_components.py",
+        "tests/test_design_lint_determinism_interfaces.py",
         "tests/test_design_lint_determinism_generic_peer_pins.py",
         "tests/test_design_lint_determinism_power_input_peers.py",
         "tests/test_component_peer_pin_assignment_outlier.py",
