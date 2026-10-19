@@ -5406,7 +5406,14 @@ is not a reason by itself to expand its scope or change its default policy.
   exports run through `NativeConnectorReturnFixtureTests` in GitHub CI; the
   current local rerun on 2026-10-08 also passed on both exact versions. The
   open `power_in` fault remained `REVIEW` and the connected control passed;
-  hosted acceptance for the current branch remains unrecorded.
+  hosted acceptance passed in `v0.5.1rc47` (commit `7fe9cac`, GitHub Actions
+  run `39330933234`). The annotated tag selected this rule and enabled the
+  connector native fixture lane; the focused rule tests, exact-version fixture
+  checks, installed-wheel rehearsal against a separate project, and Linux,
+  macOS, and Windows portability previews passed. The stable-only package job
+  was skipped under prerelease policy. This validates the tooling and fixture
+  behavior; it does not establish a project's approved pinout or hardware
+  connectivity.
 
 #### LINT-090 — USB-C port-side VBUS capacitance contract
 
