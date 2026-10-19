@@ -7278,13 +7278,22 @@ is not a reason by itself to expand its scope or change its default policy.
   `38397569065`): DRC reported no `clearance` violation and its normalized
   violation evidence was identical across repeats, while all four measured
   distances were below their authored minima. The fixtures are gated by
-  `KICAD_RUN_NATIVE_PCB_FIXTURES`. Project applicability, false-positive rate,
-  and reviewer effort remain follow-up evidence, not current claims.
+  `KICAD_RUN_NATIVE_PCB_FIXTURES`. On 2026-10-19, plated through-hole circle
+  pads were added as a below-minimum fault (1.5 mm requirement, 1.0 mm measured)
+  and an inclusive-boundary control (1.0 mm requirement and measurement). Both
+  passed the native geometry and repeated DRC checks on KiCad 10.0.0 and 10.0.5
+  in `v0.5.1rc38` (GitHub Actions run `39314208147`). The scoped run selected 14
+  tests, passed the installed-wheel check against a separate project, and
+  passed all three preview jobs. The initial `v0.5.1rc37` attempt exposed an
+  over-specific expectation for the unrelated J1.2 oval pad; the test now
+  asserts only its established oval controls and the new through-hole cases.
+  Project applicability, false-positive rate, and reviewer effort remain
+  follow-up evidence, not current claims.
 - **Focused selection:**
 
   ```sh
-  python -I -m pytest tests/test_pcb_touch_pad_clearance.py \
-    -m 'design_lint and pcb_lint'
+  python -I -m pytest \
+    -m 'design_lint and design_lint_rule(rule_id="pcb.touch_pad_reference_clearance")'
   ```
 
 #### LINT-134 — Generic pin divergence across footprint-similar connector aliases
@@ -12944,9 +12953,12 @@ pinned KiCad versions in `v0.5.0rc250` (run `38396108362`). A new native
 comparison now repeats DRC on the same fixture, compares normalized violation
 evidence, and asserts that the project-map minimum can report a clearance
 review when KiCad's default clearance emits no finding; both pinned versions
-passed in `v0.5.0rc251` (run `38397569065`). Independent public or synthetic
-applicability and reviewer-value evidence also remain open. No universal
-clearance value or new project requirement is inferred.
+passed in `v0.5.0rc251` (run `38397569065`). The plated through-hole fault and
+inclusive-boundary control, with 1.0 mm native gaps, passed both pinned
+versions and the full scoped acceptance in `v0.5.1rc38` (run `39314208147`).
+Independent public or synthetic applicability and reviewer-value evidence also
+remain open. No universal clearance value or new project requirement is
+inferred.
 
 #### Preliminary source audit: antenna keepout coverage (2026-10-08)
 
@@ -13139,8 +13151,10 @@ maintenance cost open wherever they were not measured.
    round/oval native lane and full scoped acceptance passed on
    `v0.5.0rc249`; the rotated-pad geometry regression passed on both pinned
    KiCad versions in `v0.5.0rc250`; the repeated DRC comparison passed on both
-   pinned versions in `v0.5.0rc251`. Project applicability evidence remains
-   open.
+   pinned versions in `v0.5.0rc251`. The plated through-hole fault and exact
+   boundary control then passed on both pinned versions, with the scoped gate
+   and installed-wheel check passing in `v0.5.1rc38` (run `39314208147`).
+   Project applicability evidence remains open.
    Any first-party path contract still needs native netlist
    evidence and a project-authored requirement map before implementation. The
    other domain-specific cohort families above remain conditional research
