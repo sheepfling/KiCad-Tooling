@@ -357,6 +357,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py",
             "tests/test_design_lint_mcp_parity_pcb_dru_severity_exclusion.py",
             "tests/test_design_lint_mcp_parity_pcb_drc_global_severity_review.py",
+            "tests/test_design_lint_mcp_parity_pcb_drc_global_warning_review.py",
             "tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py",
         }
     ),

@@ -116,6 +116,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic native DRC check explicitly declares Ignore.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
     )
+    warning_core_check = Candidate(
+        rule_id="pcb.core_drc_check_warning",
+        subject="projects/synthetic/controller.kicad_pro#unconnected_items",
+        message="Synthetic Error-default DRC check is configured as Warning.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
+    )
     persisted_drc_exclusion = Candidate(
         rule_id="pcb.drc_exclusion_present",
         subject="projects/synthetic/controller.kicad_pro#drc-exclusion/" + "a" * 64,
@@ -134,6 +140,10 @@ def pcb_rule_ids() -> set[str]:
         DesignLintPolicy(),
         pcb_component_inventory_coverage=inventory,
         pcb_dru_rule_candidates=(ignored_rule, excluded_custom_rule),
-        pcb_native_drc_candidates=(ignored_core_check, persisted_drc_exclusion),
+        pcb_native_drc_candidates=(
+            ignored_core_check,
+            warning_core_check,
+            persisted_drc_exclusion,
+        ),
     )
     return {finding.rule_id for finding in report.findings}

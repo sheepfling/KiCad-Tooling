@@ -46,19 +46,25 @@ class _PcbProjectSettings(BaseModel):
     board: _PcbProjectBoard | None = None
 
 
-def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:
-    """Return supported core DRC checks explicitly set to ``ignore``.
-
-    Only connection, shorting, and clearance checks with Error defaults in the
-    KiCad 10 PCB Editor reference manual are included. Other checks can
-    legitimately default to Ignore and are deliberately outside this rule.
-    """
+def configured_core_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
+    """Return explicit severities for the bounded core electrical DRC checks."""
     project = parse_model_text(document, _PcbProjectSettings)
     if project.board is None or project.board.design_settings is None:
         return ()
     severities = project.board.design_settings.rule_severities or {}
     return tuple(
-        check_id for check_id in sorted(CORE_DRC_CHECK_IDS) if severities.get(check_id) == "ignore"
+        (check_id, severity)
+        for check_id in sorted(CORE_DRC_CHECK_IDS)
+        if (severity := severities.get(check_id)) is not None
+    )
+
+
+def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:
+    """Return supported core DRC checks explicitly set to ``ignore``."""
+    return tuple(
+        check_id
+        for check_id, severity in configured_core_drc_check_severities(document)
+        if severity == "ignore"
     )
 
 

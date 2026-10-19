@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 124 active rules. They
+`synthetic_validated`; the catalog currently contains 125 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2633,6 +2633,25 @@ settings are in
 [`tests/fixtures/design_lint/pcb-core-drc-disabled/`](../tests/fixtures/design_lint/pcb-core-drc-disabled/README.md).
 
 [kicad-10-drc]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration
+
+## Review Error-default core DRC checks downgraded to Warning
+
+`pcb.core_drc_check_warning` prompts when a KiCad 10.x PCB project's
+source-hashed `.kicad_pro` sets one of five Error-default core DRC checks to
+`warning`: `unconnected_items`, `shorting_items`, `tracks_crossing`,
+`clearance`, or `copper_edge_clearance`. The finding records the exact settings
+file hash, check ID, configured severity, and project KiCad version. Its
+default mode is `review`; projects may use `block`, `off`, or exact-fingerprint
+ignore.
+
+Warning findings remain visible in DRC. The prompt asks whether lowering the
+severity of an Error-default check was intentional; it does not claim the
+board is defective or that Warning is unacceptable for every project. Other
+core DRC checks and custom-rule severities remain outside this bounded rule.
+KiCad's [DRC reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)
+lists the covered checks and their Error defaults. The source-bound synthetic
+fixtures are documented in
+[`tests/fixtures/design_lint/pcb-core-drc-warning/`](../tests/fixtures/design_lint/pcb-core-drc-warning/README.md).
 
 ## Review persisted per-violation PCB DRC exclusions
 

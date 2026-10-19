@@ -1,0 +1,15 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "clearance": "error",
+        "copper_edge_clearance": "error",
+        "missing_courtyard": "warning",
+        "shorting_items": "error",
+        "tracks_crossing": "error",
+        "unconnected_items": "error"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}
