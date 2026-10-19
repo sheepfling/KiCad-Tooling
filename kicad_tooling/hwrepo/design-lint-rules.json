@@ -120,7 +120,8 @@
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_peer_pins.test_generic_connector_outlier_order_is_stable_and_completion_clears_it",
         "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering",
-        "tests.test_connector_part_id_peers.test_part_id_alias_findings_are_stable_under_mapping_order"
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_are_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_connector_peers.test_connector_peer_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_peer_pin_findings.py#connector_peer_pin_assignment_outliers",
@@ -180,7 +181,8 @@
         "tests.test_design_lint_connector_peer_pins.test_peer_pin_divergence_order_is_stable_and_agreement_clears_it",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering",
-        "tests.test_connector_part_id_peers.test_part_id_alias_findings_are_stable_under_mapping_order"
+        "tests.test_connector_part_id_peers.test_part_id_alias_findings_are_stable_under_mapping_order",
+        "tests.test_design_lint_determinism_connector_peers.test_connector_peer_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_peer_pin_findings.py#connector_peer_pin_assignment_divergences",
