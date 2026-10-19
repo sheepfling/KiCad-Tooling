@@ -37,12 +37,13 @@ class PowerPathEndpointRequirement(StrictModel):
                 "Power-path endpoint part ID, pin function, and electrical type must be supplied together"
             )
         if self.role == "current_controlled_sink":
-            if not all(item is not None for item in exact_signature):
+            electrical_type = self.pin_electrical_type
+            if self.part_id is None or self.pin_function is None or electrical_type is None:
                 raise ValueError(
                     "A current-controlled sink endpoint requires exact part ID, pin function, "
                     "and electrical type evidence"
                 )
-            if self.pin_electrical_type.casefold() not in {
+            if electrical_type.casefold() not in {
                 "output",
                 "bidirectional",
                 "tri_state",

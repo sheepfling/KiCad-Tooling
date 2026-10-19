@@ -150,3 +150,17 @@ def test_current_sink_role_requires_complete_source_bound_pin_identity() -> None
             net="LED_SINK",
             role="current_controlled_sink",
         )
+
+
+def test_current_sink_role_rejects_missing_native_electrical_type() -> None:
+    with pytest.raises(ValidationError, match="must be supplied together"):
+        PowerPathEndpointRequirement(
+            reference="U1",
+            pin="U1.1",
+            symbol="Synthetic:CurrentSink",
+            footprint="Synthetic:QFN",
+            net="LED_SINK",
+            role="current_controlled_sink",
+            part_id="EXACT_PART",
+            pin_function="LED_SINK",
+        )
