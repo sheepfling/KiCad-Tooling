@@ -204,20 +204,21 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, group only exact nonempty value and footprint matches with complete identical pin inventories and identical nonempty per-pin native function and electrical-type metadata. Compare only fitted peers within the same current source-matched peer_assignment_group when all peers have one; otherwise compare the unscoped group. For each pin, require exactly one native net assignment for every peer in the scope. A generic Pin_N contact whose assigned nets differ is a REVIEW candidate only when another pin in that same scope has one exact common assigned net.",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, group only exact nonempty value and footprint matches with complete identical pin inventories and identical nonempty per-pin native function and electrical-type metadata. Compare only fitted peers within the same current source-matched peer_assignment_group when all peers have one; otherwise compare the unscoped group. For each pin, require exactly one native net assignment for every peer in the scope. A generic Pin_N or numeric-only pin-function contact whose assigned nets differ is a REVIEW candidate only when another pin in that same scope has one exact common assigned net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Equal value, footprint, pin inventory, and symbol metadata are similarity clues only; they do not prove the connector aliases share an electrical role or that any differing nets should be tied.",
         "The rule requires complete identical pin inventories and matching nonempty per-pin native function and electrical-type metadata. Missing or inconsistent evidence leaves the candidate group incomplete and produces no finding.",
-        "Only generic contacts are reported. Meaningful pin functions remain with the named connector-role checks. Each compared pin must have exactly one native net assignment; open and ambiguous contacts are recorded as incomplete coverage, not treated as divergence.",
+        "Only generic contacts are reported; Pin_N and numeric-only native function labels are generic, while meaningful pin functions remain with named connector-role checks. Each compared pin must have exactly one native net assignment; open and ambiguous contacts are recorded as incomplete coverage, not treated as divergence.",
         "At least one other pin in the same peer scope must have one exact common net assignment. This anchor reduces unrelated-port prompts but can miss connectors whose intended common return or supply is also split.",
         "Current source-matched peer-assignment groups scope comparisons; an incomplete or stale group mapping falls back to an unscoped review. DNP instances and PART_ID-bearing components are excluded.",
         "Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. Other aliases can evade scanning. The finding does not establish PCB copper continuity or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_connector_footprint_peer_pins.test_generic_assignment_difference_between_footprint_aliases_is_reviewed",
+        "tests.test_connector_footprint_peer_pins.test_numeric_pin_function_difference_is_reviewed_as_generic",
         "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
         "tests.test_ci_hosted_connector_returns.test_footprint_alias_peer_assignments_are_validated_on_pinned_native_versions"
       ],
@@ -252,19 +253,20 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. Compare peers within a current source-matched peer_assignment_group when all peers have one; otherwise retain the unscoped comparison. A generic Pin_N contact assigned on some peers and unassigned on others is a REVIEW candidate only when all assigned peers use one exact net and another pin in that same scope has one exact common-net assignment.",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. Compare peers within a current source-matched peer_assignment_group when all peers have one; otherwise retain the unscoped comparison. A generic Pin_N or numeric-only pin-function contact assigned on some peers and unassigned on others is a REVIEW candidate only when all assigned peers use one exact net and another pin in that same scope has one exact common-net assignment.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Matching symbol metadata, value, footprint, inventory, assignments, and a common anchor are review clues only; they do not prove that peers have the same electrical role or that an open contact must connect.",
         "The rule requires complete identical pin inventories and matching nonempty native pin functions and electrical types. Missing or inconsistent evidence produces a coverage gap, not a finding.",
-        "Only generic contacts are considered. Meaningful pin functions remain with named connector-role checks. Ambiguous assignments and assigned peers split across different nets are not classified as open outliers.",
+        "Only generic contacts are considered; Pin_N and numeric-only native function labels are generic, while meaningful pin functions remain with named connector-role checks. Ambiguous assignments and assigned peers split across different nets are not classified as open outliers.",
         "At least one different pin in the same peer scope must have the same exact assigned net across all peers. This reduces unrelated-port prompts but misses open contacts when no other pin anchors the group.",
         "DNP and PART_ID-bearing components are excluded. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. The finding does not establish PCB copper continuity or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_connector_footprint_peer_open.test_generic_open_contact_on_one_footprint_peer_is_reviewed",
+        "tests.test_connector_footprint_peer_open.test_numeric_open_contact_on_one_footprint_peer_is_reviewed",
         "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
         "tests.test_ci_hosted_connector_returns.test_footprint_alias_open_peer_is_validated_on_pinned_native_versions"
       ],

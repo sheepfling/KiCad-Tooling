@@ -7301,8 +7301,9 @@ is not a reason by itself to expand its scope or change its default policy.
   matching nonempty native pin functions and electrical types. Honor a current
   source-matched peer-assignment group when one is available; otherwise keep
   the comparison unscoped. Every compared pin must have exactly one assigned
-  schematic net. Review a differing generic `Pin_N` contact only when another
-  pin in the same scope has an exact common-net assignment.
+  schematic net. Review a differing generic `Pin_N` or numeric-only native
+  pin-function contact only when another pin in the same scope has an exact
+  common-net assignment.
 - **Boundary:** Equal value, footprint, pin metadata, and a common assigned
   anchor are only a reason to review. They do not prove identical electrical
   roles or require any nets to be tied. Open and ambiguous pins, incomplete
@@ -7311,8 +7312,9 @@ is not a reason by itself to expand its scope or change its default policy.
   functions remain with the existing role checks. The result cannot prove PCB
   copper continuity or off-board wiring.
 - **Evidence:** Tooling-owned synthetic fault and control schematics use
-  distinct symbols with matching passive `Pin_1`/`Pin_2` metadata and no
-  PART_ID. Unit tests cover shared-anchor fault detection, common and named-pin
+  distinct symbols with matching passive pin metadata and no PART_ID. Unit
+  tests cover both `Pin_N` and numeric-only pin-function labels, shared-anchor
+  fault detection, common and named-pin
   controls, incomplete inventory and metadata, open and ambiguous assignments,
   unanchored splits, DNP and PART_ID exclusions, peer-group isolation,
   deterministic ordering, project policy, exact ignores, and CLI/MCP parity.
@@ -7337,8 +7339,9 @@ is not a reason by itself to expand its scope or change its default policy.
   requirements: distinct symbols, exact nonempty value and footprint,
   complete identical pin inventories, and matching nonempty per-pin native
   function and electrical-type metadata. Within the source-matched peer scope
-  when present, review a generic `Pin_N` only if assigned peers share one exact
-  net and a different pin is assigned to one exact common net on every peer.
+  when present, review a generic `Pin_N` or numeric-only native pin-function
+  contact only if assigned peers share one exact net and a different pin is
+  assigned to one exact common net on every peer.
 - **Boundary:** This is a prompt to inspect the pinout. Similar metadata and an
   open peer pin do not establish that the contact is required or should be
   connected. Named pins, ambiguous or split assignments, missing inventory or
@@ -7346,6 +7349,7 @@ is not a reason by itself to expand its scope or change its default policy.
   trigger this rule. Coverage records open but unanchored groups. No copper
   continuity or off-board wiring is established.
 - **Evidence:** Synthetic fault/control schematics and typed netlist cases cover
+  `Pin_N` and numeric-only pin-function labels,
   the anchored open contact, common assignment, all-open and unanchored cases,
   named/incomplete/ineligible peers, stable ordering, policy/ignore behavior,
   CLI/MCP parity, and exact-version native exports for KiCad 10.0.0 and 10.0.5.

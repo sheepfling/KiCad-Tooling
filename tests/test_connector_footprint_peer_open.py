@@ -45,6 +45,22 @@ def test_generic_open_contact_on_one_footprint_peer_is_reviewed() -> None:
     assert alias.open_outlier_finding_count == 1
 
 
+def test_numeric_open_contact_on_one_footprint_peer_is_reviewed() -> None:
+    report = lint_report(
+        peer_netlist(
+            assignments=(("GND", "GND"), ("DATA_A", None)),
+            functions=("1", "7"),
+        )
+    )
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].evidence["pin_function"] == ("7",)
+    assert findings[0].evidence["open_pins"] == ("J2.2",)
+    assert findings[0].evidence["common_anchor_pin_numbers"] == ("1",)
+
+
 def test_common_open_and_unanchored_controls_do_not_prompt() -> None:
     common = lint_report(peer_netlist(assignments=(("GND", "GND"), ("DATA", "DATA"))))
     assert not any(item.rule_id == RULE_ID for item in common.findings)

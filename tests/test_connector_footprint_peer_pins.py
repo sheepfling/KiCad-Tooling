@@ -54,6 +54,21 @@ def test_generic_assignment_difference_between_footprint_aliases_is_reviewed() -
     assert alias.divergence_finding_count == 1
 
 
+def test_numeric_pin_function_difference_is_reviewed_as_generic() -> None:
+    report = lint_report(
+        peer_netlist(
+            assignments=(("GND", "GND"), ("DATA_A", "DATA_B")),
+            functions=("1", "7"),
+        )
+    )
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+
+    assert len(findings) == 1
+    assert findings[0].subject == "Synthetic two-contact connector [Synthetic:Connector_2x1] pin 2"
+    assert findings[0].evidence["assignments"] == ("J1.2=DATA_A", "J2.2=DATA_B")
+    assert findings[0].evidence["pin_function"] == ("7",)
+
+
 def test_common_assignment_and_named_pin_controls_are_quiet() -> None:
     common = lint_report(peer_netlist(assignments=(("GND", "GND"), ("DATA", "DATA"))))
     assert not any(item.rule_id == RULE_ID for item in common.findings)

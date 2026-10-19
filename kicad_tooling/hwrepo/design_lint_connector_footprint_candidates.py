@@ -43,6 +43,7 @@ def connector_footprint_peer_pin_candidates(
                 "value": (item.value,),
                 "footprint": (item.footprint,),
                 "pin_number": (item.pin_number,),
+                "pin_function": (item.pin_function,),
                 "assignments": tuple(
                     f"{pin}={','.join(nets)}" for pin, nets in item.assignments.items()
                 ),
@@ -91,6 +92,7 @@ def _footprint_peer_pin_open_candidates(
                 "value": (item.value,),
                 "footprint": (item.footprint,),
                 "pin_number": (item.pin_number,),
+                "pin_function": (item.pin_function,),
                 "assignments": tuple(
                     f"{pin}={','.join(nets) if nets else '<unassigned>'}"
                     for pin, nets in item.assignments.items()

@@ -7,8 +7,8 @@ from dataclasses import dataclass
 
 from .connector_identity import (
     connector_candidate_references,
-    has_meaningful_pin_function,
     partition_peer_assignments,
+    pin_function_is_generic,
 )
 from .models import NetlistContract
 
@@ -20,6 +20,7 @@ class ConnectorFootprintPeerPinDivergence:
     footprint: str
     value: str
     pin_number: str
+    pin_function: str
     assignments: dict[str, tuple[str, ...]]
     symbols: tuple[str, ...]
     common_anchor_pin_numbers: tuple[str, ...]
@@ -34,6 +35,7 @@ class ConnectorFootprintPeerPinOpenOutlier:
     footprint: str
     value: str
     pin_number: str
+    pin_function: str
     assignments: dict[str, tuple[str, ...]]
     open_pins: tuple[str, ...]
     symbols: tuple[str, ...]
@@ -264,7 +266,7 @@ def scan_connector_footprint_peer_pin_assignments(
                     if (
                         assigned_signatures
                         and len(set(assigned_signatures)) == 1
-                        and not has_meaningful_pin_function(function)
+                        and pin_function_is_generic(function)
                     ):
                         open_peer_pin_group_count += 1
                         generic_open_assignments.append((pin_number, assignments))
@@ -277,11 +279,11 @@ def scan_connector_footprint_peer_pin_assignments(
 
                 different_assignment_pin_group_count += 1
                 function = functions[f"{scope_references[0]}.{pin_number}".casefold()]
-                if has_meaningful_pin_function(function):
-                    non_generic_different_assignment_pin_group_count += 1
-                else:
+                if pin_function_is_generic(function):
                     generic_different_assignment_pin_group_count += 1
                     generic_differences.append((pin_number, assignments))
+                else:
+                    non_generic_different_assignment_pin_group_count += 1
 
             if anchors:
                 common_anchor_group_count += 1
@@ -297,6 +299,9 @@ def scan_connector_footprint_peer_pin_assignments(
                             footprint=footprint_display,
                             value=value_display,
                             pin_number=pin_number,
+                            pin_function=functions[
+                                f"{scope_references[0]}.{pin_number}".casefold()
+                            ],
                             assignments=dict(sorted(assignments.items())),
                             symbols=peer_symbols,
                             common_anchor_pin_numbers=tuple(sorted(anchors)),
@@ -310,6 +315,9 @@ def scan_connector_footprint_peer_pin_assignments(
                             footprint=footprint_display,
                             value=value_display,
                             pin_number=pin_number,
+                            pin_function=functions[
+                                f"{scope_references[0]}.{pin_number}".casefold()
+                            ],
                             assignments=dict(sorted(assignments.items())),
                             open_pins=tuple(pin for pin, nets in assignments.items() if not nets),
                             symbols=peer_symbols,

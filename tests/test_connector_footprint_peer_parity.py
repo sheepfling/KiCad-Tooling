@@ -41,7 +41,12 @@ RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
 OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
 
 
-def _observed(*, fault: bool, open_peer: bool = False) -> NetlistContract:
+def _observed(
+    *,
+    fault: bool,
+    open_peer: bool = False,
+    functions: tuple[str, str] = ("Pin_1", "Pin_2"),
+) -> NetlistContract:
     components = {
         reference: ComponentContract(
             value="Synthetic two-contact connector",
@@ -63,10 +68,10 @@ def _observed(*, fault: bool, open_peer: bool = False) -> NetlistContract:
         },
         component_pin_numbers={"J1": ("1", "2"), "J2": ("1", "2")},
         pin_functions={
-            "J1.1": "Pin_1",
-            "J1.2": "Pin_2",
-            "J2.1": "Pin_1",
-            "J2.2": "Pin_2",
+            "J1.1": functions[0],
+            "J1.2": functions[1],
+            "J2.1": functions[0],
+            "J2.2": functions[1],
         },
         pin_electrical_types={
             "J1.1": "passive",
@@ -135,13 +140,16 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for fault, open_peer, rule_id, expected_status, expected_findings in (
-        (True, False, RULE_ID, "REVIEW", 1),
-        (False, False, RULE_ID, "PASS", 0),
-        (False, True, OPEN_RULE_ID, "REVIEW", 1),
-        (False, False, OPEN_RULE_ID, "PASS", 0),
+    for fault, open_peer, functions, rule_id, expected_status, expected_findings in (
+        (True, False, ("Pin_1", "Pin_2"), RULE_ID, "REVIEW", 1),
+        (False, False, ("Pin_1", "Pin_2"), RULE_ID, "PASS", 0),
+        (False, True, ("Pin_1", "Pin_2"), OPEN_RULE_ID, "REVIEW", 1),
+        (False, False, ("Pin_1", "Pin_2"), OPEN_RULE_ID, "PASS", 0),
+        (True, False, ("1", "7"), RULE_ID, "REVIEW", 1),
+        (False, False, ("1", "7"), RULE_ID, "PASS", 0),
+        (False, True, ("1", "7"), OPEN_RULE_ID, "REVIEW", 1),
     ):
-        observed = _observed(fault=fault, open_peer=open_peer)
+        observed = _observed(fault=fault, open_peer=open_peer, functions=functions)
         netlist_path.write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
         write_model(
             summary_path,
