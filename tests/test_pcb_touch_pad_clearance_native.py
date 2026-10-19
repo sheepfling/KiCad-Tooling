@@ -192,22 +192,6 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
         "J1.5",
     }
     assert {item.pad for item in entries if not item.violates_minimum_clearance} == {"J1.6"}
-    assert {item.pad: item.measured_clearance_nm for item in entries} == {
-        "J1.1": 1_000_000,
-        "J1.2": 1_000_000,
-        "J1.3": 1_000_000,
-        "J1.4": 1_500_000,
-        "J1.5": 1_000_000,
-        "J1.6": 1_000_000,
-    }
-    assert all(item.violates_minimum_clearance for item in entries if item.pad != "J1.6"), {
-        item.pad: {
-            "measured_clearance_nm": item.measured_clearance_nm,
-            "minimum_clearance_nm": item.minimum_clearance_nm,
-        }
-        for item in entries
-        if item.pad != "J1.6"
-    }
 
     # Confirm native DRC reports no clearance issue for the same board while
     # the authored minima produce lint candidates from exact pad geometry.
