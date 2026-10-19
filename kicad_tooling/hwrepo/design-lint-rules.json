@@ -4652,7 +4652,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_population_mismatch.test_population_comparison_is_order_independent_and_requires_schema_12",
-        "tests.test_pcb_variant_population_capture.test_variant_capture_blocks_source_changes_during_exports"
+        "tests.test_pcb_variant_population_capture.test_variant_capture_blocks_source_changes_during_exports",
+        "tests.test_design_lint_determinism_pcb_dnp.test_dnp_mismatch_directions_and_fitted_control_are_source_bound_and_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

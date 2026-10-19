@@ -16,6 +16,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_touch_pad_clearance",
     "pcb_required_fitted_reference",
     "pcb_board_only_footprints",
+    "pcb_dnp_mismatch",
     "pcb_measurements",
     "interfaces",
     "analog",

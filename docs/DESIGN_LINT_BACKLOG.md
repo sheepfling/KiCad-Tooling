@@ -2769,8 +2769,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v65. The cross-process probe supports themed report
-  selectors and retains the complete 181-report inventory gate. Fault/control
+- **Status:** Implemented v66. The cross-process probe supports themed report
+  selectors and retains the complete 184-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2798,7 +2798,9 @@ is not a reason by itself to expand its scope or change its default policy.
   source-bound synthetic PCB return-copper disconnect/control checks, a
   same-net split-plane fault/control pair, and a DNP net-tie fault against a
   fitted, explicitly bonded-return control, plus an unstitched front/back
-  return-plane fault and through-via control.
+  return-plane fault and through-via control. The v66 extension adds both
+  schematic/PCB DNP mismatch directions and a fitted control to the three-
+  process source-bound report comparison; the rule remains REVIEW.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -6439,6 +6441,10 @@ is not a reason by itself to expand its scope or change its default policy.
   independent review is still needed to measure whether a finding is
   actionable; no reviewer-time or field-precision claim is made. No project
   source or proprietary fixture is stored.
+- **Determinism:** LINT-080 compares both base DNP mismatch directions against
+  a matching fitted control across three isolated processes. The complete
+  reports retain the schematic netlist, PCB snapshot, and board source hashes;
+  the check remains a CAD-state consistency review, not assembly approval.
 - **Next:** Keep the default at REVIEW. Board-only footprint coverage is tracked
   separately by LINT-129; evaluate explicitly required fitted-reference
   coverage without inferring assembly intent from component similarity alone.
