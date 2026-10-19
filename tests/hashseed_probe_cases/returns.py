@@ -7,6 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
+from kicad_tooling.hwrepo.contracts import model_json_bytes
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.electrical import grounding_checks, pin_relationship_checks
 from kicad_tooling.hwrepo.models import (
@@ -43,7 +44,7 @@ def reviewed_connector_return_report(*, common_return: bool) -> dict[str, object
         interface_catalog_sha256="b" * 64,
         inventory_review=inventory_review(),
     )
-    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    netlist_sha256 = hashlib.sha256(model_json_bytes(observed)).hexdigest()
     report = evaluate(
         "synthetic-reviewed-return-common" if common_return else "synthetic-reviewed-return-split",
         coach(observed, netlist_sha256),
@@ -191,6 +192,27 @@ def unconnected_pin_inventory_check_result() -> dict[str, object]:
     return results
 
 
+def numbered_pwm_return_report(*, common: bool) -> dict[str, object]:
+    """Serialize the spaced PWM return-name fault or its common-net control."""
+    observed = four_db9_return_domains(common=common)
+    nets = (
+        {"0V PWM": tuple(f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9))}
+        if common
+        else {
+            f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9")
+            for reference in range(1, 5)
+        }
+    )
+    observed = observed.model_copy(update={"nets": nets})
+    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    report = evaluate(
+        "synthetic-four-db9-pwm-common" if common else "synthetic-four-db9-pwm-split",
+        coach(observed, netlist_sha256),
+        DesignLintPolicy(),
+    )
+    return report.model_dump(mode="json")
+
+
 def report_cases() -> dict[str, object]:
     return {
         "parsed_netlist_pin_metadata": parsed_netlist_pin_metadata(),
@@ -204,6 +226,8 @@ def report_cases() -> dict[str, object]:
             coach(four_db9_return_domains(common=True)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
+        "pwm_numbered_return_fault": numbered_pwm_return_report(common=False),
+        "pwm_common_return_control": numbered_pwm_return_report(common=True),
         "letter_suffixed_unindexed_return_fault": return_net_lint_report(
             ("GNDA", "GNDD")
         ).model_dump(mode="json"),

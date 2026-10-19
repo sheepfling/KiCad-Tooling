@@ -2840,7 +2840,8 @@
         "tests.test_design_lint_numbered_returns.test_numbered_return_fingerprint_is_stable_under_mapping_reordering",
         "tests.test_design_lint_numbered_returns.test_unrelated_component_does_not_change_numbered_return_fingerprint",
         "tests.test_design_lint_numbered_returns.test_numbered_return_ignore_keeps_exact_scope",
-        "tests.test_design_lint_numbered_returns.test_repeated_pin_ignore_does_not_hide_numbered_return_review"
+        "tests.test_design_lint_numbered_returns.test_repeated_pin_ignore_does_not_hide_numbered_return_review",
+        "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"

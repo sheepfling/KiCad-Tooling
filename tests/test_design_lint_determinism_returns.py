@@ -34,6 +34,18 @@ def test_return_and_ground_reports_remain_deterministic() -> None:
     }
     assert reports["common_control"]["status"] == "PASS"
     assert reports["common_control"]["findings"] == []
+    pwm_fault = reports["pwm_numbered_return_fault"]
+    pwm_control = reports["pwm_common_return_control"]
+    assert pwm_fault["status"] == "REVIEW"
+    assert pwm_control["status"] == "PASS"
+    assert pwm_fault["netlist_sha256"] != pwm_control["netlist_sha256"]
+    pwm_return_finding = next(
+        finding for finding in pwm_fault["findings"] if finding["rule_id"] == "net.numbered_returns"
+    )
+    assert pwm_return_finding["evidence"] == {
+        f"0V PWM {reference}": [f"J{reference}.7", f"J{reference}.9"] for reference in range(1, 5)
+    }
+    assert pwm_control["findings"] == []
     suffix_fault = reports["letter_suffixed_unindexed_return_fault"]
     assert suffix_fault["status"] == "REVIEW"
     assert "net.return_labels_without_pin_roles" in {
