@@ -74,6 +74,7 @@ def test_exact_minimum_and_parallel_caps_are_valid_controls() -> None:
     (
         (ic_decoupling_netlist(return_net="GND_ALT"), "C1.2"),
         (ic_decoupling_netlist(dnp_references=("C1",)), "DNP"),
+        (ic_decoupling_netlist(dnp_references=("U1",)), "U1 is DNP"),
         (ic_decoupling_netlist(("Cload",)), "not a supported capacitance"),
         (ic_decoupling_netlist(capacitor_symbol="Device:R"), "symbol is Device:R"),
         (ic_decoupling_netlist(ic_value="Different IC"), "U1 value is Different IC"),
@@ -153,7 +154,10 @@ def test_ic_decoupling_rule_obeys_review_block_off_and_exact_ignore() -> None:
             }
         ),
     )
-    assert next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition == "RULE_OFF"
+    assert (
+        next(item for item in disabled.findings if item.rule_id == RULE_ID).disposition
+        == "RULE_OFF"
+    )
 
     ignored = evaluate(
         "synthetic-ic-decoupling-policy",
@@ -170,7 +174,9 @@ def test_ic_decoupling_rule_obeys_review_block_off_and_exact_ignore() -> None:
             }
         ),
     )
-    assert next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    assert (
+        next(item for item in ignored.findings if item.rule_id == RULE_ID).disposition == "IGNORED"
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -198,7 +204,9 @@ def test_ic_decoupling_map_rejects_ambiguous_component_and_pin_mappings() -> Non
             ),
         )
     with pytest.raises(ValidationError, match="unique"):
-        IcDecouplingMap(requirements=(
-            ic_decoupling_map().requirements[0],
-            ic_decoupling_map().requirements[0],
-        ))
+        IcDecouplingMap(
+            requirements=(
+                ic_decoupling_map().requirements[0],
+                ic_decoupling_map().requirements[0],
+            )
+        )

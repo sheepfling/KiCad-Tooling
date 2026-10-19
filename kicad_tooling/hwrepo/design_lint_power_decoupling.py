@@ -35,7 +35,9 @@ def _component_identity_issues(
     if expected_value is not None and component.value != expected_value:
         issues.append(f"{reference} value is {component.value}; expected {expected_value}")
     if component.footprint != expected_footprint:
-        issues.append(f"{reference} footprint is {component.footprint}; expected {expected_footprint}")
+        issues.append(
+            f"{reference} footprint is {component.footprint}; expected {expected_footprint}"
+        )
     if symbol != expected_symbol:
         issues.append(f"{reference} symbol is {symbol}; expected {expected_symbol}")
     return issues
@@ -60,9 +62,7 @@ def _component_pin_inventory_issues(
     return []
 
 
-def _pin_assignment_issue(
-    pin_nets: dict[str, set[str]], pin: str, expected_net: str
-) -> str | None:
+def _pin_assignment_issue(pin_nets: dict[str, set[str]], pin: str, expected_net: str) -> str | None:
     actual = tuple(sorted(pin_nets.get(pin.casefold(), ()), key=str.casefold))
     if actual != (expected_net,):
         rendered = ", ".join(actual) if actual else "unassigned"
@@ -106,6 +106,10 @@ def _requirement_issues(
         issues.append(power_net_issue)
 
     dnp = {reference.casefold() for reference in observed.dnp_components}
+    if requirement.ic_reference.casefold() in dnp:
+        issues.append(
+            f"{requirement.ic_reference} is DNP and the mapped decoupling requirement does not apply"
+        )
     cap_values: list[tuple[str, Decimal | None]] = []
     for capacitor in sorted(requirement.capacitors, key=lambda item: item.reference.casefold()):
         cap_issues = _component_identity_issues(
@@ -130,7 +134,9 @@ def _requirement_issues(
                     f"{capacitor.reference} value {component.value} is not a supported capacitance"
                 )
         if capacitor.reference.casefold() in dnp:
-            cap_issues.append(f"{capacitor.reference} is DNP and does not count as fitted capacitance")
+            cap_issues.append(
+                f"{capacitor.reference} is DNP and does not count as fitted capacitance"
+            )
         cap_issues.extend(
             _component_pin_inventory_issues(
                 observed,

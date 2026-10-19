@@ -5126,12 +5126,13 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each project-authored IC power-pin requirement, verify the exact IC identity, mapped power-pin type and net, and every fitted two-pin capacitor identity, passive pin inventory, pin type, and power/return net assignment. Parse the mapped capacitors' nominal values with the bounded capacitance parser, sum them in pF, and report when the sum is below the independently authored inclusive minimum.",
+      "predicate": "For each project-authored IC power-pin requirement, verify the exact fitted IC identity, mapped power-pin type and net, and every fitted two-pin capacitor identity, passive pin inventory, pin type, and power/return net assignment. Parse the mapped capacitors' nominal values with the bounded capacitance parser, sum them in pF, and report when the sum is below the independently authored inclusive minimum.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The project must explicitly map the IC identity, one power pin and net, one return net, every capacitor counted toward the requirement, a positive minimum, and the source basis. No IC, rail, capacitor, or threshold is inferred.",
+        "A mapped IC marked DNP is a stale requirement and produces a REVIEW mapping finding; its capacitor total is not evaluated.",
         "Only fitted, exact two-pin capacitors with explicitly supported nominal value spellings count. The result does not apply tolerance, DC-bias derating, voltage rating, temperature behavior, placement, current demand, transient response, or PCB return-path evidence.",
         "A passing result establishes only the authored nominal schematic comparison. It does not establish that the source basis is correct, that the map covers every relevant IC pin, or that the physical design meets an electrical requirement."
       ],

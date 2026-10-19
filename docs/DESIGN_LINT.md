@@ -4749,13 +4749,14 @@ inferred from a design:
 ```
 
 For each mapped requirement, the check verifies exact component identity,
-power-pin type and assignment, capacitor identity, fitted state, exact two-pin
-inventory, passive pin types, and supply/return assignments. It parses explicit
-capacitance units, sums mapped nominal values in pF, and reviews a total below
-the authored inclusive minimum. Stale identity or topology also produces a
-review before a capacitance comparison can be relied on. Findings default to
-`REVIEW`; the normal rule override and exact-fingerprint ignore lifecycle
-applies.
+IC fitted state, power-pin type and assignment, capacitor identity and fitted
+state, exact two-pin inventory, passive pin types, and supply/return
+assignments. A mapped DNP IC is a stale requirement: it produces `REVIEW` and
+does not evaluate the capacitor total. The check parses explicit capacitance
+units, sums mapped nominal values in pF, and reviews a total below the authored
+inclusive minimum. Stale identity or topology also produces a review before a
+capacitance comparison can be relied on. Findings default to `REVIEW`; the
+normal rule override and exact-fingerprint ignore lifecycle applies.
 
 The example values are synthetic and are not design guidance. The check does
 not choose a universal capacitor value, discover missing map entries, validate

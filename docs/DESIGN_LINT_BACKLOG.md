@@ -7397,11 +7397,12 @@ is not a reason by itself to expand its scope or change its default policy.
   continues to cover selected capacitor-presence prompts; LINT-020 handles its
   separately mapped PCB placement question.
 - **Evidence:** Tooling-owned synthetic tests cover the below-minimum fault,
-  exact inclusive boundary, summed parallel capacitors, identity/topology/DNP
-  faults, unsupported values, stable ordering, project policy, and exact
-  ignores. CLI/MCP parity exercises the same fault and control. Source-backed
-  KiCad 10.0.0/10.0.5 fixtures are coded for a synthetic 47 nF fault and 100
-  nF control; hosted exact-version acceptance remains pending. These values
+  exact inclusive boundary, summed parallel capacitors, identity/topology,
+  DNP-capacitor and DNP-IC mapping faults, unsupported values, stable ordering,
+  project policy, and exact ignores. CLI/MCP parity exercises the same fault
+  and control. Source-backed KiCad 10.0.0/10.0.5 fixtures include the
+  DNP-IC case alongside a synthetic 47 nF fault and 100 nF control; hosted
+  exact-version acceptance remains pending. These values
   are test boundaries only, not recommended design limits. No project source
   or cohort fixture is imported.
 - **Focused selection:**

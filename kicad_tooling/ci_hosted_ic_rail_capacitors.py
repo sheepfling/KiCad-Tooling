@@ -55,6 +55,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-below-minimum": "source-backed-below-minimum.kicad_sch",
         "source-backed-no-cap": "source-backed-no-cap.kicad_sch",
         "source-backed-dnp-capacitor": "source-backed-dnp-capacitor.kicad_sch",
+        "source-backed-dnp-ic": "source-backed-dnp-ic.kicad_sch",
         "custom-capacitor-role-control": "custom-capacitor-role-control.kicad_sch",
         "custom-capacitor-role-wrong-return": "custom-capacitor-role-wrong-return.kicad_sch",
     }
@@ -154,6 +155,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-below-minimum": set(),
         "source-backed-no-cap": {("+3V3", ("U1.1",), ("U1",))},
         "source-backed-dnp-capacitor": {("+3V3", ("U1.1",), ("U1",))},
+        "source-backed-dnp-ic": set(),
         "custom-capacitor-role-control": set(),
         "custom-capacitor-role-wrong-return": {("+3V3", ("U1.1",), ("U1",))},
     }
@@ -166,6 +168,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-below-minimum": set(),
         "source-backed-no-cap": {"+3V3: IC supply decoupling review"},
         "source-backed-dnp-capacitor": {"+3V3: IC supply decoupling review"},
+        "source-backed-dnp-ic": set(),
         "custom-capacitor-role-control": set(),
         "custom-capacitor-role-wrong-return": {"+3V3: IC supply decoupling review"},
     }
@@ -178,6 +181,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-below-minimum": set(),
         "source-backed-no-cap": set(),
         "source-backed-dnp-capacitor": set(),
+        "source-backed-dnp-ic": set(),
         "custom-capacitor-role-control": set(),
         "custom-capacitor-role-wrong-return": set(),
     }
@@ -318,6 +322,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 "source-backed-below-minimum",
                 "source-backed-no-cap",
                 "source-backed-dnp-capacitor",
+                "source-backed-dnp-ic",
                 "custom-capacitor-role-control",
                 "custom-capacitor-role-wrong-return",
             }:
@@ -332,6 +337,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                     raise ValueError(
                         f"Native {case} did not preserve the capacitor population state"
                     )
+                if (case == "source-backed-dnp-ic") != ("U1" in observed.dnp_components):
+                    raise ValueError(f"Native {case} did not preserve the IC population state")
             if case.startswith("custom-capacitor-role-"):
                 component = observed.components.get("C1")
                 if (
@@ -367,7 +374,11 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 netlist_sha256=raw_hashes[(case, run)],
             )
             reports[(case, run)] = evaluate(project_id, coach, policy)
-            if case in {"source-backed-minimum-control", "source-backed-below-minimum"}:
+            if case in {
+                "source-backed-minimum-control",
+                "source-backed-below-minimum",
+                "source-backed-dnp-ic",
+            }:
                 ic_decoupling_results[(case, run)] = source_backed_ic_decoupling_result(
                     observed,
                     project_id=project_id,
@@ -385,7 +396,11 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         for case in cases
     ):
         raise ValueError("Native IC power-rail ERC reports differ after normalization")
-    for case in ("source-backed-minimum-control", "source-backed-below-minimum"):
+    for case in (
+        "source-backed-minimum-control",
+        "source-backed-below-minimum",
+        "source-backed-dnp-ic",
+    ):
         if ic_decoupling_results[(case, "first")] != ic_decoupling_results[(case, "repeat")]:
             raise ValueError(f"Native {case} decoupling findings differ between repeated exports")
     for case in cases:
@@ -444,9 +459,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
             power_pin_not_driven=("true" if case in expected_power_pin_not_driven else "false"),
             lint_status=reports[(case, "first")].status,
             capacitor_findings=";".join(sorted(findings)) or "none",
-            ic_decoupling_status=ic_decoupling_results.get(
-                (case, "first"), ("not_run", ())
-            )[0],
+            ic_decoupling_status=ic_decoupling_results.get((case, "first"), ("not_run", ()))[0],
             ic_decoupling_findings=(
                 ";".join(ic_decoupling_results[(case, "first")][1])
                 if (case, "first") in ic_decoupling_results

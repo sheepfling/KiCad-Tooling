@@ -14,6 +14,7 @@ They do not represent a product board and contain no proprietary source.
 | `source-backed-below-minimum.kicad_sch`        | Same exact mapped topology, with nominal `C1` at 47 nF.                                                                        | Synthetic LINT-136 below-minimum fault.                                       |
 | `source-backed-no-cap.kicad_sch`               | `U1.1` and synthetic `power_out` pin `U2.1` share `+3V3`; no capacitor is present.                                              | Native ERC / LINT-046 comparison; cohort flags missing decoupling.             |
 | `source-backed-dnp-capacitor.kicad_sch`        | `U1.1`, `U2.1`, and DNP `C1.1` share `+3V3`; `C1.2` connects to `GND`.                                                          | LINT-046 DNP regression; kicad_skills treats the unpopulated part as coverage. |
+| `source-backed-dnp-ic.kicad_sch`               | Mapped `U1.1` and fitted `C1` match the 100 nF requirement, but `U1` is DNP.                                                    | LINT-136 reports the requirement as stale; the cap total is not evaluated.     |
 | `custom-capacitor-role-control.kicad_sch`      | Exact opaque `Vendor:CAP123` identity is on `+3V3` and `GND`; `PART_ID`, footprint, and passive pins `1`/`2` are explicit.      | LINT-091 exact project-role control.                                           |
 | `custom-capacitor-role-wrong-return.kicad_sch` | Same exact opaque identity, with `C1.2` on unrecognized `CAP_REF`.                                                              | LINT-091 mapped-but-incomplete topology fault.                                 |
 
@@ -27,6 +28,7 @@ They do not represent a product board and contain no proprietary source.
 | `source-backed-below-minimum.kicad_sch`        | `e52e3a9f920c823f05df1ac4293019b39b200ba67bba85c6920afb7af28b46d6` |
 | `source-backed-no-cap.kicad_sch`               | `5db3396470f1e3b8101e428dc25b41c4166f1748e4a68ad88a3ac2757173952a` |
 | `source-backed-dnp-capacitor.kicad_sch`        | `8184bd9c297b40d0192af1e446206939ec7d5466bc8e306a0292472da7424b6c` |
+| `source-backed-dnp-ic.kicad_sch`               | `2c2604a13e52edd20b2e41beab5504a5f8380a59d3f6f95a52907e21cb796bd6` |
 | `custom-capacitor-role-control.kicad_sch`      | `338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d` |
 | `custom-capacitor-role-wrong-return.kicad_sch` | `52edf68703b6fc4052fbb7197778108fc52c0a4ac4195bd533a1d1aaead8669a` |
 

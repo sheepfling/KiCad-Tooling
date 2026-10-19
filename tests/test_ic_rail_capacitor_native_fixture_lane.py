@@ -48,6 +48,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "source-backed-below-minimum": "e52e3a9f920c823f05df1ac4293019b39b200ba67bba85c6920afb7af28b46d6",
         "source-backed-no-cap": "5db3396470f1e3b8101e428dc25b41c4166f1748e4a68ad88a3ac2757173952a",
         "source-backed-dnp-capacitor": "8184bd9c297b40d0192af1e446206939ec7d5466bc8e306a0292472da7424b6c",
+        "source-backed-dnp-ic": "2c2604a13e52edd20b2e41beab5504a5f8380a59d3f6f95a52907e21cb796bd6",
         "custom-capacitor-role-control": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
         "custom-capacitor-role-wrong-return": "52edf68703b6fc4052fbb7197778108fc52c0a4ac4195bd533a1d1aaead8669a",
     }
@@ -63,6 +64,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
             "REVIEW",
             {"+3V3: IC supply decoupling review"},
         ),
+        "source-backed-dnp-ic": ("PASS", set()),
         "custom-capacitor-role-control": ("PASS", set()),
         "custom-capacitor-role-wrong-return": (
             "REVIEW",
@@ -78,6 +80,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "source-backed-below-minimum": "none",
         "source-backed-no-cap": "none",
         "source-backed-dnp-capacitor": "none",
+        "source-backed-dnp-ic": "none",
         "custom-capacitor-role-control": "none",
         "custom-capacitor-role-wrong-return": "none",
     }
@@ -112,6 +115,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "ic-rail-cap-fixture/source-backed-below-minimum",
         "ic-rail-cap-fixture/source-backed-no-cap",
         "ic-rail-cap-fixture/source-backed-dnp-capacitor",
+        "ic-rail-cap-fixture/source-backed-dnp-ic",
         "ic-rail-cap-fixture/custom-capacitor-role-control",
         "ic-rail-cap-fixture/custom-capacitor-role-wrong-return",
     }
@@ -167,5 +171,10 @@ def test_missing_capacitor_and_controls_export_repeatably(
     )
     assert (
         results["ic-rail-cap-fixture/source-backed-below-minimum"]["ic_decoupling_findings"]
+        == "synthetic-u1-vdd-decoupling: U1.1"
+    )
+    assert results["ic-rail-cap-fixture/source-backed-dnp-ic"]["ic_decoupling_status"] == "REVIEW"
+    assert (
+        results["ic-rail-cap-fixture/source-backed-dnp-ic"]["ic_decoupling_findings"]
         == "synthetic-u1-vdd-decoupling: U1.1"
     )
