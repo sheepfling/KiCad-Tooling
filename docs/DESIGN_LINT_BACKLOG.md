@@ -11967,11 +11967,12 @@ it does not claim field validation or effectiveness against private boards.
   topology used by the public status-LED training examples. The public project
   files remain in their template repository; this regression uses only the
   minimal tooling-owned synthetic netlist.
-  A ninth synthetic schematic now covers a constant-current-sink LED path.
-  The native lane checks the unmapped prompt, then requires the exact mapped
-  driver `PART_ID`/pin signature and LED A-to-K path to match before that
-  prompt is suppressed; local native execution remains pending the pinned CI
-  lane.
+  Two additional synthetic schematics cover single- and two-channel
+  current-controlled sink LED paths. The native lane checks the unmapped
+  prompts, then requires each exact mapped driver `PART_ID`/pin signature and
+  LED A-to-K path to match before those prompts are suppressed; local native
+  execution remains pending the pinned CI lane. A partial map is covered by a
+  typed regression and leaves its unlisted LED channel reviewable.
 - **Public-template applicability check (2026-10-01):** The clean public
   KiCad-Team-Workflow-Template checkout at
   `ed89536f0dbbcb013145af2994fef41b2250143e` documents its Arduino status LED
@@ -12921,7 +12922,7 @@ design.
 | Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                        | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                       | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                              |
 | Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts       | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.  | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings. |
 | Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps         | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.     | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                             |
-| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | First step implemented in the existing explicit power map: a synthetic constant-current-sink endpoint can suppress only its exact `Device:LED` A-to-K path after source-bound identity and connectivity match. Extend to multi-channel maps only with separate fault/control evidence. | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
+| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5. | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
 | Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data. | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                |
 
 #### LINT-133 implementation status: capacitive touch-pad clearance

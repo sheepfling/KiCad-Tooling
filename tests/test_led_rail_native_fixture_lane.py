@@ -49,6 +49,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "custom-direct-output": "2e2d6909d49c5815c5254aea14125ac6243fba0d45307d875c2563d657bc4f7b",
         "custom-series-return-control": "c5a254ead0887da399cd2ace46db4fde8231711abdb602304eac7e1be68ff047",
         "current-sink-output": "642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184",
+        "current-sink-two-channel": "e8640c8799542a499b7b7b1792e03512f114cabc8cd8a1a600059cd593f718c4",
     }
     expected_findings: dict[str, set[str]] = {
         "direct-rails": {"D1: LED directly spans supply and return"},
@@ -60,6 +61,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "custom-direct-output": set(),
         "custom-series-return-control": set(),
         "current-sink-output": set(),
+        "current-sink-two-channel": set(),
     }
     expected_output_findings: dict[str, set[str]] = {
         "direct-rails": set(),
@@ -71,6 +73,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "custom-direct-output": {"D1: LED directly shares an output net and a rail"},
         "custom-series-return-control": set(),
         "current-sink-output": set(),
+        "current-sink-two-channel": set(),
     }
     config = selected_config(root, project)
     assert config.kicad_version == version
@@ -99,6 +102,7 @@ def test_direct_rail_and_output_driven_led_faults_with_series_controls(
         "led-rail-fixture/custom-direct-output",
         "led-rail-fixture/custom-series-return-control",
         "led-rail-fixture/current-sink-output",
+        "led-rail-fixture/current-sink-two-channel",
     }
     assert results["led-rail-fixture/native-export"]["status"] == "PASS"
     for case, expected in expected_findings.items():

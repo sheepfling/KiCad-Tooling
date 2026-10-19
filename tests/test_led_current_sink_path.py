@@ -8,17 +8,14 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import evaluate
-from kicad_tooling.hwrepo.models import (
-    ComponentContract,
-    ContractCoachReport,
-    DesignLintPolicy,
-    NetlistContract,
-)
+from kicad_tooling.hwrepo.models import ContractCoachReport, DesignLintPolicy, NetlistContract
 from kicad_tooling.hwrepo.power_path_models import (
-    PowerPathElementRequirement,
     PowerPathEndpointRequirement,
     PowerPathMap,
-    PowerPathRequirement,
+)
+from tests.design_lint_fixtures.current_sink_led import (
+    current_sink_netlist,
+    current_sink_path_map,
 )
 
 LED_RULE = "component.led_directly_driven_from_output"
@@ -31,85 +28,6 @@ pytestmark = [
     pytest.mark.design_lint_rule(rule_id=LED_RULE),
     pytest.mark.design_lint_rule(rule_id=PATH_RULE),
 ]
-
-
-def current_sink_netlist(*, driver_type: str = "output") -> NetlistContract:
-    return NetlistContract(
-        components={
-            "U1": ComponentContract(
-                value="Synthetic current sink",
-                footprint="Synthetic:QFN",
-                part_id="synthetic-cc-sink",
-            ),
-            "D1": ComponentContract(value="Synthetic LED", footprint="Synthetic:LED"),
-            "U2": ComponentContract(value="Synthetic rail source", footprint="Synthetic:Source"),
-        },
-        nets={
-            "+5V": ("U2.1", "D1.1"),
-            "LED_SINK": ("D1.2", "U1.1"),
-        },
-        component_symbols={
-            "U1": "Synthetic:CurrentSink",
-            "D1": "Device:LED",
-            "U2": "Synthetic:RailSource",
-        },
-        pin_functions={"U1.1": "OUT0", "D1.1": "A", "D1.2": "K", "U2.1": "VOUT"},
-        pin_electrical_types={
-            "U1.1": driver_type,
-            "D1.1": "passive",
-            "D1.2": "passive",
-            "U2.1": "power_out",
-        },
-        component_pin_numbers={"U1": ("1",), "D1": ("1", "2"), "U2": ("1",)},
-    )
-
-
-def current_sink_path_map(
-    *,
-    part_id: str = "synthetic-cc-sink",
-    pin_function: str = "OUT0",
-    pin_electrical_type: str = "output",
-    led_anode_pin: str = "D1.1",
-    led_cathode_pin: str = "D1.2",
-) -> PowerPathMap:
-    return PowerPathMap(
-        basis="Synthetic project-approved current-controlled LED output path",
-        paths=(
-            PowerPathRequirement(
-                id="led-channel-0",
-                basis="Synthetic reviewed source identifies U1.1 as a current sink output",
-                start=PowerPathEndpointRequirement(
-                    reference="U2",
-                    pin="U2.1",
-                    symbol="Synthetic:RailSource",
-                    footprint="Synthetic:Source",
-                    net="+5V",
-                ),
-                end=PowerPathEndpointRequirement(
-                    reference="U1",
-                    pin="U1.1",
-                    symbol="Synthetic:CurrentSink",
-                    footprint="Synthetic:QFN",
-                    net="LED_SINK",
-                    role="current_controlled_sink",
-                    part_id=part_id,
-                    pin_function=pin_function,
-                    pin_electrical_type=pin_electrical_type,
-                ),
-                elements=(
-                    PowerPathElementRequirement(
-                        reference="D1",
-                        symbol="Device:LED",
-                        footprint="Synthetic:LED",
-                        side_a_pin=led_anode_pin,
-                        side_b_pin=led_cathode_pin,
-                        side_a_net="+5V",
-                        side_b_net="LED_SINK",
-                    ),
-                ),
-            ),
-        ),
-    )
 
 
 def lint(netlist: NetlistContract, path_map: PowerPathMap | None = None):
@@ -140,6 +58,32 @@ def test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt() -> None
     assert (path_run.status, path_run.requirement_count, path_run.finding_count) == (
         "EVALUATED",
         1,
+        0,
+    )
+
+
+def test_multichannel_map_only_suppresses_its_exact_led_paths() -> None:
+    source = current_sink_netlist(two_channels=True)
+    unmapped = lint(source)
+    assert {item.subject for item in unmapped.findings if item.rule_id == LED_RULE} == {
+        "D1: LED directly shares an output net and a rail",
+        "D2: LED directly shares an output net and a rail",
+    }
+
+    partially_mapped = lint(source, current_sink_path_map())
+    assert {item.subject for item in partially_mapped.findings if item.rule_id == LED_RULE} == {
+        "D2: LED directly shares an output net and a rail"
+    }
+    assert PATH_RULE not in {item.rule_id for item in partially_mapped.findings}
+
+    fully_mapped = lint(source, current_sink_path_map(two_channels=True))
+    assert fully_mapped.status == "PASS", fully_mapped.issues
+    assert LED_RULE not in {item.rule_id for item in fully_mapped.findings}
+    assert PATH_RULE not in {item.rule_id for item in fully_mapped.findings}
+    path_run = next(item for item in fully_mapped.mapped_check_runs if item.rule_id == PATH_RULE)
+    assert (path_run.status, path_run.requirement_count, path_run.finding_count) == (
+        "EVALUATED",
+        2,
         0,
     )
 

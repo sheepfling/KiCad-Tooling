@@ -157,19 +157,23 @@ sparse synthetic schematic.
 
 ## Explicit current-controlled-sink path
 
-`control-current-sink-output.kicad_sch` is a tooling-owned native source
-fixture with synthetic identities only. U1.1 directly drives D1's K pin while
-D1's A pin connects to `+5V`. Without a project-authored path map, LINT-063
-keeps its review prompt. A map that names the exact U1 `PART_ID`, native pin
-function and electrical type, and the source-to-LED A-to-K topology suppresses
-only that exact prompt. A stale driver identity, changed pin signature, or
-reversed LED polarity leaves the review visible in the typed regression tests.
+`control-current-sink-output.kicad_sch` and
+`control-current-sink-two-channel.kicad_sch` are tooling-owned native source
+fixtures with synthetic identities only. U1 directly drives one or two LED K
+pins while each LED A pin connects to `+5V`. Without a project-authored path
+map, LINT-063 keeps its review prompt. A map that names the exact U1
+`PART_ID`, native pin function and electrical type, and each source-to-LED
+A-to-K topology suppresses only those exact prompts. A partial two-channel map
+covers its one mapped LED while leaving the other channel reviewable. A stale
+driver identity, changed pin signature, or reversed LED polarity leaves the
+matching review visible in the typed regression tests.
 
 Fixture SHA-256:
 
 | Fixture                                 | SHA-256                                                            |
 | --------------------------------------- | ------------------------------------------------------------------ |
 | `control-current-sink-output.kicad_sch` | `642cba6e1236cc953b470d2244d72d7298d4724b26440bfa4f87ba0cae3a3184` |
+| `control-current-sink-two-channel.kicad_sch` | `e8640c8799542a499b7b7b1792e03512f114cabc8cd8a1a600059cd593f718c4` |
 
 The synthetic map tests explicit project metadata and native connectivity; it
 does not establish current regulation, safe operating limits, brightness,

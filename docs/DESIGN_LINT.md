@@ -568,8 +568,10 @@ The first rules are:
   actually regulates current or is electrically adequate. The rule does not
   infer LED polarity, output limits, off-board paths, board copper, population,
   or runtime behavior. Its native synthetic direct-output fault,
-  return-side-series control, and parallel-resistor fault are exported twice on
-  pinned KiCad 10.0.0 and 10.0.5. Custom-role native fault/control exports use
+  return-side-series control, and parallel-resistor fault are exported twice
+  on pinned KiCad 10.0.0 and 10.0.5. Single- and two-channel current-sink
+  controls are registered in the same pinned native lane; their hosted export
+  result is pending. Custom-role native fault/control exports use
   the same pins and exact project mapping. The cohort trial behind the adjacent
   LED review family did not evaluate this topology. See the
   [fixture trial and native regression record](../tests/fixtures/design_lint/cohort-led-resistor/README.md).

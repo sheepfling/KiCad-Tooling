@@ -4966,6 +4966,8 @@
         "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
       "tests.test_led_output_heuristics.test_custom_led_role_map_is_exact_and_stale_identity_blocks_lint",
       "tests.test_led_current_sink_path.test_stale_or_incomplete_sink_path_keeps_led_review_visible",
+      "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
+      "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity",
       "tests.test_led_rail_native_fixture_lane.test_direct_rail_and_output_driven_led_faults_with_series_controls"
       ],
       "valid_control_fixtures": [
@@ -4973,6 +4975,8 @@
         "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
       "tests.test_led_output_heuristics.test_custom_led_with_output_side_series_resistor_is_control",
       "tests.test_led_current_sink_path.test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt",
+      "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
+      "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity",
       "tests.test_led_rail_native_fixture_lane.test_direct_rail_and_output_driven_led_faults_with_series_controls"
       ],
       "metamorphic_status": "covered",
@@ -5206,7 +5210,9 @@
         "tests.test_power_paths.test_rule_uses_review_block_off_and_exact_ignore_lifecycle",
         "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability",
       "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault",
-      "tests.test_led_current_sink_path.test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt"
+      "tests.test_led_current_sink_path.test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt",
+      "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
+      "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
