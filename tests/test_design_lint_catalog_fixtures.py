@@ -158,6 +158,14 @@ _PARITY_FIXTURES_BY_RULE = {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_connector_coverage",
             "test_design_lint_connector_coverage_and_review_lifecycle",
+        )
+        + _refs(
+            "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns",
+            "test_power_input_aliases_use_typed_rule_instead_of_generic_all_open_hint",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns",
+            "test_power_input_aliases_use_typed_rule_instead_of_generic_all_open_hint",
         ),
     },
     "power.named_supply_pin_on_negative_rail": {

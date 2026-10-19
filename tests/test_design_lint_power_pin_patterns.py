@@ -11,6 +11,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
 )
+from tests.connector_footprint_peer_support import peer_netlist as footprint_peer_netlist
 from tests.design_lint_fixtures import (
     coach,
     cross_symbol_power,
@@ -125,6 +126,50 @@ class TestDesignLintPowerPinPatterns:
             "J1.1: generic native power-input pin is unassigned",
             "J2.1: generic native power-input pin is unassigned",
         }
+
+    @pytest.mark.design_lint_rule(rule_id="connector.unconnected_power_input")
+    def test_power_input_aliases_use_typed_rule_instead_of_generic_all_open_hint(self) -> None:
+        disconnected = footprint_peer_netlist(assignments=(("GND", "GND"), (None, None)))
+        pin_types = dict(disconnected.pin_electrical_types)
+        pin_types.update({"J1.2": "power_in", "J2.2": "power_in"})
+        disconnected = disconnected.model_copy(update={"pin_electrical_types": pin_types})
+
+        report = evaluate(
+            "synthetic-footprint-alias-power-input",
+            coach(disconnected),
+            DesignLintPolicy(),
+        )
+
+        findings = tuple(
+            item for item in report.findings if item.rule_id == "connector.unconnected_power_input"
+        )
+        assert report.status == "REVIEW"
+        assert tuple(item.subject for item in findings) == (
+            "J1.2: generic native power-input pin is unassigned",
+            "J2.2: generic native power-input pin is unassigned",
+        )
+        assert all(item.evidence["pin_electrical_type"] == ("power_in",) for item in findings)
+        assert not any(
+            item.rule_id == "connector.footprint_peer_pin_all_open" for item in report.findings
+        )
+
+        connected = footprint_peer_netlist(assignments=(("GND", "GND"), ("VBUS", "VBUS")))
+        connected_types = dict(connected.pin_electrical_types)
+        connected_types.update({"J1.2": "power_in", "J2.2": "power_in"})
+        connected = connected.model_copy(update={"pin_electrical_types": connected_types})
+        control = evaluate(
+            "synthetic-footprint-alias-power-input-control",
+            coach(connected),
+            DesignLintPolicy(),
+        )
+        assert not any(
+            item.rule_id
+            in {
+                "connector.unconnected_power_input",
+                "connector.footprint_peer_pin_all_open",
+            }
+            for item in control.findings
+        )
 
     @pytest.mark.parametrize(
         "control",

@@ -7475,11 +7475,16 @@ is not a reason by itself to expand its scope or change its default policy.
   ambiguous or incomplete evidence, unanchored groups, DNP parts, and
   PART_ID-bearing components. It cannot establish PCB copper continuity or
   off-board wiring. An independently approved pinout or connector contract is
-  still needed to turn the prompt into a project requirement.
+  still needed to turn the prompt into a project requirement. Pins explicitly
+  typed `power_in` or `power_out` remain with the dedicated unconnected-power
+  rules rather than this generic-contact prompt.
 - **Evidence:** Tooling-owned synthetic tests cover the anchored all-open
   fault, assigned and unanchored controls, unsupported pin roles, deterministic
   ordering, policy/ignore behavior, CLI/MCP parity, and the source-bound native
-  fixture. The exact-version native lane exports the all-open fault and
+  fixture. A cross-rule regression confirms that a power-input pin left open
+  across footprint aliases is reported by `connector.unconnected_power_input`,
+  while the generic all-open rule stays out of that classification. The
+  exact-version native lane exports the all-open fault and
   connected control twice on KiCad 10.0.0 and 10.0.5. The catalog requires the
   pinned native connector lane on rule-scoped prerelease tags; synthetic tests
   do not claim that native result. No project source or private fixture is used.

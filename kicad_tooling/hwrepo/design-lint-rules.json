@@ -1782,12 +1782,14 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_power_input_report_includes_native_evidence",
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_power_input_aliases_use_typed_rule_instead_of_generic_all_open_hint",
         "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         "tests.test_design_lint_mcp_parity_connector_coverage.test_design_lint_connector_coverage_and_review_lifecycle"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_valid_controls_are_suppressed",
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_named_generic_connector_power_pins_keep_specific_rules",
+        "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_power_input_aliases_use_typed_rule_instead_of_generic_all_open_hint",
         "tests.test_design_lint_power_pin_patterns.TestDesignLintPowerPinPatterns.test_generic_connector_power_input_supports_policy_block_ignore_and_off",
         "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
       ],
