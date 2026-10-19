@@ -58,12 +58,12 @@ def netlist(*, pad_net: str = "SIGNAL") -> NetlistContract:
     )
 
 
-def round_and_oval_netlist() -> NetlistContract:
-    """Return the synthetic source netlist for the four native pad shapes."""
+def native_pad_shapes_netlist() -> NetlistContract:
+    """Return the synthetic source netlist for native pad-shape coverage."""
     return NetlistContract(
         components={"J1": ComponentContract(value="Synthetic touch pads", footprint=FOOTPRINT)},
-        nets={"SIGNAL": ("J1.1", "J1.2", "J1.3", "J1.4")},
-        component_pin_numbers={"J1": ("1", "2", "3", "4")},
+        nets={"SIGNAL": ("J1.1", "J1.2", "J1.3", "J1.4", "J1.5", "J1.6")},
+        component_pin_numbers={"J1": ("1", "2", "3", "4", "5", "6")},
     )
 
 

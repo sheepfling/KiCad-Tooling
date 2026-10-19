@@ -26,7 +26,7 @@ from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
     PcbTouchPadClearanceMap,
     PcbTouchPadClearanceRequestSet,
 )
-from tests.pcb_touch_pad_clearance_support import requirement, round_and_oval_netlist
+from tests.pcb_touch_pad_clearance_support import native_pad_shapes_netlist, requirement
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -112,11 +112,21 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
             requirement_id="J1-rotated-oval-clearance",
             pad="J1.4",
         ),
+        requirement(
+            minimum_clearance_nm=1_500_000,
+            requirement_id="J1-through-hole-fault-clearance",
+            pad="J1.5",
+        ),
+        requirement(
+            minimum_clearance_nm=1_000_000,
+            requirement_id="J1-through-hole-boundary-clearance",
+            pad="J1.6",
+        ),
     )
     authored = PcbTouchPadClearanceMap(
         basis=(
-            "Synthetic native fixture checks round, oval, and rotated oval pads "
-            "against ground fills"
+            "Synthetic native fixture checks round, oval, rotated oval, and "
+            "through-hole pads against ground fills"
         ),
         requirements=authored_requirements,
     )
@@ -140,14 +150,14 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
         touch_pad_clearance_probes=True,
     )
     measurements = {item.pad: item for item in observed.touch_pad_clearance_observations}
-    assert set(measurements) == {"J1.1", "J1.2", "J1.3", "J1.4"}
+    assert set(measurements) == {"J1.1", "J1.2", "J1.3", "J1.4", "J1.5", "J1.6"}
     for authored_requirement in authored_requirements:
         measurement = measurements[authored_requirement.pad]
         assert measurement.requirement_id == authored_requirement.id
         assert measurement.observed_pad_net == authored_requirement.expected_pad_net
         assert measurement.reference_net == authored_requirement.reference_net
         assert measurement.layer == authored_requirement.layer
-        assert measurement.matching_zone_count == 3
+        assert measurement.matching_zone_count == 5
         assert measurement.status == "MEASURED"
         assert measurement.closest_zone_uuid is not None
         assert measurement.distance_nm is not None
@@ -159,16 +169,44 @@ def test_native_measurement_is_bound_to_exact_pad_zone_and_authored_request(
     assert measurements["J1.4"].closest_zone_uuid == "87654321-4321-8765-4321-876543210002"
     assert measurements["J1.3"].distance_nm == 1_000_000
     assert measurements["J1.4"].distance_nm == 1_500_000
+    assert measurements["J1.5"].closest_zone_uuid == "87654321-4321-8765-4321-876543210003"
+    assert measurements["J1.5"].distance_nm == 1_000_000
+    assert measurements["J1.6"].closest_zone_uuid == "87654321-4321-8765-4321-876543210004"
+    assert measurements["J1.6"].distance_nm == 1_000_000
 
-    entries = touch_pad_clearance_entries(authored, observed, round_and_oval_netlist())
-    assert {item.pad for item in entries} == {"J1.1", "J1.2", "J1.3", "J1.4"}
+    entries = touch_pad_clearance_entries(authored, observed, native_pad_shapes_netlist())
+    assert {item.pad for item in entries} == {
+        "J1.1",
+        "J1.2",
+        "J1.3",
+        "J1.4",
+        "J1.5",
+        "J1.6",
+    }
     assert all(item.status == "COMPLETE" for item in entries)
-    assert all(item.violates_minimum_clearance for item in entries), {
+    assert {item.pad for item in entries if item.violates_minimum_clearance} == {
+        "J1.1",
+        "J1.2",
+        "J1.3",
+        "J1.4",
+        "J1.5",
+    }
+    assert {item.pad for item in entries if not item.violates_minimum_clearance} == {"J1.6"}
+    assert {item.pad: item.measured_clearance_nm for item in entries} == {
+        "J1.1": 1_000_000,
+        "J1.2": 1_000_000,
+        "J1.3": 1_000_000,
+        "J1.4": 1_500_000,
+        "J1.5": 1_000_000,
+        "J1.6": 1_000_000,
+    }
+    assert all(item.violates_minimum_clearance for item in entries if item.pad != "J1.6"), {
         item.pad: {
             "measured_clearance_nm": item.measured_clearance_nm,
             "minimum_clearance_nm": item.minimum_clearance_nm,
         }
         for item in entries
+        if item.pad != "J1.6"
     }
 
     # Confirm native DRC reports no clearance issue for the same board while
