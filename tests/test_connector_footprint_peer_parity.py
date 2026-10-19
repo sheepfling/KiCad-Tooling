@@ -38,9 +38,10 @@ pytestmark = [
 ]
 
 RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
+OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
 
 
-def _observed(*, fault: bool) -> NetlistContract:
+def _observed(*, fault: bool, open_peer: bool = False) -> NetlistContract:
     components = {
         reference: ComponentContract(
             value="Synthetic two-contact connector",
@@ -53,8 +54,8 @@ def _observed(*, fault: bool) -> NetlistContract:
         nets={
             "SYNTHETIC_GROUND": ("J1.1", "J2.1"),
             "SYNTHETIC_SIGNAL_A": ("J1.2",),
-            **({"SYNTHETIC_SIGNAL_B": ("J2.2",)} if fault else {}),
-            **({"SYNTHETIC_SIGNAL_A": ("J1.2", "J2.2")} if not fault else {}),
+            **({"SYNTHETIC_SIGNAL_B": ("J2.2",)} if fault and not open_peer else {}),
+            **({"SYNTHETIC_SIGNAL_A": ("J1.2", "J2.2")} if not fault and not open_peer else {}),
         },
         component_symbols={
             "J1": "Synthetic:GenericPort",
@@ -134,11 +135,13 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             assert result.structured_content is not None
             return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
 
-    for fault, expected_status, expected_findings in (
-        (True, "REVIEW", 1),
-        (False, "PASS", 0),
+    for fault, open_peer, rule_id, expected_status, expected_findings in (
+        (True, False, RULE_ID, "REVIEW", 1),
+        (False, False, RULE_ID, "PASS", 0),
+        (False, True, OPEN_RULE_ID, "REVIEW", 1),
+        (False, False, OPEN_RULE_ID, "PASS", 0),
     ):
-        observed = _observed(fault=fault)
+        observed = _observed(fault=fault, open_peer=open_peer)
         netlist_path.write_text(peer_pin_netlist_xml(observed), encoding="utf-8")
         write_model(
             summary_path,
@@ -158,10 +161,13 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
 
         assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
         assert cli_report.status == expected_status, cli_report.issues
-        findings = tuple(item for item in cli_report.findings if item.rule_id == RULE_ID)
+        findings = tuple(item for item in cli_report.findings if item.rule_id == rule_id)
         assert len(findings) == expected_findings
         coverage = cli_report.connector_peer_pin_coverage
         assert coverage is not None
         alias = coverage.footprint_alias_coverage
         assert alias.netlist_sha256 == digest(netlist_path)
-        assert alias.divergence_finding_count == expected_findings
+        if rule_id == RULE_ID:
+            assert alias.divergence_finding_count == expected_findings
+        else:
+            assert alias.open_outlier_finding_count == expected_findings

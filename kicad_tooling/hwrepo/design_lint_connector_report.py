@@ -100,7 +100,10 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"{footprint_coverage.ambiguous_assignment_pin_group_count}; anchor/difference "
             f"groups: {footprint_coverage.common_anchor_group_count}/"
             f"{footprint_coverage.generic_different_assignment_pin_group_count}; findings: "
-            f"{footprint_coverage.divergence_finding_count}"
+            f"{footprint_coverage.divergence_finding_count}; generic mixed-open peers: "
+            f"{footprint_coverage.open_peer_pin_group_count}; unanchored/findings: "
+            f"{footprint_coverage.unanchored_open_peer_pin_group_count}/"
+            f"{footprint_coverage.open_outlier_finding_count}"
         )
         lines.append(
             f"  Repeated function groups: {peer_coverage.repeated_function_group_count}; "
@@ -118,7 +121,8 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"{peer_coverage.peer_pin_outlier_finding_count}; peer divergences "
             f"{peer_coverage.peer_pin_divergence_finding_count}; all-open generic peer pins "
             f"{peer_coverage.generic_peer_pin_all_open_finding_count}; footprint-alias "
-            f"divergences {footprint_coverage.divergence_finding_count}"
+            f"divergences {footprint_coverage.divergence_finding_count}; footprint-alias "
+            f"open outliers {footprint_coverage.open_outlier_finding_count}"
         )
         lines.append(f"  Scope: {peer_coverage.scope}")
         for reference in peer_coverage.incomplete_pin_inventory_references:

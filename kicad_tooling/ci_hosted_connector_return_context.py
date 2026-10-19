@@ -117,6 +117,8 @@ def prepare_connector_return_fixture_context(
         "footprint-alias-fault": fixture_root / "connector-footprint-alias-native/fault.kicad_sch",
         "footprint-alias-control": fixture_root
         / "connector-footprint-alias-native/control.kicad_sch",
+        "footprint-alias-open-fault": fixture_root
+        / "connector-footprint-alias-native/open-fault.kicad_sch",
         "peer-pin-minority-fault": fixture_root
         / "generic-peer-pin-assignment-native/minority-fault.kicad_sch",
         "peer-pin-divergence-fault": fixture_root
@@ -246,6 +248,7 @@ def prepare_connector_return_fixture_context(
         "peer-pin-part-id-split-fault": "8530bab2ac3537a821be48321e9bb713aa8b2933d714902cc5a30fb4168fa192",
         "footprint-alias-fault": "e45b8069603078c1a26198b962b96b20d8a7f9dff39b195b7bb6399e00b323c0",
         "footprint-alias-control": "d5c77a1b8de808ab82c9f98f0172af7f6f933ce43536dabe00c6fbf83e048e28",
+        "footprint-alias-open-fault": "ba6fd627b7a8e994ca554dbb9f3a1d67197f8a48d5302c5ee6c78318be424605",
         "peer-pin-minority-fault": "a071543178ad7668d20a3653fea5196cf556c3b96338b81dbeac97a6360ede2c",
         "peer-pin-divergence-fault": "c278b2ff86c869a6dba7c19ee08f064a863d282d251be44fd47c1e8a71254e57",
         "generic-placeholder-divergence-fault": "f6f4c9b419ab590366ca329b1ac0749706b29536017f2f24145de7ef6bdfaf30",

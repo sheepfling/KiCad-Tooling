@@ -100,6 +100,18 @@ def _footprint_alias_peer_pin_cases() -> dict[str, NetlistContract]:
             pin_functions=functions,
             pin_electrical_types=electrical_types,
         ),
+        "footprint-alias-open-fault": NetlistContract(
+            components=components,
+            nets={
+                "SYNTHETIC_NET_1": ("J1.1", "J2.1"),
+                "SYNTHETIC_NET_2": ("J1.2",),
+            },
+            unconnected_nets={"unconnected": ("J2.2",)},
+            component_symbols=symbols,
+            component_pin_numbers=pin_numbers,
+            pin_functions=functions,
+            pin_electrical_types=electrical_types,
+        ),
     }
 
 

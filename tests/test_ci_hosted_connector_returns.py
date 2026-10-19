@@ -70,6 +70,7 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/peer-pin-part-id-split-fault",
     "connector-return-fixture/footprint-alias-fault",
     "connector-return-fixture/footprint-alias-control",
+    "connector-return-fixture/footprint-alias-open-fault",
     "connector-return-fixture/two-peer-open-fault",
     "connector-return-fixture/two-peer-no-connect-fault",
     "connector-return-fixture/two-peer-common-control",
@@ -237,6 +238,33 @@ def test_footprint_alias_peer_assignments_are_validated_on_pinned_native_version
     assert fault_coverage["divergence_finding_count"] == 1
     assert control_coverage["status"] == "NO_DIVERGENT_ASSIGNMENTS"
     assert control_coverage["common_assignment_pin_group_count"] == 2
+    for result in (fault, control):
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+def test_footprint_alias_open_peer_is_validated_on_pinned_native_versions(
+    connector_return_results_by_version, version
+):
+    results = connector_return_results_by_version[version]
+    fault = results["connector-return-fixture/footprint-alias-open-fault"]
+    control = results["connector-return-fixture/footprint-alias-control"]
+    assert fault["lint_status"] == "REVIEW"
+    assert fault["findings"] == "connector.footprint_peer_pin_open_outlier"
+    assert fault["subjects"] == ("Synthetic two-contact connector [Synthetic:Connector_2x1] pin 2")
+    assert control["lint_status"] == "PASS"
+    assert control["findings"] == "none"
+
+    fault_coverage = json.loads(fault["connector_peer_pin_coverage"])["footprint_alias_coverage"]
+    assert fault_coverage["status"] == "PARTIALLY_EVALUATED"
+    assert fault_coverage["netlist_sha256"] == fault["netlist_sha256"]
+    assert fault_coverage["candidate_group_count"] == 1
+    assert fault_coverage["common_anchor_group_count"] == 1
+    assert fault_coverage["open_peer_pin_group_count"] == 1
+    assert fault_coverage["open_outlier_finding_count"] == 1
     for result in (fault, control):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"

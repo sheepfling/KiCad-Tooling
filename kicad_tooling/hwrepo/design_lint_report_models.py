@@ -373,6 +373,14 @@ class DesignLintReport(StrictModel):
                 raise ValueError(
                     "Connector footprint-alias peer coverage count must match findings"
                 )
+            footprint_open_findings = sum(
+                finding.rule_id == "connector.footprint_peer_pin_open_outlier"
+                for finding in self.findings
+            )
+            if footprint_open_findings != item.footprint_alias_coverage.open_outlier_finding_count:
+                raise ValueError(
+                    "Connector footprint-alias open-peer coverage count must match findings"
+                )
             part_id_expected_counts = (
                 (
                     "connector.peer_pin_assignment_outlier",

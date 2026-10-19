@@ -157,6 +157,9 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     common_anchor_group_count: NonNegativeCount
     unanchored_different_assignment_pin_group_count: NonNegativeCount
     divergence_finding_count: NonNegativeCount
+    open_peer_pin_group_count: NonNegativeCount
+    unanchored_open_peer_pin_group_count: NonNegativeCount
+    open_outlier_finding_count: NonNegativeCount
 
     @model_validator(mode="after")
     def coverage_counts_match_scope(self) -> ConnectorFootprintPeerPinCoverage:
@@ -194,6 +197,15 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             self.generic_different_assignment_pin_group_count
         ):
             raise ValueError("Generic footprint alias differences must be anchored or unanchored")
+        if self.open_peer_pin_group_count > self.unassigned_assignment_pin_group_count:
+            raise ValueError("Footprint alias open peers must have an unassigned peer contact")
+        if self.unanchored_open_peer_pin_group_count > self.open_peer_pin_group_count:
+            raise ValueError("Unanchored open peers cannot exceed open peer pin groups")
+        if (
+            self.open_outlier_finding_count + self.unanchored_open_peer_pin_group_count
+            != self.open_peer_pin_group_count
+        ):
+            raise ValueError("Footprint alias open peers must be anchored or unanchored")
 
         incomplete_count = (
             self.incomplete_pin_inventory_group_count
@@ -309,7 +321,9 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
         if self.repeated_function_finding_count > self.repeated_function_group_count:
             raise ValueError("Repeated-function findings cannot exceed compared groups")
         if (
-            self.peer_pin_outlier_finding_count + self.peer_pin_divergence_finding_count
+            self.peer_pin_outlier_finding_count
+            + self.peer_pin_divergence_finding_count
+            + self.footprint_alias_coverage.open_outlier_finding_count
             > self.exact_symbol_pin_group_count
             + self.part_id_alias_coverage.compared_pin_group_count
             + self.footprint_alias_coverage.compared_pin_group_count

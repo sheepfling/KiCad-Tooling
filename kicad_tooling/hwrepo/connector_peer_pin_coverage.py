@@ -37,6 +37,7 @@ def connector_peer_pin_heuristic_coverage(
     part_id_peer_pin_outlier_finding_count: int = 0,
     part_id_peer_pin_divergence_finding_count: int = 0,
     footprint_peer_pin_divergence_finding_count: int = 0,
+    footprint_peer_pin_open_outlier_finding_count: int = 0,
 ) -> ConnectorPeerPinHeuristicCoverage:
     """Summarize exact-symbol, PART_ID, and footprint-alias comparisons."""
     candidate_references = connector_candidate_references(observed, declared_references)
@@ -316,6 +317,9 @@ def connector_peer_pin_heuristic_coverage(
             footprint_scan.unanchored_different_assignment_pin_group_count
         ),
         divergence_finding_count=footprint_peer_pin_divergence_finding_count,
+        open_peer_pin_group_count=footprint_scan.open_peer_pin_group_count,
+        unanchored_open_peer_pin_group_count=(footprint_scan.unanchored_open_peer_pin_group_count),
+        open_outlier_finding_count=footprint_peer_pin_open_outlier_finding_count,
     )
 
     if not candidate_references:

@@ -11,6 +11,7 @@ from .ci_hosted_connector_return_context import (
 from .ci_hosted_connector_return_db9_returns import verify_db9_neutral_return_cases
 from .ci_hosted_connector_return_footprint_peers import (
     verify_footprint_alias_peer_assignments,
+    verify_footprint_alias_peer_open_outlier,
 )
 from .ci_hosted_connector_return_grounding import (
     verify_connector_grounding_contracts,
@@ -45,6 +46,7 @@ def connector_return_lint_fixture_lane(
     verify_peer_power_inputs(context)
     peer_pin_coverage_receipts = verify_peer_pin_assignments(context)
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_assignments(context))
+    peer_pin_coverage_receipts.update(verify_footprint_alias_peer_open_outlier(context))
     verify_offboard_connector_interfaces(context)
     verify_peer_pin_outlier_cases(context)
     verify_mapped_return_interfaces(context)
