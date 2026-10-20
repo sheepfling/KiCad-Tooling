@@ -4888,7 +4888,10 @@ is not a reason by itself to expand its scope or change its default policy.
   controls;
   two connectors to one numbered hub with per-port evidence, a shared-
   reference control, a crossed-channel control, an unused-port control, and
-  exact `data_port_group` maps;
+  exact `data_port_group` maps. A typed three-port regression also checks one
+  split-reference review per connector, exact-map suppression, a common-reference
+  control, and stable path ordering. Three-port coverage is synthetic netlist
+  evidence; the exact-version native schematic lane remains two-port;
   USB-C duplicated A/B data contacts with two-pin shunt branches and common/split
   reference controls; exact USB-map contact coverage; arbitrary-peer,
   unsupported-branch, split-duplicate-pin, multi-reference-PHY, and isolator-path

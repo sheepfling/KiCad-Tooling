@@ -307,13 +307,13 @@ def test_interface_reports_remain_deterministic() -> None:
     usb_multiport_fault = reports["usb_multiport_peer_fault"]
     usb_fault_coverage = usb_multiport_fault["usb_peer_reference_coverage"]
     assert usb_fault_coverage["status"] == "EVALUATED"
-    assert usb_fault_coverage["recognized_connector_group_count"] == 2
-    assert usb_fault_coverage["supported_connector_group_count"] == 2
-    assert usb_fault_coverage["recognized_phy_group_count"] == 2
-    assert usb_fault_coverage["supported_phy_group_count"] == 2
-    assert usb_fault_coverage["supported_data_path_count"] == 2
-    assert usb_fault_coverage["separate_reference_path_count"] == 2
-    assert usb_fault_coverage["candidate_group_count"] == 2
+    assert usb_fault_coverage["recognized_connector_group_count"] == 3
+    assert usb_fault_coverage["supported_connector_group_count"] == 3
+    assert usb_fault_coverage["recognized_phy_group_count"] == 3
+    assert usb_fault_coverage["supported_phy_group_count"] == 3
+    assert usb_fault_coverage["supported_data_path_count"] == 3
+    assert usb_fault_coverage["separate_reference_path_count"] == 3
+    assert usb_fault_coverage["candidate_group_count"] == 3
     multiport_findings = tuple(
         finding
         for finding in usb_multiport_fault["findings"]
@@ -325,12 +325,13 @@ def test_interface_reports_remain_deterministic() -> None:
     ) == (
         ("J1 / U1: USB reference-domain review (port 1)", ["1"]),
         ("J2 / U1: USB reference-domain review (port 2)", ["2"]),
+        ("J3 / U1: USB reference-domain review (port 3)", ["3"]),
     )
     assert "bus.usb_peer_reference_review" not in {
         finding["rule_id"] for finding in reports["usb_multiport_peer_control"]["findings"]
     }
     usb_control_coverage = reports["usb_multiport_peer_control"]["usb_peer_reference_coverage"]
-    assert usb_control_coverage["common_reference_path_count"] == 2
+    assert usb_control_coverage["common_reference_path_count"] == 3
     assert usb_control_coverage["separate_reference_path_count"] == 0
     assert usb_control_coverage["candidate_group_count"] == 0
     usb_superspeed_fault = reports["usb_superspeed_peer_fault"]

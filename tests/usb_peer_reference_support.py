@@ -141,88 +141,96 @@ def usb_peer_series_netlist(
     )
 
 
-def usb_multiport_peer_netlist(*, common_references: bool = False) -> NetlistContract:
+def usb_multiport_peer_netlist(
+    *, common_references: bool = False, connector_count: int = 2
+) -> NetlistContract:
+    if connector_count not in (2, 3):
+        raise ValueError("synthetic USB hub supports two or three connector ports")
+
     shared_reference = "BOARD_GND"
-    connector_1_reference = shared_reference if common_references else "USB1_GND"
-    connector_2_reference = shared_reference if common_references else "USB2_GND"
     phy_reference = shared_reference if common_references else "PHY_GND"
-    nets = {
-        "USB1_DP": ("J1.1", "U1.1"),
-        "USB1_DM": ("J1.2", "U1.2"),
-        "USB2_DP": ("J2.1", "U1.4"),
-        "USB2_DM": ("J2.2", "U1.5"),
-        "+5V": ("J1.4", "J2.4"),
+    hub_data_pins = {1: ("U1.1", "U1.2"), 2: ("U1.4", "U1.5"), 3: ("U1.8", "U1.9")}
+    nets: dict[str, tuple[str, ...]] = {
+        "+5V": tuple(f"J{port}.4" for port in range(1, connector_count + 1)),
         "+3V3": ("U1.7",),
     }
-    for reference_net, pin in (
-        (connector_1_reference, "J1.3"),
-        (connector_2_reference, "J2.3"),
-        (phy_reference, "U1.3"),
-        (phy_reference, "U1.6"),
-    ):
-        nets[reference_net] = (*nets.get(reference_net, ()), pin)
+    components: dict[str, ComponentContract] = {}
+    symbols: dict[str, str] = {}
+    functions: dict[str, str] = {}
+    electrical_types: dict[str, str] = {}
+    component_pin_numbers: dict[str, tuple[str, ...]] = {}
+
+    for port in range(1, connector_count + 1):
+        connector = f"J{port}"
+        positive_phy_pin, negative_phy_pin = hub_data_pins[port]
+        nets[f"USB{port}_DP"] = (f"{connector}.1", positive_phy_pin)
+        nets[f"USB{port}_DM"] = (f"{connector}.2", negative_phy_pin)
+        reference_net = shared_reference if common_references else f"USB{port}_GND"
+        nets[reference_net] = (*nets.get(reference_net, ()), f"{connector}.3")
+        components[connector] = ComponentContract(
+            value=f"Synthetic USB-A port {port}", footprint="Synthetic:USB-A"
+        )
+        symbols[connector] = "Connector:USB_A"
+        functions.update(
+            {
+                f"{connector}.1": "D+",
+                f"{connector}.2": "D-",
+                f"{connector}.3": "GND",
+                f"{connector}.4": "VBUS",
+                positive_phy_pin: f"USB{port}D+",
+                negative_phy_pin: f"USB{port}D-",
+            }
+        )
+        electrical_types.update(
+            {
+                f"{connector}.1": "passive",
+                f"{connector}.2": "passive",
+                f"{connector}.3": "passive",
+                f"{connector}.4": "passive",
+                positive_phy_pin: "input",
+                negative_phy_pin: "input",
+            }
+        )
+        component_pin_numbers[connector] = ("1", "2", "3", "4")
+
+    for pin, function in (("U1.3", "GND"), ("U1.6", "AGND"), ("U1.7", "VDD")):
+        functions[pin] = function
+        electrical_types[pin] = "power_in"
+    for pin in ("U1.3", "U1.6"):
+        nets[phy_reference] = (*nets.get(phy_reference, ()), pin)
+    components["U1"] = ComponentContract(
+        value=f"Synthetic {connector_count}-port USB hub", footprint="Synthetic:QFN"
+    )
+    symbols["U1"] = "Synthetic:UsbHub"
+    component_pin_numbers["U1"] = tuple(str(pin) for pin in range(1, 8)) + (
+        ("8", "9") if connector_count == 3 else ()
+    )
     return NetlistContract(
-        components={
-            "J1": ComponentContract(value="Synthetic USB-A port 1", footprint="Synthetic:USB-A"),
-            "J2": ComponentContract(value="Synthetic USB-A port 2", footprint="Synthetic:USB-A"),
-            "U1": ComponentContract(value="Synthetic dual-port USB hub", footprint="Synthetic:QFN"),
-        },
+        components=components,
         nets=nets,
-        component_symbols={
-            "J1": "Connector:USB_A",
-            "J2": "Connector:USB_A",
-            "U1": "Synthetic:UsbHub",
-        },
-        pin_functions={
-            "J1.1": "D+",
-            "J1.2": "D-",
-            "J1.3": "GND",
-            "J1.4": "VBUS",
-            "J2.1": "D+",
-            "J2.2": "D-",
-            "J2.3": "GND",
-            "J2.4": "VBUS",
-            "U1.1": "USB1D+",
-            "U1.2": "USB1D-",
-            "U1.3": "GND",
-            "U1.4": "USB2D+",
-            "U1.5": "USB2D-",
-            "U1.6": "AGND",
-            "U1.7": "VDD",
-        },
-        pin_electrical_types={
-            "J1.1": "passive",
-            "J1.2": "passive",
-            "J1.3": "passive",
-            "J1.4": "passive",
-            "J2.1": "passive",
-            "J2.2": "passive",
-            "J2.3": "passive",
-            "J2.4": "passive",
-            "U1.1": "input",
-            "U1.2": "input",
-            "U1.3": "power_in",
-            "U1.4": "input",
-            "U1.5": "input",
-            "U1.6": "power_in",
-            "U1.7": "power_in",
-        },
-        component_pin_numbers={
-            "J1": ("1", "2", "3", "4"),
-            "J2": ("1", "2", "3", "4"),
-            "U1": ("1", "2", "3", "4", "5", "6", "7"),
-        },
+        component_symbols=symbols,
+        pin_functions=functions,
+        pin_electrical_types=electrical_types,
+        component_pin_numbers=component_pin_numbers,
     )
 
 
-def usb_multiport_data_map(*, second_port_group: str = "2") -> UsbDataPathMap:
+def usb_multiport_data_map(
+    *, second_port_group: str = "2", third_port_group: str = "3", connector_count: int = 2
+) -> UsbDataPathMap:
+    if connector_count not in (2, 3):
+        raise ValueError("synthetic USB hub map supports two or three connector ports")
+
     def interface(
         connector: str,
         port_group: str,
         connector_reference_net: str,
     ) -> UsbDataInterfaceRequirement:
-        phy_positive_pin = "U1.1" if port_group == "1" else "U1.4"
-        phy_negative_pin = "U1.2" if port_group == "1" else "U1.5"
+        phy_positive_pin, phy_negative_pin = {
+            "1": ("U1.1", "U1.2"),
+            "2": ("U1.4", "U1.5"),
+            "3": ("U1.8", "U1.9"),
+        }[port_group]
         phy_reference_pins = (
             UsbReferencePinRequirement(pin="U1.3", net="PHY_GND"),
             UsbReferencePinRequirement(pin="U1.6", net="PHY_GND"),
@@ -260,12 +268,16 @@ def usb_multiport_data_map(*, second_port_group: str = "2") -> UsbDataPathMap:
             reference_policy="separate_nets",
         )
 
+    port_groups = [
+        (f"J{port}", str(port), f"USB{port}_GND") for port in range(1, connector_count + 1)
+    ]
+    if connector_count >= 2:
+        port_groups[1] = ("J2", second_port_group, "USB2_GND")
+    if connector_count == 3:
+        port_groups[2] = ("J3", third_port_group, "USB3_GND")
     return UsbDataPathMap(
-        basis="Synthetic dual-port USB hub mapping",
-        interfaces=(
-            interface("J1", "1", "USB1_GND"),
-            interface("J2", second_port_group, "USB2_GND"),
-        ),
+        basis=f"Synthetic {connector_count}-port USB hub mapping",
+        interfaces=tuple(interface(*entry) for entry in port_groups),
     )
 
 

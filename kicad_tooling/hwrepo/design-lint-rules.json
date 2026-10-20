@@ -3993,6 +3993,7 @@
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
+        "tests.test_usb_peer_reference_coverage.test_three_port_hub_reports_each_split_reference_and_quiets_common_control",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels",
         "tests.test_usb_peer_reference_superspeed.test_split_reference_direct_superspeed_pair_emits_review_and_family_evidence",
         "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_map_reports_mismatch_and_keeps_review",
@@ -4019,6 +4020,7 @@
         "tests.test_usb_isolator_peer_reference.test_two_port_isolator_is_quiet_but_remains_incomplete_coverage",
         "tests.test_usb_peer_reference_coverage.test_single_port_numbered_usb_data_functions_are_recognized",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
+        "tests.test_usb_peer_reference_coverage.test_three_port_hub_reports_each_split_reference_and_quiets_common_control",
         "tests.test_usb_data_path_reference_bonds.test_exact_bonded_reference_path_is_a_valid_control",
         "tests.test_usb_data_path_protection_shunts.test_explicit_common_reference_policy_suppresses_the_review",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
@@ -4041,6 +4043,7 @@
       "metamorphic_fixtures": [
         "tests.test_usb_peer_reference_boundaries.test_input_order_is_stable_and_commoning_clears_only_this_review",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
+        "tests.test_usb_peer_reference_coverage.test_three_port_hub_reports_each_split_reference_and_quiets_common_control",
         "tests.test_usb_peer_reference_paths.test_exact_mapped_inline_component_path_reviews_split_references",
         "tests.test_usb_data_path_protection_shunts.test_shunt_path_evidence_is_stable_under_native_mapping_order",
         "tests.test_usb_peer_reference_superspeed.test_superspeed_pair_result_is_stable_under_input_mapping_order",

@@ -423,12 +423,12 @@ def report_cases() -> dict[str, object]:
         "serial_reference_bond_control": serial_bonded_reference_checks(fault=False),
         "usb_multiport_peer_fault": evaluate(
             "synthetic-usb-multiport-peer-reference-fault",
-            coach(usb_multiport_peer_netlist()),
+            coach(usb_multiport_peer_netlist(connector_count=3)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "usb_multiport_peer_control": evaluate(
             "synthetic-usb-multiport-peer-reference-control",
-            coach(usb_multiport_peer_netlist(common_references=True)),
+            coach(usb_multiport_peer_netlist(common_references=True, connector_count=3)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
         "usb_superspeed_peer_fault": evaluate(

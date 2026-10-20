@@ -352,6 +352,44 @@ def test_numbered_multiport_hub_groups_each_connector_with_its_usb_port() -> Non
     assert (PATH_RULE_ID) in ({item.rule_id for item in stale_map.findings})
 
 
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_three_port_hub_reports_each_split_reference_and_quiets_common_control() -> None:
+    observed = usb_multiport_peer_netlist(connector_count=3)
+    reviews = usb_peer_reference_reviews(observed)
+    assert tuple((item.connector_reference, item.data_link.port_group) for item in reviews) == (
+        ("J1", "1"),
+        ("J2", "2"),
+        ("J3", "3"),
+    )
+
+    report = lint_report(observed)
+    coverage = report.usb_peer_reference_coverage
+    assert coverage is not None
+    assert tuple(
+        (item.connector_reference, item.data_path.port_group, item.reference_disposition)
+        for item in coverage.path_entries
+    ) == (
+        ("J1", "1", "SEPARATE_REFERENCE_REVIEW"),
+        ("J2", "2", "SEPARATE_REFERENCE_REVIEW"),
+        ("J3", "3", "SEPARATE_REFERENCE_REVIEW"),
+    )
+    assert len(tuple(item for item in report.findings if item.rule_id == RULE_ID)) == 3
+
+    mapped = lint_report(
+        observed,
+        path_map=usb_multiport_data_map(connector_count=3),
+    )
+    assert RULE_ID not in {item.rule_id for item in mapped.findings}
+    assert PATH_RULE_ID not in {item.rule_id for item in mapped.findings}
+    assert len(mapped.usb_peer_reference_coverage.path_entries) == 3
+
+    common = lint_report(usb_multiport_peer_netlist(common_references=True, connector_count=3))
+    assert RULE_ID not in {item.rule_id for item in common.findings}
+    assert tuple(
+        item.reference_disposition for item in common.usb_peer_reference_coverage.path_entries
+    ) == ("COMMON_REFERENCE", "COMMON_REFERENCE", "COMMON_REFERENCE")
+
+
 def test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels() -> None:
     observed = usb_multiport_peer_netlist()
     crossed = observed.model_copy(
