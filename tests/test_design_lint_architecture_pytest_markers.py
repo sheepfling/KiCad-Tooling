@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+from tests.design_lint_return_path_test_markers import RETURN_PATH_LINT_TEST_MODULES
 from tests.design_lint_test_markers import (
     design_lint_markers_for_path,
     design_lint_rule_ids_for_test,
@@ -172,6 +173,28 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_ci_hosted_pcb_fixture_schedule.py": {"pcb_lint", "return_path_lint"},
 }
 
+_RETURN_PATH_PEER_REFERENCE_SUITES = {
+    "tests/test_can_peer_reference_review.py",
+    "tests/test_connector_split_return_peers.py",
+    "tests/test_design_lint_mcp_parity_can_reference.py",
+    "tests/test_design_lint_mcp_parity_rs485_reference.py",
+    "tests/test_design_lint_mcp_parity_spi_reference.py",
+    "tests/test_i2c_peer_reference_native_fixture_lane.py",
+    "tests/test_i2c_peer_reference_review.py",
+    "tests/test_rs485_peer_reference_native_fixture_lane.py",
+    "tests/test_rs485_peer_reference_review.py",
+    "tests/test_spi_peer_reference_native_fixture_lane.py",
+    "tests/test_spi_peer_reference_review.py",
+    "tests/test_usb_data_path_reference_bonds.py",
+    "tests/test_usb_inline_bonded_reference_paths.py",
+    "tests/test_usb_isolator_peer_reference.py",
+    "tests/test_usb_peer_reference_superspeed.py",
+    "tests/test_usb_superspeed_peer_reference_native_fixture_lane.py",
+    "tests/test_serial_peer_reference_multichannel.py",
+    "tests/test_design_lint_serial_parity.py",
+    "tests/test_design_lint_mcp_parity_usb_reference.py",
+}
+
 
 def test_active_catalog_fixture_references_receive_their_rule_marker() -> None:
     for rule in rule_catalog().rules:
@@ -196,14 +219,24 @@ def test_active_catalog_fixture_references_receive_their_rule_marker() -> None:
 
 
 def test_peer_reference_regressions_are_selectable_in_return_path_scope() -> None:
-    for path in (
-        "tests/test_serial_peer_reference_multichannel.py",
-        "tests/test_design_lint_serial_parity.py",
-        "tests/test_design_lint_mcp_parity_usb_reference.py",
-    ):
+    assert _RETURN_PATH_PEER_REFERENCE_SUITES <= RETURN_PATH_LINT_TEST_MODULES
+    for path in sorted(_RETURN_PATH_PEER_REFERENCE_SUITES):
         markers = design_lint_markers_for_path(path)
         assert "design_lint" in markers
         assert "return_path_lint" in markers
+
+
+def test_return_path_registry_entries_exist_and_receive_both_lint_markers() -> None:
+    tests_root = Path(__file__).parent
+    for path in sorted(RETURN_PATH_LINT_TEST_MODULES):
+        assert (tests_root.parent / path).is_file(), path
+        markers = set(design_lint_markers_for_path(path))
+        assert {"design_lint", "return_path_lint"} <= markers
+
+
+def test_return_path_marker_owner_stays_below_review_threshold() -> None:
+    owner = Path(__file__).with_name("design_lint_return_path_test_markers.py")
+    assert len(owner.read_text(encoding="utf-8").splitlines()) < 500
 
 
 def test_cross_theme_architecture_suites_do_not_claim_area_markers() -> None:

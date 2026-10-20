@@ -7,6 +7,7 @@ from collections import defaultdict
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
 from tests.design_lint_component_test_markers import COMPONENT_LINT_TEST_MODULES
 from tests.design_lint_pcb_test_markers import PCB_LINT_TEST_MODULES
+from tests.design_lint_return_path_test_markers import RETURN_PATH_LINT_TEST_MODULES
 
 # Keep the area catalog explicit. Adding a lint test module here also includes
 # it in the portable design_lint selection derived below.
@@ -317,64 +318,7 @@ _LINT_AREA_MODULES = {
         }
     ),
     "pcb_lint": PCB_LINT_TEST_MODULES,
-    "return_path_lint": frozenset(
-        {
-            "tests/test_electrical_connector_return_parity.py",
-            "tests/test_electrical_connector_pin_relationship_parity.py",
-            "tests/test_electrical_pcb_return_path_parity.py",
-            "tests/test_electrical_pcb_return_evidence.py",
-            "tests/test_electrical_serial_peer_parity.py",
-            "tests/test_connector_return_distribution.py",
-            "tests/test_return_contract_fixture_lane.py",
-            "tests/test_native_db9_return_contracts.py",
-            "tests/test_connector_named_power_pin_fixture_lane.py",
-            "tests/test_numbered_return_native_fixture_lane.py",
-            "tests/test_design_lint_determinism_components.py",
-            "tests/test_design_lint_determinism_interfaces.py",
-            "tests/test_ci_hosted_pcb_fixture_schedule.py",
-            "tests/test_ci_hosted_digital_peer_serial.py",
-            "tests/test_native_connector_return_lint.py",
-            "tests/test_design_lint_determinism_pcb_protection.py",
-            "tests/test_pcb_decoupling_native_fixture_lane.py",
-            "tests/test_pcb_decoupling_return_vias.py",
-            "tests/test_pcb_protection_path_native_fixture_lane.py",
-            "tests/test_design_lint_mcp_parity_connector_returns.py",
-            "tests/test_design_lint_mcp_parity_serial.py",
-            "tests/test_pcb_reference_plane_lint.py",
-            "tests/test_pcb_reference_plane_native_fixture_lane.py",
-            "tests/test_pcb_switching_loop_native_fixture_lane.py",
-            "tests/test_pcb_return_path_native_fixture_lane.py",
-            "tests/test_pcb_reference_plane_geometry.py",
-            "tests/test_pcb_reference_plane_layers.py",
-            "tests/test_pcb_reference_plane_contract.py",
-            "tests/test_ci_hosted_pcb_reference_planes.py",
-            "tests/test_ci_hosted_pcb_return_paths.py",
-            "tests/test_pcb_return_paths.py",
-            "tests/test_hosted_pcb_lane_boundaries.py",
-            "tests/test_pcb_signal_path_coverage.py",
-            "tests/test_pcb_signal_path_evidence.py",
-            "tests/test_pcb_signal_path_hosted_schedule.py",
-            "tests/test_pcb_signal_path_lane.py",
-            "tests/test_pcb_signal_path_native.py",
-            "tests/test_pcb_switching_loop_geometry.py",
-            "tests/test_pcb_switching_loop_routes.py",
-            "tests/test_return_net_lint.py",
-            "tests/test_electrical_return_contracts.py",
-            "tests/test_serial_peer_reference_review.py",
-            "tests/test_serial_peer_reference_coverage.py",
-            "tests/test_serial_peer_reference_maps.py",
-            "tests/test_serial_peer_reference_boundaries.py",
-            "tests/test_serial_peer_reference_multichannel.py",
-            "tests/test_design_lint_serial_parity.py",
-            "tests/test_serial_reference_bond_native_fixture_lane.py",
-            "tests/test_usb_peer_reference_coverage.py",
-            "tests/test_usb_peer_reference_paths.py",
-            "tests/test_usb_peer_reference_maps.py",
-            "tests/test_usb_peer_reference_boundaries.py",
-            "tests/test_usb_peer_reference_superspeed.py",
-            "tests/test_design_lint_mcp_parity_usb_reference.py",
-        }
-    ),
+    "return_path_lint": RETURN_PATH_LINT_TEST_MODULES,
     "parity_lint": frozenset(
         {
             "tests/test_design_lint_mcp_parity_connector_named_power_peers.py",
