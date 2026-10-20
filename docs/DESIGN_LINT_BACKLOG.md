@@ -8063,11 +8063,11 @@ is not a reason by itself to expand its scope or change its default policy.
   1 kΩ resistor against a synthetic 22–47 Ω requirement. Direct and in-range
   series controls, a DNP parallel resistor, an unrelated resistor, review/block/
   off/ignore lifecycle, input-order stability, catalog reachability,
-  architecture ownership, and CLI/MCP parity are registered. No cohort code,
-  board, or project fixture was copied. The
-  CLI/MCP parity suite needs the separately configured public template
-  checkout; this local checkout does not have `KICAD_TEMPLATE_ROOT` set. No
-  native KiCad process or product board is claimed for this rule.
+  architecture ownership, and CLI/MCP parity are registered. The parity test
+  uses the tooling-owned synthetic project and source-bound netlist serializer,
+  so it runs without a separately configured public template checkout. No
+  cohort code, board, or project fixture was copied. No native KiCad process
+  or product board is claimed for this rule.
 - **Focused selection:**
 
   ```sh
