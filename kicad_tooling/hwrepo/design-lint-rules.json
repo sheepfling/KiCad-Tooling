@@ -2979,13 +2979,13 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized ground stem may use a one-letter suffix such as GNDA before an optional numeric suffix.",
+      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized ground stem may use a one-letter suffix such as GNDA before an optional numeric suffix. The bounded RET token is also recognized, including RET1/RET2 and PORT1_RET/PORT2_RET.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Suffix similarity is only a review clue; separate numbered returns can be intentional isolation domains.",
-        "Only documented return-like stems and numeric suffix patterns are recognized."
+        "Only documented return-like stems and numeric suffix patterns are recognized; the RET token is lexical context, not proof that a net is ground or that domains should be joined."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
@@ -2993,6 +2993,7 @@
         "tests.test_design_lint_numbered_returns.test_four_db9_numbered_pwm_return_names_are_reviewed",
         "tests.test_design_lint_numbered_returns.test_project_can_block_numbered_return_review",
         "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review",
+        "tests.test_return_net_lint.test_numbered_ret_tokens_request_review",
         "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable"
       ],
       "valid_control_fixtures": [
@@ -3000,6 +3001,7 @@
         "tests.test_design_lint_numbered_returns.test_four_db9_common_return_control_clears_review_findings",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_pwm_return_name_is_a_valid_control",
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
+        "tests.test_return_net_lint.test_common_ret_and_reset_labels_are_valid_controls",
         "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable"
       ],
       "metamorphic_fixtures": [
@@ -3027,22 +3029,24 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct populated net names contain a recognized return token, are not already included in a numbered-return group, and have no attached exported symbol pin function that identifies a return. Recognized ground names include one-letter suffixes such as GNDA and GNDD.",
+      "predicate": "At least two distinct populated net names contain a recognized return token, are not already included in a numbered-return group, and have no attached exported symbol pin function that identifies a return. Recognized ground names include one-letter suffixes such as GNDA and GNDD; the bounded RET token is also recognized.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Net-label text does not establish that domains must be connected, bonded, or isolated; the finding only prompts review.",
-        "Only documented return tokens and native pin-function text are recognized; a one-letter suffix extends GND only (for example GNDA or GNDD). Longer labels such as GNDAUDIO are not matched. Unrelated labels, missing symbol metadata, or an attached pin with a recognized return function can suppress this candidate.",
+        "Only documented return tokens and native pin-function text are recognized; a one-letter suffix extends GND only (for example GNDA or GNDD). RET is matched as a bounded token, so RESET is not a match. Longer labels such as GNDAUDIO are not matched. Unrelated labels, missing symbol metadata, or an attached pin with a recognized return function can suppress this candidate.",
         "The rule does not inspect PCB copper, off-board wiring, connector datasheets, or physical continuity."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_return_label_groups.test_unindexed_return_labels_include_exact_evidence_and_review_question",
-        "tests.test_return_net_lint.test_letter_suffixed_ground_nets_without_return_pin_roles_request_review"
+        "tests.test_return_net_lint.test_letter_suffixed_ground_nets_without_return_pin_roles_request_review",
+        "tests.test_return_net_lint.test_unindexed_ret_labels_request_review_without_return_pin_roles"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_return_label_groups.test_native_return_pin_roles_suppress_unroled_label_hint",
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
+        "tests.test_return_net_lint.test_common_ret_and_reset_labels_are_valid_controls",
         "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",
         "tests.test_return_net_lint.test_longer_non_return_tokens_do_not_match_letter_suffix_rule",
         "tests.test_design_lint_return_label_groups.test_one_unindexed_return_label_is_not_a_group_hint"

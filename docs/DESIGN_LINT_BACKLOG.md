@@ -3412,8 +3412,16 @@ is not a reason by itself to expand its scope or change its default policy.
   one-letter suffix on `GND`, including `GNDA` and `GNDD`, which KiCad's
   [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
   lists as a net matched by `GND*`. Matching names remain review-only and do
-  not imply a common electrical domain.
+  not imply a common electrical domain. The bounded `RET` token is also
+  recognized for both numbered and unnumbered candidate groups. TI's
+  [UCC28630EVM-572 user guide](https://www.ti.com/lit/ug/sluuax9b/sluuax9b.pdf)
+  labels an output return `RET`; this supports the spelling only. Synthetic
+  `RET1`/`RET2`, `PORT1_RET`/`PORT2_RET`, and `RET_USB`/`RET_SERIAL` cases
+  exercise review candidates, while common-`RET` and `RESET` controls protect
+  the boundary. No source schematic was copied.
 - **Boundary:** The recognized label and pin-function vocabularies are narrow.
+  A return-like label token, including `RET`, is context only and does not
+  prove that the label names a ground domain.
   Longer names such as `GNDAUDIO` do not match the one-letter suffix form.
   The rule does not infer that similarly named nets must connect, discover
   off-board grounds, or establish PCB copper or physical continuity. Separate

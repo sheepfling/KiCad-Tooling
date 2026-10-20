@@ -1022,7 +1022,13 @@ have been connected.
 - `net.numbered_returns` flags two or more return-like nets with the same stem
   and distinct numeric suffixes, such as `GND1` and `GND2`. Its recognized
   ground token also permits one-letter suffixes, so `GNDA1` and `GNDA2` can
-  prompt review. The synthetic four-port DB9 case covers `0V PWM 1` through
+  prompt review. The bounded `RET` token also covers patterns such as
+  `RET1`/`RET2` and `PORT1_RET`/`PORT2_RET`; synthetic common-`RET` and
+  `RESET1`/`RESET2` controls guard the boundary. TI's
+  [UCC28630EVM-572 user guide](https://www.ti.com/lit/ug/sluuax9b/sluuax9b.pdf)
+  uses `RET` for an output return label. This source supports the spelling as
+  review context only; it does not establish that separate domains should be
+  joined. The synthetic four-port DB9 case covers `0V PWM 1` through
   `0V PWM 4`, with a common `0V PWM` control. See the
   [numbered-return fixture](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
   KiCad's [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
@@ -1039,7 +1045,8 @@ have been connected.
   return-like net labels when none of their attached exported pin functions
   identifies a return. Nets already included in a numbered-return group are
   left to `net.numbered_returns`. It is intended to catch separate labels such
-  as `USB_GND`, `SERIAL_RETURN`, `GNDA`, and `GNDD` on numeric connector pins. This asks for review;
+  as `USB_GND`, `SERIAL_RETURN`, `GNDA`, `GNDD`, and synthetic `RET_USB` /
+  `RET_SERIAL` labels on numeric connector pins. This asks for review;
   it does not determine whether the domains should be common, bonded, or
   isolated. Numbered sibling nets remain under `net.numbered_returns`, and
   explicit return pin functions leave this candidate to the connector rules.
