@@ -4677,6 +4677,11 @@ is not a reason by itself to expand its scope or change its default policy.
   the focused rule gate and installed-wheel check against the separate public
   template passed, as did Ubuntu, macOS, and Windows previews. The package job
   was skipped under prerelease policy.
+  Hosted acceptance for `v0.5.2rc43` also passed (GitHub Actions run
+  [39423202370](https://github.com/sheepfling/KiCad-Tooling/actions/runs/39423202370)):
+  the connected-bias rule gate and installed-wheel check against the separate
+  public template passed, as did Ubuntu, macOS, and Windows previews. The
+  package job was skipped under prerelease policy.
 - **Remaining:** The native results validate evidence parsing and bounded
   aliases, not design intent. Public demo screens do not label intent, and
   connected-bias candidate volume is not a false-positive measurement.
