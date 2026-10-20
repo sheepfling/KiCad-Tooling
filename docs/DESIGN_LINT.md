@@ -1028,8 +1028,9 @@ have been connected.
   [UCC28630EVM-572 user guide](https://www.ti.com/lit/ug/sluuax9b/sluuax9b.pdf)
   uses `RET` for an output return label. This source supports the spelling as
   review context only; it does not establish that separate domains should be
-  joined. The synthetic four-port DB9 case covers `0V PWM 1` through
-  `0V PWM 4`, with a common `0V PWM` control. See the
+  joined. A focused CLI/MCP parity regression covers numbered and unindexed
+  `RET` candidates plus a common-`RET` control. The synthetic four-port DB9
+  case covers `0V PWM 1` through `0V PWM 4`, with a common `0V PWM` control. See the
   [numbered-return fixture](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
   KiCad's [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
   shows `GND*` matching both `GND` and `GNDA`; that naming similarity does not

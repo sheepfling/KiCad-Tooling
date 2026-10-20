@@ -1243,6 +1243,7 @@
         "tests.test_design_lint_mcp_parity_two_pin_varistors.test_same_net_varistor_lint_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_connector_returns.test_connector_capacitor_only_dc_reference_lint_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_connector_returns.test_numbered_pwm_return_cli_mcp_parity",
+        "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_schematic_geometry.test_schematic_geometry_opt_in_parity",
         "tests.test_design_lint_mcp_parity_schematic_hierarchy.test_reused_child_sheet_geometry_source_binding_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_schematic_connectivity.test_schematic_pin_tip_on_wire_interior_cli_mcp_parity",

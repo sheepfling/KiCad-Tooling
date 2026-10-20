@@ -3418,7 +3418,9 @@ is not a reason by itself to expand its scope or change its default policy.
   labels an output return `RET`; this supports the spelling only. Synthetic
   `RET1`/`RET2`, `PORT1_RET`/`PORT2_RET`, and `RET_USB`/`RET_SERIAL` cases
   exercise review candidates, while common-`RET` and `RESET` controls protect
-  the boundary. No source schematic was copied.
+  the boundary. A focused CLI/MCP parity case exercises numbered and
+  unindexed candidates plus a common-`RET` control. No source schematic was
+  copied.
 - **Boundary:** The recognized label and pin-function vocabularies are narrow.
   A return-like label token, including `RET`, is context only and does not
   prove that the label names a ground domain.
