@@ -74,9 +74,7 @@ def connector_footprint_peer_candidate_groups(
             (components[reference.casefold()].part_id or "").strip() for reference in peers
         }
         part_id = (
-            min(part_id_values, key=lambda item: (item.casefold(), item))
-            if part_id_key
-            else None
+            min(part_id_values, key=lambda item: (item.casefold(), item)) if part_id_key else None
         )
         result.append(
             ConnectorFootprintPeerGroup(

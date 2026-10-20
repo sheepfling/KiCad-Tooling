@@ -153,7 +153,11 @@ def peer_missing_metadata_netlist(
     )
 
 
-def native_peer_missing_metadata_netlist(*, common_target: bool = False) -> NetlistContract:
+def native_peer_missing_metadata_netlist(
+    *,
+    common_target: bool = False,
+    part_ids: tuple[str | None, str | None] = (None, None),
+) -> NetlistContract:
     """Model the numbered pins and assignments in the checked-in native pair."""
     references = ("J1", "J2")
     return NetlistContract(
@@ -161,8 +165,9 @@ def native_peer_missing_metadata_netlist(*, common_target: bool = False) -> Netl
             reference: ComponentContract(
                 value="Synthetic peer metadata connector",
                 footprint="Synthetic:Package",
+                part_id=part_id,
             )
-            for reference in references
+            for reference, part_id in zip(references, part_ids, strict=True)
         },
         nets={
             "COMMON_REFERENCE": ("J1.2", "J2.2"),

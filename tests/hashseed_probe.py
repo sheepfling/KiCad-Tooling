@@ -206,6 +206,8 @@ REPORT_ORDER = (
     "pcb_pad_net_matching_control",
     "connector_peer_missing_metadata_fault",
     "connector_peer_missing_metadata_control",
+    "connector_peer_missing_metadata_part_id_fault",
+    "connector_peer_missing_metadata_part_id_control",
     "connector_generic_peer_pin_all_open_fault",
     "connector_generic_peer_pin_all_open_control",
 )

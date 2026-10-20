@@ -10,6 +10,8 @@ from .hwrepo.connector_identity import native_pin_metadata_is_missing
 RULE_ID = "connector.footprint_peer_pin_missing_metadata_assignment_divergence"
 FAULT_CASE = "footprint-alias-peer-missing-metadata-fault"
 CONTROL_CASE = "footprint-alias-peer-missing-metadata-control"
+PART_ID_FAULT_CASE = "footprint-alias-part-id-peer-missing-metadata-fault"
+PART_ID_CONTROL_CASE = "footprint-alias-part-id-peer-missing-metadata-control"
 
 
 def verify_footprint_alias_peer_missing_metadata_divergence(
@@ -82,11 +84,49 @@ def verify_footprint_alias_peer_missing_metadata_divergence(
     ):
         raise ValueError("Native common-assignment control produced a missing-metadata finding")
 
+    part_id_fault = ctx.reports[PART_ID_FAULT_CASE, "first"]
+    part_id_observed = ctx.observed_contracts[PART_ID_FAULT_CASE, "first"]
+    part_id_findings = tuple(item for item in part_id_fault.findings if item.rule_id == RULE_ID)
+    part_ids = (
+        part_id_observed.components["J1"].part_id,
+        part_id_observed.components["J2"].part_id,
+    )
+    part_id_nets = {net: set(pins) for net, pins in part_id_observed.nets.items()}
+    if (
+        part_id_fault.status != "REVIEW"
+        or len(part_id_findings) != 1
+        or tuple(value.casefold() for value in part_ids if value is not None)
+        != ("synthetic-peer-001", "synthetic-peer-001")
+        or part_ids != ("SYNTHETIC-PEER-001", "synthetic-peer-001")
+        or part_id_findings[0].evidence.get("peer_identity_basis") != ("part_id",)
+        or part_id_findings[0].evidence.get("assignments")
+        != ("J1.1=UART_RX_NET", "J2.1=UART_TX_NET")
+        or part_id_findings[0].evidence.get("common_anchor_pin_numbers") != ("2",)
+        or part_id_nets.get("COMMON_REFERENCE") != {"J1.2", "J2.2"}
+    ):
+        raise ValueError("Native matching-PART_ID fault lost its split assignment evidence")
+
+    part_id_control = ctx.reports[PART_ID_CONTROL_CASE, "first"]
+    part_id_control_observed = ctx.observed_contracts[PART_ID_CONTROL_CASE, "first"]
+    part_id_control_nets = {net: set(pins) for net, pins in part_id_control_observed.nets.items()}
+    if (
+        any(item.rule_id == RULE_ID for item in part_id_control.findings)
+        or part_id_control_nets.get("SHARED_PORT") != {"J1.1", "J2.1"}
+        or part_id_control_nets.get("COMMON_REFERENCE") != {"J1.2", "J2.2"}
+    ):
+        raise ValueError("Native matching-PART_ID common-net control produced a finding")
+
     return {
         FAULT_CASE: json.dumps(
             finding.model_dump(mode="json"),
             sort_keys=True,
             separators=(",", ":"),
             ensure_ascii=False,
-        )
+        ),
+        PART_ID_FAULT_CASE: json.dumps(
+            part_id_findings[0].model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ),
     }

@@ -5,10 +5,10 @@ connector aliases whose target pin has missing or unnamed native function
 metadata. Both instances use distinct symbols with the same value, footprint,
 and complete two-pin inventory. Pin 2 is a common-net anchor.
 
-| Fixture           | Pin 1 function metadata | Pin 1 assignments             | Pin 2 anchor       | Expected result |
-| ----------------- | ----------------------- | ----------------------------- | ------------------ | --------------- |
-| `fault.kicad_sch` | J1 is `UART_RX`; J2 is `~` | `UART_RX_NET` / `UART_TX_NET` | `COMMON_REFERENCE` | `REVIEW` |
-| `control.kicad_sch` | J1 is `UART_RX`; J2 is `~` | both use `SHARED_PORT` | `COMMON_REFERENCE` | No finding |
+| Fixture             | Pin 1 function metadata    | Pin 1 assignments             | Pin 2 anchor       | Expected result |
+| ------------------- | -------------------------- | ----------------------------- | ------------------ | --------------- |
+| `fault.kicad_sch`   | J1 is `UART_RX`; J2 is `~` | `UART_RX_NET` / `UART_TX_NET` | `COMMON_REFERENCE` | `REVIEW`        |
+| `control.kicad_sch` | J1 is `UART_RX`; J2 is `~` | both use `SHARED_PORT`        | `COMMON_REFERENCE` | No finding      |
 
 The split may be intentional. The prompt asks a reviewer to inspect exact
 symbol pinouts and project requirements; it does not infer a shared role or

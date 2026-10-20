@@ -17,6 +17,8 @@ from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
 from kicad_tooling.ci_hosted_connector_return_peer_missing_metadata import (
     CONTROL_CASE,
     FAULT_CASE,
+    PART_ID_CONTROL_CASE,
+    PART_ID_FAULT_CASE,
     RULE_ID,
     verify_footprint_alias_peer_missing_metadata_divergence,
 )
@@ -26,6 +28,7 @@ from tests.connector_footprint_peer_support import (
     lint_report,
     native_peer_missing_metadata_netlist,
 )
+from tests.hosted_connector_return_expected_stages import EXPECTED_CONNECTOR_RETURN_STAGES
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
     PINNED_NATIVE_KICAD_IMAGES,
@@ -34,22 +37,30 @@ from tests.synthetic_design_lint_project import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
 
-FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE)
+FIXTURE_CASES = (FAULT_CASE, CONTROL_CASE, PART_ID_FAULT_CASE, PART_ID_CONTROL_CASE)
+FIXTURE_PATHS = {
+    FAULT_CASE: ("connector-footprint-peer-missing-metadata-native", "fault.kicad_sch"),
+    CONTROL_CASE: ("connector-footprint-peer-missing-metadata-native", "control.kicad_sch"),
+    PART_ID_FAULT_CASE: ("connector-part-id-peer-missing-metadata-native", "fault.kicad_sch"),
+    PART_ID_CONTROL_CASE: (
+        "connector-part-id-peer-missing-metadata-native",
+        "control.kicad_sch",
+    ),
+}
 EXPECTED_SOURCE_HASHES = {
     FAULT_CASE: "7265e062e47c5b1d06a30f40c94cfd23d14cc5f07ff51799ef0afefb21ab2c21",
     CONTROL_CASE: "407e25454fabe943a4f2b9ad5fd58c8d8af48b836cef20258b32d216902db923",
+    PART_ID_FAULT_CASE: "5684bcf7293542cbc8bf2b05e68a3a7c9f6d0db6f0b7aaac0590721f1b58907b",
+    PART_ID_CONTROL_CASE: "880e000dc1646fe5a8a4183b60ac36150d6e965e9dd7b8055ac286e0a0e1f75c",
 }
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_missing_metadata_fixture_sources_match_reviewed_hashes() -> None:
-    fixture_root = (
-        Path(__file__).resolve().parent
-        / "fixtures/design_lint/connector-footprint-peer-missing-metadata-native"
-    )
+    fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
     assert {
-        case: hashlib.sha256((fixture_root / f"{name}.kicad_sch").read_bytes()).hexdigest()
-        for case, name in ((FAULT_CASE, "fault"), (CONTROL_CASE, "control"))
+        case: hashlib.sha256((fixture_root / folder / filename).read_bytes()).hexdigest()
+        for case, (folder, filename) in FIXTURE_PATHS.items()
     } == EXPECTED_SOURCE_HASHES
 
 
@@ -57,33 +68,39 @@ def test_missing_metadata_fixture_sources_match_reviewed_hashes() -> None:
 def test_missing_metadata_fixtures_are_registered_for_hosted_capture() -> None:
     fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
     sources = connector_return_fixture_sources(fixture_root)
-    for case, filename in zip(FIXTURE_CASES, ("fault.kicad_sch", "control.kicad_sch"), strict=True):
-        assert sources[case] == (
-            fixture_root / "connector-footprint-peer-missing-metadata-native" / filename
-        )
+    for case, (folder, filename) in FIXTURE_PATHS.items():
+        assert sources[case] == fixture_root / folder / filename
         assert CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES[case] == EXPECTED_SOURCE_HASHES[case]
+    assert {f"connector-return-fixture/{case}" for case in FIXTURE_CASES}.issubset(
+        EXPECTED_CONNECTOR_RETURN_STAGES
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_native_evidence_validator_checks_split_fault_and_common_control() -> None:
-    fault_observed = native_peer_missing_metadata_netlist()
-    control_observed = native_peer_missing_metadata_netlist(common_target=True)
+    part_ids = ("SYNTHETIC-PEER-001", "synthetic-peer-001")
+    observations = {
+        FAULT_CASE: native_peer_missing_metadata_netlist(),
+        CONTROL_CASE: native_peer_missing_metadata_netlist(common_target=True),
+        PART_ID_FAULT_CASE: native_peer_missing_metadata_netlist(part_ids=part_ids),
+        PART_ID_CONTROL_CASE: native_peer_missing_metadata_netlist(
+            common_target=True,
+            part_ids=part_ids,
+        ),
+    }
     context = SimpleNamespace(
-        reports={
-            (FAULT_CASE, "first"): lint_report(fault_observed),
-            (CONTROL_CASE, "first"): lint_report(control_observed),
-        },
-        observed_contracts={
-            (FAULT_CASE, "first"): fault_observed,
-            (CONTROL_CASE, "first"): control_observed,
-        },
+        reports={(case, "first"): lint_report(value) for case, value in observations.items()},
+        observed_contracts={(case, "first"): value for case, value in observations.items()},
         netlist_hashes={(case, "first"): "a" * 64 for case in FIXTURE_CASES},
     )
 
     receipts = verify_footprint_alias_peer_missing_metadata_divergence(context)
 
-    assert tuple(receipts) == (FAULT_CASE,)
+    assert tuple(receipts) == (FAULT_CASE, PART_ID_FAULT_CASE)
     assert json.loads(receipts[FAULT_CASE])["rule_id"] == RULE_ID
+    assert json.loads(receipts[PART_ID_FAULT_CASE])["evidence"]["peer_identity_basis"] == [
+        "part_id"
+    ]
 
 
 @pytest.mark.native_kicad
@@ -139,10 +156,10 @@ def test_native_missing_metadata_fault_and_control_are_repeatable(
     assert_native_fixture_mounts(root, native_events[-1]["command_receipt"])
     verify_footprint_alias_peer_missing_metadata_divergence(context)
 
-    fault = context.reports[FAULT_CASE, "first"]
-    control = context.reports[CONTROL_CASE, "first"]
-    assert any(item.rule_id == RULE_ID for item in fault.findings)
-    assert not any(item.rule_id == RULE_ID for item in control.findings)
+    for case in (FAULT_CASE, PART_ID_FAULT_CASE):
+        assert any(item.rule_id == RULE_ID for item in context.reports[case, "first"].findings)
+    for case in (CONTROL_CASE, PART_ID_CONTROL_CASE):
+        assert not any(item.rule_id == RULE_ID for item in context.reports[case, "first"].findings)
     for case in FIXTURE_CASES:
         assert (
             context.normalized_netlist_hashes[case, "first"]

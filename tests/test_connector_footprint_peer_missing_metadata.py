@@ -70,9 +70,7 @@ def test_unnamed_peer_pin_with_split_assignment_is_reviewed() -> None:
 def test_part_id_connector_aliases_with_missing_metadata_are_reviewed() -> None:
     observed = peer_missing_metadata_netlist(part_id="SYNTHETIC-PART-001")
     components = dict(observed.components)
-    components["J2"] = components["J2"].model_copy(
-        update={"part_id": "synthetic-part-001"}
-    )
+    components["J2"] = components["J2"].model_copy(update={"part_id": "synthetic-part-001"})
     report = lint_report(observed.model_copy(update={"components": components}))
     findings = [item for item in report.findings if item.rule_id == RULE_ID]
 

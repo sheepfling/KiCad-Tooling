@@ -2851,8 +2851,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v74. The cross-process probe supports themed report
-  selectors and retains the complete 196-report inventory gate. Fault/control
+- **Status:** Implemented v75. The cross-process probe supports themed report
+  selectors and retains the complete 198-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2867,7 +2867,8 @@ is not a reason by itself to expand its scope or change its default policy.
   generic and named component power-input peer faults and controls,
   generic component peer-pin all-open, mixed-open, and strict-majority
   assignment-outlier reports with valid controls,
-  missing-metadata connector-peer split and common-assignment reports,
+  missing-metadata connector-peer split and common-assignment reports both
+  with and without a case-insensitive matching `PART_ID`,
   mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
   open-contact case, plus the typed contact-rating boundary and over-limit
   checks, DB9 grounding and pin-connectivity requirements, multi-device
@@ -2901,7 +2902,9 @@ is not a reason by itself to expand its scope or change its default policy.
   the focused `catalog_lint` gate and documents rule/theme selectors for shared
   hash-seed reports.
   The v74 extension adds a source-bound fault/control pair for LINT-165 to the
-  three-process comparison and selects it directly by report family.
+  three-process comparison and selects it directly by report family. The v75
+  extension adds matching `PART_ID` split/common reports with a case-only ID
+  difference to that same three-process comparison.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -8711,18 +8714,18 @@ is not a reason by itself to expand its scope or change its default policy.
   PART_ID is only a project-authored similarity clue, not proof of electrical
   equivalence. Project policy can select REVIEW,
   BLOCK, or OFF and exact-fingerprint ignores.
-- **Evidence:** Tooling-owned synthetic tests cover unnamed and absent pin
-  functions, missing electrical types, common-assignment controls, missing
-  anchors, open or ambiguous targets, incomplete inventories, DNP and
-  mismatched-PART_ID controls, source-matched peer scopes, mapping-order and three-process
-  hash-seed determinism, policy and ignore lifecycle, and CLI/MCP parity. A
-  matching-PART_ID fault and mismatched-PART_ID control are synthetic-tested;
-  the registered native pair continues to cover the no-PART_ID predicate.
-  Digest-pinned synthetic fault/control
-  schematics are registered for native export and repeatability on KiCad
-  10.0.0 and 10.0.5; exact native execution remains pending for this local
-  checkpoint. No product source or cohort fixture is used; see the
-  [fixture README](../tests/fixtures/design_lint/connector-footprint-peer-missing-metadata-native/README.md).
+- **Evidence:** Tooling-owned synthetic tests cover unnamed and absent pin functions, missing
+  electrical types, common-assignment controls, missing anchors, open or ambiguous targets,
+  incomplete inventories, DNP and mismatched-PART_ID controls, source-matched peer scopes,
+  mapping-order and three-process hash-seed determinism, policy and ignore lifecycle, and CLI/MCP
+  parity. A matching-PART_ID fault, common-net control, and mismatched-PART_ID control are covered.
+  Separate digest-pinned fault/control pairs for peers without PART_ID and case-insensitive matching
+  PART_IDs are registered for native export and repeatability on KiCad 10.0.0 and 10.0.5; exact
+  native execution remains pending for this local checkpoint. No product source or cohort fixture is
+  used; see the
+  [base fixture README](../tests/fixtures/design_lint/connector-footprint-peer-missing-metadata-native/README.md)
+  and
+  [PART_ID fixture README](../tests/fixtures/design_lint/connector-part-id-peer-missing-metadata-native/README.md).
 - **Focused selection:**
 
   ```sh
