@@ -30,6 +30,9 @@ from tests.design_lint_fixtures.connector_coverage import (
     connector_return_role_reviews,
     inventory_review,
 )
+from tests.design_lint_fixtures.connector_mixed_return import (
+    two_usb_one_serial_return_case,
+)
 from tests.test_return_net_lint import lint_report as return_net_lint_report
 
 
@@ -204,11 +207,29 @@ def numbered_pwm_return_report(*, common: bool) -> dict[str, object]:
         }
     )
     observed = observed.model_copy(update={"nets": nets})
-    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    netlist_sha256 = hashlib.sha256(model_json_bytes(observed)).hexdigest()
     report = evaluate(
         "synthetic-four-db9-pwm-common" if common else "synthetic-four-db9-pwm-split",
         coach(observed, netlist_sha256),
         DesignLintPolicy(),
+    )
+    return report.model_dump(mode="json")
+
+
+def two_usb_one_serial_return_report(*, common_return: bool) -> dict[str, object]:
+    """Serialize the mixed-port split-return fault or common-return control."""
+    observed, coverage = two_usb_one_serial_return_case(common_return=common_return)
+    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    project_id = (
+        "synthetic-two-usb-one-serial-common-return"
+        if common_return
+        else "synthetic-two-usb-one-serial-split-return"
+    )
+    report = evaluate(
+        project_id,
+        coach(observed, netlist_sha256),
+        DesignLintPolicy(),
+        connector_coverage=coverage,
     )
     return report.model_dump(mode="json")
 
@@ -252,4 +273,6 @@ def report_cases() -> dict[str, object]:
         "unconnected_pin_inventory": unconnected_pin_inventory_check_result(),
         "mapped_return_fault": reviewed_connector_return_report(common_return=False),
         "mapped_return_control": reviewed_connector_return_report(common_return=True),
+        "two_usb_one_serial_return_fault": two_usb_one_serial_return_report(common_return=False),
+        "two_usb_one_serial_return_control": two_usb_one_serial_return_report(common_return=True),
     }

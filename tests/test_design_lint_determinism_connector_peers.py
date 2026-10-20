@@ -131,6 +131,29 @@ def test_connector_peer_reports_remain_deterministic() -> None:
     ]
     assert reports["mapped_return_control"]["status"] == "PASS"
     assert reports["mapped_return_control"]["findings"] == []
+    mixed_return_fault = reports["two_usb_one_serial_return_fault"]
+    mixed_return_control = reports["two_usb_one_serial_return_control"]
+    assert mixed_return_fault["status"] == "REVIEW"
+    assert mixed_return_control["status"] == "REVIEW"
+    assert "signal.named_pair_without_reviewed_requirement" in {
+        finding["rule_id"] for finding in mixed_return_control["findings"]
+    }
+    assert "connector.repeated_pin_function" not in {
+        finding["rule_id"] for finding in mixed_return_control["findings"]
+    }
+    mixed_return_findings = [
+        finding
+        for finding in mixed_return_fault["findings"]
+        if finding["rule_id"] == "connector.repeated_pin_function"
+    ]
+    assert mixed_return_findings
+    assert {
+        pin
+        for finding in mixed_return_findings
+        for pin in ("J1.3", "J2.3", "J3.3")
+        if pin in finding["evidence"]
+    } == {"J1.3", "J2.3", "J3.3"}
+    assert all(finding["mode"] == "review" for finding in mixed_return_findings)
     mapped_supply_fault = reports["mapped_supply_open_peer_fault"]
     assert mapped_supply_fault["status"] == "REVIEW"
     assert mapped_supply_fault["connector_coverage"]["status"] == "COMPLETE"

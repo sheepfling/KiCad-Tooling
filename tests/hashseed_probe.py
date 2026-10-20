@@ -108,6 +108,8 @@ REPORT_ORDER = (
     "peer_pin_control",
     "mapped_return_fault",
     "mapped_return_control",
+    "two_usb_one_serial_return_fault",
+    "two_usb_one_serial_return_control",
     "mapped_supply_open_peer_fault",
     "mapped_supply_common_control",
     "connector_peer_scope_separate",
