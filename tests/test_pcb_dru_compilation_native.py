@@ -11,7 +11,10 @@ import pytest
 
 from kicad_tooling.hwrepo.contracts import write_model
 from kicad_tooling.hwrepo.models import CommandEvidence
-from kicad_tooling.hwrepo.pcb_dru_compilation import run_pcb_dru_compilation_probe
+from kicad_tooling.hwrepo.pcb_dru_compilation import (
+    PcbDruCompilationReport,
+    run_pcb_dru_compilation_probe,
+)
 from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 
 pytestmark = [
@@ -26,6 +29,12 @@ pytestmark = [
 ]
 
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/pcb-dru-rule-compilation"
+
+
+def _failure_context(report: PcbDruCompilationReport, output: Path) -> str:
+    command_path = output / "drc-rule-compilation/native-command.command.json"
+    command = command_path.read_text(encoding="utf-8") if command_path.is_file() else "missing"
+    return f"probe report:\n{report.model_dump_json(indent=2)}\nnative command evidence:\n{command}"
 
 
 def _docker_executor(image: str):
@@ -111,7 +120,7 @@ def test_native_drc_proves_terminal_rule_and_rejects_malformed_custom_rules(
         image=image,
         execute=executor,
     )
-    assert control.status == "PASS"
+    assert control.status == "PASS", _failure_context(control, output / "control")
     assert control.observed_kicad_version == kicad_version
     assert control.sentinel_matches >= 1
     assert control.native_returncode == 5
@@ -127,6 +136,6 @@ def test_native_drc_proves_terminal_rule_and_rejects_malformed_custom_rules(
         image=image,
         execute=executor,
     )
-    assert fault.status == "FAIL"
+    assert fault.status == "FAIL", _failure_context(fault, output / "fault")
     assert fault.sentinel_matches == 0
     assert fault.issue

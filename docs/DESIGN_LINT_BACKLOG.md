@@ -7574,9 +7574,11 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Evidence:** Tooling-owned fixtures include a valid but deliberately
   nonmatching source rule and malformed syntax. Synthetic tests cover version,
   report, sentinel, source-hash, and validation integration behavior. The
-  exact-version native test is registered for KiCad 10.0.0 and 10.0.5; hosted
-  acceptance is pending the `pcb_lint` scoped tag run. No product project or
-  private source is used.
+  `v0.5.1rc78` hosted native run passed the KiCad 10.0.5 case but failed the
+  KiCad 10.0.0 control. Its assertion omitted the probe report and native
+  command output; the fixture now includes both in assertion failures so the
+  scoped tag rerun can identify the cause. Exact-version native acceptance
+  remains unverified. No product project or private source is used.
 - **Focused selection:**
 
   ```sh
