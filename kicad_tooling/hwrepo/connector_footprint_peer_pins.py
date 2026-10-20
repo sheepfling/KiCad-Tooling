@@ -44,7 +44,7 @@ class ConnectorFootprintPeerPinDivergence:
 
 @dataclass(frozen=True)
 class ConnectorFootprintPeerPinOpenOutlier:
-    """An eligible generic or named input contact open on some peers."""
+    """An eligible generic or named contact open on some peers."""
 
     footprint: str
     value: str
@@ -284,7 +284,7 @@ def scan_connector_footprint_peer_pin_assignments(
             anchors: list[str] = []
             generic_differences: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             generic_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
-            named_input_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
+            named_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             generic_all_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             for pin_number in pin_numbers:
                 assignments = {
@@ -320,12 +320,12 @@ def scan_connector_footprint_peer_pin_assignments(
                             open_peer_pin_group_count += 1
                             generic_open_assignments.append((pin_number, assignments))
                         elif (
-                            pin_type in {"power_in", "input"}
+                            pin_type in {"power_in", "input", "power_out"}
                             and not is_named_supply_function(function)
                             and not is_return_function(function)
                         ):
                             open_peer_pin_group_count += 1
-                            named_input_open_assignments.append((pin_number, assignments))
+                            named_open_assignments.append((pin_number, assignments))
                     continue
                 compared_pin_group_count += 1
                 if len(set(signatures)) == 1:
@@ -365,7 +365,7 @@ def scan_connector_footprint_peer_pin_assignments(
                             peer_assignment_basis=basis,
                         )
                     )
-                for pin_number, assignments in named_input_open_assignments:
+                for pin_number, assignments in named_open_assignments:
                     named_power_input_open_outlier = ConnectorFootprintPeerPinOpenOutlier(
                         footprint=footprint_display,
                         value=value_display,
@@ -423,7 +423,7 @@ def scan_connector_footprint_peer_pin_assignments(
             else:
                 unanchored_different_assignment_pin_group_count += len(generic_differences)
                 unanchored_open_peer_pin_group_count += len(generic_open_assignments) + len(
-                    named_input_open_assignments
+                    named_open_assignments
                 )
                 unanchored_all_open_peer_pin_group_count += len(generic_all_open_assignments)
 

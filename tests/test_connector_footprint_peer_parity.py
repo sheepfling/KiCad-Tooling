@@ -46,6 +46,7 @@ OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
 ALL_OPEN_RULE_ID = "connector.footprint_peer_pin_all_open"
 NAMED_POWER_INPUT_OPEN_RULE_ID = "connector.footprint_named_power_input_open_outlier"
 NAMED_SIGNAL_INPUT_OPEN_RULE_ID = "connector.footprint_named_signal_input_open_outlier"
+NAMED_POWER_OUTPUT_OPEN_RULE_ID = "connector.footprint_named_power_output_open_outlier"
 
 
 def _observed(
@@ -87,7 +88,7 @@ def _observed(
         },
         pin_electrical_types={
             f"{reference}.{number}": (
-                {"BIAS_IN": "power_in", "UART_RX": "input"}.get(
+                {"BIAS_IN": "power_in", "UART_RX": "input", "BIAS_OUT": "power_out"}.get(
                     functions[int(number) - 1], "passive"
                 )
             )
@@ -172,6 +173,7 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
         (False, False, False, ("Pin_1", "Pin_2"), ALL_OPEN_RULE_ID, "PASS", 0),
         (False, True, False, ("GND", "BIAS_IN"), NAMED_POWER_INPUT_OPEN_RULE_ID, "REVIEW", 1),
         (False, True, False, ("GND", "UART_RX"), NAMED_SIGNAL_INPUT_OPEN_RULE_ID, "REVIEW", 1),
+        (False, True, False, ("GND", "BIAS_OUT"), NAMED_POWER_OUTPUT_OPEN_RULE_ID, "REVIEW", 1),
     ):
         observed = _observed(
             fault=fault,
@@ -212,13 +214,21 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             assert alias.divergence_finding_count == expected_findings
         elif rule_id == OPEN_RULE_ID:
             assert alias.open_outlier_finding_count == expected_findings
-        elif rule_id in {NAMED_POWER_INPUT_OPEN_RULE_ID, NAMED_SIGNAL_INPUT_OPEN_RULE_ID}:
+        elif rule_id in {
+            NAMED_POWER_INPUT_OPEN_RULE_ID,
+            NAMED_SIGNAL_INPUT_OPEN_RULE_ID,
+            NAMED_POWER_OUTPUT_OPEN_RULE_ID,
+        }:
             named_findings = tuple(
                 item for item in cli_report.findings if item.rule_id == rule_id
             )
             assert len(named_findings) == expected_findings
             if expected_findings:
-                expected_type = "power_in" if rule_id == NAMED_POWER_INPUT_OPEN_RULE_ID else "input"
+                expected_type = {
+                    NAMED_POWER_INPUT_OPEN_RULE_ID: "power_in",
+                    NAMED_SIGNAL_INPUT_OPEN_RULE_ID: "input",
+                    NAMED_POWER_OUTPUT_OPEN_RULE_ID: "power_out",
+                }[rule_id]
                 assert named_findings[0].evidence["pin_electrical_type"] == (expected_type,)
                 assert named_findings[0].evidence["open_pins"] == ("J2.2",)
             assert alias.open_outlier_finding_count == expected_findings

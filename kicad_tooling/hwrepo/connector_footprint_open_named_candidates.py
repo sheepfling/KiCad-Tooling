@@ -1,4 +1,4 @@
-"""Build review findings for eligible named input contacts open across aliases."""
+"""Build review findings for eligible named contacts open across aliases."""
 
 from __future__ import annotations
 
@@ -7,13 +7,13 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 
 
-def open_input_outlier_candidates(
+def open_named_outlier_candidates(
     records: tuple[ConnectorFootprintPeerPinOpenOutlier, ...],
     *,
     rule_id: DesignLintRuleId,
     role_label: str,
 ) -> tuple[Candidate, ...]:
-    """Convert already classified open-input peer records into review candidates."""
+    """Convert classified open-peer records into named-contact review candidates."""
     candidates = tuple(
         Candidate(
             rule_id=rule_id,

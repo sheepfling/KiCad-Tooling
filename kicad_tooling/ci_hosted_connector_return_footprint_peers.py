@@ -11,6 +11,7 @@ OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
 ALL_OPEN_RULE_ID = "connector.footprint_peer_pin_all_open"
 NAMED_POWER_INPUT_OPEN_RULE_ID = "connector.footprint_named_power_input_open_outlier"
 NAMED_SIGNAL_INPUT_OPEN_RULE_ID = "connector.footprint_named_signal_input_open_outlier"
+NAMED_POWER_OUTPUT_OPEN_RULE_ID = "connector.footprint_named_power_output_open_outlier"
 
 
 def verify_footprint_alias_peer_assignments(
@@ -86,7 +87,7 @@ def verify_footprint_alias_peer_assignments(
 def verify_footprint_alias_peer_open_outlier(
     ctx: ConnectorReturnFixtureContext,
 ) -> dict[str, str]:
-    """Validate generic, named power-input, and named signal-input peer cases."""
+    """Validate generic and named connector peer contacts left open."""
     receipts: dict[str, str] = {}
     for case, expected_status, expected_finding_count, expected_functions in (
         ("footprint-alias-open-fault", "REVIEW", 1, ("Pin_1", "Pin_2")),
@@ -278,6 +279,73 @@ def verify_footprint_alias_peer_open_outlier(
         or coverage.footprint_alias_coverage.open_outlier_finding_count != 0
     ):
         raise ValueError("Native named signal-input common control produced an open-peer finding")
+    receipts[case] = json.dumps(
+        coverage.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+
+    case = "footprint-alias-named-power-output-fault"
+    report = ctx.reports[case, "first"]
+    observed = ctx.observed_contracts[case, "first"]
+    coverage = report.connector_peer_pin_coverage
+    findings = tuple(
+        item for item in report.findings if item.rule_id == NAMED_POWER_OUTPUT_OPEN_RULE_ID
+    )
+    if (
+        report.status != "REVIEW"
+        or len(report.findings) != 1
+        or len(findings) != 1
+        or coverage is None
+        or coverage.netlist_sha256 != ctx.netlist_hashes[case, "first"]
+        or observed.components["J1"].part_id is not None
+        or observed.components["J2"].part_id is not None
+        or observed.component_symbols["J1"] == observed.component_symbols["J2"]
+        or any(
+            observed.pin_functions.get(f"{reference}.{number}") != function
+            or observed.pin_electrical_types.get(f"{reference}.{number}") != pin_type
+            for reference in ("J1", "J2")
+            for number, function, pin_type in (
+                ("1", "BIAS_OUT", "power_out"),
+                ("2", "2", "passive"),
+            )
+        )
+        or findings[0].evidence.get("open_pins") != ("J2.1",)
+        or findings[0].evidence.get("common_anchor_pin_numbers") != ("2",)
+    ):
+        raise ValueError("Native named power-output fault lost exact PART_ID-free peer evidence")
+    alias = coverage.footprint_alias_coverage
+    if (
+        alias.status != "PARTIALLY_EVALUATED"
+        or alias.candidate_group_count != 1
+        or alias.eligible_peer_group_count != 1
+        or alias.peer_scope_group_count != 1
+        or alias.unassigned_assignment_pin_group_count != 1
+        or alias.common_anchor_group_count != 1
+        or alias.open_peer_pin_group_count != 1
+        or alias.unanchored_open_peer_pin_group_count != 0
+        or alias.open_outlier_finding_count != 1
+    ):
+        raise ValueError("Native named power-output fault lost its exact coverage counts")
+    receipts[case] = json.dumps(
+        coverage.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+
+    case = "footprint-alias-named-power-output-control"
+    report = ctx.reports[case, "first"]
+    coverage = report.connector_peer_pin_coverage
+    if (
+        report.status != "PASS"
+        or report.findings
+        or coverage is None
+        or coverage.netlist_sha256 != ctx.netlist_hashes[case, "first"]
+        or coverage.footprint_alias_coverage.open_outlier_finding_count != 0
+    ):
+        raise ValueError("Native named power-output common control produced an open-peer finding")
     receipts[case] = json.dumps(
         coverage.model_dump(mode="json"),
         sort_keys=True,

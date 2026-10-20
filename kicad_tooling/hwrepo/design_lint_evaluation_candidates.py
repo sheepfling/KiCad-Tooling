@@ -216,6 +216,7 @@ def scan_evaluation_candidates(
                     "connector.footprint_peer_pin_open_outlier",
                     "connector.footprint_named_power_input_open_outlier",
                     "connector.footprint_named_signal_input_open_outlier",
+                    "connector.footprint_named_power_output_open_outlier",
                 }
                 for item in items
             ),

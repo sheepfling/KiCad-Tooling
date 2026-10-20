@@ -204,6 +204,10 @@ def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> Non
             {"design_lint", "connector_lint", "interface_lint"},
         ),
         (
+            "test_connector_footprint_power_output.py",
+            {"design_lint", "connector_lint", "power_lint"},
+        ),
+        (
             "test_design_lint_numbered_returns.py",
             {"design_lint", "connector_lint", "return_path_lint"},
         ),

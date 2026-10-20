@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .connector_footprint_open_input_candidates import open_input_outlier_candidates
+from .connector_footprint_open_named_candidates import open_named_outlier_candidates
 from .connector_footprint_peer_pins import ConnectorFootprintPeerPinScan
 from .connector_identity import (
     is_named_supply_function,
@@ -27,4 +27,4 @@ def footprint_named_power_input_open_outlier_candidates(
         and not is_named_supply_function(item.pin_function)
         and not is_return_function(item.pin_function)
     )
-    return open_input_outlier_candidates(records, rule_id=RULE_ID, role_label="power-input")
+    return open_named_outlier_candidates(records, rule_id=RULE_ID, role_label="power-input")

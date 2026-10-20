@@ -164,6 +164,16 @@ _PARITY_FIXTURES_BY_RULE = {
             "test_footprint_alias_review_matches_cli_and_mcp",
         ),
     },
+    "connector.footprint_named_power_output_open_outlier": {
+        "fault_fixtures": _refs(
+            "tests.test_connector_footprint_peer_parity",
+            "test_footprint_alias_review_matches_cli_and_mcp",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_connector_footprint_peer_parity",
+            "test_footprint_alias_review_matches_cli_and_mcp",
+        ),
+    },
     "connector.unconnected_power_output": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_connector_power_output",

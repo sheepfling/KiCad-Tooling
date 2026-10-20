@@ -80,6 +80,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/footprint-alias-named-power-input-control",
     "connector-return-fixture/footprint-alias-named-signal-input-fault",
     "connector-return-fixture/footprint-alias-named-signal-input-control",
+    "connector-return-fixture/footprint-alias-named-power-output-fault",
+    "connector-return-fixture/footprint-alias-named-power-output-control",
     "connector-return-fixture/two-peer-open-fault",
     "connector-return-fixture/two-peer-no-connect-fault",
     "connector-return-fixture/two-peer-common-control",

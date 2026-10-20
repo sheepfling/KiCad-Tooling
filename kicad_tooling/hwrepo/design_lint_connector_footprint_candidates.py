@@ -9,6 +9,9 @@ from .connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
 )
 from .connector_footprint_power_input import footprint_named_power_input_open_outlier_candidates
+from .connector_footprint_power_output import (
+    footprint_named_power_output_open_outlier_candidates,
+)
 from .connector_footprint_signal_input import (
     footprint_named_signal_input_open_outlier_candidates,
 )
@@ -71,6 +74,7 @@ def connector_footprint_peer_pin_candidates(
         *_footprint_peer_pin_open_candidates(scan),
         *footprint_named_power_input_open_outlier_candidates(scan),
         *footprint_named_signal_input_open_outlier_candidates(scan),
+        *footprint_named_power_output_open_outlier_candidates(scan),
         *_footprint_peer_pin_all_open_candidates(scan),
     )
 

@@ -12,6 +12,7 @@ DesignLintRuleId = Literal[
     "connector.footprint_peer_pin_open_outlier",
     "connector.footprint_named_power_input_open_outlier",
     "connector.footprint_named_signal_input_open_outlier",
+    "connector.footprint_named_power_output_open_outlier",
     "connector.footprint_peer_pin_all_open",
     "connector.peer_power_input_open_assignment",
     "connector.peer_power_input_named_all_open",
