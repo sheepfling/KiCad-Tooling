@@ -400,6 +400,11 @@ the separate public template and Ubuntu, macOS, and Windows preview jobs. The
 package job was skipped under prerelease policy. The preceding docs-only
 `v0.5.2rc48` tag failed before tests because its message omitted the required
 `Lint-Area` or `Lint-Rule` selector; the later scoped tag passed validation.
+The docs-only checkpoint `v0.5.2rc50` at `62aac53` also passed its scoped
+design-lint gate (GitHub Actions run `39436260075`), including the installed-
+wheel rehearsal against the separate public template and all three preview
+jobs. Its annotated tag passed the local scope resolver; the package job was
+skipped under prerelease policy.
 
 - `connector.repeated_pin_function`
 - `connector.peer_pin_assignment_outlier`
