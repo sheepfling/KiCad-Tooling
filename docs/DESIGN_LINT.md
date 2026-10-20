@@ -1022,7 +1022,10 @@ have been connected.
 - `net.numbered_returns` flags two or more return-like nets with the same stem
   and distinct numeric suffixes, such as `GND1` and `GND2`. Its recognized
   ground token also permits one-letter suffixes, so `GNDA1` and `GNDA2` can
-  prompt review. KiCad's [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
+  prompt review. The synthetic four-port DB9 case covers `0V PWM 1` through
+  `0V PWM 4`, with a common `0V PWM` control. See the
+  [numbered-return fixture](../tests/fixtures/design_lint/four-port-db9-returns/README.md).
+  KiCad's [net-class example](https://docs.kicad.org/8.0/en/eeschema/eeschema.pdf)
   shows `GND*` matching both `GND` and `GNDA`; that naming similarity does not
   establish that the nets should be joined.
 - `net.numbered_power_rails` flags separately numbered nets with a bounded
