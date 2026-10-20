@@ -111,6 +111,87 @@ def peer_metadata_divergence_netlist(
     )
 
 
+def peer_missing_metadata_netlist(
+    *,
+    anchor_assignments: tuple[str | None, str | None] = (
+        "COMMON_REFERENCE",
+        "COMMON_REFERENCE",
+    ),
+    target_assignments: tuple[str | None, str | None] = ("UART_RX_NET", "UART_TX_NET"),
+    missing_fields: tuple[str, ...] = ("pin_function",),
+    missing_reference: str = "J2",
+    placeholder_function: str | None = "~",
+    part_id: str | None = None,
+    dnp: tuple[str, ...] = (),
+    incomplete_inventory: bool = False,
+    ambiguous_pin: str | None = None,
+) -> NetlistContract:
+    """Build exact peer assignments while withholding selected native metadata."""
+    observed = peer_metadata_divergence_netlist(
+        anchor_assignments=anchor_assignments,
+        target_assignments=target_assignments,
+        part_id=part_id,
+        dnp=dnp,
+        incomplete_inventory=incomplete_inventory,
+        ambiguous_pin=ambiguous_pin,
+    )
+    functions = dict(observed.pin_functions)
+    electrical_types = dict(observed.pin_electrical_types)
+    pin = f"{missing_reference}.2"
+    for field in missing_fields:
+        if field == "pin_function":
+            if placeholder_function is None:
+                functions.pop(pin, None)
+            else:
+                functions[pin] = placeholder_function
+        elif field == "pin_electrical_type":
+            electrical_types.pop(pin, None)
+        else:
+            raise ValueError(f"Unsupported synthetic metadata field: {field}")
+    return observed.model_copy(
+        update={"pin_functions": functions, "pin_electrical_types": electrical_types}
+    )
+
+
+def native_peer_missing_metadata_netlist(*, common_target: bool = False) -> NetlistContract:
+    """Model the numbered pins and assignments in the checked-in native pair."""
+    references = ("J1", "J2")
+    return NetlistContract(
+        components={
+            reference: ComponentContract(
+                value="Synthetic peer metadata connector",
+                footprint="Synthetic:Package",
+            )
+            for reference in references
+        },
+        nets={
+            "COMMON_REFERENCE": ("J1.2", "J2.2"),
+            **(
+                {"SHARED_PORT": ("J1.1", "J2.1")}
+                if common_target
+                else {"UART_RX_NET": ("J1.1",), "UART_TX_NET": ("J2.1",)}
+            ),
+        },
+        component_symbols={
+            "J1": "Lint:PeerMetadataDivergenceA",
+            "J2": "Lint:PeerMetadataDivergenceB",
+        },
+        component_pin_numbers={reference: ("1", "2") for reference in references},
+        pin_functions={
+            "J1.1": "UART_RX",
+            "J2.1": "~",
+            "J1.2": "2",
+            "J2.2": "2",
+        },
+        pin_electrical_types={
+            "J1.1": "input",
+            "J2.1": "output",
+            "J1.2": "passive",
+            "J2.2": "passive",
+        },
+    )
+
+
 def named_power_input_divergence_netlist(
     *,
     anchor_assignments: tuple[str | None, str | None] = ("GND", "GND"),
@@ -337,6 +418,7 @@ def peer_pin_reachability_netlists() -> tuple[NetlistContract, ...]:
         named_power_input_divergence_netlist(),
         named_power_input_all_open_netlist(),
         named_power_output_divergence_netlist(),
+        peer_missing_metadata_netlist(),
         peer_netlist(assignments=(("GND", "GND"), (None, None))),
     )
 

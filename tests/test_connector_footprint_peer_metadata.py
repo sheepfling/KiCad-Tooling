@@ -135,6 +135,23 @@ def test_matching_metadata_does_not_enter_the_metadata_divergence_rule() -> None
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_unnamed_native_pin_function_is_missing_metadata_not_a_role_difference() -> None:
+    observed = peer_metadata_divergence_netlist()
+    report = lint_report(
+        observed.model_copy(
+            update={
+                "pin_functions": {**observed.pin_functions, "J2.2": "~"},
+            }
+        )
+    )
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    coverage = report.connector_peer_pin_coverage
+    assert coverage is not None
+    assert coverage.footprint_alias_coverage.incomplete_pin_metadata_group_count == 1
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_current_peer_groups_prevent_cross_port_metadata_comparison() -> None:
     observed = peer_metadata_divergence_netlist()
     candidates = connector_footprint_peer_pin_metadata_assignment_divergences(

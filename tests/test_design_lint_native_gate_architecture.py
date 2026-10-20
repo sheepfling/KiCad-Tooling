@@ -335,6 +335,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.footprint_peer_pin_metadata_assignment_divergence": {
             "tests.test_connector_footprint_peer_metadata_native_fixture_lane.test_native_metadata_divergence_fault_and_control_are_repeatable",
         },
+        "connector.footprint_peer_pin_missing_metadata_assignment_divergence": {
+            "tests.test_connector_footprint_peer_missing_metadata_native_fixture_lane.test_native_missing_metadata_fault_and_control_are_repeatable",
+        },
         "connector.unconnected_power_input": {
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },

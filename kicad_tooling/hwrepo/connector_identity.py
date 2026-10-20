@@ -97,6 +97,11 @@ def has_meaningful_pin_function(function: str | None) -> bool:
     return function is not None and _GENERIC_PIN_FUNCTION.fullmatch(function.strip()) is None
 
 
+def native_pin_metadata_is_missing(value: str | None) -> bool:
+    """Recognize absent and unnamed values in native pin metadata fields."""
+    return value is None or not value.strip() or value.strip() == "~"
+
+
 def pin_function_is_generic(function: str | None) -> bool:
     """Return whether native pin metadata does not identify an electrical role."""
     return (

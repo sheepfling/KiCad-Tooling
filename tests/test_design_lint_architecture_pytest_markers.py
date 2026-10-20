@@ -72,6 +72,15 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "connector_lint",
         "interface_lint",
     },
+    "test_connector_footprint_peer_missing_metadata.py": {
+        "connector_lint",
+        "interface_lint",
+        "parity_lint",
+    },
+    "test_connector_footprint_peer_missing_metadata_native_fixture_lane.py": {
+        "connector_lint",
+        "interface_lint",
+    },
     "test_design_lint_determinism_connector_all_open.py": {"connector_lint"},
     "test_design_lint_connector_power_pins.py": {"connector_lint", "power_lint"},
     "test_design_lint_connector_named_power_input_peers.py": {

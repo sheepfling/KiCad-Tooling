@@ -265,6 +265,24 @@ The first rules are:
   select review, block, or off and use exact-fingerprint ignores. The
   [tooling-owned fixture record](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md)
   covers assigned, mixed-open, and all-open cases on KiCad 10.0.0 and 10.0.5.
+- `connector.footprint_peer_pin_metadata_assignment_divergence` reviews a
+  split assignment when matched connector aliases have complete pin inventories
+  but present native function or electrical-type metadata differs. The missing-
+  metadata case is handled separately below. Distinct connector roles and
+  isolated interfaces may be intentional, so this prompt does not say the nets
+  should be joined.
+- `connector.footprint_peer_pin_missing_metadata_assignment_divergence`
+  reviews a split assignment when matched connector aliases have complete
+  inventories but a target pin has missing, blank, or KiCad unnamed (`~`)
+  function or electrical-type metadata. It requires one exact net per peer and
+  a separate pin on one exact common net in the same peer scope. Common, open,
+  ambiguous, unanchored, incomplete-inventory, DNP, and PART_ID groups are
+  excluded. The default is REVIEW; project policy can select REVIEW, BLOCK, or
+  OFF and exact-fingerprint ignores. This asks for exact pinout and
+  project-requirement review; it does not infer a shared role or tell the user
+  to join nets. The synthetic fault/control source and native-lane registration
+  are documented in the
+  [fixture README](../tests/fixtures/design_lint/connector-footprint-peer-missing-metadata-native/README.md).
 - `connector.peer_power_input_open_assignment` and
   `connector.peer_power_input_named_all_open` compare an explicit, unrecognized
   native `power_in` pin across distinct connector symbols with a guarded shared
@@ -1277,7 +1295,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 146 active rules. They
+`synthetic_validated`; the catalog currently contains 147 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and

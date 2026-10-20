@@ -8,7 +8,7 @@ from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
 )
-from .connector_identity import partition_peer_assignments
+from .connector_identity import native_pin_metadata_is_missing, partition_peer_assignments
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .models import NetlistContract
@@ -55,15 +55,14 @@ def connector_footprint_peer_pin_metadata_assignment_divergences(
                 pin = f"{reference}.{displayed_pin}"
                 function = functions.get(pin.casefold())
                 electrical_type = electrical_types.get(pin.casefold())
-                if (
-                    function is None
-                    or not function.strip()
-                    or electrical_type is None
-                    or not electrical_type.strip()
+                function_value = function or ""
+                electrical_type_value = electrical_type or ""
+                if native_pin_metadata_is_missing(function) or native_pin_metadata_is_missing(
+                    electrical_type
                 ):
                     pin_metadata = {}
                     break
-                pin_metadata[reference_key] = (pin, function, electrical_type)
+                pin_metadata[reference_key] = (pin, function_value, electrical_type_value)
             if len(pin_metadata) != len(group.references):
                 continue
 
