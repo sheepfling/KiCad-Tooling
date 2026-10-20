@@ -4684,6 +4684,45 @@
       ]
     },
     {
+      "rule_id": "pcb.dfm_drc_check_warning",
+      "title": "Documented DFM Error-default DRC checks downgraded to Warning need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_global_severity_review.py#warning_dfm_native_drc_check_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro path, one of thirteen documented Error-default DFM check IDs, configured Warning severity, and exact configured KiCad version",
+      "predicate": "For a PCB or PCB-only project configured for KiCad 10.0.x, emit one review candidate for each source-bound Warning setting among annular_width, courtyards_overlap, drill_out_of_range, hole_clearance, hole_to_hole, invalid_outline, malformed_courtyard, microvia_drill_out_of_range, solder_mask_bridge, track_angle, track_on_post_machined_layer, track_segment_length, and track_width.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.x project JSON board.design_settings.rule_severities; check IDs are mapped from versioned KiCad 10.0.0 and 10.0.5 DRC item sources, and the exact configured patch version is recorded; no native tool is executed"
+      ],
+      "limitations": [
+        "Warning remains visible in DRC results. This is a review prompt about lowering a documented Error-default check's severity, not evidence of a board defect or a claim that Warning is unacceptable for every project.",
+        "Only the thirteen documented Error-default DFM checks listed by this rule are covered. The core copper-edge check has a separate rule; other built-in checks, custom-rule severity, board geometry, and DRC output are outside this predicate.",
+        "The source parser does not run DRC, decide whether a check applies to the board, verify a project-authored requirement, or establish electrical or manufacturing approval."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_dfm_warning_review.test_documented_error_default_dfm_checks_configured_as_warning_prompt_for_review",
+        "tests.test_pcb_drc_dfm_warning_review.test_warning_finding_uses_standard_default_review_policy",
+        "tests.test_design_lint_mcp_parity_pcb_drc_dfm_warning_review.test_dfm_warning_severity_finding_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_dfm_warning_review.test_error_defaults_and_warning_settings_outside_dfm_scope_are_valid_controls",
+        "tests.test_pcb_drc_dfm_warning_review.test_versions_outside_reviewed_kicad_10_0_profile_are_out_of_scope",
+        "tests.test_pcb_drc_dfm_warning_review.test_non_pcb_project_is_out_of_scope"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_dfm_warning_review.test_json_key_order_does_not_change_warning_candidates"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_global_severity_review.py#warning_dfm_native_drc_check_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_dfm_drc_check_severities",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_exclusion_present",
       "title": "Persisted PCB DRC exclusions need intentional review",
       "theme": "pcb",

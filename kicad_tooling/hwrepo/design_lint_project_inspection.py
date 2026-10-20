@@ -40,6 +40,7 @@ from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
 from .pcb_drc_global_severity_review import (
     ignored_core_native_drc_check_candidates,
     warning_core_native_drc_check_candidates,
+    warning_dfm_native_drc_check_candidates,
 )
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -92,6 +93,7 @@ def inspect_design_lint_summary(
         pcb_native_drc_candidates = (
             *ignored_core_native_drc_check_candidates(root, config, coach.source_hashes),
             *warning_core_native_drc_check_candidates(root, config, coach.source_hashes),
+            *warning_dfm_native_drc_check_candidates(root, config, coach.source_hashes),
             *source_bound_pcb_drc_exclusion_candidates(root, config, coach.source_hashes),
         )
         spi_roster = spi_roster_context(root, config)

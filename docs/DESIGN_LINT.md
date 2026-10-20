@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 125 active rules. They
+`synthetic_validated`; the catalog currently contains 126 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2652,6 +2652,26 @@ KiCad's [DRC reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)
 lists the covered checks and their Error defaults. The source-bound synthetic
 fixtures are documented in
 [`tests/fixtures/design_lint/pcb-core-drc-warning/`](../tests/fixtures/design_lint/pcb-core-drc-warning/README.md).
+
+## Review documented DFM Error-default DRC checks downgraded to Warning
+
+`pcb.dfm_drc_check_warning` prompts when a KiCad 10.0.x PCB project's
+source-hashed `.kicad_pro` sets one of thirteen documented Error-default DFM
+checks to `warning`: `hole_clearance`, `hole_to_hole`, `track_width`,
+`track_angle`, `track_segment_length`, `annular_width`, `drill_out_of_range`,
+`microvia_drill_out_of_range`, `courtyards_overlap`, `malformed_courtyard`,
+`invalid_outline`, `solder_mask_bridge`, or `track_on_post_machined_layer`.
+The finding records the settings hash, check ID, configured severity, and exact
+project KiCad version. Its default mode is `review`; projects may use `block`,
+`off`, or exact-fingerprint ignore.
+
+The warning remains visible in DRC. This prompt asks whether lowering the
+documented default severity was intentional; it does not claim a violation
+exists or that a project must retain KiCad's default. The core copper-edge
+check is covered separately by `pcb.core_drc_check_warning`. KiCad's
+[DRC reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html) lists the
+DFM defaults; tooling-owned synthetic settings are in
+[`tests/fixtures/design_lint/pcb-dfm-drc-warning/`](../tests/fixtures/design_lint/pcb-dfm-drc-warning/README.md).
 
 ## Review persisted per-violation PCB DRC exclusions
 

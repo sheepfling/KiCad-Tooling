@@ -122,6 +122,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic Error-default DRC check is configured as Warning.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
     )
+    warning_dfm_check = Candidate(
+        rule_id="pcb.dfm_drc_check_warning",
+        subject="projects/synthetic/controller.kicad_pro#track_width",
+        message="Synthetic Error-default DFM DRC check is configured as Warning.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
+    )
     persisted_drc_exclusion = Candidate(
         rule_id="pcb.drc_exclusion_present",
         subject="projects/synthetic/controller.kicad_pro#drc-exclusion/" + "a" * 64,
@@ -143,6 +149,7 @@ def pcb_rule_ids() -> set[str]:
         pcb_native_drc_candidates=(
             ignored_core_check,
             warning_core_check,
+            warning_dfm_check,
             persisted_drc_exclusion,
         ),
     )

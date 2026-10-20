@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 125 rules are implemented with synthetic regression coverage.
+The following 126 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -481,6 +481,7 @@ Their actual recognition limits are documented in
 - `pcb.custom_drc_rule_excluded`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
+- `pcb.dfm_drc_check_warning`
 - `pcb.drc_exclusion_present`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
@@ -2633,7 +2634,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 125 active rules; CI requires every new
+- **Status:** Baseline complete for all 126 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2642,7 +2643,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 125 covered, 0 not applicable, 0 unreviewed.
+  audit: 126 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7619,9 +7620,10 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Policy boundary:** The finding asks whether the suppression is intentional;
   it does not state that the check must be enabled or that a defect exists.
   The bounded list leaves documented default-ignore footprint and presentation
-  checks quiet. Warning downgrades for these five checks have a separate review
-  rule (LINT-143); other severity changes, custom-rule severities, DRC
-  applicability, and board geometry are outside this rule.
+  checks quiet. Warning downgrades for the five core checks have a separate
+  review rule (LINT-143); documented Error-default DFM checks are covered by
+  LINT-144. Other severity changes, custom-rule severities, DRC applicability,
+  and board geometry are outside this rule.
   Project policy can choose `review`, `block`, `off`, or exact-fingerprint
   ignore.
 - **Synthetic evidence:** Fault and valid-control `.kicad_pro` fragments cover
@@ -7740,8 +7742,9 @@ is not a reason by itself to expand its scope or change its default policy.
   severity, and exact project-configured KiCad version.
 - **Policy boundary:** The finding asks whether lowering the Error-default
   severity was intentional. It does not assert that Warning is unacceptable,
-  a DRC violation exists, or that the board has an electrical defect. Other
-  built-in checks, custom rules, DRC applicability, board geometry, and
+  a DRC violation exists, or that the board has an electrical defect.
+  Documented DFM Error-default checks are covered separately by LINT-144;
+  other built-in checks, custom rules, DRC applicability, board geometry, and
   manufacturing approval are outside the predicate. Projects may choose
   `review`, `block`, `off`, or exact-fingerprint ignore.
 - **Evidence:** Synthetic fault/control settings cover two downgraded checks,
@@ -7757,6 +7760,48 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   python -I -m pytest tests/test_pcb_drc_global_warning_review.py \
     tests/test_design_lint_mcp_parity_pcb_drc_global_warning_review.py \
+    -m 'design_lint and pcb_lint'
+  ```
+
+#### LINT-144 — Review documented DFM Error-default DRC checks downgraded to Warning
+
+- **Status:** Implemented as `pcb.dfm_drc_check_warning`, a source-bound
+  default-review prompt for each Warning setting among thirteen KiCad 10.0.x
+  design-for-manufacturing checks documented with Error defaults.
+- **Gap:** LINT-143 covers five core electrical checks. KiCad also documents
+  Error defaults for manufacturing checks such as hole clearance, track width,
+  annular width, malformed board outlines, and solder-mask bridges. Lowering
+  those severities can leave a manufacturing condition visible only as a
+  warning; this rule asks for review without asserting the board is defective.
+- **Predicate:** Read the source-hashed KiCad 10.0.x `.kicad_pro` and emit one
+  finding for each Warning setting among `hole_clearance`, `hole_to_hole`,
+  `track_width`, `track_angle`, `track_segment_length`, `annular_width`,
+  `drill_out_of_range`, `microvia_drill_out_of_range`, `courtyards_overlap`,
+  `malformed_courtyard`, `invalid_outline`, `solder_mask_bridge`, and
+  `track_on_post_machined_layer`. Record source hash, check ID, configured
+  severity, and exact configured KiCad version.
+- **Policy boundary:** Warning remains visible in DRC. The prompt asks whether
+  lowering the documented default was intentional; it does not claim a DRC
+  violation exists, that Warning is unacceptable for every project, or that
+  manufacturing is approved. LINT-143 separately covers the core copper-edge
+  check. Projects may choose `review`, `block`, `off`, or exact-fingerprint
+  ignore.
+- **Evidence:** Synthetic fault/control settings cover three downgraded checks,
+  all thirteen Error settings, unrelated Warning defaults, a non-DFM
+  signal-integrity downgrade, the separate core check, JSON key ordering,
+  exact KiCad 10.0.0/10.0.5 profiles, unsupported
+  9.0/10.1/11.0 versions, non-PCB projects, default REVIEW policy, and CLI/MCP
+  parity. No native DRC process or product board is used.
+- **Source basis:** The KiCad 10 [DRC reference][kicad-10-drc] documents the
+  Error defaults. The versioned KiCad 10.0.0 and 10.0.5
+  [DRC item sources][kicad-10.0.0-drc-items] and
+  [10.0.5 source][kicad-10.0.5-drc-items] provide exact project-settings keys;
+  no source code or project data is imported.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_drc_dfm_warning_review.py \
+    tests/test_design_lint_mcp_parity_pcb_drc_dfm_warning_review.py \
     -m 'design_lint and pcb_lint'
   ```
 
@@ -10707,7 +10752,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 125 active rules. Each entry has a deterministic predicate, evidence
+contains 126 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin
@@ -13607,5 +13652,7 @@ quality, or first-article continuity.
 [kicad-thermistor-ptc-us-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_PTC_US.kicad_sym>
 
 [kicad-10-drc]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration
+[kicad-10.0.0-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp
+[kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp

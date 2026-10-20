@@ -17,6 +17,23 @@ CORE_DRC_CHECK_IDS = frozenset(
         "unconnected_items",
     }
 )
+DFM_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
+    {
+        "annular_width",
+        "courtyards_overlap",
+        "drill_out_of_range",
+        "hole_clearance",
+        "hole_to_hole",
+        "invalid_outline",
+        "malformed_courtyard",
+        "microvia_drill_out_of_range",
+        "solder_mask_bridge",
+        "track_angle",
+        "track_on_post_machined_layer",
+        "track_segment_length",
+        "track_width",
+    }
+)
 SUPPORTED_DRC_EXCLUSION_SCHEMA_VERSION = 2
 
 
@@ -46,17 +63,28 @@ class _PcbProjectSettings(BaseModel):
     board: _PcbProjectBoard | None = None
 
 
-def configured_core_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
-    """Return explicit severities for the bounded core electrical DRC checks."""
+def _configured_drc_check_severities(
+    document: str, check_ids: frozenset[str]
+) -> tuple[tuple[str, str], ...]:
     project = parse_model_text(document, _PcbProjectSettings)
     if project.board is None or project.board.design_settings is None:
         return ()
     severities = project.board.design_settings.rule_severities or {}
     return tuple(
         (check_id, severity)
-        for check_id in sorted(CORE_DRC_CHECK_IDS)
+        for check_id in sorted(check_ids)
         if (severity := severities.get(check_id)) is not None
     )
+
+
+def configured_core_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
+    """Return explicit severities for the bounded core electrical DRC checks."""
+    return _configured_drc_check_severities(document, CORE_DRC_CHECK_IDS)
+
+
+def configured_dfm_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
+    """Return explicit severities for documented Error-default DFM checks."""
+    return _configured_drc_check_severities(document, DFM_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
 def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:
