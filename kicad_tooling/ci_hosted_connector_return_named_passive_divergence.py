@@ -25,8 +25,8 @@ def verify_footprint_alias_named_passive_divergence(
         or tuple(item.rule_id for item in fault.findings) != (RULE_ID,)
         or observed.components["J1"].part_id is not None
         or observed.components["J2"].part_id is not None
-        or observed.components["J1"].value != "Synthetic named passive peer"
-        or observed.components["J2"].value != "Synthetic named passive peer"
+        or observed.components["J1"].value != "Synthetic named passive divergence peer"
+        or observed.components["J2"].value != "Synthetic named passive divergence peer"
         or observed.components["J1"].footprint != "Synthetic:Package"
         or observed.components["J2"].footprint != "Synthetic:Package"
         or observed.component_symbols["J1"] == observed.component_symbols["J2"]

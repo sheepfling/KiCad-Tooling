@@ -102,7 +102,7 @@ def test_named_passive_divergence_validator_checks_fault_and_control() -> None:
     components = {
         reference: SimpleNamespace(
             part_id=None,
-            value="Synthetic named passive peer",
+            value="Synthetic named passive divergence peer",
             footprint="Synthetic:Package",
         )
         for reference in ("J1", "J2")
