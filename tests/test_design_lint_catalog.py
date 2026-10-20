@@ -93,9 +93,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
 
 def test_default_block_requires_project_authored_population_evidence() -> None:
     catalog = rule_catalog()
-    blocking_rules = {
-        item.rule_id: item for item in catalog.rules if item.default_mode == "block"
-    }
+    blocking_rules = {item.rule_id: item for item in catalog.rules if item.default_mode == "block"}
 
     assert set(blocking_rules) == {"pcb.required_fitted_reference"}
     requirement = blocking_rules["pcb.required_fitted_reference"]
