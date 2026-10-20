@@ -43,7 +43,10 @@ HOSTED_PCB_GEOMETRY_MODULES = (
     "ci_hosted_pcb_protection_fixture.py",
     "ci_hosted_pcb_track_width_fixture.py",
 )
-HOSTED_USB_DATA_PATH_MODULE = "ci_hosted_usb_data_paths.py"
+HOSTED_USB_DATA_PATH_MODULES = (
+    "ci_hosted_usb_data_paths.py",
+    "ci_hosted_usb_data_path_cases.py",
+)
 HOSTED_USB_REQUIREMENTS_MODULE = "ci_hosted_usb_requirements.py"
 HOSTED_POWER_PATH_MODULES = (
     "ci_hosted_power_paths.py",
@@ -116,7 +119,7 @@ def test_pcb_geometry_hosted_fixtures_stay_split_by_lint_theme() -> None:
 
 def test_hosted_fixture_lanes_stay_theme_scoped() -> None:
     modules = (
-        REPO_ROOT / "kicad_tooling" / HOSTED_USB_DATA_PATH_MODULE,
+        *(REPO_ROOT / "kicad_tooling" / name for name in HOSTED_USB_DATA_PATH_MODULES),
         REPO_ROOT / "kicad_tooling" / HOSTED_USB_REQUIREMENTS_MODULE,
         *(REPO_ROOT / "kicad_tooling" / name for name in HOSTED_POWER_PATH_MODULES),
     )

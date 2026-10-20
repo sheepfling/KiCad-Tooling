@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .ci_hosted_usb_data_path_cases import usb_data_path_fixture_sources
 from .ci_hosted_usb_isolation import validate_usb_isolator_reference_boundary
 from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
 from .ci_hosted_usb_requirements import usb_data_path_requirements
@@ -43,47 +44,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
         raise ValueError(f"USB data-path fixtures do not cover KiCad {config.kicad_version}")
     pinned = pinned_image(config.image)
 
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
-    cases = {
-        "integrated-direct": fixture_root / "usb-data-path-native/integrated-phy-direct.kicad_sch",
-        "external-series": fixture_root
-        / "usb-data-path-native/external-phy-series-control.kicad_sch",
-        "external-series-reference-bond-control": fixture_root
-        / "usb-data-path-native/external-phy-series-reference-bond-control.kicad_sch",
-        "external-series-reference-fault": fixture_root
-        / "usb-data-path-native/external-phy-series-reference-fault.kicad_sch",
-        "external-bypass": fixture_root
-        / "usb-data-path-native/external-phy-direct-bypass-fault.kicad_sch",
-        "peer-reference-fault": fixture_root / "usb-peer-reference-native/fault.kicad_sch",
-        "peer-reference-control": fixture_root / "usb-peer-reference-native/control.kicad_sch",
-        "usb-c-peer-reference-fault": fixture_root / "usb-c-peer-reference-native/fault.kicad_sch",
-        "usb-c-peer-reference-control": fixture_root
-        / "usb-c-peer-reference-native/control.kicad_sch",
-        "usb-multiport-peer-reference-fault": fixture_root
-        / "usb-multiport-peer-reference-native/fault.kicad_sch",
-        "usb-multiport-peer-reference-control": fixture_root
-        / "usb-multiport-peer-reference-native/control.kicad_sch",
-        "intentional-isolation-boundary": fixture_root
-        / "usb-isolator-peer-reference-native/intentional-isolation.kicad_sch",
-        "inline-component-control": fixture_root
-        / "usb-data-path-native/inline-protection-control.kicad_sch",
-        "inline-component-ground-fault": fixture_root
-        / "usb-data-path-native/inline-protection-ground-fault.kicad_sch",
-        "inline-component-peer-reference-fault": fixture_root
-        / "usb-data-path-native/inline-protection-split-reference.kicad_sch",
-        "inline-component-peer-reference-map-control": fixture_root
-        / "usb-data-path-native/inline-protection-split-reference.kicad_sch",
-        "inline-component-peer-reference-bond-fault": fixture_root
-        / "usb-data-path-native/inline-protection-reference-bond-fault.kicad_sch",
-        "inline-component-peer-reference-bond-control": fixture_root
-        / "usb-data-path-native/inline-protection-reference-bond-control.kicad_sch",
-        "protection-shunt-split-reference": fixture_root
-        / "usb-data-path-native/protection-shunt-split-reference.kicad_sch",
-        "protection-shunt-common-reference": fixture_root
-        / "usb-data-path-native/protection-shunt-common-reference.kicad_sch",
-        "protection-shunt-pin-fault": fixture_root
-        / "usb-data-path-native/protection-shunt-pin-fault.kicad_sch",
-    }
+    cases = usb_data_path_fixture_sources()
     source_hashes = {case: digest(path) for case, path in cases.items()}
     scratch = Path(
         tempfile.mkdtemp(prefix=f"usb-data-path-{project}-", dir=log.directory.resolve())

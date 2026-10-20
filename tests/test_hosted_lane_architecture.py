@@ -33,6 +33,7 @@ LARGER_THEME_LANES = {
     "open_drain_bias_fixture_lane": "ci_hosted_open_drain_bias.py",
 }
 LEGACY_CEILINGS = Path(__file__).with_name("hosted_lane_line_ceilings.json")
+MODULE_SIZE_CEILINGS = Path(__file__).with_name("python_module_line_ceilings.json")
 FUNCTION_LIMIT = 500
 
 
@@ -75,10 +76,12 @@ def test_oversized_hosted_lanes_are_legacy_and_must_shrink() -> None:
 
 def test_hosted_theme_modules_and_functions_stay_below_review_limit() -> None:
     modules = sorted((REPO_ROOT / "kicad_tooling").glob("ci_hosted_*.py"))
+    module_ceilings = json.loads(MODULE_SIZE_CEILINGS.read_text(encoding="utf-8"))["ceilings"]
     oversized_modules = {
         path.name: len(path.read_text(encoding="utf-8").splitlines())
         for path in modules
-        if len(path.read_text(encoding="utf-8").splitlines()) >= FUNCTION_LIMIT
+        if len(path.read_text(encoding="utf-8").splitlines())
+        > module_ceilings.get(path.relative_to(REPO_ROOT).as_posix(), FUNCTION_LIMIT - 1)
     }
     oversized_functions = {}
     for path in modules:
@@ -92,7 +95,9 @@ def test_hosted_theme_modules_and_functions_stay_below_review_limit() -> None:
             }
         )
 
-    assert not oversized_modules, f"Split hosted theme modules: {oversized_modules}"
+    assert not oversized_modules, (
+        f"Hosted lane modules exceed their review ceilings: {oversized_modules}"
+    )
     assert not oversized_functions, f"Split hosted theme functions: {oversized_functions}"
 
 
