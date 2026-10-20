@@ -5025,8 +5025,19 @@ is not a reason by itself to expand its scope or change its default policy.
   normalized hashes are `5d9c692a866f5be8bcaea25a1b8a0e17ad027d34283022b3d71048a7b5d59e72`
   (fault) and `fbdfff8ac4a244c36374bcd728d76b98ce6999323156e69edad1b316c83a4bd8`
   (control). The source cases are registered for the digest-pinned KiCad
-  10.0.0/10.0.5 lane; that hosted acceptance is pending. This does not establish
-  PCB copper or physical return continuity.
+  10.0.0/10.0.5 lane. This does not establish PCB copper or physical return
+  continuity.
+
+  **Tagged hosted acceptance (2026-10-20):** `v0.5.2rc40` (commit `952f03c`,
+  run `39418812542`) passed the focused `bus.usb_peer_reference_review` gate
+  with `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`. The three-port J1/J2/J3
+  fault and control ran on digest-pinned KiCad 10.0.0 and 10.0.5; both matched
+  three supported data paths, only the J3/U1 port-3 fault prompted, and both
+  exports repeated with matching normalized netlist contracts. The scoped
+  installed-wheel check against an external project and all three platform
+  preview jobs passed. The separate package job was skipped. This is synthetic
+  schematic-export and packaging evidence, not PCB copper or physical return
+  continuity.
 
   **Tagged exact-version acceptance (2026-10-20):** `v0.5.2rc7` (commit
   `eea03f6`, run `39375741595`) passed the focused
