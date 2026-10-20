@@ -16,6 +16,11 @@ from .pcb_drc_project_settings import (
     configured_electrical_drc_check_severities,
     configured_miscellaneous_drc_check_severities,
     configured_signal_integrity_drc_check_severities,
+    configured_warning_default_drc_check_severities,
+)
+
+WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS = frozenset(
+    {"10.0.0", "10.0.3", "10.0.4", "10.0.5", "10.0.6", "10.0.7"}
 )
 
 
@@ -243,6 +248,45 @@ def downgraded_miscellaneous_drc_check_candidates(
         rule_id="pcb.miscellaneous_drc_check_downgraded",
         category="miscellaneous",
         parse_severities=configured_miscellaneous_drc_check_severities,
+    )
+
+
+def ignored_warning_default_native_drc_check_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+) -> tuple[Candidate, ...]:
+    """Review Warning-default KiCad DRC checks explicitly disabled as Ignore."""
+    if config.kicad_version not in WARNING_DEFAULT_DRC_SUPPORTED_VERSIONS:
+        return ()
+    settings = _source_bound_drc_settings(
+        root,
+        config,
+        source_hashes,
+        supported_version_prefix="10.0.",
+        parse_severities=configured_warning_default_drc_check_severities,
+    )
+    if settings is None:
+        return ()
+    relative, expected_hash, severities = settings
+    return tuple(
+        Candidate(
+            rule_id="pcb.warning_default_drc_check_ignored",
+            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            message=(
+                f"Warning-default native DRC check {check_id!r} is configured as Ignore; "
+                "confirm that disabling this check is intentional."
+            ),
+            evidence={
+                "source_path": (relative,),
+                "source_sha256": (expected_hash,),
+                "kicad_version": (config.kicad_version,),
+                "check_id": (check_id,),
+                "configured_severity": (severity,),
+            },
+        )
+        for check_id, severity in severities
+        if severity == "ignore"
     )
 
 

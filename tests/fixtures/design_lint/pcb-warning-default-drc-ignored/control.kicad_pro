@@ -1,0 +1,36 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "connection_width": "warning",
+        "copper_sliver": "warning",
+        "duplicate_footprints": "warning",
+        "extra_footprint": "warning",
+        "hole_to_hole": "warning",
+        "holes_co_located": "warning",
+        "isolated_copper": "warning",
+        "lib_footprint_issues": "warning",
+        "lib_footprint_mismatch": "warning",
+        "missing_footprint": "warning",
+        "missing_tuning_profile": "warning",
+        "mirrored_text_on_front_layer": "warning",
+        "net_conflict": "warning",
+        "nonmirrored_text_on_back_layer": "warning",
+        "padstack": "warning",
+        "schematic_fields_parity": "warning",
+        "schematic_parity": "warning",
+        "silk_edge_clearance": "warning",
+        "silk_overlap": "warning",
+        "silk_over_copper": "warning",
+        "text_height": "warning",
+        "text_thickness": "warning",
+        "track_dangling": "warning",
+        "via_dangling": "warning",
+        "footprint_type_mismatch": "ignore",
+        "hole_clearance": "ignore",
+        "unconnected_items": "ignore"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}

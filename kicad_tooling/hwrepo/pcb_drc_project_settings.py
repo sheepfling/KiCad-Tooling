@@ -57,6 +57,34 @@ MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
         "zones_intersect",
     }
 )
+WARNING_DEFAULT_DRC_CHECK_IDS = frozenset(
+    {
+        "connection_width",
+        "copper_sliver",
+        "duplicate_footprints",
+        "extra_footprint",
+        "hole_to_hole",
+        "holes_co_located",
+        "isolated_copper",
+        "lib_footprint_issues",
+        "lib_footprint_mismatch",
+        "missing_footprint",
+        "missing_tuning_profile",
+        "mirrored_text_on_front_layer",
+        "net_conflict",
+        "nonmirrored_text_on_back_layer",
+        "padstack",
+        "schematic_fields_parity",
+        "schematic_parity",
+        "silk_edge_clearance",
+        "silk_overlap",
+        "silk_over_copper",
+        "text_height",
+        "text_thickness",
+        "track_dangling",
+        "via_dangling",
+    }
+)
 SUPPORTED_DRC_EXCLUSION_SCHEMA_VERSION = 2
 
 
@@ -127,6 +155,13 @@ def configured_miscellaneous_drc_check_severities(
 ) -> tuple[tuple[str, str], ...]:
     """Return severities for bounded Error-default miscellaneous DRC checks."""
     return _configured_drc_check_severities(document, MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS)
+
+
+def configured_warning_default_drc_check_severities(
+    document: str,
+) -> tuple[tuple[str, str], ...]:
+    """Return explicit severities for reviewed KiCad 10.0 Warning-default checks."""
+    return _configured_drc_check_severities(document, WARNING_DEFAULT_DRC_CHECK_IDS)
 
 
 def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:
