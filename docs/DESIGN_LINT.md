@@ -4194,13 +4194,33 @@ prompt open. Project lint policy can set the rule to `off` or `block`, and an
 exact finding can be ignored through the normal fingerprint workflow. Keep it
 at `review` unless a project owner explicitly chooses a stricter policy.
 
+## Review I2C and CAN peer reference domains
+
+`bus.i2c_peer_reference_review` compares fitted ICs that expose one exact
+shared native SDA/SCL net pair. `bus.can_peer_reference_review` compares fitted
+ICs that expose one exact native CANH/CANL pair. Both are default-`review`
+prompts when supported endpoints show explicit return pins on different native
+nets. A return pin with native type `passive` or `power_in` is eligible; type
+`unspecified` is eligible only when its pin function explicitly identifies a
+return role such as `GND` or `VSS`. Shield, chassis, frame, and protective-earth
+functions are excluded. These rules ask whether the difference is intentional;
+they do not require common grounding, resolve isolated or translated buses, or
+prove a physical return path. Projects can use the normal `review`, `block`, or
+`off` policy and exact-fingerprint ignores. The I2C and CAN synthetic and
+digest-pinned fixture suites are under
+[`tests/test_i2c_peer_reference_review.py`](../tests/test_i2c_peer_reference_review.py),
+[`tests/test_can_peer_reference_review.py`](../tests/test_can_peer_reference_review.py),
+and their native fixture notes.
+
 ## Review SPI peer reference domains
 
 `bus.spi_peer_reference_review` is a default-`review` prompt for fitted ICs
 with one unambiguous native SCK/SCLK pin each on the exact same exported clock
 net, at least one output-capable clock endpoint and one input-capable endpoint,
-and explicit passive/`power_in` return-like pin assignments spanning multiple
-schematic nets. It reports one finding for the direct clock group. A documented
+and explicit return-like pin assignments spanning multiple schematic nets.
+Passive/`power_in` types are eligible; native type `unspecified` is eligible
+only when the pin function explicitly identifies a return role. It reports
+one finding for the direct clock group. A documented
 control keeps both endpoints on `+3V3` and uses a common return; the fault
 changes only the return pins to `GND_A` and `GND_B`. The separate
 `bus.spi_peer_voltage_review` rule remains quiet on that equal-supply case,
@@ -4259,9 +4279,11 @@ through other components.
 
 Both paths require complete native pin metadata and explicit signal-reference
 pins assigned to different native nets. Each endpoint must have one unambiguous
-return net across its explicit GND/AGND/DGND/PGND, VSS/VSSA/VSSD/VSSP, 0V, RTN,
-RETURN, or GROUND pins. Pin functions marked SHIELD, CHASSIS, FRAME, or PE are
-excluded.
+return net across explicit return-like functions such as GND, AGND, DGND, PGND,
+VSS/VSSA/VSSD/VSSP, 0V, RTN, RETURN, or GROUND. Passive/`power_in` types are
+eligible; native type `unspecified` is eligible only when the pin function
+explicitly identifies a return role. Pin functions marked SHIELD, CHASSIS,
+FRAME, or PE are excluded.
 Findings include the exact shared signal pins or label assignments and native
 reference-pin assignments.
 When one IC drives multiple UART headers, each peer is reviewed separately;

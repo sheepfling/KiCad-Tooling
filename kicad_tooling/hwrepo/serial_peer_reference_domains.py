@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from .models import NetlistContract
-from .return_nets import is_return_like_net_name
+from .peer_reference_assignments import peer_reference_assignments
 from .serial_participants import serial_function_role_and_channel
 from .serial_peer_reference_types import (
     SerialLabelPeerLink,
@@ -14,19 +14,6 @@ from .serial_peer_reference_types import (
 )
 
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-
-
-_RETURN_FUNCTION_SUFFIX = re.compile(r"\d+$")
-
-
-_NON_SIGNAL_REFERENCE_MARKER = re.compile(
-    r"(?:^|[^A-Z0-9])(?:CHASSIS|SHIELD|FRAME|PE)(?:$|[^A-Z0-9])",
-    re.IGNORECASE,
-)
-
-
-_RETURN_PIN_TYPES = frozenset({"passive", "power_in"})
-
 
 _SERIAL_CHANNEL_LABEL = re.compile(r"^(uart|usart)[_. ]*([0-9]+)[_. ]*(txd?|rxd?)$", re.IGNORECASE)
 
@@ -39,13 +26,6 @@ def _serial_channel_label_role_and_channel(value: str) -> tuple[str, str] | None
         return None
     prefix, number, role = match.groups()
     return ("tx" if role.casefold().startswith("tx") else "rx", f"{prefix.casefold()}{number}")
-
-
-def _is_explicit_signal_reference_function(function: str) -> bool:
-    normalized = _RETURN_FUNCTION_SUFFIX.sub("", function.strip())
-    return not _NON_SIGNAL_REFERENCE_MARKER.search(normalized) and is_return_like_net_name(
-        normalized
-    )
 
 
 def pin_index(
@@ -102,42 +82,20 @@ def reference_domain(
     if not numbers:
         return None
 
-    functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
-    electrical_types = {
-        pin.casefold(): value.casefold() for pin, value in observed.pin_electrical_types.items()
-    }
-    assignments: list[SerialReferencePinAssignment] = []
-    for number in numbers:
-        pin = f"{reference}.{number}"
-        pin_key = pin.casefold()
-        function = functions.get(pin_key)
-        electrical_type = electrical_types.get(pin_key)
-        if function is None or electrical_type is None:
-            return None
-        if not _is_explicit_signal_reference_function(function):
-            continue
-        if electrical_type not in _RETURN_PIN_TYPES:
-            return None
-        nets = pin_nets.get(pin_key, set())
-        if len(nets) != 1:
-            return None
-        assignments.append(
-            SerialReferencePinAssignment(
-                pin=pin,
-                function=function,
-                electrical_type=electrical_type,
-                net=next(iter(nets)),
-            )
-        )
-
-    if not assignments:
-        return None
-    nets = {item.net for item in assignments}
-    if len(nets) != 1:
+    evidence = peer_reference_assignments(reference, observed, pin_nets, numbers)
+    if evidence.net is None:
         return None
     return SerialReferenceDomain(
-        net=next(iter(nets)),
-        pins=tuple(sorted(assignments, key=lambda item: item.pin.casefold())),
+        net=evidence.net,
+        pins=tuple(
+            SerialReferencePinAssignment(
+                pin=item.pin,
+                function=item.function,
+                electrical_type=item.electrical_type,
+                net=item.net,
+            )
+            for item in evidence.pins
+        ),
     )
 
 

@@ -572,6 +572,20 @@ and optional ecosystem adapters are `P3`.
   is registered. This extends the explicit project-authored contract; it adds
   no inferred electrical rule.
 
+- **Shared explicit return-pin metadata (2026-10-19):** I2C, SPI, CAN, serial,
+  and USB peer-reference checks now share `peer_reference_assignments.py` for
+  native pin-function and pin-type interpretation. A return-like function
+  with native type `unspecified` can support a REVIEW only when the function
+  itself names a recognized return role; shield, chassis, frame, protective
+  earth, and ordinary signal functions do not. This closes a cross-protocol
+  evidence gap while preserving the checks' advisory behavior. Synthetic
+  regressions cover split and common references plus non-return controls across
+  protocols, including a suffixed `VSS1` function. Focused protocol tests,
+  catalog/architecture tests, Ruff, Pyright, and the documentation check pass.
+  No project board or proprietary fixture was imported. The `v0.5.2rc3`
+  interface-area gate will establish hosted parity, installed-wheel, and exact
+  native-fixture results.
+
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
   `tests/test_design_lint_architecture_pytest_markers.py` and

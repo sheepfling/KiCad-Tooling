@@ -9,6 +9,7 @@ from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride
 from kicad_tooling.hwrepo.serial_peer_reference_review import (
     unmapped_serial_peer_reference_reviews,
 )
+from tests.reference_pin_role_support import with_unspecified_reference_pins
 from tests.serial_peer_reference_multichannel_support import (
     multi_channel_labelled_serial_reference_netlist,
 )
@@ -25,6 +26,24 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
 
 class SerialPeerReferenceReviewTests:
+    def test_explicit_unspecified_vss_reference_domain_remains_reviewable(self) -> None:
+        split = with_unspecified_reference_pins(serial_reference_netlist(), ("U1.9", "U2.9"))
+        common = with_unspecified_reference_pins(
+            serial_reference_netlist(output_reference_net="GND", input_reference_net="GND"),
+            ("U1.9", "U2.9"),
+        )
+        nonreturn = with_unspecified_reference_pins(
+            serial_reference_netlist(), ("U1.9", "U2.9"), function="GPIO"
+        )
+
+        (candidate,) = unmapped_serial_peer_reference_reviews(split)
+        assert {candidate.first_reference_domain.net, candidate.second_reference_domain.net} == {
+            "GND_A",
+            "GND_B",
+        }
+        assert not unmapped_serial_peer_reference_reviews(common)
+        assert not unmapped_serial_peer_reference_reviews(nonreturn)
+
     def test_distinct_explicit_return_nets_prompt_with_exact_signal_and_pin_evidence(self) -> None:
         source = serial_reference_netlist()
         candidates = unmapped_serial_peer_reference_reviews(source)

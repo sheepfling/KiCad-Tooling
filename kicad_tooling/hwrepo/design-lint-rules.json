@@ -2340,23 +2340,25 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For fitted U/IC components with exactly one assigned native SDA and SCL pin, group endpoints that share the exact exported SDA/SCL net pair. Require complete native pin-function and pin-type inventories. Emit one REVIEW candidate when supported endpoints on one shared bus have explicit passive or power_in return-like pin assignments spanning different nets; retain endpoints with incomplete reference evidence in the report without inferring their reference domain.",
+      "predicate": "For fitted U/IC components with exactly one assigned native SDA and SCL pin, group endpoints that share the exact exported SDA/SCL net pair. Require complete native pin-function and pin-type inventories. Emit one REVIEW candidate when supported endpoints on one shared bus have return-like pins with passive or power_in native types, or unspecified type backed by an explicit return-like function, spanning different nets; retain endpoints with incomplete reference evidence in the report without inferring their reference domain.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "A split reference is a review cue only; the check does not require common grounding, prove electrical compatibility, or establish a physical return path or bond.",
-        "Only one unambiguous native SDA/SCL pair per fitted U/IC is supported. Multi-port devices, incomplete pin metadata, multiple reference domains on one endpoint, unrecognized return functions, and DNP endpoints are not used as positive reference evidence; incomplete reference assignments remain visible as coverage evidence.",
+        "Only one unambiguous native SDA/SCL pair per fitted U/IC is supported. Multi-port devices, incomplete pin metadata, multiple reference domains on one endpoint, unrecognized return functions, unspecified types without an explicit return-like function, and DNP endpoints are not used as positive reference evidence; incomplete reference assignments remain visible as coverage evidence.",
         "Only endpoints on the same exact native SDA/SCL net pair are compared. Translated or isolated segments, off-board peers, pull-up voltage limits, and component-specific input tolerance are outside this rule."
       ],
       "fault_fixtures": [
         "tests.test_i2c_peer_reference_review.test_shared_i2c_bus_with_split_references_emits_exact_review",
+        "tests.test_i2c_peer_reference_review.test_explicit_unspecified_vss_pins_support_split_review_and_common_control",
         "tests.test_i2c_peer_reference_review.test_one_split_among_three_shared_bus_peers_emits_one_grouped_review",
         "tests.test_i2c_peer_reference_review.test_known_split_remains_reviewable_when_another_peer_is_incomplete",
         "tests.test_i2c_peer_reference_native_fixture_lane.test_native_i2c_peer_reference_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_i2c_peer_reference_review.test_common_reference_is_a_valid_control",
+        "tests.test_i2c_peer_reference_review.test_explicit_unspecified_vss_pins_support_split_review_and_common_control",
         "tests.test_i2c_peer_reference_review.test_distinct_i2c_segments_are_not_compared_as_one_bus",
         "tests.test_i2c_peer_reference_review.test_dnp_incomplete_reference_and_shield_pins_are_not_ground_evidence",
         "tests.test_i2c_peer_reference_native_fixture_lane.test_native_i2c_peer_reference_fault_and_control_on_supported_images"
@@ -2372,6 +2374,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_peer_reference_scan.py#scan_i2c_peer_reference_reviews",
+        "kicad_tooling/hwrepo/peer_reference_assignments.py#peer_reference_assignments",
         "kicad_tooling/hwrepo/design_lint_i2c_candidates.py#i2c_peer_reference_candidates",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
@@ -2385,23 +2388,25 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For fitted U/IC components with exactly one assigned native SCK/SCLK pin and complete native pin-number, pin-function, and pin-type inventories, group endpoints by exact exported clock net. Require at least one output-capable and one input-capable clock endpoint. Emit one REVIEW candidate when explicit passive or power_in return-like pin assignments span different nets; retain incomplete reference evidence in coverage without inferring its domain.",
+      "predicate": "For fitted U/IC components with exactly one assigned native SCK/SCLK pin and complete native pin-number, pin-function, and pin-type inventories, group endpoints by exact exported clock net. Require at least one output-capable and one input-capable clock endpoint. Emit one REVIEW candidate when return-like pins with passive or power_in native types, or unspecified type backed by an explicit return-like function, span different nets; retain incomplete reference evidence in coverage without inferring its domain.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "A split reference is a review cue only; the check does not require a common return, prove electrical compatibility, or establish a physical return path or bond.",
-        "Only one unambiguous assigned SCK/SCLK pin per fitted U/IC and native input/output-compatible types on the shared clock are supported. Multi-port parts, incomplete metadata, multiple reference domains on one endpoint, unrecognized return functions, DNP endpoints, and ambiguous clock directions are outside the positive predicate.",
+        "Only one unambiguous assigned SCK/SCLK pin per fitted U/IC and native input/output-compatible types on the shared clock are supported. Multi-port parts, incomplete metadata, multiple reference domains on one endpoint, unrecognized return functions, unspecified types without an explicit return-like function, DNP endpoints, and ambiguous clock directions are outside the positive predicate.",
         "Endpoints are grouped only by one exact native SCK/SCLK net. The rule does not infer SPI membership from data or chip-select names, trace translators or isolators, inspect off-board endpoints, or establish PCB copper continuity."
       ],
       "fault_fixtures": [
         "tests.test_spi_peer_reference_review.test_shared_sck_with_split_references_emits_review_and_exact_evidence",
+        "tests.test_spi_peer_reference_review.test_explicit_unspecified_vss_pins_support_split_review_and_common_control",
         "tests.test_spi_peer_reference_review.test_known_split_remains_reviewable_when_another_peer_is_incomplete",
         "tests.test_spi_peer_reference_review.test_component_peer_review_must_cover_every_reference_pin_to_suppress",
         "tests.test_spi_peer_reference_native_fixture_lane.test_native_spi_peer_reference_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_spi_peer_reference_review.test_common_reference_is_a_valid_control",
+        "tests.test_spi_peer_reference_review.test_explicit_unspecified_vss_pins_support_split_review_and_common_control",
         "tests.test_spi_peer_reference_review.test_distinct_clock_segments_are_not_compared",
         "tests.test_spi_peer_reference_review.test_dnp_incomplete_and_shield_only_endpoints_are_not_ground_evidence",
         "tests.test_spi_peer_reference_review.test_only_directed_clock_peers_are_covered",
@@ -2418,6 +2423,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_peer_reference_scan.py#scan_spi_peer_references",
+        "kicad_tooling/hwrepo/peer_reference_assignments.py#peer_reference_assignments",
         "kicad_tooling/hwrepo/design_lint_spi_candidates.py#spi_peer_reference_candidates",
         "kicad_tooling/hwrepo/spi_peer_reference_coverage.py#spi_peer_reference_coverage"
       ],
@@ -2745,22 +2751,24 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For fitted U/IC components with exactly one assigned native CANH and CANL pin on distinct nets, group endpoints by the exact exported line-net pair. Emit one REVIEW candidate when explicit passive or power_in return-like pin assignments span different nets; retain a known split when another endpoint reference assignment is incomplete.",
+      "predicate": "For fitted U/IC components with exactly one assigned native CANH and CANL pin on distinct nets, group endpoints by the exact exported line-net pair. Emit one REVIEW candidate when return-like pins with passive or power_in native types, or unspecified type backed by an explicit return-like function, span different nets; retain a known split when another endpoint reference assignment is incomplete.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "A split reference is a review cue only; the check does not require a common return, establish a bond, or prove a physical return path.",
-        "Only native CANH/CAN_HIGH and CANL/CAN_LOW function aliases with one exact assigned CANH/CANL pair per fitted U/IC endpoint are supported. DNP, ambiguous, incomplete signal assignments, unrelated net pairs, and endpoints without explicit passive or power_in return pins do not provide positive evidence.",
+        "Only native CANH/CAN_HIGH and CANL/CAN_LOW function aliases with one exact assigned CANH/CANL pair per fitted U/IC endpoint are supported. DNP, ambiguous, incomplete signal assignments, unrelated net pairs, unrecognized return functions, and unspecified types without explicit return-like functions do not provide positive evidence.",
         "The rule does not infer CAN membership from component reference/value names, resolve isolated or translated segments, compare transceiver voltage compatibility, or establish PCB copper and off-board continuity."
       ],
       "fault_fixtures": [
         "tests.test_can_peer_reference_review.test_shared_can_line_pair_with_split_references_emits_one_exact_review",
+        "tests.test_can_peer_reference_review.test_explicit_unspecified_vss_pins_support_split_review_and_common_control",
         "tests.test_can_peer_reference_review.test_known_split_survives_an_incomplete_peer_and_keeps_coverage_visible",
         "tests.test_can_native_fixture_lanes.test_native_can_peer_reference_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_can_peer_reference_review.test_common_reference_distinct_can_buses_dnp_and_shield_are_controls",
+        "tests.test_can_peer_reference_review.test_explicit_unspecified_vss_pins_support_split_review_and_common_control",
         "tests.test_can_native_fixture_lanes.test_native_can_peer_reference_fault_and_control"
       ],
       "metamorphic_status": "covered",
@@ -2774,6 +2782,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_peer_reference_scan.py#scan_can_peer_references",
+        "kicad_tooling/hwrepo/peer_reference_assignments.py#peer_reference_assignments",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_peer_reference_candidates",
         "kicad_tooling/hwrepo/can_peer_reference_coverage.py#can_peer_reference_coverage"
       ],
@@ -3898,17 +3907,18 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete native pin inventories, exact TX/RX-like pin functions or bounded channel labels, native electrical types, and unique net assignments",
-      "predicate": "For directionally clear native UART TX-to-RX links among fitted U/IC components and bounded or project-reviewed connector candidates, or direct fitted U/IC pairs joined by one uniquely numbered UART/USART TX and RX channel-label pair, require complete component pin/function/type inventories and explicit signal-reference pins of power_in or passive type. Report a REVIEW prompt when each endpoint's signal-reference pins share one unique native net and the two endpoint nets differ. Suppress only a source-current direct serial map that exactly matches both endpoint identities, signal pins/nets, and explicit reference-pin assignments under common_net or separate_nets policy.",
+      "predicate": "For directionally clear native UART TX-to-RX links among fitted U/IC components and bounded or project-reviewed connector candidates, or direct fitted U/IC pairs joined by one uniquely numbered UART/USART TX and RX channel-label pair, require complete component pin/function/type inventories and explicit signal-reference pins with passive or power_in types, or unspecified type backed by an explicit return-like function. Report a REVIEW prompt when each endpoint's signal-reference pins share one unique native net and the two endpoint nets differ. Suppress only a source-current direct serial map that exactly matches both endpoint identities, signal pins/nets, and explicit reference-pin assignments under common_net or separate_nets policy.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The prompt does not decide whether the references should be common, bonded through a component, or intentionally isolated; net names and symbol pin functions provide review clues only.",
-        "The native-function path accepts supported UART/USART TX/RX pin-function spellings. The label path accepts only numbered UART/USART TX/RX labels where each net joins exactly one pin from the same two fitted U/IC components. It does not treat connector endpoints or multi-hop translated paths as direct peers. Each endpoint must have a complete native pin inventory plus uniquely assigned GND/AGND/DGND/PGND/VSS/0V/RTN/RETURN/GROUND pins of passive or power_in type. Functions marked SHIELD, CHASSIS, FRAME, or PE are excluded; incomplete, DNP, mixed-reference-domain, third-party, or ambiguous endpoints are skipped.",
+        "The native-function path accepts supported UART/USART TX/RX pin-function spellings. The label path accepts only numbered UART/USART TX/RX labels where each net joins exactly one pin from the same two fitted U/IC components. It does not treat connector endpoints or multi-hop translated paths as direct peers. Each endpoint must have a complete native pin inventory plus uniquely assigned GND/AGND/DGND/PGND/VSS/0V/RTN/RETURN/GROUND pins of passive or power_in type, or unspecified type backed by an explicit return-like function. Functions marked SHIELD, CHASSIS, FRAME, or PE are excluded; incomplete, DNP, mixed-reference-domain, third-party, or ambiguous endpoints are skipped.",
         "An exact authored direct serial map records reviewed schematic intent but cannot prove a fitted net tie, PCB copper continuity, an external bond, connector wiring, or electrical suitability. Other maps and stale or partial assignments do not suppress the prompt."
       ],
       "fault_fixtures": [
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_distinct_explicit_return_nets_prompt_with_exact_signal_and_pin_evidence",
+        "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_explicit_unspecified_vss_reference_domain_remains_reviewable",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_direct_mcu_to_serial_header_peer_reviews_split_reference_nets",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_headers_localize_one_split_reference",
         "tests.test_serial_peer_reference_multichannel.test_three_uart_headers_localize_one_split_return_among_common_peers",
@@ -3925,6 +3935,7 @@
       ],
       "valid_control_fixtures": [
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_same_reference_net_is_a_quiet_control",
+        "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_explicit_unspecified_vss_reference_domain_remains_reviewable",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_multi_uart_headers_with_common_references_are_a_quiet_control",
         "tests.test_serial_peer_reference_multichannel.test_three_uart_headers_localize_one_split_return_among_common_peers",
         "tests.test_serial_peer_reference_review.SerialPeerReferenceReviewTests.test_three_channel_labelled_ic_pair_with_common_reference_is_quiet",
@@ -3959,6 +3970,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/serial_peer_reference_domains.py#reference_domain",
+        "kicad_tooling/hwrepo/peer_reference_assignments.py#peer_reference_assignments",
         "kicad_tooling/hwrepo/serial_peer_reference_mapping.py#fully_mapped_direct_link",
         "kicad_tooling/hwrepo/serial_peer_reference_scan.py#scan_serial_peer_reference_reviews",
         "kicad_tooling/hwrepo/serial_peer_reference_scan.py#unmapped_serial_peer_reference_reviews",
@@ -4062,6 +4074,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_superspeed_function_identity",
         "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_endpoint",
+        "kicad_tooling/hwrepo/peer_reference_assignments.py#peer_reference_assignments",
         "kicad_tooling/hwrepo/usb_peer_path_analysis.py#usb_data_link",
         "kicad_tooling/hwrepo/usb_peer_path_analysis.py#d_designated_shunt_branches",
         "kicad_tooling/hwrepo/usb_peer_inline_path_analysis.py#mapped_inline_usb_data_link",

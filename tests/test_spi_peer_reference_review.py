@@ -15,6 +15,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
 )
 from kicad_tooling.hwrepo.spi_peer_reference_scan import scan_spi_peer_references
+from tests.reference_pin_role_support import with_unspecified_reference_pins
 from tests.spi_peer_reference_support import spi_peer_netlist
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
@@ -43,6 +44,21 @@ def test_shared_sck_with_split_references_emits_review_and_exact_evidence() -> N
 
 def test_common_reference_is_a_valid_control() -> None:
     assert not _rule_candidates(spi_peer_netlist(reference_nets={"U1": "GND", "U2": "GND"}))
+
+
+def test_explicit_unspecified_vss_pins_support_split_review_and_common_control() -> None:
+    split = with_unspecified_reference_pins(spi_peer_netlist(), ("U1.3", "U2.3"))
+    common = with_unspecified_reference_pins(
+        spi_peer_netlist(reference_nets={"U1": "GND", "U2": "GND"}),
+        ("U1.3", "U2.3"),
+    )
+    nonreturn = with_unspecified_reference_pins(
+        spi_peer_netlist(), ("U1.3", "U2.3"), function="GPIO"
+    )
+
+    assert len(_rule_candidates(split)) == 1
+    assert not _rule_candidates(common)
+    assert not _rule_candidates(nonreturn)
 
 
 def test_distinct_clock_segments_are_not_compared() -> None:

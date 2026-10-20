@@ -13,6 +13,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
 )
 from tests.i2c_peer_reference_support import i2c_peer_netlist
+from tests.reference_pin_role_support import with_unspecified_reference_pins
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
@@ -42,6 +43,25 @@ def test_shared_i2c_bus_with_split_references_emits_exact_review() -> None:
 
 def test_common_reference_is_a_valid_control() -> None:
     assert not _rule_candidates(i2c_peer_netlist(reference_nets={"U1": "GND", "U2": "GND"}))
+
+
+def test_explicit_unspecified_vss_pins_support_split_review_and_common_control() -> None:
+    split = with_unspecified_reference_pins(i2c_peer_netlist(), ("U1.3", "U2.3"))
+    suffixed = with_unspecified_reference_pins(
+        i2c_peer_netlist(), ("U1.3", "U2.3"), function="VSS1"
+    )
+    common = with_unspecified_reference_pins(
+        i2c_peer_netlist(reference_nets={"U1": "GND", "U2": "GND"}),
+        ("U1.3", "U2.3"),
+    )
+    nonreturn = with_unspecified_reference_pins(
+        i2c_peer_netlist(), ("U1.3", "U2.3"), function="GPIO"
+    )
+
+    assert len(_rule_candidates(split)) == 1
+    assert len(_rule_candidates(suffixed)) == 1
+    assert not _rule_candidates(common)
+    assert not _rule_candidates(nonreturn)
 
 
 def test_one_split_among_three_shared_bus_peers_emits_one_grouped_review() -> None:

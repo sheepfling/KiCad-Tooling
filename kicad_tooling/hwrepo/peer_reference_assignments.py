@@ -1,4 +1,4 @@
-"""Shared interpretation of explicit passive and power-input return pins."""
+"""Shared interpretation of explicit return-like pin functions and pin types."""
 
 from __future__ import annotations
 
@@ -12,7 +12,8 @@ _NON_SIGNAL_REFERENCE = re.compile(
     r"(?:^|[^A-Z0-9])(?:CHASSIS|SHIELD|FRAME|PE)(?:$|[^A-Z0-9])",
     re.IGNORECASE,
 )
-_REFERENCE_PIN_TYPES = frozenset({"passive", "power_in"})
+_RETURN_FUNCTION_SUFFIX = re.compile(r"\d+$")
+_EXTENDED_RETURN_FUNCTIONS = frozenset({"gnda", "gndd", "gndp", "vssa", "vssd", "vssp"})
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,21 @@ class PeerReferenceAssignments:
     pins: tuple[PeerReferencePinAssignment, ...]
 
 
+def is_explicit_reference_pin_function(function: str) -> bool:
+    """Recognize a bounded return-like pin function while excluding chassis roles."""
+    normalized = _RETURN_FUNCTION_SUFFIX.sub("", function.strip())
+    compact = re.sub(r"[^a-z0-9]", "", normalized.casefold())
+    return not _NON_SIGNAL_REFERENCE.search(normalized) and (
+        compact in _EXTENDED_RETURN_FUNCTIONS or is_return_like_net_name(normalized)
+    )
+
+
+def _supported_reference_pin_type(function: str, electrical_type: str) -> bool:
+    if electrical_type in {"passive", "power_in"}:
+        return True
+    return electrical_type == "unspecified" and is_explicit_reference_pin_function(function)
+
+
 def peer_reference_assignments(
     reference: str,
     observed: NetlistContract,
@@ -43,8 +59,9 @@ def peer_reference_assignments(
 
     A split assignment is preserved in ``pins`` while ``net`` remains unknown.
     Missing inventory metadata, ambiguous assignments, named shield/chassis
-    pins, and non-passive/non-power-input return pins cannot establish a
-    reference domain.
+    pins, and return pins with unsupported electrical types cannot establish a
+    reference domain. An ``unspecified`` type is accepted only with an explicit
+    bounded return-like function; it remains visible in the evidence.
     """
     if not pin_numbers:
         return PeerReferenceAssignments(net=None, pins=())
@@ -60,9 +77,9 @@ def peer_reference_assignments(
         electrical_type = electrical_types.get(pin_key)
         if function is None or electrical_type is None:
             return PeerReferenceAssignments(net=None, pins=())
-        if _NON_SIGNAL_REFERENCE.search(function) or not is_return_like_net_name(function):
+        if not is_explicit_reference_pin_function(function):
             continue
-        if electrical_type not in _REFERENCE_PIN_TYPES:
+        if not _supported_reference_pin_type(function, electrical_type):
             return PeerReferenceAssignments(net=None, pins=())
         nets = pin_nets.get(pin_key, set())
         if len(nets) != 1:

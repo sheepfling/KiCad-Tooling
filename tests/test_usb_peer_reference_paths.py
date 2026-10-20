@@ -5,9 +5,10 @@ from __future__ import annotations
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import text_report
-from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
+from kicad_tooling.hwrepo.models import ComponentContract
 from kicad_tooling.hwrepo.usb_data_paths import usb_data_path_mismatches
 from kicad_tooling.hwrepo.usb_peer_reference_review import usb_peer_reference_reviews
+from tests.reference_pin_role_support import with_unspecified_reference_pins
 from tests.usb_c_peer_support import (
     usb_c_peer_netlist,
 )
@@ -22,18 +23,6 @@ from tests.usb_peer_reference_support import (
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
-
-
-def _with_unspecified_vss(observed: NetlistContract) -> NetlistContract:
-    return observed.model_copy(
-        update={
-            "pin_functions": {**observed.pin_functions, "U1.3": "VSS"},
-            "pin_electrical_types": {
-                **observed.pin_electrical_types,
-                "U1.3": "unspecified",
-            },
-        }
-    )
 
 
 def test_split_reference_direct_usb_pair_emits_exact_review_evidence() -> None:
@@ -55,7 +44,7 @@ def test_split_reference_direct_usb_pair_emits_exact_review_evidence() -> None:
 
 
 def test_unspecified_vss_return_type_keeps_split_reference_as_review() -> None:
-    observed = _with_unspecified_vss(usb_peer_netlist())
+    observed = with_unspecified_reference_pins(usb_peer_netlist(), ("U1.3",))
     reviews = usb_peer_reference_reviews(observed)
 
     assert len(reviews) == 1
@@ -72,11 +61,12 @@ def test_unspecified_vss_return_type_keeps_split_reference_as_review() -> None:
 
 
 def test_unspecified_vss_return_type_with_common_reference_is_quiet() -> None:
-    observed = _with_unspecified_vss(
+    observed = with_unspecified_reference_pins(
         usb_peer_netlist(
             connector_reference_net="BOARD_GND",
             phy_reference_net="BOARD_GND",
-        )
+        ),
+        ("U1.3",),
     )
 
     assert usb_peer_reference_reviews(observed) == ()
@@ -84,10 +74,7 @@ def test_unspecified_vss_return_type_with_common_reference_is_quiet() -> None:
 
 
 def test_unspecified_nonreturn_phy_pin_does_not_enable_reference_review() -> None:
-    observed = _with_unspecified_vss(usb_peer_netlist())
-    observed = observed.model_copy(
-        update={"pin_functions": {**observed.pin_functions, "U1.3": "GPIO"}}
-    )
+    observed = with_unspecified_reference_pins(usb_peer_netlist(), ("U1.3",), function="GPIO")
 
     assert usb_peer_reference_reviews(observed) == ()
     assert RULE_ID not in {item.rule_id for item in lint_report(observed).findings}

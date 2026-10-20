@@ -65,6 +65,7 @@ BUS_ANALYSIS_MODULES = (
     "bus_signal_roles.py",
     "bus_signal_pairs.py",
     "resistor_paths.py",
+    "peer_reference_assignments.py",
     "i2c_pullup_contract_paths.py",
     "i2c_pullup_contract.py",
     "i2c_pullup_heuristics.py",
@@ -271,6 +272,7 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
     assert references <= {
         *USB_PEER_ANALYSIS_MODULES,
         "bus_signal_pairs.py",
+        "peer_reference_assignments.py",
         "design_lint_candidate_aggregation.py",
     }
 

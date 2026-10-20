@@ -8,7 +8,7 @@ from typing import TypeVar
 
 from .bus_signal_pairs import usb_data_function_identity, usb_superspeed_function_identity
 from .models import NetlistContract
-from .return_nets import is_return_like_net_name
+from .peer_reference_assignments import peer_reference_assignments
 from .usb_peer_reference_types import (
     UsbEndpoint,
     UsbPeerSignalFamily,
@@ -16,20 +16,6 @@ from .usb_peer_reference_types import (
 )
 
 IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-
-
-_NON_SIGNAL_REFERENCE_MARKER = re.compile(
-    r"(?:^|[^A-Z0-9])(?:CHASSIS|SHIELD|FRAME|PE)(?:$|[^A-Z0-9])",
-    re.IGNORECASE,
-)
-
-
-# `unspecified` is accepted only after `_return_pin_function` recognizes an
-# explicit, bounded return-like function on that pin.
-_RETURN_PIN_TYPES = frozenset({"passive", "power_in", "unspecified"})
-
-
-_EXTENDED_RETURN_PIN_FUNCTIONS = frozenset({"gnda", "gndd", "gndp", "vssa", "vssd", "vssp"})
 
 
 ValueT = TypeVar("ValueT")
@@ -51,50 +37,27 @@ def pin_net_index(observed: NetlistContract) -> tuple[dict[str, set[str]], dict[
     return by_pin, by_net
 
 
-def _return_pin_function(function: str) -> bool:
-    normalized = re.sub(r"\d+$", "", function.strip())
-    compact = re.sub(r"[^a-z0-9]", "", normalized.casefold())
-    return not _NON_SIGNAL_REFERENCE_MARKER.search(normalized) and (
-        compact in _EXTENDED_RETURN_PIN_FUNCTIONS or is_return_like_net_name(normalized)
-    )
-
-
 def usb_endpoint_reference_pins(
     observed: NetlistContract, reference: str
 ) -> tuple[UsbReferencePinAssignment, ...] | None:
     """Return complete, uniquely assigned explicit signal-reference pins for one endpoint."""
     pin_nets, _ = pin_net_index(observed)
     pin_inventories = casefold_mapping(observed.component_pin_numbers)
-    functions = casefold_mapping(observed.pin_functions)
-    electrical_types = casefold_mapping(observed.pin_electrical_types)
     numbers = pin_inventories.get(reference.casefold())
     if not numbers:
         return None
-    assignments: list[UsbReferencePinAssignment] = []
-    for raw_number in numbers:
-        pin = f"{reference}.{raw_number}"
-        pin_key = pin.casefold()
-        function = functions.get(pin_key)
-        electrical_type = electrical_types.get(pin_key)
-        if function is None or electrical_type is None:
-            return None
-        if not _return_pin_function(function):
-            continue
-        normalized_type = electrical_type.casefold()
-        nets = pin_nets.get(pin_key, set())
-        if normalized_type not in _RETURN_PIN_TYPES or len(nets) != 1:
-            return None
-        assignments.append(
-            UsbReferencePinAssignment(
-                pin=pin,
-                function=function,
-                electrical_type=normalized_type,
-                net=next(iter(nets)),
-            )
-        )
-    if not assignments or len({item.net.casefold() for item in assignments}) != 1:
+    evidence = peer_reference_assignments(reference, observed, pin_nets, numbers)
+    if evidence.net is None:
         return None
-    return tuple(sorted(assignments, key=lambda item: (item.pin.casefold(), item.pin)))
+    return tuple(
+        UsbReferencePinAssignment(
+            pin=item.pin,
+            function=item.function,
+            electrical_type=item.electrical_type,
+            net=item.net,
+        )
+        for item in evidence.pins
+    )
 
 
 def usb_endpoint(

@@ -17,6 +17,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests.can_peer_reference_support import can_peer_reference_netlist
 from tests.design_lint_fixtures import coach
+from tests.reference_pin_role_support import with_unspecified_reference_pins
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
@@ -91,6 +92,28 @@ def test_common_reference_distinct_can_buses_dnp_and_shield_are_controls() -> No
     assert dnp.can_peer_reference_coverage.status == "NO_SHARED_CAN_BUSES"
     assert not _rule_findings(shield)
     assert shield.can_peer_reference_coverage.entries[0].disposition == "INCOMPLETE"
+
+
+def test_explicit_unspecified_vss_pins_support_split_review_and_common_control() -> None:
+    split = with_unspecified_reference_pins(can_peer_reference_netlist(), ("U1.3", "U2.3"))
+    common = with_unspecified_reference_pins(
+        can_peer_reference_netlist(reference_nets={"U1": "GND", "U2": "GND"}),
+        ("U1.3", "U2.3"),
+    )
+    nonreturn = with_unspecified_reference_pins(
+        can_peer_reference_netlist(), ("U1.3", "U2.3"), function="GPIO"
+    )
+
+    assert (
+        len(_rule_findings(evaluate("synthetic-can-reference", coach(split), DesignLintPolicy())))
+        == 1
+    )
+    assert not _rule_findings(
+        evaluate("synthetic-can-reference", coach(common), DesignLintPolicy())
+    )
+    assert not _rule_findings(
+        evaluate("synthetic-can-reference", coach(nonreturn), DesignLintPolicy())
+    )
 
 
 def test_known_split_survives_an_incomplete_peer_and_keeps_coverage_visible() -> None:
