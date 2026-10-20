@@ -1,11 +1,12 @@
 # Custom DRC rule compilation fixtures
 
 These source files are synthetic probes for the `kicad-druid` cohort's
-terminal-rule idea. The packaged probe board contains one 0.3 mm track. The
-native test pairs `control.kicad_dru` with a minimal `control.kicad_pro` so
-both pinned KiCad versions run with project settings present. The tooling
-appends a uniquely named 10 mm minimum-width rule to a temporary copy of each
-source file and requires KiCad to report that rule by name.
+terminal-rule idea. The packaged probe board has two parallel tracks on
+separate nets. The native test pairs `control.kicad_dru` with a minimal
+`control.kicad_pro` so both pinned KiCad versions run with project settings
+present. The tooling appends a uniquely named 2 mm track-to-track clearance
+rule to a temporary copy of each source file and requires KiCad to report that
+rule by name.
 
 - `control.kicad_dru` is syntactically valid. Its lower-case item type is a
   deliberately nonmatching but parseable condition, so the terminal sentinel

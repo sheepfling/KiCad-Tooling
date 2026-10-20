@@ -2625,8 +2625,8 @@ those names into requirements or geometric limits.
 During exact-version native validation, a PCB project that contains a
 `.kicad_dru` file receives an additional `drc_rule_compilation` check. The
 tooling copies the rule file and optional `.kicad_pro` settings into a temporary
-directory, appends a uniquely named terminal rule that must flag a track on a
-tooling-owned synthetic board, then runs KiCad DRC using the project's pinned
+directory, appends a uniquely named terminal clearance rule that must flag the
+synthetic board's track pair, then runs KiCad DRC using the project's pinned
 image. The retained receipt records source hashes, the observed KiCad version,
 the sentinel violation count, and the native report; the temporary source
 copies are removed after the command. This adapts the terminal-rule probe idea

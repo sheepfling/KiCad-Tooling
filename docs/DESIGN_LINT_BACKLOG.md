@@ -7561,11 +7561,12 @@ is not a reason by itself to expand its scope or change its default policy.
   syntax prevents KiCad DRC from running. Ordinary board validation does not
   retain a direct check that KiCad evaluated the complete authored rule file.
 - **Predicate:** In a temporary workspace, copy the project rule file and
-  optional settings, append a uniquely named terminal track-width rule, and
-  run native DRC on a packaged synthetic board containing one track. Require
-  the exact configured KiCad version and a report containing the terminal
-  rule's violation. Retain only source hashes, command evidence, and the
-  synthetic native report; remove temporary source copies.
+  optional settings, append a uniquely named terminal track-to-track
+  clearance rule, and run native DRC on a packaged synthetic board with two
+  parallel traces on separate nets. Require the exact configured KiCad
+  version and a report containing the terminal rule's violation. Retain only
+  source hashes, command evidence, and the synthetic native report; remove
+  temporary source copies.
 - **Boundary:** This proves that the rule parser reached the appended rule. It
   does not prove that each authored condition or layer matches its intended
   objects, that a rule has appropriate limits, or that the design satisfies an
@@ -7574,13 +7575,15 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Evidence:** Tooling-owned fixtures include a valid but deliberately
   nonmatching source rule, minimal project settings, and malformed syntax.
   Synthetic tests cover version, report, sentinel, source-hash, and validation
-  integration behavior. The `v0.5.1rc78` hosted native run passed KiCad 10.0.5
-  but failed the 10.0.0 control. The detailed `v0.5.1rc79` report showed an
-  exact 10.0.0 run with return code 5, two violations, zero sentinel matches,
-  and no copied project settings. The native fixture now supplies a minimal
-  `.kicad_pro` next to `.kicad_dru`; the scoped rerun must verify both versions.
-  Exact-version native acceptance remains unverified. No product project or
-  private source is used.
+  integration behavior. The `v0.5.1rc78` and `v0.5.1rc79` hosted native runs
+  passed KiCad 10.0.5 but failed the 10.0.0 control. The detailed
+  `v0.5.1rc80` report showed that KiCad 10.0.0 applied the 10 mm width
+  constraint but omitted the custom rule name from its `track_width`
+  violation, so a name-based match could not prove the sentinel. The native
+  fixture now uses a named clearance rule over two synthetic tracks and keeps
+  the minimal `.kicad_pro` project context. The scoped rerun must verify both
+  versions. Exact-version native acceptance remains unverified. No product
+  project or private source is used.
 - **Focused selection:**
 
   ```sh

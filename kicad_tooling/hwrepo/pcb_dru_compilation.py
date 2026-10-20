@@ -21,8 +21,8 @@ from .pcb_dru_compilation_native_report import (
 
 _PROBE_BOARD = Path(__file__).parent / "fixtures" / PROBE_BOARD_NAME
 _PROBE_RULE_NAME = "KTT_DRC_RULE_COMPILE_SENTINEL"
-_PROBE_CONDITION = "A.Type == 'Track'"
-_PROBE_CONSTRAINT = "(constraint track_width (min 10mm))"
+_PROBE_CONDITION = "A.Type == 'Track' && B.Type == 'Track'"
+_PROBE_CONSTRAINT = "(constraint clearance (min 2mm))"
 
 NativeExecutor = Callable[[Sequence[str], Path, Path, str], CommandEvidence]
 

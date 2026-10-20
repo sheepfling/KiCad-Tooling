@@ -86,7 +86,7 @@ def test_project_validation_requires_compilation_proof_when_rules_file_exists(
             violations = (
                 [
                     {
-                        "type": "track_width",
+                        "type": "clearance",
                         "description": f"Custom rule {match[0]} violated",
                         "severity": "error",
                         "items": [],

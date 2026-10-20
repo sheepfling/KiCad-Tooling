@@ -32,7 +32,7 @@ def native_identity_and_matches(report_path: Path, sentinel_name: str) -> tuple[
         violation = cast(dict[str, object], raw_violation)
         description = violation.get("description")
         if (
-            violation.get("type") == "track_width"
+            violation.get("type") == "clearance"
             and violation.get("severity") == "error"
             and violation.get("excluded") is not True
             and isinstance(description, str)

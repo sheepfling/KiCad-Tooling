@@ -40,7 +40,7 @@ def _command(
     violations = (
         [
             {
-                "type": "track_width",
+                "type": "clearance",
                 "description": f"Custom rule {match[0]} violated",
                 "severity": "error",
                 "items": [],
@@ -116,7 +116,7 @@ def test_sentinel_name_and_appended_rule_are_stable_and_terminal() -> None:
     assert first not in source
     appended = _append_sentinel(source, first)
     assert appended.startswith(source)
-    assert appended.rstrip().endswith("(constraint track_width (min 10mm)))")
+    assert appended.rstrip().endswith("(constraint clearance (min 2mm)))")
     assert appended.rfind(f'(rule "{first}"') == appended.rfind("(rule ")
 
 
@@ -169,3 +169,42 @@ def test_report_parser_rejects_malformed_native_output(tmp_path: Path) -> None:
 
     with pytest.raises(TypeError, match="root must be an object"):
         _native_identity_and_matches(output, "sentinel")
+
+
+def test_unlabeled_track_width_violation_does_not_prove_named_sentinel(
+    tmp_path: Path,
+) -> None:
+    from kicad_tooling.hwrepo.pcb_dru_compilation_native_report import (
+        PROBE_BOARD_NAME,
+        native_identity_and_matches,
+    )
+
+    output = tmp_path / "generic-track-width.json"
+    output.write_text(
+        json.dumps(
+            {
+                "source": PROBE_BOARD_NAME,
+                "kicad_version": "10.0.0",
+                "violations": [
+                    {
+                        "type": "track_width",
+                        "description": (
+                            "Track width (board setup constraints min width "
+                            "10.0000 mm; actual 0.3000 mm)"
+                        ),
+                        "severity": "error",
+                        "items": [],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    version, matches = native_identity_and_matches(
+        output,
+        "KTT_DRC_RULE_COMPILE_SENTINEL_0123456789abcdef",
+    )
+
+    assert version == "10.0.0"
+    assert matches == 0
