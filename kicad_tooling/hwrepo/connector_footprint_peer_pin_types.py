@@ -70,7 +70,7 @@ class ConnectorFootprintPeerPinAllOpen:
 
 @dataclass(frozen=True)
 class ConnectorFootprintPeerPinNamedAllOpen:
-    """A named power-input contact left open on every footprint-alias peer."""
+    """A named power contact left open on every footprint-alias peer."""
 
     footprint: str
     value: str

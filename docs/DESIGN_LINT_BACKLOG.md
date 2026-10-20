@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 140 rules are implemented with synthetic regression coverage.
+The following 141 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -382,6 +382,7 @@ Their actual recognition limits are documented in
 - `connector.footprint_named_power_input_assignment_divergence`
 - `connector.footprint_named_power_output_assignment_divergence`
 - `connector.footprint_named_power_input_all_open`
+- `connector.footprint_named_power_output_all_open`
 - `connector.footprint_peer_pin_all_open`
 - `connector.generic_peer_pin_all_open`
 - `connector.peer_power_input_named_all_open`
@@ -2669,7 +2670,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 140 active rules; CI requires every new
+- **Status:** Baseline complete for all 141 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2678,7 +2679,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 140 covered, 0 not applicable, 0 unreviewed.
+  audit: 141 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -8452,12 +8453,54 @@ is not a reason by itself to expand its scope or change its default policy.
   exact-ignore behavior; and CLI/MCP parity. A source-hashed synthetic native
   fault/control pair is registered in the
   [fixture README](../tests/fixtures/design_lint/connector-footprint-named-power-input-all-open-native/README.md)
-  for exact KiCad 10.0.0 and 10.0.5 exports. Hosted native acceptance remains
-  pending for this checkpoint. No project source or cohort fixture is used.
+  for exact KiCad 10.0.0 and 10.0.5 exports. Hosted native acceptance passed
+  under `v0.5.2rc19` (run `39386265101`). No project source or cohort fixture is
+  used.
 - **Focused selection:**
 
   ```sh
   python -I -m pytest tests -m 'design_lint and design_lint_rule(rule_id="connector.footprint_named_power_input_all_open")'
+  ```
+
+#### LINT-159 — Review named power-output contacts left open across footprint aliases
+
+- **Status:** Implemented as the default-review rule
+  `connector.footprint_named_power_output_all_open`.
+- **Gap:** LINT-153 reviews a named power-output contact when some footprint
+  aliases assign it and others leave it open; it deliberately excludes the
+  all-open case. The PART_ID-based all-open rule did not cover equivalent
+  PART_ID-free aliases matched only by complete, consistent footprint/value
+  evidence.
+- **Predicate:** Reuse the bounded footprint-alias peer scan. Require fitted
+  connector instances with distinct native symbols, no PART_ID, exact
+  nonempty value and footprint, complete identical pin inventories, matching
+  nonempty native function and electrical-type metadata, and any current
+  source-matched peer-assignment group. Review an explicit, non-generic
+  `power_out` function outside recognized supply and return roles when every
+  peer leaves that contact unassigned and another pin in the same scope has
+  one exact common-net assignment.
+- **Boundary:** This is a default-review heuristic. A power output may be
+  intentionally unused or isolated. Similar symbols, matching metadata, and
+  one common anchor do not prove that the contact must connect. Generic,
+  recognized supply/return, input, signal, passive, free, unspecified,
+  assigned, ambiguous, DNP, PART_ID-bearing, and incomplete groups do not
+  trigger. Missing anchor evidence is recorded as unanchored coverage without
+  a finding. The prompt does not establish PCB copper continuity or off-board
+  wiring; project-authored pinout or connectivity requirements remain
+  authoritative when a specific relationship must block.
+- **Evidence:** Tooling-owned synthetic tests cover a common-anchor all-open fault; common-net,
+  unanchored, generic, supply/return, wrong native-type, mixed-open, ambiguous, incomplete or
+  mismatched metadata, DNP, and PART_ID controls; mapping-order stability; configurable
+  `REVIEW`/`BLOCK`/`OFF` and exact-ignore behavior; and CLI/MCP parity. The source-hashed native
+  fault is documented in the
+  [fixture README](../tests/fixtures/design_lint/connector-footprint-named-power-output-all-open-native/README.md)
+  and uses the exact common-net control from the power-output divergence fixture. Both are
+  registered for exact KiCad 10.0.0 and 10.0.5 exports. Hosted native acceptance remains pending for
+  this checkpoint. No project source or cohort fixture is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests -m 'design_lint and design_lint_rule(rule_id="connector.footprint_named_power_output_all_open")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -11432,7 +11475,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 140 active rules. Each entry has a deterministic predicate, evidence
+contains 141 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

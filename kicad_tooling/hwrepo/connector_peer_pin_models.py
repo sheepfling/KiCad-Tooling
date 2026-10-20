@@ -172,6 +172,9 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     named_power_input_all_open_peer_pin_group_count: NonNegativeCount = 0
     unanchored_named_power_input_all_open_peer_pin_group_count: NonNegativeCount = 0
     named_power_input_all_open_finding_count: NonNegativeCount = 0
+    named_power_output_all_open_peer_pin_group_count: NonNegativeCount = 0
+    unanchored_named_power_output_all_open_peer_pin_group_count: NonNegativeCount = 0
+    named_power_output_all_open_finding_count: NonNegativeCount = 0
     named_power_output_different_assignment_pin_group_count: NonNegativeCount = 0
     unanchored_named_power_output_divergence_pin_group_count: NonNegativeCount = 0
     named_power_output_divergence_finding_count: NonNegativeCount = 0
@@ -246,6 +249,18 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             != self.named_power_input_all_open_peer_pin_group_count
         ):
             raise ValueError("Named power-input all-open groups must be anchored or unanchored")
+        if self.unanchored_named_power_output_all_open_peer_pin_group_count > (
+            self.named_power_output_all_open_peer_pin_group_count
+        ):
+            raise ValueError(
+                "Unanchored named power-output all-open groups cannot exceed candidates"
+            )
+        if (
+            self.named_power_output_all_open_finding_count
+            + self.unanchored_named_power_output_all_open_peer_pin_group_count
+            != self.named_power_output_all_open_peer_pin_group_count
+        ):
+            raise ValueError("Named power-output all-open groups must be anchored or unanchored")
         if self.unanchored_named_power_output_divergence_pin_group_count > (
             self.named_power_output_different_assignment_pin_group_count
         ):
@@ -403,6 +418,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             + self.footprint_alias_coverage.named_signal_divergence_finding_count
             + self.footprint_alias_coverage.named_power_input_divergence_finding_count
             + self.footprint_alias_coverage.named_power_input_all_open_finding_count
+            + self.footprint_alias_coverage.named_power_output_all_open_finding_count
             + self.footprint_alias_coverage.named_power_output_divergence_finding_count
             + self.footprint_alias_coverage.all_open_finding_count
             > self.exact_symbol_pin_group_count
@@ -410,6 +426,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             + self.footprint_alias_coverage.compared_pin_group_count
             + self.footprint_alias_coverage.all_open_peer_pin_group_count
             + self.footprint_alias_coverage.named_power_input_all_open_peer_pin_group_count
+            + self.footprint_alias_coverage.named_power_output_all_open_peer_pin_group_count
         ):
             raise ValueError("Peer-pin findings cannot exceed compared connector pin groups")
         if self.generic_peer_pin_all_open_finding_count > (

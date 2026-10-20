@@ -647,11 +647,13 @@
       "fault_fixtures": [
         "tests.test_connector_footprint_named_power_input_all_open.test_named_power_input_open_on_every_alias_is_reviewed_with_common_anchor",
         "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_power_input_all_open_native_fixture_lane.test_named_power_input_all_open_validator_checks_fault_and_control",
         "tests.test_connector_footprint_named_power_input_all_open_native_fixture_lane.test_native_named_power_input_all_open_fault_and_control_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_footprint_named_power_input_all_open.test_common_unanchored_or_ineligible_contacts_are_not_all_open_findings",
         "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_power_input_all_open_native_fixture_lane.test_named_power_input_all_open_validator_checks_fault_and_control",
         "tests.test_connector_footprint_named_power_input_all_open_native_fixture_lane.test_native_named_power_input_all_open_fault_and_control_are_repeatable"
       ],
       "metamorphic_fixtures": [
@@ -667,6 +669,55 @@
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_named_power_input_all_open.py#evaluate_footprint_named_power_input_all_open",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
+      "rule_id": "connector.footprint_named_power_output_all_open",
+      "title": "Named power-output contact is open across every footprint-similar connector peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, matching nonempty per-pin native function and electrical-type metadata, and the current source-matched peer-assignment scope when one applies. An explicit, non-generic native power_out contact outside recognized supply and return roles is a REVIEW candidate when every peer leaves that pin unassigned and another pin in the same scope has one exact common-net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching symbol metadata, value, footprint, pin inventory, and a common anchor are review clues only; they do not prove that peers have the same electrical role or that an open contact must connect.",
+        "An output can be intentionally unused or isolated. The default REVIEW prompt asks the project owner to inspect the approved pinout; it does not instruct the project to connect or block the contact.",
+        "Only explicit non-generic functions outside recognized supply and return roles with native power_out type are considered. Generic functions, recognized supply/return, signal, passive, free, unspecified, assigned or ambiguous contacts remain outside this predicate.",
+        "The rule requires complete identical pin inventories and matching nonempty native pin functions and electrical types. Missing or inconsistent evidence, or an absent common assigned anchor, produces no finding.",
+        "DNP and PART_ID-bearing components are excluded. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. Schematic assignment does not establish PCB copper continuity or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_footprint_named_power_output_all_open.test_named_power_output_open_on_every_alias_is_reviewed_with_common_anchor",
+        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_power_output_all_open_native_fixture_lane.test_named_power_output_all_open_validator_checks_fault_and_control",
+        "tests.test_connector_footprint_named_power_output_all_open_native_fixture_lane.test_native_named_power_output_all_open_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_footprint_named_power_output_all_open.test_common_unanchored_or_ineligible_contacts_are_not_all_open_findings",
+        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_power_output_all_open_native_fixture_lane.test_named_power_output_all_open_validator_checks_fault_and_control",
+        "tests.test_connector_footprint_named_power_output_all_open_native_fixture_lane.test_native_named_power_output_all_open_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_footprint_named_power_output_all_open.test_named_power_output_all_open_is_stable_under_mapping_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedAllOpen",
+        "kicad_tooling/hwrepo/connector_footprint_named_power_output_all_open.py#evaluate_footprint_named_power_output_all_open",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/connector_peer_pin_coverage.py#connector_peer_pin_heuristic_coverage",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_named_power_output_all_open.py#evaluate_footprint_named_power_output_all_open",
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
