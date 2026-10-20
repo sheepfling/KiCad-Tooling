@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.electrical import grounding_checks, pin_relationship_checks
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
+    DesignLintIgnore,
     DesignLintPolicy,
     GroundDomain,
     GroundingAnalysis,
@@ -216,19 +217,43 @@ def numbered_pwm_return_report(*, common: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
-def two_usb_one_serial_return_report(*, common_return: bool) -> dict[str, object]:
+def two_usb_one_serial_return_report(
+    *, common_return: bool, ignore_return: bool = False
+) -> dict[str, object]:
     """Serialize the mixed-port split-return fault or common-return control."""
     observed, coverage = two_usb_one_serial_return_case(common_return=common_return)
-    netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    netlist_sha256 = hashlib.sha256(model_json_bytes(observed)).hexdigest()
     project_id = (
         "synthetic-two-usb-one-serial-common-return"
         if common_return
         else "synthetic-two-usb-one-serial-split-return"
     )
+    policy = DesignLintPolicy()
+    if ignore_return:
+        unignored = evaluate(
+            project_id,
+            coach(observed, netlist_sha256),
+            policy,
+            connector_coverage=coverage,
+        )
+        candidate = next(
+            finding
+            for finding in unignored.findings
+            if finding.rule_id == "connector.repeated_pin_function"
+        )
+        policy = DesignLintPolicy(
+            ignores=(
+                DesignLintIgnore(
+                    rule_id=candidate.rule_id,
+                    fingerprint=candidate.fingerprint,
+                    reason="Synthetic project review accepts these intentionally isolated returns",
+                ),
+            )
+        )
     report = evaluate(
         project_id,
         coach(observed, netlist_sha256),
-        DesignLintPolicy(),
+        policy,
         connector_coverage=coverage,
     )
     return report.model_dump(mode="json")
@@ -275,4 +300,7 @@ def report_cases() -> dict[str, object]:
         "mapped_return_control": reviewed_connector_return_report(common_return=True),
         "two_usb_one_serial_return_fault": two_usb_one_serial_return_report(common_return=False),
         "two_usb_one_serial_return_control": two_usb_one_serial_return_report(common_return=True),
+        "two_usb_one_serial_return_ignored": two_usb_one_serial_return_report(
+            common_return=False, ignore_return=True
+        ),
     }

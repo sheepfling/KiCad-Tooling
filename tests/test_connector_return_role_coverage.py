@@ -13,6 +13,7 @@ from kicad_tooling.hwrepo.design_lint import text_report
 from kicad_tooling.hwrepo.models import (
     ConnectorCoverageReport,
     ContractCoachReport,
+    DesignLintIgnore,
     DesignLintPolicy,
     DesignLintRuleOverride,
     NetlistContract,
@@ -292,6 +293,8 @@ def test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed() -> 
         netlist: NetlistContract,
         coverage: ConnectorCoverageReport,
         project_id: str,
+        *,
+        policy: DesignLintPolicy | None = None,
     ):
         return evaluate_design_lint(
             project_id,
@@ -301,7 +304,7 @@ def test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed() -> 
                 observed=netlist,
                 netlist_sha256=hashlib.sha256(model_json_bytes(netlist)).hexdigest(),
             ),
-            DesignLintPolicy(),
+            policy if policy is not None else DesignLintPolicy(),
             connector_coverage=coverage,
         )
 
@@ -314,7 +317,7 @@ def test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed() -> 
     )
 
     assert split_report.status == "REVIEW"
-    assert split_findings
+    assert len(split_findings) == 1
     connector_pin_evidence = {
         pin
         for finding in split_findings
@@ -327,6 +330,34 @@ def test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed() -> 
         "J3.3",
     }
     assert all(item.mode == "review" for item in split_findings)
+
+    ignored_report = report(
+        observed,
+        split_coverage,
+        "synthetic-two-usb-one-serial-split-return",
+        policy=DesignLintPolicy(
+            ignores=(
+                DesignLintIgnore(
+                    rule_id="connector.repeated_pin_function",
+                    fingerprint=split_findings[0].fingerprint,
+                    reason="Synthetic project review accepts these intentionally isolated returns",
+                ),
+            )
+        ),
+    )
+    ignored_return_findings = tuple(
+        finding
+        for finding in ignored_report.findings
+        if finding.rule_id == "connector.repeated_pin_function"
+    )
+    assert ignored_report.status == "REVIEW"
+    assert len(ignored_return_findings) == 1
+    assert ignored_return_findings[0].disposition == "IGNORED"
+    assert any(
+        finding.rule_id == "signal.named_pair_without_reviewed_requirement"
+        and finding.disposition == "OPEN"
+        for finding in ignored_report.findings
+    )
 
     common, common_coverage = two_usb_one_serial_return_case(common_return=True)
     common_report = report(common, common_coverage, "synthetic-two-usb-one-serial-common-return")

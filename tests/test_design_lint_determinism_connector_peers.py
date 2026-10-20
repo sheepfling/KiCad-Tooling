@@ -133,6 +133,7 @@ def test_connector_peer_reports_remain_deterministic() -> None:
     assert reports["mapped_return_control"]["findings"] == []
     mixed_return_fault = reports["two_usb_one_serial_return_fault"]
     mixed_return_control = reports["two_usb_one_serial_return_control"]
+    mixed_return_ignored = reports["two_usb_one_serial_return_ignored"]
     assert mixed_return_fault["status"] == "REVIEW"
     assert mixed_return_control["status"] == "REVIEW"
     assert "signal.named_pair_without_reviewed_requirement" in {
@@ -141,6 +142,18 @@ def test_connector_peer_reports_remain_deterministic() -> None:
     assert "connector.repeated_pin_function" not in {
         finding["rule_id"] for finding in mixed_return_control["findings"]
     }
+    assert mixed_return_ignored["status"] == "REVIEW"
+    ignored_return = next(
+        finding
+        for finding in mixed_return_ignored["findings"]
+        if finding["rule_id"] == "connector.repeated_pin_function"
+    )
+    assert ignored_return["disposition"] == "IGNORED"
+    assert any(
+        finding["rule_id"] == "signal.named_pair_without_reviewed_requirement"
+        and finding["disposition"] == "OPEN"
+        for finding in mixed_return_ignored["findings"]
+    )
     mixed_return_findings = [
         finding
         for finding in mixed_return_fault["findings"]
