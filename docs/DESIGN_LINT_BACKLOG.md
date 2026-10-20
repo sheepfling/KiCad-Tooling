@@ -13177,6 +13177,11 @@ it does not claim field validation or effectiveness against private boards.
   rule. The same CLI/MCP case now also applies an exact source-matched
   `separate_nets` peer map and confirms the intentional split no longer prompts.
   This verifies shared-service and adapter parity, not another KiCad export.
+  A typed three-header regression adds a third UART port with a common return
+  beside one split-reference header and one common-reference header. It checks
+  six supported signal links, one localized review, the all-common control, and
+  order-independent reports; the cross-process hash-seed probe uses this
+  three-header case. This extends synthetic coverage, not native export evidence.
   The native lane retains
   three IC-to-IC
   schematics (same-rail common-reference control, different-supply

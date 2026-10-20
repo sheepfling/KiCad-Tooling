@@ -151,10 +151,20 @@ def test_interface_reports_remain_deterministic() -> None:
     ]
     assert len(serial_reference_findings) == 1
     assert serial_reference_findings[0]["subject"] == "J1 / U1: serial reference-domain review"
+    serial_reference_coverage = serial_reference_fault["serial_peer_reference_coverage"]
+    assert serial_reference_coverage["native_peer_link_count"] == 6
+    assert serial_reference_coverage["supported_reference_link_count"] == 6
+    assert serial_reference_coverage["separate_reference_link_count"] == 2
+    assert serial_reference_coverage["common_reference_link_count"] == 4
+    assert serial_reference_coverage["candidate_group_count"] == 1
     serial_reference_control = reports["serial_reference_control"]
     assert "bus.serial_peer_reference_review" not in {
         finding["rule_id"] for finding in serial_reference_control["findings"]
     }, "the all-common UART control must clear this heuristic without erasing other review"
+    serial_control_coverage = serial_reference_control["serial_peer_reference_coverage"]
+    assert serial_control_coverage["native_peer_link_count"] == 6
+    assert serial_control_coverage["common_reference_link_count"] == 6
+    assert serial_control_coverage["candidate_group_count"] == 0
     serial_bond_fault = reports["serial_reference_bond_fault"]
     serial_bond_control = reports["serial_reference_bond_control"]
     fault_reference_check = next(

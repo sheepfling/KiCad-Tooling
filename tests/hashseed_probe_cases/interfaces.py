@@ -51,9 +51,11 @@ from tests.serial_participant_support import (
     alternate_function_serial_netlist,
     alternate_function_serial_peer_analysis,
 )
+from tests.serial_peer_reference_multichannel_support import (
+    three_uart_connector_reference_netlist,
+)
 from tests.serial_peer_reference_support import (
     labelled_serial_reference_netlist,
-    multi_uart_connector_reference_netlist,
 )
 from tests.spi_peer_reference_support import spi_peer_netlist
 from tests.test_stm32_pin_map import _IOC_FIXTURE
@@ -70,7 +72,7 @@ from tests.usb_peer_superspeed_support import superspeed_peer_netlist
 
 
 def serial_reference_lint_report(*, common_references: bool) -> dict[str, object]:
-    observed = multi_uart_connector_reference_netlist(common_first_return=common_references)
+    observed = three_uart_connector_reference_netlist(common_references=common_references)
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     report = evaluate(
         "synthetic-multi-uart-common-reference"
