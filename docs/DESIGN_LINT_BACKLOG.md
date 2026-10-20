@@ -7572,13 +7572,15 @@ is not a reason by itself to expand its scope or change its default policy.
   electrical requirement. Syntactically valid but nonmatching rules require
   separate semantic and project-authored coverage checks.
 - **Evidence:** Tooling-owned fixtures include a valid but deliberately
-  nonmatching source rule and malformed syntax. Synthetic tests cover version,
-  report, sentinel, source-hash, and validation integration behavior. The
-  `v0.5.1rc78` hosted native run passed the KiCad 10.0.5 case but failed the
-  KiCad 10.0.0 control. Its assertion omitted the probe report and native
-  command output; the fixture now includes both in assertion failures so the
-  scoped tag rerun can identify the cause. Exact-version native acceptance
-  remains unverified. No product project or private source is used.
+  nonmatching source rule, minimal project settings, and malformed syntax.
+  Synthetic tests cover version, report, sentinel, source-hash, and validation
+  integration behavior. The `v0.5.1rc78` hosted native run passed KiCad 10.0.5
+  but failed the 10.0.0 control. The detailed `v0.5.1rc79` report showed an
+  exact 10.0.0 run with return code 5, two violations, zero sentinel matches,
+  and no copied project settings. The native fixture now supplies a minimal
+  `.kicad_pro` next to `.kicad_dru`; the scoped rerun must verify both versions.
+  Exact-version native acceptance remains unverified. No product project or
+  private source is used.
 - **Focused selection:**
 
   ```sh

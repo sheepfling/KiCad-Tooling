@@ -34,7 +34,17 @@ FIXTURES = Path(__file__).parent / "fixtures/design_lint/pcb-dru-rule-compilatio
 def _failure_context(report: PcbDruCompilationReport, output: Path) -> str:
     command_path = output / "drc-rule-compilation/native-command.command.json"
     command = command_path.read_text(encoding="utf-8") if command_path.is_file() else "missing"
-    return f"probe report:\n{report.model_dump_json(indent=2)}\nnative command evidence:\n{command}"
+    native_report_path = output / "drc-rule-compilation/probe-drc.json"
+    native_report = (
+        native_report_path.read_text(encoding="utf-8")
+        if native_report_path.is_file()
+        else "missing"
+    )
+    return (
+        f"probe report:\n{report.model_dump_json(indent=2)}\n"
+        f"native command evidence:\n{command}\n"
+        f"native DRC report:\n{native_report}"
+    )
 
 
 def _docker_executor(image: str):
@@ -109,6 +119,7 @@ def test_native_drc_proves_terminal_rule_and_rejects_malformed_custom_rules(
     output.mkdir(parents=True)
     executor = _docker_executor(image)
 
+    project.write_bytes((FIXTURES / "control.kicad_pro").read_bytes())
     rules.write_bytes((FIXTURES / "control.kicad_dru").read_bytes())
     control = run_pcb_dru_compilation_probe(
         rules_path=rules,

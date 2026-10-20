@@ -2,8 +2,10 @@
 
 These source files are synthetic probes for the `kicad-druid` cohort's
 terminal-rule idea. The packaged probe board contains one 0.3 mm track. The
-tooling appends a uniquely named 10 mm minimum-width rule to a temporary copy
-of each source file and requires KiCad to report that rule by name.
+native test pairs `control.kicad_dru` with a minimal `control.kicad_pro` so
+both pinned KiCad versions run with project settings present. The tooling
+appends a uniquely named 10 mm minimum-width rule to a temporary copy of each
+source file and requires KiCad to report that rule by name.
 
 - `control.kicad_dru` is syntactically valid. Its lower-case item type is a
   deliberately nonmatching but parseable condition, so the terminal sentinel
