@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 131 active rules. They
+`synthetic_validated`; the catalog currently contains 132 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -1995,6 +1995,65 @@ not model component tolerances. This is not proof of oscillator startup,
 frequency accuracy, drive level, ESR margin, parasitics, layout quality, or environmental
 performance. This rule is synthetic-validated only and does not use private
 board fixtures.
+
+## Review a mapped oscillator-module output path
+
+`oscillator.output_load_path_mismatch` checks only output paths named in the
+project's `design_lint.oscillator_output_path_map`. The project records the
+reviewed module identity and output pin, every fitted load pin, and whether the
+required topology is direct or uses one series resistor. A series map also
+records the exact resistor identity, pin sides, and inclusive nominal
+resistance range.
+
+```json
+{
+  "design_lint": {
+    "oscillator_output_path_map": {
+      "basis": "Reviewed synthetic clock-module output requirements",
+      "paths": [
+        {
+          "id": "clock-to-receivers",
+          "basis": "Synthetic module datasheet requirement, revision A",
+          "oscillator_reference": "X1",
+          "expected_oscillator_value": "Synthetic clock module",
+          "expected_oscillator_symbol": "Synthetic:ClockModule",
+          "expected_oscillator_footprint": "Synthetic:ClockModule_4",
+          "output_pin": "X1.1",
+          "topology": "series",
+          "load_pins": [
+            {
+              "reference": "U2",
+              "pin": "U2.2",
+              "expected_symbol": "Synthetic:Receiver",
+              "expected_footprint": "Synthetic:SOIC8"
+            }
+          ],
+          "series_resistor": {
+            "reference": "R1",
+            "expected_symbol": "Device:R",
+            "expected_footprint": "Synthetic:R_0603",
+            "output_side_pin": "R1.1",
+            "load_side_pin": "R1.2",
+            "minimum_nominal_resistance_ohms": 22.0,
+            "maximum_nominal_resistance_ohms": 47.0
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+Use `topology: "direct"` and omit `series_resistor` when that is the reviewed
+requirement. Unmapped outputs are not guessed, and this rule never states that
+every clock output needs a resistor. A mismatch creates a default-`REVIEW`
+finding that project policy can set to `block`, `off`, or ignore by its exact
+fingerprint. The comparison covers schematic netlist membership, fitted state,
+mapped identities, and the authored nominal resistor range. It does not check
+the PCB route, alternate parallel branches, resistor tolerance, signal
+integrity, waveform behavior, or whether the project-authored requirement is
+electrically correct. The rule has synthetic regression coverage only; no
+product or proprietary project is used.
 
 ## Review an adjustable regulator feedback divider
 

@@ -216,6 +216,16 @@ _PARITY_FIXTURES_BY_RULE = {
             "test_disabled_signal_path_coverage_matches_cli_and_mcp",
         ),
     },
+    "oscillator.output_load_path_mismatch": {
+        "fault_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_oscillator_output_paths",
+            "test_oscillator_output_path_matches_cli_and_mcp",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_design_lint_mcp_parity_oscillator_output_paths",
+            "test_oscillator_output_path_matches_cli_and_mcp",
+        ),
+    },
 }
 
 

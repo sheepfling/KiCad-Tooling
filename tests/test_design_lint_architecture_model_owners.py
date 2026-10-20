@@ -82,6 +82,12 @@ NEW_THEME_MODELS = (
     "PcbTouchPadClearanceCoverageEntry",
     "PcbTouchPadClearanceCoverageReport",
 )
+OSCILLATOR_OUTPUT_PATH_MODELS = (
+    "OscillatorOutputLoadRequirement",
+    "OscillatorOutputSeriesResistorRequirement",
+    "OscillatorOutputPathRequirement",
+    "OscillatorOutputPathMap",
+)
 SCHEMATIC_GEOMETRY_RULE_TYPES = (
     "SchematicGeometryRuleId",
     "SchematicGeometryRuleCoverageStatus",
@@ -133,6 +139,21 @@ def test_new_touch_clearance_models_stay_in_their_theme_owner() -> None:
     assert all(not hasattr(compatibility_models, name) for name in NEW_THEME_MODELS)
 
 
+def test_oscillator_output_path_models_stay_in_their_theme_owner() -> None:
+    from kicad_tooling.hwrepo import oscillator_output_path_models
+
+    owner_path = HWREPO / "oscillator_output_path_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(OSCILLATOR_OUTPUT_PATH_MODELS) <= _top_level_definitions(owner_path)
+    assert not (set(OSCILLATOR_OUTPUT_PATH_MODELS) & _top_level_definitions(HWREPO / "models.py"))
+    assert all(not hasattr(compatibility_models, name) for name in OSCILLATOR_OUTPUT_PATH_MODELS)
+    assert all(
+        getattr(oscillator_output_path_models, name).__module__
+        == oscillator_output_path_models.__name__
+        for name in OSCILLATOR_OUTPUT_PATH_MODELS
+    )
+
+
 def test_schematic_geometry_rule_types_have_theme_owner_and_compatible_exports() -> None:
     owner_path = HWREPO / "schematic_geometry_models.py"
     assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
@@ -152,6 +173,7 @@ def test_connector_peer_pin_role_has_theme_owner_and_compatible_export() -> None
 def test_internal_services_import_lint_models_from_their_theme_owners() -> None:
     moved_names = {name for _, names in MODEL_OWNERS.values() for name in names}
     moved_names.update(NEW_THEME_MODELS)
+    moved_names.update(OSCILLATOR_OUTPUT_PATH_MODELS)
     moved_names.update(SCHEMATIC_GEOMETRY_RULE_TYPES)
     moved_names.update(CONNECTOR_PEER_PIN_TYPES)
     legacy_imports: list[str] = []
@@ -187,6 +209,7 @@ def test_design_lint_policy_imports_typed_maps_from_theme_owners() -> None:
         and node.module
         in {
             "pcb_touch_pad_clearance_models",
+            "oscillator_output_path_models",
             "rc_filter_models",
             "regulator_feedback_models",
             "signal_pair_models",
@@ -196,6 +219,7 @@ def test_design_lint_policy_imports_typed_maps_from_theme_owners() -> None:
 
     assert {
         "PcbTouchPadClearanceMap",
+        "OscillatorOutputPathMap",
         "RcFilterMap",
         "RegulatorFeedbackMap",
         "ComplementaryPinFunctionAliasMap",

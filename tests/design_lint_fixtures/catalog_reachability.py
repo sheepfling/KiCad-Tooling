@@ -1,4 +1,4 @@
-"""Synthetic schematic-geometry cases used by catalog reachability checks."""
+"""Synthetic cases for design-lint catalog reachability checks."""
 
 from __future__ import annotations
 
@@ -7,11 +7,15 @@ from pathlib import Path
 from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.schematic_geometry import scan_wire_ends_on_pin_lines
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
+from tests.test_oscillator_output_paths import (
+    oscillator_output_netlist,
+    oscillator_output_path_map,
+)
 
 TESTS = Path(__file__).resolve().parents[1]
 
 
-def schematic_geometry_rule_ids() -> set[str]:
+def catalog_reachability_rule_ids() -> set[str]:
     cases = (
         (
             (TESTS / "fixtures/design_lint/near-miss-pin-line.kicad_sch").read_bytes(),
@@ -82,4 +86,11 @@ def schematic_geometry_rule_ids() -> set[str]:
             unconnected_pins=unconnected_pins,
         )
         result.update(item.rule_id for item in candidates(observed(), schematic_geometry=coverage))
+    result.update(
+        item.rule_id
+        for item in candidates(
+            oscillator_output_netlist(resistor_value="1k"),
+            oscillator_output_path_map=oscillator_output_path_map(),
+        )
+    )
     return result

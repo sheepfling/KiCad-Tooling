@@ -14,6 +14,7 @@ from .external_protection_models import ExternalProtectionMap
 from .i2c_address_models import I2cAddressMap
 from .ic_decoupling_models import IcDecouplingMap
 from .model_primitives import StrictModel
+from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_decoupling_models import PcbDecouplingMap
 from .pcb_drc_models import PcbDifferentialPairRuleMap, PcbSignalPathRuleMap
 from .pcb_keepout_models import PcbKeepoutMap
@@ -49,6 +50,7 @@ class DesignLintPolicy(StrictModel):
     power_sequence_map: PowerSequenceMap | None = None
     ic_decoupling_map: IcDecouplingMap | None = None
     crystal_network_map: CrystalNetworkMap | None = None
+    oscillator_output_path_map: OscillatorOutputPathMap | None = None
     regulator_feedback_map: RegulatorFeedbackMap | None = None
     rc_filter_map: RcFilterMap | None = None
     connector_return_distribution_map: ConnectorReturnDistributionMap | None = None

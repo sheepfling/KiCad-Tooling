@@ -67,7 +67,7 @@ from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
 from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
-from tests.design_lint_fixtures.catalog_reachability import schematic_geometry_rule_ids
+from tests.design_lint_fixtures.catalog_reachability import catalog_reachability_rule_ids
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
 from tests.power_sequence_support import (
     power_sequence_map as synthetic_power_sequence_map,
@@ -247,7 +247,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id for item in candidates(i2c_observed, i2c_address_coverage=i2c_coverage)
     )
-    emitted.update(schematic_geometry_rule_ids())
+    emitted.update(catalog_reachability_rule_ids())
     unreviewed_protection = evaluate_external_protection(
         None,
         _external_protection_support.observed_netlist(),

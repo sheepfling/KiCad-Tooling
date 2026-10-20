@@ -13,6 +13,8 @@ from .led_heuristics import (
     leds_directly_driven_without_visible_series_resistor,
 )
 from .models import NetlistContract
+from .oscillator_output_path_candidates import oscillator_output_path_candidates
+from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .two_pin_components import two_pin_components_on_same_net
 
@@ -39,6 +41,7 @@ def component_candidates(
     *,
     component_role_map: ComponentRoleMap | None = None,
     power_path_map: PowerPathMap | None = None,
+    oscillator_output_path_map: OscillatorOutputPathMap | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
     """Build review prompts for component polarity, role, and same-net patterns."""
@@ -194,4 +197,5 @@ def component_candidates(
                 description="return",
             )
         )
+    found.extend(oscillator_output_path_candidates(observed, oscillator_output_path_map))
     return tuple(found)

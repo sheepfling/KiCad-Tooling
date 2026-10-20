@@ -51,6 +51,7 @@ from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .ic_decoupling_models import IcDecouplingMap
 from .models import NetlistContract
+from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import (
@@ -146,6 +147,7 @@ def candidates(
     peer_power_output_review_enabled: bool = True,
     connector_power_output_review_enabled: bool = True,
     ic_decoupling_map: IcDecouplingMap | None = None,
+    oscillator_output_path_map: OscillatorOutputPathMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -187,6 +189,7 @@ def candidates(
             observed,
             component_role_map=component_role_map,
             power_path_map=power_path_map,
+            oscillator_output_path_map=oscillator_output_path_map,
             reviewed_connector_references=reviewed_connector_references,
         )
     )

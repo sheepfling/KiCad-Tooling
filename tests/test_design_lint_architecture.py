@@ -57,6 +57,10 @@ PIN_ANALYSIS_MODULES = (
     "component_pin_patterns.py",
 )
 ROLE_MAPPING_MODULES = ("component_roles.py",)
+COMPONENT_THEME_MODULES = (
+    "oscillator_output_path_candidates.py",
+    "oscillator_output_paths.py",
+)
 THEME_OWNER_PREFIXES = {
     "connectors": ("connector_",),
     "interfaces": (
@@ -73,7 +77,15 @@ THEME_OWNER_PREFIXES = {
         "spi_",
         "usb_",
     ),
-    "components": ("component_", "crystal_", "led_", "rc_", "stm32_", "two_pin_"),
+    "components": (
+        "component_",
+        "crystal_",
+        "led_",
+        "oscillator_",
+        "rc_",
+        "stm32_",
+        "two_pin_",
+    ),
     "power": ("net_dc_", "power_", "regulator_"),
     "returns": ("component_return_", "connector_return_", "return_"),
     "schematic": ("schematic_",),
@@ -248,6 +260,7 @@ def test_design_lint_implementation_modules_stay_below_review_limit() -> None:
     modules = sorted(HWREPO.glob("design_lint_*.py"))
     modules.extend(HWREPO / name for name in PIN_ANALYSIS_MODULES)
     modules.extend(HWREPO / name for name in ROLE_MAPPING_MODULES)
+    modules.extend(HWREPO / name for name in COMPONENT_THEME_MODULES)
     assert modules, "Design-lint implementation modules should be discoverable."
 
     module_sizes = {path.name: _line_count(path) for path in modules}

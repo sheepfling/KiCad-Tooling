@@ -10,6 +10,7 @@ from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .models import DesignLintMappedCheckRun
+from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .usb_data_path_models import UsbDataPathMap
@@ -18,6 +19,7 @@ MappedTopologyRuleId = Literal[
     "bus.usb_data_path_mismatch",
     "power.mapped_series_path_mismatch",
     "power.mapped_sequence_dependency_mismatch",
+    "oscillator.output_load_path_mismatch",
 ]
 RuleMode = Literal["review", "block", "off"]
 
@@ -74,6 +76,7 @@ def mapped_topology_coverage_runs(
     usb_map: UsbDataPathMap | None = policy.usb_data_path_map
     power_path_map: PowerPathMap | None = policy.power_path_map
     power_sequence_map: PowerSequenceMap | None = policy.power_sequence_map
+    oscillator_path_map: OscillatorOutputPathMap | None = policy.oscillator_output_path_map
     return (
         _mapped_check_run(
             usb_rule_id,
@@ -112,5 +115,17 @@ def mapped_topology_coverage_runs(
             default_modes[power_sequence_rule_id]
             if power_sequence_rule_id not in overrides
             else overrides[power_sequence_rule_id].mode,
+        ),
+        _mapped_check_run(
+            "oscillator.output_load_path_mismatch",
+            None
+            if oscillator_path_map is None
+            else hashlib.sha256(oscillator_path_map.model_dump_json().encode("utf-8")).hexdigest(),
+            0 if oscillator_path_map is None else len(oscillator_path_map.paths),
+            netlist_sha256,
+            candidates,
+            default_modes["oscillator.output_load_path_mismatch"]
+            if "oscillator.output_load_path_mismatch" not in overrides
+            else overrides["oscillator.output_load_path_mismatch"].mode,
         ),
     )

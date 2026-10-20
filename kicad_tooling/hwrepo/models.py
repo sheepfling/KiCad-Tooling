@@ -2072,6 +2072,7 @@ class DesignLintMappedCheckRun(StrictModel):
         "bus.usb_data_path_mismatch",
         "power.mapped_series_path_mismatch",
         "power.mapped_sequence_dependency_mismatch",
+        "oscillator.output_load_path_mismatch",
     ]
     status: Literal["NOT_CONFIGURED", "EVALUATED", "BLOCKED"]
     mode: Literal["review", "block", "off"]

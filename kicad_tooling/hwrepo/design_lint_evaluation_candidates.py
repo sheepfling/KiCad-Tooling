@@ -105,6 +105,7 @@ def scan_evaluation_candidates(
         peer_power_output_review_enabled=peer_power_output_mode != "off",
         connector_power_output_review_enabled=connector_power_output_mode != "off",
         ic_decoupling_map=policy.ic_decoupling_map,
+        oscillator_output_path_map=policy.oscillator_output_path_map,
     )
     items = tuple(
         sorted(

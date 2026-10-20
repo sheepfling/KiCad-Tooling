@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 131 rules are implemented with synthetic regression coverage.
+The following 132 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -413,6 +413,7 @@ Their actual recognition limits are documented in
 - `component.unconnected_return_pin`
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
+- `oscillator.output_load_path_mismatch`
 - `power.ic_decoupling_below_project_minimum`
 - `power.ic_rail_without_fitted_capacitor`
 - `power.pin_function_net_role_conflict`
@@ -2639,7 +2640,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 131 active rules; CI requires every new
+- **Status:** Baseline complete for all 132 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2648,7 +2649,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 131 covered, 0 not applicable, 0 unreviewed.
+  audit: 132 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -8003,18 +8004,58 @@ is not a reason by itself to expand its scope or change its default policy.
   This exact profile is deliberate: patch releases can change defaults, so
   10.0.1 and 10.0.2 remain out of scope until their source profiles are
   reviewed. No KiCad source or project design is imported.
-- **Synthetic evidence:** Tooling-owned `.kicad_pro` fixtures cover every
-  supported key set to Ignore, all supported keys left at Warning, unrelated
-  ignored keys, PCB-only and non-PCB scope, unsupported patch versions,
-  source-hash mutation, deterministic ordering, standard REVIEW disposition,
-  and CLI/MCP parity. The exact synthetic cases and source references are
-  recorded in the [fixture README](../tests/fixtures/design_lint/pcb-warning-default-drc-ignored/README.md).
-  No native DRC process or product board is used.
+- **Synthetic evidence:** Tooling-owned `.kicad_pro` fixtures cover every supported key set to
+  Ignore, all supported keys left at Warning, unrelated ignored keys, PCB-only and non-PCB scope,
+  unsupported patch versions, source-hash mutation, deterministic ordering, standard REVIEW
+  disposition, and CLI/MCP parity. The exact synthetic cases and source references are recorded in
+  the [fixture README](../tests/fixtures/design_lint/pcb-warning-default-drc-ignored/README.md). No
+  native DRC process or product board is used.
 - **Focused selection:**
 
   ```sh
   python -I -m pytest \
     -m 'design_lint and design_lint_rule(rule_id="pcb.warning_default_drc_check_ignored")'
+  ```
+
+#### LINT-150 — Review authored oscillator output paths
+
+- **Status:** Implemented as `oscillator.output_load_path_mismatch`, a
+  project-mapped, default-review comparison for explicitly named oscillator
+  module outputs, fitted load pins, and direct or single-series-resistor
+  topologies. A series path also checks its authored inclusive nominal
+  resistance range.
+- **Gap:** LINT-075 trialed the cohort's generic direct-load hint. It
+  over-prompted on an allowed direct-drive fixture and missed wrong-part, DNP,
+  and wrong-value series components. Existing generic power-path checks do not
+  express an oscillator-specific nominal resistor range for named receiver
+  pins.
+- **Predicate:** Read `design_lint.oscillator_output_path_map` from the
+  project test contract. Match exact module, load, and optional resistor
+  identities; check fitted state, native pin inventory and net assignments;
+  require all direct loads on the output net, or each mapped load on the
+  load-side net of the named resistor; and compare its parsed nominal
+  resistance to the inclusive authored range. The map SHA-256, basis, mapped
+  pins, topology, resistor, and mismatch evidence are included in the finding.
+- **Policy boundary:** This is not automatic oscillator discovery and does not
+  claim that every clock needs a resistor. Direct-drive outputs are valid when
+  explicitly mapped. Findings default to `REVIEW`; projects can select `block`,
+  `off`, or exact-fingerprint ignore. The check does not review alternate
+  parallel branches, the resistor's tolerance, PCB routing, signal integrity,
+  or the correctness of the authored electrical requirement.
+- **Synthetic evidence:** Faults cover split loads, bypassed or reversed
+  resistor sides, missing and DNP components, changed module identity, and an
+  out-of-range 1 kΩ resistor against a synthetic 22–47 Ω requirement. Direct
+  and in-range series controls, review/block/off/ignore lifecycle, input-order
+  stability, catalog reachability, architecture ownership, and CLI/MCP parity
+  are registered. No cohort code, board, or project fixture was copied. The
+  CLI/MCP parity suite needs the separately configured public template
+  checkout; this local checkout does not have `KICAD_TEMPLATE_ROOT` set. No
+  native KiCad process or product board is claimed for this rule.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest \
+    -m 'design_lint and design_lint_rule(rule_id="oscillator.output_load_path_mismatch")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
@@ -10964,7 +11005,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 131 active rules. Each entry has a deterministic predicate, evidence
+contains 132 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin
@@ -13200,8 +13241,9 @@ it does not claim field validation or effectiveness against private boards.
 
 #### LINT-075 — Oscillator-module output load-path review
 
-- **Priority and status:** P3 cohort-derived candidate; not an active catalog
-  rule. LINT-031 records the initial repeated no-CLI trial and an expanded
+- **Priority and status:** P3 cohort-derived candidate. The generic discovery
+  heuristic is not adopted; its bounded, project-mapped follow-on is active as
+  LINT-150. LINT-031 records the initial repeated no-CLI trial and an expanded
   native trial on 11 tooling-owned schematics with KiCad 10.0.6. The candidate
   demonstrates a narrow direct-load hint, a fixture-relative over-prompt for
   an allowed direct-drive topology, and misses for wrong-part, DNP, and
@@ -13217,20 +13259,16 @@ it does not claim field validation or effectiveness against private boards.
 - **Problem and incremental-value hypothesis:** Native ERC does not compare a
   project's reviewed oscillator-output topology with the source-bound
   schematic. When a specific module requires a source resistor, removing or
-  bypassing it can leave a syntactically valid netlist. An exact project map
-  may catch that topology regression; a review hint may also find a likely
-  unmapped oscillator output. Measure the mapped check against existing
-  source-bound component and connectivity contracts before adopting a second
-  mechanism.
-- **Candidate predicate:** The deterministic path check must use a
-  project-authored map identifying exact fitted oscillator component and
-  library identity, output pin, named load pins, expected direct or series
-  topology, and (for series topology) exact fitted resistor identity, pin
-  endpoints, and reviewed value limits with source references. Compare these
-  expectations with native KiCad netlist evidence bound to the schematic and
-  contract digests. Any discovery prompt must be separately bounded to
-  uniquely identified oscillator-module outputs and must report that its
-  classification is uncertain.
+  bypassing it can leave a syntactically valid netlist. LINT-150 adds an exact
+  project map for topology and nominal resistor range. A review hint for an
+  unmapped oscillator output remains deferred because the trial showed an
+  allowed direct-drive over-prompt and no measured field benefit.
+- **Candidate predicate:** The LINT-150 deterministic path check uses a
+  project-authored map for exact oscillator and load identities, output and
+  load pins, direct or series topology, and (for series topology) the fitted
+  resistor identity, pin endpoints, and reviewed nominal value bounds. It
+  compares these expectations with the source-bound native netlist. No
+  discovery prompt is included.
 - **Boundary:** Do not infer that every clock needs damping, that an output is
   an oscillator module from a generic `CLK` net name, or that a resistor value
   is suitable. Crystal and resonator networks, MCU-generated clocks, clock

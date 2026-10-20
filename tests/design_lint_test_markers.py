@@ -363,6 +363,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_mcp_parity_pcb_signal_integrity_drc_severity.py",
             "tests/test_design_lint_mcp_parity_pcb_miscellaneous_drc_severity.py",
             "tests/test_design_lint_mcp_parity_pcb_warning_default_drc_ignored.py",
+            "tests/test_design_lint_mcp_parity_oscillator_output_paths.py",
             "tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py",
         }
     ),
