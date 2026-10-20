@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+SIGNAL_ELECTRICAL_TYPES = frozenset(
+    {"input", "output", "bidirectional", "tri_state", "open_collector", "open_emitter"}
+)
+
 
 @dataclass(frozen=True)
 class ConnectorFootprintPeerPinDivergence:
@@ -70,7 +74,7 @@ class ConnectorFootprintPeerPinAllOpen:
 
 @dataclass(frozen=True)
 class ConnectorFootprintPeerPinNamedAllOpen:
-    """A named power contact left open on every footprint-alias peer."""
+    """A named contact with a supported role left open on every alias peer."""
 
     footprint: str
     value: str

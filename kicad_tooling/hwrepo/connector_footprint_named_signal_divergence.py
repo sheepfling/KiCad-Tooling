@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .connector_footprint_peer_pin_types import (
+    SIGNAL_ELECTRICAL_TYPES,
     ConnectorFootprintPeerPinScan,
 )
 from .connector_identity import (
@@ -16,9 +17,6 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 
 RULE_ID: DesignLintRuleId = "connector.footprint_named_signal_assignment_divergence"
-_SIGNAL_ELECTRICAL_TYPES = frozenset(
-    {"input", "output", "bidirectional", "tri_state", "open_collector", "open_emitter"}
-)
 
 
 @dataclass(frozen=True)
@@ -37,7 +35,7 @@ def evaluate_footprint_named_signal_assignment_divergence(
     eligible = tuple(
         item
         for item in scan.named_divergences
-        if item.pin_electrical_type.strip().casefold() in _SIGNAL_ELECTRICAL_TYPES
+        if item.pin_electrical_type.strip().casefold() in SIGNAL_ELECTRICAL_TYPES
         and not pin_function_is_generic(item.pin_function)
         and not is_named_supply_function(item.pin_function)
         and not is_return_function(item.pin_function)

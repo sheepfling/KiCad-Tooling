@@ -175,6 +175,9 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     named_power_output_all_open_peer_pin_group_count: NonNegativeCount = 0
     unanchored_named_power_output_all_open_peer_pin_group_count: NonNegativeCount = 0
     named_power_output_all_open_finding_count: NonNegativeCount = 0
+    named_signal_all_open_peer_pin_group_count: NonNegativeCount = 0
+    unanchored_named_signal_all_open_peer_pin_group_count: NonNegativeCount = 0
+    named_signal_all_open_finding_count: NonNegativeCount = 0
     named_power_output_different_assignment_pin_group_count: NonNegativeCount = 0
     unanchored_named_power_output_divergence_pin_group_count: NonNegativeCount = 0
     named_power_output_divergence_finding_count: NonNegativeCount = 0
@@ -261,6 +264,16 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             != self.named_power_output_all_open_peer_pin_group_count
         ):
             raise ValueError("Named power-output all-open groups must be anchored or unanchored")
+        if self.unanchored_named_signal_all_open_peer_pin_group_count > (
+            self.named_signal_all_open_peer_pin_group_count
+        ):
+            raise ValueError("Unanchored named signal all-open groups cannot exceed candidates")
+        if (
+            self.named_signal_all_open_finding_count
+            + self.unanchored_named_signal_all_open_peer_pin_group_count
+            != self.named_signal_all_open_peer_pin_group_count
+        ):
+            raise ValueError("Named signal all-open groups must be anchored or unanchored")
         if self.unanchored_named_power_output_divergence_pin_group_count > (
             self.named_power_output_different_assignment_pin_group_count
         ):

@@ -144,6 +144,31 @@ def named_power_output_all_open_netlist(
     )
 
 
+def named_signal_all_open_netlist(
+    *,
+    anchor_assignments: tuple[str | None, str | None] = ("GND", "GND"),
+    target_assignments: tuple[str | None, str | None] = (None, None),
+    function: str = "UART_TX",
+    electrical_type: str = "output",
+    dnp: tuple[str, ...] = (),
+    part_id: str | None = None,
+    incomplete_inventory: bool = False,
+    missing_metadata_pin: str | None = None,
+    ambiguous_target: bool = False,
+) -> NetlistContract:
+    """Build a named signal contact left open across every alias peer."""
+    return peer_netlist(
+        assignments=(anchor_assignments, target_assignments),
+        functions=("Pin_1", function),
+        electrical_types=("passive", electrical_type),
+        dnp=dnp,
+        part_id=part_id,
+        ambiguous_pin="J1.2" if ambiguous_target else None,
+        incomplete_inventory=incomplete_inventory,
+        missing_metadata_pin=missing_metadata_pin,
+    )
+
+
 def named_power_output_divergence_netlist(
     *,
     anchor_assignments: tuple[str | None, str | None] = ("GND", "GND"),

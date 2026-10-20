@@ -94,18 +94,20 @@ def test_catalog_types_have_small_rule_owned_modules() -> None:
     assert not oversized, f"Keep catalog theme types below 500 lines: {oversized}"
 
 
-def test_named_power_all_open_regression_suites_stay_below_review_limit() -> None:
+def test_named_all_open_regression_suites_stay_below_review_limit() -> None:
     module_names = (
         "connector_footprint_peer_support.py",
         "test_connector_footprint_named_power_input_all_open.py",
         "test_connector_footprint_named_power_input_all_open_native_fixture_lane.py",
         "test_connector_footprint_named_power_output_all_open.py",
         "test_connector_footprint_named_power_output_all_open_native_fixture_lane.py",
+        "test_connector_footprint_named_signal_all_open.py",
+        "test_connector_footprint_named_signal_all_open_native_fixture_lane.py",
         "test_connector_footprint_peer_parity.py",
     )
     sizes = {name: line_count(REPO_ROOT / "tests" / name) for name in module_names}
     oversized = {name: lines for name, lines in sizes.items() if lines >= THEME_SUITE_MAX_LINES}
-    assert not oversized, f"Split named power all-open regressions before growth: {oversized}"
+    assert not oversized, f"Split named contact all-open regressions before growth: {oversized}"
 
 
 def test_legacy_model_exports_preserve_identity() -> None:

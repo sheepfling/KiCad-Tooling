@@ -78,6 +78,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "connector-footprint-named-signal-output-native/fault.kicad_sch",
         "footprint-alias-named-signal-output-control": fixture_root
         / "connector-footprint-named-signal-output-native/control.kicad_sch",
+        "footprint-alias-named-signal-all-open-fault": fixture_root
+        / "connector-footprint-named-signal-all-open-native/fault.kicad_sch",
+        "footprint-alias-named-signal-all-open-control": fixture_root
+        / "connector-footprint-named-signal-output-native/control.kicad_sch",
         "footprint-alias-named-signal-divergence-fault": fixture_root
         / "connector-footprint-named-signal-divergence-native/fault.kicad_sch",
         "footprint-alias-named-power-input-divergence-fault": fixture_root
@@ -233,6 +237,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "footprint-alias-named-power-output-control": "43fcd7e09c75bba6d11b12ce937fd808c4e694b17fc4551769fdccd38abfde29",
     "footprint-alias-named-signal-output-fault": "338f674f9dab065e286b2c5a4495b7967c81947343ce1497fefec347666362c8",
     "footprint-alias-named-signal-output-control": "f072787dbd52dafcc5e2fd0728ed2bc4add23653d8b4978c7472aa658b660d8f",
+    "footprint-alias-named-signal-all-open-fault": "694b9284e1e08d029ffaf6c69198bb20a3179c2f90896f32cbecf9040b687af1",
+    "footprint-alias-named-signal-all-open-control": "f072787dbd52dafcc5e2fd0728ed2bc4add23653d8b4978c7472aa658b660d8f",
     "footprint-alias-named-signal-divergence-fault": "2a63cd0836321ce6752b5b4725d830a7f96ad01533e903fe24dfae5b696084a1",
     "footprint-alias-named-power-input-divergence-fault": "d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea",
     "footprint-alias-named-power-input-divergence-control": "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",

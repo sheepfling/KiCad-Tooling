@@ -229,6 +229,12 @@ The first rules are:
   matched footprint/value connector alias while another pin has one exact
   common-net assignment. An output can be intentionally unused or isolated;
   the prompt does not require the contacts to connect.
+- `connector.footprint_named_signal_all_open` prompts for review when an
+  explicit non-generic signal contact with native `input`, `output`,
+  `bidirectional`, `tri_state`, `open_collector`, or `open_emitter` type is
+  unassigned on every matched footprint/value connector alias while another
+  pin has one exact common-net assignment. A signal can be intentionally
+  unused or isolated; the prompt does not require the contacts to connect.
 - `connector.footprint_peer_pin_all_open` extends this prompt to fitted,
   PART_ID-free connector aliases only when distinct native symbols have exact
   nonempty value and footprint matches, complete identical pin inventories,
@@ -1253,7 +1259,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 141 active rules. They
+`synthetic_validated`; the catalog currently contains 142 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and

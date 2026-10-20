@@ -415,6 +415,17 @@ class DesignLintReport(StrictModel):
                 raise ValueError(
                     "Named power-output all-open footprint-alias coverage count must match findings"
                 )
+            named_signal_all_open_findings = sum(
+                finding.rule_id == "connector.footprint_named_signal_all_open"
+                for finding in self.findings
+            )
+            if (
+                named_signal_all_open_findings
+                != item.footprint_alias_coverage.named_signal_all_open_finding_count
+            ):
+                raise ValueError(
+                    "Named signal all-open footprint-alias coverage count must match findings"
+                )
             named_power_output_divergence_findings = sum(
                 finding.rule_id == "connector.footprint_named_power_output_assignment_divergence"
                 for finding in self.findings

@@ -40,6 +40,7 @@ pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
     pytest.mark.power_lint,
+    pytest.mark.interface_lint,
 ]
 
 RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
@@ -53,6 +54,7 @@ NAMED_SIGNAL_DIVERGENCE_RULE_ID = "connector.footprint_named_signal_assignment_d
 NAMED_POWER_INPUT_DIVERGENCE_RULE_ID = "connector.footprint_named_power_input_assignment_divergence"
 NAMED_POWER_INPUT_ALL_OPEN_RULE_ID = "connector.footprint_named_power_input_all_open"
 NAMED_POWER_OUTPUT_ALL_OPEN_RULE_ID = "connector.footprint_named_power_output_all_open"
+NAMED_SIGNAL_ALL_OPEN_RULE_ID = "connector.footprint_named_signal_all_open"
 NAMED_POWER_OUTPUT_DIVERGENCE_RULE_ID = (
     "connector.footprint_named_power_output_assignment_divergence"
 )
@@ -143,6 +145,11 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
                 rule_id=NAMED_POWER_OUTPUT_ALL_OPEN_RULE_ID,
                 mode="review",
                 reason="Synthetic parity fixture opts in to named power-output all-open review.",
+            ),
+            DesignLintRuleOverride(
+                rule_id=NAMED_SIGNAL_ALL_OPEN_RULE_ID,
+                mode="review",
+                reason="Synthetic parity fixture opts in to named signal all-open review.",
             ),
         )
     )
@@ -271,6 +278,24 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             "PASS",
             0,
         ),
+        (
+            False,
+            False,
+            True,
+            ("GND", "UART_TX"),
+            NAMED_SIGNAL_ALL_OPEN_RULE_ID,
+            "REVIEW",
+            1,
+        ),
+        (
+            False,
+            False,
+            False,
+            ("GND", "UART_TX"),
+            NAMED_SIGNAL_ALL_OPEN_RULE_ID,
+            "PASS",
+            0,
+        ),
     ):
         observed = _observed(
             fault=fault,
@@ -285,6 +310,7 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             if rule_id in {
                 NAMED_POWER_INPUT_ALL_OPEN_RULE_ID,
                 NAMED_POWER_OUTPUT_ALL_OPEN_RULE_ID,
+                NAMED_SIGNAL_ALL_OPEN_RULE_ID,
             }:
                 assert scan.all_open_finding_count == 0, (scan, parsed.model_dump())
                 assert len(scan.named_all_open) == 1, (scan, parsed.model_dump())
@@ -372,6 +398,14 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             assert alias.named_power_output_all_open_finding_count == expected_findings
             if expected_findings:
                 assert findings[0].evidence["pin_electrical_type"] == ("power_out",)
+                assert findings[0].evidence["assignments"] == (
+                    "J1.2=<unassigned>",
+                    "J2.2=<unassigned>",
+                )
+        elif rule_id == NAMED_SIGNAL_ALL_OPEN_RULE_ID:
+            assert alias.named_signal_all_open_finding_count == expected_findings
+            if expected_findings:
+                assert findings[0].evidence["pin_electrical_type"] == ("output",)
                 assert findings[0].evidence["assignments"] == (
                     "J1.2=<unassigned>",
                     "J2.2=<unassigned>",
