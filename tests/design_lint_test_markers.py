@@ -364,12 +364,15 @@ _LINT_AREA_MODULES = {
             "tests/test_serial_peer_reference_coverage.py",
             "tests/test_serial_peer_reference_maps.py",
             "tests/test_serial_peer_reference_boundaries.py",
+            "tests/test_serial_peer_reference_multichannel.py",
+            "tests/test_design_lint_serial_parity.py",
             "tests/test_serial_reference_bond_native_fixture_lane.py",
             "tests/test_usb_peer_reference_coverage.py",
             "tests/test_usb_peer_reference_paths.py",
             "tests/test_usb_peer_reference_maps.py",
             "tests/test_usb_peer_reference_boundaries.py",
             "tests/test_usb_peer_reference_superspeed.py",
+            "tests/test_design_lint_mcp_parity_usb_reference.py",
         }
     ),
     "parity_lint": frozenset(

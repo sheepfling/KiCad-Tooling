@@ -8,7 +8,10 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
-from tests.design_lint_test_markers import design_lint_rule_ids_for_test
+from tests.design_lint_test_markers import (
+    design_lint_markers_for_path,
+    design_lint_rule_ids_for_test,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
 
@@ -190,6 +193,17 @@ def test_active_catalog_fixture_references_receive_their_rule_marker() -> None:
                 test_class,
                 function,
             ), reference
+
+
+def test_peer_reference_regressions_are_selectable_in_return_path_scope() -> None:
+    for path in (
+        "tests/test_serial_peer_reference_multichannel.py",
+        "tests/test_design_lint_serial_parity.py",
+        "tests/test_design_lint_mcp_parity_usb_reference.py",
+    ):
+        markers = design_lint_markers_for_path(path)
+        assert "design_lint" in markers
+        assert "return_path_lint" in markers
 
 
 def test_cross_theme_architecture_suites_do_not_claim_area_markers() -> None:
