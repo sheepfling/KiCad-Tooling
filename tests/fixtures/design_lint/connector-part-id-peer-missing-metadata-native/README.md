@@ -22,5 +22,7 @@ SHA-256 source digests:
 - `fault.kicad_sch`: `5684bcf7293542cbc8bf2b05e68a3a7c9f6d0db6f0b7aaac0590721f1b58907b`
 - `control.kicad_sch`: `880e000dc1646fe5a8a4183b60ac36150d6e965e9dd7b8055ac286e0a0e1f75c`
 
-The digest-pinned native lane is registered for KiCad 10.0.0 and 10.0.5.
+These cases ran as part of the local digest-pinned KiCad 10.0.0 and 10.0.5
+fault/control acceptance recorded in the
+[companion fixture record](../connector-footprint-peer-missing-metadata-native/README.md).
 Generated reports and receipts stay under ignored `build/` directories.

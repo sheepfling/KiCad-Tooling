@@ -8722,9 +8722,11 @@ is not a reason by itself to expand its scope or change its default policy.
   mapping-order and three-process hash-seed determinism, policy and ignore lifecycle, and CLI/MCP
   parity. A matching-PART_ID fault, common-net control, and mismatched-PART_ID control are covered.
   Separate digest-pinned fault/control pairs for peers without PART_ID and case-insensitive matching
-  PART_IDs are registered for native export and repeatability on KiCad 10.0.0 and 10.0.5; exact
-  native execution remains pending for this local checkpoint. No product source or cohort fixture is
-  used; see the
+  PART_IDs were exported twice on KiCad 10.0.0 and 10.0.5 in local Docker containers. Both
+  version-parameterized native tests passed at `v0.5.2rc34` on 2026-10-20; the tests verify exact
+  fixture hashes, reported native versions, repeatable normalized netlists, findings on both faults,
+  and quiet controls. Hosted package acceptance remains pending. No product source or cohort fixture
+  is used; see the
   [base fixture README](../tests/fixtures/design_lint/connector-footprint-peer-missing-metadata-native/README.md)
   and
   [PART_ID fixture README](../tests/fixtures/design_lint/connector-part-id-peer-missing-metadata-native/README.md).
