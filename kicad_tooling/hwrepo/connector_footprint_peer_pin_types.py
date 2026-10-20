@@ -69,6 +69,22 @@ class ConnectorFootprintPeerPinAllOpen:
 
 
 @dataclass(frozen=True)
+class ConnectorFootprintPeerPinNamedAllOpen:
+    """A named power-input contact left open on every footprint-alias peer."""
+
+    footprint: str
+    value: str
+    pin_number: str
+    pin_function: str
+    pin_electrical_type: str
+    assignments: dict[str, tuple[str, ...]]
+    symbols: tuple[str, ...]
+    common_anchor_pin_numbers: tuple[str, ...]
+    peer_assignment_group: str | None = None
+    peer_assignment_basis: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ConnectorFootprintPeerPinScan:
     """Coverage and review candidates derived from one native netlist snapshot."""
 
@@ -98,3 +114,4 @@ class ConnectorFootprintPeerPinScan:
     named_divergences: tuple[ConnectorFootprintPeerPinNamedDivergence, ...]
     open_outliers: tuple[ConnectorFootprintPeerPinOpenOutlier, ...]
     all_open: tuple[ConnectorFootprintPeerPinAllOpen, ...]
+    named_all_open: tuple[ConnectorFootprintPeerPinNamedAllOpen, ...]

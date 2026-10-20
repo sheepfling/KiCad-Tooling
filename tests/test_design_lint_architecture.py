@@ -38,6 +38,7 @@ def _implementation_path(reference: str) -> str | None:
 PIN_ANALYSIS_MODULES = (
     "connector_identity.py",
     "connector_footprint_named_power_input_divergence.py",
+    "connector_footprint_named_power_input_all_open.py",
     "connector_footprint_named_power_output_divergence.py",
     "connector_footprint_named_signal_divergence.py",
     "connector_footprint_peer_pins.py",
@@ -117,6 +118,7 @@ CONNECTOR_COVERAGE_THEME_SUITES = (
     "test_connector_inventory_coverage.py",
     "test_connector_supply_peer_coverage.py",
     "test_connector_return_role_coverage.py",
+    "test_connector_footprint_named_power_input_all_open.py",
     "test_ci_hosted_connector_returns.py",
     "test_ci_hosted_connector_inventory_native.py",
 )

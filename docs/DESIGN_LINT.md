@@ -219,6 +219,11 @@ The first rules are:
   exact common-net assignment. Separate sources, switched outputs, and
   isolated power domains can be intentional; the finding does not say the
   outputs should be joined.
+- `connector.footprint_named_power_input_all_open` prompts for review when an
+  explicit non-generic native `power_in` contact is unassigned on every matched
+  footprint/value connector alias while another pin has one exact common-net
+  assignment. An input can be intentionally unused or isolated; this prompt
+  does not require the contacts to be connected.
 - `connector.footprint_peer_pin_all_open` extends this prompt to fitted,
   PART_ID-free connector aliases only when distinct native symbols have exact
   nonempty value and footprint matches, complete identical pin inventories,
@@ -1243,7 +1248,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 139 active rules. They
+`synthetic_validated`; the catalog currently contains 140 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and

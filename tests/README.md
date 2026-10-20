@@ -27,6 +27,15 @@ fixtures; their source boundary and pinned hashes are recorded in the
 The all-open named peer power-input fault and control are separate synthetic tooling fixtures;
 their source boundary and pinned hashes are recorded in the
 [all-open peer power-input fixture README](fixtures/design_lint/named-peer-power-input-all-open/README.md).
+Native footprint-alias review fixtures also cover named power-input and power-output pins,
+named signal-input and signal-output pins, and named-signal assignment divergence. Their
+individual READMEs describe the synthetic fault/control topology and pinned source hashes:
+[power input](fixtures/design_lint/connector-footprint-named-power-input-native/README.md),
+[power output](fixtures/design_lint/connector-footprint-named-power-output-native/README.md),
+[signal input](fixtures/design_lint/connector-footprint-named-signal-input-native/README.md),
+[signal output](fixtures/design_lint/connector-footprint-named-signal-output-native/README.md),
+and
+[signal assignment divergence](fixtures/design_lint/connector-footprint-named-signal-divergence-native/README.md).
 Named connector power-output peer tests can be selected independently; the native case uses
 tooling-owned aliases and digest-pinned KiCad fixtures:
 

@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_footprint_named_power_input_all_open import (
+    evaluate_footprint_named_power_input_all_open,
+)
 from .connector_footprint_named_power_input_divergence import (
     evaluate_footprint_named_power_input_assignment_divergence,
 )
@@ -48,6 +51,7 @@ def connector_peer_pin_heuristic_coverage(
     footprint_peer_pin_divergence_finding_count: int = 0,
     footprint_named_signal_divergence_finding_count: int = 0,
     footprint_named_power_input_divergence_finding_count: int = 0,
+    footprint_named_power_input_all_open_finding_count: int = 0,
     footprint_named_power_output_divergence_finding_count: int = 0,
     footprint_peer_pin_open_outlier_finding_count: int = 0,
     footprint_peer_pin_all_open_finding_count: int = 0,
@@ -282,6 +286,7 @@ def connector_peer_pin_heuristic_coverage(
     named_power_input_divergence = evaluate_footprint_named_power_input_assignment_divergence(
         footprint_scan
     )
+    named_power_input_all_open = evaluate_footprint_named_power_input_all_open(footprint_scan)
     named_power_output_divergence = evaluate_footprint_named_power_output_assignment_divergence(
         footprint_scan
     )
@@ -365,6 +370,15 @@ def connector_peer_pin_heuristic_coverage(
         named_power_input_divergence_finding_count=(
             footprint_named_power_input_divergence_finding_count
         ),
+        named_power_input_all_open_peer_pin_group_count=(
+            named_power_input_all_open.candidate_count
+        ),
+        unanchored_named_power_input_all_open_peer_pin_group_count=(
+            named_power_input_all_open.unanchored_count
+        ),
+        named_power_input_all_open_finding_count=(
+            footprint_named_power_input_all_open_finding_count
+        ),
         named_power_output_different_assignment_pin_group_count=(
             named_power_output_divergence.candidate_count
         ),
@@ -398,6 +412,8 @@ def connector_peer_pin_heuristic_coverage(
             "function, and electrical-type evidence. PART_ID-free footprint aliases require exact "
             "value, footprint, inventory, matching generic pin metadata, and a common assigned "
             "anchor before a differing pin receives a review prompt. "
+            "An explicit named power-input pin left open on every alias can also receive a review "
+            "prompt under those evidence bounds; intentionally unused inputs remain possible. "
             "Coverage records evaluated evidence; it does not assert that peer nets must match."
         ),
         connector_candidate_count=len(candidate_references),

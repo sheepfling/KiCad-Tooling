@@ -84,6 +84,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "connector-footprint-named-power-input-divergence-native/fault.kicad_sch",
         "footprint-alias-named-power-input-divergence-control": fixture_root
         / "connector-footprint-named-power-input-divergence-native/control.kicad_sch",
+        "footprint-alias-named-power-input-all-open-fault": fixture_root
+        / "connector-footprint-named-power-input-all-open-native/fault.kicad_sch",
+        "footprint-alias-named-power-input-all-open-control": fixture_root
+        / "connector-footprint-named-power-input-all-open-native/control.kicad_sch",
         "footprint-alias-named-power-output-divergence-fault": fixture_root
         / "connector-footprint-named-power-output-divergence-native/fault.kicad_sch",
         "footprint-alias-named-power-output-divergence-control": fixture_root

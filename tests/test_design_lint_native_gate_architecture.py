@@ -314,6 +314,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.footprint_peer_pin_all_open": {
             "tests.test_ci_hosted_connector_returns.test_footprint_alias_all_open_peer_is_validated_on_pinned_native_versions",
         },
+        "connector.footprint_named_power_input_all_open": {
+            "tests.test_connector_footprint_named_power_input_all_open_native_fixture_lane.test_native_named_power_input_all_open_fault_and_control_are_repeatable",
+        },
         "connector.unconnected_power_input": {
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },

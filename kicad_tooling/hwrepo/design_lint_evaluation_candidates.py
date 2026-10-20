@@ -218,6 +218,9 @@ def scan_evaluation_candidates(
                 item.rule_id == "connector.footprint_named_power_input_assignment_divergence"
                 for item in items
             ),
+            footprint_named_power_input_all_open_finding_count=sum(
+                item.rule_id == "connector.footprint_named_power_input_all_open" for item in items
+            ),
             footprint_named_power_output_divergence_finding_count=sum(
                 item.rule_id == "connector.footprint_named_power_output_assignment_divergence"
                 for item in items
