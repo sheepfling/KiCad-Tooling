@@ -331,6 +331,7 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_footprint_peer_missing_metadata.test_missing_metadata_finding_is_stable_under_mapping_order",
+        "tests.test_connector_footprint_peer_missing_metadata_determinism.test_missing_metadata_peer_fault_and_control_are_hashseed_stable",
         "tests.test_connector_footprint_peer_missing_metadata.test_missing_metadata_review_matches_cli_and_mcp"
       ],
       "implementation_refs": [

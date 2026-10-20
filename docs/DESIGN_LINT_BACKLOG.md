@@ -2851,8 +2851,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v73. The cross-process probe supports themed report
-  selectors and retains the complete 194-report inventory gate. Fault/control
+- **Status:** Implemented v74. The cross-process probe supports themed report
+  selectors and retains the complete 196-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2867,6 +2867,7 @@ is not a reason by itself to expand its scope or change its default policy.
   generic and named component power-input peer faults and controls,
   generic component peer-pin all-open, mixed-open, and strict-majority
   assignment-outlier reports with valid controls,
+  missing-metadata connector-peer split and common-assignment reports,
   mapped PCB decoupling boundary reports, and a cross-symbol mapped-supply
   open-contact case, plus the typed contact-rating boundary and over-limit
   checks, DB9 grounding and pin-connectivity requirements, multi-device
@@ -2899,6 +2900,8 @@ is not a reason by itself to expand its scope or change its default policy.
   The v73 extension keeps the marker and collection architecture tests inside
   the focused `catalog_lint` gate and documents rule/theme selectors for shared
   hash-seed reports.
+  The v74 extension adds a source-bound fault/control pair for LINT-165 to the
+  three-process comparison and selects it directly by report family.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -8707,8 +8710,9 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Evidence:** Tooling-owned synthetic tests cover unnamed and absent pin
   functions, missing electrical types, common-assignment controls, missing
   anchors, open or ambiguous targets, incomplete inventories, DNP/PART_ID
-  exclusions, source-matched peer scopes, deterministic evidence, policy and
-  ignore lifecycle, and CLI/MCP parity. Digest-pinned synthetic fault/control
+  exclusions, source-matched peer scopes, mapping-order and three-process
+  hash-seed determinism, policy and ignore lifecycle, and CLI/MCP parity.
+  Digest-pinned synthetic fault/control
   schematics are registered for native export and repeatability on KiCad
   10.0.0 and 10.0.5; exact native execution remains pending for this local
   checkpoint. No product source or cohort fixture is used; see the
