@@ -63,6 +63,15 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_schematic_text.py": {"schematic_lint"},
     "test_schematic_geometry_symbol_arc_body.py": {"schematic_lint"},
     "test_connector_peer_pin_all_open.py": {"connector_lint"},
+    "test_connector_footprint_peer_metadata.py": {
+        "connector_lint",
+        "interface_lint",
+        "parity_lint",
+    },
+    "test_connector_footprint_peer_metadata_native_fixture_lane.py": {
+        "connector_lint",
+        "interface_lint",
+    },
     "test_design_lint_determinism_connector_all_open.py": {"connector_lint"},
     "test_design_lint_connector_power_pins.py": {"connector_lint", "power_lint"},
     "test_design_lint_connector_named_power_input_peers.py": {

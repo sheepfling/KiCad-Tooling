@@ -75,6 +75,42 @@ def peer_netlist(
     )
 
 
+def peer_metadata_divergence_netlist(
+    *,
+    anchor_assignments: tuple[str | None, str | None] = ("COMMON_REFERENCE", "COMMON_REFERENCE"),
+    target_assignments: tuple[str | None, str | None] = ("UART_RX_NET", "UART_TX_NET"),
+    part_id: str | None = None,
+    dnp: tuple[str, ...] = (),
+    incomplete_inventory: bool = False,
+    missing_metadata_pin: str | None = None,
+    ambiguous_pin: str | None = None,
+) -> NetlistContract:
+    """Build aliases with different native pin roles and controlled net assignments."""
+    observed = peer_netlist(
+        assignments=(anchor_assignments, target_assignments),
+        part_id=part_id,
+        dnp=dnp,
+        incomplete_inventory=incomplete_inventory,
+        ambiguous_pin=ambiguous_pin,
+    )
+    functions = {
+        **observed.pin_functions,
+        "J1.2": "UART_RX",
+        "J2.2": "UART_TX",
+    }
+    electrical_types = {
+        **observed.pin_electrical_types,
+        "J1.2": "input",
+        "J2.2": "output",
+    }
+    if missing_metadata_pin is not None:
+        functions.pop(missing_metadata_pin, None)
+        electrical_types.pop(missing_metadata_pin, None)
+    return observed.model_copy(
+        update={"pin_functions": functions, "pin_electrical_types": electrical_types}
+    )
+
+
 def named_power_input_divergence_netlist(
     *,
     anchor_assignments: tuple[str | None, str | None] = ("GND", "GND"),

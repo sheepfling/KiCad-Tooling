@@ -31,6 +31,9 @@ from .connector_footprint_named_signal_divergence import (
 from .connector_footprint_named_signal_mode_dependent_open import (
     footprint_named_signal_mode_dependent_open_outlier_candidates,
 )
+from .connector_footprint_peer_metadata import (
+    connector_footprint_peer_pin_metadata_assignment_divergences,
+)
 from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
@@ -57,6 +60,11 @@ def connector_footprint_peer_pin_candidates(
 ) -> tuple[Candidate, ...]:
     """Create review prompts when footprint-similar connector pin assignments differ."""
     scan = scan_connector_footprint_peer_pin_assignments(
+        observed,
+        declared_references,
+        peer_assignment_groups,
+    )
+    metadata_divergences = connector_footprint_peer_pin_metadata_assignment_divergences(
         observed,
         declared_references,
         peer_assignment_groups,
@@ -109,6 +117,7 @@ def connector_footprint_peer_pin_candidates(
     )
     named_passive_divergence = evaluate_footprint_named_passive_assignment_divergence(scan)
     return (
+        *metadata_divergences,
         *divergence_candidates,
         *named_signal_divergence.candidates,
         *named_power_input_divergence.candidates,

@@ -12,6 +12,7 @@ from tests.connector_footprint_peer_support import (
     named_power_output_all_open_netlist,
     named_signal_all_open_netlist,
     named_signal_mode_dependent_open_netlist,
+    peer_metadata_divergence_netlist,
 )
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
 from tests.test_oscillator_output_paths import (
@@ -108,4 +109,5 @@ def catalog_reachability_rule_ids() -> set[str]:
         named_passive_contact_divergence_netlist(),
     ):
         result.update(item.rule_id for item in candidates(source))
+    result.update(item.rule_id for item in candidates(peer_metadata_divergence_netlist()))
     return result

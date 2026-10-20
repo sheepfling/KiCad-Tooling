@@ -96,6 +96,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "connector-footprint-named-passive-divergence-native/fault.kicad_sch",
         "footprint-alias-named-passive-divergence-control": fixture_root
         / "connector-footprint-named-passive-divergence-native/control.kicad_sch",
+        "footprint-alias-peer-metadata-fault": fixture_root
+        / "connector-footprint-peer-metadata-native/fault.kicad_sch",
+        "footprint-alias-peer-metadata-control": fixture_root
+        / "connector-footprint-peer-metadata-native/control.kicad_sch",
         "footprint-alias-named-power-input-divergence-fault": fixture_root
         / "connector-footprint-named-power-input-divergence-native/fault.kicad_sch",
         "footprint-alias-named-power-input-divergence-control": fixture_root
@@ -258,6 +262,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "footprint-alias-named-signal-divergence-fault": "2a63cd0836321ce6752b5b4725d830a7f96ad01533e903fe24dfae5b696084a1",
     "footprint-alias-named-passive-divergence-fault": "ff33080326c28271c1a0efa214dd788288800695cba6b8fd4865ebf1b587a32b",
     "footprint-alias-named-passive-divergence-control": "0c8a06ee56f2e058cb58b3515ff7f65f95c8df457dfc4ab9d87bdb40ff501aa7",
+    "footprint-alias-peer-metadata-fault": "eb57ac1553fa4a6d76a297375ec840d8b6b01c401401877a470968e4c12a45d6",
+    "footprint-alias-peer-metadata-control": "1377db1444bf8c1c15bbde73358fe81e36c11581869ea5f31f2082464e97f45e",
     "footprint-alias-named-power-input-divergence-fault": "d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea",
     "footprint-alias-named-power-input-divergence-control": "8b055617a737dde04b6647a7ce8f5e4a167aa9567b712a1b0d88696eae1f8a7c",
     "footprint-alias-named-power-input-all-open-fault": "fc7bf0d75bcc8775e39328d6e9cf0e19a2c244f3ac1b782fed9d95e23b30271d",

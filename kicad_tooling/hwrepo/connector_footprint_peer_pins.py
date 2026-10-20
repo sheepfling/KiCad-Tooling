@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_footprint_peer_groups import (
+    complete_connector_footprint_peer_pin_inventory,
+    connector_footprint_peer_candidate_groups,
+)
 from .connector_footprint_peer_pin_types import (
     SIGNAL_ELECTRICAL_TYPES,
     ConnectorFootprintPeerPinAllOpen,
@@ -14,7 +18,6 @@ from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinScan,
 )
 from .connector_identity import (
-    connector_candidate_references,
     is_named_supply_function,
     is_return_function,
     partition_peer_assignments,
@@ -35,24 +38,6 @@ _GENERIC_ALL_OPEN_PIN_TYPES = frozenset(
 )
 
 
-def _observed_pin_numbers(observed: NetlistContract) -> dict[str, set[str]]:
-    """Collect all pin references that must be represented by a full inventory."""
-    found: dict[str, set[str]] = {}
-    pin_groups = (
-        observed.pin_functions,
-        observed.pin_electrical_types,
-        *observed.nets.values(),
-        *observed.unconnected_nets.values(),
-    )
-    for assignments in pin_groups:
-        pins = assignments if not isinstance(assignments, Mapping) else assignments.keys()
-        for pin in pins:
-            reference, separator, number = pin.rpartition(".")
-            if separator and reference and number:
-                found.setdefault(reference.casefold(), set()).add(number.casefold())
-    return found
-
-
 def scan_connector_footprint_peer_pin_assignments(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
@@ -66,17 +51,7 @@ def scan_connector_footprint_peer_pin_assignments(
     excludes PART_ID-bearing components, which use the separately reviewed
     exact-part alias checks.
     """
-    connector_references = {
-        reference.casefold()
-        for reference in connector_candidate_references(observed, declared_references)
-    }
-    dnp_references = {reference.casefold() for reference in observed.dnp_components}
-    components = {reference.casefold(): item for reference, item in observed.components.items()}
     symbols = {reference.casefold(): item for reference, item in observed.component_symbols.items()}
-    inventories = {
-        reference.casefold(): tuple(numbers)
-        for reference, numbers in observed.component_pin_numbers.items()
-    }
     functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
     electrical_types = {
         pin.casefold(): value for pin, value in observed.pin_electrical_types.items()
@@ -86,29 +61,10 @@ def scan_connector_footprint_peer_pin_assignments(
         for pin in pins:
             pin_nets.setdefault(pin.casefold(), set()).add(net)
 
-    grouped: dict[tuple[str, str], list[str]] = {}
-    for reference, component in observed.components.items():
-        reference_key = reference.casefold()
-        symbol = symbols.get(reference_key)
-        if (
-            reference_key not in connector_references
-            or reference_key in dnp_references
-            or symbol is None
-            or (component.part_id is not None and component.part_id.strip())
-            or not component.value.strip()
-            or not component.footprint.strip()
-        ):
-            continue
-        identity = (component.footprint.strip().casefold(), component.value.strip().casefold())
-        grouped.setdefault(identity, []).append(reference)
-
-    candidate_groups = tuple(
-        (identity, tuple(sorted(references, key=lambda item: (item.casefold(), item))))
-        for identity, references in sorted(grouped.items())
-        if len(references) >= 2
-        and len({symbols[reference.casefold()].casefold() for reference in references}) >= 2
+    candidate_groups = connector_footprint_peer_candidate_groups(
+        observed,
+        declared_references,
     )
-    observed_pin_numbers = _observed_pin_numbers(observed)
 
     incomplete_inventory_count = 0
     incomplete_metadata_count = 0
@@ -134,47 +90,31 @@ def scan_connector_footprint_peer_pin_assignments(
     all_open: list[ConnectorFootprintPeerPinAllOpen] = []
     named_all_open: list[ConnectorFootprintPeerPinNamedAllOpen] = []
 
-    for identity, peers in candidate_groups:
-        folded_inventories = {
-            reference.casefold(): tuple(
-                number.casefold() for number in inventories.get(reference.casefold(), ())
-            )
-            for reference in peers
-        }
-        inventory_sets = {frozenset(numbers) for numbers in folded_inventories.values()}
-        inventory_is_complete = (
-            bool(inventory_sets)
-            and all(folded_inventories.values())
-            and all(len(set(numbers)) == len(numbers) for numbers in folded_inventories.values())
-            and len(inventory_sets) == 1
-            and all(
-                observed_pin_numbers.get(reference.casefold(), set()).issubset(
-                    set(folded_inventories[reference.casefold()])
-                )
-                for reference in peers
-            )
-        )
-        if not inventory_is_complete:
+    for group in candidate_groups:
+        peers = group.references
+        inventory = complete_connector_footprint_peer_pin_inventory(observed, peers)
+        if inventory is None:
             incomplete_inventory_count += 1
             continue
-
-        folded_pin_numbers = next(iter(inventory_sets))
-        display_pin_numbers = {
-            folded: next(
-                number for number in inventories[peers[0].casefold()] if number.casefold() == folded
-            )
-            for folded in sorted(folded_pin_numbers)
-        }
-        pin_numbers = tuple(display_pin_numbers.values())
+        pin_numbers, display_pin_numbers = inventory
         metadata_matches = all(
             all(
-                (value := metadata.get(f"{reference}.{pin_number}".casefold())) is not None
+                (
+                    value := metadata.get(
+                        f"{reference}.{display_pin_numbers[reference.casefold()][pin_number.casefold()]}".casefold()
+                    )
+                )
+                is not None
                 and value.strip()
                 for reference in peers
             )
             and len(
                 {
-                    metadata[f"{reference}.{pin_number}".casefold()].strip().casefold()
+                    metadata[
+                        f"{reference}.{display_pin_numbers[reference.casefold()][pin_number.casefold()]}".casefold()
+                    ]
+                    .strip()
+                    .casefold()
                     for reference in peers
                 }
             )
@@ -187,14 +127,15 @@ def scan_connector_footprint_peer_pin_assignments(
             continue
 
         eligible_group_count += 1
-        footprint_display = components[peers[0].casefold()].footprint.strip()
-        value_display = components[peers[0].casefold()].value.strip()
+        footprint_display = group.footprint
+        value_display = group.value
 
         # Scope the peer set once. Assignment groups constrain comparison; they
         # do not establish that any two connector nets are required to match.
         representative_pin = pin_numbers[0]
         representative_assignments = {
-            f"{reference}.{representative_pin}": () for reference in peers
+            f"{reference}.{display_pin_numbers[reference.casefold()][representative_pin.casefold()]}": ()
+            for reference in peers
         }
         scopes = tuple(
             (peer_group, scoped, basis)
@@ -222,8 +163,13 @@ def scan_connector_footprint_peer_pin_assignments(
             named_all_open_assignments: list[tuple[str, dict[str, tuple[str, ...]]]] = []
             for pin_number in pin_numbers:
                 assignments = {
-                    f"{reference}.{pin_number}": tuple(
-                        sorted(pin_nets.get(f"{reference}.{pin_number}".casefold(), ()))
+                    f"{reference}.{display_pin_numbers[reference.casefold()][pin_number.casefold()]}": tuple(
+                        sorted(
+                            pin_nets.get(
+                                f"{reference}.{display_pin_numbers[reference.casefold()][pin_number.casefold()]}".casefold(),
+                                (),
+                            )
+                        )
                     )
                     for reference in scope_references
                 }
