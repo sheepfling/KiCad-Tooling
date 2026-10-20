@@ -11,10 +11,10 @@ in evidence. The fault assigns connector GND and PHY VSS to separate schematic
 nets; the control assigns both pins to one net. No project board or product
 source is included.
 
-| Fixture             | Reference topology                                | Expected heuristic result                  |
-| ------------------- | ------------------------------------------------- | ------------------------------------------ |
+| Fixture             | Reference topology                                               | Expected heuristic result                         |
+| ------------------- | ---------------------------------------------------------------- | ------------------------------------------------- |
 | `fault.kicad_sch`   | J1.4 `GND` on `USB_GND`; U1.3 `VSS` (`unspecified`) on `PHY_GND` | One REVIEW with exact pin, type, and net evidence |
-| `control.kicad_sch` | J1.4 `GND` and U1.3 `VSS` (`unspecified`) on `BOARD_GND`          | No USB peer reference review                      |
+| `control.kicad_sch` | J1.4 `GND` and U1.3 `VSS` (`unspecified`) on `BOARD_GND`         | No USB peer reference review                      |
 
 SHA-256 of the version-controlled schematic inputs:
 
