@@ -10,18 +10,17 @@ import pytest
 from mcp import Client
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
-from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
     ConnectorInventoryReview,
     DesignLintPolicy,
     DesignLintReport,
     ProjectManifest,
-    ValidationSummary,
 )
 from tests.electrical_parity_support import contract_netlist_xml
 from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_lint_report
 from tests.synthetic_design_lint_project import (
+    install_synthetic_netlist,
     run_design_lint_cli,
     synthetic_design_lint_project,
 )
@@ -55,24 +54,11 @@ def test_oscillator_output_path_matches_cli_and_mcp(tmp_path: Path) -> None:
             }
         ),
     )
-    netlist = native.parent / "netlist.xml"
-    summary = read_model(native, ValidationSummary)
 
     def install_netlist(resistor_value: str) -> None:
-        netlist.write_text(
-            contract_netlist_xml(oscillator_output_netlist(resistor_value=resistor_value)),
-            encoding="utf-8",
-        )
-        write_model(
+        install_synthetic_netlist(
             native,
-            summary.model_copy(
-                update={
-                    "artifacts_sha256": {
-                        **summary.artifacts_sha256,
-                        "netlist.xml": digest(netlist),
-                    }
-                }
-            ),
+            contract_netlist_xml(oscillator_output_netlist(resistor_value=resistor_value)),
         )
 
     async def compare_with_mcp() -> tuple[DesignLintReport, DesignLintReport, int]:

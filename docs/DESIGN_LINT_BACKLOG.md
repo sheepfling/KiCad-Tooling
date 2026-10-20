@@ -3419,8 +3419,9 @@ is not a reason by itself to expand its scope or change its default policy.
   `RET1`/`RET2`, `PORT1_RET`/`PORT2_RET`, and `RET_USB`/`RET_SERIAL` cases
   exercise review candidates, while common-`RET` and `RESET` controls protect
   the boundary. A focused CLI/MCP parity case exercises numbered and
-  unindexed candidates plus a common-`RET` control. No source schematic was
-  copied.
+  unindexed candidates plus a common-`RET` control using a tooling-owned
+  synthetic project, so the check runs without the separate public template
+  checkout. No source schematic was copied.
 - **Boundary:** The recognized label and pin-function vocabularies are narrow.
   A return-like label token, including `RET`, is context only and does not
   prove that the label names a ground domain.

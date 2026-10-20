@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from kicad_tooling.hwrepo.contracts import write_model
+from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     CatalogPaths,
@@ -177,6 +177,25 @@ def synthetic_design_lint_project(
         ),
     )
     return root, summary_path
+
+
+def install_synthetic_netlist(summary_path: Path, serialized_netlist: str) -> Path:
+    """Write typed synthetic netlist evidence and refresh its retained digest."""
+    netlist_path = summary_path.parent / "netlist.xml"
+    netlist_path.write_text(serialized_netlist, encoding="utf-8")
+    summary = read_model(summary_path, ValidationSummary)
+    write_model(
+        summary_path,
+        summary.model_copy(
+            update={
+                "artifacts_sha256": {
+                    **summary.artifacts_sha256,
+                    "netlist.xml": digest(netlist_path),
+                }
+            }
+        ),
+    )
+    return netlist_path
 
 
 def run_design_lint_cli(
