@@ -69,7 +69,6 @@ def verify_footprint_alias_named_signal_mode_dependent_open(
     if (
         control.status != "PASS"
         or control.findings
-        or control_alias is None
         or control_nets.get("DATA_IO") != {"J1.1", "J2.1"}
         or control_nets.get("COMMON_ANCHOR") != {"J1.2", "J2.2"}
         or control_alias.open_outlier_finding_count != 0
