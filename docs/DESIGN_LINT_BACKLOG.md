@@ -4687,12 +4687,16 @@ is not a reason by itself to expand its scope or change its default policy.
   package job was skipped under prerelease policy.
 - **Pytest selection update (2026-10-20):** The native control-input lane now
   exposes each of six public and synthetic samples as an independent
-  parameterized pytest case. A module-scoped fixture shares the native export,
-  and asserts the exact-version read-only container and mount boundaries. The
-  active-rule catalog points to the top-level pytest
-  function, and architecture tests keep this suite free of `unittest.TestCase`.
-  `-k series-bias-fixture` selects that sample's result assertions; the shared
-  fixture still performs one lane run for the module.
+  parameterized pytest case. The active-rule catalog points to the top-level
+  pytest function, and architecture tests keep this suite free of
+  `unittest.TestCase`. The first pytest migration still exported all six
+  samples for a single `-k` selection. The runner now filters to the selected
+  sample IDs while retaining one exact-version, read-only container for the
+  selected set. `-k series-bias-fixture` selected one test, deselected five,
+  and passed in 1.64 seconds; its setup took 1.62 seconds versus 14.42 seconds
+  when the earlier fixture exported all six. The full connected-bias rule
+  selector passed 15 tests with 3,852 deselected; all six sample cases shared
+  one native run.
 - **Hosted prerelease acceptance (2026-10-20):** Tag `v0.5.2rc45` passed the
   focused rule gate and installed-wheel check against a separate public
   project checkout (GitHub Actions run 39430522860). Windows, Ubuntu, and

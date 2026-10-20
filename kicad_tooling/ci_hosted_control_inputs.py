@@ -15,7 +15,14 @@ if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog
 
 
-def native_control_input_demo_lane(root: Path, *, project: str, image: str, log: HostedLog) -> None:
+def native_control_input_demo_lane(
+    root: Path,
+    *,
+    project: str,
+    image: str,
+    log: HostedLog,
+    sample_names: frozenset[str] | None = None,
+) -> None:
     """Check unconnected controls in public demos bundled in pinned KiCad 10.0.5."""
     import hashlib
 
@@ -80,6 +87,13 @@ def native_control_input_demo_lane(root: Path, *, project: str, image: str, log:
             (),
         ),
     }
+    if sample_names is not None:
+        unknown = sample_names - samples.keys()
+        if unknown:
+            raise ValueError(f"Unknown native control-input demo samples: {sorted(unknown)}")
+        samples = {name: sample for name, sample in samples.items() if name in sample_names}
+        if not samples:
+            raise ValueError("Native control-input demo selection must include at least one sample")
     synthetic_fixture_root = (
         Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/control-input-alias"
     )

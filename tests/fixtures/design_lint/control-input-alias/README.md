@@ -42,8 +42,10 @@ leaves both pins unassigned, and emits only `U1.1` as a reset candidate. It also
 confirms the chain fixture's exact pin assignments, DNP state, isolated
 intermediate net, no connected-bias candidate, and repeated normalized export.
 The pytest lane repeats four public KiCad demos and checks their pinned candidate
-inventories and normalized netlists. The lane exports netlists; it does not run
-ERC or DRC and does not establish that a reset pin requires bias.
+inventories and normalized netlists. A selected parameter case exports only
+that sample; the full selection shares one container run across all samples.
+The lane exports netlists; it does not run ERC or DRC and does not establish
+that a reset pin requires bias.
 
 Run from the tooling checkout with a public reference-template checkout
 configured:

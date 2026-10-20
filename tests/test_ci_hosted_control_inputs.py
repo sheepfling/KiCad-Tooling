@@ -68,8 +68,23 @@ _EXPECTED_CASES = (
 
 
 @pytest.fixture(scope="module")
-def native_control_input_demo_run() -> tuple[str, dict[str, Any]]:
-    """Export every registered public and synthetic sample once per module."""
+def native_control_input_demo_run(
+    request: pytest.FixtureRequest,
+) -> tuple[str, dict[str, Any]]:
+    """Export selected samples once, sharing one exact-version native run."""
+    selected: set[str] = set()
+    for item in request.session.items:
+        if getattr(item, "module", None) is not request.module:
+            continue
+        callspec = getattr(item, "callspec", None)
+        if callspec is None:
+            continue
+        sample = callspec.params.get("sample")
+        if isinstance(sample, str):
+            selected.add(sample)
+    selected_samples = frozenset(selected)
+    assert selected_samples, "The native demo fixture requires a selected sample case"
+
     repository = Path(__file__).resolve().parents[1]
     acceptance = repository / "build/ci"
     acceptance.mkdir(parents=True, exist_ok=True)
@@ -84,7 +99,13 @@ def native_control_input_demo_run() -> tuple[str, dict[str, Any]]:
     config = selected_config(root, project)
     assert config.kicad_version == "10.0.5"
     log = HostedLog(root, "native-control-input-demos")
-    native_control_input_demo_lane(root, project=project, image=config.image, log=log)
+    native_control_input_demo_lane(
+        root,
+        project=project,
+        image=config.image,
+        log=log,
+        sample_names=selected_samples,
+    )
 
     events = tuple(json.loads(line) for line in log.events.read_text().splitlines())
     results = {
@@ -92,10 +113,9 @@ def native_control_input_demo_run() -> tuple[str, dict[str, Any]]:
         for item in events
         if item.get("stage", "").startswith("control-input-demo/")
     }
-    sample_names = {case[0] for case in _EXPECTED_CASES}
     assert set(results) == {
         "control-input-demo/native-export",
-        *(f"control-input-demo/{sample}" for sample in sample_names),
+        *(f"control-input-demo/{sample}" for sample in selected_samples),
     }
 
     native = results["control-input-demo/native-export"]
