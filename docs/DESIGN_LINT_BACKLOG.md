@@ -7581,16 +7581,35 @@ is not a reason by itself to expand its scope or change its default policy.
   constraint but omitted the custom rule name from its `track_width`
   violation, so a name-based match could not prove the sentinel. The native
   fixture now uses a named clearance rule over two synthetic tracks and keeps
-  the minimal `.kicad_pro` project context. The scoped rerun must verify both
-  versions. Exact-version native acceptance remains unverified. No product
+  the minimal `.kicad_pro` project context. Hosted run `v0.5.1rc81`
+  (`39364277532`) set `KICAD_RUN_NATIVE_PCB_FIXTURES=1`; its unit stage passed
+  489 tests with one skip, including the exact-version LINT-138 native cases
+  for KiCad 10.0.0 and 10.0.5. The overall prerelease job then stopped at the
+  repository-wide Ruff format check for
+  `tests/fixtures/design_lint/cohort-transformer-feedback/trial_tf001.py`; that
+  formatting issue is corrected in `v0.5.1rc82`. The broad
+  `design_lint and pcb_lint` selector collected 490 tests locally, while rc82's
+  seven explicit `Test-Path` modules collected 66. Hosted run `v0.5.1rc82`
+  (`39365386701`) passed all 66 tests with no skips in 86.7 seconds. The two
+  parametrized native compilation cases passed on KiCad 10.0.0 and 10.0.5
+  (42.2 and 42.9 seconds). Compared with rc81, the focused unit stage ran 75%
+  faster while retaining both exact-version native cases. Ruff format/lint,
+  Pyright, Windows type analysis, wheel/sdist rebuild, installed-wheel
+  verification against the separate and adapted template checkouts, and the
+  playtest all passed; Linux, macOS, and Windows previews passed. No product
   project or private source is used.
 - **Focused selection:**
 
-  ```sh
-  python -I -m pytest tests/test_pcb_dru_compilation.py \
-    tests/test_pcb_dru_compilation_architecture.py \
-    tests/test_validate_drc_rule_compilation.py \
-    -m 'design_lint and pcb_lint'
+  ```text
+  Lint-Area: pcb_lint
+  Native-Fixture: KICAD_RUN_NATIVE_PCB_FIXTURES
+  Test-Path: tests/test_ci_pytest_selection.py
+  Test-Path: tests/test_lint_gate_scope.py
+  Test-Path: tests/test_package_ci.py
+  Test-Path: tests/test_pcb_dru_compilation.py
+  Test-Path: tests/test_pcb_dru_compilation_architecture.py
+  Test-Path: tests/test_validate_drc_rule_compilation.py
+  Test-Path: tests/test_pcb_dru_compilation_native.py
   ```
 
 #### LINT-139 — Review explicitly ignored custom PCB rules
