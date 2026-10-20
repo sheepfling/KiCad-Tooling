@@ -1,0 +1,24 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "annular_width": "error",
+        "courtyards_overlap": "error",
+        "drill_out_of_range": "error",
+        "footprint_filters_mismatch": "ignore",
+        "hole_clearance": "warning",
+        "hole_to_hole": "error",
+        "invalid_outline": "error",
+        "malformed_courtyard": "error",
+        "microvia_drill_out_of_range": "error",
+        "missing_courtyard": "ignore",
+        "solder_mask_bridge": "error",
+        "track_angle": "error",
+        "track_on_post_machined_layer": "error",
+        "track_segment_length": "error",
+        "track_width": "error"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}

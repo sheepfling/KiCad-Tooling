@@ -1,4 +1,4 @@
-"""Source-bound review candidates for suppressed core native PCB DRC checks."""
+"""Source-bound review candidates for PCB DRC severity changes."""
 
 from __future__ import annotations
 
@@ -82,6 +82,43 @@ def ignored_core_native_drc_check_candidates(
                 "kicad_version": (config.kicad_version,),
                 "check_id": (check_id,),
                 "configured_severity": ("ignore",),
+            },
+        )
+        for check_id, severity in severities
+        if severity == "ignore"
+    )
+
+
+def ignored_dfm_native_drc_check_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+) -> tuple[Candidate, ...]:
+    """Review KiCad 10.0 DFM checks documented with Error defaults but set to Ignore."""
+    settings = _source_bound_drc_settings(
+        root,
+        config,
+        source_hashes,
+        supported_version_prefix="10.0.",
+        parse_severities=configured_dfm_drc_check_severities,
+    )
+    if settings is None:
+        return ()
+    relative, expected_hash, severities = settings
+    return tuple(
+        Candidate(
+            rule_id="pcb.dfm_drc_check_ignored",
+            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            message=(
+                f"Documented Error-default DFM DRC check {check_id!r} is configured as Ignore; "
+                "confirm that suppressing this check is intentional."
+            ),
+            evidence={
+                "source_path": (relative,),
+                "source_sha256": (expected_hash,),
+                "kicad_version": (config.kicad_version,),
+                "check_id": (check_id,),
+                "configured_severity": (severity,),
             },
         )
         for check_id, severity in severities

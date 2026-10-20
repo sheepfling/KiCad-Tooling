@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 126 active rules. They
+`synthetic_validated`; the catalog currently contains 127 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2672,6 +2672,22 @@ check is covered separately by `pcb.core_drc_check_warning`. KiCad's
 [DRC reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html) lists the
 DFM defaults; tooling-owned synthetic settings are in
 [`tests/fixtures/design_lint/pcb-dfm-drc-warning/`](../tests/fixtures/design_lint/pcb-dfm-drc-warning/README.md).
+
+## Review documented DFM Error-default DRC checks set to Ignore
+
+`pcb.dfm_drc_check_ignored` prompts when a KiCad 10.0.x PCB project's
+source-hashed `.kicad_pro` sets one of the same thirteen documented
+Error-default DFM checks to `ignore`. KiCad disables the selected check at this
+severity. The finding records the settings hash, check ID, configured
+severity, and exact project KiCad version. Its default mode is `review`; a
+project can choose `block`, `off`, or exact-fingerprint ignore.
+
+The prompt asks whether suppressing the check was intentional; it does not
+claim a violation exists or require every check to remain enabled. It reads
+project settings and does not run DRC or determine whether a check applies to a
+particular board. KiCad's [DRC reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)
+describes Ignore behavior. Tooling-owned synthetic settings are in
+[`tests/fixtures/design_lint/pcb-dfm-drc-ignored/`](../tests/fixtures/design_lint/pcb-dfm-drc-ignored/README.md).
 
 ## Review persisted per-violation PCB DRC exclusions
 

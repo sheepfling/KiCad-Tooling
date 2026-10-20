@@ -116,6 +116,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic native DRC check explicitly declares Ignore.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
     )
+    ignored_dfm_check = Candidate(
+        rule_id="pcb.dfm_drc_check_ignored",
+        subject="projects/synthetic/controller.kicad_pro#hole_clearance",
+        message="Synthetic Error-default DFM DRC check explicitly declares Ignore.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
+    )
     warning_core_check = Candidate(
         rule_id="pcb.core_drc_check_warning",
         subject="projects/synthetic/controller.kicad_pro#unconnected_items",
@@ -148,6 +154,7 @@ def pcb_rule_ids() -> set[str]:
         pcb_dru_rule_candidates=(ignored_rule, excluded_custom_rule),
         pcb_native_drc_candidates=(
             ignored_core_check,
+            ignored_dfm_check,
             warning_core_check,
             warning_dfm_check,
             persisted_drc_exclusion,
