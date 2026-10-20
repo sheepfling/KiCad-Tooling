@@ -10,6 +10,10 @@ from types import SimpleNamespace
 
 import pytest
 
+from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
+    CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES,
+    connector_return_fixture_sources,
+)
 from kicad_tooling.ci_hosted_connector_return_named_power_input_all_open import (
     CONTROL_CASE,
     FAULT_CASE,
@@ -33,6 +37,7 @@ EXPECTED_SOURCE_HASHES = {
 }
 
 
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_named_power_input_all_open_fixture_sources_match_reviewed_hashes() -> None:
     fixture_root = (
         Path(__file__).resolve().parent
@@ -42,6 +47,21 @@ def test_named_power_input_all_open_fixture_sources_match_reviewed_hashes() -> N
         case: hashlib.sha256((fixture_root / f"{name}.kicad_sch").read_bytes()).hexdigest()
         for case, name in ((FAULT_CASE, "fault"), (CONTROL_CASE, "control"))
     } == EXPECTED_SOURCE_HASHES
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_named_power_input_all_open_fixtures_are_registered_for_hosted_capture() -> None:
+    fixture_root = Path(__file__).resolve().parent / "fixtures/design_lint"
+    sources = connector_return_fixture_sources(fixture_root)
+
+    for case, name in ((FAULT_CASE, "fault"), (CONTROL_CASE, "control")):
+        assert sources[case] == (
+            fixture_root
+            / "connector-footprint-named-power-input-all-open-native"
+            / f"{name}.kicad_sch"
+        )
+        assert case in CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES
+        assert CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES[case] == EXPECTED_SOURCE_HASHES[case]
 
 
 def test_named_power_input_all_open_validator_checks_fault_and_control() -> None:
