@@ -61,7 +61,9 @@ def test_common_named_power_input_peer_is_quiet() -> None:
 
     assert RULE_ID not in {item.rule_id for item in report.findings}
     assert report.connector_peer_pin_coverage is not None
-    assert report.connector_peer_pin_coverage.footprint_alias_coverage.open_outlier_finding_count == 0
+    assert (
+        report.connector_peer_pin_coverage.footprint_alias_coverage.open_outlier_finding_count == 0
+    )
 
 
 def test_named_power_input_open_prompt_requires_anchor_and_shared_assigned_net() -> None:
@@ -80,8 +82,7 @@ def test_named_power_input_open_prompt_requires_anchor_and_shared_assigned_net()
     unanchored = lint_report(controls[0])
     assert unanchored.connector_peer_pin_coverage is not None
     assert (
-        unanchored.connector_peer_pin_coverage.footprint_alias_coverage
-        .unanchored_open_peer_pin_group_count
+        unanchored.connector_peer_pin_coverage.footprint_alias_coverage.unanchored_open_peer_pin_group_count
         == 1
     )
 

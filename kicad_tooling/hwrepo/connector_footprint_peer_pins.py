@@ -318,9 +318,7 @@ def scan_connector_footprint_peer_pin_assignments(
                         footprint=footprint_display,
                         value=value_display,
                         pin_number=pin_number,
-                        pin_function=functions[
-                            f"{scope_references[0]}.{pin_number}".casefold()
-                        ],
+                        pin_function=functions[f"{scope_references[0]}.{pin_number}".casefold()],
                         pin_electrical_type=electrical_types[
                             f"{scope_references[0]}.{pin_number}".casefold()
                         ],

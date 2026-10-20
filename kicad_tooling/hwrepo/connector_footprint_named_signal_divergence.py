@@ -68,9 +68,7 @@ def evaluate_footprint_named_signal_assignment_divergence(
                 "pin_number": (item.pin_number,),
                 "pin_function": (item.pin_function,),
                 "pin_electrical_type": (item.pin_electrical_type.strip().casefold(),),
-                "assignments": tuple(
-                    f"{pin}={nets[0]}" for pin, nets in item.assignments.items()
-                ),
+                "assignments": tuple(f"{pin}={nets[0]}" for pin, nets in item.assignments.items()),
                 "symbols": item.symbols,
                 "common_anchor_pin_numbers": item.common_anchor_pin_numbers,
                 **(

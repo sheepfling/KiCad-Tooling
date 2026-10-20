@@ -140,4 +140,6 @@ def test_named_signal_divergence_obeys_policy_and_exact_ignore() -> None:
     )
 
     assert blocked.status == "FAIL"
-    assert any(item.rule_id == RULE_ID and item.disposition == "IGNORED" for item in ignored.findings)
+    assert any(
+        item.rule_id == RULE_ID and item.disposition == "IGNORED" for item in ignored.findings
+    )

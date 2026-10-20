@@ -51,9 +51,7 @@ def verify_footprint_alias_named_signal_output(
         net_pins = {net: set(pins) for net, pins in observed.nets.items()}
         if expected_status == "REVIEW":
             assigned_pins = {pin for pins in observed.nets.values() for pin in pins}
-            unconnected_pins = {
-                pin for pins in observed.unconnected_nets.values() for pin in pins
-            }
+            unconnected_pins = {pin for pins in observed.unconnected_nets.values() for pin in pins}
             if (
                 len(report.findings) != 1
                 or len(findings) != 1
@@ -74,7 +72,9 @@ def verify_footprint_alias_named_signal_output(
                 or alias.unanchored_open_peer_pin_group_count != 0
                 or alias.open_outlier_finding_count != 1
             ):
-                raise ValueError("Native named signal-output fault lost exact pin or coverage evidence")
+                raise ValueError(
+                    "Native named signal-output fault lost exact pin or coverage evidence"
+                )
         elif (
             report.findings
             or findings

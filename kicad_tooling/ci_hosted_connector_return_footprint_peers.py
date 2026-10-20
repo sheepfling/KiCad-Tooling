@@ -225,7 +225,9 @@ def verify_footprint_alias_peer_open_outlier(
     report = ctx.reports[case, "first"]
     observed = ctx.observed_contracts[case, "first"]
     coverage = report.connector_peer_pin_coverage
-    findings = tuple(item for item in report.findings if item.rule_id == NAMED_SIGNAL_INPUT_OPEN_RULE_ID)
+    findings = tuple(
+        item for item in report.findings if item.rule_id == NAMED_SIGNAL_INPUT_OPEN_RULE_ID
+    )
     if (
         report.status != "REVIEW"
         or len(report.findings) != 1

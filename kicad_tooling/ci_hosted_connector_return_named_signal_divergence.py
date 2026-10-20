@@ -51,8 +51,7 @@ def verify_footprint_alias_named_signal_divergence(
         fault_nets.get("UART_TX_A") != {"J1.1"}
         or fault_nets.get("UART_TX_B") != {"J2.1"}
         or fault_nets.get("COMMON_ANCHOR") != {"J1.2", "J2.2"}
-        or fault.findings[0].evidence.get("assignments")
-        != ("J1.1=UART_TX_A", "J2.1=UART_TX_B")
+        or fault.findings[0].evidence.get("assignments") != ("J1.1=UART_TX_A", "J2.1=UART_TX_B")
         or fault.findings[0].evidence.get("common_anchor_pin_numbers") != ("2",)
         or fault_alias.status != "EVALUATED"
         or fault_alias.candidate_group_count != 1

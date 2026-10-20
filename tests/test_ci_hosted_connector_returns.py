@@ -43,8 +43,6 @@ pytestmark = [
 ]
 
 
-
-
 @pytest.fixture(scope="module")
 def connector_return_results_by_version() -> dict[str, dict[str, dict[str, Any]]]:
     from kicad_tooling.ci_hosted import HostedLog, connector_return_lint_fixture_lane
@@ -226,6 +224,7 @@ def test_footprint_alias_open_peer_is_validated_on_pinned_native_versions(
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
 @pytest.mark.connector_lint
