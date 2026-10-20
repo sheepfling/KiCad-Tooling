@@ -13942,6 +13942,16 @@ it does not claim field validation or effectiveness against private boards.
   both versions; ERC-type digests are stable within each version and may differ
   between versions. The exact image digests and reproduction command are in
   the [synthetic native fixture record](../tests/fixtures/design_lint/mosfet-stress/README.md).
+- **Pytest selection (2026-10-20):** The component-stress regression matrix
+  now uses pytest functions and stable parameter IDs, with `design_lint` and
+  `component_lint` markers. Before the migration, `-k wrong-drain-function`
+  deselected all eight collected test methods because that fault was inside a
+  `unittest` subtest; it now runs exactly one case (`1 passed, 17 deselected`).
+  The full focused module passes 18 tests, the marker/collection architecture
+  slice passes 38 tests, and the component evidence, CLI/MCP parity, and
+  determinism slice passes 24 tests with one unrelated test deselected against
+  the clean public template at `ed89536f0dbbcb013145af2994fef41b2250143e`.
+  This changes test selection only; it adds no electrical rule or evidence.
 - **Next evidence:** Preserve LINT-064's two-pin identity rules. Before a
   project adopts this explicit requirement, its owner must review exact-part
   ratings, operating conditions, state coverage, potential intervals, and

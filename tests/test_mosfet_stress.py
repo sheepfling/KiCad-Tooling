@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import tempfile
-import unittest
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.models import (
@@ -19,6 +18,8 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.mosfet_stress import mosfet_stress_checks
 from kicad_tooling.validate import read_netlist
+
+pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
 
 def requirement() -> MosfetStressAnalysis:
@@ -201,286 +202,240 @@ def native_netlist_xml(*, fault: str | None = None) -> str:
     return ET.tostring(root, encoding="unicode")
 
 
-class MosfetStressTests(unittest.TestCase):
-    def test_native_pin_functions_and_state_intervals_produce_conservative_stress(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="mosfet-netlist-") as directory:
-            path = Path(directory) / "netlist.xml"
-            path.write_text(native_netlist_xml(), encoding="utf-8")
-            observed = read_netlist(path)
-        checks = {row.id: row for row in mosfet_stress_checks(requirement(), observed)}
-        self.assertEqual(checks["mosfet-stress/switch-q1/identity"].status, "PASS")
-        for role in ("drain", "gate", "source"):
-            self.assertEqual(checks[f"mosfet-stress/switch-q1/pin-{role}"].status, "PASS")
-        self.assertEqual(checks["mosfet-stress/switch-q1/state-on/coverage"].status, "PASS")
-        self.assertAlmostEqual(
-            checks["mosfet-stress/switch-q1/state-on/vds"].observed or 0.0, 52.0 / 60.0
-        )
-        self.assertAlmostEqual(
-            checks["mosfet-stress/switch-q1/state-on/vgs"].observed or 0.0, 12.0 / 20.0
-        )
-        self.assertIn(
-            "combined conservatively", checks["mosfet-stress/switch-q1/state-on/vds"].detail
+def test_native_pin_functions_and_state_intervals_produce_conservative_stress(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "netlist.xml"
+    path.write_text(native_netlist_xml(), encoding="utf-8")
+    observed = read_netlist(path)
+    checks = {row.id: row for row in mosfet_stress_checks(requirement(), observed)}
+    assert checks["mosfet-stress/switch-q1/identity"].status == "PASS"
+    for role in ("drain", "gate", "source"):
+        assert checks[f"mosfet-stress/switch-q1/pin-{role}"].status == "PASS"
+    assert checks["mosfet-stress/switch-q1/state-on/coverage"].status == "PASS"
+    assert checks["mosfet-stress/switch-q1/state-on/vds"].observed == pytest.approx(52.0 / 60.0)
+    assert checks["mosfet-stress/switch-q1/state-on/vgs"].observed == pytest.approx(12.0 / 20.0)
+    assert "combined conservatively" in checks["mosfet-stress/switch-q1/state-on/vds"].detail
+
+
+@pytest.mark.parametrize(
+    ("state_id", "drain", "gate", "source"),
+    [
+        pytest.param(
+            "positive-and-zero-crossing",
+            MosfetVoltageInterval(minimum_v=49.0, maximum_v=51.0),
+            MosfetVoltageInterval(minimum_v=9.0, maximum_v=11.0),
+            MosfetVoltageInterval(minimum_v=-1.0, maximum_v=1.0),
+            id="positive-and-zero-crossing",
+        ),
+        pytest.param(
+            "opposite-polarity",
+            MosfetVoltageInterval(minimum_v=-12.0, maximum_v=-8.0),
+            MosfetVoltageInterval(minimum_v=-1.0, maximum_v=2.0),
+            MosfetVoltageInterval(minimum_v=2.0, maximum_v=4.0),
+            id="opposite-polarity",
+        ),
+        pytest.param(
+            "both-ranges-cross-zero",
+            MosfetVoltageInterval(minimum_v=-3.0, maximum_v=7.0),
+            MosfetVoltageInterval(minimum_v=-9.0, maximum_v=-7.0),
+            MosfetVoltageInterval(minimum_v=-5.0, maximum_v=1.0),
+            id="both-ranges-cross-zero",
+        ),
+    ],
+)
+def test_interval_bounds_match_exhaustive_endpoint_oracle(
+    state_id: str,
+    drain: MosfetVoltageInterval,
+    gate: MosfetVoltageInterval,
+    source: MosfetVoltageInterval,
+) -> None:
+    def exhaustive_bound(first: MosfetVoltageInterval, second: MosfetVoltageInterval) -> float:
+        return max(
+            abs(first_value - second_value)
+            for first_value in (first.minimum_v, first.maximum_v)
+            for second_value in (second.minimum_v, second.maximum_v)
         )
 
-    def test_interval_bounds_match_exhaustive_endpoint_oracle(self) -> None:
-        def exhaustive_bound(first: MosfetVoltageInterval, second: MosfetVoltageInterval) -> float:
-            return max(
-                abs(first_value - second_value)
-                for first_value in (first.minimum_v, first.maximum_v)
-                for second_value in (second.minimum_v, second.maximum_v)
-            )
+    authored = requirement().requirements[0]
+    state = MosfetOperatingState(
+        id=state_id,
+        net_potentials={"D_NET": drain, "G_NET": gate, "S_NET": source},
+    )
+    spec = requirement().model_copy(update={"required_states": (state_id,), "states": (state,)})
+    checks = {row.id: row for row in mosfet_stress_checks(spec, netlist())}
+    expected_vds = exhaustive_bound(drain, source)
+    expected_vgs = exhaustive_bound(gate, source)
+    observed_vds = checks[f"mosfet-stress/switch-q1/state-{state_id}/vds"].observed
+    observed_vgs = checks[f"mosfet-stress/switch-q1/state-{state_id}/vgs"].observed
+    assert observed_vds is not None
+    assert observed_vgs is not None
+    assert observed_vds * authored.rated_maximum_vds_v == pytest.approx(expected_vds)
+    assert observed_vgs * authored.rated_maximum_vgs_v == pytest.approx(expected_vgs)
 
-        cases = (
-            (
-                "positive-and-zero-crossing",
-                MosfetVoltageInterval(minimum_v=49.0, maximum_v=51.0),
-                MosfetVoltageInterval(minimum_v=9.0, maximum_v=11.0),
-                MosfetVoltageInterval(minimum_v=-1.0, maximum_v=1.0),
-            ),
-            (
-                "opposite-polarity",
-                MosfetVoltageInterval(minimum_v=-12.0, maximum_v=-8.0),
-                MosfetVoltageInterval(minimum_v=-1.0, maximum_v=2.0),
-                MosfetVoltageInterval(minimum_v=2.0, maximum_v=4.0),
-            ),
-            (
-                "both-ranges-cross-zero",
-                MosfetVoltageInterval(minimum_v=-3.0, maximum_v=7.0),
-                MosfetVoltageInterval(minimum_v=-9.0, maximum_v=-7.0),
-                MosfetVoltageInterval(minimum_v=-5.0, maximum_v=1.0),
-            ),
-        )
-        authored = requirement().requirements[0]
-        for state_id, drain, gate, source in cases:
-            with self.subTest(state=state_id):
-                state = MosfetOperatingState(
-                    id=state_id,
-                    net_potentials={"D_NET": drain, "G_NET": gate, "S_NET": source},
-                )
-                spec = requirement().model_copy(
-                    update={"required_states": (state_id,), "states": (state,)}
-                )
-                checks = {row.id: row for row in mosfet_stress_checks(spec, netlist())}
-                expected_vds = exhaustive_bound(drain, source)
-                expected_vgs = exhaustive_bound(gate, source)
-                self.assertAlmostEqual(
-                    (checks[f"mosfet-stress/switch-q1/state-{state_id}/vds"].observed or 0.0)
-                    * authored.rated_maximum_vds_v,
-                    expected_vds,
-                )
-                self.assertAlmostEqual(
-                    (checks[f"mosfet-stress/switch-q1/state-{state_id}/vgs"].observed or 0.0)
-                    * authored.rated_maximum_vgs_v,
-                    expected_vgs,
-                )
 
-    def test_exact_rating_limits_pass_and_overstress_fails(self) -> None:
-        authored = requirement()
-        exact_requirement = authored.requirements[0].model_copy(
-            update={"maximum_utilization_fraction": 1.0}
-        )
-        spec = requirement().model_copy(
-            update={
-                "requirements": (exact_requirement,),
-                "states": (
-                    MosfetOperatingState(
-                        id="off",
-                        net_potentials={
-                            "D_NET": MosfetVoltageInterval(minimum_v=0.0, maximum_v=0.0),
-                            "G_NET": MosfetVoltageInterval(minimum_v=0.0, maximum_v=0.0),
-                            "S_NET": MosfetVoltageInterval(minimum_v=0.0, maximum_v=0.0),
-                        },
-                    ),
-                    MosfetOperatingState(
-                        id="on",
-                        net_potentials={
-                            "D_NET": MosfetVoltageInterval(minimum_v=60.0, maximum_v=60.0),
-                            "G_NET": MosfetVoltageInterval(minimum_v=20.0, maximum_v=20.0),
-                            "S_NET": MosfetVoltageInterval(minimum_v=0.0, maximum_v=0.0),
-                        },
-                    ),
-                ),
+@pytest.mark.parametrize(
+    ("drain_voltage", "gate_voltage", "expected_status"),
+    [
+        pytest.param(60.0, 20.0, "PASS", id="at-maximum-rating"),
+        pytest.param(60.1, 20.1, "FAIL", id="above-maximum-rating"),
+    ],
+)
+def test_rating_boundary_is_inclusive_and_overstress_fails(
+    drain_voltage: float,
+    gate_voltage: float,
+    expected_status: str,
+) -> None:
+    authored = requirement()
+    exact_requirement = authored.requirements[0].model_copy(
+        update={"maximum_utilization_fraction": 1.0}
+    )
+    on_state = MosfetOperatingState(
+        id="on",
+        net_potentials={
+            "D_NET": MosfetVoltageInterval(minimum_v=drain_voltage, maximum_v=drain_voltage),
+            "G_NET": MosfetVoltageInterval(minimum_v=gate_voltage, maximum_v=gate_voltage),
+            "S_NET": MosfetVoltageInterval(minimum_v=0.0, maximum_v=0.0),
+        },
+    )
+    spec = authored.model_copy(
+        update={"requirements": (exact_requirement,), "states": (authored.states[0], on_state)}
+    )
+    checks = {row.id: row for row in mosfet_stress_checks(spec, netlist())}
+    assert checks["mosfet-stress/switch-q1/state-on/vds"].status == expected_status
+    assert checks["mosfet-stress/switch-q1/state-on/vgs"].status == expected_status
+
+
+@pytest.mark.parametrize(
+    ("fault", "expected_failure"),
+    [
+        pytest.param("wrong-symbol", "identity", id="wrong-symbol"),
+        pytest.param("wrong-footprint", "identity", id="wrong-footprint"),
+        pytest.param("wrong-part-id", "identity", id="wrong-part-id"),
+        pytest.param("wrong-inventory", "identity", id="wrong-inventory"),
+        pytest.param("wrong-drain-function", "pin-drain", id="wrong-drain-function"),
+        pytest.param("wrong-gate-net", "pin-gate", id="wrong-gate-net"),
+        pytest.param("open-source", "pin-source", id="open-source"),
+        pytest.param("dnp", "identity", id="dnp"),
+    ],
+)
+def test_identity_and_topology_faults_fail_closed(fault: str, expected_failure: str) -> None:
+    checks = {row.id: row for row in mosfet_stress_checks(requirement(), netlist(fault=fault))}
+    assert checks[f"mosfet-stress/switch-q1/{expected_failure}"].status == "FAIL"
+    assert checks["mosfet-stress/switch-q1/state-on/vds"].status == "NOT_APPLICABLE"
+
+
+def test_missing_state_and_potential_are_explicit_coverage_failures() -> None:
+    missing_state = requirement().model_copy(update={"states": requirement().states[:1]})
+    checks = {row.id: row for row in mosfet_stress_checks(missing_state, netlist())}
+    assert checks["mosfet-stress/switch-q1/state-on/coverage"].status == "FAIL"
+    assert checks["mosfet-stress/switch-q1/state-on/vds"].status == "NOT_APPLICABLE"
+
+    on_state = requirement().states[1]
+    on = on_state.model_copy(
+        update={
+            "net_potentials": {
+                "G_NET": on_state.net_potentials["G_NET"],
+                "S_NET": on_state.net_potentials["S_NET"],
             }
-        )
-        equality = {row.id: row for row in mosfet_stress_checks(spec, netlist())}
-        self.assertEqual(equality["mosfet-stress/switch-q1/state-on/vds"].status, "PASS")
-        self.assertEqual(equality["mosfet-stress/switch-q1/state-on/vgs"].status, "PASS")
-
-        over = spec.model_copy(
-            update={
-                "states": (
-                    spec.states[0],
-                    MosfetOperatingState(
-                        id="on",
-                        net_potentials={
-                            "D_NET": MosfetVoltageInterval(minimum_v=60.1, maximum_v=60.1),
-                            "G_NET": MosfetVoltageInterval(minimum_v=20.1, maximum_v=20.1),
-                            "S_NET": MosfetVoltageInterval(minimum_v=0.0, maximum_v=0.0),
-                        },
-                    ),
-                )
-            }
-        )
-        failed = {row.id: row for row in mosfet_stress_checks(over, netlist())}
-        self.assertEqual(failed["mosfet-stress/switch-q1/state-on/vds"].status, "FAIL")
-        self.assertEqual(failed["mosfet-stress/switch-q1/state-on/vgs"].status, "FAIL")
-
-    def test_identity_and_topology_faults_fail_closed(self) -> None:
-        for fault in (
-            "wrong-symbol",
-            "wrong-footprint",
-            "wrong-part-id",
-            "wrong-inventory",
-            "wrong-drain-function",
-            "wrong-gate-net",
-            "open-source",
-            "dnp",
-        ):
-            with self.subTest(fault=fault):
-                checks = {
-                    row.id: row for row in mosfet_stress_checks(requirement(), netlist(fault=fault))
-                }
-                expected_failure = (
-                    "identity"
-                    if fault
-                    in {
-                        "wrong-symbol",
-                        "wrong-footprint",
-                        "wrong-part-id",
-                        "wrong-inventory",
-                        "dnp",
-                    }
-                    else {
-                        "wrong-drain-function": "pin-drain",
-                        "wrong-gate-net": "pin-gate",
-                        "open-source": "pin-source",
-                    }[fault]
-                )
-                self.assertEqual(
-                    checks[f"mosfet-stress/switch-q1/{expected_failure}"].status, "FAIL"
-                )
-                self.assertEqual(
-                    checks["mosfet-stress/switch-q1/state-on/vds"].status, "NOT_APPLICABLE"
-                )
-
-    def test_missing_state_and_potential_are_explicit_coverage_failures(self) -> None:
-        missing_state = requirement().model_copy(update={"states": requirement().states[:1]})
-        checks = {row.id: row for row in mosfet_stress_checks(missing_state, netlist())}
-        self.assertEqual(checks["mosfet-stress/switch-q1/state-on/coverage"].status, "FAIL")
-        self.assertEqual(checks["mosfet-stress/switch-q1/state-on/vds"].status, "NOT_APPLICABLE")
-
-        on_state = requirement().states[1]
-        on = on_state.model_copy(
-            update={
-                "net_potentials": {
-                    "G_NET": on_state.net_potentials["G_NET"],
-                    "S_NET": on_state.net_potentials["S_NET"],
-                }
-            }
-        )
-        missing_potential = requirement().model_copy(
-            update={"states": (requirement().states[0], on)}
-        )
-        checks = {row.id: row for row in mosfet_stress_checks(missing_potential, netlist())}
-        self.assertEqual(checks["mosfet-stress/switch-q1/state-on/coverage"].status, "FAIL")
-        self.assertIn("D_NET", checks["mosfet-stress/switch-q1/state-on/coverage"].detail)
-        self.assertEqual(checks["mosfet-stress/switch-q1/state-on/vds"].status, "NOT_APPLICABLE")
-        self.assertEqual(checks["mosfet-stress/switch-q1/state-on/vgs"].status, "PASS")
-
-    def test_results_are_stable_when_input_mappings_and_records_are_reordered(self) -> None:
-        spec = requirement()
-        reversed_states = tuple(
-            state.model_copy(
-                update={"net_potentials": dict(reversed(tuple(state.net_potentials.items())))}
-            )
-            for state in reversed(spec.states)
-        )
-        reversed_spec = spec.model_copy(
-            update={
-                "states": reversed_states,
-                "required_states": tuple(reversed(spec.required_states)),
-            }
-        )
-        observed = netlist()
-        reversed_netlist = observed.model_copy(
-            update={
-                "nets": dict(reversed(tuple(observed.nets.items()))),
-                "components": dict(reversed(tuple(observed.components.items()))),
-            }
-        )
-        self.assertEqual(
-            mosfet_stress_checks(spec, observed),
-            mosfet_stress_checks(reversed_spec, reversed_netlist),
-        )
-
-    def test_multiple_devices_keep_results_isolated_under_reordering_and_mutation(self) -> None:
-        spec = multi_device_requirement()
-        observed = multi_device_netlist()
-        baseline = {
-            row.id: (row.status, row.detail, row.observed, row.unit)
-            for row in mosfet_stress_checks(spec, observed)
         }
-        reversed_states = tuple(
-            state.model_copy(
-                update={"net_potentials": dict(reversed(tuple(state.net_potentials.items())))}
-            )
-            for state in reversed(spec.states)
-        )
-        reversed_spec = spec.model_copy(
-            update={
-                "requirements": tuple(reversed(spec.requirements)),
-                "states": reversed_states,
-                "required_states": tuple(reversed(spec.required_states)),
-            }
-        )
-        reversed_netlist = observed.model_copy(
-            update={
-                "components": dict(reversed(tuple(observed.components.items()))),
-                "nets": dict(reversed(tuple(observed.nets.items()))),
-                "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
-                "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
-                "component_pin_numbers": dict(
-                    reversed(tuple(observed.component_pin_numbers.items()))
-                ),
-            }
-        )
-        self.assertEqual(
-            mosfet_stress_checks(spec, observed),
-            mosfet_stress_checks(reversed_spec, reversed_netlist),
-        )
-        self.assertEqual(baseline["mosfet-stress/switch-q1/state-on/vds"][0], "PASS")
-        self.assertEqual(baseline["mosfet-stress/switch-q2/state-on/vds"][0], "PASS")
+    )
+    missing_potential = requirement().model_copy(update={"states": (requirement().states[0], on)})
+    checks = {row.id: row for row in mosfet_stress_checks(missing_potential, netlist())}
+    assert checks["mosfet-stress/switch-q1/state-on/coverage"].status == "FAIL"
+    assert "D_NET" in checks["mosfet-stress/switch-q1/state-on/coverage"].detail
+    assert checks["mosfet-stress/switch-q1/state-on/vds"].status == "NOT_APPLICABLE"
+    assert checks["mosfet-stress/switch-q1/state-on/vgs"].status == "PASS"
 
-        fault = multi_device_requirement(
-            q2_drain_on=MosfetVoltageInterval(minimum_v=59.0, maximum_v=61.0)
+
+def test_results_are_stable_when_input_mappings_and_records_are_reordered() -> None:
+    spec = requirement()
+    reversed_states = tuple(
+        state.model_copy(
+            update={"net_potentials": dict(reversed(tuple(state.net_potentials.items())))}
         )
-        fault_rows = {
-            row.id: (row.status, row.detail, row.observed, row.unit)
-            for row in mosfet_stress_checks(fault, observed)
+        for state in reversed(spec.states)
+    )
+    reversed_spec = spec.model_copy(
+        update={
+            "states": reversed_states,
+            "required_states": tuple(reversed(spec.required_states)),
         }
-        changed = {row_id for row_id in baseline if baseline[row_id] != fault_rows[row_id]}
-        expected_change = "mosfet-stress/switch-q2/state-on/vds"
-        self.assertEqual(changed, {expected_change})
-        self.assertEqual(fault_rows[expected_change][0], "FAIL")
-        self.assertEqual(fault_rows["mosfet-stress/switch-q2/state-on/vgs"][0], "PASS")
-        self.assertEqual(fault_rows["mosfet-stress/switch-q1/state-on/vds"][0], "PASS")
-
-    def test_models_reject_invalid_interval_and_non_three_terminal_map(self) -> None:
-        with self.assertRaises(ValidationError):
-            MosfetVoltageInterval(minimum_v=2.0, maximum_v=1.0)
-        original = requirement().requirements[0]
-        with self.assertRaises(ValidationError):
-            MosfetStressRequirement.model_validate(
-                {
-                    **original.model_dump(),
-                    "source_pin": original.gate_pin,
-                    "source_function": original.source_function,
-                    "source_net": original.source_net,
-                }
-            )
-        with self.assertRaises(ValidationError):
-            MosfetStressRequirement.model_validate({**original.model_dump(), "drain_function": "G"})
+    )
+    observed = netlist()
+    reversed_netlist = observed.model_copy(
+        update={
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "components": dict(reversed(tuple(observed.components.items()))),
+        }
+    )
+    assert mosfet_stress_checks(spec, observed) == mosfet_stress_checks(
+        reversed_spec, reversed_netlist
+    )
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_multiple_devices_keep_results_isolated_under_reordering_and_mutation() -> None:
+    spec = multi_device_requirement()
+    observed = multi_device_netlist()
+    baseline = {
+        row.id: (row.status, row.detail, row.observed, row.unit)
+        for row in mosfet_stress_checks(spec, observed)
+    }
+    reversed_states = tuple(
+        state.model_copy(
+            update={"net_potentials": dict(reversed(tuple(state.net_potentials.items())))}
+        )
+        for state in reversed(spec.states)
+    )
+    reversed_spec = spec.model_copy(
+        update={
+            "requirements": tuple(reversed(spec.requirements)),
+            "states": reversed_states,
+            "required_states": tuple(reversed(spec.required_states)),
+        }
+    )
+    reversed_netlist = observed.model_copy(
+        update={
+            "components": dict(reversed(tuple(observed.components.items()))),
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+            "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+        }
+    )
+    assert mosfet_stress_checks(spec, observed) == mosfet_stress_checks(
+        reversed_spec, reversed_netlist
+    )
+    assert baseline["mosfet-stress/switch-q1/state-on/vds"][0] == "PASS"
+    assert baseline["mosfet-stress/switch-q2/state-on/vds"][0] == "PASS"
+
+    fault = multi_device_requirement(
+        q2_drain_on=MosfetVoltageInterval(minimum_v=59.0, maximum_v=61.0)
+    )
+    fault_rows = {
+        row.id: (row.status, row.detail, row.observed, row.unit)
+        for row in mosfet_stress_checks(fault, observed)
+    }
+    changed = {row_id for row_id in baseline if baseline[row_id] != fault_rows[row_id]}
+    expected_change = "mosfet-stress/switch-q2/state-on/vds"
+    assert changed == {expected_change}
+    assert fault_rows[expected_change][0] == "FAIL"
+    assert fault_rows["mosfet-stress/switch-q2/state-on/vgs"][0] == "PASS"
+    assert fault_rows["mosfet-stress/switch-q1/state-on/vds"][0] == "PASS"
+
+
+def test_models_reject_invalid_interval_and_non_three_terminal_map() -> None:
+    with pytest.raises(ValidationError):
+        MosfetVoltageInterval(minimum_v=2.0, maximum_v=1.0)
+    original = requirement().requirements[0]
+    with pytest.raises(ValidationError):
+        MosfetStressRequirement.model_validate(
+            {
+                **original.model_dump(),
+                "source_pin": original.gate_pin,
+                "source_function": original.source_function,
+                "source_net": original.source_net,
+            }
+        )
+    with pytest.raises(ValidationError):
+        MosfetStressRequirement.model_validate({**original.model_dump(), "drain_function": "G"})
