@@ -373,6 +373,17 @@ class DesignLintReport(StrictModel):
                 raise ValueError(
                     "Connector footprint-alias peer coverage count must match findings"
                 )
+            named_signal_divergence_findings = sum(
+                finding.rule_id == "connector.footprint_named_signal_assignment_divergence"
+                for finding in self.findings
+            )
+            if (
+                named_signal_divergence_findings
+                != item.footprint_alias_coverage.named_signal_divergence_finding_count
+            ):
+                raise ValueError(
+                    "Named signal footprint-alias coverage count must match findings"
+                )
             footprint_open_findings = sum(
                 finding.rule_id
                 in {

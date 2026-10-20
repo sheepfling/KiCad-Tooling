@@ -184,6 +184,24 @@ _PARITY_FIXTURES_BY_RULE = {
             "test_footprint_alias_review_matches_cli_and_mcp",
         ),
     },
+    "connector.footprint_named_signal_assignment_divergence": {
+        "fault_fixtures": _refs(
+            "tests.test_connector_footprint_named_signal_divergence",
+            "test_named_signal_pin_on_different_nets_is_reviewed_with_a_common_anchor",
+        )
+        + _refs(
+            "tests.test_connector_footprint_peer_parity",
+            "test_footprint_alias_review_matches_cli_and_mcp",
+        ),
+        "valid_control_fixtures": _refs(
+            "tests.test_connector_footprint_named_signal_divergence",
+            "test_common_unanchored_or_ineligible_contacts_are_not_signal_divergence_findings",
+        )
+        + _refs(
+            "tests.test_connector_footprint_peer_parity",
+            "test_footprint_alias_review_matches_cli_and_mcp",
+        ),
+    },
     "connector.unconnected_power_output": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_mcp_parity_connector_power_output",

@@ -100,6 +100,11 @@ def peer_pin_reachability_netlists() -> tuple[NetlistContract, ...]:
             functions=("GND", "UART_TX"),
             electrical_types=("passive", "output"),
         ),
+        peer_netlist(
+            assignments=(("GND", "GND"), ("UART_TX_A", "UART_TX_B")),
+            functions=("GND", "UART_TX"),
+            electrical_types=("passive", "output"),
+        ),
         peer_netlist(assignments=(("GND", "GND"), (None, None))),
     )
 

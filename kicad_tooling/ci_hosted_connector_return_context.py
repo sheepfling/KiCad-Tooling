@@ -146,6 +146,8 @@ def prepare_connector_return_fixture_context(
         / "connector-footprint-named-signal-output-native/fault.kicad_sch",
         "footprint-alias-named-signal-output-control": fixture_root
         / "connector-footprint-named-signal-output-native/control.kicad_sch",
+        "footprint-alias-named-signal-divergence-fault": fixture_root
+        / "connector-footprint-named-signal-divergence-native/fault.kicad_sch",
         "peer-pin-minority-fault": fixture_root
         / "generic-peer-pin-assignment-native/minority-fault.kicad_sch",
         "peer-pin-divergence-fault": fixture_root
@@ -291,6 +293,7 @@ def prepare_connector_return_fixture_context(
         "footprint-alias-named-power-output-control": "43fcd7e09c75bba6d11b12ce937fd808c4e694b17fc4551769fdccd38abfde29",
         "footprint-alias-named-signal-output-fault": "338f674f9dab065e286b2c5a4495b7967c81947343ce1497fefec347666362c8",
         "footprint-alias-named-signal-output-control": "f072787dbd52dafcc5e2fd0728ed2bc4add23653d8b4978c7472aa658b660d8f",
+        "footprint-alias-named-signal-divergence-fault": "2a63cd0836321ce6752b5b4725d830a7f96ad01533e903fe24dfae5b696084a1",
         "peer-pin-minority-fault": "a071543178ad7668d20a3653fea5196cf556c3b96338b81dbeac97a6360ede2c",
         "peer-pin-divergence-fault": "c278b2ff86c869a6dba7c19ee08f064a863d282d251be44fd47c1e8a71254e57",
         "generic-placeholder-divergence-fault": "f6f4c9b419ab590366ca329b1ac0749706b29536017f2f24145de7ef6bdfaf30",

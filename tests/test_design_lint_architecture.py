@@ -38,6 +38,7 @@ def _implementation_path(reference: str) -> str | None:
 PIN_ANALYSIS_MODULES = (
     "connector_identity.py",
     "connector_footprint_peer_pins.py",
+    "connector_footprint_peer_pin_types.py",
     "connector_peer_pin_coverage.py",
     "connector_peer_pin_findings.py",
     "connector_peer_pin_scan.py",

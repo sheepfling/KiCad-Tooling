@@ -227,7 +227,6 @@ def test_footprint_alias_open_peer_is_validated_on_pinned_native_versions(
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
 
-
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
 @pytest.mark.connector_lint
 def test_footprint_alias_all_open_peer_is_validated_on_pinned_native_versions(
@@ -253,6 +252,30 @@ def test_footprint_alias_all_open_peer_is_validated_on_pinned_native_versions(
     assert fault_coverage["all_open_peer_pin_group_count"] == 1
     assert fault_coverage["all_open_finding_count"] == 1
     assert control_coverage["all_open_finding_count"] == 0
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+def test_footprint_alias_named_signal_divergence_is_validated_on_pinned_native_versions(
+    connector_return_results_by_version, version
+):
+    results = connector_return_results_by_version[version]
+    fault = results["connector-return-fixture/footprint-alias-named-signal-divergence-fault"]
+    control = results["connector-return-fixture/footprint-alias-named-signal-output-control"]
+
+    assert fault["lint_status"] == "REVIEW"
+    assert fault["findings"] == "connector.footprint_named_signal_assignment_divergence"
+    assert fault["pin_functions"] == "J1.1=UART_TX;J1.2=2;J2.1=UART_TX;J2.2=2"
+    coverage = json.loads(fault["connector_peer_pin_coverage"])["footprint_alias_coverage"]
+    assert coverage["named_signal_different_assignment_pin_group_count"] == 1
+    assert coverage["named_signal_divergence_finding_count"] == 1
+    assert coverage["unanchored_named_signal_divergence_pin_group_count"] == 0
+    assert control["lint_status"] == "PASS"
+    assert control["findings"] == "none"
+    for result in (fault, control):
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
     for result in (fault, control):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"

@@ -108,6 +108,12 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"({footprint_coverage.unanchored_all_open_peer_pin_group_count} unanchored)"
         )
         lines.append(
+            "  Named signal divergence groups/findings/unanchored: "
+            f"{footprint_coverage.named_signal_different_assignment_pin_group_count}/"
+            f"{footprint_coverage.named_signal_divergence_finding_count}/"
+            f"{footprint_coverage.unanchored_named_signal_divergence_pin_group_count}"
+        )
+        lines.append(
             f"  Repeated function groups: {peer_coverage.repeated_function_group_count}; "
             f"common assignments: "
             f"{peer_coverage.repeated_function_groups_with_common_assignment_count}; "
@@ -124,6 +130,8 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"{peer_coverage.peer_pin_divergence_finding_count}; all-open generic peer pins "
             f"{peer_coverage.generic_peer_pin_all_open_finding_count}; footprint-alias "
             f"divergences {footprint_coverage.divergence_finding_count}; footprint-alias "
+            f"named signal divergences {footprint_coverage.named_signal_divergence_finding_count}; "
+            f"footprint-alias "
             f"open outliers {footprint_coverage.open_outlier_finding_count}; all-open "
             f"{footprint_coverage.all_open_finding_count}"
         )

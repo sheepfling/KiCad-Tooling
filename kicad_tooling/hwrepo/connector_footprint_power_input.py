@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .connector_footprint_open_named_candidates import open_named_outlier_candidates
-from .connector_footprint_peer_pins import ConnectorFootprintPeerPinScan
+from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_identity import (
     is_named_supply_function,
     is_return_function,

@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_footprint_named_signal_divergence import (
+    evaluate_footprint_named_signal_assignment_divergence,
+)
+from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_footprint_peer_pins import (
-    ConnectorFootprintPeerPinScan,
     scan_connector_footprint_peer_pin_assignments,
 )
 from .connector_footprint_power_input import footprint_named_power_input_open_outlier_candidates
@@ -72,8 +75,10 @@ def connector_footprint_peer_pin_candidates(
         )
         for item in scan.divergences
     )
+    named_signal_divergence = evaluate_footprint_named_signal_assignment_divergence(scan)
     return (
         *divergence_candidates,
+        *named_signal_divergence.candidates,
         *_footprint_peer_pin_open_candidates(scan),
         *footprint_named_power_input_open_outlier_candidates(scan),
         *footprint_named_signal_input_open_outlier_candidates(scan),

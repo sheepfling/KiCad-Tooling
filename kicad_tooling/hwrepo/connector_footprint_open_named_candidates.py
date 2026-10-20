@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .connector_footprint_peer_pins import ConnectorFootprintPeerPinOpenOutlier
+from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinOpenOutlier
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 

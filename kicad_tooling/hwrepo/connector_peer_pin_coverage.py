@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_footprint_named_signal_divergence import (
+    evaluate_footprint_named_signal_assignment_divergence,
+)
 from .connector_footprint_peer_pins import scan_connector_footprint_peer_pin_assignments
 from .connector_identity import (
     connector_candidate_references,
@@ -37,6 +40,7 @@ def connector_peer_pin_heuristic_coverage(
     part_id_peer_pin_outlier_finding_count: int = 0,
     part_id_peer_pin_divergence_finding_count: int = 0,
     footprint_peer_pin_divergence_finding_count: int = 0,
+    footprint_named_signal_divergence_finding_count: int = 0,
     footprint_peer_pin_open_outlier_finding_count: int = 0,
     footprint_peer_pin_all_open_finding_count: int = 0,
 ) -> ConnectorPeerPinHeuristicCoverage:
@@ -266,6 +270,9 @@ def connector_peer_pin_heuristic_coverage(
         declared_references,
         peer_assignment_groups,
     )
+    named_signal_divergence = evaluate_footprint_named_signal_assignment_divergence(
+        footprint_scan
+    )
     footprint_incomplete_count = sum(
         (
             footprint_scan.incomplete_pin_inventory_group_count,
@@ -288,7 +295,11 @@ def connector_peer_pin_heuristic_coverage(
         else "PARTIALLY_EVALUATED"
         if footprint_incomplete_count > 0
         else "NO_DIVERGENT_ASSIGNMENTS"
-        if footprint_scan.generic_different_assignment_pin_group_count == 0
+        if (
+            footprint_scan.generic_different_assignment_pin_group_count
+            + named_signal_divergence.candidate_count
+            == 0
+        )
         else "EVALUATED"
     )
     footprint_alias_coverage = ConnectorFootprintPeerPinCoverage(
@@ -326,6 +337,15 @@ def connector_peer_pin_heuristic_coverage(
             footprint_scan.unanchored_all_open_peer_pin_group_count
         ),
         all_open_finding_count=footprint_peer_pin_all_open_finding_count,
+        named_signal_different_assignment_pin_group_count=(
+            named_signal_divergence.candidate_count
+        ),
+        unanchored_named_signal_divergence_pin_group_count=(
+            named_signal_divergence.unanchored_count
+        ),
+        named_signal_divergence_finding_count=(
+            footprint_named_signal_divergence_finding_count
+        ),
     )
 
     if not candidate_references:
