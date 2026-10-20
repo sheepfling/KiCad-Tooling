@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 129 active rules. They
+`synthetic_validated`; the catalog currently contains 130 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2735,6 +2735,28 @@ versioned [10.0.0 DRC item source][electrical-drc-items-100] and
 keys. Their corresponding [10.0.0 settings source][electrical-drc-settings-100]
 and [10.0.5 settings source][electrical-drc-settings-105] initialize all DRC
 severities to Error before applying explicit default exceptions.
+
+## Review lowered miscellaneous DRC checks
+
+`pcb.miscellaneous_drc_check_downgraded` prompts when a KiCad 10.0.x PCB
+project's source-hashed `.kicad_pro` sets one of nine Error-default
+miscellaneous checks to `warning` or `ignore`: `footprint`,
+`item_on_disabled_layer`, `items_not_allowed`, `npth_inside_courtyard`,
+`pth_inside_courtyard`, `text_on_edge_cuts`, `through_hole_pad_without_hole`,
+`unresolved_variable`, or `zones_intersect`. It records the exact project
+version, settings hash, check ID, and severity, and defaults to `review`.
+
+The KiCad 10 [DRC reference][kicad-10-drc] documents eight of these checks and
+their Error defaults. Versioned [10.0.0][misc-drc-items-100] and
+[10.0.5][misc-drc-items-105] DRC item sources list all nine editable keys,
+including `text_on_edge_cuts`, which the manual omits from its table. Their
+[10.0.0][misc-drc-settings-100] and [10.0.5][misc-drc-settings-105] settings
+sources initialize DRC severities to Error before applying explicit
+exceptions. The prompt asks whether lowering the severity was intentional. It
+does not claim a violation exists, determine whether the check applies, run
+DRC, inspect board geometry, or establish electrical or manufacturing
+approval. Tooling-owned settings fixtures are in
+[`tests/fixtures/design_lint/pcb-miscellaneous-drc-severity/`](../tests/fixtures/design_lint/pcb-miscellaneous-drc-severity/README.md).
 
 ## Review persisted per-violation PCB DRC exclusions
 
@@ -5331,3 +5353,7 @@ pad. Review the physical access path and first-article test separately.
 [electrical-drc-items-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [electrical-drc-settings-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/board_design_settings.cpp
 [electrical-drc-settings-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/board_design_settings.cpp
+[misc-drc-items-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp
+[misc-drc-items-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
+[misc-drc-settings-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/board_design_settings.cpp
+[misc-drc-settings-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/board_design_settings.cpp

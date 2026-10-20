@@ -4842,6 +4842,46 @@
       ]
     },
     {
+      "rule_id": "pcb.miscellaneous_drc_check_downgraded",
+      "title": "Miscellaneous DRC checks lowered from Error need intentional review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_global_severity_review.py#downgraded_miscellaneous_drc_check_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro path, supported miscellaneous check ID, configured Warning or Ignore severity, and exact configured KiCad version",
+      "predicate": "For a PCB or PCB-only project configured for KiCad 10.0.x, emit one source-bound review candidate for each explicit Warning or Ignore setting among footprint, item_on_disabled_layer, items_not_allowed, npth_inside_courtyard, pth_inside_courtyard, text_on_edge_cuts, through_hole_pad_without_hole, unresolved_variable, and zones_intersect.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.x project JSON board.design_settings.rule_severities; the documented checks and the source-confirmed text_on_edge_cuts key are mapped from versioned KiCad 10.0.0 and 10.0.5 sources, and the exact configured patch version is recorded; no native tool is executed"
+      ],
+      "limitations": [
+        "Warning remains visible in DRC while Ignore disables the selected check. Both findings ask whether lowering an Error-default check was intentional; neither proves a board defect or requires every project to retain Error.",
+        "The bounded set contains the documented Error-default miscellaneous checks plus the source-confirmed text_on_edge_cuts check. It does not include checks whose defaults are Warning or Ignore, other built-in checks, custom rules, or the DRC report.",
+        "The rule does not determine whether a check applies to the board, inspect board geometry, run DRC, or establish electrical or manufacturing approval. Projects may choose review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_miscellaneous_drc_severity.test_error_default_miscellaneous_checks_configured_below_error_create_review_candidates",
+        "tests.test_pcb_miscellaneous_drc_severity.test_changed_settings_after_source_hash_capture_fail_closed",
+        "tests.test_pcb_miscellaneous_drc_severity.test_downgraded_findings_use_standard_default_review_policy",
+        "tests.test_design_lint_mcp_parity_pcb_miscellaneous_drc_severity.test_miscellaneous_severity_findings_match_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_miscellaneous_drc_severity.test_error_defaults_and_other_miscellaneous_overrides_are_valid_controls",
+        "tests.test_pcb_miscellaneous_drc_severity.test_versions_outside_reviewed_kicad_10_0_profile_are_out_of_scope",
+        "tests.test_pcb_miscellaneous_drc_severity.test_non_pcb_project_is_out_of_scope"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_miscellaneous_drc_severity.test_json_key_order_does_not_change_review_candidate_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_global_severity_review.py#downgraded_miscellaneous_drc_check_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_miscellaneous_drc_check_severities",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_exclusion_present",
       "title": "Persisted PCB DRC exclusions need intentional review",
       "theme": "pcb",

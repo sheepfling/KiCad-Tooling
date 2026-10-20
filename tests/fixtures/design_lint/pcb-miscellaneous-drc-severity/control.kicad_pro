@@ -1,0 +1,26 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "footprint": "error",
+        "item_on_disabled_layer": "error",
+        "items_not_allowed": "error",
+        "npth_inside_courtyard": "error",
+        "pth_inside_courtyard": "error",
+        "text_on_edge_cuts": "error",
+        "through_hole_pad_without_hole": "error",
+        "unresolved_variable": "error",
+        "zones_intersect": "error",
+        "isolated_copper": "ignore",
+        "padstack": "warning",
+        "footprint_type_mismatch": "ignore",
+        "lib_footprint_issues": "warning",
+        "unconnected_items": "ignore",
+        "hole_clearance": "warning",
+        "creepage": "ignore",
+        "length_out_of_range": "warning"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}

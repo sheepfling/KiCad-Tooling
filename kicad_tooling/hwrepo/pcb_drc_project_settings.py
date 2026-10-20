@@ -44,6 +44,19 @@ SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
     }
 )
 ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset({"creepage", "starved_thermal"})
+MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
+    {
+        "footprint",
+        "item_on_disabled_layer",
+        "items_not_allowed",
+        "npth_inside_courtyard",
+        "pth_inside_courtyard",
+        "text_on_edge_cuts",
+        "through_hole_pad_without_hole",
+        "unresolved_variable",
+        "zones_intersect",
+    }
+)
 SUPPORTED_DRC_EXCLUSION_SCHEMA_VERSION = 2
 
 
@@ -107,6 +120,13 @@ def configured_signal_integrity_drc_check_severities(
 def configured_electrical_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
     """Return explicit severities for bounded Error-default electrical DRC checks."""
     return _configured_drc_check_severities(document, ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS)
+
+
+def configured_miscellaneous_drc_check_severities(
+    document: str,
+) -> tuple[tuple[str, str], ...]:
+    """Return severities for bounded Error-default miscellaneous DRC checks."""
+    return _configured_drc_check_severities(document, MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
 def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:

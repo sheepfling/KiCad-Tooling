@@ -146,6 +146,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic Error-default electrical DRC check is configured below Error.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
     )
+    downgraded_miscellaneous_check = Candidate(
+        rule_id="pcb.miscellaneous_drc_check_downgraded",
+        subject="projects/synthetic/controller.kicad_pro#items_not_allowed",
+        message="Synthetic Error-default miscellaneous DRC check is configured below Error.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_pro",)},
+    )
     persisted_drc_exclusion = Candidate(
         rule_id="pcb.drc_exclusion_present",
         subject="projects/synthetic/controller.kicad_pro#drc-exclusion/" + "a" * 64,
@@ -171,6 +177,7 @@ def pcb_rule_ids() -> set[str]:
             warning_dfm_check,
             downgraded_signal_integrity_check,
             downgraded_electrical_check,
+            downgraded_miscellaneous_check,
             persisted_drc_exclusion,
         ),
     )

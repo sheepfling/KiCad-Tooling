@@ -1,0 +1,18 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "footprint": "warning",
+        "item_on_disabled_layer": "ignore",
+        "items_not_allowed": "warning",
+        "npth_inside_courtyard": "ignore",
+        "pth_inside_courtyard": "warning",
+        "text_on_edge_cuts": "ignore",
+        "through_hole_pad_without_hole": "warning",
+        "unresolved_variable": "ignore",
+        "zones_intersect": "warning"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}

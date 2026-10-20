@@ -39,6 +39,7 @@ from .models import (
 from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
 from .pcb_drc_global_severity_review import (
     downgraded_electrical_drc_check_candidates,
+    downgraded_miscellaneous_drc_check_candidates,
     downgraded_signal_integrity_drc_check_candidates,
     ignored_core_native_drc_check_candidates,
     ignored_dfm_native_drc_check_candidates,
@@ -100,6 +101,7 @@ def inspect_design_lint_summary(
             *warning_dfm_native_drc_check_candidates(root, config, coach.source_hashes),
             *downgraded_signal_integrity_drc_check_candidates(root, config, coach.source_hashes),
             *downgraded_electrical_drc_check_candidates(root, config, coach.source_hashes),
+            *downgraded_miscellaneous_drc_check_candidates(root, config, coach.source_hashes),
             *source_bound_pcb_drc_exclusion_candidates(root, config, coach.source_hashes),
         )
         spi_roster = spi_roster_context(root, config)

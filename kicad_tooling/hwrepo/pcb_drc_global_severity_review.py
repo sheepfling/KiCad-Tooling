@@ -14,6 +14,7 @@ from .pcb_drc_project_settings import (
     configured_core_drc_check_severities,
     configured_dfm_drc_check_severities,
     configured_electrical_drc_check_severities,
+    configured_miscellaneous_drc_check_severities,
     configured_signal_integrity_drc_check_severities,
 )
 
@@ -226,6 +227,22 @@ def downgraded_electrical_drc_check_candidates(
         rule_id="pcb.electrical_drc_check_downgraded",
         category="electrical",
         parse_severities=configured_electrical_drc_check_severities,
+    )
+
+
+def downgraded_miscellaneous_drc_check_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+) -> tuple[Candidate, ...]:
+    """Review Error-default KiCad 10.0 miscellaneous checks set below Error."""
+    return _downgraded_native_drc_check_candidates(
+        root,
+        config,
+        source_hashes,
+        rule_id="pcb.miscellaneous_drc_check_downgraded",
+        category="miscellaneous",
+        parse_severities=configured_miscellaneous_drc_check_severities,
     )
 
 
