@@ -45,23 +45,31 @@ def test_common_reference_is_a_valid_control() -> None:
     assert not _rule_candidates(i2c_peer_netlist(reference_nets={"U1": "GND", "U2": "GND"}))
 
 
-def test_explicit_unspecified_vss_pins_support_split_review_and_common_control() -> None:
-    split = with_unspecified_reference_pins(i2c_peer_netlist(), ("U1.3", "U2.3"))
-    suffixed = with_unspecified_reference_pins(
-        i2c_peer_netlist(), ("U1.3", "U2.3"), function="VSS1"
-    )
+@pytest.mark.parametrize(
+    ("function", "split_reference_is_supported"),
+    (
+        ("VSS", True),
+        ("VSS1", True),
+        ("GPIO", False),
+        ("SHIELD", False),
+        ("CHASSIS", False),
+        ("FRAME", False),
+        ("PE", False),
+        ("GND_SHIELD", False),
+    ),
+)
+def test_explicit_unspecified_vss_pins_support_split_review_and_common_control(
+    function: str, split_reference_is_supported: bool
+) -> None:
+    split = with_unspecified_reference_pins(i2c_peer_netlist(), ("U1.3", "U2.3"), function=function)
     common = with_unspecified_reference_pins(
         i2c_peer_netlist(reference_nets={"U1": "GND", "U2": "GND"}),
         ("U1.3", "U2.3"),
-    )
-    nonreturn = with_unspecified_reference_pins(
-        i2c_peer_netlist(), ("U1.3", "U2.3"), function="GPIO"
+        function=function,
     )
 
-    assert len(_rule_candidates(split)) == 1
-    assert len(_rule_candidates(suffixed)) == 1
+    assert len(_rule_candidates(split)) == int(split_reference_is_supported)
     assert not _rule_candidates(common)
-    assert not _rule_candidates(nonreturn)
 
 
 def test_one_split_among_three_shared_bus_peers_emits_one_grouped_review() -> None:
