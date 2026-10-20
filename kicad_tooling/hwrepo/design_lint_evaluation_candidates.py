@@ -211,7 +211,12 @@ def scan_evaluation_candidates(
                 for item in items
             ),
             footprint_peer_pin_open_outlier_finding_count=sum(
-                item.rule_id == "connector.footprint_peer_pin_open_outlier" for item in items
+                item.rule_id
+                in {
+                    "connector.footprint_peer_pin_open_outlier",
+                    "connector.footprint_named_power_input_open_outlier",
+                }
+                for item in items
             ),
             footprint_peer_pin_all_open_finding_count=sum(
                 item.rule_id == "connector.footprint_peer_pin_all_open" for item in items

@@ -374,7 +374,11 @@ class DesignLintReport(StrictModel):
                     "Connector footprint-alias peer coverage count must match findings"
                 )
             footprint_open_findings = sum(
-                finding.rule_id == "connector.footprint_peer_pin_open_outlier"
+                finding.rule_id
+                in {
+                    "connector.footprint_peer_pin_open_outlier",
+                    "connector.footprint_named_power_input_open_outlier",
+                }
                 for finding in self.findings
             )
             if footprint_open_findings != item.footprint_alias_coverage.open_outlier_finding_count:

@@ -130,6 +130,10 @@ def prepare_connector_return_fixture_context(
         / "connector-footprint-alias-native/numeric-control.kicad_sch",
         "footprint-alias-numeric-open-fault": fixture_root
         / "connector-footprint-alias-native/numeric-open-fault.kicad_sch",
+        "footprint-alias-named-power-input-fault": fixture_root
+        / "connector-footprint-named-power-input-native/fault.kicad_sch",
+        "footprint-alias-named-power-input-control": fixture_root
+        / "connector-footprint-named-power-input-native/control.kicad_sch",
         "peer-pin-minority-fault": fixture_root
         / "generic-peer-pin-assignment-native/minority-fault.kicad_sch",
         "peer-pin-divergence-fault": fixture_root
@@ -267,6 +271,8 @@ def prepare_connector_return_fixture_context(
         "footprint-alias-numeric-fault": "505a7b2d1eaa74c54d476c5cab9cfcc41649ed51a64f2da4ebd9f5beb6a74f94",
         "footprint-alias-numeric-control": "c8140e9cf9030ccb646121631d186cef97b7d9c76b0d994c2cb3648aaae28a27",
         "footprint-alias-numeric-open-fault": "1a011151f612ba45769e859e0ada0cf67da46dea50d062e0559e4591f537d270",
+        "footprint-alias-named-power-input-fault": "cfe8665acc39c84863f5ffa45df9343d0ee94bcfa16baad52223ced344b940ab",
+        "footprint-alias-named-power-input-control": "dd864fe4a51950ba0c47d007b682458c37632cb2e84478c2303df926fc9a2ac9",
         "peer-pin-minority-fault": "a071543178ad7668d20a3653fea5196cf556c3b96338b81dbeac97a6360ede2c",
         "peer-pin-divergence-fault": "c278b2ff86c869a6dba7c19ee08f064a863d282d251be44fd47c1e8a71254e57",
         "generic-placeholder-divergence-fault": "f6f4c9b419ab590366ca329b1ac0749706b29536017f2f24145de7ef6bdfaf30",

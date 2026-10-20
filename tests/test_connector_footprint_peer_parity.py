@@ -44,6 +44,7 @@ pytestmark = [
 RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
 OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
 ALL_OPEN_RULE_ID = "connector.footprint_peer_pin_all_open"
+NAMED_POWER_INPUT_OPEN_RULE_ID = "connector.footprint_named_power_input_open_outlier"
 
 
 def _observed(
@@ -84,10 +85,11 @@ def _observed(
             "J2.2": functions[1],
         },
         pin_electrical_types={
-            "J1.1": "passive",
-            "J1.2": "passive",
-            "J2.1": "passive",
-            "J2.2": "passive",
+            f"{reference}.{number}": (
+                "power_in" if functions[int(number) - 1] == "BIAS_IN" else "passive"
+            )
+            for reference in ("J1", "J2")
+            for number in ("1", "2")
         },
     )
 
@@ -165,6 +167,7 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
         (False, True, False, ("1", "7"), OPEN_RULE_ID, "REVIEW", 1),
         (False, False, True, ("Pin_1", "Pin_2"), ALL_OPEN_RULE_ID, "REVIEW", 1),
         (False, False, False, ("Pin_1", "Pin_2"), ALL_OPEN_RULE_ID, "PASS", 0),
+        (False, True, False, ("GND", "BIAS_IN"), NAMED_POWER_INPUT_OPEN_RULE_ID, "REVIEW", 1),
     ):
         observed = _observed(
             fault=fault,
@@ -204,6 +207,15 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
         if rule_id == RULE_ID:
             assert alias.divergence_finding_count == expected_findings
         elif rule_id == OPEN_RULE_ID:
+            assert alias.open_outlier_finding_count == expected_findings
+        elif rule_id == NAMED_POWER_INPUT_OPEN_RULE_ID:
+            named_findings = tuple(
+                item for item in cli_report.findings if item.rule_id == NAMED_POWER_INPUT_OPEN_RULE_ID
+            )
+            assert len(named_findings) == expected_findings
+            if expected_findings:
+                assert named_findings[0].evidence["pin_electrical_type"] == ("power_in",)
+                assert named_findings[0].evidence["open_pins"] == ("J2.2",)
             assert alias.open_outlier_finding_count == expected_findings
         else:
             assert alias.all_open_finding_count == expected_findings

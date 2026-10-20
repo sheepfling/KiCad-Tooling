@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 132 rules are implemented with synthetic regression coverage.
+The following 133 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -374,6 +374,7 @@ Their actual recognition limits are documented in
 - `connector.peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_open_outlier`
+- `connector.footprint_named_power_input_open_outlier`
 - `connector.footprint_peer_pin_all_open`
 - `connector.generic_peer_pin_all_open`
 - `connector.peer_power_input_named_all_open`
@@ -2661,7 +2662,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 132 active rules; CI requires every new
+- **Status:** Baseline complete for all 133 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2670,7 +2671,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 132 covered, 0 not applicable, 0 unreviewed.
+  audit: 133 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -8152,6 +8153,43 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and design_lint_rule(rule_id="oscillator.output_load_path_mismatch")'
   ```
 
+#### LINT-151 — Review named power-input pins left open on footprint-alias connectors
+
+- **Status:** Implemented as the default-review rule
+  `connector.footprint_named_power_input_open_outlier`.
+- **Gap:** The existing footprint-alias open-contact heuristic only considered
+  generic pin functions. A named pin can also be an explicit native `power_in`
+  contact that is assigned on one similar connector and left open on another.
+- **Predicate:** Compare fitted connector references with distinct native
+  symbols, exact nonempty matching values and footprints, complete identical
+  pin inventories, and matching nonempty native pin functions and electrical
+  types. Exclude `PART_ID` groups and DNP instances. If at least two peers
+  remain in one unscoped or source-matched assignment scope, review a named,
+  non-generic `power_in` pin outside recognized supply and return functions
+  when assigned peers share one exact net, at least one peer is open, and a
+  different pin has one exact common assignment across the scope.
+- **Policy boundary:** Similarity and the common anchor only make this a review
+  candidate. The rule does not infer that the contacts share an electrical
+  role or must connect, and does not establish PCB copper or off-board
+  continuity. Generic contacts, known supply/return roles, `power_out`, all-
+  open contacts, ambiguous assignments, and split assigned nets remain out of
+  scope. Project policy can keep REVIEW, disable the rule, block on it, or
+  record an exact-fingerprint ignore.
+- **Synthetic evidence:** Tooling-owned fault and control netlists cover the
+  open and commonly assigned BIAS_IN contacts, a missing common anchor,
+  different assigned nets, all-open peers, recognized supply roles,
+  `power_out`, DNP and `PART_ID` exclusions, stable input ordering, policy
+  overrides, and CLI/MCP parity. A separate source-hashed schematic fault and
+  control pair is wired into repeated native exports for KiCad 10.0.0 and
+  10.0.5. Hosted results determine native acceptance; synthetic tests do not
+  claim field effectiveness.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_connector_footprint_power_input.py \
+    -m 'design_lint and connector_lint and power_lint'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -11124,7 +11162,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 132 active rules. Each entry has a deterministic predicate, evidence
+contains 133 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

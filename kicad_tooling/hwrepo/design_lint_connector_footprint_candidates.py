@@ -8,6 +8,8 @@ from .connector_footprint_peer_pins import (
     ConnectorFootprintPeerPinScan,
     scan_connector_footprint_peer_pin_assignments,
 )
+from .connector_footprint_power_input import footprint_named_power_input_open_outlier_candidates
+from .connector_identity import pin_function_is_generic
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
@@ -64,6 +66,7 @@ def connector_footprint_peer_pin_candidates(
     return (
         *divergence_candidates,
         *_footprint_peer_pin_open_candidates(scan),
+        *footprint_named_power_input_open_outlier_candidates(scan),
         *_footprint_peer_pin_all_open_candidates(scan),
     )
 
@@ -112,6 +115,7 @@ def _footprint_peer_pin_open_candidates(
             },
         )
         for item in scan.open_outliers
+        if pin_function_is_generic(item.pin_function)
     )
 
 

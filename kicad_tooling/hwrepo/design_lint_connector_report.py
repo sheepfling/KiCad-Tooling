@@ -100,7 +100,7 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"{footprint_coverage.ambiguous_assignment_pin_group_count}; anchor/difference "
             f"groups: {footprint_coverage.common_anchor_group_count}/"
             f"{footprint_coverage.generic_different_assignment_pin_group_count}; findings: "
-            f"{footprint_coverage.divergence_finding_count}; generic mixed-open peers: "
+            f"{footprint_coverage.divergence_finding_count}; mixed-open peer groups: "
             f"{footprint_coverage.open_peer_pin_group_count}; unanchored/findings: "
             f"{footprint_coverage.unanchored_open_peer_pin_group_count}/"
             f"{footprint_coverage.open_outlier_finding_count}; all-open generic peer pins: "

@@ -24,6 +24,7 @@ def peer_netlist(
         ("DATA_A", "DATA_B"),
     ),
     functions: tuple[str, str] = ("Pin_1", "Pin_2"),
+    electrical_types: tuple[str, str] = ("passive", "passive"),
     part_id: str | None = None,
     dnp: tuple[str, ...] = (),
     incomplete_inventory: bool = False,
@@ -66,7 +67,7 @@ def peer_netlist(
             for number, function in enumerate(functions, start=1)
         },
         pin_electrical_types={
-            f"{reference}.{number}": "passive"
+            f"{reference}.{number}": electrical_types[int(number) - 1]
             for reference in ("J1", "J2")
             for number in ("1", "2")
             if f"{reference}.{number}" != missing_metadata_pin

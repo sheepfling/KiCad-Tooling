@@ -76,6 +76,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/footprint-alias-numeric-fault",
     "connector-return-fixture/footprint-alias-numeric-control",
     "connector-return-fixture/footprint-alias-numeric-open-fault",
+    "connector-return-fixture/footprint-alias-named-power-input-fault",
+    "connector-return-fixture/footprint-alias-named-power-input-control",
     "connector-return-fixture/two-peer-open-fault",
     "connector-return-fixture/two-peer-no-connect-fault",
     "connector-return-fixture/two-peer-common-control",
@@ -287,6 +289,27 @@ def test_footprint_alias_open_peer_is_validated_on_pinned_native_versions(
     assert fault_coverage["open_peer_pin_group_count"] == 1
     assert fault_coverage["open_outlier_finding_count"] == 1
     for result in (fault, control, numeric_fault):
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+
+    named_fault = results["connector-return-fixture/footprint-alias-named-power-input-fault"]
+    named_control = results["connector-return-fixture/footprint-alias-named-power-input-control"]
+    assert named_fault["lint_status"] == "REVIEW"
+    assert named_fault["findings"] == "connector.footprint_named_power_input_open_outlier"
+    assert named_fault["pin_functions"] == "J1.1=BIAS_IN;J1.2=2;J2.1=BIAS_IN;J2.2=2"
+    assert named_control["lint_status"] == "PASS"
+    assert named_control["findings"] == "none"
+    named_coverage = json.loads(named_fault["connector_peer_pin_coverage"])[
+        "footprint_alias_coverage"
+    ]
+    assert named_coverage["status"] == "PARTIALLY_EVALUATED"
+    assert named_coverage["netlist_sha256"] == named_fault["netlist_sha256"]
+    assert named_coverage["candidate_group_count"] == 1
+    assert named_coverage["common_anchor_group_count"] == 1
+    assert named_coverage["open_peer_pin_group_count"] == 1
+    assert named_coverage["open_outlier_finding_count"] == 1
+    for result in (named_fault, named_control):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

@@ -203,6 +203,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_unconnected_power_output.py",
             "tests/test_design_lint_connector_power_pins.py",
             "tests/test_design_lint_connector_named_power_input_peers.py",
+            "tests/test_connector_footprint_power_input.py",
             "tests/test_design_lint_connector_named_power_output_peers.py",
             "tests/test_design_lint_mcp_parity_connector_named_power_peers.py",
             "tests/test_connector_named_power_input_native_fixture_lane.py",
