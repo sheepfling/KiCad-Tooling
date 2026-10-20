@@ -66,6 +66,7 @@ class NativeControlInputDemoTests(unittest.TestCase):
                 "IC30.33|BOOT_B|boot/strap|input;IC30.38|BOOT_A|boot/strap|input"
             ),
             "por-alias-fixture": "U1.1|POR_B|reset|input",
+            "series-bias-fixture": "none",
         }
         expected_connected_bias = {
             "cm5-minima": (
@@ -85,6 +86,10 @@ class NativeControlInputDemoTests(unittest.TestCase):
                 "2ee541b32622143b5293f6add4da0d0c6b32137ec15521fd2bafb6fe9e3df050",
             ),
             "por-alias-fixture": (
+                0,
+                "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            ),
+            "series-bias-fixture": (
                 0,
                 "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             ),

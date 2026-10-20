@@ -60,14 +60,14 @@ def control_candidates(
         found.append(
             Candidate(
                 rule_id="control.connected_control_input_without_visible_bias",
-                subject=f"{gap.net}: connected control input has no visible rail resistor",
+                subject=f"{gap.net}: connected control input has no visible rail resistor path",
                 message=(
                     "This assigned net contains a recognized reset, enable, or boot/strap input, "
-                    "but no fitted conventional resistor is directly visible between the net "
-                    "and a recognized positive or return net. Review whether an internal or "
-                    "off-board bias, a connected driver, or another topology establishes the "
-                    "intended state, and whether a local path is required. This finding does "
-                    "not establish that a resistor is required."
+                    "but no fitted conventional resistor path is visible directly or through "
+                    "an unbranched series chain to a recognized positive or return net. Review "
+                    "whether an internal or off-board bias, a connected driver, or another "
+                    "topology establishes the intended state, and whether a local path is "
+                    "required. This finding does not establish that a resistor is required."
                 ),
                 evidence={
                     "net": (gap.net,),

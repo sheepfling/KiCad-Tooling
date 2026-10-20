@@ -854,17 +854,20 @@ The first rules are:
   alias.
 - `control.connected_control_input_without_visible_bias` reports one review
   candidate per assigned net containing a recognized reset, enable, or
-  boot/strap input when no fitted conventional two-terminal resistor is
-  directly assigned between that net and a recognized positive or return net.
-  A visible resistor in either polarity clears the prompt; output-capable peers
-  are included as evidence for review and do not suppress it. The rule uses
-  native `input`/`input_low` types, excludes DNP control components, and can be
+  boot/strap input when no fitted conventional two-terminal resistor path is
+  visible from that net to a recognized positive or return net. It recognizes
+  direct resistors and unbranched resistor chains whose intermediate nets
+  contain exactly the two resistor pins; any positive nominal resistance is
+  accepted without claiming adequacy. Output-capable peers are included as
+  evidence for review and do not suppress it. The rule uses native
+  `input`/`input_low` types, excludes DNP control components, and can be
   changed per project to `review`, `block`, or `off`, or cleared by an exact
-  ignore. It does not infer that a local resistor is required. DNP resistors,
-  series paths, resistor arrays, jumpers, custom rail names, internal pulls,
-  off-board bias, runtime drive, resistor adequacy, and PCB continuity are
-  outside the heuristic. When the electrical contract has an exact control
-  requirement for every candidate input on the net, the heuristic prompt is
+  ignore. It does not infer that a local resistor is required. DNP and
+  zero-ohm resistors, branched or ambiguous paths, resistor arrays, jumpers,
+  custom rail names, internal pulls, off-board bias, runtime drive, resistor
+  adequacy, and PCB continuity are outside the heuristic. When the electrical
+  contract has an exact control requirement for every candidate input on the
+  net, the heuristic prompt is
   resolved only after its endpoint and driver checks pass and its local bias
   check passes, or its internal, external, or not-required bias decision is
   explicitly declared. The report records the contract path and digest, signal

@@ -4511,8 +4511,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Status:** Implemented as an optional project-authored control-signal
   contract. Two configurable review-only candidate rules also report unassigned
-  control inputs and connected control nets without a directly visible resistor
-  to a recognized positive or return net.
+  control inputs and connected control nets without a visible resistor path to
+  a recognized positive or return net.
 - **Problem:** Reset/enable/boot pins may be wired but left without the
   intended bias, driven by multiple outputs, or tied to the wrong domain.
 - **Evidence and check:** `control_inputs` declares each signal net, exact
@@ -4526,11 +4526,14 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Connected-input prompt:** `control.connected_control_input_without_visible_bias`
   groups recognized, connected reset/enable/boot input pins by their unique
   assigned net. It reports one REVIEW candidate per net when no fitted,
-  conventional two-terminal resistor is directly assigned between that net
-  and a recognized positive or return net. Native output-capable peers are
+  conventional two-terminal resistor path reaches a recognized positive or
+  return net. Direct resistors and unbranched series chains are recognized
+  without a resistance window; each intermediate net must contain exactly the
+  two resistor pins. DNP and zero-ohm resistors, branched or ambiguous chains,
+  resistor arrays, and jumpers do not satisfy the path. Native output-capable peers are
   included in the evidence for review; they do not suppress the candidate
   because their runtime state is not known. A directly visible resistor in
-  either polarity clears the prompt. The existing per-rule `review`, `block`,
+  either polarity or a supported chain clears the prompt. The existing per-rule `review`, `block`,
   `off`, and exact-ignore controls apply. An exact project control-input
   requirement can resolve a candidate when it covers every detected input on
   that net, its endpoint and driver checks pass, and its local-bias check passes
@@ -4553,11 +4556,13 @@ is not a reason by itself to expand its scope or change its default policy.
   PCB copper, and physical test access remain unverified. Unlisted
   bidirectional or output-capable pin metadata is a contract-review mismatch,
   not proof of electrical contention. The connected-input prompt does not
-  trace resistor chains or arrays, infer custom rail names, validate resistor
-  adequacy, or prove a visible schematic path reaches the physical input.
+  trace resistor arrays or unsupported paths, infer custom rail names, validate
+  resistor adequacy, or prove a visible schematic path reaches the physical input.
   An authored internal or external decision records intent and does not verify
   firmware behavior, the remote host, or physical bias implementation.
-- **Fixtures:** Correct pull-up/down; missing resistor; DNP option; wrong rail
+- **Fixtures:** Correct pull-up/down, including two-resistor unbranched chains
+  to positive and return rails; branched, DNP, and zero-ohm chain controls;
+  missing resistor; DNP option; wrong rail
   and value; expected shared open-drain drivers; changed native pin type;
   missing type metadata; unlisted push-pull output; explicit internal,
   external, and not-required bias; unassigned reset/enable/boot inputs; valid
@@ -4647,8 +4652,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
   The 42 findings are net-level review prompts, not confirmed defects or a precision estimate. Some
   designs may rely on internal bias, resistor arrays, a connected driver, or other reviewed
-  circuitry that the direct-resistor predicate does not resolve. This screen measures candidate
-  volume and repeatability only.
+  circuitry that the bounded resistor-path predicate does not resolve. This screen measures
+  candidate volume and repeatability only.
 - **Pinned native revalidation (2026-10-03):** The
   `tests/test_ci_hosted_control_inputs.py::NativeControlInputDemoTests` lane
   passed locally with one test and five
@@ -4661,8 +4666,9 @@ is not a reason by itself to expand its scope or change its default policy.
   inventories, and connected-bias summaries. Receipts are under ignored
   `build/ci/` paths. The lane exports netlists only; it does not run ERC/DRC.
 - **Rule-scoped native selection (2026-10-20):** The same public demos and
-  synthetic `POR_B`/`PORN` pair passed again with exact KiCad 10.0.5: one test
-  and five subtests, with repeated normalized netlists and all expected
+  synthetic `POR_B`/`PORN` and reset-bias-chain fixtures passed with exact
+  KiCad 10.0.5: one test and six subtests, with repeated normalized netlists
+  and all expected
   candidate inventories. The connected-input screen reports 42 net-level
   bias candidates across the four demos; 7 candidate nets include a native
   output-capable peer (CM5 2/4, Jetson 3/24, ColdFire 0/2, VME 2/12). These
@@ -4672,16 +4678,27 @@ is not a reason by itself to expand its scope or change its default policy.
   `KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES`. Focused collection selects this
   same native test for either rule, so prerelease rule tags exercise the demo
   lane even when the full package job is skipped. Hosted acceptance for
-  `v0.5.2rc42` passed (GitHub Actions run
-  [39422510660](https://github.com/sheepfling/KiCad-Tooling/actions/runs/39422510660)):
+  `v0.5.2rc42` passed (GitHub Actions run 39422510660):
   the focused rule gate and installed-wheel check against the separate public
   template passed, as did Ubuntu, macOS, and Windows previews. The package job
   was skipped under prerelease policy.
-  Hosted acceptance for `v0.5.2rc43` also passed (GitHub Actions run
-  [39423202370](https://github.com/sheepfling/KiCad-Tooling/actions/runs/39423202370)):
+  Hosted acceptance for `v0.5.2rc43` also passed (GitHub Actions run 39423202370):
   the connected-bias rule gate and installed-wheel check against the separate
   public template passed, as did Ubuntu, macOS, and Windows previews. The
   package job was skipped under prerelease policy.
+- **Series resistor-path extension (2026-10-20):** The connected-input
+  heuristic now recognizes a fitted direct resistor or an unbranched series
+  chain to a bounded positive or return net, using the shared
+  `visible_resistor_paths` service. No resistance window is implied. Synthetic
+  tests cover both rail polarities and keep branched, DNP, and zero-ohm paths
+  reviewable. A separate tooling-owned reset schematic passed repeated native
+  netlist export on exact KiCad 10.0.5, with exact `RESET_N`/DNP assignments,
+  a two-pin `RESET_BIAS_MID`, and no bias candidate; its normalized typed
+  netlist hash is
+  `7460ef30a887211f4bc8f8ef86ecc68e8220d7edfd131a1a86e7aa356f40a99b`.
+  The four public-demo inventories remained at 42 review prompts; that volume
+  is not a false-positive measurement. This extends topology recognition and
+  does not change default `REVIEW` policy or establish resistor adequacy.
 - **Remaining:** The native results validate evidence parsing and bounded
   aliases, not design intent. Public demo screens do not label intent, and
   connected-bias candidate volume is not a false-positive measurement.
@@ -8804,8 +8821,7 @@ is not a reason by itself to expand its scope or change its default policy.
   fixture hashes, reported native versions, repeatable normalized netlists, findings on both faults,
   and quiet controls. On 2026-10-20, the focused rule selector passed 26 tests, including a repeat
   of the exact-version native fault/control lane on KiCad 10.0.0 and 10.0.5. Hosted prerelease
-  acceptance passed on tag `v0.5.2rc41` (GitHub Actions run
-  [39420789406](https://github.com/sheepfling/KiCad-Tooling/actions/runs/39420789406)); its scoped
+  acceptance passed on tag `v0.5.2rc41` (GitHub Actions run 39420789406); its scoped
   lint and installed-wheel check passed, as did preview orchestration on Ubuntu, macOS, and Windows.
   The synthetic
   regression suite uses no product source or cohort fixture; see the

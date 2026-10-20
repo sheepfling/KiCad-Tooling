@@ -74,6 +74,11 @@ def native_control_input_demo_lane(root: Path, *, project: str, image: str, log:
             "por-b.kicad_sch",
             (("U1.1", "POR_B", "reset", "input"),),
         ),
+        "series-bias-fixture": (
+            "/synthetic",
+            "series-bias-control.kicad_sch",
+            (),
+        ),
     }
     synthetic_fixture_root = (
         Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/control-input-alias"
@@ -192,6 +197,23 @@ def native_control_input_demo_lane(root: Path, *, project: str, image: str, log:
                 assigned = {pin.casefold() for pins in observed.nets.values() for pin in pins}
                 if {"u1.1", "u1.2"} & assigned:
                     raise ValueError("Native POR alias fixture pins must remain unassigned")
+            if sample == "series-bias-fixture":
+                if observed.pin_functions.get("U1.1") != "RESET_N":
+                    raise ValueError("Native series-bias fixture lost its RESET_N pin function")
+                if observed.pin_electrical_types.get("U1.1") != "input":
+                    raise ValueError("Native series-bias fixture lost its reset input type")
+                dnp = {reference.upper() for reference in observed.dnp_components}
+                if "U2" not in dnp:
+                    raise ValueError("Native series-bias fixture lost its DNP control")
+                nets_by_label = {
+                    net.lstrip("/").casefold(): pins for net, pins in observed.nets.items()
+                }
+                if set(nets_by_label.get("reset_bias_mid", ())) != {"R1.2", "R2.1"}:
+                    raise ValueError(
+                        "Native series-bias fixture intermediate net is not unbranched"
+                    )
+                if "U1.1" not in nets_by_label.get("reset_n", ()):
+                    raise ValueError("Native series-bias fixture reset pin has no net assignment")
             candidates = unconnected_control_inputs(observed)
             candidates_by_run[run] = tuple(
                 (item.pin, item.function, item.family, item.electrical_type) for item in candidates

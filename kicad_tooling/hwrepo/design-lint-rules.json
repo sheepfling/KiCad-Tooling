@@ -2796,18 +2796,18 @@
     },
     {
       "rule_id": "control.connected_control_input_without_visible_bias",
-      "title": "Connected reset, enable, or boot input lacks a visible rail resistor",
+      "title": "Connected reset, enable, or boot input lacks a visible resistor path",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A non-DNP pin has a bounded reset, enable, or boot/strap function alias and exported input or input_low electrical type, is assigned to exactly one non-rail net, and that net has no fitted conventional two-terminal resistor directly assigned to a recognized positive or return net.",
+      "predicate": "A non-DNP pin has a bounded reset, enable, or boot/strap function alias and exported input or input_low electrical type, is assigned to exactly one non-rail net, and that net has no fitted conventional two-terminal resistor path to a recognized positive or return net. Paths may be direct or unbranched series chains whose intermediate nets contain exactly the two resistor pins.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The bounded function aliases can miss vendor-specific control names and do not establish required bias, polarity, startup state, or whether a local resistor is needed.",
-        "Only direct fitted conventional two-terminal resistor assignments to recognized rail names or pin functions are recognized. DNP resistors, series paths, resistor arrays, jumpers, active bias circuits, custom rail names, and unusual component identities can produce a review prompt.",
+        "Direct and unbranched series paths of fitted conventional two-terminal resistors are recognized without a resistance window. DNP and zero-ohm resistors, branched or ambiguous paths, resistor arrays, jumpers, active bias circuits, custom rail names, and unusual component identities can produce a review prompt.",
         "Internal pulls, off-board bias, connected drivers, firmware behavior, resistor adequacy, and PCB copper continuity are not modeled; DNP control components are excluded."
       ],
       "fault_fixtures": [
@@ -2816,11 +2816,14 @@
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_prompt_checks_assignments_and_valid_controls",
-        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_exact_source_bound_contract_decision_satisfies_heuristic_coverage"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_exact_source_bound_contract_decision_satisfies_heuristic_coverage",
+        "tests.test_design_lint_control_input_bias_paths.test_unbranched_fitted_resistor_chain_clears_control_bias_prompt",
+        "tests.test_design_lint_mcp_parity_report.test_design_lint_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_finding_is_order_stable_and_direct_resistor_clears_it"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_finding_is_order_stable_and_direct_resistor_clears_it",
+        "tests.test_design_lint_control_input_bias_paths.test_unbranched_fitted_resistor_chain_clears_control_bias_prompt"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/control_input_inventory.py#connected_control_inputs_without_visible_rail_resistor",

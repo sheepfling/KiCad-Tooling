@@ -133,6 +133,12 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "power_lint",
         "return_path_lint",
     },
+    "test_design_lint_determinism_connector_peers.py": {
+        "connector_lint",
+        "interface_lint",
+        "power_lint",
+        "return_path_lint",
+    },
     "test_design_lint_determinism_interfaces.py": {
         "interface_lint",
         "connector_lint",
@@ -141,6 +147,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "return_path_lint",
     },
     "test_design_lint_determinism_control_inputs.py": {"power_lint", "interface_lint"},
+    "test_design_lint_control_input_bias_paths.py": {"interface_lint", "power_lint"},
     "test_design_lint_mcp_parity_peer_pin_assignment_outlier.py": {
         "component_lint",
         "parity_lint",

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from .connector_identity import power_function_key
 from .models import NetlistContract
-from .resistor_paths import direct_resistors
+from .resistor_paths import visible_resistor_paths
 from .return_nets import is_return_like_net_name
 
 OUTPUT_CAPABLE_TYPES = frozenset(
@@ -137,7 +137,7 @@ def unconnected_control_inputs(observed: NetlistContract) -> tuple[UnconnectedCo
 def connected_control_inputs_without_visible_rail_resistor(
     observed: NetlistContract,
 ) -> tuple[ControlInputBiasGap, ...]:
-    """Find connected reset/enable/boot inputs without a direct fitted resistor to a named rail."""
+    """Find connected controls without a fitted resistor path to a named rail."""
     pin_nets: dict[str, set[str]] = {}
     pins_by_net: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
@@ -183,16 +183,11 @@ def connected_control_inputs_without_visible_rail_resistor(
         or any(is_return_like_net_name(observed.pin_functions.get(pin, "")) for pin in pins)
     }
     rail_keys = {net.casefold() for net in positive_rails | return_nets}
+    bias_paths = visible_resistor_paths(observed, positive_rails | return_nets)
     control_net_keys = {net.casefold() for net in controls_by_net}
-
-    biased_signal_keys: set[str] = set()
-    for resistor in direct_resistors(observed):
-        first_key = resistor.first_net.casefold()
-        second_key = resistor.second_net.casefold()
-        if first_key in rail_keys and second_key in control_net_keys:
-            biased_signal_keys.add(second_key)
-        if second_key in rail_keys and first_key in control_net_keys:
-            biased_signal_keys.add(first_key)
+    biased_signal_keys = {
+        net.casefold() for net in bias_paths if net.casefold() in control_net_keys
+    }
 
     gaps: list[ControlInputBiasGap] = []
     for net, controls in controls_by_net.items():

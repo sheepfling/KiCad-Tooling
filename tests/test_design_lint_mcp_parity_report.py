@@ -8,6 +8,7 @@ import pytest
 
 pytestmark = [
     pytest.mark.parity_lint,
+    pytest.mark.interface_lint,
     pytest.mark.slow,
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
@@ -98,6 +99,50 @@ class _DesignLintMcpParityReportCases(DesignLintMcpParityReportHarness):
                         }
                     }
                 ),
+            )
+            chain_tree = ElementTree.fromstring(control_text)
+            components = chain_tree.find("./components")
+            nets = chain_tree.find("./nets")
+            assert components is not None and nets is not None
+            for reference in ("R4", "R5"):
+                component = ElementTree.SubElement(components, "comp", {"ref": reference})
+                ElementTree.SubElement(component, "value").text = "10k"
+                ElementTree.SubElement(component, "libsource", {"lib": "Device", "part": "R"})
+            positive_rail = next(net for net in nets.findall("net") if net.get("name") == "+3V3")
+            ElementTree.SubElement(positive_rail, "node", {"ref": "R5", "pin": "2"})
+            ElementTree.SubElement(
+                nets,
+                "net",
+                {"name": "MCP_RESET_N"},
+            )
+            for reference, pin in (("U3", "1"), ("R4", "1")):
+                ElementTree.SubElement(nets[-1], "node", {"ref": reference, "pin": pin})
+            ElementTree.SubElement(
+                nets,
+                "net",
+                {"name": "MCP_RESET_BIAS_MID"},
+            )
+            for reference, pin in (("R4", "2"), ("R5", "1")):
+                ElementTree.SubElement(nets[-1], "node", {"ref": reference, "pin": pin})
+            netlist.write_text(
+                ElementTree.tostring(chain_tree, encoding="unicode"), encoding="utf-8"
+            )
+            chained = read_model(native, ValidationSummary)
+            write_model(
+                native,
+                chained.model_copy(
+                    update={
+                        "artifacts_sha256": {
+                            **chained.artifacts_sha256,
+                            "netlist.xml": digest(netlist),
+                        }
+                    }
+                ),
+            )
+            chain_report = await self.compare_lint_report(client, native, "REVIEW", 1)
+            self.assertNotIn(
+                "control.connected_control_input_without_visible_bias",
+                {item.rule_id for item in chain_report.findings},
             )
             assert uncovered.connector_coverage is not None
             self.assertEqual(uncovered.connector_coverage.status, "UNDECLARED")
