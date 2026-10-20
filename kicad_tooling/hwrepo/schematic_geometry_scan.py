@@ -176,6 +176,7 @@ def scan_unconnected_pin_wire_geometry(
         tuple(body_envelopes),
         wire_segments,
         sheet_instance_path=sheet_instance_path,
+        pins=tuple(pins),
     )
     text_body_findings, text_body_issues = free_text_over_symbol_bodies(
         text,

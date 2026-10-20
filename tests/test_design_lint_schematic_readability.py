@@ -18,6 +18,7 @@ from tests.design_lint_fixtures import (
     coach,
 )
 from tests.design_lint_fixtures.schematic_geometry_fixtures import (
+    enclosed_connector_body_wire_fixture,
     symbol_body_wire_fixture,
 )
 
@@ -90,6 +91,34 @@ def test_wire_through_symbol_body_review_has_source_evidence(
     assert finding.evidence["wire_uuid"] == ("f1000000-0000-4000-8000-000000000001",)
     assert "body_box_mm" in finding.evidence
     assert "overlap_segment_mm" in finding.evidence
+    assert finding.evidence["pin_endpoint_numbers"] == ()
+    assert "pin tip" not in finding.message
+
+
+def test_wire_body_review_reports_connector_pin_endpoint_context(
+    empty_native_contract, review_policy
+):
+    scan = scan_wire_ends_on_pin_lines(
+        enclosed_connector_body_wire_fixture(body_offset_x=0.0),
+        source_path="synthetic/enclosed-connector/body-wire.kicad_sch",
+        kicad_version="10.0.6",
+        unconnected_pins=frozenset(),
+    )
+    report = evaluate(
+        "synthetic-enclosed-connector-body-wire",
+        empty_native_contract,
+        review_policy,
+        schematic_geometry=scan,
+    )
+
+    findings = [
+        item for item in report.findings if item.rule_id == "schematic.wire_through_symbol_body"
+    ]
+    assert report.status == "REVIEW"
+    assert len(findings) == 2
+    assert {item.evidence["reference"] for item in findings} == {("J1",), ("J2",)}
+    assert all(item.evidence["pin_endpoint_numbers"] == ("1",) for item in findings)
+    assert all("pin tip(s): 1 (SIGNAL)" in item.message for item in findings)
 
 
 def test_wire_through_symbol_body_rule_can_block_by_project_policy(

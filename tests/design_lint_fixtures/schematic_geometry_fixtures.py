@@ -19,6 +19,14 @@ FAULT = FIXTURES / "near-miss-pin-line.kicad_sch"
 CONTROL = FIXTURES / "connected-pin-control.kicad_sch"
 
 
+CONNECTOR_BODY_PIN_ENDPOINTS = (
+    FIXTURES / "schematic-body-pin-endpoints/pin-endpoint-review-candidate.kicad_sch"
+)
+CONNECTOR_BODY_PIN_ENDPOINTS_CONTROL = (
+    FIXTURES / "schematic-body-pin-endpoints/pin-endpoint-clear-control.kicad_sch"
+)
+
+
 PIN_ON_WIRE_MIDDLE_FAULT = FIXTURES / "pin-on-wire-middle-no-junction.kicad_sch"
 
 
@@ -363,64 +371,11 @@ def symbol_body_wire_fixture(
 
 def enclosed_connector_body_wire_fixture(*, body_offset_x: float) -> bytes:
     """Connect peer passive header pins inside or outside their body outlines."""
-    source = f"""(kicad_sch (version 20231120) (generator "eeschema")
-  (uuid "10000000-0000-4000-8000-000000000001")
-  (paper "A4")
-  (title_block (title "Synthetic enclosed connector geometry control")
-    (comment 1 "NOT FOR MANUFACTURE - tooling regression fixture"))
-  (lib_symbols
-    (symbol "Connector_Generic:Conn_01x01"
-      (pin_names (offset 0) hide)
-      (in_bom yes) (on_board yes)
-      (property "Reference" "J" (at 0 -7.62 0) (effects (font (size 1.27 1.27))))
-      (property "Value" "Synthetic enclosed header" (at 0 7.62 0) (effects (font (size 1.27 1.27))))
-      (property "Footprint" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
-      (property "Datasheet" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
-      (symbol "Conn_01x01_0_1"
-        (rectangle (start {body_offset_x - 5.08} -5.08)
-          (end {body_offset_x + 5.08} 5.08)
-          (stroke (width 0.254) (type default)) (fill (type none))))
-      (symbol "Conn_01x01_1_1"
-        (pin passive line (at -2.54 0 0) (length 2.54)
-          (name "SIGNAL" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27)))))))
-  )
-  (symbol (lib_id "Connector_Generic:Conn_01x01") (at 76.2 76.2 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid "10000000-0000-4000-8000-000000000002")
-    (property "Reference" "J1" (at 76.2 88.9 0) (effects (font (size 1.27 1.27))))
-    (property "Value" "Synthetic enclosed header" (at 76.2 91.44 0) (effects (font (size 1.27 1.27))))
-    (property "Footprint" "" (at 76.2 76.2 0) (effects (font (size 1.27 1.27)) hide))
-    (property "Datasheet" "" (at 76.2 76.2 0) (effects (font (size 1.27 1.27)) hide))
-    (pin "1" (uuid "10000000-0000-4000-8000-000000000003"))
-    (instances (project "synthetic-enclosed-connector"
-    (path "/10000000-0000-4000-8000-000000000001" (reference "J1") (unit 1)))))
-  (symbol (lib_id "Connector_Generic:Conn_01x01") (at 120.65 76.2 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid "20000000-0000-4000-8000-000000000002")
-    (property "Reference" "J2" (at 120.65 88.9 0) (effects (font (size 1.27 1.27))))
-    (property "Value" "Synthetic enclosed header" (at 120.65 91.44 0) (effects (font (size 1.27 1.27))))
-    (property "Footprint" "" (at 120.65 76.2 0) (effects (font (size 1.27 1.27)) hide))
-    (property "Datasheet" "" (at 120.65 76.2 0) (effects (font (size 1.27 1.27)) hide))
-    (pin "1" (uuid "20000000-0000-4000-8000-000000000003"))
-    (instances (project "synthetic-enclosed-connector"
-      (path "/10000000-0000-4000-8000-000000000001" (reference "J2") (unit 1)))))
-  (wire (pts (xy 63.5 76.2) (xy 73.66 76.2))
-    (stroke (width 0) (type default))
-    (uuid "10000000-0000-4000-8000-000000000004"))
-  (label "SIGNAL" (at 63.5 76.2 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
-    (uuid "10000000-0000-4000-8000-000000000005"))
-  (wire (pts (xy 109.22 76.2) (xy 118.11 76.2))
-    (stroke (width 0) (type default))
-    (uuid "20000000-0000-4000-8000-000000000004"))
-  (label "SIGNAL" (at 109.22 76.2 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
-    (uuid "20000000-0000-4000-8000-000000000005"))
-  (sheet_instances (path "/" (page "1")))
-)
-"""
-    return source.encode("utf-8")
+    if body_offset_x == 0.0:
+        return CONNECTOR_BODY_PIN_ENDPOINTS.read_bytes()
+    if body_offset_x == 2.54:
+        return CONNECTOR_BODY_PIN_ENDPOINTS_CONTROL.read_bytes()
+    raise ValueError("connector body fixture supports offsets 0.0 and 2.54 mm")
 
 
 def free_text_symbol_body_fixture(

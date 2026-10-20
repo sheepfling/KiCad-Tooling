@@ -117,6 +117,7 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
         )
         assert (fault.status) == ("COMPLETE")
         assert (len(fault.wires_through_symbol_bodies)) == (1)
+        assert (fault.wires_through_symbol_bodies[0].pin_endpoint_matches) == (())
         assert (control.wires_through_symbol_bodies) == (())
         assert (_netlist_components_without_sheetfile(fault_netlist)) == (
             _netlist_components_without_sheetfile(control_netlist)
@@ -186,6 +187,15 @@ class NativeSchematicGeometrySymbolBodyTests(NativeSchematicGeometryHelpers):
                 ("J2", "Connector_Generic:Conn_01x01"),
             }
         )
+        assert (
+            {
+                (
+                    finding.reference,
+                    tuple(match.pin_number for match in finding.pin_endpoint_matches),
+                )
+                for finding in enclosed.wires_through_symbol_bodies
+            }
+        ) == (("J1", ("1",)), ("J2", ("1",)))
         assert (clear.status) == ("COMPLETE")
         assert (clear.wires_through_symbol_bodies) == (())
         assert (_netlist_components_without_sheetfile(enclosed_netlist)) == (

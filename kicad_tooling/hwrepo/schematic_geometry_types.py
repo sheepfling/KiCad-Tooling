@@ -265,6 +265,16 @@ class FreeTextSymbolBodyOverlap:
 
 
 @dataclass(frozen=True)
+class WireBodyPinEndpointMatch:
+    """A wire endpoint coordinate matches a pin tip within one symbol body envelope."""
+
+    pin_number: str
+    pin_name: str
+    pin_uuid: str | None
+    endpoint_mm: tuple[float, float]
+
+
+@dataclass(frozen=True)
 class WireThroughSymbolBody:
     """A native wire segment crosses a guarded symbol-body envelope."""
 
@@ -276,6 +286,7 @@ class WireThroughSymbolBody:
     overlap_start_mm: tuple[float, float]
     overlap_end_mm: tuple[float, float]
     overlap_length_mm: float
+    pin_endpoint_matches: tuple[WireBodyPinEndpointMatch, ...] = ()
     sheet_instance_path: str = "/"
 
 

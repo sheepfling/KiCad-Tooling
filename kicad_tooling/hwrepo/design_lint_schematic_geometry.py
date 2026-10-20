@@ -284,14 +284,26 @@ def schematic_geometry_candidates(scan: SchematicGeometryScan) -> tuple[Candidat
         start_x, start_y = item.overlap_start_mm
         end_x, end_y = item.overlap_end_mm
         body_box = ",".join(f"{value:.6f}" for value in item.body_box_mm)
+        pin_numbers = tuple(match.pin_number for match in item.pin_endpoint_matches)
+        pin_names = tuple(match.pin_name for match in item.pin_endpoint_matches)
+        pin_endpoints = tuple(
+            f"{match.endpoint_mm[0]:.6f},{match.endpoint_mm[1]:.6f}"
+            for match in item.pin_endpoint_matches
+        )
+        pin_context = ""
+        if pin_numbers:
+            pins = ", ".join(
+                f"{number} ({name})" for number, name in zip(pin_numbers, pin_names, strict=True)
+            )
+            pin_context = f" Endpoint coordinates match pin tip(s): {pins}."
         found.append(
             Candidate(
                 rule_id="schematic.wire_through_symbol_body",
                 subject=f"wire {item.wire_uuid} crosses {item.reference} body envelope",
                 message=(
                     "A schematic wire centerline runs through a guarded symbol-body envelope. "
-                    "Review the rendered sheet; the bounding box is graphical evidence and "
-                    "does not establish pin connectivity or design intent."
+                    f"{pin_context} Review the rendered sheet; source-bound coordinates locate "
+                    "the overlap for project review."
                 ),
                 evidence={
                     **schematic_geometry_evidence(scan, item.sheet_instance_path),
@@ -302,6 +314,9 @@ def schematic_geometry_candidates(scan: SchematicGeometryScan) -> tuple[Candidat
                     "wire_uuid": (item.wire_uuid,),
                     "overlap_segment_mm": (f"{start_x:.6f},{start_y:.6f},{end_x:.6f},{end_y:.6f}",),
                     "overlap_length_mm": (f"{item.overlap_length_mm:.6f}",),
+                    "pin_endpoint_numbers": pin_numbers,
+                    "pin_endpoint_names": pin_names,
+                    "pin_endpoint_mm": pin_endpoints,
                     "kicad_version": (scan.kicad_version,),
                 },
             )

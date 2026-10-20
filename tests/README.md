@@ -27,6 +27,8 @@ fixtures; their source boundary and pinned hashes are recorded in the
 The all-open named peer power-input fault and control are separate synthetic tooling fixtures;
 their source boundary and pinned hashes are recorded in the
 [all-open peer power-input fixture README](fixtures/design_lint/named-peer-power-input-all-open/README.md).
+The schematic wire/body pin-endpoint review candidate and clear control are recorded in the
+[body pin-endpoint fixture README](fixtures/design_lint/schematic-body-pin-endpoints/README.md).
 Native footprint-alias review fixtures also cover named power-input and power-output pins,
 named signal-input and signal-output pins, and named-signal assignment divergence. Their
 individual READMEs describe the synthetic fault/control topology and pinned source hashes:

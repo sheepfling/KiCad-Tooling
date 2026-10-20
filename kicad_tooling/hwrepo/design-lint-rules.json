@@ -4316,13 +4316,13 @@
       "maturity": "synthetic_validated",
       "default_mode": "off",
       "evidence_adapter": "Source-bound KiCad 10.0.5 or 10.0.6 schematic wire geometry and supported embedded symbol graphics",
-      "predicate": "For supported single-unit, single-conversion symbols with rectangle, polyline, bezier, circle, or non-degenerate three-point arc graphics, report a native wire centerline that remains at least 0.2 mm inside the axis-aligned body envelope and overlaps it for at least 0.3 mm.",
+      "predicate": "For supported single-unit, single-conversion symbols with rectangle, polyline, bezier, circle, or non-degenerate three-point arc graphics, report a native wire centerline that remains at least 0.2 mm inside the axis-aligned body envelope and overlaps it for at least 0.3 mm. Add exact same-symbol pin-tip matches for wire endpoints inside the envelope as review context; these matches do not suppress the candidate.",
       "supported_kicad_versions": [
         "10.0.5",
         "10.0.6"
       ],
       "limitations": [
-        "The envelope bounds supported embedded symbol graphics after orthogonal rotation and x/y mirroring. Bounding several disjoint or non-rectangular primitives can include empty space; valid connector contacts inside a symbol outline and other intentional wire crossings can be review candidates.",
+        "The envelope bounds supported embedded symbol graphics after orthogonal rotation and x/y mirroring. Bounding several disjoint or non-rectangular primitives can include empty space; valid connector contacts inside a symbol outline and other intentional wire crossings can be review candidates. Pin-tip matches distinguish a wire endpoint entering one pin from a segment crossing the envelope without such an endpoint, while preserving both as review candidates.",
         "Text graphics, collinear or degenerate arcs, multi-unit or multi-conversion symbols, unsupported transforms, or unrecognized body primitives leave geometry coverage partial. The rule does not infer pin connectivity, intended isolation, or schematic electrical meaning.",
         "This is a graphical review hint only. It is off by default and supports project review, block, off, and exact-ignore dispositions; it never edits the schematic or replaces native ERC."
       ],
@@ -4339,6 +4339,7 @@
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_overlap_uses_guard_and_minimum_length",
         "tests.test_schematic_geometry_symbol_arc_body.test_arc_wire_candidate_uses_the_swept_arc_envelope_and_clear_control",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
+        "tests.test_design_lint_schematic_readability.test_wire_body_review_reports_connector_pin_endpoint_context",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_arc_symbol_body_wire_and_text_match_native_svg_and_clear_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_symbol_body_wire_matches_native_svg_and_erc_control",
         "tests.test_schematic_geometry_native_symbol_body.NativeSchematicGeometrySymbolBodyTests.test_valid_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
@@ -4348,6 +4349,7 @@
       "metamorphic_fixtures": [
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_symbol_body_wire_tracks_all_supported_orthogonal_transforms",
         "tests.test_schematic_geometry_symbol_body.SchematicGeometrySymbolBodyTests.test_peer_connector_contacts_inside_symbol_body_remain_review_candidates",
+        "tests.test_design_lint_determinism_schematic_geometry.test_schematic_wire_crossing_fault_and_control_reports_are_deterministic",
         "tests.test_schematic_geometry_symbol_arc_body.test_major_arc_contains_only_extrema_that_lie_on_its_selected_sweep",
         "tests.test_schematic_geometry_symbol_arc_body.test_arc_envelope_is_stable_across_orthogonal_transforms",
         "tests.test_schematic_geometry_symbol_arc_body.test_collinear_arc_keeps_symbol_body_coverage_partial"

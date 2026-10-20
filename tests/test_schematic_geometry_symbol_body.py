@@ -42,6 +42,7 @@ class SchematicGeometrySymbolBodyTests(SchematicGeometryHelpers):
         assert (finding.overlap_start_mm) == ((75.13, 76.2))
         assert (finding.overlap_end_mm) == ((77.27, 76.2))
         assert (finding.overlap_length_mm) == (2.14)
+        assert (finding.pin_endpoint_matches) == (())
         assert (control.status) == ("COMPLETE")
         assert (control.wires_through_symbol_bodies) == (())
 
@@ -87,6 +88,17 @@ class SchematicGeometrySymbolBodyTests(SchematicGeometryHelpers):
             enclosed_connector_body_wire_fixture(body_offset_x=0.0),
             unconnected_pins=frozenset(),
         )
+        reversed_source = enclosed_connector_body_wire_fixture(body_offset_x=0.0)
+        reversed_source = reversed_source.replace(
+            b"(xy 63.5 76.2) (xy 73.66 76.2)",
+            b"(xy 73.66 76.2) (xy 63.5 76.2)",
+            1,
+        ).replace(
+            b"(xy 109.22 76.2) (xy 118.11 76.2)",
+            b"(xy 118.11 76.2) (xy 109.22 76.2)",
+            1,
+        )
+        reversed_wires = self.scan(reversed_source, unconnected_pins=frozenset())
         outside = self.scan(
             enclosed_connector_body_wire_fixture(body_offset_x=2.54),
             unconnected_pins=frozenset(),
@@ -95,17 +107,29 @@ class SchematicGeometrySymbolBodyTests(SchematicGeometryHelpers):
         assert (enclosed.status) == ("COMPLETE")
         assert (
             tuple(
-                (candidate.reference, candidate.symbol_library_id, candidate.overlap_length_mm)
+                (
+                    candidate.reference,
+                    candidate.symbol_library_id,
+                    candidate.overlap_length_mm,
+                    tuple(match.pin_number for match in candidate.pin_endpoint_matches),
+                )
                 for candidate in enclosed.wires_through_symbol_bodies
             )
         ) == (
             (
-                ("J1", "Connector_Generic:Conn_01x01", 2.34),
-                ("J2", "Connector_Generic:Conn_01x01", 2.34),
+                ("J1", "Connector_Generic:Conn_01x01", 2.34, ("1",)),
+                ("J2", "Connector_Generic:Conn_01x01", 2.34, ("1",)),
             )
         )
         assert (outside.status) == ("COMPLETE")
         assert (outside.wires_through_symbol_bodies) == (())
+        assert tuple(
+            (item.reference, item.pin_endpoint_matches)
+            for item in reversed_wires.wires_through_symbol_bodies
+        ) == tuple(
+            (item.reference, item.pin_endpoint_matches)
+            for item in enclosed.wires_through_symbol_bodies
+        )
         assert (enclosed.source_sha256) != (outside.source_sha256)
 
     def test_symbol_body_wire_tracks_all_supported_orthogonal_transforms(self) -> None:

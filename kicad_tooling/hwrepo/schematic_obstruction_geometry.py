@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import math
+
 from .model_inventory import _Span  # pyright: ignore[reportPrivateUsage]
 from .schematic_geometry_primitives import clip_segment_to_box
 from .schematic_geometry_source import schematic_nodes
 from .schematic_geometry_types import (
+    POINT_TOLERANCE_MM,
     SYMBOL_BODY_WIRE_GUARD_MM,
     SYMBOL_BODY_WIRE_LENGTH_EPSILON_MM,
     SYMBOL_BODY_WIRE_MIN_OVERLAP_MM,
@@ -19,7 +22,9 @@ from .schematic_geometry_types import (
     FreeTextGeometry,
     FreeTextSymbolBodyOverlap,
     FreeTextWireOverlap,
+    SchematicPin,
     SymbolBodyEnvelope,
+    WireBodyPinEndpointMatch,
     WireSegment,
     WireThroughSymbolBody,
 )
@@ -31,9 +36,13 @@ def wire_through_symbol_bodies(
     wire_segments: tuple[WireSegment, ...],
     *,
     sheet_instance_path: str,
+    pins: tuple[SchematicPin, ...] = (),
 ) -> tuple[WireThroughSymbolBody, ...]:
-    """Find wire centerlines with substantial overlap inside a guarded body box."""
+    """Find wire/body overlaps and report exact same-symbol pin-tip endpoints."""
     findings: list[WireThroughSymbolBody] = []
+    pins_by_symbol: dict[str, list[SchematicPin]] = {}
+    for pin in pins:
+        pins_by_symbol.setdefault(pin.symbol_uuid, []).append(pin)
     for body in bodies:
         x0, y0, x1, y1 = body.box_mm
         guarded_box = (
@@ -44,6 +53,7 @@ def wire_through_symbol_bodies(
         )
         if guarded_box[0] >= guarded_box[2] or guarded_box[1] >= guarded_box[3]:
             continue
+        body_pins = tuple(pins_by_symbol.get(body.symbol_uuid, ()))
         for segment in wire_segments:
             clipped = clip_segment_to_box(segment.start, segment.end, guarded_box)
             if clipped is None:
@@ -61,6 +71,7 @@ def wire_through_symbol_bodies(
                     overlap_start_mm=(round(start[0], 6), round(start[1], 6)),
                     overlap_end_mm=(round(end[0], 6), round(end[1], 6)),
                     overlap_length_mm=round(length, 6),
+                    pin_endpoint_matches=_wire_body_pin_endpoint_matches(body, segment, body_pins),
                     sheet_instance_path=sheet_instance_path,
                 )
             )
@@ -74,6 +85,39 @@ def wire_through_symbol_bodies(
         )
     )
     return tuple(findings)
+
+
+def _wire_body_pin_endpoint_matches(
+    body: SymbolBodyEnvelope,
+    segment: WireSegment,
+    pins: tuple[SchematicPin, ...],
+) -> tuple[WireBodyPinEndpointMatch, ...]:
+    x0, y0, x1, y1 = body.box_mm
+    endpoints = tuple(sorted({segment.start, segment.end}))
+    matches: dict[tuple[str, str, tuple[float, float]], WireBodyPinEndpointMatch] = {}
+    for pin in pins:
+        tip_x, tip_y = pin.tip
+        if not (
+            x0 - POINT_TOLERANCE_MM <= tip_x <= x1 + POINT_TOLERANCE_MM
+            and y0 - POINT_TOLERANCE_MM <= tip_y <= y1 + POINT_TOLERANCE_MM
+        ):
+            continue
+        for endpoint in endpoints:
+            if math.dist(endpoint, pin.tip) > POINT_TOLERANCE_MM:
+                continue
+            key = (pin.number, pin.pin_uuid or "", endpoint)
+            matches[key] = WireBodyPinEndpointMatch(
+                pin_number=pin.number,
+                pin_name=pin.name,
+                pin_uuid=pin.pin_uuid,
+                endpoint_mm=(round(endpoint[0], 6), round(endpoint[1], 6)),
+            )
+    return tuple(
+        sorted(
+            matches.values(),
+            key=lambda item: (item.pin_number, item.pin_uuid or "", item.endpoint_mm),
+        )
+    )
 
 
 def free_text_wire_overlaps(

@@ -18,6 +18,8 @@ def test_schematic_wire_crossing_fault_and_control_reports_are_deterministic() -
     assert set(reports) == {
         "schematic_wire_crossing_fault",
         "schematic_wire_crossing_junction_control",
+        "schematic_body_wire_pin_endpoint_candidate",
+        "schematic_body_wire_pin_endpoint_clear_control",
     }
     fault = reports["schematic_wire_crossing_fault"]
     control = reports["schematic_wire_crossing_junction_control"]
@@ -37,3 +39,25 @@ def test_schematic_wire_crossing_fault_and_control_reports_are_deterministic() -
     assert control["status"] == "PASS"
     assert control_geometry["finding_count"] == 0
     assert control["findings"] == []
+
+    body_report = reports["schematic_body_wire_pin_endpoint_candidate"]
+    body_geometry = body_report["schematic_geometry"]
+    assert body_report["status"] == "REVIEW"
+    assert body_geometry["finding_count"] == 2
+    body_findings = [
+        finding
+        for finding in body_report["findings"]
+        if finding["rule_id"] == "schematic.wire_through_symbol_body"
+    ]
+    assert len(body_findings) == 2
+    assert {
+        (
+            tuple(finding["evidence"]["reference"]),
+            tuple(finding["evidence"]["pin_endpoint_numbers"]),
+        )
+        for finding in body_findings
+    } == {(("J1",), ("1",)), (("J2",), ("1",))}
+    body_control = reports["schematic_body_wire_pin_endpoint_clear_control"]
+    assert body_control["status"] == "PASS"
+    assert body_control["schematic_geometry"]["finding_count"] == 0
+    assert body_control["findings"] == []

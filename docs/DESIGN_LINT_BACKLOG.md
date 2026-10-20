@@ -2851,8 +2851,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v75. The cross-process probe supports themed report
-  selectors and retains the complete 198-report inventory gate. Fault/control
+- **Status:** Implemented v76. The cross-process probe supports themed report
+  selectors and retains the complete 200-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -2904,7 +2904,9 @@ is not a reason by itself to expand its scope or change its default policy.
   The v74 extension adds a source-bound fault/control pair for LINT-165 to the
   three-process comparison and selects it directly by report family. The v75
   extension adds matching `PART_ID` split/common reports with a case-only ID
-  difference to that same three-process comparison.
+  difference to that same three-process comparison. The v76 extension adds a
+  source-bound schematic symbol-body pin-endpoint review candidate and a clear
+  control to the three-process comparison.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -9545,6 +9547,15 @@ is not a reason by itself to expand its scope or change its default policy.
   resolution, both digest-pinned native KiCad geometry matrices (10.0.5 and
   10.0.6), installed-wheel acceptance against the separate public template,
   wheel/sdist checks, and Linux/macOS/Windows preview jobs.
+- **Pin-endpoint review context (2026-10-20):** Wire/body candidates now carry
+  exact same-symbol pin-tip matches for segment endpoints within the bounded
+  geometry tolerance. The paired synthetic connector case reports its single
+  pin tip per body, while an interior wire crossing has no endpoint match and
+  remains a candidate. This adds localization without suppressing candidates
+  or inferring electrical intent. The public-template observation remains
+  unresolved; no external source or project fixture was copied. Local native
+  cases skip without a configured KiCad CLI and remain covered by the exact-
+  version hosted lane.
 
 #### LINT-025 — PCB return-reference and connector-ground path evidence
 

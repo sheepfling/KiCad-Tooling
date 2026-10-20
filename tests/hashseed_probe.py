@@ -186,6 +186,8 @@ REPORT_ORDER = (
     "stm32_pin_map_control",
     "schematic_wire_crossing_fault",
     "schematic_wire_crossing_junction_control",
+    "schematic_body_wire_pin_endpoint_candidate",
+    "schematic_body_wire_pin_endpoint_clear_control",
     "pcb_inventory_missing_placement_fault",
     "pcb_inventory_footprint_mismatch_fault",
     "pcb_inventory_exact_footprint_control",
