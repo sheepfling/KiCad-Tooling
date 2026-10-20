@@ -91,6 +91,21 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)
 
 
+def test_default_block_requires_project_authored_population_evidence() -> None:
+    catalog = rule_catalog()
+    blocking_rules = {
+        item.rule_id: item for item in catalog.rules if item.default_mode == "block"
+    }
+
+    assert set(blocking_rules) == {"pcb.required_fitted_reference"}
+    requirement = blocking_rules["pcb.required_fitted_reference"]
+    assert "project-authored required fitted-reference map" in requirement.predicate
+    assert "do not infer requirements from similar components" in requirement.predicate
+    assert requirement.fault_fixtures
+    assert requirement.valid_control_fixtures
+    assert requirement.maturity == "synthetic_validated"
+
+
 def test_catalog_digest_binds_the_shipped_metadata_bytes() -> None:
     content = files("kicad_tooling.hwrepo").joinpath("design-lint-rules.json").read_bytes()
     assert rule_catalog().sha256 == hashlib.sha256(content).hexdigest()
