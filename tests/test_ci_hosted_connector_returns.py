@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+from tests.hosted_ci_component_power_support import assert_unconnected_component_power_input_cases
 from tests.hosted_ci_connector_common_support import normalized_connector_return_patterns
 from tests.hosted_ci_connector_peer_support import assert_connector_peer_pin_cases
 from tests.hosted_ci_connector_power_support import assert_connector_power_and_role_cases
@@ -328,6 +329,17 @@ def test_footprint_alias_all_open_peer_is_validated_on_pinned_native_versions(
 @pytest.mark.power_lint
 def test_power_pin_and_reviewed_role_cases(connector_return_results_by_version, version):
     assert_connector_power_and_role_cases(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.component_lint
+def test_unconnected_component_power_input_faults_and_controls(
+    connector_return_results_by_version, version
+):
+    assert_unconnected_component_power_input_cases(
+        connector_return_results_by_version[version],
+        version,
+    )
 
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))

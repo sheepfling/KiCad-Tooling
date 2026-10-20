@@ -7,7 +7,12 @@ import json
 from tests.hosted_ci_connector_common_support import assert_connector_result_sources
 
 
-def assert_connector_peer_pin_cases(results, version):
+def assert_connector_peer_pin_cases(
+    results,
+    version,
+    *,
+    all_open_pin_functions: str = "J1.2=Pin_2;J2.2=Pin_2",
+):
     peer_pin_fault = results["connector-return-fixture/peer-pin-outlier-fault"]
     peer_pin_control = results["connector-return-fixture/peer-pin-outlier-control"]
     assert peer_pin_fault["status"] == "PASS"
@@ -137,7 +142,7 @@ def assert_connector_peer_pin_cases(results, version):
     assert all_open_fault["subjects"] == (
         "Lint:PeerPowerPort pin 2: generic passive contact is open on every peer"
     )
-    assert all_open_fault["pin_functions"] == "J1.2=Pin_2;J2.2=Pin_2"
+    assert all_open_fault["pin_functions"] == all_open_pin_functions
     assert all_open_control["status"] == "PASS"
     assert all_open_control["lint_status"] == "PASS"
     assert all_open_control["findings"] == "none"

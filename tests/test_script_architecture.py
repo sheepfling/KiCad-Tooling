@@ -25,6 +25,8 @@ JSON_ADAPTERS = {
     # Native DRC JSON is decoded into typed report and source-bound evidence models.
     "kicad_tooling/hwrepo/pcb_drc_rule_parser.py",
     "kicad_tooling/hwrepo/pcb_drc_source_evidence.py",
+    # Native custom-rule probe JSON has a focused identity and sentinel adapter.
+    "kicad_tooling/hwrepo/pcb_dru_compilation_native_report.py",
 }
 # Discover services automatically so a new module cannot evade architecture checks.
 CORE_MODULES = tuple(

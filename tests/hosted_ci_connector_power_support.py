@@ -27,23 +27,6 @@ def assert_connector_power_and_role_cases(results, version):
     assert (
         generic_power_control["pin_electrical_types"] == generic_power_fault["pin_electrical_types"]
     )
-    for case in (
-        "unconnected-generic-component-power-input-fault",
-        "unconnected-generic-component-power-input-no-connect-fault",
-    ):
-        item = results[f"connector-return-fixture/{case}"]
-        assert item["status"] == "PASS"
-        assert item["lint_status"] == "REVIEW"
-        assert item["findings"] == "component.unconnected_power_input"
-    for case in (
-        "unconnected-generic-component-power-input-control",
-        "unconnected-generic-component-power-input-dnp-control",
-    ):
-        item = results[f"connector-return-fixture/{case}"]
-        assert item["status"] == "PASS"
-        assert item["lint_status"] == "PASS"
-        assert item["findings"] == "none"
-
     channel_fault = results["connector-return-fixture/channel-power-fault"]
     channel_control = results["connector-return-fixture/channel-power-control"]
     assert channel_fault["status"] == "PASS"

@@ -21,6 +21,7 @@ from tests.hosted_ci_support import copy_reference_checkout
 from tests.support import reference_root
 
 pytest_plugins = (
+    "tests.connector_return_lane_support",
     "tests.contract_coach_support",
     "tests.digital_peer_voltage_lane_support",
     "tests.digital_peer_native_acceptance",

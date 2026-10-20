@@ -37,8 +37,10 @@ The existing Tooling `design_lint` evaluated the same KiCad-generated XML
 netlists: the fault returned `REVIEW` with `connector.repeated_pin_function`
 and `net.numbered_returns`, while the control returned `PASS`. Related
 synthetic contract cases are in
-`tests/test_design_lint_connector_roles.py`; the native fixture lane is in
-`tests/test_connector_return_fixture_lane.py`. Hosted package acceptance now
+`tests/test_design_lint_connector_roles.py`. Portable hosted-lane regressions
+are split across `tests/test_connector_fixture_lane.py`,
+`tests/test_return_contract_fixture_lane.py`, and
+`tests/test_connector_fixture_lane_evidence.py`. Hosted package acceptance now
 repeats the native exports with the public template's exact
 KiCad 10.0.0 and 10.0.5 images. The optional direct local export test remains
 available from `tests/test_native_connector_return_lint.py` when

@@ -85,7 +85,8 @@ _LINT_AREA_MODULES = {
             "tests/test_verify_design_lint.py",
             "tests/test_external_protection_contract.py",
             "tests/test_external_protection_review.py",
-            "tests/test_connector_return_fixture_lane.py",
+            "tests/test_connector_fixture_lane.py",
+            "tests/test_return_contract_fixture_lane.py",
             "tests/test_native_db9_return_contracts.py",
             "tests/test_connector_named_power_pin_fixture_lane.py",
             "tests/test_numbered_return_native_fixture_lane.py",
@@ -254,6 +255,7 @@ _LINT_AREA_MODULES = {
     ),
     "evidence_lint": frozenset(
         {
+            "tests/test_connector_fixture_lane_evidence.py",
             "tests/test_design_lint_connectivity_reconciliation.py",
             "tests/test_design_lint_connectivity_snapshot_inspection.py",
             "tests/test_design_lint_mcp_parity_reconciliation.py",
@@ -276,7 +278,7 @@ _LINT_AREA_MODULES = {
             "tests/test_electrical_pcb_return_evidence.py",
             "tests/test_electrical_serial_peer_parity.py",
             "tests/test_connector_return_distribution.py",
-            "tests/test_connector_return_fixture_lane.py",
+            "tests/test_return_contract_fixture_lane.py",
             "tests/test_native_db9_return_contracts.py",
             "tests/test_connector_named_power_pin_fixture_lane.py",
             "tests/test_numbered_return_native_fixture_lane.py",

@@ -11,6 +11,7 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.architecture, pytest.mark.pcb
 
 ROOT = Path(__file__).resolve().parents[1]
 OWNER = ROOT / "kicad_tooling/hwrepo/pcb_dru_compilation.py"
+NATIVE_REPORT_OWNER = ROOT / "kicad_tooling/hwrepo/pcb_dru_compilation_native_report.py"
 
 
 def test_custom_rule_compilation_owner_stays_small_and_uses_theme_owned_records() -> None:
@@ -24,6 +25,7 @@ def test_custom_rule_compilation_owner_stays_small_and_uses_theme_owned_records(
     }
 
     assert len(source.splitlines()) < 500
+    assert len(NATIVE_REPORT_OWNER.read_text(encoding="utf-8").splitlines()) < 500
     assert "PcbDruCompilationReport" not in imported_models
     assert "CommandEvidence" in imported_models
     assert (

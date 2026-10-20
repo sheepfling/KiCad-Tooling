@@ -3,18 +3,23 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import shutil
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal, cast
+from typing import Literal
 
 from .contracts import write_model
 from .model_primitives import Digest, NonEmptyText, NonNegativeCount, RepositoryPath, StrictModel
 from .models import CommandEvidence
+from .pcb_dru_compilation_native_report import (
+    PROBE_BOARD_NAME,
+)
+from .pcb_dru_compilation_native_report import (
+    native_identity_and_matches as _native_identity_and_matches,
+)
 
-_PROBE_BOARD = Path(__file__).parent / "fixtures" / "pcb-dru-rule-compilation-probe.kicad_pcb"
+_PROBE_BOARD = Path(__file__).parent / "fixtures" / PROBE_BOARD_NAME
 _PROBE_RULE_NAME = "KTT_DRC_RULE_COMPILE_SENTINEL"
 _PROBE_CONDITION = "A.Type == 'Track'"
 _PROBE_CONSTRAINT = "(constraint track_width (min 10mm))"
@@ -66,38 +71,6 @@ def _append_sentinel(source: str, name: str) -> str:
         f"  {_PROBE_CONSTRAINT})\n"
     )
     return f"{source.rstrip()}\n\n{rule}"
-
-
-def _native_identity_and_matches(report_path: Path, sentinel_name: str) -> tuple[str, int]:
-    raw: object = json.loads(report_path.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict):
-        raise TypeError("Native sentinel DRC report root must be an object")
-    payload = cast(dict[str, object], raw)
-    version = payload.get("kicad_version")
-    source = payload.get("source")
-    violations = payload.get("violations")
-    if not isinstance(version, str) or not version.strip():
-        raise TypeError("Native sentinel DRC report has no KiCad version")
-    if not isinstance(source, str) or Path(source).name != _PROBE_BOARD.name:
-        raise TypeError("Native sentinel DRC report does not identify the synthetic probe board")
-    if not isinstance(violations, list):
-        raise TypeError("Native sentinel DRC report violations must be a list")
-
-    matches = 0
-    for index, raw_violation in enumerate(cast(list[object], violations)):
-        if not isinstance(raw_violation, dict):
-            raise TypeError(f"Native sentinel DRC violation {index} must be an object")
-        violation = cast(dict[str, object], raw_violation)
-        description = violation.get("description")
-        if (
-            violation.get("type") == "track_width"
-            and violation.get("severity") == "error"
-            and violation.get("excluded") is not True
-            and isinstance(description, str)
-            and sentinel_name in description
-        ):
-            matches += 1
-    return version, matches
 
 
 def run_pcb_dru_compilation_probe(
@@ -182,7 +155,7 @@ def run_pcb_dru_compilation_probe(
                 observed_version, sentinel_matches = _native_identity_and_matches(
                     report_path, sentinel_name
                 )
-            except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            except (OSError, TypeError, ValueError) as exc:
                 issue = str(exc)
             if issue is None and observed_version != expected_kicad_version:
                 issue = (

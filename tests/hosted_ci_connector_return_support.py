@@ -133,6 +133,8 @@ def assert_grounding_contract_cases(results, version):
     pin_connectivity_expectations = {
         "common-fault": "FAIL",
         "common-control": "PASS",
+        "assignment-only-split-control": "PASS",
+        "assignment-only-common-control": "PASS",
         "isolated-fault": "PASS",
         "isolated-control": "FAIL",
         "peer-common-open-fault": "FAIL",
@@ -156,6 +158,11 @@ def assert_grounding_contract_cases(results, version):
         results["connector-return-fixture/pin-connectivity-contract-common-control"]["checks"]
         == "pin-connectivity/db9-common-return=PASS"
     )
+    for case in ("assignment-only-split-control", "assignment-only-common-control"):
+        assert (
+            results[f"connector-return-fixture/pin-connectivity-contract-{case}"]["checks"]
+            == "pin-connectivity/db9-returns-assigned=PASS"
+        )
     assert results["connector-return-fixture/pin-connectivity-contract-isolated-fault"][
         "checks"
     ] == ";".join(
@@ -195,7 +202,10 @@ def assert_grounding_contract_cases(results, version):
         "pin-connectivity/peer-j3-power-unused=FAIL"
     )
     stale_pin = results["connector-return-fixture/pin-connectivity-contract-stale-pin-reference"]
+    assert stale_pin["status"] == "PASS"
+    assert stale_pin["contract_status"] == "FAIL"
     assert stale_pin["relationship"] == "stale-symbol-pin"
+    assert stale_pin["checks"] == "pin-connectivity/stale-pin-reference=FAIL"
     assert (
         "unknown symbol pins=['J1.99']"
         in json.loads(stale_pin["check_details"])["pin-connectivity/stale-pin-reference"]
