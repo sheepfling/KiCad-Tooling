@@ -214,6 +214,10 @@ def scan_evaluation_candidates(
                 item.rule_id == "connector.footprint_named_signal_assignment_divergence"
                 for item in items
             ),
+            footprint_named_power_input_divergence_finding_count=sum(
+                item.rule_id == "connector.footprint_named_power_input_assignment_divergence"
+                for item in items
+            ),
             footprint_peer_pin_open_outlier_finding_count=sum(
                 item.rule_id
                 in {

@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 137 rules are implemented with synthetic regression coverage.
+The following 138 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -379,6 +379,7 @@ Their actual recognition limits are documented in
 - `connector.footprint_named_power_output_open_outlier`
 - `connector.footprint_named_signal_output_open_outlier`
 - `connector.footprint_named_signal_assignment_divergence`
+- `connector.footprint_named_power_input_assignment_divergence`
 - `connector.footprint_peer_pin_all_open`
 - `connector.generic_peer_pin_all_open`
 - `connector.peer_power_input_named_all_open`
@@ -2666,7 +2667,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 137 active rules; CI requires every new
+- **Status:** Baseline complete for all 138 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2675,7 +2676,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 137 covered, 0 not applicable, 0 unreviewed.
+  audit: 138 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -8334,6 +8335,47 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and connector_lint and interface_lint'
   ```
 
+#### LINT-156 — Review split named power-input assignments across footprint-alias connectors
+
+- **Status:** Implemented as the default-review rule
+  `connector.footprint_named_power_input_assignment_divergence`.
+- **Gap:** The connector peer checks cover open named power inputs and split
+  named signal assignments across footprint-similar aliases. A named native
+  `power_in` contact assigned to distinct nets on those aliases could still
+  pass when another contact provided a common anchor. Existing named
+  power-input divergence covers `PART_ID` peers, not this bounded
+  PART_ID-free footprint/value candidate group.
+- **Predicate:** Require fitted connector instances with distinct native
+  symbols, no PART_ID, exact nonempty value and footprint, complete identical
+  pin inventories, and matching nonempty native function and electrical-type
+  metadata. Honor a current source-matched peer-assignment group when present.
+  Review an explicit, non-generic `power_in` function outside recognized
+  supply and return roles when every peer has exactly one assignment to at
+  least two distinct nets and another pin in the same scope has one exact
+  common-net assignment.
+- **Boundary:** This is a default-review heuristic. Different power-input
+  nets can represent separate sources, switched rails, or isolated domains.
+  Matching symbol metadata and one common anchor do not prove that the inputs
+  should be joined. Generic, recognized supply/return, signal, power-output,
+  passive, free, unspecified, open, ambiguous, DNP, PART_ID-bearing, or
+  incomplete groups do not trigger. The finding does not establish PCB copper
+  continuity or off-board wiring. Project-authored pinout or connectivity
+  requirements remain the authority for blocking a specific relationship.
+- **Evidence:** Synthetic tests cover a split-net fault, common-net control,
+  missing-anchor and metadata/type/function exclusions, open assignments,
+  DNP and PART_ID exclusions, mapping-order stability, `REVIEW`/`BLOCK`/`OFF`,
+  exact-ignore behavior, and CLI/MCP parity. A source-hashed synthetic native
+  fault/control pair is registered in the
+  [fixture README](../tests/fixtures/design_lint/connector-footprint-named-power-input-divergence-native/README.md)
+  for exact KiCad 10.0.0 and 10.0.5 exports.
+  Local native KiCad is unavailable; hosted native acceptance is required by
+  the rule-scoped tag gate. No project source or cohort fixture is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests -m 'design_lint and design_lint_rule(rule_id="connector.footprint_named_power_input_assignment_divergence")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -11306,7 +11348,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 137 active rules. Each entry has a deterministic predicate, evidence
+contains 138 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

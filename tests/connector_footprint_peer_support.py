@@ -75,6 +75,25 @@ def peer_netlist(
     )
 
 
+def named_power_input_divergence_netlist(
+    *,
+    anchor_assignments: tuple[str | None, str | None] = ("GND", "GND"),
+    target_assignments: tuple[str | None, str | None] = ("BIAS_A", "BIAS_B"),
+    function: str = "BIAS_IN",
+    electrical_type: str = "power_in",
+    dnp: tuple[str, ...] = (),
+    part_id: str | None = None,
+) -> NetlistContract:
+    """Build a source-like named power-input split or valid connector control."""
+    return peer_netlist(
+        assignments=(anchor_assignments, target_assignments),
+        functions=("Pin_1", function),
+        electrical_types=("passive", electrical_type),
+        dnp=dnp,
+        part_id=part_id,
+    )
+
+
 def peer_pin_reachability_netlists() -> tuple[NetlistContract, ...]:
     """Provide synthetic alias cases for footprint-peer rule reachability."""
     return (
@@ -105,6 +124,7 @@ def peer_pin_reachability_netlists() -> tuple[NetlistContract, ...]:
             functions=("GND", "UART_TX"),
             electrical_types=("passive", "output"),
         ),
+        named_power_input_divergence_netlist(),
         peer_netlist(assignments=(("GND", "GND"), (None, None))),
     )
 

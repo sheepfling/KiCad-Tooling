@@ -49,6 +49,7 @@ NAMED_SIGNAL_INPUT_OPEN_RULE_ID = "connector.footprint_named_signal_input_open_o
 NAMED_POWER_OUTPUT_OPEN_RULE_ID = "connector.footprint_named_power_output_open_outlier"
 NAMED_SIGNAL_OUTPUT_OPEN_RULE_ID = "connector.footprint_named_signal_output_open_outlier"
 NAMED_SIGNAL_DIVERGENCE_RULE_ID = "connector.footprint_named_signal_assignment_divergence"
+NAMED_POWER_INPUT_DIVERGENCE_RULE_ID = "connector.footprint_named_power_input_assignment_divergence"
 
 
 def _observed(
@@ -95,9 +96,7 @@ def _observed(
                     "UART_RX": "input",
                     "BIAS_OUT": "power_out",
                     "UART_TX": "output",
-                }.get(
-                    functions[int(number) - 1], "passive"
-                )
+                }.get(functions[int(number) - 1], "passive")
             )
             for reference in ("J1", "J2")
             for number in ("1", "2")
@@ -184,6 +183,24 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
         (False, True, False, ("GND", "UART_TX"), NAMED_SIGNAL_OUTPUT_OPEN_RULE_ID, "REVIEW", 1),
         (True, False, False, ("GND", "UART_TX"), NAMED_SIGNAL_DIVERGENCE_RULE_ID, "REVIEW", 1),
         (False, False, False, ("GND", "UART_TX"), NAMED_SIGNAL_DIVERGENCE_RULE_ID, "PASS", 0),
+        (
+            True,
+            False,
+            False,
+            ("GND", "BIAS_IN"),
+            NAMED_POWER_INPUT_DIVERGENCE_RULE_ID,
+            "REVIEW",
+            1,
+        ),
+        (
+            False,
+            False,
+            False,
+            ("GND", "BIAS_IN"),
+            NAMED_POWER_INPUT_DIVERGENCE_RULE_ID,
+            "PASS",
+            0,
+        ),
     ):
         observed = _observed(
             fault=fault,
@@ -230,9 +247,7 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             NAMED_POWER_OUTPUT_OPEN_RULE_ID,
             NAMED_SIGNAL_OUTPUT_OPEN_RULE_ID,
         }:
-            named_findings = tuple(
-                item for item in cli_report.findings if item.rule_id == rule_id
-            )
+            named_findings = tuple(item for item in cli_report.findings if item.rule_id == rule_id)
             assert len(named_findings) == expected_findings
             if expected_findings:
                 expected_type = {
@@ -248,6 +263,14 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             assert alias.named_signal_divergence_finding_count == expected_findings
             if expected_findings:
                 assert findings[0].evidence["pin_electrical_type"] == ("output",)
+                assert findings[0].evidence["assignments"] == (
+                    "J1.2=SYNTHETIC_SIGNAL_A",
+                    "J2.2=SYNTHETIC_SIGNAL_B",
+                )
+        elif rule_id == NAMED_POWER_INPUT_DIVERGENCE_RULE_ID:
+            assert alias.named_power_input_divergence_finding_count == expected_findings
+            if expected_findings:
+                assert findings[0].evidence["pin_electrical_type"] == ("power_in",)
                 assert findings[0].evidence["assignments"] == (
                     "J1.2=SYNTHETIC_SIGNAL_A",
                     "J2.2=SYNTHETIC_SIGNAL_B",
