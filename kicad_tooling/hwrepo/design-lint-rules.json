@@ -2995,7 +2995,8 @@
         "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review",
         "tests.test_return_net_lint.test_numbered_ret_tokens_request_review",
         "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",
-        "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable"
+        "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable",
+        "tests.test_numbered_return_native_fixture_lane.test_native_ret_return_label_fault_and_control_are_focused_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
@@ -3004,7 +3005,8 @@
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
         "tests.test_return_net_lint.test_common_ret_and_reset_labels_are_valid_controls",
         "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",
-        "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable"
+        "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable",
+        "tests.test_numbered_return_native_fixture_lane.test_native_ret_return_label_fault_and_control_are_focused_and_repeatable"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_numbered_returns.test_numbered_return_fingerprint_is_stable_under_mapping_reordering",
@@ -3044,7 +3046,8 @@
         "tests.test_design_lint_return_label_groups.test_unindexed_return_labels_include_exact_evidence_and_review_question",
         "tests.test_return_net_lint.test_letter_suffixed_ground_nets_without_return_pin_roles_request_review",
         "tests.test_return_net_lint.test_unindexed_ret_labels_request_review_without_return_pin_roles",
-        "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp"
+        "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",
+        "tests.test_numbered_return_native_fixture_lane.test_native_ret_return_label_fault_and_control_are_focused_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_return_label_groups.test_native_return_pin_roles_suppress_unroled_label_hint",
@@ -3053,7 +3056,8 @@
         "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",
         "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",
         "tests.test_return_net_lint.test_longer_non_return_tokens_do_not_match_letter_suffix_rule",
-        "tests.test_design_lint_return_label_groups.test_one_unindexed_return_label_is_not_a_group_hint"
+        "tests.test_design_lint_return_label_groups.test_one_unindexed_return_label_is_not_a_group_hint",
+        "tests.test_numbered_return_native_fixture_lane.test_native_ret_return_label_fault_and_control_are_focused_and_repeatable"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_return_label_groups.test_unindexed_return_label_order_does_not_change_finding",
@@ -3064,6 +3068,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/return_nets.py#return_label_groups_without_pin_roles",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
       "theme": "returns",
       "implementation_owner": "kicad_tooling/hwrepo/return_nets.py#return_label_groups_without_pin_roles"

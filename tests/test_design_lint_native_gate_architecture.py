@@ -291,6 +291,10 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         },
         "net.numbered_returns": {
             "tests.test_numbered_return_native_fixture_lane.test_native_numbered_pwm_return_fault_and_control_are_focused_and_repeatable",
+            "tests.test_numbered_return_native_fixture_lane.test_native_ret_return_label_fault_and_control_are_focused_and_repeatable",
+        },
+        "net.return_labels_without_pin_roles": {
+            "tests.test_numbered_return_native_fixture_lane.test_native_ret_return_label_fault_and_control_are_focused_and_repeatable",
         },
         "connector.peer_pin_assignment_outlier": {
             "tests.test_ci_hosted_connector_returns.test_peer_pin_assignments_and_offboard_scope",

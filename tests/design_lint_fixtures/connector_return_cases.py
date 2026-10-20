@@ -241,6 +241,53 @@ def pwm_return_case_contracts() -> dict[str, NetlistContract]:
     }
 
 
+def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
+    """Return synthetic numbered, unindexed, and common RET-label netlists."""
+    neutral = return_case_contracts()["four-db9-neutral-fault"]
+    common = return_case_contracts()["four-db9-neutral-control"]
+    signal_nets = {name: pins for name, pins in neutral.nets.items() if name.startswith("SIGNAL")}
+    return {
+        "ret-numbered-fault": neutral.model_copy(
+            update={
+                "nets": {
+                    **signal_nets,
+                    **{
+                        name: (f"J{reference}.7", f"J{reference}.9")
+                        for reference, name in enumerate(
+                            ("RET1", "RET2", "PORT3_RET", "PORT4_RET"), start=1
+                        )
+                    },
+                }
+            }
+        ),
+        "ret-unindexed-fault": neutral.model_copy(
+            update={
+                "nets": {
+                    **signal_nets,
+                    "RET_USB": ("J1.7", "J1.9"),
+                    "RET_SERIAL": ("J2.7", "J2.9"),
+                    "UNRELATED_C": ("J3.7", "J3.9"),
+                    "UNRELATED_D": ("J4.7", "J4.9"),
+                }
+            }
+        ),
+        "ret-control": common.model_copy(
+            update={
+                "nets": {
+                    **{
+                        name: pins
+                        for name, pins in common.nets.items()
+                        if name.startswith("SIGNAL")
+                    },
+                    "RET": tuple(
+                        f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)
+                    ),
+                }
+            }
+        ),
+    }
+
+
 def return_positive_rail_case_contracts() -> dict[str, NetlistContract]:
     """Return native-lane cases for a return pin on +5V and a common-return control."""
     control = return_case_contracts()["control"]

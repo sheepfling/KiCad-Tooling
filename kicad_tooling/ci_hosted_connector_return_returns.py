@@ -43,6 +43,64 @@ def verify_numbered_pwm_return_cases(ctx: ConnectorReturnFixtureContext) -> None
         )
 
 
+def verify_ret_return_label_cases(ctx: ConnectorReturnFixtureContext) -> None:
+    """Verify numbered and unindexed RET label reviews against native netlists."""
+    numbered = ctx.reports["ret-numbered-fault", "first"]
+    numbered_findings = [
+        finding for finding in numbered.findings if finding.rule_id == "net.numbered_returns"
+    ]
+    numbered_evidence = {
+        name: pins for finding in numbered_findings for name, pins in finding.evidence.items()
+    }
+    expected_numbered = {
+        "RET1": ("J1.7", "J1.9"),
+        "RET2": ("J2.7", "J2.9"),
+        "PORT3_RET": ("J3.7", "J3.9"),
+        "PORT4_RET": ("J4.7", "J4.9"),
+    }
+    if (
+        numbered.status != "REVIEW"
+        or numbered_evidence != expected_numbered
+        or any(
+            finding.rule_id == "net.return_labels_without_pin_roles"
+            for finding in numbered.findings
+        )
+    ):
+        raise ValueError("Native numbered RET labels lost their exact numbered-return review")
+
+    unindexed = ctx.reports["ret-unindexed-fault", "first"]
+    unindexed_findings = [
+        finding
+        for finding in unindexed.findings
+        if finding.rule_id == "net.return_labels_without_pin_roles"
+    ]
+    unindexed_evidence = {
+        name: pins for finding in unindexed_findings for name, pins in finding.evidence.items()
+    }
+    expected_unindexed = {
+        "RET_USB": ("J1.7", "J1.9"),
+        "RET_SERIAL": ("J2.7", "J2.9"),
+    }
+    if (
+        unindexed.status != "REVIEW"
+        or unindexed_evidence != expected_unindexed
+        or any(finding.rule_id == "net.numbered_returns" for finding in unindexed.findings)
+    ):
+        raise ValueError("Native unindexed RET labels lost their exact return-label review")
+
+    control = ctx.reports["ret-control", "first"]
+    return_rules = {"net.numbered_returns", "net.return_labels_without_pin_roles"}
+    expected_common_pins = {f"J{reference}.{pin}" for reference in range(1, 5) for pin in (7, 9)}
+    observed_common_pins = set(ctx.observed_contracts["ret-control", "first"].nets.get("RET", ()))
+    if (
+        return_rules & {finding.rule_id for finding in control.findings}
+        or observed_common_pins != expected_common_pins
+    ):
+        raise ValueError(
+            "Native common RET control lost pin membership or raised return-label lint"
+        )
+
+
 def verify_connector_return_distribution(
     ctx: ConnectorReturnFixtureContext,
 ) -> Mapping[str, tuple[str, ...]]:
@@ -120,5 +178,6 @@ def verify_connector_return_distribution(
         raise ValueError("Common four-port DB9 return control no longer passes cleanly")
     db9_control_nets = ctx.observed_contracts["four-db9-control", "first"].nets
     verify_numbered_pwm_return_cases(ctx)
+    verify_ret_return_label_cases(ctx)
 
     return db9_control_nets

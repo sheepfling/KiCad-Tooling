@@ -8,6 +8,25 @@ import re
 from tests.hosted_ci_connector_common_support import assert_connector_result_sources
 
 
+def assert_ret_return_label_cases(results):
+    numbered = results["connector-return-fixture/ret-numbered-fault"]
+    assert numbered["status"] == "PASS"
+    assert numbered["lint_status"] == "REVIEW"
+    assert "net.numbered_returns" in numbered["findings"].split(",")
+    assert "net.return_labels_without_pin_roles" not in numbered["findings"].split(",")
+    unindexed = results["connector-return-fixture/ret-unindexed-fault"]
+    assert unindexed["status"] == "PASS"
+    assert unindexed["lint_status"] == "REVIEW"
+    assert "net.return_labels_without_pin_roles" in unindexed["findings"].split(",")
+    assert "net.numbered_returns" not in unindexed["findings"].split(",")
+    control = results["connector-return-fixture/ret-control"]
+    assert control["status"] == "PASS"
+    assert not {
+        "net.numbered_returns",
+        "net.return_labels_without_pin_roles",
+    } & set(control["findings"].split(","))
+
+
 def assert_base_connector_return_cases(results, version):
     fault = results["connector-return-fixture/fault"]
     control = results["connector-return-fixture/control"]
@@ -39,6 +58,7 @@ def assert_base_connector_return_cases(results, version):
         version,
         ("fault", "control", "cross-symbol-fault", "cross-symbol-control", "cross-symbol-open"),
     )
+    assert_ret_return_label_cases(results)
 
 
 def assert_positive_rail_return_cases(results, version):

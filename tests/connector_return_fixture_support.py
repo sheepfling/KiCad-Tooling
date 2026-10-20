@@ -19,6 +19,7 @@ from tests.design_lint_fixtures.connector_power_cases import (
 )
 from tests.design_lint_fixtures.connector_return_cases import (
     pwm_return_case_contracts,
+    ret_return_label_case_contracts,
     return_case_contracts,
     return_positive_rail_case_contracts,
 )
@@ -33,6 +34,7 @@ def connector_return_fixture_contracts() -> dict[str, NetlistContract]:
     observed: dict[str, NetlistContract] = {}
     observed.update(return_case_contracts())
     observed.update(pwm_return_case_contracts())
+    observed.update(ret_return_label_case_contracts())
     observed.update(return_positive_rail_case_contracts())
     observed.update(peer_pin_case_contracts())
     observed.update(named_connector_power_peer_cases())

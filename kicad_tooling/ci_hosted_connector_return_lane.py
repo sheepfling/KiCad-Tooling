@@ -30,6 +30,7 @@ from .ci_hosted_connector_return_receipts import emit_connector_return_receipts
 from .ci_hosted_connector_return_returns import (
     verify_connector_return_distribution,
     verify_numbered_pwm_return_cases,
+    verify_ret_return_label_cases,
 )
 from .ci_hosted_connector_return_supply import verify_positive_rail_return_cases
 
@@ -69,6 +70,21 @@ def numbered_pwm_return_fixture_lane(
         case_names=("four-db9-pwm-fault", "four-db9-pwm-control"),
     )
     verify_numbered_pwm_return_cases(context)
+    emit_connector_return_receipts(context, {})
+
+
+def ret_return_label_fixture_lane(
+    root: Path, *, project: str, image: str, log: ConnectorReturnLog
+) -> None:
+    """Run only the native numbered, unindexed, and common RET-label cases."""
+    context = prepare_connector_return_fixture_context(
+        root,
+        project=project,
+        image=image,
+        log=log,
+        case_names=("ret-numbered-fault", "ret-unindexed-fault", "ret-control"),
+    )
+    verify_ret_return_label_cases(context)
     emit_connector_return_receipts(context, {})
 
 

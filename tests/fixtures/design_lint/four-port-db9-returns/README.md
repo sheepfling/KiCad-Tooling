@@ -10,12 +10,15 @@ The other seven contacts are wired to matching `SIGNAL<n>` nets across all four
 connectors. This keeps the regression focused on the return contacts and avoids
 warnings caused by unrelated unassigned synthetic pins.
 
-| Fixture                 | Assignment                                       | Expected lint result                                            |
-| ----------------------- | ------------------------------------------------ | --------------------------------------------------------------- |
-| `fault.kicad_sch`       | J1–J4 pins 7/9 use `RETURN_PORT_n`               | `REVIEW` for repeated return functions and numbered return nets |
-| `control.kicad_sch`     | All J1–J4 pins 7/9 use `COMMON_RETURN`           | `PASS`                                                          |
-| `pwm-fault.kicad_sch`   | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4` | `REVIEW` for numbered return nets                               |
-| `pwm-control.kicad_sch` | All J1–J4 pins 7/9 use `0V PWM`                  | `PASS`                                                          |
+| Fixture                         | Assignment                                                      | Expected lint result                                            |
+| ------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------- |
+| `fault.kicad_sch`               | J1–J4 pins 7/9 use `RETURN_PORT_n`                              | `REVIEW` for repeated return functions and numbered return nets |
+| `control.kicad_sch`             | All J1–J4 pins 7/9 use `COMMON_RETURN`                          | `PASS`                                                          |
+| `pwm-fault.kicad_sch`           | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4`                | `REVIEW` for numbered return nets                               |
+| `pwm-control.kicad_sch`         | All J1–J4 pins 7/9 use `0V PWM`                                 | `PASS`                                                          |
+| `ret-numbered-fault.kicad_sch`  | J1/J2 use `RET1`/`RET2`; J3/J4 use `PORT3_RET`/`PORT4_RET`      | `REVIEW` for numbered return-like labels                        |
+| `ret-unindexed-fault.kicad_sch` | J1/J2 use `RET_USB`/`RET_SERIAL`; J3/J4 use neutral labels      | `REVIEW` for unindexed return-like labels                       |
+| `ret-control.kicad_sch`         | All J1–J4 pins 7/9 use one `RET` net with numeric pin functions | No numbered or unindexed RET-label finding                      |
 
 The PWM-named pair is a tooling-owned synthetic reproduction of the supplied
 name pattern. It checks that native KiCad export preserves the spaces and
@@ -29,6 +32,23 @@ and grounding contract must state whether returns are common, bonded through a
 specified path, or isolated. The fixture contains no proprietary project source or
 board reconstruction. All fixture labels and component attributes are generated
 synthetic values.
+
+## RET token native fault and control coverage
+
+The source-hash-pinned native lane also covers three synthetic RET cases. The
+numbered fault exercises both recognized forms (`RET1`/`RET2` and
+`PORT3_RET`/`PORT4_RET`) and must produce exact numbered-return evidence. The
+unindexed fault assigns `RET_USB` and `RET_SERIAL` to separate connector return
+pairs while leaving two neutral-label pairs as controls; it must produce the
+unindexed return-label review without a numbered-return finding. The common
+`RET` control places all eight contacts on one net and must produce neither
+return-label finding. Its numeric pin functions can still leave connector-role
+coverage open; this fixture does not claim the pinout itself is approved.
+
+The focused source-bound lane is gated by
+`KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` and checks exact KiCad 10.0.0 and 10.0.5
+exports, repeated normalized-netlist hashes, and exact pin membership. Every
+finding remains a review prompt: it does not prescribe joining returns.
 
 ## Explicit grounding-contract checks
 

@@ -100,6 +100,9 @@ def prepare_connector_return_fixture_context(
         / "four-port-db9-returns/numeric-function-neutral-fault.kicad_sch",
         "four-db9-neutral-control": fixture_root
         / "four-port-db9-returns/numeric-function-neutral-control.kicad_sch",
+        "ret-numbered-fault": fixture_root / "four-port-db9-returns/ret-numbered-fault.kicad_sch",
+        "ret-unindexed-fault": fixture_root / "four-port-db9-returns/ret-unindexed-fault.kicad_sch",
+        "ret-control": fixture_root / "four-port-db9-returns/ret-control.kicad_sch",
         "peer-power-fault": fixture_root / "generic-peer-power-pin/fault.kicad_sch",
         "peer-power-control": fixture_root / "generic-peer-power-pin/control.kicad_sch",
         "peer-pin-outlier-fault": fixture_root
@@ -246,6 +249,9 @@ def prepare_connector_return_fixture_context(
         "four-db9-pwm-control": "3c00cfdee7a7bbba3439baf49f82eb6911ead068cf04ac0782f8f8fe7297cecc",
         "four-db9-neutral-fault": "8b54babacd735da898cbd477b641a57085ff03b74bf0d9aa665fc8625a36f65f",
         "four-db9-neutral-control": "49e3bca48e79e4b46ce4eba8298026b5c730fca56b119a3ec407dfaafbcf54cd",
+        "ret-numbered-fault": "254f6b25e897c2bd5f4e7eda254cca4ed9f327d41d2a1b6094ad25dde40132e4",
+        "ret-unindexed-fault": "2f3dfe64f45cded7cc24f921882ce6ba472d30f7d6a49a8ebb20d4fbca7e1fc7",
+        "ret-control": "7fb0e168dcf55270162327d4480c3dec21dac3c5c80cfc4fe9d3a7f3c3d70efa",
         "peer-power-fault": "4e2382aede1643770a466a9c902b1e960f8a8ab0d1bc676a03db33dfe6e582a8",
         "peer-power-control": "e50d57b2739dc49d3b164e0ea141f48835967fdc1982d3cfdd702f671dc7d197",
         "peer-pin-outlier-fault": "e9945c83c351ece43064a6c09c770fd8f3ab5fadd550ac58ee5d001f5d8842e2",
