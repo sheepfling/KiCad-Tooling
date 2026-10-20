@@ -4671,7 +4671,12 @@ is not a reason by itself to expand its scope or change its default policy.
   a fault fixture for both control-input rules, and both rules require
   `KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES`. Focused collection selects this
   same native test for either rule, so prerelease rule tags exercise the demo
-  lane even when the full package job is skipped.
+  lane even when the full package job is skipped. Hosted acceptance for
+  `v0.5.2rc42` passed (GitHub Actions run
+  [39422510660](https://github.com/sheepfling/KiCad-Tooling/actions/runs/39422510660)):
+  the focused rule gate and installed-wheel check against the separate public
+  template passed, as did Ubuntu, macOS, and Windows previews. The package job
+  was skipped under prerelease policy.
 - **Remaining:** The native results validate evidence parsing and bounded
   aliases, not design intent. Public demo screens do not label intent, and
   connected-bias candidate volume is not a false-positive measurement.
