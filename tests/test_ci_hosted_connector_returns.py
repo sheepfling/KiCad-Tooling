@@ -78,6 +78,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/footprint-alias-numeric-open-fault",
     "connector-return-fixture/footprint-alias-named-power-input-fault",
     "connector-return-fixture/footprint-alias-named-power-input-control",
+    "connector-return-fixture/footprint-alias-named-signal-input-fault",
+    "connector-return-fixture/footprint-alias-named-signal-input-control",
     "connector-return-fixture/two-peer-open-fault",
     "connector-return-fixture/two-peer-no-connect-fault",
     "connector-return-fixture/two-peer-common-control",
@@ -226,6 +228,7 @@ def test_peer_pin_assignments_and_offboard_scope(connector_return_results_by_ver
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
 @pytest.mark.connector_lint
+@pytest.mark.interface_lint
 def test_footprint_alias_peer_assignments_are_validated_on_pinned_native_versions(
     connector_return_results_by_version, version
 ):
@@ -310,6 +313,27 @@ def test_footprint_alias_open_peer_is_validated_on_pinned_native_versions(
     assert named_coverage["open_peer_pin_group_count"] == 1
     assert named_coverage["open_outlier_finding_count"] == 1
     for result in (named_fault, named_control):
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+
+    signal_fault = results["connector-return-fixture/footprint-alias-named-signal-input-fault"]
+    signal_control = results["connector-return-fixture/footprint-alias-named-signal-input-control"]
+    assert signal_fault["lint_status"] == "REVIEW"
+    assert signal_fault["findings"] == "connector.footprint_named_signal_input_open_outlier"
+    assert signal_fault["pin_functions"] == "J1.1=UART_RX;J1.2=2;J2.1=UART_RX;J2.2=2"
+    assert signal_control["lint_status"] == "PASS"
+    assert signal_control["findings"] == "none"
+    signal_coverage = json.loads(signal_fault["connector_peer_pin_coverage"])[
+        "footprint_alias_coverage"
+    ]
+    assert signal_coverage["status"] == "PARTIALLY_EVALUATED"
+    assert signal_coverage["netlist_sha256"] == signal_fault["netlist_sha256"]
+    assert signal_coverage["candidate_group_count"] == 1
+    assert signal_coverage["common_anchor_group_count"] == 1
+    assert signal_coverage["open_peer_pin_group_count"] == 1
+    assert signal_coverage["open_outlier_finding_count"] == 1
+    for result in (signal_fault, signal_control):
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]

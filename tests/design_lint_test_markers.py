@@ -76,6 +76,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_footprint_peer_pins.py",
             "tests/test_connector_footprint_peer_open.py",
             "tests/test_connector_footprint_peer_parity.py",
+            "tests/test_connector_footprint_signal_input.py",
             "tests/test_connector_peer_pin_all_open.py",
             "tests/test_design_lint_determinism_connector_all_open.py",
             "tests/test_connector_signal_peer_pin_all_open.py",
@@ -118,6 +119,7 @@ _LINT_AREA_MODULES = {
     "interface_lint": frozenset(
         {
             "tests/test_connector_signal_peer_pin_all_open.py",
+            "tests/test_connector_footprint_signal_input.py",
             "tests/test_control_inputs.py",
             "tests/test_design_lint_determinism_control_inputs.py",
             "tests/test_electrical_control_input_parity.py",

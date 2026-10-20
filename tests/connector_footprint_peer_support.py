@@ -75,11 +75,21 @@ def peer_netlist(
     )
 
 
-def peer_pin_reachability_netlists() -> tuple[NetlistContract, NetlistContract]:
-    """Provide synthetic alias split/open cases for active-rule reachability."""
+def peer_pin_reachability_netlists() -> tuple[NetlistContract, ...]:
+    """Provide synthetic alias cases for footprint-peer rule reachability."""
     return (
         peer_netlist(assignments=(("GND", "GND"), ("DATA_A", "DATA_B"))),
         peer_netlist(assignments=(("GND", "GND"), ("DATA_A", None))),
+        peer_netlist(
+            assignments=(("GND", "GND"), ("BIAS_IN", None)),
+            functions=("GND", "BIAS_IN"),
+            electrical_types=("passive", "power_in"),
+        ),
+        peer_netlist(
+            assignments=(("GND", "GND"), ("UART_RX", None)),
+            functions=("GND", "UART_RX"),
+            electrical_types=("passive", "input"),
+        ),
         peer_netlist(assignments=(("GND", "GND"), (None, None))),
     )
 
