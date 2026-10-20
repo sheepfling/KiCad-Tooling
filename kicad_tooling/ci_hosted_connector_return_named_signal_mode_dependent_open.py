@@ -62,7 +62,9 @@ def verify_footprint_alias_named_signal_mode_dependent_open(
     control = ctx.reports[CONTROL_CASE, "first"]
     control_observed = ctx.observed_contracts[CONTROL_CASE, "first"]
     control_coverage = control.connector_peer_pin_coverage
-    control_alias = None if control_coverage is None else control_coverage.footprint_alias_coverage
+    if control_coverage is None:
+        raise ValueError("Native common-net mode-dependent signal control lacks coverage")
+    control_alias = control_coverage.footprint_alias_coverage
     control_nets = {net: set(pins) for net, pins in control_observed.nets.items()}
     if (
         control.status != "PASS"
@@ -75,11 +77,16 @@ def verify_footprint_alias_named_signal_mode_dependent_open(
         raise ValueError("Native common-net mode-dependent signal control did not remain quiet")
 
     return {
-        case: json.dumps(
-            ctx.reports[case, "first"].connector_peer_pin_coverage.model_dump(mode="json"),
+        FAULT_CASE: json.dumps(
+            coverage.model_dump(mode="json"),
             sort_keys=True,
             separators=(",", ":"),
             ensure_ascii=False,
-        )
-        for case in (FAULT_CASE, CONTROL_CASE)
+        ),
+        CONTROL_CASE: json.dumps(
+            control_coverage.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ),
     }
