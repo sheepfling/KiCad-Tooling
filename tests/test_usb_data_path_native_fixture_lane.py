@@ -49,6 +49,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-c-peer-reference-control": "456f8d1f23735db18f4ec1b0c347cc1ab1d396af3b957c40d9158e535015a70f",
         "usb-multiport-peer-reference-fault": "9cbc4ebc8692b02fc9ef8b6a1723d926536b2b7a74251ff4d37e045cdacae615",
         "usb-multiport-peer-reference-control": "80f5af92083dbc5a3fce319dabb5c80efb535899e482ff6ad952a41f576df0d0",
+        "usb-threeport-peer-reference-fault": "2a4f7e61d8e3da0fa3be3c9717b7d04dcf3faf86778c11b7265653e32425cba5",
+        "usb-threeport-peer-reference-control": "d2d5760a775c59fc8ab2ce10d9d765bea9620a7ec5c472fb9b0c6b4190d981d5",
         "intentional-isolation-boundary": "d1a785a983b18315b402d003990056c2f3e5aab40e8bb937e3f44ffc901946d9",
         "inline-component-control": "cce0c203ea0eb8a04a186526c8c9396050e311018f732c7b6e33dbe8f6ea8ad6",
         "inline-component-ground-fault": "02868a8ff51f8a942bd6719ff0bde57776b3d92aac75e0f225b71ab189e0dcb8",
@@ -85,6 +87,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-data-path-fixture/usb-c-peer-reference-control",
         "usb-data-path-fixture/usb-multiport-peer-reference-fault",
         "usb-data-path-fixture/usb-multiport-peer-reference-control",
+        "usb-data-path-fixture/usb-threeport-peer-reference-fault",
+        "usb-data-path-fixture/usb-threeport-peer-reference-control",
         "usb-data-path-fixture/intentional-isolation-boundary",
         "usb-data-path-fixture/inline-component-control",
         "usb-data-path-fixture/inline-component-unmapped-coverage",
@@ -218,6 +222,17 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     multiport_control = results["usb-data-path-fixture/usb-multiport-peer-reference-control"]
     assert multiport_control["status"] == "PASS"
     assert multiport_control["usb_reference_findings"] == "none"
+    threeport_fault = results["usb-data-path-fixture/usb-threeport-peer-reference-fault"]
+    assert threeport_fault["status"] == "PASS"
+    assert threeport_fault["lint_status"] == "REVIEW"
+    assert threeport_fault["usb_reference_supported_data_paths"] == 3
+    assert threeport_fault["usb_reference_findings"] == (
+        "J3 / U1: USB reference-domain review (port 3)"
+    )
+    threeport_control = results["usb-data-path-fixture/usb-threeport-peer-reference-control"]
+    assert threeport_control["status"] == "PASS"
+    assert threeport_control["usb_reference_supported_data_paths"] == 3
+    assert threeport_control["usb_reference_findings"] == "none"
     isolation_boundary = results["usb-data-path-fixture/intentional-isolation-boundary"]
     assert isolation_boundary["status"] == "PASS"
     assert isolation_boundary["usb_path_findings"] == "none"
@@ -241,6 +256,8 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         "usb-c-peer-reference-control",
         "usb-multiport-peer-reference-fault",
         "usb-multiport-peer-reference-control",
+        "usb-threeport-peer-reference-fault",
+        "usb-threeport-peer-reference-control",
         "intentional-isolation-boundary",
         "inline-component-control",
         "inline-component-ground-fault",

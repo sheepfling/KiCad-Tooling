@@ -148,41 +148,53 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
             ),
         ),
     )
-    multiport_map = UsbDataPathMap(
+
+    def hub_port_map(ports: tuple[tuple[str, str, str, str], ...], *, basis: str) -> UsbDataPathMap:
+        return UsbDataPathMap(
+            basis=basis,
+            interfaces=tuple(
+                UsbDataInterfaceRequirement(
+                    id=f"usb-port-{port_group}",
+                    basis=f"Synthetic exact native path for hub port {port_group}",
+                    connector_reference=connector,
+                    expected_connector_symbol="Connector:USB_A",
+                    expected_connector_footprint="Synthetic:USB-A",
+                    phy_reference="U1",
+                    expected_phy_symbol="Synthetic:UsbHub",
+                    expected_phy_footprint="Synthetic:QFN",
+                    data_port_group=port_group,
+                    positive=UsbDataPathLineRequirement(
+                        line="D+",
+                        connector_pin=f"{connector}.1",
+                        phy_pin=f"U1.{positive_pin}",
+                        connector_net=f"USB{port_group}_DP",
+                        phy_net=f"USB{port_group}_DP",
+                        topology="direct",
+                    ),
+                    negative=UsbDataPathLineRequirement(
+                        line="D-",
+                        connector_pin=f"{connector}.2",
+                        phy_pin=f"U1.{negative_pin}",
+                        connector_net=f"USB{port_group}_DM",
+                        phy_net=f"USB{port_group}_DM",
+                        topology="direct",
+                    ),
+                )
+                for connector, port_group, positive_pin, negative_pin in ports
+            ),
+        )
+
+    multiport_map = hub_port_map(
+        (("J1", "1", "1", "2"), ("J2", "2", "4", "5")),
         basis="Synthetic exact mappings for two USB hub ports",
-        interfaces=tuple(
-            UsbDataInterfaceRequirement(
-                id=f"usb-port-{port_group}",
-                basis=f"Synthetic exact native path for hub port {port_group}",
-                connector_reference=connector,
-                expected_connector_symbol="Connector:USB_A",
-                expected_connector_footprint="Synthetic:USB-A",
-                phy_reference="U1",
-                expected_phy_symbol="Synthetic:UsbHub",
-                expected_phy_footprint="Synthetic:QFN",
-                data_port_group=port_group,
-                positive=UsbDataPathLineRequirement(
-                    line="D+",
-                    connector_pin=f"{connector}.1",
-                    phy_pin=f"U1.{positive_pin}",
-                    connector_net=f"USB{port_group}_DP",
-                    phy_net=f"USB{port_group}_DP",
-                    topology="direct",
-                ),
-                negative=UsbDataPathLineRequirement(
-                    line="D-",
-                    connector_pin=f"{connector}.2",
-                    phy_pin=f"U1.{negative_pin}",
-                    connector_net=f"USB{port_group}_DM",
-                    phy_net=f"USB{port_group}_DM",
-                    topology="direct",
-                ),
-            )
-            for connector, port_group, positive_pin, negative_pin in (
-                ("J1", "1", "1", "2"),
-                ("J2", "2", "4", "5"),
-            )
+    )
+    threeport_map = hub_port_map(
+        (
+            ("J1", "1", "1", "2"),
+            ("J2", "2", "4", "5"),
+            ("J3", "3", "6", "7"),
         ),
+        basis="Synthetic exact mappings for three USB hub ports",
     )
     isolator_map = multiport_map.model_copy(
         update={
@@ -394,6 +406,8 @@ def usb_data_path_requirements() -> dict[str, UsbDataPathMap]:
         "usb-c-peer-reference-control": usb_c_direct_map,
         "usb-multiport-peer-reference-fault": multiport_map,
         "usb-multiport-peer-reference-control": multiport_map,
+        "usb-threeport-peer-reference-fault": threeport_map,
+        "usb-threeport-peer-reference-control": threeport_map,
         "intentional-isolation-boundary": isolator_map,
         "inline-component-control": inline_component_map,
         "inline-component-ground-fault": inline_component_map,

@@ -27,6 +27,8 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
         "usb-c-peer-reference-control",
         "usb-multiport-peer-reference-fault",
         "usb-multiport-peer-reference-control",
+        "usb-threeport-peer-reference-fault",
+        "usb-threeport-peer-reference-control",
         "intentional-isolation-boundary",
         "inline-component-ground-fault",
         "inline-component-control",
@@ -50,6 +52,17 @@ def test_hosted_usb_topology_maps_cover_native_fixture_cases() -> None:
 
     multiport = requirements["usb-multiport-peer-reference-control"].interfaces
     assert tuple(interface.data_port_group for interface in multiport) == ("1", "2")
+
+    threeport = requirements["usb-threeport-peer-reference-control"].interfaces
+    assert tuple(
+        (
+            interface.connector_reference,
+            interface.data_port_group,
+            interface.positive.phy_pin,
+            interface.negative.phy_pin,
+        )
+        for interface in threeport
+    ) == (("J1", "1", "U1.1", "U1.2"), ("J2", "2", "U1.4", "U1.5"), ("J3", "3", "U1.6", "U1.7"))
 
     inline_peer_fault = requirements["inline-component-peer-reference-fault"].interfaces[0]
     assert inline_peer_fault.reference_policy is None

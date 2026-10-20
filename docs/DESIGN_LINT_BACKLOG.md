@@ -4967,8 +4967,10 @@ is not a reason by itself to expand its scope or change its default policy.
   reference control, a crossed-channel control, an unused-port control, and
   exact `data_port_group` maps. A typed three-port regression also checks one
   split-reference review per connector, exact-map suppression, a common-reference
-  control, and stable path ordering. Three-port coverage is synthetic netlist
-  evidence; the exact-version native schematic lane remains two-port;
+  control, and stable path ordering. The exact-version native lane now also
+  includes three-port fault/control schematics: J1/J2 remain common while only
+  J3 port 3 is split, and the control common-refs all three ports. See the
+  [three-port USB fixture record](../tests/fixtures/design_lint/usb-threeport-peer-reference-native/README.md).
   USB-C duplicated A/B data contacts with two-pin shunt branches and common/split
   reference controls; exact USB-map contact coverage; arbitrary-peer,
   unsupported-branch, split-duplicate-pin, multi-reference-PHY, and isolator-path
@@ -5014,6 +5016,17 @@ is not a reason by itself to expand its scope or change its default policy.
   finding. This source-hashed comparison is registered for both pinned KiCad
   versions; its tagged hosted acceptance is recorded in Evidence history below.
 - **Evidence history:**
+
+  **Three-port native fixture (2026-10-20; local compatibility):** The new
+  source-hashed J1/J2/J3 hub fixture exported twice with KiCad 10.0.6. Both
+  normalized typed-netlist hashes repeated, each authored map matched all three
+  data paths, and the split-reference fault produced only the J3/U1 port-3
+  peer-reference finding; the common-reference control produced none. The
+  normalized hashes are `5d9c692a866f5be8bcaea25a1b8a0e17ad027d34283022b3d71048a7b5d59e72`
+  (fault) and `fbdfff8ac4a244c36374bcd728d76b98ce6999323156e69edad1b316c83a4bd8`
+  (control). The source cases are registered for the digest-pinned KiCad
+  10.0.0/10.0.5 lane; that hosted acceptance is pending. This does not establish
+  PCB copper or physical return continuity.
 
   **Tagged exact-version acceptance (2026-10-20):** `v0.5.2rc7` (commit
   `eea03f6`, run `39375741595`) passed the focused

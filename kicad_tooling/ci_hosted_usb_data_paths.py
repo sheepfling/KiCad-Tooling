@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from .ci_hosted_usb_data_path_cases import usb_data_path_fixture_sources
 from .ci_hosted_usb_isolation import validate_usb_isolator_reference_boundary
+from .ci_hosted_usb_multiport_validation import validate_usb_multiport_peer_reference_reports
 from .ci_hosted_usb_protection_shunts import validate_usb_protection_shunt_fixture_reports
 from .ci_hosted_usb_requirements import usb_data_path_requirements
 
@@ -420,21 +421,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     ):
         raise ValueError("Native common-reference USB-C peer control produced a review")
 
-    multiport_faults = tuple(
-        item
-        for item in reports[("usb-multiport-peer-reference-fault", "first")].findings
-        if item.rule_id == "bus.usb_peer_reference_review"
-    )
-    if tuple((item.subject, item.evidence.get("USB_port_group")) for item in multiport_faults) != (
-        ("J1 / U1: USB reference-domain review (port 1)", ("1",)),
-        ("J2 / U1: USB reference-domain review (port 2)", ("2",)),
-    ):
-        raise ValueError("Native multiport USB fault did not localize both exact hub port groups")
-    if any(
-        item.rule_id == "bus.usb_peer_reference_review"
-        for item in reports[("usb-multiport-peer-reference-control", "first")].findings
-    ):
-        raise ValueError("Native common-reference multiport USB control produced a review")
+    validate_usb_multiport_peer_reference_reports(reports)
 
     validate_usb_isolator_reference_boundary(reports[("intentional-isolation-boundary", "first")])
 

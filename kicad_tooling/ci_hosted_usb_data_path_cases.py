@@ -27,6 +27,10 @@ def usb_data_path_fixture_sources() -> dict[str, Path]:
         / "usb-multiport-peer-reference-native/fault.kicad_sch",
         "usb-multiport-peer-reference-control": fixture_root
         / "usb-multiport-peer-reference-native/control.kicad_sch",
+        "usb-threeport-peer-reference-fault": fixture_root
+        / "usb-threeport-peer-reference-native/fault.kicad_sch",
+        "usb-threeport-peer-reference-control": fixture_root
+        / "usb-threeport-peer-reference-native/control.kicad_sch",
         "intentional-isolation-boundary": fixture_root
         / "usb-isolator-peer-reference-native/intentional-isolation.kicad_sch",
         "inline-component-control": fixture_root
