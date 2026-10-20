@@ -2845,6 +2845,10 @@ is not a reason by itself to expand its scope or change its default policy.
   The reviewed-return map case now permutes project interface IDs,
   catalog-record/pin ordering, review rows, and pin-map keys while preserving
   coverage, findings, evidence, and fingerprints for fixed source digests.
+  A three-connector fault/control case now puts two USB ports and one serial
+  port in separate authored peer groups: one split mapped return remains a
+  REVIEW across all three connectors, commoning the returns clears it, and
+  unrelated data pins stay outside the cross-group comparison.
   LINT-081 now adds an unrelated fitted resistor on separate rails to a
   two-diode fault. The native-netlist digest changes while both diode findings
   keep their evidence and fingerprints; an exact ignore for D1 persists and

@@ -9,6 +9,7 @@ from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
 from kicad_tooling.hwrepo.design_lint import text_report
 from kicad_tooling.hwrepo.models import (
     ConnectorCoverageReport,
+    ConnectorInterfaceReview,
     ContractCoachReport,
     DesignLintPolicy,
     DesignLintRuleOverride,
@@ -278,4 +279,115 @@ def test_reviewed_return_roles_refine_connector_net_heuristics() -> None:
     )
     assert ("connector.no_connected_return") in (
         {finding.rule_id for finding in stale_report.findings}
+    )
+
+
+def test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed() -> None:
+    interfaces = connector_return_role_catalog()
+    observed = NetlistContract(
+        components={},
+        nets={
+            "USB1_D+": ("J1.1",),
+            "USB1_D-": ("J1.2",),
+            "SERIAL_TX": ("J2.1",),
+            "SERIAL_RX": ("J2.2",),
+            "COMMON_RETURN": ("J1.3", "J2.3"),
+            "SERIAL_SUPPLY": ("J2.4",),
+            "USB2_D+": ("J3.1",),
+            "USB2_D-": ("J3.2",),
+            "USB2_RETURN": ("J3.3",),
+        },
+        component_symbols={
+            "J1": "Connector:USB_C_Receptacle_USB2.0_16P",
+            "J2": "Connector:DB9",
+            "J3": "Connector:USB_C_Receptacle_USB2.0_16P",
+        },
+        component_pin_numbers={
+            "J1": ("1", "2", "3"),
+            "J2": ("1", "2", "3", "4"),
+            "J3": ("1", "2", "3"),
+        },
+        pin_functions={
+            "J1.1": "D+",
+            "J1.2": "D-",
+            "J1.3": "GND",
+            "J2.1": "TX",
+            "J2.2": "RX",
+            "J2.3": "Pin_3",
+            "J2.4": "Pin_4",
+            "J3.1": "D+",
+            "J3.2": "D-",
+            "J3.3": "GND",
+        },
+    )
+    peer_specs = (
+        ("J1", "usb-interface", {"1": "1", "2": "2", "3": "3"}, "usb-port-1"),
+        ("J2", "serial-interface", {"1": "1", "2": "2", "3": "3", "4": "4"}, "serial-port"),
+        ("J3", "usb-interface", {"1": "1", "2": "2", "3": "3"}, "usb-port-2"),
+    )
+
+    def coverage(netlist: NetlistContract) -> ConnectorCoverageReport:
+        reviews = tuple(
+            ConnectorInterfaceReview(
+                reference=reference,
+                disposition="interface",
+                basis=f"Synthetic source review for {interface_id}",
+                interface_id=interface_id,
+                pin_map=pin_map,
+                peer_assignment_group=group,
+                peer_assignment_basis=f"Reviewed {reference} in group {group}",
+            )
+            for reference, interface_id, pin_map, group in peer_specs
+        )
+        return evaluate(
+            netlist,
+            ("usb-interface", "serial-interface"),
+            reviews,
+            interfaces=interfaces,
+            interface_catalog_path="catalog/interfaces.json",
+            interface_catalog_sha256="9" * 64,
+            inventory_review=inventory_review(),
+        )
+
+    def report(netlist: NetlistContract, project_id: str):
+        return evaluate_design_lint(
+            project_id,
+            ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id=project_id,
+                observed=netlist,
+                netlist_sha256="8" * 64,
+            ),
+            DesignLintPolicy(),
+            connector_coverage=coverage(netlist),
+        )
+
+    split_report = report(observed, "synthetic-two-usb-one-serial-split-return")
+    split_findings = tuple(
+        finding
+        for finding in split_report.findings
+        if finding.rule_id == "connector.repeated_pin_function"
+    )
+
+    assert split_report.status == "REVIEW"
+    assert split_findings
+    connector_pin_evidence = {
+        pin
+        for finding in split_findings
+        for pin in finding.evidence
+        if pin in {"J1.1", "J1.2", "J1.3", "J2.1", "J2.2", "J2.3", "J2.4", "J3.1", "J3.2", "J3.3"}
+    }
+    assert connector_pin_evidence == {
+        "J1.3",
+        "J2.3",
+        "J3.3",
+    }
+    assert all(item.mode == "review" for item in split_findings)
+
+    common_nets = {name: pins for name, pins in observed.nets.items() if name != "USB2_RETURN"}
+    common_nets["COMMON_RETURN"] = ("J1.3", "J2.3", "J3.3")
+    common = observed.model_copy(update={"nets": common_nets})
+    common_report = report(common, "synthetic-two-usb-one-serial-common-return")
+    assert not any(
+        finding.rule_id == "connector.repeated_pin_function" for finding in common_report.findings
     )
