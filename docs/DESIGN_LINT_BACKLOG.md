@@ -9025,22 +9025,34 @@ is not a reason by itself to expand its scope or change its default policy.
   pads on one `RETURN` net and one zone on each copper layer, then compares no
   through via with a single through-via control. Its contract result remains
   conditional on the project explicitly requiring that endpoint path.
-- **Remaining:** No synthetic path or pad-island evidence case remains in this
-  item. Native isolation controls verify two declared domains remain separate
-  and catch an added fitted net-tie bridge while preserving each domain's local
-  connectivity. The fixture lane also proves exact net-tie groups and DNP state
-  for a fitted bond and its valid-open control. The alternate-layer connected/open controls now
-  retain the stable via geometry and prove whether that via belongs to each
+- **Multiport contract regression (2026-10-20):** A pure synthetic snapshot
+  maps both return contacts on four DB9-like connectors into one authored
+  direct-return domain. The common-copper control passes; splitting both
+  contacts of J4 into a separate copper group or opening only J4.9 fails the
+  domain connectivity check while all eight exact pad/net identity checks
+  still pass. This tests multi-endpoint contract evaluation; it does not replace
+  the exact-version native lane that establishes pad-to-copper evidence.
+- **Remaining:** The four-port split/island mutation currently exercises
+  synthetic contract-snapshot evaluation; the exact-version native lane covers
+  source-bound copper evidence with smaller connected, split-plane, and
+  alternate-layer fixtures, not this exact multi-connector topology. Native
+  isolation controls verify two declared domains remain separate and catch an
+  added fitted net-tie bridge while preserving each domain's local connectivity.
+  The fixture lane also proves exact net-tie groups and DNP state for a fitted
+  bond and its valid-open control. The alternate-layer connected/open controls
+  retain stable via geometry and prove whether that via belongs to each
   endpoint's native copper component. The connected fixture repeats an exact
-  native load to verify stable IDs and membership. Component membership does not
-  establish the ordered route through tracks or prove current capacity.
+  native load to verify stable IDs and membership. Component membership does
+  not establish the ordered route through tracks or prove current capacity.
 - **Boundary:** A same-net assignment is not copper continuity; geometry is
   not manufactured continuity. A declared net-tie pass verifies the native
   footprint identity, pad groups, and DNP state, but does not prove that copper
   inside the footprint physically bridges those pads. Isolated domains remain
   valid when declared.
-- **Fixtures:** Connected plane; missing pad connection; split plane; same-net
-  front/back return planes without and with a through-via bond; declared net
+- **Fixtures:** Connected plane; missing pad connection; split plane; four-port
+  DB9-like common-return control, whole-connector copper island, and single
+  open-contact fault; same-net front/back return planes without and with a
+  through-via bond; declared net
   tie; disconnected island; valid isolation; DNP bond; alternate layer
   return. The first connected-plane and split-plane controls are now included in
   the native lane for SMD and plated through-hole pads; fitted and DNP net-tie

@@ -199,6 +199,55 @@ def test_direct_connector_returns_pass_only_when_native_copper_connects_exact_pa
     assert failed["pcb-return-paths/pwm-return/connectivity"].status == "FAIL"
 
 
+@pytest.mark.parametrize(
+    "isolated_pads",
+    (("J4.7", "J4.9"), ("J4.9",)),
+    ids=("whole-connector-island", "single-open-contact"),
+)
+def test_four_connector_return_contract_checks_both_contacts_on_every_port(
+    isolated_pads: tuple[str, ...],
+) -> None:
+    endpoint_pads = tuple(
+        f"J{reference}.{number}" for reference in range(1, 5) for number in ("7", "9")
+    )
+    requirement = PcbReturnPathsAnalysis(
+        basis="Synthetic four-port DB9 common-return requirement",
+        domains=(
+            domain(
+                "four-port-db9-return",
+                endpoints=tuple(endpoint(item) for item in endpoint_pads),
+            ),
+        ),
+    )
+    connected = snapshot(tuple(pad(item, connected=endpoint_pads) for item in endpoint_pads))
+    control = checks_for(requirement, connected)
+    assert control["pcb-return-paths/four-port-db9-return/connectivity"].status == "PASS"
+
+    isolated = set(isolated_pads)
+    groups = tuple(
+        group
+        for group in (
+            tuple(item for item in endpoint_pads if item not in isolated),
+            tuple(item for item in endpoint_pads if item in isolated),
+        )
+        if group
+    )
+    group_by_pad = {item: group for group in groups for item in group}
+    disconnected = snapshot(
+        tuple(pad(item, connected=group_by_pad[item]) for item in endpoint_pads)
+    )
+    fault = checks_for(requirement, disconnected)
+
+    assert all(
+        fault[f"pcb-return-paths/four-port-db9-return/pad/{item}"].status == "PASS"
+        for item in endpoint_pads
+    )
+    connectivity = fault["pcb-return-paths/four-port-db9-return/connectivity"]
+    assert connectivity.status == "FAIL"
+    expected_island = ", ".join(isolated_pads)
+    assert f"{expected_island} in copper group [{expected_island}]" in connectivity.detail
+
+
 def test_connected_return_retains_stable_via_geometry_and_layer_transition() -> None:
     via_id = "d" * 64
     transition = PcbViaObservation(
