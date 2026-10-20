@@ -773,6 +773,56 @@
       "metamorphic_not_applicable_basis": null
     },
     {
+      "rule_id": "connector.footprint_named_signal_mode_dependent_open_outlier",
+      "title": "Named mode-dependent signal contact is open on a footprint-similar connector peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, matching nonempty native function and electrical-type metadata, and the current source-matched peer-assignment scope when one applies. An explicitly named, non-generic bidirectional, tri_state, open_collector, or open_emitter contact is assigned to one exact net on some peers and left open on others, while another pin in the same scope has one exact common-net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching symbol metadata, value, footprint, pin inventory, and a common anchor are review clues only; they do not prove that peers have the same electrical role or that an open contact must connect.",
+        "A mode-dependent signal can be intentionally unused or isolated. The default REVIEW prompt asks the project owner to inspect the approved pinout; it does not instruct the project to connect or block the contact.",
+        "Only explicit non-generic bidirectional, tri_state, open_collector, or open_emitter functions outside recognized supply and return roles are considered. Input and output contacts belong to separate rules. Generic functions, power types, passive/free/unspecified, all-open, split-assignment, ambiguous, and unmatched contacts remain outside this predicate.",
+        "The rule requires complete identical pin inventories and matching nonempty native pin functions and electrical types. Missing or inconsistent evidence, or an absent common assigned anchor, produces no finding.",
+        "DNP and PART_ID-bearing components are excluded. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. Schematic assignment does not establish PCB copper continuity or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_footprint_named_signal_mode_dependent_open.test_mode_dependent_signal_open_on_one_alias_is_reviewed",
+        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_signal_mode_dependent_open_native_fixture_lane.test_mode_dependent_signal_validator_checks_fault_and_control",
+        "tests.test_connector_footprint_named_signal_mode_dependent_open_native_fixture_lane.test_native_mode_dependent_signal_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_footprint_named_signal_mode_dependent_open.test_common_unanchored_and_ineligible_contacts_are_not_mode_dependent_findings",
+        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_signal_mode_dependent_open_native_fixture_lane.test_mode_dependent_signal_validator_checks_fault_and_control",
+        "tests.test_connector_footprint_named_signal_mode_dependent_open_native_fixture_lane.test_native_mode_dependent_signal_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_footprint_named_signal_mode_dependent_open.test_mode_dependent_open_finding_is_stable_under_mapping_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinOpenOutlier",
+        "kicad_tooling/hwrepo/connector_footprint_named_signal_mode_dependent_open.py#footprint_named_signal_mode_dependent_open_outlier_candidates",
+        "kicad_tooling/hwrepo/connector_footprint_open_named_candidates.py#open_named_outlier_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/connector_peer_pin_coverage.py#connector_peer_pin_heuristic_coverage",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_named_signal_mode_dependent_open.py#footprint_named_signal_mode_dependent_open_outlier_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
       "rule_id": "connector.footprint_peer_pin_all_open",
       "title": "Generic pin is open on every footprint-similar connector peer",
       "status": "active",

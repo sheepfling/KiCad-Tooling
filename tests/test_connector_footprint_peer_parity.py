@@ -55,6 +55,9 @@ NAMED_POWER_INPUT_DIVERGENCE_RULE_ID = "connector.footprint_named_power_input_as
 NAMED_POWER_INPUT_ALL_OPEN_RULE_ID = "connector.footprint_named_power_input_all_open"
 NAMED_POWER_OUTPUT_ALL_OPEN_RULE_ID = "connector.footprint_named_power_output_all_open"
 NAMED_SIGNAL_ALL_OPEN_RULE_ID = "connector.footprint_named_signal_all_open"
+NAMED_SIGNAL_MODE_DEPENDENT_OPEN_RULE_ID = (
+    "connector.footprint_named_signal_mode_dependent_open_outlier"
+)
 NAMED_POWER_OUTPUT_DIVERGENCE_RULE_ID = (
     "connector.footprint_named_power_output_assignment_divergence"
 )
@@ -104,6 +107,7 @@ def _observed(
                     "UART_RX": "input",
                     "BIAS_OUT": "power_out",
                     "UART_TX": "output",
+                    "DATA_IO": "bidirectional",
                 }.get(functions[int(number) - 1], "passive")
             )
             for reference in ("J1", "J2")
@@ -150,6 +154,11 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
                 rule_id=NAMED_SIGNAL_ALL_OPEN_RULE_ID,
                 mode="review",
                 reason="Synthetic parity fixture opts in to named signal all-open review.",
+            ),
+            DesignLintRuleOverride(
+                rule_id=NAMED_SIGNAL_MODE_DEPENDENT_OPEN_RULE_ID,
+                mode="review",
+                reason="Synthetic parity fixture opts in to mode-dependent signal review.",
             ),
         )
     )
@@ -296,6 +305,24 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             "PASS",
             0,
         ),
+        (
+            False,
+            True,
+            False,
+            ("GND", "DATA_IO"),
+            NAMED_SIGNAL_MODE_DEPENDENT_OPEN_RULE_ID,
+            "REVIEW",
+            1,
+        ),
+        (
+            False,
+            False,
+            False,
+            ("GND", "DATA_IO"),
+            NAMED_SIGNAL_MODE_DEPENDENT_OPEN_RULE_ID,
+            "PASS",
+            0,
+        ),
     ):
         observed = _observed(
             fault=fault,
@@ -408,6 +435,15 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
                 assert findings[0].evidence["pin_electrical_type"] == ("output",)
                 assert findings[0].evidence["assignments"] == (
                     "J1.2=<unassigned>",
+                    "J2.2=<unassigned>",
+                )
+        elif rule_id == NAMED_SIGNAL_MODE_DEPENDENT_OPEN_RULE_ID:
+            assert alias.open_outlier_finding_count == expected_findings
+            if expected_findings:
+                assert findings[0].evidence["pin_electrical_type"] == ("bidirectional",)
+                assert findings[0].evidence["open_pins"] == ("J2.2",)
+                assert findings[0].evidence["assignments"] == (
+                    "J1.2=SYNTHETIC_SIGNAL_A",
                     "J2.2=<unassigned>",
                 )
         else:

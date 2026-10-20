@@ -22,6 +22,9 @@ from .connector_footprint_named_signal_all_open import (
 from .connector_footprint_named_signal_divergence import (
     evaluate_footprint_named_signal_assignment_divergence,
 )
+from .connector_footprint_named_signal_mode_dependent_open import (
+    footprint_named_signal_mode_dependent_open_outlier_candidates,
+)
 from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
@@ -111,6 +114,7 @@ def connector_footprint_peer_pin_candidates(
         *footprint_named_signal_input_open_outlier_candidates(scan),
         *footprint_named_power_output_open_outlier_candidates(scan),
         *footprint_named_signal_output_open_outlier_candidates(scan),
+        *footprint_named_signal_mode_dependent_open_outlier_candidates(scan),
         *_footprint_peer_pin_all_open_candidates(scan),
     )
 

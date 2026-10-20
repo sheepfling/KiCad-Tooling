@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import rule_catalog
-from tests.design_lint_footprint_named_all_open_fixture_refs import (
-    FOOTPRINT_NAMED_ALL_OPEN_FIXTURES,
+from tests.design_lint_footprint_peer_fixture_refs import (
+    FOOTPRINT_PEER_PARITY_FIXTURES,
 )
 
 pytestmark = pytest.mark.design_lint
@@ -21,7 +21,7 @@ def _refs(owner: str, *tests: str) -> tuple[str, ...]:
 
 
 _PARITY_FIXTURES_BY_RULE = {
-    **FOOTPRINT_NAMED_ALL_OPEN_FIXTURES,
+    **FOOTPRINT_PEER_PARITY_FIXTURES,
     "bus.i2c_missing_pullup": {
         "fault_fixtures": _refs(
             "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests",
