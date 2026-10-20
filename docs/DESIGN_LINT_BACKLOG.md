@@ -573,8 +573,8 @@ and optional ecosystem adapters are `P3`.
   no inferred electrical rule.
 
 - **Shared explicit return-pin metadata (2026-10-19; controls updated 2026-10-20):**
-  I2C, SPI, CAN, serial,
-  and USB peer-reference checks now share `peer_reference_assignments.py` for
+  I2C, SPI, CAN, serial, and USB peer-reference checks now share
+  `peer_reference_assignments.py` for
   native pin-function and pin-type interpretation. A return-like function
   with native type `unspecified` can support a REVIEW only when the function
   itself names a recognized return role; shield, chassis, frame, protective
@@ -586,8 +586,12 @@ and optional ecosystem adapters are `P3`.
   do not become signal-reference evidence. Focused protocol tests,
   catalog/architecture tests, Ruff, Pyright, and the documentation check pass.
   No project board or proprietary fixture was imported. The rule-scoped
-  I2C prerelease gate will retain the exact native-fixture, parity, and
-  installed-wheel acceptance checks.
+  `v0.5.2rc4` gate passed hosted run `39372713717`: 18 rule-selected tests,
+  repeated fault/control exports on digest-pinned KiCad 10.0.0 and 10.0.5 with
+  matching normalized hashes, installed-wheel checks against separate project
+  checkouts, and all three platform previews. The package-release job was
+  skipped under prerelease policy. The preceding cross-protocol gate passed
+  hosted run `39371815403`.
 
 - **Pytest architecture selection (2026-10-13):** Split the 501-line
   `tests/test_design_lint_architecture_pytest_style.py` into
