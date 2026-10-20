@@ -4930,13 +4930,14 @@ is not a reason by itself to expand its scope or change its default policy.
   exports on the digest-pinned KiCad 10.0.0 and 10.0.5 lane. The typed-netlist
   multi-reference control gives one PHY two explicitly named return pins on
   separate nets and confirms the bounded predicate skips it.
-  **Current VSS/unspecified extension (2026-10-20; exact-version acceptance pending):**
+  **Current VSS/unspecified extension (2026-10-20; exact-version acceptance passed):**
   deterministic USB 2.0 and SuperSpeed regressions preserve REVIEW for split
   references, keep a shared reference quiet, and reject an unspecified non-return
   pin. CLI/MCP parity passes on the public template pinned by CI. Local KiCad
   10.0.6 export preserves the native VSS function and unspecified type on both
-  synthetic fault/control nets. The exact KiCad 10.0.0/10.0.5 fixture lane will
-  be rerun on the next rule-scoped tag; 10.0.6 is compatibility evidence only.
+  synthetic fault/control nets. Tagged acceptance on `v0.5.2rc7` passed the
+  exact KiCad 10.0.0/10.0.5 fixture lane; 10.0.6 remains compatibility
+  evidence only.
   The two-port hub source-to-netlist cases are documented in the
   [multiport USB fixture README](../tests/fixtures/design_lint/usb-multiport-peer-reference-native/README.md).
   The exact-map extension adds a valid 0R bond control and faults for an absent
@@ -4961,6 +4962,16 @@ is not a reason by itself to expand its scope or change its default policy.
   finding. This source-hashed comparison is registered for both pinned KiCad
   versions; its tagged hosted acceptance is recorded in Evidence history below.
 - **Evidence history:**
+
+  **Tagged exact-version acceptance (2026-10-20):** `v0.5.2rc7` (commit
+  `eea03f6`, run `39375741595`) passed the focused
+  `bus.usb_peer_reference_review` gate with
+  `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`. Both USB 2.0 data-path and
+  SuperSpeed native fixture lanes ran on digest-pinned KiCad 10.0.0 and 10.0.5,
+  including the new VSS/unspecified controls, source-hashed protection-shunt
+  cases, exact 0R bond control, and mapped-versus-unmapped protection coverage.
+  The installed-wheel rehearsal and Linux, macOS, and Windows preview jobs
+  passed; the separate `package` job was skipped.
 
   **Tagged hosted acceptance (2026-10-19):** `v0.5.1rc50` (commit `8dacb2a`)
   passed GitHub Actions run `39334092708`. The scoped
