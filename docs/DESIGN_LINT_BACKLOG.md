@@ -2703,7 +2703,9 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 147 covered, 0 not applicable, 0 unreviewed.
+  audit: 147 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  hash-seed regression is linked to the named-complementary-pair rule it also
+  asserts, so catalog metadata covers every finding checked by that report.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -4658,6 +4660,18 @@ is not a reason by itself to expand its scope or change its default policy.
   also reproduced their source hashes, parsed-netlist hashes, candidate
   inventories, and connected-bias summaries. Receipts are under ignored
   `build/ci/` paths. The lane exports netlists only; it does not run ERC/DRC.
+- **Rule-scoped native selection (2026-10-20):** The same public demos and
+  synthetic `POR_B`/`PORN` pair passed again with exact KiCad 10.0.5: one test
+  and five subtests, with repeated normalized netlists and all expected
+  candidate inventories. The connected-input screen reports 42 net-level
+  bias candidates across the four demos; 7 candidate nets include a native
+  output-capable peer (CM5 2/4, Jetson 3/24, ColdFire 0/2, VME 2/12). These
+  counts measure review workload only; pin-type metadata does not establish an
+  active driver or a false positive. The native demo test is now registered as
+  a fault fixture for both control-input rules, and both rules require
+  `KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES`. Focused collection selects this
+  same native test for either rule, so prerelease rule tags exercise the demo
+  lane even when the full package job is skipped.
 - **Remaining:** The native results validate evidence parsing and bounded
   aliases, not design intent. Public demo screens do not label intent, and
   connected-bias candidate volume is not a false-positive measurement.

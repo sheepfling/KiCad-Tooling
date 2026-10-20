@@ -2773,7 +2773,8 @@
         "Connected control-pin bias and driver topology are outside this rule."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_open_control_inputs.test_unconnected_reset_enable_and_boot_inputs_are_review_candidates"
+        "tests.test_design_lint_open_control_inputs.test_unconnected_reset_enable_and_boot_inputs_are_review_candidates",
+        "tests.test_ci_hosted_control_inputs.NativeControlInputDemoTests.test_native_public_demos_record_connected_bias_and_unconnected_controls"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_open_control_inputs.test_unconnected_reset_enable_and_boot_inputs_are_review_candidates"
@@ -2788,7 +2789,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/control_input_inventory.py#unconnected_control_inputs"
+      "implementation_owner": "kicad_tooling/hwrepo/control_input_inventory.py#unconnected_control_inputs",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES"
+      ]
     },
     {
       "rule_id": "control.connected_control_input_without_visible_bias",
@@ -2807,7 +2811,8 @@
         "Internal pulls, off-board bias, connected drivers, firmware behavior, resistor adequacy, and PCB copper continuity are not modeled; DNP control components are excluded."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_input_without_visible_bias_is_review_only_and_configurable"
+        "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_input_without_visible_bias_is_review_only_and_configurable",
+        "tests.test_ci_hosted_control_inputs.NativeControlInputDemoTests.test_native_public_demos_record_connected_bias_and_unconnected_controls"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_prompt_checks_assignments_and_valid_controls",
@@ -2823,7 +2828,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/control_input_inventory.py#connected_control_inputs_without_visible_rail_resistor"
+      "implementation_owner": "kicad_tooling/hwrepo/control_input_inventory.py#connected_control_inputs_without_visible_rail_resistor",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES"
+      ]
     },
     {
       "rule_id": "signal.open_collector_input_without_visible_bias",
@@ -3633,7 +3641,8 @@
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_named_pairs.test_named_pair_hint_is_stable_and_reviewed_map_suppresses_only_the_hint",
-        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
+        "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic",
+        "tests.test_design_lint_determinism_connector_peers.test_connector_peer_reports_remain_deterministic"
       ],
       "metamorphic_status": "covered",
       "implementation_refs": [
