@@ -63,6 +63,24 @@ fixture test validates four cases. The locator now points to that four-case
 test. This was catalog/test reachability drift, not an observed lint-predicate
 failure or a board defect.
 
+A public 0BSD training-checkout screen at commit
+`ed89536f0dbbcb013145af2994fef41b2250143e` exercised three PCB examples with
+the exact KiCad 10.0.0 and 10.0.5 images. It exposed an execution gap: the
+container-native lane invoked PCB geometry capture from inside the KiCad image,
+where its nested Docker call could not run, so design lint was reported as
+`BLOCKED`. The host-to-container runners now pass the catalogued image digest
+as an execution marker. Geometry capture uses the image's `/usr/bin/python3`
+only when that marker exactly matches the selected project toolchain; retained
+command evidence validates that binding and the probe's `/work/build/` paths.
+Host execution continues to use the isolated, read-only pinned-image probe.
+After the change, the three PCB examples produced source-bound `REVIEW` reports
+with complete geometry evidence. Their overall verification remained `FAIL`
+because review findings were open; these training fixtures were not treated as
+independently adjudicated defects. This improves evidence availability, not
+rule precision or field value. The schematic-only passive reference remains
+`BLOCKED` because its native netlist contains no component records, so it was
+excluded from lint applicability counts.
+
 ### Entry requirements
 
 Before implementation, every item needs:
@@ -8725,11 +8743,20 @@ is not a reason by itself to expand its scope or change its default policy.
   PART_IDs were exported twice on KiCad 10.0.0 and 10.0.5 in local Docker containers. Both
   version-parameterized native tests passed at `v0.5.2rc34` on 2026-10-20; the tests verify exact
   fixture hashes, reported native versions, repeatable normalized netlists, findings on both faults,
-  and quiet controls. Hosted package acceptance remains pending. No product source or cohort fixture
-  is used; see the
+  and quiet controls. Hosted package acceptance remains pending. The synthetic
+  regression suite uses no product source or cohort fixture; see the
   [base fixture README](../tests/fixtures/design_lint/connector-footprint-peer-missing-metadata-native/README.md)
   and
   [PART_ID fixture README](../tests/fixtures/design_lint/connector-part-id-peer-missing-metadata-native/README.md).
+- **Public applicability screen (2026-10-20):** A separate 0BSD training
+  checkout at commit `ed89536f0dbbcb013145af2994fef41b2250143e` had no
+  supported LINT-165 peer groups. The controller report said
+  `NO_CONNECTOR_CANDIDATES`; the Arduino and Raspberry Pi status-LED reports
+  said `NO_EXACT_SYMBOL_PEERS`. The passive-signal schematic-only example had
+  no component records and was blocked before lint evaluation. These are
+  applicability results only: the examples do not measure false positives,
+  reviewer effort, or field value. No example source was copied into this
+  repository, and no training finding was classified as a defect.
 - **Focused selection:**
 
   ```sh

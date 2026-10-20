@@ -92,6 +92,7 @@ from .hwrepo.models import (
     ProjectKind,
     ProjectManifest,
 )
+from .hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
 
 __all__ = (
     "TWO_PIN_COMPONENT_FIXTURE_CASES",
@@ -369,6 +370,8 @@ def native_lane(
         "HOME=/tmp/kicad-template",
         "-e",
         "PYTHONDONTWRITEBYTECODE=1",
+        "-e",
+        f"{NATIVE_CONTAINER_IMAGE_ENV}={image}",
         "-e",
         "CHECKED_SHA",
         "-e",

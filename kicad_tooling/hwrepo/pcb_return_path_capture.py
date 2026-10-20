@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -11,6 +12,10 @@ from .contract_coach import pinned_image, run_command
 from .contracts import repo_path, write_model
 from .evidence import digest
 from .models import CommandEvidence, PcbAccessProbeRequestSet, ProjectConfig
+from .native_container_context import (
+    NATIVE_CONTAINER_IMAGE_ENV,
+    native_container_image_marker,
+)
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceRequestSet
 
@@ -46,6 +51,9 @@ def capture_native_pcb_connectivity(
     if not config.kicad_version.startswith("10."):
         raise ValueError("PCB return-path evidence currently supports the KiCad 10 Python API only")
     image = pinned_image(config.image)
+    in_container_image = native_container_image_marker()
+    if in_container_image is not None and in_container_image != image:
+        raise ValueError("Native container image marker differs from the project's pinned image")
     root = root.resolve()
     board = repo_path(root, config.project).with_suffix(".kicad_pcb")
     output = output.resolve()
@@ -73,53 +81,74 @@ def capture_native_pcb_connectivity(
         touch_request_path = output / "touch-pad-clearance-requests.json"
         write_model(touch_request_path, touch_pad_clearance_requests)
         touch_request_hash = digest(touch_request_path)
-    probe_arguments: tuple[str, ...]
-    if touch_request_path is not None:
-        probe_arguments = (
-            str(request_path.relative_to(output)) if request_path is not None else "-",
-        ) + ("touch-pad-clearance-requests.json",)
-        probe_arguments = tuple(
-            f"/output/{item}" if item != "-" else item for item in probe_arguments
-        )
-    elif request_path is not None:
-        probe_arguments = ("/output/access-probe-requests.json",)
-    else:
-        probe_arguments = ()
-    user: tuple[str, ...] = ()
-    if sys.platform != "win32":
-        import os
+    if in_container_image is not None:
 
-        user = ("--user", f"{os.getuid()}:{os.getgid()}")
-    argv = (
-        "docker",
-        "run",
-        "--rm",
-        "--platform",
-        "linux/amd64",
-        "--network",
-        "none",
-        "--read-only",
-        "--tmpfs",
-        "/tmp:rw,nosuid,nodev,size=64m",
-        *user,
-        "-e",
-        "HOME=/tmp",
-        "-v",
-        f"{root}:/work:ro",
-        "-v",
-        f"{output}:/output:rw",
-        "-w",
-        "/work",
-        "--entrypoint",
-        "/usr/bin/python3",
-        image,
-        "-I",
-        "-B",
-        "/output/native_pcb_probe.py",
-        f"/work/{relative_board}",
-        "/output/snapshot.json",
-        *probe_arguments,
-    )
+        def work_path(path: Path) -> str:
+            return f"/work/{path.relative_to(root).as_posix()}"
+
+        if touch_request_path is not None:
+            probe_arguments = (
+                work_path(request_path) if request_path is not None else "-",
+                work_path(touch_request_path),
+            )
+        elif request_path is not None:
+            probe_arguments = (work_path(request_path),)
+        else:
+            probe_arguments = ()
+        argv = (
+            "/usr/bin/env",
+            f"{NATIVE_CONTAINER_IMAGE_ENV}={image}",
+            "/usr/bin/python3",
+            "-I",
+            "-B",
+            work_path(probe_copy),
+            f"/work/{relative_board}",
+            work_path(snapshot_path),
+            *probe_arguments,
+        )
+    else:
+        if touch_request_path is not None:
+            probe_arguments = (
+                "/output/access-probe-requests.json" if request_path is not None else "-",
+                "/output/touch-pad-clearance-requests.json",
+            )
+        elif request_path is not None:
+            probe_arguments = ("/output/access-probe-requests.json",)
+        else:
+            probe_arguments = ()
+        user: tuple[str, ...] = ()
+        if sys.platform != "win32":
+            user = ("--user", f"{os.getuid()}:{os.getgid()}")
+        argv = (
+            "docker",
+            "run",
+            "--rm",
+            "--platform",
+            "linux/amd64",
+            "--network",
+            "none",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:rw,nosuid,nodev,size=64m",
+            *user,
+            "-e",
+            "HOME=/tmp",
+            "-v",
+            f"{root}:/work:ro",
+            "-v",
+            f"{output}:/output:rw",
+            "-w",
+            "/work",
+            "--entrypoint",
+            "/usr/bin/python3",
+            image,
+            "-I",
+            "-B",
+            "/output/native_pcb_probe.py",
+            f"/work/{relative_board}",
+            "/output/snapshot.json",
+            *probe_arguments,
+        )
     command = run_command(root, argv, timeout=600)
     write_model(output / "native.command.json", command)
     if command.returncode != 0 or command.error is not None or not snapshot_path.is_file():
@@ -163,7 +192,40 @@ def native_pcb_command_matches(
     except ValueError:
         return False
     argv = command.argv
-    if not argv or argv[0] != "docker" or command.returncode != 0 or command.error:
+    if not argv or command.returncode != 0 or command.error:
+        return False
+    if argv[0] == "/usr/bin/env":
+        prefix = (
+            "/usr/bin/env",
+            f"{NATIVE_CONTAINER_IMAGE_ENV}={image}",
+            "/usr/bin/python3",
+            "-I",
+            "-B",
+        )
+        if argv[:5] != prefix or len(argv) < 8:
+            return False
+        probe_path = Path(argv[5])
+        snapshot_path = Path(argv[7])
+        if (
+            probe_path.name != "native_pcb_probe.py"
+            or snapshot_path.name != "snapshot.json"
+            or probe_path.parent != snapshot_path.parent
+            or not probe_path.parent.is_relative_to(Path("/work/build/design-lint"))
+        ):
+            return False
+        board_argument = "/work/" + Path(config.project).with_suffix(".kicad_pcb").as_posix()
+        expected_tail = [board_argument, str(snapshot_path)]
+        if touch_pad_clearance_probes:
+            expected_tail.extend(
+                (
+                    str(probe_path.parent / "access-probe-requests.json") if access_probes else "-",
+                    str(probe_path.parent / "touch-pad-clearance-requests.json"),
+                )
+            )
+        elif access_probes:
+            expected_tail.append(str(probe_path.parent / "access-probe-requests.json"))
+        return len(argv) == 6 + len(expected_tail) and list(argv[6:]) == expected_tail
+    if argv[0] != "docker":
         return False
     if not all(
         item in argv

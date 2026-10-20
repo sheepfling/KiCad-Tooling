@@ -12,6 +12,7 @@ import pytest
 
 from kicad_tooling.ci_hosted import HostedLog, native_lane
 from kicad_tooling.hwrepo.models import DesignLintPolicy
+from kicad_tooling.hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
 from tests.support import initialize_git
 from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
@@ -118,5 +119,9 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         fixture.assert_called_once_with(root, **expected_kwargs)
     stages = [call.args[0] for call in run.call_args_list]
     assert "native-check" in stages
+    native_command = next(
+        call.args[1] for call in run.call_args_list if call.args[0] == "native-check"
+    )
+    assert f"{NATIVE_CONTAINER_IMAGE_ENV}=fixture@sha256:{'a' * 64}" in native_command
     assert "fault-probes" not in stages
     assert stages[-2:] == ["source-diff", "index-diff"]

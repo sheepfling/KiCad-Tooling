@@ -21,6 +21,7 @@ from kicad_tooling.hwrepo.models import (
     CommandEvidence,
     ValidationSummary,
 )
+from kicad_tooling.hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
 from kicad_tooling.verify import container_command, format_report, run_command, verify
 from tests.verify_support import VerifyFixture, native_summary
 
@@ -186,6 +187,9 @@ class VerifyTests(VerifyFixture):
         self.assertEqual(len(commands), 2)
         self.assertIn("@sha256:", " ".join(commands[0]))
         self.assertIn("@sha256:", " ".join(commands[1]))
+        self.assertTrue(
+            any(argument.startswith(f"{NATIVE_CONTAINER_IMAGE_ENV}=") for argument in commands[1])
+        )
         self.assertEqual(commands[1][commands[1].index("--project") + 1], "controller")
         self.assertTrue((Path(result.run_directory) / "dependency-command.json").is_file())
         self.assertTrue((Path(result.run_directory) / "native-command.json").is_file())

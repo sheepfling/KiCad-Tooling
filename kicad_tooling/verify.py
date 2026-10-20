@@ -27,6 +27,7 @@ from .hwrepo.models import (
     ProjectStaticPipelineReport,
     ProjectVerificationReport,
 )
+from .hwrepo.native_container_context import NATIVE_CONTAINER_IMAGE_ENV
 from .hwrepo.selection import ProjectSelector, resolve_project_ids
 
 Depth = Literal["portable", "native", "electrical"]
@@ -95,6 +96,8 @@ def container_command(
             "HOME=/tmp/kicad-template",
             "-e",
             "PYTHONDONTWRITEBYTECODE=1",
+            "-e",
+            f"{NATIVE_CONTAINER_IMAGE_ENV}={image}",
             "--mount",
             f"type=bind,source={root},target=/work",
             *git_metadata_mounts(root),
