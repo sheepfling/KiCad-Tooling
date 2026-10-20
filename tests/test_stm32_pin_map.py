@@ -30,6 +30,13 @@ from kicad_tooling.hwrepo.stm32_pin_map_models import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.interface_lint]
 _ROOT = Path(__file__).resolve().parents[1]
 _IOC_FIXTURE = _ROOT / "tests/fixtures/design_lint/stm32-pin-map/valid.ioc"
+_IOC_CONFLICT_FORWARD = (
+    _ROOT / "tests/fixtures/design_lint/stm32-pin-map/suffix-conflict-forward.ioc"
+)
+_IOC_CONFLICT_REVERSED = (
+    _ROOT / "tests/fixtures/design_lint/stm32-pin-map/suffix-conflict-reversed.ioc"
+)
+_IOC_ESCAPED_PIN_KEY = _ROOT / "tests/fixtures/design_lint/stm32-pin-map/escaped-pin-key.ioc"
 _IOC_RELATIVE = "tests/fixtures/design_lint/stm32-pin-map/valid.ioc"
 _NETLIST_SHA256 = "a" * 64
 
@@ -198,12 +205,15 @@ def test_exact_aliases_and_reasoned_package_exclusions_are_accepted() -> None:
 
 
 def test_cubemx_alternate_function_and_escaped_pin_suffixes_are_supported() -> None:
+    escaped = parse_cubemx_ioc(_IOC_ESCAPED_PIN_KEY.read_bytes())
     document = parse_cubemx_ioc(
-        b"PC13-ANTI_TAMP.Signal=GPIO_Output\nPH0\\ -\\ OSC_IN.Signal=RCC_OSC_IN\nPA13-JTMS/SWDIO.Signal=SYS_JTMS-SWDIO\n"
+        b"PC13-ANTI_TAMP.Signal=GPIO_Output\nPA13-JTMS/SWDIO.Signal=SYS_JTMS-SWDIO\n"
     )
+    assert escaped.issues == ()
+    assert escaped.pins["ph0"].port_pin == "PH0"
+    assert escaped.pins["ph0"].raw_key == "PH0\\ -\\ OSC_IN"
     assert document.issues == ()
-    assert {pin.port_pin for pin in document.pins.values()} == {"PC13", "PH0", "PA13"}
-    assert document.pins["ph0"].raw_key == "PH0\\ -\\ OSC_IN"
+    assert {pin.port_pin for pin in document.pins.values()} == {"PC13", "PA13"}
 
 
 def test_package_pin_inventory_requires_exact_map_or_reasoned_exclusion() -> None:
@@ -242,14 +252,15 @@ def test_duplicate_or_unsupported_ioc_assignments_block_coverage() -> None:
 
 
 @pytest.mark.parametrize(
-    "candidate",
+    "fixture",
     (
-        b"PA13-JTMS.Signal=SYS_JTMS-SWDIO\nPA13-SWDIO.Signal=SYS_SWDIO\n",
-        b"PA13-SWDIO.Signal=SYS_SWDIO\nPA13-JTMS.Signal=SYS_JTMS-SWDIO\n",
+        _IOC_CONFLICT_FORWARD,
+        _IOC_CONFLICT_REVERSED,
     ),
     ids=("jtag-first", "swd-first"),
 )
-def test_conflicting_alternate_function_suffixes_block_coverage(candidate: bytes) -> None:
+def test_conflicting_alternate_function_suffixes_block_coverage(fixture: Path) -> None:
+    candidate = fixture.read_bytes()
     document = parse_cubemx_ioc(candidate)
     assert len(document.issues) == 1
     assert "both identify PA13" in document.issues[0]

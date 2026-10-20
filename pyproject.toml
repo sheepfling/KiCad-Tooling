@@ -81,6 +81,7 @@ markers = [
   "pcb_reference_lint: PCB signal-to-reference-plane coverage checks",
   "return_path_lint: ground, return, reference-plane, and return-path checks",
   "parity_lint: cross-surface CLI, MCP, and electrical parity checks",
+  "cohort_trial: opt-in runtime comparisons against pinned external cohort sources",
   "template_checkout: integration tests that require a separate public template checkout",
   "native_kicad: source or board fixtures run against an exact native KiCad version",
   "architecture: repository module boundaries and size guardrails",

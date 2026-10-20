@@ -9702,7 +9702,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v21; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v22; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus a source-only audit of
@@ -9730,7 +9730,10 @@ is not a reason by itself to expand its scope or change its default policy.
   both inputs, adding no incremental USB reference-domain result. A v2.3.1
   follow-up also records a GPIO-to-regulator-enable false-positive boundary for
   the voltage-domain analyzer; local LINT-066 remains protocol-specific and
-  now has a synthetic non-applicability control.
+  now has a synthetic non-applicability control. A source-pinned
+  STM32-KiCad-Pin-Checker parser trial compares suffix-collision ordering and
+  escaped pin keys against LINT-050; it adds no local detection and is not an
+  adoption case.
 
 ##### Recorded source audit: kicad-happy CP-003 touch-pad copper clearance (2026-10-13)
 
@@ -11714,6 +11717,32 @@ is not a reason by itself to expand its scope or change its default policy.
   proprietary project, or product expectation was adopted. Reviewer effort and
   long-term maintenance cost remain unmeasured.
 
+##### Recorded runtime trial: STM32-KiCad-Pin-Checker parser (2026-10-20)
+
+- **Pinned source:** `jbmata/STM32-KiCad-Pin-Checker` commit
+  [`f0018b5b4334caa5eeb619f9c0059dd7ae4363eb`](https://github.com/jbmata/STM32-KiCad-Pin-Checker/tree/f0018b5b4334caa5eeb619f9c0059dd7ae4363eb).
+  The upstream README declares MIT; this revision has no separately tracked
+  license file. Only `ioc.py` and `compare.py` were loaded from an external
+  checkout after SHA-256 verification. The trial did not install the GUI,
+  execute its netlist parser, invoke KiCad, or read project data.
+- **Synthetic cases:** The candidate parser receives two order-reversed
+  assignments whose suffixes identify the same physical PA13 pin but give
+  conflicting signals, and one CubeMX escaped-space key for PH0. The local
+  LINT-050 parser is run on the same fixture bytes.
+- **Observed result:** Candidate `compare` reports `WARNING` for the first
+  order and `OK` for the reversed order because a later assignment replaces
+  the earlier normalized pin value. The local parser reports the collision
+  for both orders. The candidate returns an empty pin map for the escaped PH0
+  key; the local parser recognizes PH0. The opt-in trial passed twice, with
+  two tests passing on each run.
+- **Disposition and limits:** No incremental detection gain or adoption value
+  was demonstrated. Keep the first-party LINT-050 parser and its order-stable
+  collision coverage; do not add an external dependency. The trial establishes
+  behavior only for these parser inputs, not GUI usability, full application
+  correctness, reviewer effort, or applicability across external projects.
+  Source hashes and invocation are in the
+  [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
+
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
 contains 147 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
@@ -11752,14 +11781,12 @@ it does not claim field validation or effectiveness against private boards.
   [STM32-KiCad-Pin-Checker](https://github.com/jbmata/STM32-KiCad-Pin-Checker) README describes
   comparing a KiCad `.net` export with STM32CubeMX `.ioc` `Signal` and `GPIO_Label` values, with
   user-authored aliases and ignored pins. It declares MIT and currently documents a Tkinter desktop
-  workflow; CLI/CI appears on its roadmap. The inspected `ioc.py` recognizes selected `.Signal` and
-  `.GPIO_Label` lines and strips suffix text after `-` when normalizing a port pin. No version or
-  commit was pinned for this source inspection, no runtime trial was performed, and no candidate
-  code was copied. Inspection of the published `main` source on 2026-09-30 shows suffixed keys
-  normalize to one dictionary entry, where a later `Signal` assignment can replace an earlier one.
-  The local parser now has a synthetic regression requiring conflicting suffixes for one physical
-  pin to produce `BLOCKED` coverage instead of silently accepting one value. This is source
-  inspection and local anti-control evidence, not a runtime evaluation of the GUI. See the
+  workflow; CLI/CI appears on its roadmap. A pinned read-only parser trial is recorded under
+  [LINT-031](#lint-031--candidate-analyzer-trial-and-incremental-value-register): at commit
+  `f0018b5b4334caa5eeb619f9c0059dd7ae4363eb`, the candidate handles order-reversed conflicting
+  suffix assignments differently and ignores an escaped PH0 key that the local parser accepts.
+  The local parser reports the same `BLOCKED` collision for both orders. No candidate code was
+  copied or installed as a dependency, and the GUI was not run. See the
   [README](https://github.com/jbmata/STM32-KiCad-Pin-Checker) and
   [`ioc.py`](https://github.com/jbmata/STM32-KiCad-Pin-Checker/blob/main/ioc.py). The local parser's
   alternate-function key boundary was also checked against an
@@ -14054,11 +14081,10 @@ has been run on a private board or imported into this repository.
   [STM32-KiCad-Pin-Checker](https://github.com/jbmata/STM32-KiCad-Pin-Checker)
   README documents `.net`/`.ioc` comparison, aliases, ignored pins, an MIT
   declaration, and a GUI-only invocation with CLI/CI listed as future work.
-  Selected [`ioc.py` source](https://github.com/jbmata/STM32-KiCad-Pin-Checker/blob/main/ioc.py)
-  parses a bounded set of signal and user-label keys and strips hyphenated
-  suffixes from the IOC port key. Its current main revision was not pinned;
-  this is not a runtime evaluation. The source motivates LINT-050's explicit
-  pin map and fail-visible parser coverage, not code reuse.
+  The source-pinned parser comparison is recorded under LINT-031. It found
+  order-dependent handling of conflicting suffix assignments and no support
+  for an escaped PH0 key; the local parser handles both cases deterministically.
+  The GUI was not run, and no candidate code or dependency was adopted.
 - **I2C pull-up voltage context:** The public
   [kicad-happy changelog](https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md)
   documents I2C pull-up, rise-time, and voltage-related analysis fields. This
@@ -14147,7 +14173,7 @@ engineering advice applies to every design.
 | USB-C port role-map coverage                           | kicad-happy USB-C CC validation                                                                    | LINT-053 prompts when a connector exports both CC1/CC2 pin functions but is absent from the authored role map. Native exports on KiCad 10.0.0/10.0.5 prove this bounded pin-function field and mapped/unmapped behavior. A pinned v2.1.0 runtime trial recognized simple 56 kΩ source and 5.1 kΩ sink controls, but for an unknown role it emitted sink-specific missing-pull-down findings while reporting the role as unknown. It adds no unique coverage over the local role-map prompt and authored role checks; details and hashes are in the synthetic fixture notes.                                                                                                                                                                                                                                                                                                        |
 | LED current-limiter presence                           | kicad-happy `validate_led_resistors`, LR-001; LED audit `LA-AUD`                                   | LINT-048 keeps exact `Device:LED` direct positive-rail/return assignments as a review hint; LINT-063 prompts when a native output-capable pin directly shares an LED terminal and the other terminal is on a recognized rail. A read-only `LA-AUD` trial corroborates the simple direct-output case but misclassifies the parallel-resistor fault as `resistor_limited`; the local rule retains that finding. Native exports on KiCad 10.0.0/10.0.5 assert the parallel resistor shares both LED nets before testing. ERC, current, and electrical qualification remain open; exact cohort hashes and reports are in the synthetic fixture notes.                                                                                                                                                                                                                                  |
 | USB external series-resistor topology                  | kicad-happy PR-004; ST AN4879; TI TUSB2036 datasheet                                               | LINT-049 implements an opt-in exact connector-to-PHY path map. The source-backed integrated STM32 direct-path control and TI TUSB2036 27R control both pass; removing a mapped resistor is detected. The generic cohort rule prompts on both PHY classes, so its universal resistor assumption is not adopted. Native source-to-netlist regressions now pass synthetic direct, series, and bypass cases on KiCad 10.0.0 and 10.0.5. Native ERC and electrical qualification remain open.                                                                                                                                                                                                                                                                                                                                                                                           |
-| STM32CubeMX to KiCad MCU pin assignments               | jbmata/STM32-KiCad-Pin-Checker README and selected `ioc.py` source                                 | LINT-050 implements a configurable, source-hashed contract for exact package-pin, KiCad symbol-pin, schematic-net, CubeMX signal, and label comparisons. Synthetic service and CLI/MCP parity cases pass; repeated native exports pass on pinned KiCad 10.0.0 and 10.0.5. The cohort desktop tool remains unadopted and has no runtime trial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| STM32CubeMX to KiCad MCU pin assignments               | jbmata/STM32-KiCad-Pin-Checker README and selected `ioc.py` source                                 | LINT-050 implements a configurable, source-hashed map from exact package pins to KiCad symbol pins, schematic nets, CubeMX signals, and labels. Service and CLI/MCP parity pass, as do repeated native exports on KiCad 10.0.0 and 10.0.5. The pinned trial found order-dependent PA13 suffix conflicts and ignored escaped PH0; local parsing rejects conflicts and accepts PH0. The candidate remains unadopted; GUI behavior and reviewer value were not measured. See LINT-031.                                                                                                                                                                                                                                                                                                                                                                                                |
 | IC power-pin DC-source path                            | kicad-happy `audit_power_pin_dc_paths`, PP-001                                                     | LINT-031's mapped wrong-rail follow-up shows PP-001 detects the ERC-clean synthetic fault when no map exists, while the valid path control is quiet. The project-authored LINT-055 map already catches it when supplied. LINT-056 adopts a configurable fallback REVIEW using a narrower explicit passive set; it does not copy the candidate's severity or “AC-coupled” diagnosis. External source recognition, custom paths, and broader false-positive behavior remain open.                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Connector/capacitor-only net without visible DC anchor | kicad_skills `analog.no_dc_path`                                                                   | LINT-065 adds a default REVIEW when every fitted pin on a non-return net is a supported connector or capacitor and at least one of each is present. It does not trace DC paths and allows off-board/internal bias. Native KiCad 10.0.0/10.0.5 runs repeat the fault, output-driver control, and DNP-capacitor control; ERC is clean in all. The pinned cohort runtime duplicates the fitted fault, stays quiet on the output-driver control, and warns on the DNP control because it counts unpopulated C/J/P-prefixed symbols. No unique detection; see LINT-031. This is synthetic evidence, not field validation.                                                                                                                                                                                                                                                               |
 | Unmapped decoupled power-input source path             | kicad-happy `PP-001`                                                                               | LINT-056 uses native `power_in`, fitted capacitor-to-return evidence, recognized positive rails or `power_out` pins, and a bounded fitted path graph. It recognizes bidirectional passive elements and the exact bridged solder-jumper symbol, and traverses exact supported diodes in the source-to-load direction. It prompts REVIEW when no supported path is found and suppresses the prompt for endpoints covered by an authored LINT-055 map. The synthetic assigned-wrong-rail case is missed by the mapless baseline and native ERC; the check does not infer required connectivity or prove conduction.                                                                                                                                                                                                                                                                   |

@@ -341,6 +341,7 @@ These notes identify the separate fixture inputs used by focused suites:
 - [Multi-bus contract parity netlist](fixtures/electrical/multi-bus-contract-parity/README.md)
 - [Release-contract evidence netlist](fixtures/electrical/release-contract-evidence/README.md)
 - [PCB access probe snapshot](fixtures/pcb-access-probe/README.md)
+- [Pinned STM32 cohort parser comparison](fixtures/design_lint/cohort-stm32-pin-checker/README.md)
 
 The first command runs the portable, non-slow design-lint group that is
 self-contained. Tests that need the public template checkout carry the
@@ -354,6 +355,9 @@ narrow local runs; the package acceptance gate continues to run the complete
 suite. Add each new lint test module to its area in
 `tests/design_lint_test_markers.py`; `tests/conftest.py` applies those markers and
 keeps it in both the focused area and the portable `design_lint` selection.
+External cohort source comparisons use the opt-in `cohort_trial` marker and run
+only when their pinned source checkout is supplied through the documented
+environment variable.
 
 Hosted PCB geometry acceptance is split by theme; for example, run only the
 synthetic decoupling placement or return-via checks with:
