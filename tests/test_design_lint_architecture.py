@@ -38,6 +38,7 @@ def _implementation_path(reference: str) -> str | None:
 PIN_ANALYSIS_MODULES = (
     "connector_identity.py",
     "connector_footprint_named_power_input_divergence.py",
+    "connector_footprint_named_power_output_divergence.py",
     "connector_footprint_named_signal_divergence.py",
     "connector_footprint_peer_pins.py",
     "connector_footprint_peer_pin_types.py",

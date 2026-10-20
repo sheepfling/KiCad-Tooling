@@ -23,6 +23,9 @@ from .ci_hosted_connector_return_mapped_supplies import verify_mapped_supply_int
 from .ci_hosted_connector_return_named_power_input_divergence import (
     verify_footprint_alias_named_power_input_divergence,
 )
+from .ci_hosted_connector_return_named_power_output_divergence import (
+    verify_footprint_alias_named_power_output_divergence,
+)
 from .ci_hosted_connector_return_named_signal_divergence import (
     verify_footprint_alias_named_signal_divergence,
 )
@@ -61,6 +64,7 @@ def connector_return_lint_fixture_lane(
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_signal_output(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_signal_divergence(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_power_input_divergence(context))
+    peer_pin_coverage_receipts.update(verify_footprint_alias_named_power_output_divergence(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_all_open(context))
     verify_offboard_connector_interfaces(context)
     verify_peer_pin_outlier_cases(context)

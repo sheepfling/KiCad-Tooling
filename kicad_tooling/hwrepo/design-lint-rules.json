@@ -580,6 +580,52 @@
       "metamorphic_not_applicable_basis": null
     },
     {
+      "rule_id": "connector.footprint_named_power_output_assignment_divergence",
+      "title": "Named power-output pin is assigned to different nets on a footprint-similar connector peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. Compare peers within a current source-matched peer_assignment_group when all peers have one; otherwise retain the unscoped comparison. An explicit, non-generic function outside recognized supply and return roles with native power_out type is a REVIEW candidate when each peer has exactly one assigned net and the assignments include at least two exact nets, only when another pin in that same scope has one exact common-net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching symbol metadata, value, footprint, pin inventory, assignments, and a common anchor are review clues only; they do not prove that peers have the same electrical role or that either net assignment is wrong.",
+        "The rule requires complete identical pin inventories and matching nonempty native pin functions and electrical types. Missing or inconsistent evidence produces a coverage gap, not a finding.",
+        "Only explicit native power_out contacts with non-generic functions outside recognized supply and return roles are considered. Generic functions, power_in, signal, passive, free, unspecified, and other electrical types, common assignments, open or ambiguous assignments, and assigned peers without distinct nets remain outside this predicate.",
+        "At least one different pin in the same peer scope must have one exact common assigned net. This reduces unrelated-port prompts but misses divergent power outputs when no other pin anchors the group.",
+        "DNP and PART_ID-bearing components are excluded. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references. Separate sources, switched rails, or isolated power domains may be intentional; schematic assignments do not establish PCB continuity or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_footprint_named_power_output_divergence.test_named_power_output_on_different_nets_is_reviewed_with_a_common_anchor",
+        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_power_output_native_fixture_lane.test_native_named_power_output_divergence_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_footprint_named_power_output_divergence.test_common_unanchored_or_ineligible_contacts_are_not_power_output_findings",
+        "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_named_power_output_native_fixture_lane.test_native_named_power_output_divergence_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_footprint_named_power_output_divergence.test_named_power_output_divergence_is_stable_under_mapping_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPinNamedDivergence",
+        "kicad_tooling/hwrepo/connector_footprint_named_power_output_divergence.py#evaluate_footprint_named_power_output_assignment_divergence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_named_power_output_divergence.py#evaluate_footprint_named_power_output_assignment_divergence",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "metamorphic_not_applicable_basis": null
+    },
+    {
       "rule_id": "connector.footprint_peer_pin_all_open",
       "title": "Generic pin is open on every footprint-similar connector peer",
       "status": "active",
