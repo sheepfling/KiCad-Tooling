@@ -77,6 +77,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_footprint_peer_open.py",
             "tests/test_connector_footprint_peer_parity.py",
             "tests/test_connector_footprint_signal_input.py",
+            "tests/test_connector_footprint_signal_output.py",
             "tests/test_connector_footprint_power_output.py",
             "tests/test_connector_peer_pin_all_open.py",
             "tests/test_design_lint_determinism_connector_all_open.py",

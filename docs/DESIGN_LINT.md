@@ -186,12 +186,15 @@ The first rules are:
   The schematic assignment does not establish routed copper continuity or off-board wiring.
 - `connector.footprint_named_power_input_open_outlier`,
   `connector.footprint_named_signal_input_open_outlier`, and
-  `connector.footprint_named_power_output_open_outlier` prompt for review when a
-  named native input or power-output contact is assigned on some exact footprint/value peers
-  and open on another, with complete matching pin evidence and a separate
-  common-net anchor. The power-input rule accepts an explicit native
-  `power_in`; the signal-input rule accepts an explicit native `input`; the
-  power-output rule accepts an explicit native `power_out`. Generic names,
+  `connector.footprint_named_power_output_open_outlier` and
+  `connector.footprint_named_signal_output_open_outlier` prompt for review when
+  an explicit native input, power-output, or signal-output contact is assigned
+  on some exact footprint/value peers and open on another, with complete
+  matching pin evidence and a separate common-net anchor. The power-input rule
+  accepts an explicit native `power_in`; the signal-input rule accepts an
+  explicit native `input`; the power-output rule accepts an explicit native
+  `power_out`; the signal-output rule accepts an explicit native `output`.
+  Generic names,
   recognized supply and return functions, DNP instances, PART_ID groups,
   ambiguous or split assignments, and groups without an anchor are excluded.
   Similarity only identifies a review candidate; it does not establish a
@@ -1221,7 +1224,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 135 active rules. They
+`synthetic_validated`; the catalog currently contains 136 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and

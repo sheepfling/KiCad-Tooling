@@ -32,6 +32,9 @@ from .ci_hosted_connector_return_returns import (
     verify_numbered_pwm_return_cases,
     verify_ret_return_label_cases,
 )
+from .ci_hosted_connector_return_signal_output import (
+    verify_footprint_alias_named_signal_output,
+)
 from .ci_hosted_connector_return_supply import verify_positive_rail_return_cases
 
 
@@ -49,6 +52,7 @@ def connector_return_lint_fixture_lane(
     peer_pin_coverage_receipts = verify_peer_pin_assignments(context)
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_assignments(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_open_outlier(context))
+    peer_pin_coverage_receipts.update(verify_footprint_alias_named_signal_output(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_all_open(context))
     verify_offboard_connector_interfaces(context)
     verify_peer_pin_outlier_cases(context)

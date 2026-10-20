@@ -320,7 +320,7 @@ def scan_connector_footprint_peer_pin_assignments(
                             open_peer_pin_group_count += 1
                             generic_open_assignments.append((pin_number, assignments))
                         elif (
-                            pin_type in {"power_in", "input", "power_out"}
+                            pin_type in {"power_in", "input", "power_out", "output"}
                             and not is_named_supply_function(function)
                             and not is_return_function(function)
                         ):
