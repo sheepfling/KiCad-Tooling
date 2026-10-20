@@ -9032,6 +9032,12 @@ is not a reason by itself to expand its scope or change its default policy.
   domain connectivity check while all eight exact pad/net identity checks
   still pass. This tests multi-endpoint contract evaluation; it does not replace
   the exact-version native lane that establishes pad-to-copper evidence.
+- **Scoped acceptance (2026-10-20):** Tagged as `v0.5.2rc5` with the
+  `return_path_lint` modules and `KICAD_RUN_NATIVE_PCB_FIXTURES` lane.
+  [GitHub Actions run 39373764914](https://github.com/sheepfling/KiCad-Tooling/actions/runs/39373764914)
+  passed the selected unit checks, exact-version native PCB fixtures, package
+  and wheel checks, and installed-wheel rehearsal against a separate project.
+  Linux, macOS, and Windows preview jobs passed as well.
 - **Remaining:** The four-port split/island mutation currently exercises
   synthetic contract-snapshot evaluation; the exact-version native lane covers
   source-bound copper evidence with smaller connected, split-plane, and
