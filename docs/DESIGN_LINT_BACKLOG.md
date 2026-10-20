@@ -4699,6 +4699,11 @@ is not a reason by itself to expand its scope or change its default policy.
   The four public-demo inventories remained at 42 review prompts; that volume
   is not a false-positive measurement. This extends topology recognition and
   does not change default `REVIEW` policy or establish resistor adequacy.
+- **Hosted prerelease acceptance (2026-10-20):** Tag `v0.5.2rc44` passed the
+  focused rule gate and installed-wheel check against a separate public
+  project checkout (GitHub Actions run 39428774039). Windows, Ubuntu, and
+  macOS preview orchestration also passed. The package job was skipped under
+  prerelease policy.
 - **Remaining:** The native results validate evidence parsing and bounded
   aliases, not design intent. Public demo screens do not label intent, and
   connected-bias candidate volume is not a false-positive measurement.
