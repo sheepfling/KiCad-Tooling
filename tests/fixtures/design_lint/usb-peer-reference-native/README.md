@@ -4,22 +4,24 @@ These two tooling-owned KiCad schematics are synthetic controls for the
 `bus.usb_peer_reference_review` heuristic. Each contains a direct USB 2.0 D+/D−
 pair between one connector candidate and one synthetic U-prefixed PHY. The PHY
 pin functions use the `UD+` and `UD-` aliases found on some USB-to-serial
-symbols, so the fixtures exercise those names through native export. The
-fault assigns connector GND and PHY AGND to separate schematic nets; the
-control assigns both pins to one net. No project board or product source is
-included.
+symbols, so the fixtures exercise those names through native export. Its VSS
+reference pin has KiCad electrical type `unspecified`; this verifies that the
+bounded return-function match retains the pin while preserving its uncertainty
+in evidence. The fault assigns connector GND and PHY VSS to separate schematic
+nets; the control assigns both pins to one net. No project board or product
+source is included.
 
 | Fixture             | Reference topology                                | Expected heuristic result                  |
 | ------------------- | ------------------------------------------------- | ------------------------------------------ |
-| `fault.kicad_sch`   | J1.4 `GND` on `USB_GND`; U1.3 `AGND` on `PHY_GND` | One review with exact pin and net evidence |
-| `control.kicad_sch` | J1.4 `GND` and U1.3 `AGND` on `BOARD_GND`         | No USB peer reference review               |
+| `fault.kicad_sch`   | J1.4 `GND` on `USB_GND`; U1.3 `VSS` (`unspecified`) on `PHY_GND` | One REVIEW with exact pin, type, and net evidence |
+| `control.kicad_sch` | J1.4 `GND` and U1.3 `VSS` (`unspecified`) on `BOARD_GND`          | No USB peer reference review                      |
 
 SHA-256 of the version-controlled schematic inputs:
 
 | Fixture             | SHA-256                                                            |
 | ------------------- | ------------------------------------------------------------------ |
-| `fault.kicad_sch`   | `5af2a1b730701e1167b96f13ccb296c6ff4127e0454404b4e2eef47f5d92b959` |
-| `control.kicad_sch` | `0fe232d691405e8ac95ef894a2ece81a3d11ccd9b200f59ff6fcb685d591bd98` |
+| `fault.kicad_sch`   | `98e594b6c6f8941d9e0f778e838d61d6f1f38a48a8bc83bb9ce13725f73e89a6` |
+| `control.kicad_sch` | `c69f78c67a841826b88e776d596ec60d62702ee262efc72a1aee9f9421af9cb4` |
 
 The fixtures are included in the existing source-bound USB data-path native
 lane. That lane exports every schematic twice in the digest-pinned KiCad
@@ -33,6 +35,12 @@ KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1 \
 .venv/bin/python -I -m pytest -q tests/test_usb_data_path_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad'
 ```
+
+The current VSS/unspecified source hashes are new. Local KiCad 10.0.6 export
+preserved the pin function and `pintype="unspecified"` on both the split and
+common nets. The pinned 10.0.0/10.0.5 acceptance result recorded below covered
+the earlier AGND/power_in revision; the current pair still requires a fresh
+tagged exact-version run.
 
 The fixture sources and expected outcomes are registered here. A local
 KiCad 10.0.6 export exposed and corrected the original ground-wire coordinates;
@@ -77,6 +85,8 @@ including on the authored common-reference control. It therefore did not
 distinguish the split-reference fault from its common-reference control.
 
 This was a schematic-parser comparison, not a KiCad-native export or ERC run.
+That comparison used the earlier AGND/power_in fixture revision; the current
+native cases use VSS/unspecified to cover the bounded pin-type rule.
 The separate pinned native USB fixture lane passed in hosted run
 `37863872527`; this candidate comparison itself remains parser-only and is not
 a head-to-head comparison on native-exported input. The candidate's generic

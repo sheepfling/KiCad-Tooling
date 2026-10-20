@@ -60,7 +60,7 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
                 '<libpart lib="Synthetic" part="UsbPhy"><pins>'
                 '<pin num="1" name="USB_DP" type="input"/>'
                 '<pin num="2" name="USB_DM" type="input"/>'
-                '<pin num="3" name="AGND" type="power_in"/>'
+                '<pin num="3" name="VSS" type="unspecified"/>'
                 "</pins></libpart></libparts><nets>"
                 '<net name="USB_DP"><node ref="J1" pin="1"/>'
                 '<node ref="U1" pin="1"/></net>'

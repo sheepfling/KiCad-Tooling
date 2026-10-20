@@ -19,7 +19,7 @@ from .usb_peer_endpoint_analysis import (
 from .usb_peer_inline_path_analysis import mapped_inline_usb_data_link
 from .usb_peer_path_analysis import usb_data_link, usb_superspeed_direct_data_link
 from .usb_peer_protection_shunt_analysis import mapped_protection_shunt_usb_data_link
-from .usb_peer_reference_contract import usb_reference_map_matches
+from .usb_peer_reference_decision import usb_peer_reference_disposition
 from .usb_peer_reference_types import (
     UsbPeerEndpointGroupCoverage,
     UsbPeerReferenceCoverage,
@@ -41,9 +41,10 @@ def scan_usb_peer_reference_reviews(
 
     USB 2.0 endpoints need complete native pin inventories and one or more same-net
     positive and negative data pins within one port group, plus uniquely assigned
-    passive/power_in reference pins on one net. Numbered DPn/DMn aliases pair only
-    with the same number; unnumbered D+/D- aliases pair with each other or with one
-    numbered endpoint group. USB SuperSpeed support is limited to one direct,
+    bounded return-like reference pins on one net. Those pins use passive/power_in
+    types, or an unspecified type only with an explicit return-like function.
+    Numbered DPn/DMn aliases pair only with the same number; unnumbered D+/D-
+    aliases pair with each other or with one numbered endpoint group. USB SuperSpeed support is limited to one direct,
     unbranched complementary P/N pair whose connector TX maps to PHY RX or connector
     RX maps to PHY TX. Every matched net must contain exactly its two endpoint pins.
     USB 2.0 lines may also use one fitted two-pin Device:R or an exact current
@@ -222,20 +223,11 @@ def scan_usb_peer_reference_reviews(
                     )
                 )
                 continue
-            common_reference = connector.reference_net.casefold() == phy.reference_net.casefold()
-            mapped_separate_reference = not common_reference and usb_reference_map_matches(
-                connector, phy, data_link, path_map
-            )
-            reference_disposition: Literal[
-                "COMMON_REFERENCE",
-                "SEPARATE_REFERENCE_REVIEW",
-                "MAP_COVERED_SEPARATE_REFERENCE",
-            ] = (
-                "COMMON_REFERENCE"
-                if common_reference
-                else "MAP_COVERED_SEPARATE_REFERENCE"
-                if mapped_separate_reference
-                else "SEPARATE_REFERENCE_REVIEW"
+            reference_disposition = usb_peer_reference_disposition(
+                connector,
+                phy,
+                data_link,
+                path_map,
             )
             path_entries.append(
                 UsbPeerReferencePathCoverage(
@@ -253,7 +245,7 @@ def scan_usb_peer_reference_reviews(
                     data_link=data_link,
                 )
             )
-            if common_reference or mapped_separate_reference:
+            if reference_disposition != "SEPARATE_REFERENCE_REVIEW":
                 continue
             findings.append(
                 UsbPeerReferenceReview(

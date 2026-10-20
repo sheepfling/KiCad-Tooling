@@ -24,7 +24,9 @@ _NON_SIGNAL_REFERENCE_MARKER = re.compile(
 )
 
 
-_RETURN_PIN_TYPES = frozenset({"passive", "power_in"})
+# `unspecified` is accepted only after `_return_pin_function` recognizes an
+# explicit, bounded return-like function on that pin.
+_RETURN_PIN_TYPES = frozenset({"passive", "power_in", "unspecified"})
 
 
 _EXTENDED_RETURN_PIN_FUNCTIONS = frozenset({"gnda", "gndd", "gndp", "vssa", "vssd", "vssp"})

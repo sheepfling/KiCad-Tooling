@@ -4844,8 +4844,10 @@ is not a reason by itself to expand its scope or change its default policy.
   evidence. Separately, recognize direct USB SuperSpeed P/N pairs when native endpoint pin metadata
   is complete, exactly one positive and negative pin exists per family, connector TX connects to PHY
   RX or connector RX to PHY TX, and each data net contains exactly those two pins. Both endpoint
-  references must be explicit passive/power_in pins on one net per endpoint. A differing pair of
-  reference nets produces a review; a common reference is quiet. An exact
+  references must have explicit bounded return-like pin functions on one net per endpoint. Their
+  native electrical types must be passive or power_in, or `unspecified` paired with an explicit
+  return-like function such as VSS. The uncertainty remains visible in the review evidence. A
+  differing pair of reference nets produces a review; a common reference is quiet. An exact
   `superspeed_interfaces` map can cover a reviewed direct SuperSpeed pair only
   when its endpoint identities, complementary P/N pins and nets, reference-pin
   inventories, and common/separate/bonded decision match. Stale mapped
@@ -4882,7 +4884,9 @@ is not a reason by itself to expand its scope or change its default policy.
   finding. Other unsupported arrangements can remain unreported. A current
   exact project-authored map remains necessary to evaluate this topology.
 - **Fixtures:** Synthetic split-reference fault and common-reference control,
-  including native `UD+`/`UD−` PHY-pin aliases;
+  including native `UD+`/`UD−` PHY-pin aliases and a VSS return pin whose native
+  electrical type is `unspecified`; a matching common-reference control and a
+  typed non-return `unspecified` pin control keep the acceptance bounded;
   exact mapped inline-protection split-reference fault, common-reference and
   explicit separate-reference controls, plus unmapped-array and extra-peer
   controls;
@@ -4905,6 +4909,13 @@ is not a reason by itself to expand its scope or change its default policy.
   exports on the digest-pinned KiCad 10.0.0 and 10.0.5 lane. The typed-netlist
   multi-reference control gives one PHY two explicitly named return pins on
   separate nets and confirms the bounded predicate skips it.
+  **Current VSS/unspecified extension (2026-10-20; exact-version acceptance pending):**
+  deterministic USB 2.0 and SuperSpeed regressions preserve REVIEW for split
+  references, keep a shared reference quiet, and reject an unspecified non-return
+  pin. CLI/MCP parity passes on the public template pinned by CI. Local KiCad
+  10.0.6 export preserves the native VSS function and unspecified type on both
+  synthetic fault/control nets. The exact KiCad 10.0.0/10.0.5 fixture lane will
+  be rerun on the next rule-scoped tag; 10.0.6 is compatibility evidence only.
   The two-port hub source-to-netlist cases are documented in the
   [multiport USB fixture README](../tests/fixtures/design_lint/usb-multiport-peer-reference-native/README.md).
   The exact-map extension adds a valid 0R bond control and faults for an absent

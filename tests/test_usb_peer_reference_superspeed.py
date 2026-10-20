@@ -53,6 +53,26 @@ def test_split_reference_direct_superspeed_pair_emits_review_and_family_evidence
     assert coverage.separate_reference_path_count == 1
 
 
+def test_unspecified_vss_phy_return_type_is_supported_for_superspeed_review() -> None:
+    base = superspeed_peer_netlist()
+    observed = base.model_copy(
+        update={
+            "pin_functions": {**base.pin_functions, "U1.3": "VSS"},
+            "pin_electrical_types": {
+                **base.pin_electrical_types,
+                "U1.3": "unspecified",
+            },
+        }
+    )
+
+    report = lint_report(observed)
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+    assert report.status == "REVIEW"
+    assert finding.evidence["phy_reference_pin_assignments"] == (
+        "U1.3 (VSS, unspecified)=BOARD_GND",
+    )
+
+
 def test_common_reference_superspeed_pair_is_a_quiet_control() -> None:
     observed = superspeed_peer_netlist(
         connector_reference_net="BOARD_GND",

@@ -387,7 +387,7 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
     if peer_reference_faults[0].evidence.get("connector_reference_pin_assignments") != (
         "J1.4 (GND, passive)=USB_GND",
     ) or peer_reference_faults[0].evidence.get("phy_reference_pin_assignments") != (
-        "U1.3 (AGND, power_in)=PHY_GND",
+        "U1.3 (VSS, unspecified)=PHY_GND",
     ):
         raise ValueError("Native USB peer review did not preserve exact reference-pin evidence")
     if any(

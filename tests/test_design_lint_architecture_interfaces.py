@@ -85,6 +85,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_inline_path_analysis.py",
     "usb_peer_protection_shunt_analysis.py",
     "usb_peer_reference_contract.py",
+    "usb_peer_reference_decision.py",
     "usb_peer_reference_scan.py",
     "usb_peer_unsupported_topology.py",
 )
@@ -240,7 +241,7 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
 
     assert rule.theme == "interfaces"
     assert rule.implementation_owner == (
-        "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews"
+        "kicad_tooling/hwrepo/usb_peer_reference_decision.py#usb_peer_reference_disposition"
     )
     assert rule.implementation_owner in rule.implementation_refs
     assert (
