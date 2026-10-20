@@ -1,6 +1,14 @@
 """CLI/MCP parity fixture references for footprint-alias peer rules."""
 
 FOOTPRINT_PEER_PARITY_FIXTURES = {
+    "connector.footprint_named_passive_assignment_divergence": {
+        "fault_fixtures": (
+            "tests.test_connector_footprint_named_passive_divergence_parity.test_named_passive_divergence_matches_cli_and_mcp",
+        ),
+        "valid_control_fixtures": (
+            "tests.test_connector_footprint_named_passive_divergence_parity.test_named_passive_divergence_matches_cli_and_mcp",
+        ),
+    },
     "connector.footprint_named_power_input_all_open": {
         "fault_fixtures": (
             "tests.test_connector_footprint_peer_parity.test_footprint_alias_review_matches_cli_and_mcp",

@@ -20,6 +20,9 @@ from .ci_hosted_connector_return_grounding import (
 )
 from .ci_hosted_connector_return_mapped_returns import verify_mapped_return_interfaces
 from .ci_hosted_connector_return_mapped_supplies import verify_mapped_supply_interfaces
+from .ci_hosted_connector_return_named_passive_divergence import (
+    verify_footprint_alias_named_passive_divergence,
+)
 from .ci_hosted_connector_return_named_passive_open import (
     verify_footprint_alias_named_passive_open,
 )
@@ -86,6 +89,7 @@ def connector_return_lint_fixture_lane(
         verify_footprint_alias_named_signal_mode_dependent_open(context)
     )
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_passive_open(context))
+    peer_pin_coverage_receipts.update(verify_footprint_alias_named_passive_divergence(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_power_output_divergence(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_all_open(context))
     verify_offboard_connector_interfaces(context)

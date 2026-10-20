@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from .connector_coverage_models import ConnectorMappedPinEvidence
+from .connector_footprint_named_passive_divergence import (
+    evaluate_footprint_named_passive_assignment_divergence,
+)
 from .connector_footprint_named_power_input_all_open import (
     evaluate_footprint_named_power_input_all_open,
 )
@@ -59,6 +62,7 @@ def connector_peer_pin_heuristic_coverage(
     footprint_named_power_output_all_open_finding_count: int = 0,
     footprint_named_signal_all_open_finding_count: int = 0,
     footprint_named_power_output_divergence_finding_count: int = 0,
+    footprint_named_passive_divergence_finding_count: int = 0,
     footprint_peer_pin_open_outlier_finding_count: int = 0,
     footprint_peer_pin_all_open_finding_count: int = 0,
 ) -> ConnectorPeerPinHeuristicCoverage:
@@ -298,6 +302,9 @@ def connector_peer_pin_heuristic_coverage(
     named_power_output_divergence = evaluate_footprint_named_power_output_assignment_divergence(
         footprint_scan
     )
+    named_passive_divergence = evaluate_footprint_named_passive_assignment_divergence(
+        footprint_scan
+    )
     footprint_incomplete_count = sum(
         (
             footprint_scan.incomplete_pin_inventory_group_count,
@@ -325,6 +332,7 @@ def connector_peer_pin_heuristic_coverage(
             + named_signal_divergence.candidate_count
             + named_power_input_divergence.candidate_count
             + named_power_output_divergence.candidate_count
+            + named_passive_divergence.candidate_count
             == 0
         )
         else "EVALUATED"
@@ -410,6 +418,13 @@ def connector_peer_pin_heuristic_coverage(
         named_power_output_divergence_finding_count=(
             footprint_named_power_output_divergence_finding_count
         ),
+        named_passive_different_assignment_pin_group_count=(
+            named_passive_divergence.candidate_count
+        ),
+        unanchored_named_passive_divergence_pin_group_count=(
+            named_passive_divergence.unanchored_count
+        ),
+        named_passive_divergence_finding_count=(footprint_named_passive_divergence_finding_count),
     )
 
     if not candidate_references:

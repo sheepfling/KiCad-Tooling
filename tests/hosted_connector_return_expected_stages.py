@@ -49,6 +49,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/footprint-alias-named-passive-open-fault",
     "connector-return-fixture/footprint-alias-named-passive-open-control",
     "connector-return-fixture/footprint-alias-named-signal-divergence-fault",
+    "connector-return-fixture/footprint-alias-named-passive-divergence-fault",
+    "connector-return-fixture/footprint-alias-named-passive-divergence-control",
     "connector-return-fixture/footprint-alias-named-power-input-divergence-fault",
     "connector-return-fixture/footprint-alias-named-power-input-divergence-control",
     "connector-return-fixture/footprint-alias-named-power-input-all-open-fault",

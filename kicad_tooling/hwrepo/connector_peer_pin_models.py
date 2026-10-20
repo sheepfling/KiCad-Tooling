@@ -181,6 +181,9 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     named_power_output_different_assignment_pin_group_count: NonNegativeCount = 0
     unanchored_named_power_output_divergence_pin_group_count: NonNegativeCount = 0
     named_power_output_divergence_finding_count: NonNegativeCount = 0
+    named_passive_different_assignment_pin_group_count: NonNegativeCount = 0
+    unanchored_named_passive_divergence_pin_group_count: NonNegativeCount = 0
+    named_passive_divergence_finding_count: NonNegativeCount = 0
 
     @model_validator(mode="after")
     def coverage_counts_match_scope(self) -> ConnectorFootprintPeerPinCoverage:
@@ -286,6 +289,16 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             raise ValueError(
                 "Named power-output differences must be anchored findings or unanchored"
             )
+        if self.unanchored_named_passive_divergence_pin_group_count > (
+            self.named_passive_different_assignment_pin_group_count
+        ):
+            raise ValueError("Unanchored named passive differences must be eligible")
+        if (
+            self.named_passive_divergence_finding_count
+            + self.unanchored_named_passive_divergence_pin_group_count
+            != self.named_passive_different_assignment_pin_group_count
+        ):
+            raise ValueError("Named passive differences must be anchored findings or unanchored")
         if self.open_peer_pin_group_count > self.unassigned_assignment_pin_group_count:
             raise ValueError("Footprint alias open peers must have an unassigned peer contact")
         if self.unanchored_open_peer_pin_group_count > self.open_peer_pin_group_count:
@@ -330,6 +343,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
                 + self.named_signal_different_assignment_pin_group_count
                 + self.named_power_input_different_assignment_pin_group_count
                 + self.named_power_output_different_assignment_pin_group_count
+                + self.named_passive_different_assignment_pin_group_count
                 == 0
             )
             else "EVALUATED"
@@ -433,6 +447,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             + self.footprint_alias_coverage.named_power_input_all_open_finding_count
             + self.footprint_alias_coverage.named_power_output_all_open_finding_count
             + self.footprint_alias_coverage.named_power_output_divergence_finding_count
+            + self.footprint_alias_coverage.named_passive_divergence_finding_count
             + self.footprint_alias_coverage.all_open_finding_count
             > self.exact_symbol_pin_group_count
             + self.part_id_alias_coverage.compared_pin_group_count

@@ -358,6 +358,14 @@ class DesignLintReport(StrictModel):
                     "connector.generic_peer_pin_all_open",
                     item.generic_peer_pin_all_open_finding_count,
                 ),
+                (
+                    "connector.footprint_named_signal_assignment_divergence",
+                    item.footprint_alias_coverage.named_signal_divergence_finding_count,
+                ),
+                (
+                    "connector.footprint_named_passive_assignment_divergence",
+                    item.footprint_alias_coverage.named_passive_divergence_finding_count,
+                ),
             )
             for rule_id, expected_count in expected_counts:
                 actual_count = sum(finding.rule_id == rule_id for finding in self.findings)
@@ -373,15 +381,6 @@ class DesignLintReport(StrictModel):
                 raise ValueError(
                     "Connector footprint-alias peer coverage count must match findings"
                 )
-            named_signal_divergence_findings = sum(
-                finding.rule_id == "connector.footprint_named_signal_assignment_divergence"
-                for finding in self.findings
-            )
-            if (
-                named_signal_divergence_findings
-                != item.footprint_alias_coverage.named_signal_divergence_finding_count
-            ):
-                raise ValueError("Named signal footprint-alias coverage count must match findings")
             named_power_input_divergence_findings = sum(
                 finding.rule_id == "connector.footprint_named_power_input_assignment_divergence"
                 for finding in self.findings

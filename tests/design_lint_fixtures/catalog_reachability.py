@@ -6,6 +6,13 @@ from pathlib import Path
 
 from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.schematic_geometry import scan_wire_ends_on_pin_lines
+from tests.connector_footprint_peer_support import (
+    named_passive_contact_divergence_netlist,
+    named_passive_contact_open_netlist,
+    named_power_output_all_open_netlist,
+    named_signal_all_open_netlist,
+    named_signal_mode_dependent_open_netlist,
+)
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
 from tests.test_oscillator_output_paths import (
     oscillator_output_netlist,
@@ -93,4 +100,12 @@ def catalog_reachability_rule_ids() -> set[str]:
             oscillator_output_path_map=oscillator_output_path_map(),
         )
     )
+    for source in (
+        named_signal_all_open_netlist(),
+        named_power_output_all_open_netlist(),
+        named_signal_mode_dependent_open_netlist(),
+        named_passive_contact_open_netlist(),
+        named_passive_contact_divergence_netlist(),
+    ):
+        result.update(item.rule_id for item in candidates(source))
     return result
