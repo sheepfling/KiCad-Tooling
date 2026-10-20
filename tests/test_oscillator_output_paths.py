@@ -116,6 +116,28 @@ def oscillator_output_netlist(
         nets = {"CLK": ("X1.1", "R1.1", "R1.2", "U2.2", "U3.3")}
     elif fault == "wrong-resistor-side" and topology == "series":
         nets = {"CLK_SOURCE": ("X1.1", "R1.2"), "CLK_LOAD": ("R1.1", "U2.2", "U3.3")}
+    elif (
+        fault
+        in {
+            "extra-parallel-resistor",
+            "zero-ohm-parallel-resistor",
+            "dnp-parallel-resistor",
+            "unrelated-resistor",
+        }
+        and topology == "series"
+    ):
+        extra_value = "0R" if fault == "zero-ohm-parallel-resistor" else "22R"
+        components["R2"] = ComponentContract(value=extra_value, footprint="Synthetic:R_0603")
+        symbols["R2"] = "Device:R"
+        pin_numbers["R2"] = ("1", "2")
+        if fault == "unrelated-resistor":
+            nets["AUX_SOURCE"] = ("R2.1",)
+            nets["AUX_LOAD"] = ("R2.2",)
+        else:
+            nets["CLK_SOURCE"] = (*nets["CLK_SOURCE"], "R2.1")
+            nets["CLK_LOAD"] = (*nets["CLK_LOAD"], "R2.2")
+        if fault == "dnp-parallel-resistor":
+            dnp = ("R2",)
     elif fault == "resistor-missing" and topology == "series":
         components.pop("R1")
         symbols.pop("R1")
@@ -208,6 +230,31 @@ def test_mapped_topology_identity_population_and_load_faults_are_reviewed(
     assert report.status == "REVIEW"
     finding = next(item for item in report.findings if item.rule_id == RULE_ID)
     assert any(expected_issue in issue for issue in finding.evidence["issues"])
+
+
+@pytest.mark.parametrize(
+    ("fault", "expected_reference"),
+    (("extra-parallel-resistor", "R2"), ("zero-ohm-parallel-resistor", "R2")),
+)
+def test_unmapped_fitted_resistor_across_series_path_is_reviewed(
+    fault: str, expected_reference: str
+) -> None:
+    report = lint_report(oscillator_output_netlist(fault=fault), oscillator_output_path_map())
+
+    assert report.status == "REVIEW"
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+    assert any(
+        f"unmapped fitted resistor {expected_reference} also bridges" in issue
+        for issue in finding.evidence["issues"]
+    )
+
+
+@pytest.mark.parametrize("fault", ("dnp-parallel-resistor", "unrelated-resistor"))
+def test_unmapped_resistor_outside_fitted_mapped_bridge_is_a_control(fault: str) -> None:
+    report = lint_report(oscillator_output_netlist(fault=fault), oscillator_output_path_map())
+
+    assert report.status == "PASS", report.issues
+    assert RULE_ID not in {item.rule_id for item in report.findings}
 
 
 def test_wrong_resistor_value_is_the_distinct_cohort_gap() -> None:

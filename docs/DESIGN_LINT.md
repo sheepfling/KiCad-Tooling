@@ -2049,8 +2049,11 @@ requirement. Unmapped outputs are not guessed, and this rule never states that
 every clock output needs a resistor. A mismatch creates a default-`REVIEW`
 finding that project policy can set to `block`, `off`, or ignore by its exact
 fingerprint. The comparison covers schematic netlist membership, fitted state,
-mapped identities, and the authored nominal resistor range. It does not check
-the PCB route, alternate parallel branches, resistor tolerance, signal
+mapped identities, and the authored nominal resistor range. For a series path,
+it also reviews another recognized fitted two-terminal resistor across the same
+output and load nets, including a zero-ohm bridge. It does not enumerate
+non-resistor or multi-component parallel branches, resistor arrays, or hidden
+electrical paths; nor does it check the PCB route, resistor tolerance, signal
 integrity, waveform behavior, or whether the project-authored requirement is
 electrically correct. The rule has synthetic regression coverage only; no
 product or proprietary project is used.

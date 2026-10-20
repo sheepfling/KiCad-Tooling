@@ -51,8 +51,15 @@ def resistance_ohms(value: str) -> float | None:
     return amount * scale
 
 
-def direct_resistors(observed: NetlistContract) -> tuple[DirectResistor, ...]:
-    """Return fitted, conventional two-terminal resistors with two unique net assignments."""
+def direct_resistors(
+    observed: NetlistContract, *, include_zero_ohm: bool = False
+) -> tuple[DirectResistor, ...]:
+    """Return fitted two-terminal resistors with two unique net assignments.
+
+    Zero-ohm bridges are excluded for path/value heuristics by default. A
+    topology completeness check can include them because they can bypass a
+    mapped series element.
+    """
     pin_nets: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
@@ -66,7 +73,7 @@ def direct_resistors(observed: NetlistContract) -> tuple[DirectResistor, ...]:
         if reference.casefold() in dnp or RESISTOR_REFERENCE_PATTERN.fullmatch(reference) is None:
             continue
         resistance = resistance_ohms(component.value)
-        if resistance is None or resistance <= 0:
+        if resistance is None or resistance < 0 or (resistance == 0 and not include_zero_ohm):
             continue
         pins = component_pins.get(reference, set())
         known_pin_numbers = observed.component_pin_numbers.get(reference)

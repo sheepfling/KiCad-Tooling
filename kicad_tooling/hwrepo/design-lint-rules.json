@@ -4099,23 +4099,25 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "ProjectTestContract oscillator_output_path_map compared with the source-bound KiCad 10 native netlist; candidate evidence includes map SHA-256, exact module/output pin, fitted loads, topology, and series-resistor value bounds",
-      "predicate": "For each explicitly mapped oscillator module output, require the authored direct or single-series-resistor relationship to all named fitted load pins. Check exact oscillator and load identities, native pin inventory and assignments, resistor population and identity, and its parsed nominal resistance against the authored inclusive range. Emit one REVIEW candidate when any required observation differs.",
+      "predicate": "For each explicitly mapped oscillator module output, require the authored direct or single-series-resistor relationship to all named fitted load pins. Check exact oscillator and load identities, native pin inventory and assignments, resistor population and identity, and its parsed nominal resistance against the authored inclusive range. For a series path, also review any other recognized fitted two-terminal resistor, including a zero-ohm bridge, across the mapped output and load nets. Emit one REVIEW candidate when any required observation differs.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "This rule performs no automatic clock-module discovery and never asserts that every oscillator or clock output requires a series resistor. The map must come from an independently reviewed project requirement.",
         "It checks schematic netlist membership and nominal resistor value only. It does not establish resistor tolerance, signal integrity, edge quality, loading, PCB routing, placement, waveform behavior, or datasheet correctness.",
-        "A direct topology is valid when explicitly mapped. The series form supports exactly one mapped two-terminal resistor and the listed load pins; other networks require a separate authored profile."
+        "A direct topology is valid when explicitly mapped. The series form supports exactly one mapped two-terminal resistor and the listed load pins; another recognized fitted resistor across those same nets is reviewable, but arbitrary non-resistor or multi-component branches, arrays, and hidden electrical paths are not enumerated. Other networks require a separate authored profile."
       ],
       "fault_fixtures": [
         "tests.test_oscillator_output_paths.test_wrong_resistor_value_is_the_distinct_cohort_gap",
         "tests.test_oscillator_output_paths.test_mapped_topology_identity_population_and_load_faults_are_reviewed",
+        "tests.test_oscillator_output_paths.test_unmapped_fitted_resistor_across_series_path_is_reviewed",
         "tests.test_design_lint_mcp_parity_oscillator_output_paths.test_oscillator_output_path_matches_cli_and_mcp"
       ],
       "valid_control_fixtures": [
         "tests.test_oscillator_output_paths.test_reviewed_direct_output_is_a_valid_control",
         "tests.test_oscillator_output_paths.test_reviewed_series_output_and_inclusive_resistance_bounds_pass",
+        "tests.test_oscillator_output_paths.test_unmapped_resistor_outside_fitted_mapped_bridge_is_a_control",
         "tests.test_design_lint_mcp_parity_oscillator_output_paths.test_oscillator_output_path_matches_cli_and_mcp"
       ],
       "metamorphic_fixtures": [
@@ -4123,6 +4125,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/oscillator_output_paths.py#oscillator_output_path_mismatches",
+        "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
         "kicad_tooling/hwrepo/oscillator_output_path_candidates.py#oscillator_output_path_candidates",
         "kicad_tooling/hwrepo/design_lint_policy_models.py#DesignLintPolicy",
         "kicad_tooling/hwrepo/design_lint_mapped_topology_coverage.py#mapped_topology_coverage_runs"

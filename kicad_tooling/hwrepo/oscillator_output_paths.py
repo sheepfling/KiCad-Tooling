@@ -10,7 +10,7 @@ from .oscillator_output_path_models import (
     OscillatorOutputPathMap,
     OscillatorOutputPathRequirement,
 )
-from .resistor_paths import resistance_ohms
+from .resistor_paths import direct_resistors, resistance_ohms
 
 
 @dataclass(frozen=True)
@@ -178,6 +178,21 @@ def _path_issues(
                     issues.append(
                         f"series load {load.pin} is on {nets[0]}; "
                         f"resistor load side is on {resistor_load_nets[0]}"
+                    )
+        if len(output_nets) == len(resistor_load_nets) == 1:
+            expected_nets = {output_nets[0].casefold(), resistor_load_nets[0].casefold()}
+            expected_resistor = resistor.reference.casefold()
+            for candidate in direct_resistors(observed, include_zero_ohm=True):
+                if (
+                    candidate.reference.casefold() != expected_resistor
+                    and {candidate.first_net.casefold(), candidate.second_net.casefold()}
+                    == expected_nets
+                ):
+                    issues.append(
+                        f"unmapped fitted resistor {candidate.reference} also bridges "
+                        f"oscillator output net {output_nets[0]} and load net "
+                        f"{resistor_load_nets[0]} alongside mapped series resistor "
+                        f"{resistor.reference}"
                     )
         component = _lookup(observed.components, resistor.reference)
         if component is not None:

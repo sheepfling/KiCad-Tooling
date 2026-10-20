@@ -8034,20 +8034,27 @@ is not a reason by itself to expand its scope or change its default policy.
   identities; check fitted state, native pin inventory and net assignments;
   require all direct loads on the output net, or each mapped load on the
   load-side net of the named resistor; and compare its parsed nominal
-  resistance to the inclusive authored range. The map SHA-256, basis, mapped
-  pins, topology, resistor, and mismatch evidence are included in the finding.
+  resistance to the inclusive authored range. For a mapped series path, an
+  extra recognized fitted two-terminal resistor (including a zero-ohm bridge)
+  across the output and load nets is also reviewable. The map SHA-256, basis,
+  mapped pins, topology, resistor, and mismatch evidence are included in the
+  finding.
 - **Policy boundary:** This is not automatic oscillator discovery and does not
   claim that every clock needs a resistor. Direct-drive outputs are valid when
   explicitly mapped. Findings default to `REVIEW`; projects can select `block`,
-  `off`, or exact-fingerprint ignore. The check does not review alternate
-  parallel branches, the resistor's tolerance, PCB routing, signal integrity,
-  or the correctness of the authored electrical requirement.
+  `off`, or exact-fingerprint ignore. The extra-resistor scan does not
+  enumerate non-resistor or multi-component branches, resistor arrays, or
+  hidden paths. The check also does not review the mapped resistor's tolerance,
+  PCB routing, signal integrity, or the correctness of the authored electrical
+  requirement.
 - **Synthetic evidence:** Faults cover split loads, bypassed or reversed
-  resistor sides, missing and DNP components, changed module identity, and an
-  out-of-range 1 kΩ resistor against a synthetic 22–47 Ω requirement. Direct
-  and in-range series controls, review/block/off/ignore lifecycle, input-order
-  stability, catalog reachability, architecture ownership, and CLI/MCP parity
-  are registered. No cohort code, board, or project fixture was copied. The
+  resistor sides, a second fitted resistor or zero-ohm bridge in parallel,
+  missing and DNP components, changed module identity, and an out-of-range
+  1 kΩ resistor against a synthetic 22–47 Ω requirement. Direct and in-range
+  series controls, a DNP parallel resistor, an unrelated resistor, review/block/
+  off/ignore lifecycle, input-order stability, catalog reachability,
+  architecture ownership, and CLI/MCP parity are registered. No cohort code,
+  board, or project fixture was copied. The
   CLI/MCP parity suite needs the separately configured public template
   checkout; this local checkout does not have `KICAD_TEMPLATE_ROOT` set. No
   native KiCad process or product board is claimed for this rule.
