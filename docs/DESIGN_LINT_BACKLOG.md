@@ -8095,9 +8095,13 @@ is not a reason by itself to expand its scope or change its default policy.
   off/ignore lifecycle, input-order stability, catalog reachability,
   architecture ownership, and CLI/MCP parity are registered. The parity test
   uses the tooling-owned synthetic project and source-bound netlist serializer,
-  so it runs without a separately configured public template checkout. No
-  cohort code, board, or project fixture was copied. No native KiCad process
-  or product board is claimed for this rule.
+  so it runs without a separately configured public template checkout. A
+  separate source-hashed native lane exports a 47R inclusive-boundary control
+  and a 1 kOhm value fault with digest-pinned KiCad 10.0.0 and 10.0.5, then
+  evaluates the native XML through the typed rule service. It checks
+  repeatability and parsed resistor value. Hosted acceptance for that lane is
+  recorded by its annotated lint tag. No cohort code, board, or project
+  fixture was copied.
 - **Focused selection:**
 
   ```sh

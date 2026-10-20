@@ -4122,7 +4122,8 @@
       "evidence_adapter": "ProjectTestContract oscillator_output_path_map compared with the source-bound KiCad 10 native netlist; candidate evidence includes map SHA-256, exact module/output pin, fitted loads, topology, and series-resistor value bounds",
       "predicate": "For each explicitly mapped oscillator module output, require the authored direct or single-series-resistor relationship to all named fitted load pins. Check exact oscillator and load identities, native pin inventory and assignments, resistor population and identity, and its parsed nominal resistance against the authored inclusive range. For a series path, also review any other recognized fitted two-terminal resistor, including a zero-ohm bridge, across the mapped output and load nets. Emit one REVIEW candidate when any required observation differs.",
       "supported_kicad_versions": [
-        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+        "10.0.0",
+        "10.0.5"
       ],
       "limitations": [
         "This rule performs no automatic clock-module discovery and never asserts that every oscillator or clock output requires a series resistor. The map must come from an independently reviewed project requirement.",
@@ -4133,16 +4134,22 @@
         "tests.test_oscillator_output_paths.test_wrong_resistor_value_is_the_distinct_cohort_gap",
         "tests.test_oscillator_output_paths.test_mapped_topology_identity_population_and_load_faults_are_reviewed",
         "tests.test_oscillator_output_paths.test_unmapped_fitted_resistor_across_series_path_is_reviewed",
-        "tests.test_design_lint_mcp_parity_oscillator_output_paths.test_oscillator_output_path_matches_cli_and_mcp"
+        "tests.test_design_lint_mcp_parity_oscillator_output_paths.test_oscillator_output_path_matches_cli_and_mcp",
+        "tests.test_oscillator_output_paths_native_fixture_lane.test_native_oscillator_output_path_fault_and_control_are_version_pinned_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_oscillator_output_paths.test_reviewed_direct_output_is_a_valid_control",
         "tests.test_oscillator_output_paths.test_reviewed_series_output_and_inclusive_resistance_bounds_pass",
         "tests.test_oscillator_output_paths.test_unmapped_resistor_outside_fitted_mapped_bridge_is_a_control",
-        "tests.test_design_lint_mcp_parity_oscillator_output_paths.test_oscillator_output_path_matches_cli_and_mcp"
+        "tests.test_design_lint_mcp_parity_oscillator_output_paths.test_oscillator_output_path_matches_cli_and_mcp",
+        "tests.test_oscillator_output_paths_native_fixture_lane.test_native_oscillator_output_path_fault_and_control_are_version_pinned_and_repeatable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_oscillator_output_paths.test_netlist_record_order_does_not_change_the_path_finding"
+        "tests.test_oscillator_output_paths.test_netlist_record_order_does_not_change_the_path_finding",
+        "tests.test_oscillator_output_paths_native_fixture_lane.test_native_fixture_sources_match_their_generator"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_OSCILLATOR_OUTPUT_PATH_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/oscillator_output_paths.py#oscillator_output_path_mismatches",

@@ -2066,8 +2066,13 @@ output and load nets, including a zero-ohm bridge. It does not enumerate
 non-resistor or multi-component parallel branches, resistor arrays, or hidden
 electrical paths; nor does it check the PCB route, resistor tolerance, signal
 integrity, waveform behavior, or whether the project-authored requirement is
-electrically correct. The rule has synthetic regression coverage only; no
-product or proprietary project is used.
+electrically correct. Its test projects are synthetic; no product or
+proprietary project is used. A focused, source-hashed native lane
+also exports a 47R inclusive-boundary control and a 1 kOhm fault with
+digest-pinned KiCad 10.0.0 and 10.0.5 images. It repeats both exports and
+evaluates the native XML through the same typed rule service; its hosted result
+is attached to the annotated lint tag. See the
+[native fixture record](../tests/fixtures/design_lint/oscillator-output-native/README.md).
 
 ## Review an adjustable regulator feedback divider
 
