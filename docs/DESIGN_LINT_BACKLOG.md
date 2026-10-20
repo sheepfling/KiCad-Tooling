@@ -9034,20 +9034,21 @@ is not a reason by itself to expand its scope or change its default policy.
   the exact-version native lane that establishes pad-to-copper evidence.
 - **Scoped acceptance (2026-10-20):** Tagged as `v0.5.2rc5` with the
   `return_path_lint` modules and `KICAD_RUN_NATIVE_PCB_FIXTURES` lane.
-  GitHub Actions run 39373764914.
-  passed the selected unit checks, exact-version native PCB fixtures, package
-  and wheel checks, and installed-wheel rehearsal against a separate project.
+  Run 39373764914 passed the selected unit checks, exact-version native PCB
+  fixtures, package and wheel checks, and installed-wheel rehearsal against a
+  separate project.
   Linux, macOS, and Windows preview jobs passed as well.
-- **Multiport native board fixtures (2026-10-20; acceptance pending):** Added
+- **Multiport native board fixtures (2026-10-20; acceptance passed):** Added
   three board-only, tooling-owned fixtures with eight exact J1–J4 return pads
   on one `RETURN` net assignment. The control connects all pads; the faults
   isolate both J4 contacts or leave J4.9 open. The source-bound native lane
   evaluates every pad identity and the common-domain copper result on the
-  configured KiCad 10.0.0 and 10.0.5 images. Local mocked-lane, package-asset,
-  focused return-path, and architecture checks pass. Count native capture as
-  demonstrated only after the hosted exact-version run completes.
-- **Remaining:** Confirm the hosted exact-version result for the new four-port
-  boards. Native isolation controls verify two declared domains remain separate
+  configured KiCad 10.0.0 and 10.0.5 images. Run 39375039382 completed
+  successfully with `KICAD_RUN_NATIVE_PCB_FIXTURES=1`; the selected lane covers
+  both pinned versions. Local mocked-lane, package-asset, focused return-path,
+  and architecture checks also pass. The `package` workflow job was skipped;
+  the passing prerelease job performed the installed-wheel rehearsal.
+- **Existing native cases:** Isolation controls verify two declared domains remain separate
   and catch an added fitted net-tie bridge while preserving each domain's local
   connectivity.
   The fixture lane also proves exact net-tie groups and DNP state for a fitted
