@@ -8778,7 +8778,12 @@ is not a reason by itself to expand its scope or change its default policy.
   PART_IDs were exported twice on KiCad 10.0.0 and 10.0.5 in local Docker containers. Both
   version-parameterized native tests passed at `v0.5.2rc34` on 2026-10-20; the tests verify exact
   fixture hashes, reported native versions, repeatable normalized netlists, findings on both faults,
-  and quiet controls. Hosted package acceptance remains pending. The synthetic
+  and quiet controls. On 2026-10-20, the focused rule selector passed 26 tests, including a repeat
+  of the exact-version native fault/control lane on KiCad 10.0.0 and 10.0.5. Hosted prerelease
+  acceptance passed on tag `v0.5.2rc41` (GitHub Actions run
+  [39420789406](https://github.com/sheepfling/KiCad-Tooling/actions/runs/39420789406)); its scoped
+  lint and installed-wheel check passed, as did preview orchestration on Ubuntu, macOS, and Windows.
+  The synthetic
   regression suite uses no product source or cohort fixture; see the
   [base fixture README](../tests/fixtures/design_lint/connector-footprint-peer-missing-metadata-native/README.md)
   and
