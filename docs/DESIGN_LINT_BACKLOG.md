@@ -392,6 +392,15 @@ The following 147 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
+The mapped-topology execution receipt now has a focused model owner; internal
+coverage, evaluation, and report code import it directly while the shared model
+registry keeps a compatibility export. The `v0.5.2rc49` scoped gate (GitHub
+Actions run `39435239835`) passed, including its installed-wheel check against
+the separate public template and Ubuntu, macOS, and Windows preview jobs. The
+package job was skipped under prerelease policy. The preceding docs-only
+`v0.5.2rc48` tag failed before tests because its message omitted the required
+`Lint-Area` or `Lint-Rule` selector; the later scoped tag passed validation.
+
 - `connector.repeated_pin_function`
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
