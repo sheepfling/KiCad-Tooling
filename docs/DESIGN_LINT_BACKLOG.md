@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 128 rules are implemented with synthetic regression coverage.
+The following 129 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -484,6 +484,7 @@ Their actual recognition limits are documented in
 - `pcb.dfm_drc_check_ignored`
 - `pcb.dfm_drc_check_warning`
 - `pcb.signal_integrity_drc_check_downgraded`
+- `pcb.electrical_drc_check_downgraded`
 - `pcb.drc_exclusion_present`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
@@ -2636,7 +2637,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 128 active rules; CI requires every new
+- **Status:** Baseline complete for all 129 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2645,7 +2646,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 128 covered, 0 not applicable, 0 unreviewed.
+  audit: 129 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -7886,6 +7887,47 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and pcb_lint'
   ```
 
+#### LINT-147 — Review downgraded electrical DRC checks
+
+- **Status:** Implemented as `pcb.electrical_drc_check_downgraded`, a
+  source-bound default-review prompt for the KiCad 10.0.x `creepage` and
+  `starved_thermal` checks explicitly configured as Warning or Ignore.
+- **Gap:** LINT-140 and LINT-143 cover the core copper checks, LINT-144 and
+  LINT-145 cover documented DFM checks, and LINT-146 covers signal-integrity
+  checks. These two Error-default electrical checks were not included in those
+  bounded groups. Lowering or disabling creepage review can hide short
+  separation against an authored creepage constraint; lowering or disabling
+  starved-thermal review can conceal insufficient thermal-relief spokes.
+- **Predicate:** Read the source-hashed `.kicad_pro` and emit one candidate
+  for each Warning or Ignore setting among `creepage` and `starved_thermal`.
+  Record the settings hash, exact key, configured severity, and exact
+  project-configured KiCad version. Scope is PCB and PCB-only projects using
+  KiCad 10.0.x.
+- **Policy boundary:** The finding asks whether the explicit severity change
+  is intentional. It does not prove that a creepage constraint applies, that
+  a pad uses thermal relief, that a violation exists, or that the selected
+  severity is unacceptable. It does not run DRC or inspect board copper.
+  Project policy may choose `review`, `block`, `off`, or exact-fingerprint
+  ignore; no electrical or manufacturing approval is inferred.
+- **Source basis:** The KiCad 10 [DRC reference][kicad-10-drc] documents both
+  checks with Error defaults. Versioned [10.0.0][kicad-10.0.0-drc-items] and
+  [10.0.5][kicad-10.0.5-drc-items] sources confirm the serialized keys, and
+  both `board_design_settings.cpp` versions initialize all checks to Error
+  before applying documented exceptions. No KiCad source or project data is
+  imported.
+- **Synthetic evidence:** Tooling-owned fault/control settings cover Warning,
+  Ignore, unchanged Error defaults, unrelated lowered severities, exact source
+  hashing, deterministic key order, unsupported KiCad versions, non-PCB
+  scope, standard REVIEW disposition, and CLI/MCP parity. No native DRC
+  process or product board is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_pcb_electrical_drc_severity.py \
+    tests/test_design_lint_mcp_parity_pcb_electrical_drc_severity.py \
+    -m 'design_lint and pcb_lint'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -10833,7 +10875,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 128 active rules. Each entry has a deterministic predicate, evidence
+contains 129 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

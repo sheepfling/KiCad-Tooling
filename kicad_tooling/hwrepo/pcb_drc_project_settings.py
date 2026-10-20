@@ -43,6 +43,7 @@ SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
         "too_many_vias",
     }
 )
+ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset({"creepage", "starved_thermal"})
 SUPPORTED_DRC_EXCLUSION_SCHEMA_VERSION = 2
 
 
@@ -101,6 +102,11 @@ def configured_signal_integrity_drc_check_severities(
 ) -> tuple[tuple[str, str], ...]:
     """Return explicit severities for documented Error-default signal-integrity checks."""
     return _configured_drc_check_severities(document, SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS)
+
+
+def configured_electrical_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
+    """Return explicit severities for bounded Error-default electrical DRC checks."""
+    return _configured_drc_check_severities(document, ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
 def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:

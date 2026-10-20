@@ -1,0 +1,14 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "creepage": "warning",
+        "starved_thermal": "ignore",
+        "unconnected_items": "error",
+        "track_width": "error",
+        "length_out_of_range": "error"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}

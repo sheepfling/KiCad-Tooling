@@ -6,12 +6,14 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from .contracts import repo_path
+from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .evidence import digest
 from .models import ProjectConfig, ProjectKind
 from .pcb_drc_project_settings import (
     configured_core_drc_check_severities,
     configured_dfm_drc_check_severities,
+    configured_electrical_drc_check_severities,
     configured_signal_integrity_drc_check_severities,
 )
 
@@ -201,42 +203,67 @@ def downgraded_signal_integrity_drc_check_candidates(
     source_hashes: Mapping[str, str],
 ) -> tuple[Candidate, ...]:
     """Review Error-default KiCad 10.0 signal-integrity checks set below Error."""
+    return _downgraded_native_drc_check_candidates(
+        root,
+        config,
+        source_hashes,
+        rule_id="pcb.signal_integrity_drc_check_downgraded",
+        category="signal-integrity",
+        parse_severities=configured_signal_integrity_drc_check_severities,
+    )
+
+
+def downgraded_electrical_drc_check_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+) -> tuple[Candidate, ...]:
+    """Review Error-default KiCad 10.0 electrical checks set below Error."""
+    return _downgraded_native_drc_check_candidates(
+        root,
+        config,
+        source_hashes,
+        rule_id="pcb.electrical_drc_check_downgraded",
+        category="electrical",
+        parse_severities=configured_electrical_drc_check_severities,
+    )
+
+
+def _downgraded_native_drc_check_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+    *,
+    rule_id: DesignLintRuleId,
+    category: str,
+    parse_severities: Callable[[str], tuple[tuple[str, str], ...]],
+) -> tuple[Candidate, ...]:
     settings = _source_bound_drc_settings(
         root,
         config,
         source_hashes,
         supported_version_prefix="10.0.",
-        parse_severities=configured_signal_integrity_drc_check_severities,
+        parse_severities=parse_severities,
     )
     if settings is None:
         return ()
     relative, expected_hash, severities = settings
-    candidates: list[Candidate] = []
-    for check_id, severity in severities:
-        if severity not in {"ignore", "warning"}:
-            continue
-        if severity == "ignore":
-            message = (
-                f"Signal-integrity DRC check {check_id!r} is configured as Ignore; "
-                "confirm that suppressing this check is intentional."
-            )
-        else:
-            message = (
-                f"Error-default signal-integrity DRC check {check_id!r} is configured as Warning; "
-                "confirm that lowering its severity is intentional."
-            )
-        candidates.append(
-            Candidate(
-                rule_id="pcb.signal_integrity_drc_check_downgraded",
-                subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
-                message=message,
-                evidence={
-                    "source_path": (relative,),
-                    "source_sha256": (expected_hash,),
-                    "kicad_version": (config.kicad_version,),
-                    "check_id": (check_id,),
-                    "configured_severity": (severity,),
-                },
-            )
+    return tuple(
+        Candidate(
+            rule_id=rule_id,
+            subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+            message=(
+                f"Error-default {category} DRC check {check_id!r} is configured as "
+                f"{severity.title()}; confirm lowering its severity is intentional."
+            ),
+            evidence={
+                "source_path": (relative,),
+                "source_sha256": (expected_hash,),
+                "kicad_version": (config.kicad_version,),
+                "check_id": (check_id,),
+                "configured_severity": (severity,),
+            },
         )
-    return tuple(candidates)
+        for check_id, severity in severities
+        if severity in {"ignore", "warning"}
+    )

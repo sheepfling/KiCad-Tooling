@@ -117,6 +117,7 @@ DesignLintRuleId = Literal[
     "pcb.dfm_drc_check_ignored",
     "pcb.dfm_drc_check_warning",
     "pcb.signal_integrity_drc_check_downgraded",
+    "pcb.electrical_drc_check_downgraded",
     "pcb.drc_exclusion_present",
     "connector.return_distribution",
     "net.numbered_returns",

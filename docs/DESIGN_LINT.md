@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 128 active rules. They
+`synthetic_validated`; the catalog currently contains 129 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2711,6 +2711,30 @@ present or applicable, measure a route, or qualify signal integrity. Existing
 project-authored differential-pair and signal-path coverage checks remain
 separate. Synthetic settings are in
 [`tests/fixtures/design_lint/pcb-signal-integrity-drc-severity/`](../tests/fixtures/design_lint/pcb-signal-integrity-drc-severity/README.md).
+
+## Review downgraded electrical DRC checks
+
+`pcb.electrical_drc_check_downgraded` prompts when a KiCad 10.0.x PCB
+project's source-hashed `.kicad_pro` sets `creepage` or `starved_thermal` to
+`warning` or `ignore`, despite their documented Error defaults. The finding
+records the exact project version, settings hash, check ID, and configured
+severity. The rule defaults to `review`; project policy may set `block`, `off`,
+or an exact-fingerprint ignore.
+
+The prompt asks whether the explicit severity change was intentional. It does
+not prove that a creepage constraint applies, that a pad uses thermal relief,
+or that a violation exists. It does not run DRC, inspect board copper, or
+establish electrical or manufacturing approval. Tooling-owned synthetic
+settings are in
+[`tests/fixtures/design_lint/pcb-electrical-drc-severity/`](../tests/fixtures/design_lint/pcb-electrical-drc-severity/README.md).
+
+The [KiCad 10 DRC reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#drc-configuration)
+documents both checks with Error defaults. The
+versioned [10.0.0 DRC item source][electrical-drc-items-100] and
+[10.0.5 DRC item source][electrical-drc-items-105] confirm the serialized
+keys. Their corresponding [10.0.0 settings source][electrical-drc-settings-100]
+and [10.0.5 settings source][electrical-drc-settings-105] initialize all DRC
+severities to Error before applying explicit default exceptions.
 
 ## Review persisted per-violation PCB DRC exclusions
 
@@ -5303,3 +5327,7 @@ pad. Review the physical access path and first-article test separately.
 [usb-isolator]: ../tests/fixtures/design_lint/usb-isolator-peer-reference-native/README.md
 [peer-open-fixture]: ../tests/fixtures/design_lint/named-peer-power-input-open/README.md
 [peer-all-open-fixture]: ../tests/fixtures/design_lint/named-peer-power-input-all-open/README.md
+[electrical-drc-items-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp
+[electrical-drc-items-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
+[electrical-drc-settings-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/board_design_settings.cpp
+[electrical-drc-settings-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/board_design_settings.cpp
