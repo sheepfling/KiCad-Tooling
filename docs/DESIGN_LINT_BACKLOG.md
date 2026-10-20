@@ -13598,32 +13598,37 @@ design.
 | PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5. | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
 | Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data.         | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                                   |
 
-#### Preliminary source audit: kicad-happy TF-001 isolated feedback (2026-10-19)
+#### kicad-happy TF-001 isolated-feedback trial (2026-10-19)
 
-The current, unpinned upstream
-[`detect_transformer_feedback` implementation][tf001]
-recognizes controller, optocoupler, and TL431 candidates from value/library
-keywords. It calls a candidate connected when any controller FB-like pin shares
-a net with any optocoupler pin, then any optocoupler pin shares a net with any
-TL431 pin. The detector does not require or inspect a transformer component,
-distinguish the optocoupler's primary transistor pins from its secondary LED
-pins, or verify the secondary sense divider. The release changelog lists TF-001
-as an optocoupler-plus-TL431 detector, but no local runtime trial has been run.
+- **Pinned source:** Release `v2.3.1`, commit
+  [`06840467ad0f5d76af45f64449b1f5ecb10f052f`][tf001-commit], under the
+  declared MIT license. The detector-level function is
+  [`detect_transformer_feedback`][tf001-source].
+- **Trial:** A tooling-owned in-memory probe called the exact pinned function
+  three times with synthetic component and pin-net contexts. It repeated each
+  result and compared the records for stability. The matching keyword case
+  returned an optocoupler and TL431 finding with `deterministic` confidence,
+  despite there being no transformer component in the context. The
+  controller-only anti-control still returned a TF-001 isolated-SMPS record
+  with no optocoupler or TL431. A role-agnostic pin mapping also returned a
+  `deterministic` TF-001 association, although the provided optocoupler and
+  TL431 pin names did not match the roles described by the report.
+- **Scope:** This is an implementation-level runtime probe, not a parser, CLI,
+  native KiCad export, public-board screen, or reviewer measurement. Its
+  synthetic contexts and reproduction runner are retained in
+  [`cohort-transformer-feedback`](../tests/fixtures/design_lint/cohort-transformer-feedback/README.md).
+  No cohort code, product schematic, or board fixture was copied into the
+  tooling package.
+- **Disposition:** Defer adoption. TF-001 adds topology classification, but
+  this trial did not show a unique defect or coverage result over source-bound
+  project requirements. The controller-only and role-agnostic results show
+  that its labels and confidence overstate the evidence for these synthetic
+  cases. LINT-036 and project-authored pin/path contracts remain the exact
+  requirements surface; any future broad review hint needs stronger
+  applicability controls and a valid-control matrix before adoption.
 
-LINT-036 already checks an exact conventional two-resistor regulator feedback
-divider; the general project `pin_connectivity` contract can express exact
-common-net and separate-net pin requirements. The source audit therefore does
-not establish incremental detection value for another topology checker. Keep
-this candidate conditional: a local review prompt should advance only if a
-synthetic fault/control pair shows that a likely isolated-feedback interface
-can be recognized deterministically, that missing authored coverage is
-otherwise silent, and that unrelated controller/opto/TL431 combinations stay
-quiet. Any such prompt must remain default `REVIEW` and must not claim loop
-stability or electrical approval. This is a source-only observation from the
-mutable upstream `main` branch, not a pinned or executed cohort trial; no
-upstream code or project fixtures were copied.
-
-[tf001]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/domain_detectors.py
+[tf001-commit]: https://github.com/aklofas/kicad-happy/commit/06840467ad0f5d76af45f64449b1f5ecb10f052f
+[tf001-source]: https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/domain_detectors.py#L5839-L5892
 
 #### LINT-133 implementation status: capacitive touch-pad clearance
 
