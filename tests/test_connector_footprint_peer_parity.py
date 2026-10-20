@@ -58,6 +58,7 @@ NAMED_SIGNAL_ALL_OPEN_RULE_ID = "connector.footprint_named_signal_all_open"
 NAMED_SIGNAL_MODE_DEPENDENT_OPEN_RULE_ID = (
     "connector.footprint_named_signal_mode_dependent_open_outlier"
 )
+NAMED_PASSIVE_OPEN_RULE_ID = "connector.footprint_named_passive_open_outlier"
 NAMED_POWER_OUTPUT_DIVERGENCE_RULE_ID = (
     "connector.footprint_named_power_output_assignment_divergence"
 )
@@ -160,6 +161,11 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
                 mode="review",
                 reason="Synthetic parity fixture opts in to mode-dependent signal review.",
             ),
+            DesignLintRuleOverride(
+                rule_id=NAMED_PASSIVE_OPEN_RULE_ID,
+                mode="review",
+                reason="Synthetic parity fixture opts in to named passive-contact review.",
+            ),
         )
     )
     root, summary_path = synthetic_design_lint_project(tmp_path, policy)
@@ -230,6 +236,24 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             False,
             ("GND", "BIAS_IN"),
             NAMED_POWER_INPUT_DIVERGENCE_RULE_ID,
+            "PASS",
+            0,
+        ),
+        (
+            False,
+            True,
+            False,
+            ("GND", "AUX_DETECT"),
+            NAMED_PASSIVE_OPEN_RULE_ID,
+            "REVIEW",
+            1,
+        ),
+        (
+            False,
+            False,
+            False,
+            ("GND", "AUX_DETECT"),
+            NAMED_PASSIVE_OPEN_RULE_ID,
             "PASS",
             0,
         ),
@@ -441,6 +465,15 @@ def test_footprint_alias_review_matches_cli_and_mcp(tmp_path: Path) -> None:
             assert alias.open_outlier_finding_count == expected_findings
             if expected_findings:
                 assert findings[0].evidence["pin_electrical_type"] == ("bidirectional",)
+                assert findings[0].evidence["open_pins"] == ("J2.2",)
+                assert findings[0].evidence["assignments"] == (
+                    "J1.2=SYNTHETIC_SIGNAL_A",
+                    "J2.2=<unassigned>",
+                )
+        elif rule_id == NAMED_PASSIVE_OPEN_RULE_ID:
+            assert alias.open_outlier_finding_count == expected_findings
+            if expected_findings:
+                assert findings[0].evidence["pin_electrical_type"] == ("passive",)
                 assert findings[0].evidence["open_pins"] == ("J2.2",)
                 assert findings[0].evidence["assignments"] == (
                     "J1.2=SYNTHETIC_SIGNAL_A",

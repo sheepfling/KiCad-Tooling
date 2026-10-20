@@ -365,7 +365,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 143 rules are implemented with synthetic regression coverage.
+The following 144 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -379,6 +379,7 @@ Their actual recognition limits are documented in
 - `connector.footprint_named_power_output_open_outlier`
 - `connector.footprint_named_signal_output_open_outlier`
 - `connector.footprint_named_signal_mode_dependent_open_outlier`
+- `connector.footprint_named_passive_open_outlier`
 - `connector.footprint_named_signal_assignment_divergence`
 - `connector.footprint_named_power_input_assignment_divergence`
 - `connector.footprint_named_power_output_assignment_divergence`
@@ -2672,7 +2673,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 143 active rules; CI requires every new
+- **Status:** Baseline complete for all 144 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2681,7 +2682,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 143 covered, 0 not applicable, 0 unreviewed.
+  audit: 144 covered, 0 not applicable, 0 unreviewed.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -8578,6 +8579,38 @@ is not a reason by itself to expand its scope or change its default policy.
   python -I -m pytest tests -m 'design_lint and design_lint_rule(rule_id="connector.footprint_named_signal_mode_dependent_open_outlier")'
   ```
 
+#### LINT-162 — Review named passive contacts left open on connector peers
+
+- **Status:** Implemented as the default-review rule
+  `connector.footprint_named_passive_open_outlier`.
+- **Gap:** Named input, output, and mode-dependent signal contacts had partial-
+  open review checks, but explicitly named passive contacts did not. A peer
+  connector may share pin metadata and a separate common anchor while one
+  instance leaves the passive contact open.
+- **Predicate:** Reuse the bounded footprint-alias scan. Require fitted
+  connectors with distinct native symbols, no PART_ID, exact nonempty value and
+  footprint, complete identical pin inventories, matching nonempty function
+  and electrical-type metadata, one exact assignment on some peers, an open
+  contact on another, and a separate exact common-net anchor. Only passive
+  electrical type is considered; generic, supply/return, active signal, split,
+  ambiguous, incomplete, DNP, and PART_ID groups are excluded.
+- **Boundary:** This is a default-review heuristic. Similar metadata and a
+  common anchor do not establish that the passive contacts share an electrical
+  role or must connect. Project-authored connectivity requirements remain
+  authoritative when a connection must block. The rule does not prove PCB
+  copper continuity.
+- **Evidence:** Synthetic tests cover assigned/common and unanchored controls,
+  exclusions, stable finding order, `REVIEW`/`BLOCK`/`OFF` and exact-ignore
+  behavior, and CLI/MCP parity. A digest-pinned synthetic native fault/control
+  pair runs with KiCad 10.0.0 and 10.0.5 in the hosted connector lane. No
+  product source or cohort fixture is used; see the
+  [fixture README](../tests/fixtures/design_lint/connector-footprint-named-passive-open-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests -m 'design_lint and design_lint_rule(rule_id="connector.footprint_named_passive_open_outlier")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -11550,7 +11583,7 @@ is not a reason by itself to expand its scope or change its default policy.
   long-term maintenance cost remain unmeasured.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 143 active rules. Each entry has a deterministic predicate, evidence
+contains 144 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

@@ -82,6 +82,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "connector-footprint-named-signal-mode-dependent-open-native/fault.kicad_sch",
         "footprint-alias-named-signal-mode-dependent-open-control": fixture_root
         / "connector-footprint-named-signal-mode-dependent-open-native/control.kicad_sch",
+        "footprint-alias-named-passive-open-fault": fixture_root
+        / "connector-footprint-named-passive-open-native/fault.kicad_sch",
+        "footprint-alias-named-passive-open-control": fixture_root
+        / "connector-footprint-named-passive-open-native/control.kicad_sch",
         "footprint-alias-named-signal-all-open-fault": fixture_root
         / "connector-footprint-named-signal-all-open-native/fault.kicad_sch",
         "footprint-alias-named-signal-all-open-control": fixture_root
@@ -243,6 +247,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "footprint-alias-named-signal-output-control": "f072787dbd52dafcc5e2fd0728ed2bc4add23653d8b4978c7472aa658b660d8f",
     "footprint-alias-named-signal-mode-dependent-open-fault": "96314806f6a6b21e43c9de2b86754d6a9b6f9f15d8ed19b204c61415d9c40e49",
     "footprint-alias-named-signal-mode-dependent-open-control": "6375edf7f06cd00f66fcbd8d19675f151c428ebf9114b04891e7b9aff8977e3b",
+    "footprint-alias-named-passive-open-fault": "9d05ca2c2f871e763b311ec299cee1b325a0daaf5370f15eff80228edebd62b7",
+    "footprint-alias-named-passive-open-control": "8e3be4a0aec8a24ac85021d1f647c51052e35966d4bfe434adf7b53b7491b821",
     "footprint-alias-named-signal-all-open-fault": "694b9284e1e08d029ffaf6c69198bb20a3179c2f90896f32cbecf9040b687af1",
     "footprint-alias-named-signal-all-open-control": "f072787dbd52dafcc5e2fd0728ed2bc4add23653d8b4978c7472aa658b660d8f",
     "footprint-alias-named-signal-divergence-fault": "2a63cd0836321ce6752b5b4725d830a7f96ad01533e903fe24dfae5b696084a1",

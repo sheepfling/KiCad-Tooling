@@ -206,6 +206,12 @@ The first rules are:
   peers and left open on another, with a separate common-net anchor. Input and
   output pins remain covered by their dedicated rules. Similarity only prompts
   inspection; it does not establish a shared role or required connection.
+- `connector.footprint_named_passive_open_outlier` prompts for review when an
+  explicitly named native passive contact is assigned to one exact net on
+  some footprint/value peers and left open on another, with a separate
+  common-net anchor. Generic, supply/return, active signal, ambiguous,
+  incomplete, and unanchored cases are excluded. Similarity does not establish
+  that contacts share a role or must connect.
 - `connector.footprint_named_signal_assignment_divergence` prompts for review
   when a non-generic native signal pin on matched footprint/value connector
   aliases is assigned to different nets while another pin has one exact
@@ -1265,7 +1271,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 143 active rules. They
+`synthetic_validated`; the catalog currently contains 144 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
