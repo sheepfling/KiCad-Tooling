@@ -149,3 +149,17 @@ The native lane uses a minimal tooling-owned synthetic project manifest to
 select each pinned KiCad version. It copies only `pwm-fault.kicad_sch` and
 `pwm-control.kicad_sch` into the read-only fixture mount, then exports each
 twice for repeatability.
+
+## Native PCB copper fault/control fixtures
+
+Three tooling-owned board fixtures under
+`kicad_tooling/hwrepo/fixtures/pcb-return-four-port-db9-*.kicad_pcb` exercise
+the same eight contacts (`J1.7`, `J1.9` through `J4.7`, `J4.9`) with every pad
+assigned to `RETURN`. The control routes all contacts into one copper group.
+One fault isolates both J4 contacts together; the other leaves only J4.9 open.
+The exact-version PCB lane is configured to evaluate all eight pad identities
+and the project-authored direct-return domain against native copper
+connectivity on KiCad 10.0.0 and 10.0.5. These small board-only fixtures test
+native evidence and contract evaluation; they do not model a physical DB9
+footprint, current capacity, manufacturing, or a requirement that returns must
+be common.

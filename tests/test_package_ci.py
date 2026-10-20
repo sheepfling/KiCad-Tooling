@@ -42,6 +42,9 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/pcb_keepout_models.py",
         "kicad_tooling/hwrepo/usb_c_models.py",
         "kicad_tooling/hwrepo/connector_return_distribution_models.py",
+        "kicad_tooling/hwrepo/fixtures/pcb-return-four-port-db9-return-control.kicad_pcb",
+        "kicad_tooling/hwrepo/fixtures/pcb-return-four-port-db9-connector-island.kicad_pcb",
+        "kicad_tooling/hwrepo/fixtures/pcb-return-four-port-db9-single-open.kicad_pcb",
     ),
     ids=(
         "rule-catalog",
@@ -59,6 +62,9 @@ from scripts.lint_gate_scope import (
         "pcb-keepout-models",
         "usb-c-models",
         "connector-return-distribution-models",
+        "four-port-return-control-board",
+        "four-port-return-island-board",
+        "four-port-return-open-contact-board",
     ),
 )
 @pytest.mark.architecture

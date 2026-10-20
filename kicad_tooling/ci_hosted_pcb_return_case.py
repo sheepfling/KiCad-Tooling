@@ -91,6 +91,24 @@ def verify_pcb_return_fixture_case(
                 ),
             )
             domains = (topology,)
+        elif scenario == "multiport-direct":
+            endpoint_pads = tuple(
+                f"J{reference}.{number}" for reference in range(1, 5) for number in ("7", "9")
+            )
+            topology = PcbReturnDomainRequirement(
+                id=fixture_id,
+                basis="Synthetic fixture asserts all four connector return pairs share copper",
+                topology="direct",
+                endpoints=tuple(
+                    PcbReturnEndpointRequirement(
+                        pad=pad,
+                        net="RETURN",
+                        footprint="Synthetic:TestPad",
+                    )
+                    for pad in endpoint_pads
+                ),
+            )
+            domains = (topology,)
         else:
             domains = (
                 PcbReturnDomainRequirement(
@@ -143,15 +161,28 @@ def verify_pcb_return_fixture_case(
             probe_sha256=pcb_return_path_capture.expected_probe_sha256(),
         )
         by_pad = {item.pad.casefold(): item for item in snapshot.pads}
-        first = by_pad.get("j1.1")
-        second = by_pad.get("j2.1")
-        is_via_fixture = fixture_id.startswith("alternate-layer-")
-        observed_connected = (
-            first is not None
-            and second is not None
-            and ("j2.1" in {pad.casefold() for pad in first.connected_pads})
-            and ("j1.1" in {pad.casefold() for pad in second.connected_pads})
+        first_pad_id, second_pad_id = (
+            ("j1.7", "j2.7") if scenario == "multiport-direct" else ("j1.1", "j2.1")
         )
+        first = by_pad.get(first_pad_id)
+        second = by_pad.get(second_pad_id)
+        is_via_fixture = fixture_id.startswith("alternate-layer-")
+        if scenario == "multiport-direct":
+            required_pad_ids = {
+                f"J{reference}.{number}".casefold()
+                for reference in range(1, 5)
+                for number in ("7", "9")
+            }
+            observed_connected = first is not None and required_pad_ids <= {
+                pad.casefold() for pad in first.connected_pads
+            }
+        else:
+            observed_connected = (
+                first is not None
+                and second is not None
+                and ("j2.1" in {pad.casefold() for pad in first.connected_pads})
+                and ("j1.1" in {pad.casefold() for pad in second.connected_pads})
+            )
         connectivity_id = f"pcb-return-paths/{fixture_id}/connectivity"
         connectivity_check = next((check for check in checks if check.id == connectivity_id), None)
         failures: list[str] = []

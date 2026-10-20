@@ -60,6 +60,7 @@ def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evid
         is_unanchored_zone = fixture_id == "zone-unanchored-island"
         is_tie_fixture = fixture_id.startswith("net-tie-")
         is_isolation_fixture = fixture_id.startswith("isolation-")
+        is_multiport_fixture = fixture_id.startswith("four-port-db9-return-")
         is_isolation_bridge = fixture_id == "isolation-bridged"
         tie_dnp = fixture_id == "net-tie-dnp"
         expected_connected = fixture_id in {
@@ -70,6 +71,7 @@ def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evid
             "net-tie-connected",
             "isolation-open",
             "isolation-bridged",
+            "four-port-db9-return-control",
         }
         is_split_zone = is_zone_fixture and ("split" in fixture_id or is_unanchored_zone)
         expected_islands = 2 if is_split_zone else 1
@@ -107,6 +109,11 @@ def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evid
             assert '(net 2 "RETURN_B")' in content
             if is_isolation_bridge:
                 assert '(net_tie_pad_groups "1,2")' in content
+        if is_multiport_fixture:
+            assert content.count('(footprint "Synthetic:TestPad"') == 4
+            assert content.count('(pad "7" smd circle') == 4
+            assert content.count('(pad "9" smd circle') == 4
+            assert content.count('(net 1 "RETURN")') == 9
         connected_pads = ("J1.1", "J2.1") if expected_connected else ("J1.1",)
         connected_j2 = ("J1.1", "J2.1") if expected_connected else ("J2.1",)
         via_id = "d" * 64
@@ -282,6 +289,37 @@ def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evid
                 if is_isolation_bridge
                 else ()
             )
+        elif is_multiport_fixture:
+            multiport_pads = tuple(
+                f"J{reference}.{number}" for reference in range(1, 5) for number in ("7", "9")
+            )
+            isolated_pads = {
+                "four-port-db9-return-connector-island": ("J4.7", "J4.9"),
+                "four-port-db9-return-single-open": ("J4.9",),
+            }.get(fixture_id, ())
+            groups = tuple(
+                group
+                for group in (
+                    tuple(pad for pad in multiport_pads if pad not in isolated_pads),
+                    isolated_pads,
+                )
+                if group
+            )
+            group_by_pad = {pad: group for group in groups for pad in group}
+            endpoint_pads = tuple(
+                PcbPadConnectivityObservation(
+                    pad=pad,
+                    net="RETURN",
+                    footprint="Synthetic:TestPad",
+                    dnp=False,
+                    connected_pads=group_by_pad[pad],
+                    connected_zones=(),
+                    connected_islands=(),
+                    connected_vias=(),
+                )
+                for pad in multiport_pads
+            )
+            tie_pads = ()
         else:
             endpoint_pads = (
                 PcbPadConnectivityObservation(
@@ -403,8 +441,8 @@ def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evid
             hosted_reference_root, project="controller", image=config.image, log=log
         )
 
-    assert run_probe.call_count == 14
-    assert len(observed_boards) == 14
+    assert run_probe.call_count == 17
+    assert len(observed_boards) == 17
     assert all(board.is_file() for board in observed_boards)
     events = [json.loads(line) for line in log.events.read_text().splitlines()]
     results = {
@@ -425,6 +463,9 @@ def test_pcb_return_fixture_checks_native_connectivity_zone_via_and_net_tie_evid
         ("net-tie-dnp", "open"),
         ("isolation-open", "connected"),
         ("isolation-bridged", "connected"),
+        ("four-port-db9-return-control", "connected"),
+        ("four-port-db9-return-connector-island", "open"),
+        ("four-port-db9-return-single-open", "open"),
     ):
         result = results[f"pcb-return-fixture/{fixture_id}"]
         assert result["status"] == "PASS"

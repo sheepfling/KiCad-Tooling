@@ -41,6 +41,9 @@ EXPECTED_CONNECTIVITY = {
     "net-tie-dnp": "open",
     "isolation-open": "connected",
     "isolation-bridged": "connected",
+    "four-port-db9-return-control": "connected",
+    "four-port-db9-return-connector-island": "open",
+    "four-port-db9-return-single-open": "open",
 }
 
 
