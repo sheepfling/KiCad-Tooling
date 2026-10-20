@@ -20,6 +20,7 @@ from .design_lint_finding_models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
 )
+from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
 from .design_lint_pcb_required_fitted_reference_report import (
     validate_required_fitted_reference_findings,
 )
@@ -30,10 +31,7 @@ from .i2c_address_models import I2cAddressCoverageReport
 from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .model_primitives import Digest, Identifier, NonEmptyText, RepositoryPath, StrictModel
-from .models import (
-    DesignLintMappedCheckRun,
-    register_design_lint_report,
-)
+from .models import register_design_lint_report
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
 from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport

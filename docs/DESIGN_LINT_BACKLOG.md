@@ -266,6 +266,11 @@ intended requirement.
   `tests/test_verify_design_lint.py`; runner failure tests stay in
   `tests/test_verify.py`, and shared synthetic setup lives in bounded
   `tests/verify_support.py` and `tests/verify_design_lint_support.py` modules.
+- Keep mapped-topology execution receipts in
+  `design_lint_mapped_topology_models.py`. Coverage, evaluation, and report
+  modules import the owner directly; `models.py` keeps only the
+  identity-compatible export. The report-model architecture suite guards the
+  owner size and import boundary.
 - Keep `pcb_return_paths.py` as a compatibility facade. Pure checks against
   reviewed return requirements live in `pcb_return_path_checks.py`; native
   source-bound snapshot capture and probe provenance live in

@@ -4,24 +4,19 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping, Sequence
-from typing import Literal
 
+from .design_lint_mapped_topology_models import (
+    DesignLintMappedCheckRun,
+    MappedTopologyRuleId,
+    MappedTopologyRuleMode,
+)
 from .design_lint_policy_models import DesignLintPolicy
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .models import DesignLintMappedCheckRun
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
 from .usb_data_path_models import UsbDataPathMap
-
-MappedTopologyRuleId = Literal[
-    "bus.usb_data_path_mismatch",
-    "power.mapped_series_path_mismatch",
-    "power.mapped_sequence_dependency_mismatch",
-    "oscillator.output_load_path_mismatch",
-]
-RuleMode = Literal["review", "block", "off"]
 
 
 def _mapped_check_run(
@@ -30,7 +25,7 @@ def _mapped_check_run(
     requirement_count: int,
     netlist_sha256: str | None,
     candidates: Sequence[Candidate],
-    mode: RuleMode,
+    mode: MappedTopologyRuleMode,
 ) -> DesignLintMappedCheckRun:
     finding_count = sum(item.rule_id == rule_id for item in candidates)
     if map_sha256 is None:
@@ -64,7 +59,7 @@ def _mapped_check_run(
 
 def mapped_topology_coverage_runs(
     policy: DesignLintPolicy,
-    default_modes: Mapping[DesignLintRuleId, RuleMode],
+    default_modes: Mapping[DesignLintRuleId, MappedTopologyRuleMode],
     candidates: Sequence[Candidate],
     netlist_sha256: str | None,
 ) -> tuple[DesignLintMappedCheckRun, ...]:

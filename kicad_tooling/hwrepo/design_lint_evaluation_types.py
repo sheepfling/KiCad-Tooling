@@ -22,6 +22,7 @@ from .design_lint_finding_models import (
     DesignLintIgnore,
     DesignLintRuleOverride,
 )
+from .design_lint_mapped_topology_models import DesignLintMappedCheckRun
 from .design_lint_pcb_coverage_policy import (
     PcbInputCoveragePolicyState,
     PcbMappedCoveragePolicyState,
@@ -39,7 +40,6 @@ from .i2c_peer_reference_models import I2cPeerReferenceCoverageReport
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import (
     ContractCoachReport,
-    DesignLintMappedCheckRun,
     Digest,
     RepositoryPath,
 )

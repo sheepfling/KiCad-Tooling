@@ -31,6 +31,7 @@ from . import connector_return_distribution_models as _connector_return_distribu
 from . import control_input_models as _control_input_models
 from . import crystal_network_models as _crystal_network_models
 from . import design_lint_finding_models as _design_lint_finding_models
+from . import design_lint_mapped_topology_models as _design_lint_mapped_topology_models
 from . import design_lint_policy_models as _design_lint_policy_models
 from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
@@ -134,6 +135,7 @@ RegulatorFeedbackCoverageReport = _regulator_feedback_models.RegulatorFeedbackCo
 ComplementaryPinFunctionAlias = _signal_pair_models.ComplementaryPinFunctionAlias
 ComplementaryPinFunctionAliasMap = _signal_pair_models.ComplementaryPinFunctionAliasMap
 DesignLintPolicy = _design_lint_policy_models.DesignLintPolicy
+DesignLintMappedCheckRun = _design_lint_mapped_topology_models.DesignLintMappedCheckRun
 ComponentVoltageRatingRequirement = _component_rating_models.ComponentVoltageRatingRequirement
 ComponentVoltageRatingAnalysis = _component_rating_models.ComponentVoltageRatingAnalysis
 ComponentPowerRatingRequirement = _component_rating_models.ComponentPowerRatingRequirement
@@ -2063,46 +2065,6 @@ class ContractCoachReport(StrictModel):
 ConnectorMappedPinEvidence = _connector_coverage_models.ConnectorMappedPinEvidence
 ConnectorCoverageEntry = _connector_coverage_models.ConnectorCoverageEntry
 ConnectorCoverageReport = _connector_coverage_models.ConnectorCoverageReport
-
-
-class DesignLintMappedCheckRun(StrictModel):
-    """Execution receipt for an optional mapped topology check."""
-
-    rule_id: Literal[
-        "bus.usb_data_path_mismatch",
-        "power.mapped_series_path_mismatch",
-        "power.mapped_sequence_dependency_mismatch",
-        "oscillator.output_load_path_mismatch",
-    ]
-    status: Literal["NOT_CONFIGURED", "EVALUATED", "BLOCKED"]
-    mode: Literal["review", "block", "off"]
-    map_sha256: Digest | None = None
-    netlist_sha256: Digest | None = None
-    requirement_count: NonNegativeCount = 0
-    finding_count: NonNegativeCount = 0
-    reason: NonEmptyText | None = None
-
-    @model_validator(mode="after")
-    def execution_matches_map_state(self) -> DesignLintMappedCheckRun:
-        if self.status == "NOT_CONFIGURED" and (
-            self.map_sha256 is not None
-            or self.requirement_count != 0
-            or self.finding_count != 0
-            or self.reason is None
-        ):
-            raise ValueError("Unconfigured mapped checks need a reason and zero map counts")
-        if self.status == "EVALUATED" and (
-            self.map_sha256 is None
-            or self.netlist_sha256 is None
-            or self.requirement_count == 0
-            or self.reason is not None
-        ):
-            raise ValueError("Evaluated mapped checks need source hashes and authored entries")
-        if self.status == "BLOCKED" and (
-            self.map_sha256 is None or self.requirement_count == 0 or self.reason is None
-        ):
-            raise ValueError("Blocked mapped checks need a configured map and blocking reason")
-        return self
 
 
 class McpArtifactEntry(StrictModel):

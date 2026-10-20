@@ -10,6 +10,7 @@ import pytest
 
 from kicad_tooling.hwrepo import (
     design_lint_connectivity_snapshot_models,
+    design_lint_mapped_topology_models,
     design_lint_report_models,
     models,
 )
@@ -38,7 +39,8 @@ def test_internal_services_import_report_from_its_owner() -> None:
                 node.module.endswith(".models") and not node.module.endswith("_models")
             )
             if is_compatibility_registry and any(
-                alias.name == "DesignLintReport" for alias in node.names
+                alias.name in {"DesignLintReport", "DesignLintMappedCheckRun"}
+                for alias in node.names
             ):
                 legacy_imports.append(path.relative_to(REPOSITORY).as_posix())
 
@@ -57,6 +59,26 @@ def test_models_compatibility_export_and_forward_field_use_the_owner() -> None:
         if isinstance(node, ast.ClassDef) and node.name == "DesignLintReport"
     ]
     assert local_report_definitions == []
+
+
+def test_mapped_topology_execution_model_has_a_focused_owner_and_compatible_export() -> None:
+    owner = TOOLING / "hwrepo" / "design_lint_mapped_topology_models.py"
+    assert len(owner.read_text(encoding="utf-8").splitlines()) < 500
+    assert (
+        models.DesignLintMappedCheckRun
+        is design_lint_mapped_topology_models.DesignLintMappedCheckRun
+    )
+
+    model_tree = ast.parse((TOOLING / "hwrepo" / "models.py").read_text(encoding="utf-8"))
+    local_model_definitions = [
+        node.name
+        for node in model_tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "DesignLintMappedCheckRun"
+    ]
+    assert local_model_definitions == []
+    assert design_lint_mapped_topology_models.DesignLintMappedCheckRun in get_args(
+        design_lint_report_models.DesignLintReport.model_fields["mapped_check_runs"].annotation
+    )
 
 
 def test_connectivity_snapshot_owners_stay_bounded_and_theme_owned() -> None:
