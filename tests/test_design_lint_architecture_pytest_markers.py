@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,45 @@ from tests.design_lint_test_markers import (
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.architecture]
+
+_RULE_THEME_MARKERS = {
+    "components": "component_lint",
+    "connectors": "connector_lint",
+    "interfaces": "interface_lint",
+    "pcb": "pcb_lint",
+    "power": "power_lint",
+    "returns": "return_path_lint",
+    "schematic": "schematic_lint",
+}
+
+
+@cache
+def _module_pytest_markers(path: str) -> frozenset[str]:
+    source_path = Path(__file__).resolve().parents[1] / path
+    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=path)
+    marker_assignments = []
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign):
+            targets = statement.targets
+            value = statement.value
+        elif isinstance(statement, ast.AnnAssign) and statement.value is not None:
+            targets = [statement.target]
+            value = statement.value
+        else:
+            continue
+        if any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in targets):
+            marker_assignments.append(value)
+
+    return frozenset(
+        node.attr
+        for expression in marker_assignments
+        for node in ast.walk(expression)
+        if isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Attribute)
+        and isinstance(node.value.value, ast.Name)
+        and node.value.value.id == "pytest"
+        and node.value.attr == "mark"
+    )
 
 
 _DIGITAL_PEER_SUITES = {
@@ -211,11 +251,15 @@ def test_active_catalog_fixture_references_receive_their_rule_marker() -> None:
             module = ".".join(parts[:2])
             test_class = ".".join(parts[2:-1]) or None
             function = parts[-1]
+            module_path = f"{module.replace('.', '/')}.py"
             assert rule.rule_id in design_lint_rule_ids_for_test(
                 module,
                 test_class,
                 function,
             ), reference
+            area_markers = set(design_lint_markers_for_path(module_path))
+            area_markers.update(_module_pytest_markers(module_path))
+            assert _RULE_THEME_MARKERS[rule.theme] in area_markers, reference
 
 
 def test_peer_reference_regressions_are_selectable_in_return_path_scope() -> None:
