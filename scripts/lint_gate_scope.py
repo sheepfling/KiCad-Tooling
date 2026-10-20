@@ -10,6 +10,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from kicad_tooling.pytest_scope import validate_test_module_files, validate_test_module_paths
+
 LINT_AREAS = frozenset(
     {
         "design_lint",
@@ -40,6 +42,7 @@ class LintGateScope:
     area: str | None
     rule_id: str | None
     native_fixtures: tuple[str, ...]
+    test_paths: tuple[str, ...] = ()
 
     @property
     def pytest_markexpr(self) -> str:
@@ -80,7 +83,7 @@ def parse_tag_message(
     known_rule_ids: frozenset[str] = frozenset(),
     required_native_fixtures: Mapping[str, tuple[str, ...]] | None = None,
 ) -> LintGateScope:
-    """Parse one area or active rule selector and native fixture declarations."""
+    """Parse a lint selector, optional test modules, and native fixture switches."""
     selectors = [
         (key.strip(), value.strip())
         for key, separator, value in (line.partition(":") for line in message.splitlines())
@@ -118,7 +121,17 @@ def parse_tag_message(
         raise ValueError(
             f"Lint-Rule {rule_id!r} requires Native-Fixture declarations: {sorted(missing)}"
         )
-    return LintGateScope(area, rule_id, tuple(fixtures))
+
+    test_paths = validate_test_module_paths(
+        value.strip()
+        for key, separator, value in (line.partition(":") for line in message.splitlines())
+        if separator and key.strip() == "Test-Path"
+    )
+    if test_paths and rule_id is not None:
+        raise ValueError(
+            "Test-Path cannot narrow a Lint-Rule selection; use its catalogued fixtures"
+        )
+    return LintGateScope(area, rule_id, tuple(fixtures), test_paths)
 
 
 def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
@@ -138,12 +151,14 @@ def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
     if not separator:
         raise ValueError(f"annotated lint tag {tag_name} has no message")
     native_fixtures_by_rule = required_native_fixtures_by_rule()
-    return parse_tag_message(
+    scope = parse_tag_message(
         message,
         configured_native_fixtures(repository),
         frozenset(native_fixtures_by_rule),
         native_fixtures_by_rule,
     )
+    validate_test_module_files(scope.test_paths, repository)
+    return scope
 
 
 def write_github_scope(scope: LintGateScope) -> None:
@@ -152,8 +167,12 @@ def write_github_scope(scope: LintGateScope) -> None:
     if output:
         with Path(output).open("a", encoding="utf-8") as stream:
             stream.write(f"markexpr={scope.pytest_markexpr}\n")
+            if scope.test_paths:
+                stream.write(f"pytestpaths={','.join(scope.test_paths)}\n")
     else:
         print(f"markexpr={scope.pytest_markexpr}")
+        if scope.test_paths:
+            print(f"pytestpaths={','.join(scope.test_paths)}")
 
     environment = os.environ.get("GITHUB_ENV")
     if environment:

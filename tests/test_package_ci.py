@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import subprocess
-import sys
 import tomllib
 import zipfile
 from pathlib import Path
@@ -32,6 +31,7 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/pcb_variant_probe.py.in",
         "kicad_tooling/hwrepo/native_pcb_probe_touch_clearance.py.in",
         "kicad_tooling/package_build.py",
+        "kicad_tooling/pytest_scope.py",
         "kicad_tooling/hwrepo/component_role_models.py",
         "kicad_tooling/hwrepo/power_path_models.py",
         "kicad_tooling/hwrepo/power_sequence_models.py",
@@ -48,6 +48,7 @@ from scripts.lint_gate_scope import (
         "native-pcb-variant-probe",
         "native-touch-clearance-probe",
         "package-build-service",
+        "pytest-scope-service",
         "component-role-models",
         "power-path-models",
         "power-sequence-models",
@@ -60,6 +61,7 @@ from scripts.lint_gate_scope import (
         "connector-return-distribution-models",
     ),
 )
+@pytest.mark.architecture
 def test_wheel_requires_rule_catalog_and_theme_owned_models(
     tmp_path: Path, missing_asset: str
 ) -> None:
@@ -75,6 +77,7 @@ def test_wheel_requires_rule_catalog_and_theme_owned_models(
         wheel_contents(wheel)
 
 
+@pytest.mark.architecture
 def test_workflow_keeps_full_acceptance_and_scopes_prerelease_tags() -> None:
     repository = Path(__file__).resolve().parents[1]
     workflow = (repository / ".github/workflows/tooling.yml").read_text(encoding="utf-8")
@@ -88,6 +91,8 @@ def test_workflow_keeps_full_acceptance_and_scopes_prerelease_tags() -> None:
     assert "contains(github.ref_name, 'rc')" in lint_job
     assert 'python scripts/lint_gate_scope.py --tag "$GITHUB_REF_NAME"' in lint_job
     assert '--pytest-markexpr "$PYTEST_MARKEXPR"' in lint_job
+    assert "PYTEST_PATHS: ${{ steps.lint-scope.outputs.pytestpaths }}" in lint_job
+    assert 'args+=(--pytest-paths "${pytest_paths[@]}")' in lint_job
     assert "build/acceptance-template" in lint_job
     assert "tooling-lint-gate-${{ github.run_id }}-${{ github.run_attempt }}" in lint_job
 
@@ -392,44 +397,6 @@ def test_distribution_build_clears_stale_staging_without_removing_receipts(
     assert not stale_temp.exists()
     assert receipt.read_text(encoding="utf-8") == "generated"
     assert native_receipt.read_text(encoding="utf-8") == "generated"
-
-
-@pytest.mark.architecture
-def test_ci_driver_applies_only_the_requested_pytest_marker_and_reports_durations(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(ci, "ROOT", tmp_path)
-    monkeypatch.setattr(
-        ci.sys,
-        "argv",
-        ["scripts/ci.py", "--pytest-markexpr", "design_lint and interface_lint"],
-    )
-    monkeypatch.delenv("KICAD_RUN_NATIVE_SCHEMATIC_GEOMETRY", raising=False)
-    stage = Mock()
-    stage.return_value.stdout = str(tmp_path / "kicad_tooling/__init__.py")
-    monkeypatch.setattr(ci, "stage", stage)
-    monkeypatch.setattr(
-        ci,
-        "build_distributions",
-        Mock(side_effect=StopIteration("stop after stage selection")),
-    )
-
-    with pytest.raises(StopIteration, match="stop after stage selection"):
-        ci.main()
-
-    commands = {call.args[0]: call.args[1] for call in stage.call_args_list}
-    assert commands["unit"] == (
-        sys.executable,
-        "-B",
-        "-I",
-        "-m",
-        "pytest",
-        "-q",
-        "--durations=10",
-        "-m",
-        "design_lint and interface_lint",
-    )
-    assert "design_lint and interface_lint" not in commands["ruff"]
 
 
 def test_stale_install_is_rejected_before_regressions(

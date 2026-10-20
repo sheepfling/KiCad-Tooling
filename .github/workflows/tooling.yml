@@ -121,9 +121,17 @@ jobs:
       - name: Check scoped lint gate and installed wheel against separate project
         env:
           PYTEST_MARKEXPR: ${{ steps.lint-scope.outputs.markexpr }}
-        run: >-
-          python scripts/ci.py --project-root build/acceptance-template
-          --pytest-markexpr "$PYTEST_MARKEXPR"
+          PYTEST_PATHS: ${{ steps.lint-scope.outputs.pytestpaths }}
+        run: |
+          args=(
+            --project-root build/acceptance-template
+            --pytest-markexpr "$PYTEST_MARKEXPR"
+          )
+          if [[ -n "${PYTEST_PATHS:-}" ]]; then
+            IFS=',' read -r -a pytest_paths <<< "$PYTEST_PATHS"
+            args+=(--pytest-paths "${pytest_paths[@]}")
+          fi
+          python scripts/ci.py "${args[@]}"
       - name: Keep stage logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

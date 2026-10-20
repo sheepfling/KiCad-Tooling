@@ -12,6 +12,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/py.typed",
         "kicad_tooling/package_assets.py",
         "kicad_tooling/package_build.py",
+        "kicad_tooling/pytest_scope.py",
         "kicad_tooling/hwrepo/external_protection_models.py",
         "kicad_tooling/hwrepo/component_role_models.py",
         "kicad_tooling/hwrepo/power_path_models.py",

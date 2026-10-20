@@ -89,6 +89,22 @@ Lint-Area: interface_lint
 Native-Fixture: KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES
 ```
 
+An area tag may instead list explicit test modules with repeated `Test-Path` lines.
+Those paths replace the area marker expression for pytest collection, so use them
+only when the listed modules contain the complete fault/control lane being gated.
+Each path must name an existing `tests/test_*.py` file in this repository. A
+`Lint-Rule` tag cannot use `Test-Path`; rule tags keep their complete catalog-derived
+fixture selection.
+
+```text
+Lint-Area: pcb_lint
+Native-Fixture: KICAD_RUN_NATIVE_PCB_FIXTURES
+Test-Path: tests/test_pcb_dru_compilation.py
+Test-Path: tests/test_pcb_dru_compilation_architecture.py
+Test-Path: tests/test_validate_drc_rule_compilation.py
+Test-Path: tests/test_pcb_dru_compilation_native.py
+```
+
 An individual active rule can use the same gate:
 
 ```text
@@ -113,7 +129,7 @@ required native-fixture declaration before the hosted job starts:
 
 Replace `NNN` with the tag's actual release-candidate number. The command only
 validates and prints the selected pytest expression and native-fixture
-switches; it does not run the tests.
+switches, plus any explicit test-module paths; it does not run the tests.
 
 An active rule may list `required_native_fixtures` in the packaged rule catalog.
 Every rule-scoped tag for that rule must declare those exact fixture switches.

@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from kicad_tooling.package_build import build_distributions
+from kicad_tooling.pytest_scope import validate_test_module_files
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -224,7 +225,16 @@ def main() -> int:
         "--pytest-markexpr",
         help="Optional pytest marker expression for a scoped prerelease lint gate",
     )
+    parser.add_argument(
+        "--pytest-paths",
+        nargs="+",
+        help="Optional explicit test modules; these replace --pytest-markexpr selection",
+    )
     args = parser.parse_args()
+    try:
+        pytest_paths = validate_test_module_files(args.pytest_paths or (), ROOT)
+    except ValueError as error:
+        parser.error(str(error))
     logs = ROOT / "build/ci"
     logs.mkdir(parents=True, exist_ok=True)
     output = Path(tempfile.mkdtemp(prefix="run-", dir=logs))
@@ -254,7 +264,9 @@ def main() -> int:
             "-q",
             "--durations=10",
         )
-        if args.pytest_markexpr:
+        if pytest_paths:
+            unit_command += pytest_paths
+        elif args.pytest_markexpr:
             unit_command += ("-m", args.pytest_markexpr)
         stage(
             "unit",

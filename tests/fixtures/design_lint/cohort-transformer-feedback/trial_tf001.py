@@ -81,7 +81,9 @@ def _summarize(case: str) -> list[dict]:
         "components",
         "description",
     )
-    return [{key: item[key] for key in keys} for item in detect_transformer_feedback(_context(case))]
+    return [
+        {key: item[key] for key in keys} for item in detect_transformer_feedback(_context(case))
+    ]
 
 
 def main() -> None:
