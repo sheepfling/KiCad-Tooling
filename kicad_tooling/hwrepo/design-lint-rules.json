@@ -305,25 +305,27 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, group exact nonempty value and footprint matches with complete identical pin inventories. For each target pin and current peer-assignment scope, require missing, blank, or KiCad unnamed (~) function or electrical-type metadata on at least one peer, exactly one assigned net per peer, and at least two different exact nets. Emit a REVIEW candidate only when another pin in the same scope has one exact common assigned net. Source-matched peer_assignment_group values scope comparisons when every participating peer has a current group; otherwise compare the unscoped group.",
+      "predicate": "Among fitted connector instances with distinct native symbols, group complete identical pin inventories when trimmed, case-folded value and footprint match and either both lack PART_ID or have the same nonempty trimmed, case-folded PART_ID. For each target pin and current peer-assignment scope, require missing, blank, or KiCad unnamed (~) function or electrical-type metadata on at least one peer, exactly one assigned net per peer, and at least two different exact nets. Emit a REVIEW candidate only when another pin in the same scope has one exact common assigned net. Source-matched peer_assignment_group values scope comparisons when every participating peer has a current group; otherwise compare the unscoped group.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "Equal or case-insensitively equal value and footprint, distinct symbol identities, and a complete pin inventory are similarity clues; they do not prove the symbols describe interchangeable connectors.",
+        "Values and footprints that match after trimming and case-folding, distinct symbol identities, and a complete pin inventory are similarity clues; they do not prove the symbols describe interchangeable connectors.",
         "Missing pin metadata and split assignments can be intentional. This default-review finding asks for exact symbol-pinout and project-requirement review; it does not establish a shared electrical role or instruct that nets be joined.",
         "A target pin must have exactly one assigned net on each peer and another pin in the same scope must have exactly one common assigned net. Open, ambiguous, common, and unanchored target assignments do not produce this finding.",
-        "DNP and PART_ID-bearing components are excluded. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references.",
+        "DNP components are excluded. PART_ID-bearing components are compared only when the nonempty trimmed, case-folded PART_ID matches along with value and footprint; PART_ID is project metadata, not proof of electrical equivalence. A missing PART_ID is grouped only with other peers whose PART_ID is missing; missing and populated PART_ID values or differing populated PART_ID values do not share a peer group. Automatic connector discovery is bounded to J/P/X/CN references, standard Connector libraries, and exact project-reviewed interface references.",
         "The finding is based on source-bound schematic netlist evidence and does not establish PCB copper continuity or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_connector_footprint_peer_missing_metadata.test_unnamed_peer_pin_with_split_assignment_is_reviewed",
+        "tests.test_connector_footprint_peer_missing_metadata.test_part_id_connector_aliases_with_missing_metadata_are_reviewed",
         "tests.test_connector_footprint_peer_missing_metadata.test_missing_metadata_review_matches_cli_and_mcp",
         "tests.test_connector_footprint_peer_missing_metadata_native_fixture_lane.test_native_evidence_validator_checks_split_fault_and_common_control",
         "tests.test_connector_footprint_peer_missing_metadata_native_fixture_lane.test_native_missing_metadata_fault_and_control_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_footprint_peer_missing_metadata.test_missing_metadata_needs_complete_split_and_anchor_evidence",
+        "tests.test_connector_footprint_peer_missing_metadata.test_part_id_connector_aliases_require_one_matching_identity",
         "tests.test_connector_footprint_peer_missing_metadata.test_complete_metadata_differences_remain_with_lint_164",
         "tests.test_connector_footprint_peer_missing_metadata.test_missing_metadata_review_matches_cli_and_mcp",
         "tests.test_connector_footprint_peer_missing_metadata_native_fixture_lane.test_native_evidence_validator_checks_split_fault_and_common_control",

@@ -33,7 +33,11 @@ def connector_footprint_peer_pin_missing_metadata_assignment_divergences(
             pin_nets.setdefault(pin.casefold(), set()).add(net)
 
     candidates: list[Candidate] = []
-    for group in connector_footprint_peer_candidate_groups(observed, declared_references):
+    for group in connector_footprint_peer_candidate_groups(
+        observed,
+        declared_references,
+        include_part_id_peers=True,
+    ):
         inventory = complete_connector_footprint_peer_pin_inventory(observed, group.references)
         if inventory is None:
             continue
@@ -148,8 +152,9 @@ def connector_footprint_peer_pin_missing_metadata_assignment_divergences(
                             f"{displayed_numbers[group.references[0].casefold()][pin_number.casefold()]}"
                         ),
                         message=(
-                            "Fitted connector aliases with the same value and footprint clues and "
-                            "a complete matching pin inventory have missing or unnamed native "
+                            "Fitted connector aliases with the same value and footprint clues"
+                            + (" and PART_ID" if group.part_id is not None else "")
+                            + " and a complete matching pin inventory have missing or unnamed native "
                             "function or electrical-type metadata for this pin. Its assigned nets "
                             "differ in the current peer scope, while another pin has one exact "
                             "common net. Review the symbol pinouts and project requirement; this "
@@ -173,6 +178,10 @@ def connector_footprint_peer_pin_missing_metadata_assignment_divergences(
                             "peer_pin_metadata": metadata_evidence,
                             "assignments": assignment_evidence,
                             "peer_symbols": peer_symbols,
+                            "peer_identity_basis": (
+                                "part_id" if group.part_id is not None else "footprint_value",
+                            ),
+                            **({} if group.part_id is None else {"part_id": (group.part_id,)}),
                             "common_anchor_pin_numbers": tuple(anchors),
                             **(
                                 {}

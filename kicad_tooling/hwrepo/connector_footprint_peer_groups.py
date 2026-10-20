@@ -11,20 +11,23 @@ from .models import NetlistContract
 
 @dataclass(frozen=True)
 class ConnectorFootprintPeerGroup:
-    """Fitted connector candidates sharing an exact value and footprint key."""
+    """Fitted connector candidates sharing exact identity clues."""
 
     footprint_key: str
     value_key: str
     footprint: str
     value: str
     references: tuple[str, ...]
+    part_id: str | None = None
 
 
 def connector_footprint_peer_candidate_groups(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
+    *,
+    include_part_id_peers: bool = False,
 ) -> tuple[ConnectorFootprintPeerGroup, ...]:
-    """Group distinct connector symbols by nonempty value and footprint clues."""
+    """Group distinct connector symbols by value/footprint, optionally scoped by PART_ID."""
     connector_references = {
         reference.casefold()
         for reference in connector_candidate_references(observed, declared_references)
@@ -36,7 +39,7 @@ def connector_footprint_peer_candidate_groups(
     symbols = {
         reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
     }
-    grouped: dict[tuple[str, str], list[str]] = {}
+    grouped: dict[tuple[str, str, str], list[str]] = {}
     for reference, component in observed.components.items():
         reference_key = reference.casefold()
         symbol = symbols.get(reference_key)
@@ -44,16 +47,22 @@ def connector_footprint_peer_candidate_groups(
             reference_key not in connector_references
             or reference_key in dnp_references
             or symbol is None
-            or (component.part_id is not None and component.part_id.strip())
             or not component.value.strip()
             or not component.footprint.strip()
         ):
             continue
-        identity = (component.footprint.strip().casefold(), component.value.strip().casefold())
+        part_id = (component.part_id or "").strip()
+        if part_id and not include_part_id_peers:
+            continue
+        identity = (
+            component.footprint.strip().casefold(),
+            component.value.strip().casefold(),
+            part_id.casefold(),
+        )
         grouped.setdefault(identity, []).append(reference)
 
     result: list[ConnectorFootprintPeerGroup] = []
-    for (footprint_key, value_key), references in sorted(grouped.items()):
+    for (footprint_key, value_key, part_id_key), references in sorted(grouped.items()):
         peers = tuple(sorted(references, key=lambda item: (item.casefold(), item)))
         if (
             len(peers) < 2
@@ -61,6 +70,14 @@ def connector_footprint_peer_candidate_groups(
         ):
             continue
         representative = components[peers[0].casefold()]
+        part_id_values = {
+            (components[reference.casefold()].part_id or "").strip() for reference in peers
+        }
+        part_id = (
+            min(part_id_values, key=lambda item: (item.casefold(), item))
+            if part_id_key
+            else None
+        )
         result.append(
             ConnectorFootprintPeerGroup(
                 footprint_key=footprint_key,
@@ -68,6 +85,7 @@ def connector_footprint_peer_candidate_groups(
                 footprint=representative.footprint.strip(),
                 value=representative.value.strip(),
                 references=peers,
+                part_id=part_id,
             )
         )
     return tuple(result)

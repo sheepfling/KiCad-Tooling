@@ -8695,8 +8695,10 @@ is not a reason by itself to expand its scope or change its default policy.
   aggregate incomplete-metadata count. It does not identify a specific split
   pin whose assignments deserve a human pinout check.
 - **Predicate:** Group fitted connector candidates with distinct native
-  symbols, no PART_ID, exact nonempty value and footprint clues, and complete
-  identical pin inventories. Within each current peer-assignment scope, require
+  symbols and complete identical pin inventories. Peers share exact nonempty
+  trimmed, case-folded value and footprint clues and either both lack PART_ID
+  or share a nonempty trimmed, case-folded PART_ID. Within each current
+  peer-assignment scope, require
   missing, blank, or KiCad unnamed (`~`) function or electrical-type metadata
   on at least one peer, exactly one assigned net per peer, at least two
   different assignments, and a separate pin on one exact common net.
@@ -8704,14 +8706,18 @@ is not a reason by itself to expand its scope or change its default policy.
   anchor do not prove interchangeable connector roles or a required connection.
   It asks the reviewer to inspect exact symbol pinouts and project-authored
   requirements; it does not direct net joining or establish PCB continuity.
-  Common, open, ambiguous, unanchored, incomplete-inventory, DNP, PART_ID, and
-  cross-scope-only groups do not trigger. Project policy can select REVIEW,
+  Common, open, ambiguous, unanchored, incomplete-inventory, DNP,
+  mismatched-PART_ID, and cross-scope-only groups do not trigger. A matching
+  PART_ID is only a project-authored similarity clue, not proof of electrical
+  equivalence. Project policy can select REVIEW,
   BLOCK, or OFF and exact-fingerprint ignores.
 - **Evidence:** Tooling-owned synthetic tests cover unnamed and absent pin
   functions, missing electrical types, common-assignment controls, missing
-  anchors, open or ambiguous targets, incomplete inventories, DNP/PART_ID
-  exclusions, source-matched peer scopes, mapping-order and three-process
-  hash-seed determinism, policy and ignore lifecycle, and CLI/MCP parity.
+  anchors, open or ambiguous targets, incomplete inventories, DNP and
+  mismatched-PART_ID controls, source-matched peer scopes, mapping-order and three-process
+  hash-seed determinism, policy and ignore lifecycle, and CLI/MCP parity. A
+  matching-PART_ID fault and mismatched-PART_ID control are synthetic-tested;
+  the registered native pair continues to cover the no-PART_ID predicate.
   Digest-pinned synthetic fault/control
   schematics are registered for native export and repeatability on KiCad
   10.0.0 and 10.0.5; exact native execution remains pending for this local

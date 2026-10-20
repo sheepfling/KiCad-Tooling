@@ -58,10 +58,30 @@ def test_unnamed_peer_pin_with_split_assignment_is_reviewed() -> None:
         "J2.2=UART_TX_NET",
     )
     assert finding.evidence["common_anchor_pin_numbers"] == ("1",)
+    assert finding.evidence["peer_identity_basis"] == ("footprint_value",)
     assert "does not establish a shared electrical role" in finding.message
     assert not any(
         item.rule_id == "connector.footprint_peer_pin_metadata_assignment_divergence"
         for item in report.findings
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_part_id_connector_aliases_with_missing_metadata_are_reviewed() -> None:
+    observed = peer_missing_metadata_netlist(part_id="SYNTHETIC-PART-001")
+    components = dict(observed.components)
+    components["J2"] = components["J2"].model_copy(
+        update={"part_id": "synthetic-part-001"}
+    )
+    report = lint_report(observed.model_copy(update={"components": components}))
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+
+    assert len(findings) == 1
+    assert findings[0].evidence["peer_identity_basis"] == ("part_id",)
+    assert findings[0].evidence["part_id"] == ("SYNTHETIC-PART-001",)
+    assert findings[0].evidence["assignments"] == (
+        "J1.2=UART_RX_NET",
+        "J2.2=UART_TX_NET",
     )
 
 
@@ -99,7 +119,10 @@ def test_supported_missing_metadata_values_are_reported(
         {"target_assignments": ("UART_RX_NET", None)},
         {"ambiguous_pin": "J1.2"},
         {"incomplete_inventory": True},
-        {"part_id": "SYNTHETIC-PART-001"},
+        {
+            "part_id": "SYNTHETIC-PART-001",
+            "target_assignments": ("SHARED_PORT", "SHARED_PORT"),
+        },
         {"dnp": ("J2",)},
     ),
     ids=(
@@ -108,7 +131,7 @@ def test_supported_missing_metadata_values_are_reported(
         "open-target",
         "ambiguous-anchor",
         "incomplete-inventory",
-        "part-id-group",
+        "part-id-common-control",
         "dnp-peer",
     ),
 )
@@ -116,6 +139,16 @@ def test_missing_metadata_needs_complete_split_and_anchor_evidence(
     kwargs: dict[str, object],
 ) -> None:
     report = lint_report(peer_missing_metadata_netlist(**kwargs))
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_part_id_connector_aliases_require_one_matching_identity() -> None:
+    observed = peer_missing_metadata_netlist(part_id="SYNTHETIC-PART-001")
+    components = dict(observed.components)
+    components["J2"] = components["J2"].model_copy(update={"part_id": "OTHER-PART-002"})
+    report = lint_report(observed.model_copy(update={"components": components}))
 
     assert not any(item.rule_id == RULE_ID for item in report.findings)
 
@@ -149,8 +182,15 @@ def test_complete_metadata_differences_remain_with_lint_164() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_missing_metadata_finding_is_stable_under_mapping_order() -> None:
-    observed = peer_missing_metadata_netlist()
+@pytest.mark.parametrize(
+    "part_id",
+    (None, "SYNTHETIC-PART-001"),
+    ids=("without-part-id", "matching-part-id"),
+)
+def test_missing_metadata_finding_is_stable_under_mapping_order(
+    part_id: str | None,
+) -> None:
+    observed = peer_missing_metadata_netlist(part_id=part_id)
     reordered = observed.model_copy(
         update={
             "components": dict(reversed(tuple(observed.components.items()))),

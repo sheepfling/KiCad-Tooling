@@ -275,9 +275,13 @@ The first rules are:
   reviews a split assignment when matched connector aliases have complete
   inventories but a target pin has missing, blank, or KiCad unnamed (`~`)
   function or electrical-type metadata. It requires one exact net per peer and
-  a separate pin on one exact common net in the same peer scope. Common, open,
-  ambiguous, unanchored, incomplete-inventory, DNP, and PART_ID groups are
-  excluded. The default is REVIEW; project policy can select REVIEW, BLOCK, or
+  a separate pin on one exact common net in the same peer scope. Peers can be
+  identified by matching nonempty value and footprint when both lack PART_ID,
+  or by matching nonempty PART_ID, value, and footprint after trimming and
+  case-folding. A PART_ID match is
+  only a similarity clue. Common, open, ambiguous, unanchored,
+  incomplete-inventory, DNP, and mismatched-PART_ID groups do not trigger. The
+  default is REVIEW; project policy can select REVIEW, BLOCK, or
   OFF and exact-fingerprint ignores. This asks for exact pinout and
   project-requirement review; it does not infer a shared role or tell the user
   to join nets. The synthetic fault/control source and native-lane registration
