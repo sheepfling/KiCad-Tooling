@@ -4702,6 +4702,13 @@ is not a reason by itself to expand its scope or change its default policy.
   project checkout (GitHub Actions run 39430522860). Windows, Ubuntu, and
   macOS preview orchestration also passed. The package job was skipped under
   prerelease policy.
+- **Selected native-sample execution (2026-10-20):** Tag `v0.5.2rc46` passed
+  the focused connected-input rule gate and installed-wheel check against a
+  separate public project checkout (GitHub Actions run 39431831959). Windows,
+  Ubuntu, and macOS preview orchestration also passed. The package job was
+  skipped under prerelease policy. The local selector `-k
+  series-bias-fixture` ran one native sample and deselected five; selecting the
+  whole rule retained a single shared native export for all six samples.
 - **Series resistor-path extension (2026-10-20):** The connected-input
   heuristic now recognizes a fitted direct resistor or an unbranched series
   chain to a bounded positive or return net, using the shared
