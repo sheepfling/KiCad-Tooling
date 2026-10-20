@@ -4655,15 +4655,14 @@ is not a reason by itself to expand its scope or change its default policy.
   circuitry that the bounded resistor-path predicate does not resolve. This screen measures
   candidate volume and repeatability only.
 - **Pinned native revalidation (2026-10-03):** The
-  `tests/test_ci_hosted_control_inputs.py::NativeControlInputDemoTests` lane
-  passed locally with one test and five
-  subtests. It used exact KiCad 10.0.5 from the digest-pinned image recorded in
-  the [synthetic alias fixture notes](../tests/fixtures/design_lint/control-input-alias/README.md).
-  The `POR_B`/`PORN` source exported twice with the same normalized typed-netlist
-  digest; exact pin functions and `input` types were preserved, both pins were
-  unassigned, and only `U1.1 POR_B` became a reset candidate. Four public demos
-  also reproduced their source hashes, parsed-netlist hashes, candidate
-  inventories, and connected-bias summaries. Receipts are under ignored
+  `tests/test_ci_hosted_control_inputs.py::test_native_public_demos_record_connected_bias_and_unconnected_controls`
+  lane passed locally with one test and five subtests. It used exact KiCad 10.0.5 from the
+  digest-pinned image recorded in the
+  [synthetic alias fixture notes](../tests/fixtures/design_lint/control-input-alias/README.md). The
+  `POR_B`/`PORN` source exported twice with the same normalized typed-netlist digest; exact pin
+  functions and `input` types were preserved, both pins were unassigned, and only `U1.1 POR_B`
+  became a reset candidate. Four public demos also reproduced their source hashes, parsed-netlist
+  hashes, candidate inventories, and connected-bias summaries. Receipts are under ignored
   `build/ci/` paths. The lane exports netlists only; it does not run ERC/DRC.
 - **Rule-scoped native selection (2026-10-20):** The same public demos and
   synthetic `POR_B`/`PORN` and reset-bias-chain fixtures passed with exact
@@ -4686,6 +4685,14 @@ is not a reason by itself to expand its scope or change its default policy.
   the connected-bias rule gate and installed-wheel check against the separate
   public template passed, as did Ubuntu, macOS, and Windows previews. The
   package job was skipped under prerelease policy.
+- **Pytest selection update (2026-10-20):** The native control-input lane now
+  exposes each of six public and synthetic samples as an independent
+  parameterized pytest case. A module-scoped fixture shares the native export,
+  and asserts the exact-version read-only container and mount boundaries. The
+  active-rule catalog points to the top-level pytest
+  function, and architecture tests keep this suite free of `unittest.TestCase`.
+  `-k series-bias-fixture` selects that sample's result assertions; the shared
+  fixture still performs one lane run for the module.
 - **Series resistor-path extension (2026-10-20):** The connected-input
   heuristic now recognizes a fitted direct resistor or an unbranched series
   chain to a bounded positive or return net, using the shared
@@ -13155,8 +13162,8 @@ it does not claim field validation or effectiveness against private boards.
   design with supported digital-peer functions before claiming public-board
   LINT-066 measurement.
 - **Pinned KiCad-demo follow-up (2026-10-03):** The four native netlists from
-  `NativeControlInputDemoTests` in
-  `tests/test_ci_hosted_control_inputs.py` were also screened with the LINT-066 predicate:
+  `test_native_public_demos_record_connected_bias_and_unconnected_controls`
+  in `tests/test_ci_hosted_control_inputs.py` was also screened with the LINT-066 predicate:
   CM5 Minima, Jetson AGX Thor, ColdFire/Xilinx, and VME-WREN all produced zero
   candidates. These bundled samples had no recognized same-net SPI or
   directionally clear UART/USART peers on different explicit voltage-named

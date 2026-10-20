@@ -2774,7 +2774,7 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_open_control_inputs.test_unconnected_reset_enable_and_boot_inputs_are_review_candidates",
-        "tests.test_ci_hosted_control_inputs.NativeControlInputDemoTests.test_native_public_demos_record_connected_bias_and_unconnected_controls"
+        "tests.test_ci_hosted_control_inputs.test_native_public_demos_record_connected_bias_and_unconnected_controls"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_open_control_inputs.test_unconnected_reset_enable_and_boot_inputs_are_review_candidates"
@@ -2812,7 +2812,7 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_input_without_visible_bias_is_review_only_and_configurable",
-        "tests.test_ci_hosted_control_inputs.NativeControlInputDemoTests.test_native_public_demos_record_connected_bias_and_unconnected_controls"
+        "tests.test_ci_hosted_control_inputs.test_native_public_demos_record_connected_bias_and_unconnected_controls"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_prompt_checks_assignments_and_valid_controls",

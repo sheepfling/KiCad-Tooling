@@ -55,6 +55,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_i2c_missing_pullups.py": {"interface_lint"},
     "test_design_lint_i2c_equivalent_resistance.py": {"interface_lint"},
     "test_design_lint_i2c_pullup_rail_families.py": {"interface_lint"},
+    "test_ci_hosted_control_inputs.py": {"interface_lint"},
     "test_electrical_rs485_contract.py": {"interface_lint"},
     "test_design_lint_led_topology.py": {"component_lint", "power_lint"},
     "test_design_lint_peer_voltage.py": {"interface_lint"},

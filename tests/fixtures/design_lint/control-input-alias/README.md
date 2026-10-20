@@ -41,7 +41,7 @@ The native lane confirms exact `POR_B`/`PORN` pin functions and `input` types,
 leaves both pins unassigned, and emits only `U1.1` as a reset candidate. It also
 confirms the chain fixture's exact pin assignments, DNP state, isolated
 intermediate net, no connected-bias candidate, and repeated normalized export.
-The test repeats four public KiCad demos and checks their pinned candidate
+The pytest lane repeats four public KiCad demos and checks their pinned candidate
 inventories and normalized netlists. The lane exports netlists; it does not run
 ERC or DRC and does not establish that a reset pin requires bias.
 
@@ -51,7 +51,8 @@ configured:
 ```sh
 KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Test \
 KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES=1 \
-  .venv/bin/python -I -m pytest -q tests/test_ci_hosted_control_inputs.py::NativeControlInputDemoTests
+  .venv/bin/python -I -m pytest -q tests/test_ci_hosted_control_inputs.py \
+  -k series-bias-fixture -m 'design_lint and interface_lint and native_kicad'
 ```
 
 Receipts remain under ignored `build/ci/` directories. The source fixture is
