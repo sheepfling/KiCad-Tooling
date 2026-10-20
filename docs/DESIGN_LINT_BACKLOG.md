@@ -13952,6 +13952,12 @@ it does not claim field validation or effectiveness against private boards.
   determinism slice passes 24 tests with one unrelated test deselected against
   the clean public template at `ed89536f0dbbcb013145af2994fef41b2250143e`.
   This changes test selection only; it adds no electrical rule or evidence.
+- **Hosted acceptance (2026-10-20):** Tag `v0.5.2rc47` passed GitHub Actions
+  run `39433440216`. Its annotated scope resolved to
+  `design_lint and component_lint` with only `tests/test_mosfet_stress.py`;
+  the focused gate, installed-wheel check against a separate public project,
+  and Windows, Ubuntu, and macOS preview jobs passed. The package job was
+  skipped under prerelease policy.
 - **Next evidence:** Preserve LINT-064's two-pin identity rules. Before a
   project adopts this explicit requirement, its owner must review exact-part
   ratings, operating conditions, state coverage, potential intervals, and
