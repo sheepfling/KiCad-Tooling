@@ -4693,6 +4693,11 @@ is not a reason by itself to expand its scope or change its default policy.
   function, and architecture tests keep this suite free of `unittest.TestCase`.
   `-k series-bias-fixture` selects that sample's result assertions; the shared
   fixture still performs one lane run for the module.
+- **Hosted prerelease acceptance (2026-10-20):** Tag `v0.5.2rc45` passed the
+  focused rule gate and installed-wheel check against a separate public
+  project checkout (GitHub Actions run 39430522860). Windows, Ubuntu, and
+  macOS preview orchestration also passed. The package job was skipped under
+  prerelease policy.
 - **Series resistor-path extension (2026-10-20):** The connected-input
   heuristic now recognizes a fitted direct resistor or an unbranched series
   chain to a bounded positive or return net, using the shared
