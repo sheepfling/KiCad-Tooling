@@ -1,0 +1,17 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "clearance": "warning",
+        "diff_pair_gap_out_of_range": "error",
+        "diff_pair_uncoupled_length_too_long": "error",
+        "length_out_of_range": "error",
+        "skew_out_of_range": "error",
+        "too_many_vias": "error",
+        "track_width": "ignore",
+        "via_count": "ignore"
+      }
+    }
+  },
+  "meta": {"filename": "synthetic.kicad_pro", "version": 1}
+}

@@ -34,6 +34,15 @@ DFM_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
         "track_width",
     }
 )
+SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
+    {
+        "diff_pair_gap_out_of_range",
+        "diff_pair_uncoupled_length_too_long",
+        "length_out_of_range",
+        "skew_out_of_range",
+        "too_many_vias",
+    }
+)
 SUPPORTED_DRC_EXCLUSION_SCHEMA_VERSION = 2
 
 
@@ -85,6 +94,13 @@ def configured_core_drc_check_severities(document: str) -> tuple[tuple[str, str]
 def configured_dfm_drc_check_severities(document: str) -> tuple[tuple[str, str], ...]:
     """Return explicit severities for documented Error-default DFM checks."""
     return _configured_drc_check_severities(document, DFM_ERROR_DEFAULT_DRC_CHECK_IDS)
+
+
+def configured_signal_integrity_drc_check_severities(
+    document: str,
+) -> tuple[tuple[str, str], ...]:
+    """Return explicit severities for documented Error-default signal-integrity checks."""
+    return _configured_drc_check_severities(document, SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS)
 
 
 def ignored_core_drc_check_ids(document: str) -> tuple[str, ...]:

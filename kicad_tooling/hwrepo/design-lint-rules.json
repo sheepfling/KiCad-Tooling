@@ -4762,6 +4762,46 @@
       ]
     },
     {
+      "rule_id": "pcb.signal_integrity_drc_check_downgraded",
+      "title": "Signal-integrity DRC checks lowered from Error need intentional review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_global_severity_review.py#downgraded_signal_integrity_drc_check_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro path, supported signal-integrity check ID, configured Warning or Ignore severity, and exact configured KiCad version",
+      "predicate": "For a PCB or PCB-only project configured for KiCad 10.0.x, emit one source-bound review candidate for each explicit Warning or Ignore setting among diff_pair_gap_out_of_range, diff_pair_uncoupled_length_too_long, length_out_of_range, skew_out_of_range, and too_many_vias.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.x project JSON board.design_settings.rule_severities; check IDs are mapped from versioned KiCad 10.0.0 and 10.0.5 DRC item sources, and the exact configured patch version is recorded; no native tool is executed"
+      ],
+      "limitations": [
+        "Warning remains visible in DRC while Ignore disables the selected check. Both are review prompts about an explicit severity change, not evidence of a board defect or proof that every project must retain Error.",
+        "The five Error-default signal-integrity settings are covered; this parser does not determine whether matching custom constraints are authored or applicable, evaluate rule conditions or limits, measure routes, or qualify signal integrity.",
+        "Project-authored differential-pair and signal-path requirement coverage remains separate. This rule does not replace those maps, run DRC, or establish electrical or manufacturing approval."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_signal_integrity_drc_severity.test_warning_and_ignored_signal_integrity_checks_create_source_bound_candidates",
+        "tests.test_pcb_signal_integrity_drc_severity.test_changed_settings_after_source_hash_capture_fail_closed",
+        "tests.test_pcb_signal_integrity_drc_severity.test_downgraded_findings_use_standard_default_review_policy",
+        "tests.test_design_lint_mcp_parity_pcb_signal_integrity_drc_severity.test_signal_integrity_severity_findings_match_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_signal_integrity_drc_severity.test_error_defaults_and_other_drc_overrides_are_valid_controls",
+        "tests.test_pcb_signal_integrity_drc_severity.test_versions_outside_reviewed_kicad_10_0_profile_are_out_of_scope",
+        "tests.test_pcb_signal_integrity_drc_severity.test_non_pcb_project_is_out_of_scope"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_signal_integrity_drc_severity.test_json_key_order_does_not_change_review_candidate_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_global_severity_review.py#downgraded_signal_integrity_drc_check_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_signal_integrity_drc_check_severities",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary",
+        "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_exclusion_present",
       "title": "Persisted PCB DRC exclusions need intentional review",
       "theme": "pcb",

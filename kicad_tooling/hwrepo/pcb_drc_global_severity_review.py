@@ -12,6 +12,7 @@ from .models import ProjectConfig, ProjectKind
 from .pcb_drc_project_settings import (
     configured_core_drc_check_severities,
     configured_dfm_drc_check_severities,
+    configured_signal_integrity_drc_check_severities,
 )
 
 
@@ -192,3 +193,50 @@ def warning_dfm_native_drc_check_candidates(
         for check_id, severity in severities
         if severity == "warning"
     )
+
+
+def downgraded_signal_integrity_drc_check_candidates(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+) -> tuple[Candidate, ...]:
+    """Review Error-default KiCad 10.0 signal-integrity checks set below Error."""
+    settings = _source_bound_drc_settings(
+        root,
+        config,
+        source_hashes,
+        supported_version_prefix="10.0.",
+        parse_severities=configured_signal_integrity_drc_check_severities,
+    )
+    if settings is None:
+        return ()
+    relative, expected_hash, severities = settings
+    candidates: list[Candidate] = []
+    for check_id, severity in severities:
+        if severity not in {"ignore", "warning"}:
+            continue
+        if severity == "ignore":
+            message = (
+                f"Signal-integrity DRC check {check_id!r} is configured as Ignore; "
+                "confirm that suppressing this check is intentional."
+            )
+        else:
+            message = (
+                f"Error-default signal-integrity DRC check {check_id!r} is configured as Warning; "
+                "confirm that lowering its severity is intentional."
+            )
+        candidates.append(
+            Candidate(
+                rule_id="pcb.signal_integrity_drc_check_downgraded",
+                subject=f"{relative}#board/design_settings/rule_severities/{check_id}",
+                message=message,
+                evidence={
+                    "source_path": (relative,),
+                    "source_sha256": (expected_hash,),
+                    "kicad_version": (config.kicad_version,),
+                    "check_id": (check_id,),
+                    "configured_severity": (severity,),
+                },
+            )
+        )
+    return tuple(candidates)

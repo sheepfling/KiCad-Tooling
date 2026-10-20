@@ -183,6 +183,8 @@ PCB_THEME_SUITES = (
     "test_ci_hosted_pcb_return_paths.py",
     "test_pcb_dru_rule_review.py",
     "test_pcb_drc_global_severity_review.py",
+    "test_pcb_signal_integrity_drc_severity.py",
+    "test_design_lint_mcp_parity_pcb_signal_integrity_drc_severity.py",
 )
 
 

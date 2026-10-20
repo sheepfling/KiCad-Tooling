@@ -1,0 +1,70 @@
+"""CLI/MCP parity for lowered signal-integrity DRC severities."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+from pathlib import Path
+
+import pytest
+from mcp import Client
+
+from kicad_tooling.hwrepo.contracts import parse_model_text
+from kicad_tooling.hwrepo.mcp_server import create_server
+from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintReport
+from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_lint_report
+from tests.synthetic_design_lint_project import (
+    run_design_lint_cli,
+    synthetic_design_lint_project,
+)
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
+    pytest.mark.parity_lint,
+    pytest.mark.slow,
+]
+
+SETTINGS = (
+    Path(__file__).parent / "fixtures/design_lint/pcb-signal-integrity-drc-severity/fault.kicad_pro"
+)
+RULE_ID = "pcb.signal_integrity_drc_check_downgraded"
+
+
+def test_signal_integrity_severity_findings_match_cli_and_mcp(tmp_path: Path) -> None:
+    root, native = synthetic_design_lint_project(
+        tmp_path,
+        parity_design_lint_policy(DesignLintPolicy()),
+        project_settings_source=SETTINGS.read_text(encoding="utf-8"),
+    )
+    process = run_design_lint_cli(tmp_path, root, native)
+    assert process.returncode == 1, process.stderr + process.stdout
+    cli_report = parse_model_text(process.stdout, DesignLintReport)
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+            assert not result.is_error, result.content
+            assert result.structured_content is not None
+            return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp_report = asyncio.run(inspect_mcp())
+
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    assert mcp_report.status == "REVIEW", mcp_report.issues
+    findings = tuple(item for item in mcp_report.findings if item.rule_id == RULE_ID)
+    assert tuple(
+        (item.evidence["check_id"][0], item.evidence["configured_severity"][0]) for item in findings
+    ) == (
+        ("diff_pair_gap_out_of_range", "warning"),
+        ("diff_pair_uncoupled_length_too_long", "ignore"),
+        ("skew_out_of_range", "warning"),
+        ("too_many_vias", "ignore"),
+    )
+    assert all(item.mode == "review" and item.disposition == "OPEN" for item in findings)

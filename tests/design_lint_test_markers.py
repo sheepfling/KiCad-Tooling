@@ -360,6 +360,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_mcp_parity_pcb_drc_global_warning_review.py",
             "tests/test_design_lint_mcp_parity_pcb_drc_dfm_warning_review.py",
             "tests/test_design_lint_mcp_parity_pcb_drc_dfm_ignored_review.py",
+            "tests/test_design_lint_mcp_parity_pcb_signal_integrity_drc_severity.py",
             "tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py",
         }
     ),

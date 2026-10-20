@@ -1197,7 +1197,7 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 127 active rules. They
+`synthetic_validated`; the catalog currently contains 128 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
 been used to claim field validation. Existing netlist rules default to
 `review`; schematic geometry rules and generic all-open connector and
@@ -2688,6 +2688,29 @@ project settings and does not run DRC or determine whether a check applies to a
 particular board. KiCad's [DRC reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)
 describes Ignore behavior. Tooling-owned synthetic settings are in
 [`tests/fixtures/design_lint/pcb-dfm-drc-ignored/`](../tests/fixtures/design_lint/pcb-dfm-drc-ignored/README.md).
+
+## Review downgraded signal-integrity DRC checks
+
+`pcb.signal_integrity_drc_check_downgraded` prompts when a KiCad 10.0.x PCB
+project's source-hashed `.kicad_pro` sets one of five Error-default
+signal-integrity checks to `warning` or `ignore`: `length_out_of_range`,
+`skew_out_of_range`, `too_many_vias`, `diff_pair_gap_out_of_range`, or
+`diff_pair_uncoupled_length_too_long`. The finding records the exact project
+version, settings hash, check ID, and configured severity. The rule defaults
+to `review`; project policy may set `block`, `off`, or an exact-fingerprint
+ignore.
+
+KiCad documents these checks and their Error defaults in the
+[KiCad 10 DRC reference][kicad-10-drc]. Ignore disables the selected check.
+The exact settings keys are confirmed against the versioned
+[KiCad 10.0.0](https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp)
+and [10.0.5](https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp)
+sources. In particular, KiCad 10 uses the key `too_many_vias` for its via-count
+check. The prompt does not determine whether matching custom constraints are
+present or applicable, measure a route, or qualify signal integrity. Existing
+project-authored differential-pair and signal-path coverage checks remain
+separate. Synthetic settings are in
+[`tests/fixtures/design_lint/pcb-signal-integrity-drc-severity/`](../tests/fixtures/design_lint/pcb-signal-integrity-drc-severity/README.md).
 
 ## Review persisted per-violation PCB DRC exclusions
 
