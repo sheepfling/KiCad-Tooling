@@ -9983,7 +9983,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v22; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v23; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus a source-only audit of
@@ -10014,7 +10014,9 @@ is not a reason by itself to expand its scope or change its default policy.
   now has a synthetic non-applicability control. A source-pinned
   STM32-KiCad-Pin-Checker parser trial compares suffix-collision ordering and
   escaped pin keys against LINT-050; it adds no local detection and is not an
-  adoption case.
+  adoption case. A pinned KiCad Library Tools KLC S5.1 runtime trial is also
+  recorded below; it found a valid generic-connector false positive and no
+  board-design lint gain.
 
 ##### Recorded source audit: kicad-happy CP-003 touch-pad copper clearance (2026-10-13)
 
@@ -10083,6 +10085,75 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Boundary:** Documentation is not a local benchmark. Do not claim a
   candidate found a real defect until it is run on approved synthetic fixtures
   or otherwise authorized non-proprietary inputs.
+
+##### Recorded trial: KiCad Library Tools KLC S5.1 (2026-10-22)
+
+- **Pinned source and license:** KiCad Library Tools commit
+  [`a903a695bf4e69905e9e56548f44dd46cdc1130e`](https://gitlab.com/kicad/libraries/kicad-library-tools/-/commit/a903a695).
+  The tested file is `library_utils/klc-check/rules_symbol/S5_1.py`. Its pinned README
+  declares GPL-3.0-or-later by default, with per-file exceptions. The tested
+  rule has no different license header.
+- **Scope and boundary:** This is symbol-library authoring QA, not an
+  electrical board check. The official [KLC S5.1 guidance](https://klc.kicad.org/symbol/s5/s5.1/)
+  says fully specified symbols need a valid default footprint and generic
+  symbols leave that field blank. The current [generic-symbol list](https://klc.kicad.org/)
+  includes all `Connector` libraries. The KLC describes its content as
+  guidelines with possible exceptions and says helper scripts cover only some
+  guidance; library-team review remains manual.
+- **Environment and execution:** Python 3.11.16. The candidate's own S5.1
+  fault and control fixtures both passed in `--unittest` mode using the
+  documented `check_symbol.py` entry point from `library_utils`. Running
+  `python -I check_symbol.py --help` from `library_utils/klc-check` failed
+  because isolated mode could not import the sibling `junit` module; the
+  candidate's full installation and CI workflow were not tested.
+- **Reproduction command:** From `library_utils` in the pinned checkout:
+
+  ```sh
+  python ./klc-check/check_symbol.py \
+    ./klc-check/test_symbol/CI_Test_S5.x.kicad_symdir/Fail__S5.1__Filled_FT_Field_WithMoreThanOne_FT_Filter.kicad_sym \
+    ./klc-check/test_symbol/CI_Test_S5.x.kicad_symdir/Pass__S5.1__Empty_FT_Field.kicad_sym \
+    --rule S5.1 --unittest --nocolor
+  ```
+
+  Both upstream unit cases passed. The normal-mode fault and control invocations used the same input
+  paths without `--unittest`, with `--rule S5.1 --nocolor`; they exited 3 and 0 respectively. The
+  derived generic Connector control was run in normal mode with the same rule selection and exited
+  2.
+- **Fault and controls:** The upstream
+  `Fail__S5.1__Filled_FT_Field_WithMoreThanOne_FT_Filter` fixture produced an
+  S5.1 violation (exit 3); the upstream
+  `Pass__S5.1__Empty_FT_Field` control was quiet (exit 0). A separate
+  tooling-only valid `Connector_Generic` control was derived by changing only
+  the upstream control's footprint-filter text to `SOT?23*`, keeping its
+  default footprint empty. The checker warned that the default footprint was
+  possibly missing (exit 2), because its generic-library allowlist contains
+  `Device` but not `Connector`. This is a false positive for the documented
+  generic connector case, not a product-board finding.
+- **Incremental-value result and disposition:** The trial found no electrical
+  design-lint gain. Keep KLC scripts outside the board design-lint catalog.
+  Reconsider them as an optional library-admission preflight only if the
+  tooling gains an explicit custom or supplier library intake boundary, and
+  only after valid generic Connector symbols are handled. Do not make KLC
+  guidance a universal blocking rule.
+- **Reproducibility:** The checkout was kept under `/private/tmp`; no source,
+  library, board, or fixture was copied into this repository. SHA-256 digests:
+  `check_symbol.py` `d00d74050cd4df8c005d17d0545e7a83217d3e07652cad1e3877dc86597de5ec`;
+  `S5_1.py` `11dbfaec088a6abdb49cdf8b5ccaff23cd89c1f13dd91cf6641fcbd24f8982b4`;
+  `kicad_sym.py` `e0b0cb0029c399156e6d23254bd161ce5b942f9a6ac922da536f66522fc542c3`;
+  `rulebase.py` `044d05bd58cfd05c4b8c51921f778792622bd46fd3deadd5d2770ef8caddbc0a`.
+  The upstream fault fixture hash is
+  `d8cb27ce434490321761cd8705d63489ae38a84460f2d486252bb1bded5d17c3`; the
+  upstream empty-footprint control is
+  `0c0d90bca4731c06098cecf6daf4cce99059e400fc0acc5ca2ea6fc31d90a23a`.
+  The derived Connector control is
+  `3a1245b775fc849563258aeffd6700c6fc8783ed8807c6d55759f1ff06908d99`. The
+  three JUnit reports, also outside the repository, hash to
+  `fa9b4246bacb69e8193ce6f555fe19d47dc2b8fc806e82c298c8391c66cb2b4b`
+  (fault),
+  `36a5dd7f448a75913d2b5a87a9c53ae0a5a9e7e0ea8bb9961ea9aea40a7799f8`
+  (upstream control), and
+  `ad61f0d798683d14d8966ed6324667d33087d1cfde813d354e5b4ba7b4de6762`
+  (generic Connector control).
 - **Done when:** Adopt only the analyzer or knowledge item with demonstrated
   incremental detection, review, or maintenance value; retain no dependency
   solely to aggregate duplicate warnings.
@@ -14610,13 +14681,14 @@ only when its project-specific source data, applicability, deterministic
 comparison, and valid alternatives can be tested without importing a product
 design.
 
-| Candidate family                                     | Existing overlap                                                              | First bounded work                                                                                                                                                                                                                                         | Stop or defer when                                                                                                                                                                                                                    |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                        | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                               | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                                                 |
-| Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts       | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.          | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings.                    |
-| Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps         | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.             | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                                                |
-| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5. | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
-| Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data.         | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                                   |
+| Candidate family                                     | Existing overlap                                                              | First bounded work                                                                                                                                                                                                                                          | Stop or defer when                                                                                                                                                                                                                    |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                        | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                                | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                                                 |
+| Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts       | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.           | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings.                    |
+| Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps         | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.              | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                                                |
+| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5.  | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
+| Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data.          | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                                   |
+| Symbol-library convention admission                  | Board design lint does not validate symbol-library authoring conventions      | LINT-031's pinned KLC S5.1 trial detects its upstream fault/control pair, but warns on a valid generic `Connector` symbol. Consider a separate optional library-admission preflight only if custom or supplier library intake becomes an explicit workflow. | Keep outside electrical design lint; KLC permits exceptions and manual review, and the current checker misclassifies generic Connector libraries.                                                                                     |
 
 #### kicad-happy TF-001 isolated-feedback trial (2026-10-19)
 
