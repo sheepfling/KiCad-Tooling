@@ -5326,7 +5326,8 @@ is not a reason by itself to expand its scope or change its default policy.
   run passed 36 tests and 10 subtests; the backlog Markdown check passed.
 - **Applicability screen:**
 
-  The MIT-licensed public [CP2102 project](https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102)
+  The MIT-licensed public
+  [CP2102 project][lint086-cp2102]
   is pinned at commit `eecf7bb08afbd1494f3136a5124f4b6b6ea6c63e`. It has
   duplicated USB-C D+/D− contacts, direct nets to a CP2102N, and separate
   two-pin data-to-GND branches. KiCad 10.0.6 exported the design; connector
@@ -5341,8 +5342,8 @@ is not a reason by itself to expand its scope or change its default policy.
   was copied into this repository.
 
   Two additional public projects were screened at immutable commits:
-  [USB-C FUSB302/RP2040](https://github.com/bentwire/USB-C-FUSB302-PI/tree/7d95292262b42767bbeefebadb6bafe055923d50)
-  and [16nx](https://github.com/16n-faderbank/16nx/tree/ca7de2233011407fdd791839d711547bf41d33d3).
+  [USB-C FUSB302/RP2040][lint086-fusb302] and
+  [16nx][lint086-16nx].
   Both use one 27R series resistor per D line and a common GND assignment;
   both were quiet baseline screens. Temporary connector-to-PHY split mutations
   produced one review with both series resistor assignments in evidence. The
@@ -5390,8 +5391,22 @@ is not a reason by itself to expand its scope or change its default policy.
   (SHA-256
   `97f2001af8d2dc3574c79269d1060aca84b4c7beabe4b8b09ae95cff76a775b2`). The
   container ran on a `linux/aarch64` Docker host. This confirms reproducibility,
-  applicability, and seeded-fault sensitivity; independent author dispositions
-  and reviewer time remain unmeasured.
+  applicability, and seeded-fault sensitivity. Applying the review worksheet,
+  each quiet, fully supported path is a `supported_non_finding`; these are not
+  prompted cases requiring a policy disposition and do not establish that the
+  reference policy is electrically correct.
+
+  - **CP2102 J1–U1:** One supported common-reference path and zero prompts;
+    `supported_non_finding`. Reviewer time is unmeasured.
+  - **FUSB302/RP2040 J1–U302:** One supported common-reference path and zero
+    prompts; `supported_non_finding`. Reviewer time is unmeasured.
+  - **16nx J3–U5:** One supported common-reference path and zero prompts;
+    `supported_non_finding`. Reviewer time is unmeasured.
+
+  Each seeded split-reference mutation produced one review. No baseline path
+  prompted, so there is no public prompted finding to classify as actionable,
+  duplicate, no-action, or unresolved. Reviewer time remains unmeasured because
+  no timed baseline-only versus report-assisted review was run.
 
   **Coverage-boundary screen (2026-10-08):** Re-evaluated two retained public
   [Cynthion hardware exports][cynthion-hardware] under the current USB
@@ -15132,3 +15147,6 @@ quality, or first-article continuity.
 [kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
+[lint086-cp2102]: https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102
+[lint086-fusb302]: https://github.com/bentwire/USB-C-FUSB302-PI/tree/7d95292262b42767bbeefebadb6bafe055923d50
+[lint086-16nx]: https://github.com/16n-faderbank/16nx/tree/ca7de2233011407fdd791839d711547bf41d33d3
