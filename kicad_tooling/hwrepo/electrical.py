@@ -25,9 +25,9 @@ from .models import (
     ProjectConfig,
     ProjectKind,
     ProjectManifest,
-    TestAccessAnalysis,
     TransientAnalysis,
 )
+from .pcb_test_access_models import TestAccessAnalysis
 from .pin_connectivity_models import PinConnectivityAnalysis
 from .return_nets import return_net_groups
 

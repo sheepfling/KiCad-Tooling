@@ -301,7 +301,7 @@ def verify_native(
             i2c_pullup_checks,
         )
         from .i2c_pullup_models import I2cPullupAnalysis
-        from .models import (
+        from .pcb_test_access_models import (
             PcbAccessAnalysis,
             TestAccessAnalysis,
         )

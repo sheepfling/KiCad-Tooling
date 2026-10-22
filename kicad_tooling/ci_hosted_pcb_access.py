@@ -15,18 +15,18 @@ def pcb_access_fixture_lane(root: Path, *, project: str, image: str, log: Hosted
     """Exercise native pad exposure and probe-envelope evidence on a synthetic PCB."""
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.models import (
-        PcbAccessAnalysis,
-        RequiredTestAccess,
-        TestAccessAnalysis,
-        TestAccessEndpointRequirement,
-        TestAccessProbeEnvelope,
-    )
     from .hwrepo.pcb_connectivity_observations import PcbAccessProbeObservation
     from .hwrepo.pcb_return_path_capture import (
         capture_native_pcb_connectivity,
         expected_probe_sha256,
         native_pcb_command_matches,
+    )
+    from .hwrepo.pcb_test_access_models import (
+        PcbAccessAnalysis,
+        RequiredTestAccess,
+        TestAccessAnalysis,
+        TestAccessEndpointRequirement,
+        TestAccessProbeEnvelope,
     )
     from .hwrepo.test_access import (
         pcb_access_probe_request_set,

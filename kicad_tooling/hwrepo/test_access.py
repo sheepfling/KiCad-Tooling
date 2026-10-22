@@ -11,9 +11,10 @@ from .model_inventory import (  # pyright: ignore[reportPrivateUsage]
     _children,  # pyright: ignore[reportPrivateUsage]
     _Span,  # pyright: ignore[reportPrivateUsage]
 )
-from .models import (
-    ElectricalCheck,
-    NetlistContract,
+from .models import ElectricalCheck, NetlistContract
+from .pcb_connectivity_observations import PcbAccessProbeObservation
+from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_test_access_models import (
     PcbAccessAnalysis,
     PcbAccessProbeRequest,
     PcbAccessProbeRequestSet,
@@ -21,8 +22,6 @@ from .models import (
     TestAccessAnalysis,
     TestAccessEndpointRequirement,
 )
-from .pcb_connectivity_observations import PcbAccessProbeObservation
-from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
 
 
 @dataclass(frozen=True)

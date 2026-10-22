@@ -259,6 +259,12 @@ intended requirement.
   A dedicated architecture suite checks owner size, internal imports, and
   compatibility identity. The extraction reduces the shared registry from
   8,732 to 8,195 lines while keeping each owner below 500 lines.
+  PCB test-access requirements and native probe request records now live in
+  `pcb_test_access_models.py`. Electrical, hosted-fixture, and evidence
+  services import these models directly; `models.py` retains identity-
+  compatible exports for existing callers. Architecture tests guard the
+  owner size, exports, and import boundary. This extraction reduced the shared
+  registry from 3,387 to 3,275 lines without changing contract schemas.
   Synthetic RF antenna test builders live in `tests/pcb_rf_antenna_support.py`;
   the focused regression suite is below 500 lines and no longer needs a legacy
   size ceiling.

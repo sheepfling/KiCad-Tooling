@@ -50,15 +50,14 @@ from .models import (
     ElectricalAnalysisReport,
     ElectricalCheck,
     ElectricalSuiteReport,
-    PcbAccessAnalysis,
     ProjectKind,
-    TestAccessAnalysis,
 )
 from .mosfet_stress import mosfet_stress_checks
 from .mosfet_stress_models import MosfetStressAnalysis
 from .pcb_return_path_capture import capture_native_pcb_connectivity, expected_probe_sha256
 from .pcb_return_path_checks import pcb_return_path_checks
 from .pcb_return_path_models import PcbReturnPathsAnalysis
+from .pcb_test_access_models import PcbAccessAnalysis, TestAccessAnalysis
 from .pin_connectivity_models import PinConnectivityAnalysis
 from .power_connectivity import power_connectivity_checks
 from .power_connectivity_models import PowerConnectivityAnalysis
