@@ -4609,13 +4609,19 @@ is not a reason by itself to expand its scope or change its default policy.
   `BST`, `BOOT`, `BOOTSTRAP`, or `CBST` and a switching node
   ([source](https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L698-L710)).
   The tooling's exact `BOOTSTRAP` alias treated that power-stage input as a
-  boot-mode strap in both unconnected and connected-input checks. The
-  exact `BOOTSTRAP` alias is removed; bare `BOOT` remains reviewable because
-  it is also used for MCU boot-mode pins. Synthetic controls cover an
-  unconnected bootstrap terminal and a connected bootstrap-capacitor node,
-  while the existing `BOOT0` fault remains active. This only prevents
-  misclassification; it does not verify a required bootstrap capacitor,
-  part value, or topology. No cohort code or board project was imported.
+  boot-mode strap in both unconnected and connected-input checks. The exact
+  `BOOTSTRAP` alias is removed. For the connected missing-bias rule, an exact
+  bare `BOOT` pin is now excluded only when the native netlist shows a fitted,
+  exact two-pin `Device:C` between its net and a same-device `SW`, `LX`, or
+  `PH` pin net. Bare `BOOT` elsewhere remains reviewable, including the
+  unconnected-input rule. Synthetic controls preserve `BOOT0`, DNP-capacitor,
+  wrong-symbol, incomplete-inventory, and different-device prompts. A
+  source-bound native fixture is registered in the KiCad 10.0.5 fixture lane.
+  Its pinned local native-container run passed twice with the same normalized
+  typed-netlist digest (`1f47dd17c62a0e8e962582fbcc104123d18e5deb6c09b978c858d15443e82d83`)
+  and zero connected-bias candidates; hosted CI has not yet run this fixture.
+  This screen does not verify a required capacitor, part value, placement, or
+  PCB connectivity. No cohort code or board project was imported.
 - **Unconnected-pin input:** KiCad's native XML uses synthetic names such as
   `unconnected-(J1-SHIELD-Pad3)` for pins without net assignments. The native
   adapter now retains those pin references in `NetlistContract.unconnected_nets`

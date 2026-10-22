@@ -86,6 +86,11 @@ def native_control_input_demo_lane(
             "series-bias-control.kicad_sch",
             (),
         ),
+        "bootstrap-capacitor-fixture": (
+            "/synthetic",
+            "bare-boot-bootstrap-capacitor.kicad_sch",
+            (),
+        ),
     }
     if sample_names is not None:
         unknown = sample_names - samples.keys()
@@ -99,6 +104,8 @@ def native_control_input_demo_lane(
     )
     if not (synthetic_fixture_root / "por-b.kicad_sch").is_file():
         raise ValueError("Synthetic POR_B native control fixture is missing")
+    if not (synthetic_fixture_root / "bare-boot-bootstrap-capacitor.kicad_sch").is_file():
+        raise ValueError("Synthetic bootstrap capacitor native control fixture is missing")
     scratch = Path(
         tempfile.mkdtemp(prefix=f"control-input-demo-{project}-", dir=log.directory.resolve())
     )
@@ -228,6 +235,32 @@ def native_control_input_demo_lane(
                     )
                 if "U1.1" not in nets_by_label.get("reset_n", ()):
                     raise ValueError("Native series-bias fixture reset pin has no net assignment")
+            if sample == "bootstrap-capacitor-fixture":
+                if observed.pin_functions.get("U1.1") != "BOOT":
+                    raise ValueError("Native bootstrap fixture lost the exact bare BOOT alias")
+                if observed.pin_electrical_types.get("U1.1") != "input":
+                    raise ValueError("Native bootstrap fixture lost its BOOT input electrical type")
+                if observed.pin_functions.get("U1.2") != "SW":
+                    raise ValueError("Native bootstrap fixture lost its switch-node pin")
+                if observed.pin_electrical_types.get("U1.2") != "output":
+                    raise ValueError("Native bootstrap fixture lost its SW output electrical type")
+                if observed.component_symbols.get("C1") != "Device:C":
+                    raise ValueError("Native bootstrap fixture lost its exact capacitor symbol")
+                capacitor_pins = observed.component_pin_numbers.get("C1", ())
+                if len(capacitor_pins) != 2 or set(capacitor_pins) != {"1", "2"}:
+                    raise ValueError("Native bootstrap fixture lost its two-pin inventory")
+                dnp = {reference.casefold() for reference in observed.dnp_components}
+                if "c1" in dnp:
+                    raise ValueError("Native bootstrap fixture capacitor must be fitted")
+                pins_by_net = {net: set(pins) for net, pins in observed.nets.items()}
+                boot_nets = {net for net, pins in pins_by_net.items() if "U1.1" in pins}
+                switch_nets = {net for net, pins in pins_by_net.items() if "U1.2" in pins}
+                if len(boot_nets) != 1 or len(switch_nets) != 1 or boot_nets == switch_nets:
+                    raise ValueError("Native bootstrap fixture endpoints must use distinct nets")
+                boot_net = next(iter(boot_nets))
+                switch_net = next(iter(switch_nets))
+                if "C1.1" not in pins_by_net[boot_net] or "C1.2" not in pins_by_net[switch_net]:
+                    raise ValueError("Native bootstrap capacitor must bridge BOOT and SW nets")
             candidates = unconnected_control_inputs(observed)
             candidates_by_run[run] = tuple(
                 (item.pin, item.function, item.family, item.electrical_type) for item in candidates

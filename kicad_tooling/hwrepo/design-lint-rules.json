@@ -2913,6 +2913,7 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_open_control_inputs.test_unconnected_reset_enable_and_boot_inputs_are_review_candidates",
+        "tests.test_design_lint_bootstrap_controls.test_unconnected_bare_boot_remains_reviewable",
         "tests.test_ci_hosted_control_inputs.test_native_public_demos_record_connected_bias_and_unconnected_controls"
       ],
       "valid_control_fixtures": [
@@ -2947,17 +2948,19 @@
       ],
       "limitations": [
         "The bounded function aliases can miss vendor-specific control names and do not establish required bias, polarity, startup state, or whether a local resistor is needed.",
-        "Power-stage BOOTSTRAP names are excluded; bare BOOT remains ambiguous and may still warrant review. This rule does not validate bootstrap capacitor topology.",
+        "Power-stage BOOTSTRAP names are excluded. An exact bare BOOT pin is omitted from connected-control review only when its native netlist shows a fitted exact two-pin Device:C between that pin and a same-device SW/LX/PH pin; bare BOOT without that topology remains reviewable. This screen does not validate capacitor requirement, value, placement, or physical connectivity.",
         "Direct and unbranched series paths of fitted conventional two-terminal resistors are recognized without a resistance window. DNP and zero-ohm resistors, branched or ambiguous paths, resistor arrays, jumpers, active bias circuits, custom rail names, and unusual component identities can produce a review prompt.",
         "Internal pulls, off-board bias, connected drivers, firmware behavior, resistor adequacy, and PCB copper continuity are not modeled; DNP control components are excluded."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_input_without_visible_bias_is_review_only_and_configurable",
+        "tests.test_design_lint_bootstrap_controls.test_unproven_bootstrap_topology_keeps_boot_candidate_reviewable",
         "tests.test_ci_hosted_control_inputs.test_native_public_demos_record_connected_bias_and_unconnected_controls"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_prompt_checks_assignments_and_valid_controls",
         "tests.test_design_lint_bootstrap_controls.test_bootstrap_capacitor_node_is_not_a_biased_control_input",
+        "tests.test_design_lint_bootstrap_controls.test_bare_boot_with_bootstrap_capacitor_is_not_a_bias_gap",
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_exact_source_bound_contract_decision_satisfies_heuristic_coverage",
         "tests.test_design_lint_control_input_bias_paths.test_unbranched_fitted_resistor_chain_clears_control_bias_prompt",
         "tests.test_design_lint_mcp_parity_report.test_design_lint_parity"

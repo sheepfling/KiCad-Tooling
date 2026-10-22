@@ -22,6 +22,8 @@ OUTPUT_CAPABLE_TYPES = frozenset(
 )
 
 _CONTROL_INPUT_TYPES = frozenset({"input", "input_low"})
+_BOOTSTRAP_CAPACITOR_SYMBOLS = frozenset({"device:c"})
+_SWITCH_NODE_FUNCTION = re.compile(r"(?:sw|lx|ph)\d*")
 
 # A power-stage BOOTSTRAP terminal is not an MCU boot-mode strap. Keep the
 # ambiguous bare BOOT alias reviewable, but do not classify the distinct word.
@@ -104,6 +106,62 @@ def control_input_family(function: str) -> str | None:
     )
 
 
+def _bootstrap_power_pin_keys(observed: NetlistContract) -> frozenset[str]:
+    """Recognize exact BOOT-to-switch bootstrap-capacitor topology."""
+    pin_nets: dict[str, set[str]] = {}
+    pins_by_net: dict[str, set[str]] = {}
+    for net, pins in observed.nets.items():
+        net_key = net.casefold()
+        for pin in pins:
+            pin_key = pin.casefold()
+            pin_nets.setdefault(pin_key, set()).add(net_key)
+            pins_by_net.setdefault(net_key, set()).add(pin)
+
+    dnp_components = {reference.casefold() for reference in observed.dnp_components}
+    pin_functions = {
+        pin.casefold(): re.sub(r"[^a-z0-9]+", "", function.casefold())
+        for pin, function in observed.pin_functions.items()
+    }
+    bootstrap_pins: set[str] = set()
+    for reference, symbol in observed.component_symbols.items():
+        capacitor_pins = observed.component_pin_numbers.get(reference, ())
+        if (
+            reference not in observed.components
+            or reference.casefold() in dnp_components
+            or symbol.casefold() not in _BOOTSTRAP_CAPACITOR_SYMBOLS
+            or len(capacitor_pins) != 2
+            or set(capacitor_pins) != {"1", "2"}
+        ):
+            continue
+
+        capacitor_nets = [
+            pin_nets.get(f"{reference}.{pin_number}".casefold(), set()) for pin_number in ("1", "2")
+        ]
+        if any(len(nets) != 1 for nets in capacitor_nets):
+            continue
+        first_net = next(iter(capacitor_nets[0])).casefold()
+        second_net = next(iter(capacitor_nets[1])).casefold()
+        if first_net == second_net:
+            continue
+
+        for bootstrap_net, switch_net in ((first_net, second_net), (second_net, first_net)):
+            for pin in pins_by_net.get(bootstrap_net, set()):
+                if pin_functions.get(pin.casefold()) != "boot":
+                    continue
+                device_reference = pin.rsplit(".", maxsplit=1)[0].casefold()
+                has_same_device_switch_pin = any(
+                    switch_pin.rsplit(".", maxsplit=1)[0].casefold() == device_reference
+                    and _SWITCH_NODE_FUNCTION.fullmatch(
+                        pin_functions.get(switch_pin.casefold(), "")
+                    )
+                    for switch_pin in pins_by_net.get(switch_net, set())
+                )
+                if has_same_device_switch_pin:
+                    bootstrap_pins.add(pin.casefold())
+
+    return frozenset(bootstrap_pins)
+
+
 def unconnected_control_inputs(observed: NetlistContract) -> tuple[UnconnectedControlInput, ...]:
     """Find unassigned input pins with a bounded reset, enable, or boot alias."""
     connected_pins = {pin.casefold() for pins in observed.nets.values() for pin in pins}
@@ -151,9 +209,12 @@ def connected_control_inputs_without_visible_rail_resistor(
         pin.casefold(): value.strip().casefold()
         for pin, value in observed.pin_electrical_types.items()
     }
+    bootstrap_pins = _bootstrap_power_pin_keys(observed)
     controls_by_net: dict[str, list[ConnectedControlInput]] = {}
     for pin, function in observed.pin_functions.items():
         if pin.rsplit(".", maxsplit=1)[0].casefold() in dnp_components:
+            continue
+        if pin.casefold() in bootstrap_pins:
             continue
         family = control_input_family(function)
         electrical_type = pin_types.get(pin.casefold(), "")
