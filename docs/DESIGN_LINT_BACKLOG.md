@@ -4609,26 +4609,26 @@ is not a reason by itself to expand its scope or change its default policy.
   The bounded reset alias set includes the `POR` token because the official
   KiCad `MCU_Module:CHIP-PRO` symbol names an input `POR_B`; `PORN` remains a
   negative control rather than a substring match.
-- **Power bootstrap pin boundary:** Cohort review found KiCad-Happy's LC
-  detector explicitly recognizes bootstrap capacitors between pins named
-  `BST`, `BOOT`, `BOOTSTRAP`, or `CBST` and a switching node
+- **Power bootstrap pin boundary:** Cohort review found KiCad-Happy's LC detector explicitly
+  recognizes bootstrap capacitors between pins named `BST`, `BOOT`, `BOOTSTRAP`, or `CBST` and a
+  switching node
   ([source](https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L698-L710)).
-  The tooling's exact `BOOTSTRAP` alias treated that power-stage input as a
-  boot-mode strap in both unconnected and connected-input checks. The exact
-  `BOOTSTRAP` alias is removed. For the connected missing-bias rule, an exact
-  bare `BOOT` pin is now excluded only when the native netlist shows a fitted,
-  exact two-pin `Device:C` between its net and a same-device `SW`, `LX`, or
-  `PH` pin net. Bare `BOOT` elsewhere remains reviewable, including the
-  unconnected-input rule. Synthetic controls preserve `BOOT0`, DNP-capacitor,
-  wrong-symbol, incomplete-inventory, and different-device prompts. A
-  metamorphic case also preserves both the quiet and review outcomes when net
-  labels and typed-netlist mapping order change. A
-  source-bound native fixture is registered in the KiCad 10.0.5 fixture lane.
-  Its pinned local native-container run passed twice with the same normalized
-  typed-netlist digest (`1f47dd17c62a0e8e962582fbcc104123d18e5deb6c09b978c858d15443e82d83`)
-  and zero connected-bias candidates; hosted CI has not yet run this fixture.
-  This screen does not verify a required capacitor, part value, placement, or
-  PCB connectivity. No cohort code or board project was imported.
+  The tooling's exact `BOOTSTRAP` alias treated that power-stage input as a boot-mode strap in both
+  unconnected and connected-input checks. The exact `BOOTSTRAP` alias is removed. For the connected
+  missing-bias rule, an exact bare `BOOT` pin is now excluded only when the native netlist shows a
+  fitted, exact two-pin unpolarized `Device:C` or `Device:C_Small` between its net and a same-device
+  `SW`, `LX`, or `PH` pin net. Bare `BOOT` elsewhere remains reviewable, including the
+  unconnected-input rule. Synthetic controls preserve `BOOT0`, DNP-capacitor, wrong-symbol,
+  incomplete-inventory, and different-device prompts. A metamorphic case also preserves both the
+  quiet and review outcomes when net labels and typed-netlist mapping order change. Source-bound
+  native fixtures for both standard capacitor symbols are registered in the KiCad 10.0.5 fixture
+  lane. Both pinned local native exports repeated with stable normalized typed-netlist digests and
+  zero connected-bias candidates: `Device:C`
+  (`1f47dd17c62a0e8e962582fbcc104123d18e5deb6c09b978c858d15443e82d83`) and `Device:C_Small`
+  (`803284fdb8a3f1e76cef39efa11b599e523ed4f941f0945dd78cc2d7ab2d41ef`). The four-source fixture
+  manifest is `173897d8682ffa2e48412469164c6329235ddeb6b6a197898e0c7349a891358b`. Hosted CI has not
+  yet run this extension. This screen does not verify a required capacitor, part value, placement,
+  or PCB connectivity. No cohort code or board project was imported.
 - **Unconnected-pin input:** KiCad's native XML uses synthetic names such as
   `unconnected-(J1-SHIELD-Pad3)` for pins without net assignments. The native
   adapter now retains those pin references in `NetlistContract.unconnected_nets`

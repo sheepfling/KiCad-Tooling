@@ -70,6 +70,12 @@ _EXPECTED_CASES = (
         0,
         "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
     ),
+    (
+        "bootstrap-small-capacitor-fixture",
+        "none",
+        0,
+        "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    ),
 )
 
 
@@ -172,12 +178,19 @@ def test_native_public_demos_record_connected_bias_and_unconnected_controls(
     assert result["repeatable"] == "true"
     assert re.fullmatch(r"[0-9a-f]{64}", result["source_sha256"])
     assert re.fullmatch(r"[0-9a-f]{64}", result["source_manifest_sha256"])
-    if sample == "bootstrap-capacitor-fixture":
-        assert result["source_sha256"] == (
-            "8a6839b27629799ad42b96b611dc5d086c37609d1f6f698f37e2773885f3541d"
-        )
-        assert result["source_manifest_sha256"] == (
-            "22465da0163965da2e11583c0afe91c6758d0a22e138da801a623f10d21b839d"
+    expected_fixture_hashes = {
+        "bootstrap-capacitor-fixture": (
+            "8a6839b27629799ad42b96b611dc5d086c37609d1f6f698f37e2773885f3541d",
+            "173897d8682ffa2e48412469164c6329235ddeb6b6a197898e0c7349a891358b",
+        ),
+        "bootstrap-small-capacitor-fixture": (
+            "513df62ef3085040a997dda72b9e0713a4f353ac4da0a1308a5ee51d8cd44b50",
+            "173897d8682ffa2e48412469164c6329235ddeb6b6a197898e0c7349a891358b",
+        ),
+    }
+    if sample in expected_fixture_hashes:
+        assert (result["source_sha256"], result["source_manifest_sha256"]) == (
+            expected_fixture_hashes[sample]
         )
     assert int(result["source_manifest_entries"]) > 0
     assert re.fullmatch(r"[0-9a-f]{64}", result["raw_netlist_sha256"])

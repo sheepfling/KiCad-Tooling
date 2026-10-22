@@ -869,11 +869,12 @@ The first rules are:
   changed per project to `review`, `block`, or `off`, or cleared by an exact
   ignore. Power-stage `BOOTSTRAP` names are excluded. For this connected-input
   rule only, a bare `BOOT` pin is omitted from the candidate when native
-  netlist evidence shows a fitted exact two-pin `Device:C` between its net and
-  a same-device `SW`, `LX`, or `PH` pin net. Bare `BOOT` without that exact
-  topology remains reviewable, and the unconnected-input rule still treats it
-  as ambiguous. This topology screen does not verify capacitor requirement,
-  value, placement, or physical connectivity.
+  netlist evidence shows a fitted exact two-pin unpolarized `Device:C` or
+  `Device:C_Small` between its net and a same-device `SW`, `LX`, or `PH` pin
+  net. Bare `BOOT` without that exact topology remains reviewable, and the
+  unconnected-input rule still treats it as ambiguous. This topology screen
+  does not verify capacitor requirement, value, placement, or physical
+  connectivity.
   It does not infer that a local resistor is required. DNP and
   zero-ohm resistors, branched or ambiguous paths, resistor arrays, jumpers,
   custom rail names, internal pulls, off-board bias, runtime drive, resistor

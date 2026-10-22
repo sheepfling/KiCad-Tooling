@@ -22,7 +22,7 @@ OUTPUT_CAPABLE_TYPES = frozenset(
 )
 
 _CONTROL_INPUT_TYPES = frozenset({"input", "input_low"})
-_BOOTSTRAP_CAPACITOR_SYMBOLS = frozenset({"device:c"})
+_BOOTSTRAP_CAPACITOR_SYMBOLS = frozenset({"device:c", "device:c_small"})
 _SWITCH_NODE_FUNCTION = re.compile(r"(?:sw|lx|ph)\d*")
 
 # A power-stage BOOTSTRAP terminal is not an MCU boot-mode strap. Keep the

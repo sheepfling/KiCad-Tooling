@@ -2948,7 +2948,7 @@
       ],
       "limitations": [
         "The bounded function aliases can miss vendor-specific control names and do not establish required bias, polarity, startup state, or whether a local resistor is needed.",
-        "Power-stage BOOTSTRAP names are excluded. An exact bare BOOT pin is omitted from connected-control review only when its native netlist shows a fitted exact two-pin Device:C between that pin and a same-device SW/LX/PH pin; bare BOOT without that topology remains reviewable. This screen does not validate capacitor requirement, value, placement, or physical connectivity.",
+        "Power-stage BOOTSTRAP names are excluded. An exact bare BOOT pin is omitted from connected-control review only when its native netlist shows a fitted exact two-pin unpolarized Device:C or Device:C_Small between that pin and a same-device SW/LX/PH pin; bare BOOT without that topology remains reviewable. This screen does not validate capacitor requirement, value, placement, or physical connectivity.",
         "Direct and unbranched series paths of fitted conventional two-terminal resistors are recognized without a resistance window. DNP and zero-ohm resistors, branched or ambiguous paths, resistor arrays, jumpers, active bias circuits, custom rail names, and unusual component identities can produce a review prompt.",
         "Internal pulls, off-board bias, connected drivers, firmware behavior, resistor adequacy, and PCB copper continuity are not modeled; DNP control components are excluded."
       ],

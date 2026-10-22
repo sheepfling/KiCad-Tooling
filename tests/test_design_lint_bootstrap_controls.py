@@ -147,10 +147,20 @@ def test_bootstrap_capacitor_node_is_not_a_biased_control_input() -> None:
 
 
 @pytest.mark.parametrize("switch_function", ("SW", "SW1", "LX2", "PH"))
-def test_bare_boot_with_bootstrap_capacitor_is_not_a_bias_gap(switch_function: str) -> None:
+@pytest.mark.parametrize("capacitor_symbol", ("Device:C", "Device:C_Small"))
+def test_bare_boot_with_bootstrap_capacitor_is_not_a_bias_gap(
+    switch_function: str,
+    capacitor_symbol: str,
+) -> None:
     report = evaluate(
         "synthetic-bootstrap-pin",
-        coach(_bootstrap_capacitor_netlist("BOOT", switch_function=switch_function)),
+        coach(
+            _bootstrap_capacitor_netlist(
+                "BOOT",
+                switch_function=switch_function,
+                capacitor_symbol=capacitor_symbol,
+            )
+        ),
         DesignLintPolicy(),
     )
 

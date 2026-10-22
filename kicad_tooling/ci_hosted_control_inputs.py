@@ -91,6 +91,11 @@ def native_control_input_demo_lane(
             "bare-boot-bootstrap-capacitor.kicad_sch",
             (),
         ),
+        "bootstrap-small-capacitor-fixture": (
+            "/synthetic",
+            "bare-boot-bootstrap-small-capacitor.kicad_sch",
+            (),
+        ),
     }
     if sample_names is not None:
         unknown = sample_names - samples.keys()
@@ -106,6 +111,8 @@ def native_control_input_demo_lane(
         raise ValueError("Synthetic POR_B native control fixture is missing")
     if not (synthetic_fixture_root / "bare-boot-bootstrap-capacitor.kicad_sch").is_file():
         raise ValueError("Synthetic bootstrap capacitor native control fixture is missing")
+    if not (synthetic_fixture_root / "bare-boot-bootstrap-small-capacitor.kicad_sch").is_file():
+        raise ValueError("Synthetic small-capacitor native control fixture is missing")
     scratch = Path(
         tempfile.mkdtemp(prefix=f"control-input-demo-{project}-", dir=log.directory.resolve())
     )
@@ -235,7 +242,10 @@ def native_control_input_demo_lane(
                     )
                 if "U1.1" not in nets_by_label.get("reset_n", ()):
                     raise ValueError("Native series-bias fixture reset pin has no net assignment")
-            if sample == "bootstrap-capacitor-fixture":
+            if sample in {
+                "bootstrap-capacitor-fixture",
+                "bootstrap-small-capacitor-fixture",
+            }:
                 if observed.pin_functions.get("U1.1") != "BOOT":
                     raise ValueError("Native bootstrap fixture lost the exact bare BOOT alias")
                 if observed.pin_electrical_types.get("U1.1") != "input":
@@ -244,7 +254,12 @@ def native_control_input_demo_lane(
                     raise ValueError("Native bootstrap fixture lost its switch-node pin")
                 if observed.pin_electrical_types.get("U1.2") != "output":
                     raise ValueError("Native bootstrap fixture lost its SW output electrical type")
-                if observed.component_symbols.get("C1") != "Device:C":
+                expected_capacitor_symbol = (
+                    "Device:C_Small"
+                    if sample == "bootstrap-small-capacitor-fixture"
+                    else "Device:C"
+                )
+                if observed.component_symbols.get("C1") != expected_capacitor_symbol:
                     raise ValueError("Native bootstrap fixture lost its exact capacitor symbol")
                 capacitor_pins = observed.component_pin_numbers.get("C1", ())
                 if len(capacitor_pins) != 2 or set(capacitor_pins) != {"1", "2"}:
