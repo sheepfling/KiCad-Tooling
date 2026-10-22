@@ -14,9 +14,9 @@ from typing import Literal, NamedTuple
 from .contracts import parse_model_text, read_model, repo_path, validate_json_object
 from .discovery import manifest_paths, settings
 from .electrical import simulation_cases
+from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .layout import layout, within_roots
 from .models import (
-    ElectricalAnalysisContract,
     McpArtifactEntry,
     McpArtifactList,
     McpEditPreview,

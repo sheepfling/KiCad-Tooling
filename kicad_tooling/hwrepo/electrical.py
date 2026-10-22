@@ -14,6 +14,7 @@ from .analysis_state_models import (
 )
 from .contracts import parse_model_text, read_model, repo_path
 from .discovery import load_config, load_registry
+from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_simulation_models import (
     FrequencyAnalysis,
     HighFrequencyAnalysis,
@@ -22,7 +23,6 @@ from .electrical_simulation_models import (
 )
 from .grounding_models import GroundingAnalysis
 from .models import (
-    ElectricalAnalysisContract,
     ElectricalCheck,
     NetlistContract,
     ProjectConfig,

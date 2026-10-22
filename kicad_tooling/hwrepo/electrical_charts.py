@@ -11,13 +11,13 @@ from uuid import uuid4
 from .contract_coach import receipt_directory
 from .contracts import read_model, repo_path, write_model
 from .electrical import simulation_cases
+from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .electrical_plot import render_case
 from .electrical_simulation_models import PowerAnalysis
 from .evidence import digest
 from .grounding_models import GroundingAnalysis
 from .models import (
     ContractCoachReport,
-    ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     ElectricalChartCase,
     ElectricalChartsReport,

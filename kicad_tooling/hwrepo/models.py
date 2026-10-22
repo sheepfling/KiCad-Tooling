@@ -36,6 +36,7 @@ from . import design_lint_policy_models as _design_lint_policy_models
 from . import design_lint_rule_models as _design_lint_rule_models
 from . import design_lint_rule_types as _design_lint_rule_types
 from . import digital_peer_voltage_models as _digital_peer_voltage_models
+from . import electrical_analysis_contract_models as _electrical_analysis_contract_models
 from . import electrical_simulation_models as _electrical_simulation_models
 from . import external_protection_models as _external_protection_models
 from . import grounding_models as _grounding_models
@@ -103,6 +104,7 @@ CrystalNetworkCoverageReport = _crystal_network_models.CrystalNetworkCoverageRep
 
 AnalysisPending = _analysis_state_models.AnalysisPending
 AnalysisNotApplicable = _analysis_state_models.AnalysisNotApplicable
+ElectricalAnalysisContract = _electrical_analysis_contract_models.ElectricalAnalysisContract
 SpiceExpression = _electrical_simulation_models.SpiceExpression
 PowerLoad = _electrical_simulation_models.PowerLoad
 PowerRail = _electrical_simulation_models.PowerRail
@@ -2528,161 +2530,6 @@ class McpNativeScopeReport(StrictModel):
     status: Literal["PASS", "FAIL"]
     run_directory: NonEmptyText
     report: CheckAllSummary
-
-
-class ElectricalAnalysisContract(StrictModel):
-    schema_version: Literal["1"] = "1"
-    project_id: Identifier
-    ngspice_version: NonEmptyText
-    ngspice_source_sha256: Digest | None = None
-    grounding: Annotated[
-        GroundingAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
-    ]
-    pcb_return_paths: Annotated[
-        PcbReturnPathsAnalysis | AnalysisNotApplicable | AnalysisPending,
-        Field(discriminator="mode"),
-    ] = Field(
-        default_factory=lambda: AnalysisPending(
-            reason="Review exact PCB return pads, their copper connectivity, and any intentional isolation."
-        )
-    )
-    pin_connectivity: (
-        Annotated[
-            PinConnectivityAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    i2c_pullups: (
-        Annotated[
-            I2cPullupAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    can_termination: (
-        Annotated[
-            CanTerminationAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    usb_c: (
-        Annotated[
-            UsbCAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    spi: (
-        Annotated[
-            SpiAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    serial_peers: (
-        Annotated[
-            SerialPeerAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    digital_peer_voltages: (
-        Annotated[
-            DigitalPeerVoltageAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    component_voltage_ratings: (
-        Annotated[
-            ComponentVoltageRatingAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    component_power_ratings: (
-        Annotated[
-            ComponentPowerRatingAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    connector_contact_ratings: (
-        Annotated[
-            ConnectorContactRatingAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    mosfet_stress: (
-        Annotated[
-            MosfetStressAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    rs485: (
-        Annotated[
-            Rs485Analysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    control_inputs: (
-        Annotated[
-            ControlInputsAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    test_access: (
-        Annotated[
-            TestAccessAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    power: Annotated[
-        PowerAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
-    ]
-    power_connectivity: (
-        Annotated[
-            PowerConnectivityAnalysis | AnalysisNotApplicable | AnalysisPending,
-            Field(discriminator="mode"),
-        ]
-        | None
-    ) = None
-    high_frequency: Annotated[
-        HighFrequencyAnalysis | AnalysisNotApplicable | AnalysisPending, Field(discriminator="mode")
-    ]
-
-    @model_validator(mode="after")
-    def unique_cases(self) -> ElectricalAnalysisContract:
-        cases: list[SimulationModel] = []
-        if isinstance(self.power, PowerAnalysis):
-            cases.extend((*self.power.startup, *self.power.steady_state))
-        if isinstance(self.high_frequency, HighFrequencyAnalysis):
-            cases.extend((*self.high_frequency.sweeps, *self.high_frequency.waveforms))
-        if len({case.id.casefold() for case in cases}) != len(cases):
-            raise ValueError("Simulation IDs must be unique across all lanes")
-        if isinstance(self.power_connectivity, PowerConnectivityAnalysis) and isinstance(
-            self.power, PowerAnalysis
-        ):
-            budget_rails = {rail.id: {load.id for load in rail.loads} for rail in self.power.rails}
-            mapped_rails = {
-                rail.id: {load.id for load in rail.loads} for rail in self.power_connectivity.rails
-            }
-            if set(mapped_rails) != set(budget_rails):
-                raise ValueError(
-                    "Power connectivity rail IDs must cover the authored power budget rails"
-                )
-            if mapped_rails != budget_rails:
-                raise ValueError(
-                    "Power connectivity load IDs must match the authored rail budget loads"
-                )
-        return self
 
 
 class ElectricalCheck(StrictModel):

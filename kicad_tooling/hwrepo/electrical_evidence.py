@@ -32,6 +32,7 @@ from .electrical import (
     selected_config,
     simulation_cases,
 )
+from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .evidence import digest, evidence_path, verify_source
 from .grounding_models import GroundingAnalysis
 from .i2c_pullup_contract import (
@@ -40,7 +41,6 @@ from .i2c_pullup_contract import (
 from .i2c_pullup_models import I2cPullupAnalysis
 from .models import (
     CommandEvidence,
-    ElectricalAnalysisContract,
     ElectricalAnalysisReport,
     ElectricalCheck,
     EvidenceFile,

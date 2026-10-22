@@ -17,12 +17,12 @@ from pydantic import BaseModel
 from . import __version__
 from .contracts import read_model, repo_path, write_model
 from .discovery import load_registry, settings
+from .electrical_analysis_contract_models import ElectricalAnalysisContract
 from .layout import CONFIG_NAME, layout
 from .models import (
     AssemblyKind,
     BomRow,
     ConnectionKind,
-    ElectricalAnalysisContract,
     ElectricalConnectionView,
     ElectricalView,
     HarnessSchedule,
