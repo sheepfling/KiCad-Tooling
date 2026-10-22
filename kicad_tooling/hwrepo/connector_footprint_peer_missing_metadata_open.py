@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_footprint_peer_anchors import (
+    connector_footprint_peer_common_anchor_pin_numbers,
+)
 from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
@@ -118,7 +121,7 @@ def connector_footprint_peer_pin_missing_metadata_open_outliers(
                 ):
                     continue
 
-                anchors = _common_anchor_pin_numbers(
+                anchors = connector_footprint_peer_common_anchor_pin_numbers(
                     pin_numbers,
                     pin_number,
                     scope_references,
@@ -225,36 +228,3 @@ def _metadata_agrees_where_present(
         if len(values) > 1:
             return False
     return True
-
-
-def _common_anchor_pin_numbers(
-    pin_numbers: tuple[str, ...],
-    target_pin_number: str,
-    references: tuple[str, ...],
-    displayed_numbers: Mapping[str, Mapping[str, str]],
-    pin_nets: Mapping[str, set[str]],
-) -> tuple[str, ...]:
-    """Return non-target pins with one identical assigned net across the scope."""
-    anchors: list[str] = []
-    for pin_number in pin_numbers:
-        if pin_number.casefold() == target_pin_number.casefold():
-            continue
-        assignments = tuple(
-            tuple(
-                sorted(
-                    pin_nets.get(
-                        f"{reference}.{displayed_numbers[reference.casefold()][pin_number.casefold()]}".casefold(),
-                        (),
-                    ),
-                    key=lambda item: (item.casefold(), item),
-                )
-            )
-            for reference in references
-        )
-        if (
-            assignments
-            and all(len(nets) == 1 for nets in assignments)
-            and len({nets[0] for nets in assignments}) == 1
-        ):
-            anchors.append(pin_number)
-    return tuple(sorted(anchors, key=lambda item: (item.casefold(), item)))

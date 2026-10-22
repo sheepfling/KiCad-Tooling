@@ -114,7 +114,16 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "interface_lint",
         "parity_lint",
     },
+    "test_connector_footprint_peer_metadata_open.py": {
+        "connector_lint",
+        "interface_lint",
+        "parity_lint",
+    },
     "test_connector_footprint_peer_metadata_native_fixture_lane.py": {
+        "connector_lint",
+        "interface_lint",
+    },
+    "test_connector_footprint_peer_metadata_open_native_fixture_lane.py": {
         "connector_lint",
         "interface_lint",
     },

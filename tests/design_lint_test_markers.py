@@ -78,7 +78,9 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_footprint_peer_open.py",
             "tests/test_connector_footprint_peer_parity.py",
             "tests/test_connector_footprint_peer_metadata.py",
+            "tests/test_connector_footprint_peer_metadata_open.py",
             "tests/test_connector_footprint_peer_metadata_native_fixture_lane.py",
+            "tests/test_connector_footprint_peer_metadata_open_native_fixture_lane.py",
             "tests/test_connector_footprint_peer_architecture.py",
             "tests/test_connector_footprint_named_signal_divergence.py",
             "tests/test_connector_footprint_named_power_input_divergence.py",
@@ -143,6 +145,7 @@ _LINT_AREA_MODULES = {
     "interface_lint": frozenset(
         {
             "tests/test_connector_signal_peer_pin_all_open.py",
+            "tests/test_connector_footprint_peer_metadata_open.py",
             "tests/test_connector_footprint_signal_input.py",
             "tests/test_connector_footprint_named_signal_divergence.py",
             "tests/test_connector_footprint_named_signal_all_open.py",
@@ -324,6 +327,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_mcp_parity_connector_named_power_peers.py",
             "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",
             "tests/test_connector_footprint_peer_parity.py",
+            "tests/test_connector_footprint_peer_metadata_open.py",
             "tests/test_design_lint_mcp_parity_peer_pins.py",
             "tests/test_design_lint_mcp_parity_two_pin_varistors.py",
             "tests/test_design_lint_mcp_parity_unconnected_power_output.py",

@@ -110,4 +110,10 @@ def catalog_reachability_rule_ids() -> set[str]:
     ):
         result.update(item.rule_id for item in candidates(source))
     result.update(item.rule_id for item in candidates(peer_metadata_divergence_netlist()))
+    result.update(
+        item.rule_id
+        for item in candidates(
+            peer_metadata_divergence_netlist(target_assignments=("UART_RX_NET", None))
+        )
+    )
     return result

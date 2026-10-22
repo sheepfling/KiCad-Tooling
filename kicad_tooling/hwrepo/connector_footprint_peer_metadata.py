@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from .connector_footprint_peer_anchors import (
+    connector_footprint_peer_common_anchor_pin_numbers,
+)
 from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
@@ -97,29 +100,13 @@ def connector_footprint_peer_pin_metadata_assignment_divergences(
                 )
                 if not mismatch_fields:
                     continue
-                anchors: list[str] = []
-                for anchor_number in pin_numbers:
-                    if anchor_number.casefold() == pin_number.casefold():
-                        continue
-                    anchor_assignments = tuple(
-                        tuple(
-                            sorted(
-                                pin_nets.get(
-                                    (
-                                        f"{reference}.{displayed_numbers[reference.casefold()][anchor_number.casefold()]}"
-                                    ).casefold(),
-                                    (),
-                                )
-                            )
-                        )
-                        for reference in scope_references
-                    )
-                    if (
-                        anchor_assignments
-                        and all(len(nets) == 1 for nets in anchor_assignments)
-                        and len({nets[0] for nets in anchor_assignments}) == 1
-                    ):
-                        anchors.append(anchor_number)
+                anchors = connector_footprint_peer_common_anchor_pin_numbers(
+                    pin_numbers,
+                    pin_number,
+                    scope_references,
+                    displayed_numbers,
+                    pin_nets,
+                )
                 if not anchors:
                     continue
 
