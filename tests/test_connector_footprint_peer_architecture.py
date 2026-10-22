@@ -15,6 +15,7 @@ PEER_MODULES = (
     "connector_footprint_peer_pins.py",
     "connector_footprint_peer_metadata.py",
     "connector_footprint_peer_missing_metadata.py",
+    "connector_footprint_peer_missing_metadata_open.py",
 )
 
 

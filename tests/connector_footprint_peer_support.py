@@ -10,6 +10,9 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     NetlistContract,
 )
+from tests.design_lint_fixtures.connector_peer_missing_metadata_open import (
+    missing_metadata_open_peer_netlist,
+)
 
 FOOTPRINT_PEER_RULE_ID = "connector.footprint_peer_pin_assignment_divergence"
 FOOTPRINT_OPEN_RULE_ID = "connector.footprint_peer_pin_open_outlier"
@@ -425,6 +428,7 @@ def peer_pin_reachability_netlists() -> tuple[NetlistContract, ...]:
         named_power_output_divergence_netlist(),
         peer_missing_metadata_netlist(),
         peer_netlist(assignments=(("GND", "GND"), (None, None))),
+        missing_metadata_open_peer_netlist(),
     )
 
 

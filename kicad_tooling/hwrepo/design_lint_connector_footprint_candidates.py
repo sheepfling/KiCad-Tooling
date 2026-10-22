@@ -37,6 +37,9 @@ from .connector_footprint_peer_metadata import (
 from .connector_footprint_peer_missing_metadata import (
     connector_footprint_peer_pin_missing_metadata_assignment_divergences,
 )
+from .connector_footprint_peer_missing_metadata_open import (
+    connector_footprint_peer_pin_missing_metadata_open_outliers,
+)
 from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
 from .connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
@@ -78,6 +81,11 @@ def connector_footprint_peer_pin_candidates(
             declared_references,
             peer_assignment_groups,
         )
+    )
+    missing_metadata_open_outliers = connector_footprint_peer_pin_missing_metadata_open_outliers(
+        observed,
+        declared_references,
+        peer_assignment_groups,
     )
     divergence_candidates = tuple(
         Candidate(
@@ -129,6 +137,7 @@ def connector_footprint_peer_pin_candidates(
     return (
         *metadata_divergences,
         *missing_metadata_divergences,
+        *missing_metadata_open_outliers,
         *divergence_candidates,
         *named_signal_divergence.candidates,
         *named_power_input_divergence.candidates,

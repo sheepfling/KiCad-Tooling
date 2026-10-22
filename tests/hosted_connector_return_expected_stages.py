@@ -55,6 +55,8 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/footprint-alias-peer-metadata-control",
     "connector-return-fixture/footprint-alias-peer-missing-metadata-fault",
     "connector-return-fixture/footprint-alias-peer-missing-metadata-control",
+    "connector-return-fixture/footprint-alias-peer-missing-metadata-open-fault",
+    "connector-return-fixture/footprint-alias-peer-missing-metadata-open-control",
     "connector-return-fixture/footprint-alias-part-id-peer-missing-metadata-fault",
     "connector-return-fixture/footprint-alias-part-id-peer-missing-metadata-control",
     "connector-return-fixture/footprint-alias-named-power-input-divergence-fault",

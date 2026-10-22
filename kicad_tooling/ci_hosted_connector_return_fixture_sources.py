@@ -104,6 +104,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "connector-footprint-peer-missing-metadata-native/fault.kicad_sch",
         "footprint-alias-peer-missing-metadata-control": fixture_root
         / "connector-footprint-peer-missing-metadata-native/control.kicad_sch",
+        "footprint-alias-peer-missing-metadata-open-fault": fixture_root
+        / "connector-footprint-peer-missing-metadata-open-native/fault.kicad_sch",
+        "footprint-alias-peer-missing-metadata-open-control": fixture_root
+        / "connector-footprint-peer-missing-metadata-open-native/control.kicad_sch",
         "footprint-alias-part-id-peer-missing-metadata-fault": fixture_root
         / "connector-part-id-peer-missing-metadata-native/fault.kicad_sch",
         "footprint-alias-part-id-peer-missing-metadata-control": fixture_root
@@ -274,6 +278,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "footprint-alias-peer-metadata-control": "1377db1444bf8c1c15bbde73358fe81e36c11581869ea5f31f2082464e97f45e",
     "footprint-alias-peer-missing-metadata-fault": "7265e062e47c5b1d06a30f40c94cfd23d14cc5f07ff51799ef0afefb21ab2c21",
     "footprint-alias-peer-missing-metadata-control": "407e25454fabe943a4f2b9ad5fd58c8d8af48b836cef20258b32d216902db923",
+    "footprint-alias-peer-missing-metadata-open-fault": "ac23a42151b013689a6c90c66ba36da980f9798c670a553ab90983efb413e73e",
+    "footprint-alias-peer-missing-metadata-open-control": "ea9380576e3dd2aaa3710935c28c7b38b14399a5954ecc939d1538dd1722d0f0",
     "footprint-alias-part-id-peer-missing-metadata-fault": "5684bcf7293542cbc8bf2b05e68a3a7c9f6d0db6f0b7aaac0590721f1b58907b",
     "footprint-alias-part-id-peer-missing-metadata-control": "880e000dc1646fe5a8a4183b60ac36150d6e965e9dd7b8055ac286e0a0e1f75c",
     "footprint-alias-named-power-input-divergence-fault": "d4dfd83d6e8c9859411e613b6f9313ae65efd25c33056541bf35b0e484b70aea",

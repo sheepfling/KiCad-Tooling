@@ -394,7 +394,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 147 rules are implemented with synthetic regression coverage.
+The following 148 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -418,6 +418,7 @@ skipped under prerelease policy.
 - `connector.footprint_peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_metadata_assignment_divergence`
 - `connector.footprint_peer_pin_missing_metadata_assignment_divergence`
+- `connector.footprint_peer_pin_missing_metadata_open_outlier`
 - `connector.footprint_peer_pin_open_outlier`
 - `connector.footprint_named_power_input_open_outlier`
 - `connector.footprint_named_signal_input_open_outlier`
@@ -2730,7 +2731,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 147 active rules; CI requires every new
+- **Status:** Baseline complete for all 148 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2739,7 +2740,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 147 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 148 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
 - **Cohort input:** The public
@@ -8907,6 +8908,45 @@ is not a reason by itself to expand its scope or change its default policy.
   python -I -m pytest tests -m 'design_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_missing_metadata_assignment_divergence")'
   ```
 
+#### LINT-166 — Review open connector peers when pin metadata is missing
+
+- **Status:** Implemented as the default-review rule
+  `connector.footprint_peer_pin_missing_metadata_open_outlier`.
+- **Gap:** The complete-metadata peer scan reports open pins only when function
+  and electrical-type metadata match across all peers. The missing-metadata
+  rule covered split assignments but left the corresponding partial-open case
+  without a pin-specific candidate.
+- **Predicate:** Group fitted connector candidates with distinct symbols,
+  matching nonempty value and footprint clues, complete identical pin
+  inventories, and either absent PART_ID on every peer or one matching
+  nonempty PART_ID. In each current peer-assignment scope, require missing,
+  blank, or KiCad unnamed (`~`) metadata on at least one peer, agreement among
+  all available function and electrical-type values, at least one exact
+  single-net assignment, and at least one open peer. All assigned peers must
+  use the same exact net. A separate pin in the same scope must have one exact
+  common net assignment.
+- **Policy boundary:** The candidate defaults to REVIEW. Similar symbols,
+  metadata, assignments, and an anchor do not prove the pin roles match or that
+  the open pin should connect. Project policy can retain REVIEW, disable the
+  rule, block on it, or exact-fingerprint-ignore a finding. Project-authored
+  pinout and connectivity contracts remain authoritative. The heuristic does
+  not establish PCB copper or off-board continuity.
+- **Evidence:** Tooling-owned fault and common-net control tests cover the
+  missing-function case, same-role metadata, conflicting available metadata,
+  missing anchor, common target, all-open target, ambiguity, incomplete pin
+  inventory, DNP exclusion, source-matched peer scopes, deterministic output,
+  policy overrides, exact ignores, and CLI/MCP parity. Separate source-hashed
+  native schematics exercise an explicit no-connect fault and common-net
+  control on KiCad 10.0.0 and 10.0.5; both version-parameterized tests passed
+  locally on 2026-10-22. The fixtures contain no product source or cohort
+  fixture. Reviewer precision and field value remain unmeasured.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_connector_footprint_peer_missing_metadata_open.py \
+    -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_missing_metadata_open_outlier")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -11917,7 +11957,7 @@ is not a reason by itself to expand its scope or change its default policy.
   [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 147 active rules. Each entry has a deterministic predicate, evidence
+contains 148 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin

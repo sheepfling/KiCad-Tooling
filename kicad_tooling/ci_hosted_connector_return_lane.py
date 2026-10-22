@@ -51,6 +51,9 @@ from .ci_hosted_connector_return_offboard import verify_offboard_connector_inter
 from .ci_hosted_connector_return_peer_metadata_divergence import (
     verify_footprint_alias_peer_metadata_divergence,
 )
+from .ci_hosted_connector_return_peer_missing_metadata_open import (
+    verify_footprint_alias_peer_missing_metadata_open_outlier,
+)
 from .ci_hosted_connector_return_peer_outliers import verify_peer_pin_outlier_cases
 from .ci_hosted_connector_return_peer_pins import verify_peer_pin_assignments
 from .ci_hosted_connector_return_peer_power import verify_peer_power_inputs
@@ -94,6 +97,9 @@ def connector_return_lint_fixture_lane(
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_passive_open(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_passive_divergence(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_metadata_divergence(context))
+    peer_pin_coverage_receipts.update(
+        verify_footprint_alias_peer_missing_metadata_open_outlier(context)
+    )
     peer_pin_coverage_receipts.update(verify_footprint_alias_named_power_output_divergence(context))
     peer_pin_coverage_receipts.update(verify_footprint_alias_peer_all_open(context))
     verify_offboard_connector_interfaces(context)

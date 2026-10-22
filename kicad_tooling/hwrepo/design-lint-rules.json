@@ -353,6 +353,52 @@
       ]
     },
     {
+      "rule_id": "connector.footprint_peer_pin_missing_metadata_open_outlier",
+      "title": "Connector peer pin is open while role metadata is missing",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector candidates with distinct native symbols, require matching nonempty case-folded value and footprint clues, a complete identical pin inventory, and either absent PART_ID on every peer or one exact case-folded PART_ID. For a target pin in each current peer-assignment scope, require missing, blank, or KiCad unnamed (~) function or electrical-type metadata on at least one peer; all available function and electrical-type values must agree case-insensitively. Require at least one exact single-net assignment and at least one unassigned peer, with every assigned peer using the same exact net. Emit a default REVIEW candidate only when a separate pin in that same scope has one exact common assigned net. Source-matched peer_assignment_group values scope comparisons when every participating peer has a current group; otherwise compare the unscoped group.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching symbol identities, value, footprint, complete pin inventory, metadata, and a common anchor are similarity clues; they do not prove interchangeable connector roles or a required connection.",
+        "The target pin must have at least one exact single-net assignment and at least one unassigned peer. Ambiguous assignments, all-open assignments, and assigned peers split across different exact nets do not produce a finding.",
+        "Missing metadata may be intentional. The rule prompts review of exact symbol pinouts and project-authored requirements; it does not direct net joining, establish PCB copper continuity, or prove off-board wiring.",
+        "All available native function and electrical-type values on the target pin must agree case-insensitively. Different known metadata remains outside this predicate; missing metadata is not treated as proof that peer roles match.",
+        "A separate pin in the same peer scope must have one exact common assigned net. This reduces unrelated-port prompts but misses open peers without an anchor. DNP instances, incomplete inventories, mismatched PART_ID groups, and cross-scope-only comparisons are excluded."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_footprint_peer_missing_metadata_open.test_missing_metadata_open_peer_pin_is_reviewed",
+        "tests.test_connector_footprint_peer_missing_metadata_open.test_missing_metadata_open_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_peer_missing_metadata_open_native_fixture_lane.test_native_open_metadata_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_footprint_peer_missing_metadata_open.test_open_metadata_controls_require_matching_assignment_and_anchor",
+        "tests.test_connector_footprint_peer_missing_metadata_open.test_missing_metadata_open_review_matches_cli_and_mcp",
+        "tests.test_connector_footprint_peer_missing_metadata_open_native_fixture_lane.test_native_open_metadata_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_footprint_peer_missing_metadata_open.test_open_metadata_finding_is_stable_under_mapping_order",
+        "tests.test_connector_footprint_peer_missing_metadata_open.test_missing_metadata_open_review_matches_cli_and_mcp"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_peer_missing_metadata_open.py#connector_footprint_peer_pin_missing_metadata_open_outliers",
+        "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#connector_footprint_peer_candidate_groups",
+        "kicad_tooling/hwrepo/connector_identity.py#native_pin_metadata_is_missing",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_peer_missing_metadata_open.py#connector_footprint_peer_pin_missing_metadata_open_outliers",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "connector.footprint_peer_pin_open_outlier",
       "title": "Generic pin is open on a footprint-similar connector peer",
       "status": "active",
