@@ -2565,15 +2565,20 @@
         "The review does not determine the correct net, prove schematic intent, establish PCB copper continuity, or verify an off-board or physical connection."
       ],
       "fault_fixtures": [
-        "tests.test_connector_mapped_interface_signal_unassigned.test_open_generic_mapped_signal_pin_requests_review_with_source_evidence"
+        "tests.test_connector_mapped_interface_signal_unassigned.test_open_generic_mapped_signal_pin_requests_review_with_source_evidence",
+        "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_connected_documented_open_and_ineligible_pins_are_controls",
         "tests.test_connector_mapped_interface_signal_unassigned.test_source_mismatched_or_digestless_coverage_cannot_trigger_review",
-        "tests.test_connector_mapped_interface_signal_unassigned.test_review_obeys_project_policy_and_exact_ignore"
+        "tests.test_connector_mapped_interface_signal_unassigned.test_review_obeys_project_policy_and_exact_ignore",
+        "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_review_is_stable_under_input_order_and_clears_when_connected"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_signal_pins",

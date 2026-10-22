@@ -222,6 +222,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "generic-component-peer-pin-assignment-outlier/fault.kicad_sch",
         "component-peer-assignment-outlier-control": fixture_root
         / "generic-component-peer-pin-assignment-outlier/control.kicad_sch",
+        "mapped-interface-signal-unassigned-fault": fixture_root
+        / "mapped-interface-signal-native/fault.kicad_sch",
+        "mapped-interface-signal-unassigned-control": fixture_root
+        / "mapped-interface-signal-native/control.kicad_sch",
     }
 
 
@@ -341,4 +345,6 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "connector-named-power-output-divergent-fault": "915340d72ad323d01266b90948d8a42fb55bd0879ceb74cea9b71a667f5a649a",
     "component-peer-assignment-outlier-fault": "2235639e107cfe4b060c052069c5c2bbc2a48dbef40c2bb22c8219ad6f19e7ba",
     "component-peer-assignment-outlier-control": "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
+    "mapped-interface-signal-unassigned-fault": "8d7cad1a7b1b0579890e0e2ad06af3b18f192f2a0ecf9260ebc3cae78c8c0554",
+    "mapped-interface-signal-unassigned-control": "634af7ee73a4cdbcc1a52967df2f08a0ca68b1a3100a8e13fef34225ef2eb6e1",
 }

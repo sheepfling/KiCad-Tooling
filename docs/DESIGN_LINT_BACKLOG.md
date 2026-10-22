@@ -9044,15 +9044,22 @@ is not a reason by itself to expand its scope or change its default policy.
   DNP, non-signal roles, typed power pins, and source-mismatched or digestless
   coverage. Metamorphic coverage checks ordering stability and that assigning
   the contact clears the finding.
-  Policy tests cover REVIEW, block, off, and exact-ignore behavior. No customer
-  or proprietary board source is used. Exact native fixture coverage and
-  reviewer precision remain unmeasured.
+  Policy tests cover REVIEW, block, off, and exact-ignore behavior. Tooling-owned
+  native fault/control schematics now cover a generic open signal contact and
+  its correctly assigned UART control with digest-pinned KiCad 10.0.0 and
+  10.0.5 test lanes. The hosted exact-native run has not yet been recorded.
+  No customer or proprietary board source is used; reviewer precision remains
+  unmeasured.
 - **Focused selection:**
 
   ```sh
-  python -I -m pytest tests/test_connector_mapped_interface_signal_unassigned.py \
-    -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
+  python -I -m pytest \
+    -m 'design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")' \
+    tests/test_connector_mapped_interface_signal_unassigned.py
   ```
+
+  Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to include the two exact-version
+  fault/control exports in package acceptance.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
