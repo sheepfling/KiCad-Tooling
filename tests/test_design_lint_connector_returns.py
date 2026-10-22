@@ -203,6 +203,31 @@ def test_return_functions_across_connector_symbols_need_review() -> None:
     assert "common, bonded, or intentionally isolated" in returns[0].message
 
 
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_explicit_return_roles_review_split_neutral_net_names() -> None:
+    observed = cross_symbol_returns().model_copy(
+        update={
+            "nets": {
+                "NET_A": ("J1.4",),
+                "NET_B": ("J2.7",),
+                "NET_C": ("J3.5",),
+            }
+        }
+    )
+
+    report = _lint(observed)
+    finding = next(
+        item for item in report.findings if item.rule_id == "connector.repeated_pin_function"
+    )
+
+    assert report.status == "REVIEW"
+    assert finding.evidence == {"J1.4": ("NET_A",), "J2.7": ("NET_B",)}
+    assert "common, bonded, or intentionally isolated" in finding.message
+    assert not any(
+        item.rule_id == "net.return_labels_without_pin_roles" for item in report.findings
+    )
+
+
 def test_cross_connector_return_order_preserves_finding_and_commoning_clears_it() -> None:
     separate = cross_symbol_returns()
     reordered = separate.model_copy(

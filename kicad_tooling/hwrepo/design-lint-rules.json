@@ -28,6 +28,7 @@
         "tests.test_verify_design_lint.test_empty_connectivity_expectations_still_raise_native_connector_review",
         "tests.test_design_lint_connector_returns.test_return_pin_disagreement_within_one_connector_needs_review",
         "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",
+        "tests.test_design_lint_connector_returns.test_explicit_return_roles_review_split_neutral_net_names",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_connector_peer_pin_coverage.test_split_meaningful_returns_are_reported_and_counted",
         "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
