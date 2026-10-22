@@ -1070,7 +1070,9 @@ and optional ecosystem adapters are `P3`.
   reviewer aid only; it does not change the predicate or infer physical fit,
   component conduction, a required bond, or PCB continuity. Synthetic cases
   cover DNP metadata present and absent, stable ordering, common-reference
-  control, and CLI/MCP parity.
+  control, and CLI/MCP parity. A direct SuperSpeed fault/control regression
+  verifies the same reference-component evidence on the second supported path
+  family.
 
   A new Tooling-authored synthetic native case covers a two-port USB isolator
   with separate host and device reference domains. It expects no peer-reference

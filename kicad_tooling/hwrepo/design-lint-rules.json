@@ -4762,6 +4762,7 @@
         "tests.test_usb_peer_reference_coverage.test_three_port_hub_reports_each_split_reference_and_quiets_common_control",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_pairing_rejects_crossed_and_incomplete_channels",
         "tests.test_usb_peer_reference_superspeed.test_split_reference_direct_superspeed_pair_emits_review_and_family_evidence",
+        "tests.test_usb_peer_reference_superspeed.test_reference_net_component_evidence_covers_superspeed_review",
         "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_map_reports_mismatch_and_keeps_review",
         "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_pin_net_or_identity_map_is_reported",
         "tests.test_usb_peer_reference_superspeed.test_stale_superspeed_reference_pin_map_is_reported",

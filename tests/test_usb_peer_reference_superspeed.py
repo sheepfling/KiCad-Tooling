@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from kicad_tooling.hwrepo.design_lint import text_report
-from kicad_tooling.hwrepo.models import DesignLintRuleOverride
+from kicad_tooling.hwrepo.models import ComponentContract, DesignLintRuleOverride
 from kicad_tooling.hwrepo.reference_bond_models import ReferenceBondRequirement
 from kicad_tooling.hwrepo.usb_peer_reference_review import usb_peer_reference_reviews
 from kicad_tooling.hwrepo.usb_superspeed_reference_models import (
@@ -51,6 +51,61 @@ def test_split_reference_direct_superspeed_pair_emits_review_and_family_evidence
     assert coverage.supported_connector_group_count == 1
     assert coverage.supported_phy_group_count == 1
     assert coverage.separate_reference_path_count == 1
+
+
+def test_reference_net_component_evidence_covers_superspeed_review() -> None:
+    base = superspeed_peer_netlist()
+    observed = base.model_copy(
+        update={
+            "components": {
+                **base.components,
+                "JP1": ComponentContract(value="0R", footprint="Synthetic:SJ2"),
+            },
+            "nets": {
+                **base.nets,
+                "USB_GND": ("J1.3", "JP1.1"),
+                "BOARD_GND": ("U1.3", "JP1.2"),
+            },
+            "component_symbols": {
+                **base.component_symbols,
+                "JP1": "Jumper:SolderJumper_2_Open",
+            },
+            "pin_functions": {
+                **base.pin_functions,
+                "JP1.1": "PAD_A",
+                "JP1.2": "PAD_B",
+            },
+            "pin_electrical_types": {
+                **base.pin_electrical_types,
+                "JP1.1": "passive",
+                "JP1.2": "passive",
+            },
+            "component_pin_numbers": {
+                **base.component_pin_numbers,
+                "JP1": ("1", "2"),
+            },
+        }
+    )
+
+    report = lint_report(observed)
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+    assert report.status == "REVIEW"
+    expected_observation = (
+        "JP1: Jumper:SolderJumper_2_Open; value=0R; footprint=Synthetic:SJ2; "
+        "DNP metadata=not listed; exact normalized schematic-netlist pin assignments: "
+        "JP1.1 (function=PAD_A, type=passive)=USB_GND; "
+        "JP1.2 (function=PAD_B, type=passive)=BOARD_GND"
+    )
+    assert finding.evidence["USB_components_with_pins_on_both_reference_nets"] == (
+        expected_observation,
+    )
+
+    commoned_nets = {
+        name: pins for name, pins in observed.nets.items() if name not in {"USB_GND", "BOARD_GND"}
+    }
+    commoned_nets["BOARD_GND"] = ("J1.3", "U1.3", "JP1.1", "JP1.2")
+    commoned = observed.model_copy(update={"nets": commoned_nets})
+    assert RULE_ID not in {item.rule_id for item in lint_report(commoned).findings}
 
 
 def test_unspecified_vss_phy_return_type_is_supported_for_superspeed_review() -> None:
