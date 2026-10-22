@@ -8,6 +8,7 @@ import pytest
 
 from kicad_tooling.hwrepo import (
     component_peer_pin_models,
+    connector_part_id_peer_models,
     connector_peer_pin_models,
     design_lint_peer_candidates,
     digital_peer_voltage_models,
@@ -35,10 +36,8 @@ pytestmark = [
 
 INTERFACE_COVERAGE_MODEL_OWNERS = {
     "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
-    "connector_peer_pin_models.py": (
-        "ConnectorPartIdPeerPinCoverage",
-        "ConnectorPeerPinHeuristicCoverage",
-    ),
+    "connector_peer_pin_models.py": ("ConnectorPeerPinHeuristicCoverage",),
+    "connector_part_id_peer_models.py": ("ConnectorPartIdPeerPinCoverage",),
     "digital_peer_voltage_models.py": ("DigitalPeerVoltageRuleCoverage",),
     "serial_peer_reference_models.py": (
         "SerialPeerReferenceLinkCoverageEntry",
@@ -131,6 +130,7 @@ def test_interface_coverage_models_live_in_theme_owners() -> None:
     owners = {
         "component_peer_pin_models.py": component_peer_pin_models,
         "connector_peer_pin_models.py": connector_peer_pin_models,
+        "connector_part_id_peer_models.py": connector_part_id_peer_models,
         "digital_peer_voltage_models.py": digital_peer_voltage_models,
         "serial_peer_reference_models.py": serial_peer_reference_models,
         "usb_peer_reference_models.py": usb_peer_reference_models,

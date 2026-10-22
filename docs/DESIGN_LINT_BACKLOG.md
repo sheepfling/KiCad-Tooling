@@ -2383,6 +2383,23 @@ is not a reason by itself to expand its scope or change its default policy.
   coverage. A synthetic CLI/MCP case confirms a mismatched shared-`PART_ID`
   value is reported as incomplete identity coverage without creating an
   electrical finding or changing `PASS` status.
+- **PART_ID connector coverage correction (2026-10-22):** The guarded
+  cross-symbol connector scan now records incomplete pin metadata separately
+  from complete but differing functions or electrical types. Missing, blank,
+  and KiCad `~` metadata remain `INCOMPLETE_EVIDENCE`; complete differing
+  metadata reports `PARTIALLY_EVALUATED`, including when no peer group is
+  comparable. These groups still do not emit an electrical finding or imply
+  that pins should share a net. The report schema advances to version 6.
+  Synthetic cases cover missing identity, inventory, function metadata,
+  unnamed electrical type, and complete metadata mismatches. The focused
+  selection uses:
+
+  ```sh
+  python -I -m pytest tests/test_connector_part_id_peer_coverage.py \
+    -m 'design_lint and connector_lint'
+  ```
+
+  No proprietary project source is used.
 - **LINT-117 coverage follow-up (2026-10-12):** The generic power-input peer
   comparison now shares the source-bound component-peer scan and coverage
   report. Its entry explains absent comparable peers, incomplete native pin

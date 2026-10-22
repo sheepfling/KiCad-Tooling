@@ -67,7 +67,7 @@ def test_mismatched_pin_metadata_with_split_assignment_is_reviewed() -> None:
     assert finding.evidence["common_anchor_pin_numbers"] == ("1",)
     assert "does not infer that the nets should connect" in finding.message
 
-    assert report.schema_version == "5"
+    assert report.schema_version == "6"
     coverage = report.connector_peer_pin_coverage
     assert coverage is not None
     alias = coverage.footprint_alias_coverage

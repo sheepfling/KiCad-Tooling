@@ -25,9 +25,9 @@ INTERFACE_COVERAGE_MODEL_OWNERS = {
     "component_peer_pin_models.py": ("ComponentPeerPinRuleCoverage",),
     "connector_peer_pin_models.py": (
         "ConnectorFootprintPeerPinCoverage",
-        "ConnectorPartIdPeerPinCoverage",
         "ConnectorPeerPinHeuristicCoverage",
     ),
+    "connector_part_id_peer_models.py": ("ConnectorPartIdPeerPinCoverage",),
     "digital_peer_voltage_models.py": ("DigitalPeerVoltageRuleCoverage",),
     "serial_peer_reference_models.py": (
         "SerialPeerReferenceLinkCoverageEntry",
@@ -56,16 +56,15 @@ PEER_COVERAGE_SERVICES = (
     "serial_peer_reference_coverage.py",
     "usb_peer_reference_coverage.py",
     "connector_footprint_peer_coverage.py",
+    "connector_part_id_peer_models.py",
 )
 
 
 def test_internal_interface_coverage_services_import_theme_owners() -> None:
     expected_by_service = {
         "connector_peer_pin_coverage.py": {
-            "connector_peer_pin_models": {
-                "ConnectorPartIdPeerPinCoverage",
-                "ConnectorPeerPinHeuristicCoverage",
-            }
+            "connector_part_id_peer_models": {"ConnectorPartIdPeerPinCoverage"},
+            "connector_peer_pin_models": {"ConnectorPeerPinHeuristicCoverage"},
         },
         "connector_footprint_peer_coverage.py": {
             "connector_peer_pin_models": {"ConnectorFootprintPeerPinCoverage"},

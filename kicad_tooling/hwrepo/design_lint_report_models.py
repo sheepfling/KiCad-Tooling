@@ -57,7 +57,7 @@ from .usb_peer_reference_models import UsbPeerReferenceCoverageReport
 class DesignLintReport(StrictModel):
     """Source-bound heuristic findings; neither a pinout nor electrical approval."""
 
-    schema_version: Literal["1", "2", "3", "4", "5"] = "5"
+    schema_version: Literal["1", "2", "3", "4", "5", "6"] = "6"
     lane: Literal["DESIGN_LINT"] = "DESIGN_LINT"
     status: Literal["PASS", "REVIEW", "FAIL", "BLOCKED"]
     project_id: Identifier

@@ -8,6 +8,7 @@ import pytest
 
 from kicad_tooling.hwrepo import (
     connector_coverage_models,
+    connector_part_id_peer_models,
     connector_peer_pin_models,
     design_lint_policy_models,
     pcb_touch_pad_clearance_models,
@@ -35,10 +36,13 @@ MODEL_OWNERS = {
     "connector_peer_pin_models.py": (
         connector_peer_pin_models,
         (
-            "ConnectorPartIdPeerPinCoverage",
             "ConnectorPeerPinHeuristicCoverage",
             "SimilarConnectorPinGroup",
         ),
+    ),
+    "connector_part_id_peer_models.py": (
+        connector_part_id_peer_models,
+        ("ConnectorPartIdPeerPinCoverage",),
     ),
     "power_rail_models.py": (power_rail_models, ("NumberedPowerRailGroup",)),
     "design_lint_policy_models.py": (
@@ -168,6 +172,10 @@ def test_connector_peer_pin_role_has_theme_owner_and_compatible_export() -> None
     assert set(CONNECTOR_PEER_PIN_TYPES) <= _top_level_assignment_names(owner_path)
     for name in CONNECTOR_PEER_PIN_TYPES:
         assert getattr(compatibility_models, name) is getattr(connector_peer_pin_models, name)
+    assert (
+        connector_peer_pin_models.ConnectorPartIdPeerPinCoverage
+        is connector_part_id_peer_models.ConnectorPartIdPeerPinCoverage
+    )
 
 
 def test_internal_services_import_lint_models_from_their_theme_owners() -> None:

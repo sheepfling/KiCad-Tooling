@@ -330,9 +330,10 @@ The first rules are:
   eligible groups, and compared pin groups. Its status distinguishes no
   candidate connectors, candidates that are all DNP, no comparable peers, no
   comparable pin groups, incomplete pin inventories, and evaluated groups. A
-  quiet evaluated result shows which bounded peer comparisons ran; it does not
-  prove that matching pins must share a net or that every physical connector
-  was identified.
+  PART_ID alias summary separates missing or unnamed pin metadata from complete
+  but differing function or electrical-type metadata. A quiet evaluated result
+  shows which bounded peer comparisons ran; it does not prove that matching
+  pins must share a net or that every physical connector was identified.
 - `component.repeated_supply_pin_function` flags recognized matching supply
   functions on one fitted non-connector component when assigned pins use
   different or ambiguous schematic nets. It asks whether the split is

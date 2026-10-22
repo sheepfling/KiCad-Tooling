@@ -6,7 +6,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
-from .connector_identity import connector_candidate_references, partition_peer_assignments
+from .connector_identity import (
+    connector_candidate_references,
+    native_pin_metadata_is_missing,
+    partition_peer_assignments,
+)
 from .models import NetlistContract
 
 
@@ -54,6 +58,7 @@ class ConnectorPartIdPeerPinScan:
     incomplete_component_identity_group_count: int
     incomplete_pin_inventory_group_count: int
     incomplete_pin_metadata_group_count: int
+    differing_pin_metadata_group_count: int
     eligible_peer_group_count: int
     incomplete_pin_inventory_references: tuple[str, ...]
     pin_groups: tuple[ConnectorPartIdPeerPinGroup, ...]
@@ -137,6 +142,7 @@ def scan_connector_part_id_peer_pins(
     incomplete_identity_count = 0
     incomplete_inventory_count = 0
     incomplete_metadata_count = 0
+    differing_metadata_count = 0
     eligible_peer_group_count = 0
     incomplete_inventory_references: set[str] = set()
     pin_groups: list[ConnectorPartIdPeerPinGroup] = []
@@ -188,7 +194,8 @@ def scan_connector_part_id_peer_pins(
             for reference in peers
         }
         pin_metadata: dict[str, tuple[str, str]] = {}
-        metadata_invalid = False
+        metadata_missing = False
+        metadata_differs = False
         for pin_number in pin_numbers:
             functions: list[str] = []
             electrical_types: list[str] = []
@@ -198,24 +205,30 @@ def scan_connector_part_id_peer_pins(
                 electrical_type = pin_types.get(pin.casefold())
                 if (
                     function is None
-                    or not function.strip()
+                    or native_pin_metadata_is_missing(function)
                     or electrical_type is None
-                    or not electrical_type.strip()
+                    or native_pin_metadata_is_missing(electrical_type)
                 ):
-                    metadata_invalid = True
+                    metadata_missing = True
                     continue
                 functions.append(function)
                 electrical_types.append(electrical_type)
-            if (
-                len({function.strip().casefold() for function in functions}) != 1
-                or len({electrical_type.strip().casefold() for electrical_type in electrical_types})
-                != 1
-            ):
-                metadata_invalid = True
-            if functions and electrical_types:
-                pin_metadata[pin_number] = (functions[0], electrical_types[0])
-        if metadata_invalid:
+            if len(functions) == len(peers) and len(electrical_types) == len(peers):
+                if (
+                    len({function.strip().casefold() for function in functions}) != 1
+                    or len(
+                        {electrical_type.strip().casefold() for electrical_type in electrical_types}
+                    )
+                    != 1
+                ):
+                    metadata_differs = True
+                else:
+                    pin_metadata[pin_number] = (functions[0], electrical_types[0])
+        if metadata_missing:
             incomplete_metadata_count += 1
+            continue
+        if metadata_differs:
+            differing_metadata_count += 1
             continue
 
         eligible_peer_group_count += 1
@@ -266,6 +279,7 @@ def scan_connector_part_id_peer_pins(
         incomplete_component_identity_group_count=incomplete_identity_count,
         incomplete_pin_inventory_group_count=incomplete_inventory_count,
         incomplete_pin_metadata_group_count=incomplete_metadata_count,
+        differing_pin_metadata_group_count=differing_metadata_count,
         eligible_peer_group_count=eligible_peer_group_count,
         incomplete_pin_inventory_references=tuple(
             sorted(incomplete_inventory_references, key=lambda item: (item.casefold(), item))

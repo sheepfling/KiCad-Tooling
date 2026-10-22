@@ -32,10 +32,8 @@ from .connector_identity import (
     partition_peer_assignments,
     similar_connector_pin_groups,
 )
-from .connector_peer_pin_models import (
-    ConnectorPartIdPeerPinCoverage,
-    ConnectorPeerPinHeuristicCoverage,
-)
+from .connector_part_id_peer_models import ConnectorPartIdPeerPinCoverage
+from .connector_peer_pin_models import ConnectorPeerPinHeuristicCoverage
 from .connector_peer_pin_scan import (
     scan_connector_part_id_peer_pins,
 )
@@ -259,6 +257,9 @@ def connector_peer_pin_heuristic_coverage(
         if part_id_scan.candidate_group_count == 0
         else "INCOMPLETE_EVIDENCE"
         if part_id_scan.eligible_peer_group_count == 0
+        and part_id_scan.differing_pin_metadata_group_count == 0
+        else "PARTIALLY_EVALUATED"
+        if part_id_scan.differing_pin_metadata_group_count > 0
         else "NO_COMPARABLE_PIN_GROUPS"
         if not part_id_scan.pin_groups
         else "PARTIALLY_EVALUATED"
@@ -274,6 +275,7 @@ def connector_peer_pin_heuristic_coverage(
         ),
         incomplete_pin_inventory_group_count=part_id_scan.incomplete_pin_inventory_group_count,
         incomplete_pin_metadata_group_count=part_id_scan.incomplete_pin_metadata_group_count,
+        differing_pin_metadata_group_count=part_id_scan.differing_pin_metadata_group_count,
         eligible_peer_group_count=part_id_scan.eligible_peer_group_count,
         incomplete_pin_inventory_references=part_id_scan.incomplete_pin_inventory_references,
         compared_pin_group_count=len(part_id_scan.pin_groups),
