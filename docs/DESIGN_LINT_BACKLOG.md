@@ -9050,8 +9050,15 @@ is not a reason by itself to expand its scope or change its default policy.
   10.0.5 test lanes. A synthetic CLI/MCP parity regression also confirms both
   surfaces emit the same REVIEW finding with the current interface-catalog
   digest and clear the rule when the signal pin is assigned. The hosted
-  exact-native run has not yet been recorded. No customer or proprietary board
-  source is used; reviewer precision remains unmeasured.
+  scoped acceptance on commit `6c4dc8a` passed the exact-native fault/control
+  tests for KiCad 10.0.0 and 10.0.5. The overall workflow stopped later at the
+  documentation reachability check; the fixture-note link below fixes that.
+  No customer or proprietary board source is used; reviewer precision remains
+  unmeasured.
+  The [native fixture note][mapped-signal-fixture] records source hashes and
+  the exact KiCad invocation.
+
+  [mapped-signal-fixture]: ../tests/fixtures/design_lint/mapped-interface-signal-native/README.md
 - **Focused selection:**
 
   ```sh
