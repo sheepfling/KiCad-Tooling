@@ -138,6 +138,13 @@ def test_open_metadata_controls_require_partial_assignment_and_anchor(
     )
 
     assert not any(item.rule_id == RULE_ID for item in report.findings)
+    if kwargs.get("anchor_assignments") == ("ANCHOR_A", "ANCHOR_B"):
+        coverage = report.connector_peer_pin_coverage
+        assert coverage is not None
+        alias = coverage.footprint_alias_coverage
+        assert alias.status == "PARTIALLY_EVALUATED"
+        assert alias.differing_pin_metadata_group_count == 1
+        assert alias.eligible_peer_group_count == 0
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

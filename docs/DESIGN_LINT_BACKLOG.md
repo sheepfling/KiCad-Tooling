@@ -9003,6 +9003,11 @@ is not a reason by itself to expand its scope or change its default policy.
   metadata or suppress the distinction between partial evaluation and absent
   evidence. The report schema advances to version 5; synthetic and exact-native
   fault cases assert the separate counts.
+- **No-anchor coverage control (2026-10-22):** The synthetic case with known
+  differing roles, a partially open target pin, and no common assigned anchor
+  emits no LINT-167 finding and reports `PARTIALLY_EVALUATED`, one differing
+  metadata group, and zero eligible matching-metadata groups. The no-finding
+  result therefore remains distinguishable from a completed clean comparison.
 - **Focused selection:**
 
   ```sh
