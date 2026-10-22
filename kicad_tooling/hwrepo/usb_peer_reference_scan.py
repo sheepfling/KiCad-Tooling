@@ -20,6 +20,7 @@ from .usb_peer_inline_path_analysis import mapped_inline_usb_data_link
 from .usb_peer_path_analysis import usb_data_link, usb_superspeed_direct_data_link
 from .usb_peer_protection_shunt_analysis import mapped_protection_shunt_usb_data_link
 from .usb_peer_reference_decision import usb_peer_reference_disposition
+from .usb_peer_reference_evidence import usb_reference_net_component_observations
 from .usb_peer_reference_types import (
     UsbPeerEndpointGroupCoverage,
     UsbPeerReferenceCoverage,
@@ -260,6 +261,13 @@ def scan_usb_peer_reference_reviews(
                     connector_reference_pins=connector.reference_pins,
                     phy_reference_pins=phy.reference_pins,
                     data_link=data_link,
+                    reference_component_observations=usb_reference_net_component_observations(
+                        observed,
+                        connector.reference,
+                        phy.reference,
+                        connector.reference_net,
+                        phy.reference_net,
+                    ),
                 )
             )
     reviews = tuple(

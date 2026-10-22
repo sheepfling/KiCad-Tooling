@@ -6,7 +6,29 @@ import hashlib
 
 from .design_lint_types import Candidate
 from .usb_data_path_models import UsbDataPathMap
-from .usb_peer_reference_types import UsbPeerReferenceScan
+from .usb_peer_reference_types import (
+    UsbPeerReferenceComponentObservation,
+    UsbPeerReferenceScan,
+)
+
+
+def _reference_component_observation(
+    component: UsbPeerReferenceComponentObservation,
+) -> str:
+    symbol = component.symbol or "symbol metadata unavailable"
+    value = component.value or "value metadata unavailable"
+    footprint = component.footprint or "footprint metadata unavailable"
+    dnp_state = "listed" if component.dnp_metadata_listed else "not listed"
+    assignments = "; ".join(
+        f"{pin.pin} (function={pin.function or 'unavailable'}, "
+        f"type={pin.electrical_type or 'unavailable'})={pin.net}"
+        for pin in component.pin_assignments
+    )
+    return (
+        f"{component.reference}: {symbol}; value={value}; footprint={footprint}; "
+        f"DNP metadata={dnp_state}; exact normalized schematic-netlist pin assignments: "
+        f"{assignments}"
+    )
 
 
 def _reference_policy_state(
@@ -121,6 +143,18 @@ def usb_peer_reference_candidates(
                     usb_data_path_map,
                     peer.data_link.connector_signal_family,
                 ),
+            ),
+            "USB_components_with_pins_on_both_reference_nets": (
+                tuple(
+                    _reference_component_observation(item)
+                    for item in peer.reference_component_observations
+                )
+                or (
+                    (
+                        "No non-endpoint component has uniquely assigned pins on both endpoint "
+                        "reference nets in the normalized schematic netlist."
+                    ),
+                )
             ),
         }
         if is_superspeed:

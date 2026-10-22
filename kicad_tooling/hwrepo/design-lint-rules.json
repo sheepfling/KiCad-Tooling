@@ -4739,6 +4739,7 @@
       ],
       "limitations": [
         "Separate reference nets can be intentional, joined elsewhere, or linked by a designed bond; the finding asks for review and does not declare that they must be common.",
+        "For an unmapped split-reference review, evidence may list non-endpoint components with uniquely assigned native netlist pins on both endpoint reference nets. This is an observation only: symbol, value, footprint, and DNP metadata do not establish component conduction, physical fit, intended bonding, or PCB continuity.",
         "USB 2.0 coverage includes direct paths, paths through exactly one complete fitted two-pin Device:R per line, paths through one complete inline component with a current exact project map, or direct paths with exact project-mapped multi-pin protection shunts. USB SuperSpeed coverage is limited to one distinct P/N pair family per endpoint, a direct unbranched connector-TX-to-PHY-RX or connector-RX-to-PHY-TX path, and exact two-pin membership on each data net. A matching superspeed_interfaces entry can record an exact common_net, separate_nets, or bonded reference decision; it does not prove bond conduction or PCB copper continuity. A stale or absent map leaves the separate-reference path as REVIEW. Lane-indexed USB-C pairs, muxes, retimers, other multi-lane or multi-hop paths, series components, shunts, arbitrary signal-net peers, incomplete or ambiguous metadata, mixed reference domains, and DNP endpoints are skipped.",
         "When one unmapped multi-pin component has native pins on both distinct connector-side and PHY-side nets for both USB 2.0 data lines, coverage lists the exact endpoint, component, pin, and net evidence as an unsupported-topology candidate. This candidate does not establish pass-through behavior, count as a supported path, or create a defect finding; other unsupported topologies may remain unreported.",
         "Reference pins use bounded return-like function tokens such as GND, AGND, DGND, PGND, VSS, 0V, RTN, RETURN, or GROUND, including numeric suffixes and GND_A/GND_D/GND_P or VSSA/VSSD/VSSP forms. They must be passive or power_in type, or have native type unspecified while retaining one of those explicit return-like functions. Unspecified pin types without an explicit return-like function remain unsupported. Shield, chassis, frame, and protective-earth functions are excluded.",
@@ -4753,6 +4754,7 @@
         "tests.test_usb_peer_reference_maps.test_stale_map_identity_does_not_suppress_peer_review",
         "tests.test_usb_peer_reference_paths.test_fitted_series_resistors_preserve_usb_peer_reference_review",
         "tests.test_usb_peer_reference_paths.test_exact_mapped_inline_component_path_reviews_split_references",
+        "tests.test_usb_peer_reference_boundaries.test_reference_net_component_evidence_does_not_claim_a_bond",
         "tests.test_usb_data_path_protection_shunts.test_exact_mapped_protection_array_supports_split_reference_review",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable",
         "tests.test_design_lint_mcp_parity_usb_protection_shunts.test_usb_protection_shunt_review_cli_mcp_parity",
@@ -4772,6 +4774,7 @@
         "tests.test_usb_peer_reference_coverage.test_coverage_marks_missing_usb_endpoints_and_incomplete_groups",
         "tests.test_usb_peer_reference_coverage.test_coverage_distinguishes_unsupported_paths_and_dnp_endpoints",
         "tests.test_usb_peer_reference_boundaries.test_multi_pin_protection_array_and_ferrite_remain_unsupported",
+        "tests.test_usb_peer_reference_boundaries.test_reference_net_component_evidence_does_not_claim_a_bond",
         "tests.test_usb_peer_reference_paths.test_exact_mapped_inline_component_path_reviews_split_references",
         "tests.test_usb_peer_reference_paths.test_common_reference_is_a_quiet_control",
         "tests.test_usb_peer_reference_paths.test_unspecified_vss_return_type_with_common_reference_is_quiet",
@@ -4808,6 +4811,7 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_usb_peer_reference_boundaries.test_input_order_is_stable_and_commoning_clears_only_this_review",
+        "tests.test_usb_peer_reference_boundaries.test_reference_net_component_evidence_does_not_claim_a_bond",
         "tests.test_usb_peer_reference_coverage.test_numbered_multiport_hub_groups_each_connector_with_its_usb_port",
         "tests.test_usb_peer_reference_coverage.test_three_port_hub_reports_each_split_reference_and_quiets_common_control",
         "tests.test_usb_peer_reference_paths.test_exact_mapped_inline_component_path_reviews_split_references",
@@ -4831,6 +4835,7 @@
         "kicad_tooling/hwrepo/usb_peer_path_analysis.py#usb_superspeed_direct_data_link",
         "kicad_tooling/hwrepo/usb_peer_unsupported_topology.py#unsupported_usb_multi_pin_path_candidates",
         "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews",
+        "kicad_tooling/hwrepo/usb_peer_reference_evidence.py#usb_reference_net_component_observations",
         "kicad_tooling/hwrepo/usb_peer_reference_decision.py#usb_peer_reference_disposition",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

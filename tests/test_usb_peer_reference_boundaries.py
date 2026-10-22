@@ -161,6 +161,101 @@ def test_isolator_mediated_usb_path_is_not_traced_across_domains() -> None:
     assert (coverage.supported_data_path_count) == (0)
 
 
+@pytest.mark.parametrize(
+    ("dnp_components", "expected_dnp_metadata", "ambiguous_pin_assignment"),
+    [
+        ((), "not listed", False),
+        (("JP1",), "listed", False),
+        ((), "not listed", True),
+    ],
+    ids=("dnp-metadata-absent", "dnp-metadata-present", "ambiguous-net-membership"),
+)
+def test_reference_net_component_evidence_does_not_claim_a_bond(
+    dnp_components: tuple[str, ...],
+    expected_dnp_metadata: str,
+    ambiguous_pin_assignment: bool,
+) -> None:
+    base = usb_peer_netlist()
+    observed = base.model_copy(
+        update={
+            "components": {
+                **base.components,
+                "JP1": ComponentContract(
+                    value="0R",
+                    footprint="Synthetic:SJ2",
+                ),
+            },
+            "nets": {
+                **base.nets,
+                "USB_GND": ("J1.3", "JP1.1"),
+                "BOARD_GND": ("U1.3", "JP1.1" if ambiguous_pin_assignment else "JP1.2"),
+            },
+            "dnp_components": dnp_components,
+            "component_symbols": {
+                **base.component_symbols,
+                "JP1": "Jumper:SolderJumper_2_Open",
+            },
+            "pin_functions": {
+                **base.pin_functions,
+                "JP1.1": "PAD_A",
+                "JP1.2": "PAD_B",
+            },
+            "pin_electrical_types": {
+                **base.pin_electrical_types,
+                "JP1.1": "passive",
+                "JP1.2": "passive",
+            },
+            "component_pin_numbers": {
+                **base.component_pin_numbers,
+                "JP1": ("1", "2"),
+            },
+        }
+    )
+
+    report = lint_report(observed)
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+    assert len(findings) == 1
+    expected_observation = (
+        "No non-endpoint component has uniquely assigned pins on both endpoint "
+        "reference nets in the normalized schematic netlist."
+        if ambiguous_pin_assignment
+        else (
+            "JP1: Jumper:SolderJumper_2_Open; value=0R; footprint=Synthetic:SJ2; "
+            f"DNP metadata={expected_dnp_metadata}; exact normalized schematic-netlist pin "
+            "assignments: JP1.1 (function=PAD_A, type=passive)=USB_GND; "
+            "JP1.2 (function=PAD_B, type=passive)=BOARD_GND"
+        )
+    )
+    expected_observations = (expected_observation,)
+    assert (
+        findings[0].evidence["USB_components_with_pins_on_both_reference_nets"]
+        == expected_observations
+    )
+
+    reordered = observed.model_copy(
+        update={
+            "components": dict(reversed(tuple(observed.components.items()))),
+            "nets": dict(
+                reversed(
+                    tuple((name, tuple(reversed(pins))) for name, pins in observed.nets.items())
+                )
+            ),
+            "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+            "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(observed.pin_electrical_types.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+        }
+    )
+    assert lint_report(reordered) == report
+
+    commoned_nets = {
+        name: pins for name, pins in observed.nets.items() if name not in {"USB_GND", "BOARD_GND"}
+    }
+    commoned_nets["BOARD_GND"] = ("J1.3", "U1.3", "JP1.1", "JP1.2")
+    commoned = observed.model_copy(update={"nets": commoned_nets})
+    assert RULE_ID not in {item.rule_id for item in lint_report(commoned).findings}
+
+
 def test_multi_pin_protection_array_and_ferrite_remain_unsupported() -> None:
     base = usb_peer_netlist()
     protected = base.model_copy(

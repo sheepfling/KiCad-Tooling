@@ -36,13 +36,23 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
         def write_netlist(*, split_reference: bool) -> None:
             if split_reference:
                 reference_nets = (
-                    '<net name="USB_GND"><node ref="J1" pin="4"/></net>'
-                    '<net name="BOARD_GND"><node ref="U1" pin="3"/></net>'
+                    '<net name="USB_GND"><node ref="J1" pin="4"/>'
+                    '<node ref="JP1" pin="1"/></net>'
+                    '<net name="BOARD_GND"><node ref="U1" pin="3"/>'
+                    '<node ref="JP1" pin="2"/></net>'
                 )
             else:
                 reference_nets = (
                     '<net name="BOARD_GND"><node ref="J1" pin="4"/><node ref="U1" pin="3"/></net>'
                 )
+            bridge_component = (
+                '<comp ref="JP1"><value>Synthetic open solder jumper</value>'
+                "<footprint>Synthetic:SJ2</footprint>"
+                '<libsource lib="Jumper" part="SolderJumper_2_Open"/>'
+                '<property name="dnp" value="true"/></comp>'
+                if split_reference
+                else ""
+            )
             netlist.write_text(
                 "<export><components>"
                 '<comp ref="J1"><value>Synthetic USB connector</value>'
@@ -51,6 +61,7 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
                 '<comp ref="U1"><value>Synthetic USB PHY</value>'
                 "<footprint>Synthetic:QFN</footprint>"
                 '<libsource lib="Synthetic" part="UsbPhy"/></comp>'
+                f"{bridge_component}"
                 "</components><libparts>"
                 '<libpart lib="Connector" part="USB_A"><pins>'
                 '<pin num="1" name="D+" type="passive"/>'
@@ -61,6 +72,10 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
                 '<pin num="1" name="USB_DP" type="input"/>'
                 '<pin num="2" name="USB_DM" type="input"/>'
                 '<pin num="3" name="VSS" type="unspecified"/>'
+                "</pins></libpart>"
+                '<libpart lib="Jumper" part="SolderJumper_2_Open"><pins>'
+                '<pin num="1" name="PAD_A" type="passive"/>'
+                '<pin num="2" name="PAD_B" type="passive"/>'
                 "</pins></libpart></libparts><nets>"
                 '<net name="USB_DP"><node ref="J1" pin="1"/>'
                 '<node ref="U1" pin="1"/></net>'
@@ -250,6 +265,17 @@ class _DesignLintMcpParityUsbReferenceCases(McpParityHarness):
             self.assertEqual(findings[0].subject, "J1 / U1: USB reference-domain review")
             self.assertEqual(findings[0].evidence["connector_reference_net"], ("USB_GND",))
             self.assertEqual(findings[0].evidence["phy_reference_net"], ("BOARD_GND",))
+            expected_reference_component = (
+                "JP1: Jumper:SolderJumper_2_Open; value=Synthetic open solder jumper; "
+                "footprint=Synthetic:SJ2; DNP metadata=listed; exact normalized "
+                "schematic-netlist pin assignments: "
+                "JP1.1 (function=PAD_A, type=passive)=USB_GND; "
+                "JP1.2 (function=PAD_B, type=passive)=BOARD_GND"
+            )
+            self.assertEqual(
+                findings[0].evidence["USB_components_with_pins_on_both_reference_nets"],
+                (expected_reference_component,),
+            )
             fault_coverage = fault.usb_peer_reference_coverage
             self.assertIsNotNone(fault_coverage)
             assert fault_coverage is not None

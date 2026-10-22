@@ -21,6 +21,24 @@ class UsbReferencePinAssignment:
 
 
 @dataclass(frozen=True)
+class UsbPeerReferenceComponentPin:
+    pin: str
+    net: str
+    function: str | None
+    electrical_type: str | None
+
+
+@dataclass(frozen=True)
+class UsbPeerReferenceComponentObservation:
+    reference: str
+    symbol: str | None
+    value: str | None
+    footprint: str | None
+    dnp_metadata_listed: bool
+    pin_assignments: tuple[UsbPeerReferenceComponentPin, ...]
+
+
+@dataclass(frozen=True)
 class UsbPeerDataShuntBranch:
     data_pin: str
     reference_pin: str
@@ -108,6 +126,7 @@ class UsbPeerReferenceReview:
     connector_reference_pins: tuple[UsbReferencePinAssignment, ...]
     phy_reference_pins: tuple[UsbReferencePinAssignment, ...]
     data_link: UsbPeerDataLink
+    reference_component_observations: tuple[UsbPeerReferenceComponentObservation, ...] = ()
 
 
 @dataclass(frozen=True)

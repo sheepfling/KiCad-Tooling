@@ -87,6 +87,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_protection_shunt_analysis.py",
     "usb_peer_reference_contract.py",
     "usb_peer_reference_decision.py",
+    "usb_peer_reference_evidence.py",
     "usb_peer_reference_scan.py",
     "usb_peer_unsupported_topology.py",
 )
@@ -261,6 +262,10 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
         "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_superspeed_endpoints"
         in rule.implementation_refs
     )
+    assert (
+        "kicad_tooling/hwrepo/usb_peer_reference_evidence.py"
+        "#usb_reference_net_component_observations"
+    ) in rule.implementation_refs
     assert (
         "kicad_tooling/hwrepo/usb_peer_path_analysis.py#usb_superspeed_direct_data_link"
         in rule.implementation_refs

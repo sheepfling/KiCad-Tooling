@@ -1063,6 +1063,15 @@ and optional ecosystem adapters are `P3`.
   visible and keep project defaults and the review-only prompt unchanged while
   evidence is gathered.
 
+  Review evidence now also lists non-endpoint components whose uniquely
+  assigned normalized schematic-netlist pins appear on both endpoint
+  reference nets. It includes symbol, value, footprint, pin metadata when
+  available, and whether the source netlist lists DNP metadata. This is a
+  reviewer aid only; it does not change the predicate or infer physical fit,
+  component conduction, a required bond, or PCB continuity. Synthetic cases
+  cover DNP metadata present and absent, stable ordering, common-reference
+  control, and CLI/MCP parity.
+
   A new Tooling-authored synthetic native case covers a two-port USB isolator
   with separate host and device reference domains. It expects no peer-reference
   finding and records two recognized connector groups, two incomplete PHY port
