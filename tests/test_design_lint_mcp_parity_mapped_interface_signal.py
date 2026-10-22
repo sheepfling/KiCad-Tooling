@@ -121,9 +121,7 @@ def test_mapped_interface_signal_review_cli_mcp_parity(tmp_path: Path) -> None:
             ),
         )
     )
-    root, native = synthetic_design_lint_project(
-        tmp_path, parity_design_lint_policy(policy)
-    )
+    root, native = synthetic_design_lint_project(tmp_path, parity_design_lint_policy(policy))
     island = root / "projects/controller"
     catalog_path = _install_reviewed_interface(root, island)
     fixture_root = Path(__file__).parent / "fixtures/design_lint/mapped-interface-signal-parity"

@@ -360,7 +360,9 @@ def test_native_fault_and_control_fixture_sources_match_reviewed_hashes() -> Non
         fixture_root / "mapped-interface-signal-native/control.kicad_sch"
     )
     for case, source in ((case, sources[case]) for case in NATIVE_FIXTURE_CASES):
-        assert hashlib.sha256(source.read_bytes()).hexdigest() == EXPECTED_NATIVE_SOURCE_HASHES[case]
+        assert (
+            hashlib.sha256(source.read_bytes()).hexdigest() == EXPECTED_NATIVE_SOURCE_HASHES[case]
+        )
         assert CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES[case] == EXPECTED_NATIVE_SOURCE_HASHES[case]
 
 
@@ -450,9 +452,7 @@ def test_native_mapped_signal_pin_fault_and_control_are_repeatable(
         if case == NATIVE_FAULT_CASE:
             assert report.status == "REVIEW"
             assert len(findings) == 1
-            assert findings[0].subject == (
-                "J1.2: reviewed signal contact has no net assignment"
-            )
+            assert findings[0].subject == ("J1.2: reviewed signal contact has no net assignment")
             assert findings[0].evidence["native_pin_function"] == ("2",)
             assert findings[0].evidence["assigned_nets"] == ()
         else:
