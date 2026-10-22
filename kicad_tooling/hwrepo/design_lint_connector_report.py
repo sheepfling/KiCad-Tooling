@@ -108,6 +108,12 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             f"({footprint_coverage.unanchored_all_open_peer_pin_group_count} unanchored)"
         )
         lines.append(
+            "  Footprint-alias pin metadata groups: incomplete "
+            f"{footprint_coverage.incomplete_pin_metadata_group_count}; differing "
+            f"{footprint_coverage.differing_pin_metadata_group_count}; matching/eligible "
+            f"{footprint_coverage.eligible_peer_group_count}"
+        )
+        lines.append(
             "  Named signal divergence groups/findings/unanchored: "
             f"{footprint_coverage.named_signal_different_assignment_pin_group_count}/"
             f"{footprint_coverage.named_signal_divergence_finding_count}/"

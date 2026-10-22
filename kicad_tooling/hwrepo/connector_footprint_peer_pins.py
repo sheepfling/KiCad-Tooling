@@ -20,6 +20,7 @@ from .connector_footprint_peer_pin_types import (
 from .connector_identity import (
     is_named_supply_function,
     is_return_function,
+    native_pin_metadata_is_missing,
     partition_peer_assignments,
     pin_function_is_generic,
 )
@@ -68,6 +69,7 @@ def scan_connector_footprint_peer_pin_assignments(
 
     incomplete_inventory_count = 0
     incomplete_metadata_count = 0
+    differing_metadata_count = 0
     eligible_group_count = 0
     peer_scope_group_count = 0
     evaluated_pin_group_count = 0
@@ -97,33 +99,30 @@ def scan_connector_footprint_peer_pin_assignments(
             incomplete_inventory_count += 1
             continue
         pin_numbers, display_pin_numbers = inventory
-        metadata_matches = all(
-            all(
-                (
-                    value := metadata.get(
-                        f"{reference}.{display_pin_numbers[reference.casefold()][pin_number.casefold()]}".casefold()
-                    )
+        metadata_values_by_field = tuple(
+            tuple(
+                metadata.get(
+                    f"{reference}.{display_pin_numbers[reference.casefold()][pin_number.casefold()]}".casefold()
                 )
-                is not None
-                and value.strip()
                 for reference in peers
             )
-            and len(
-                {
-                    metadata[
-                        f"{reference}.{display_pin_numbers[reference.casefold()][pin_number.casefold()]}".casefold()
-                    ]
-                    .strip()
-                    .casefold()
-                    for reference in peers
-                }
-            )
-            == 1
             for pin_number in pin_numbers
             for metadata in (functions, electrical_types)
         )
-        if not metadata_matches:
+        metadata_complete = all(
+            not native_pin_metadata_is_missing(value)
+            for values in metadata_values_by_field
+            for value in values
+        )
+        if not metadata_complete:
             incomplete_metadata_count += 1
+            continue
+        metadata_matches = all(
+            len({value.strip().casefold() for value in values if value is not None}) == 1
+            for values in metadata_values_by_field
+        )
+        if not metadata_matches:
+            differing_metadata_count += 1
             continue
 
         eligible_group_count += 1
@@ -398,6 +397,7 @@ def scan_connector_footprint_peer_pin_assignments(
         candidate_group_count=len(candidate_groups),
         incomplete_pin_inventory_group_count=incomplete_inventory_count,
         incomplete_pin_metadata_group_count=incomplete_metadata_count,
+        differing_pin_metadata_group_count=differing_metadata_count,
         eligible_peer_group_count=eligible_group_count,
         peer_scope_group_count=peer_scope_group_count,
         evaluated_pin_group_count=evaluated_pin_group_count,

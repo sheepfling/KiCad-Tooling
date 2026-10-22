@@ -23,10 +23,7 @@ ANCHOR_MODULES = ("connector_footprint_peer_anchors.py",)
 
 
 def test_connector_footprint_peer_modules_stay_below_review_limit() -> None:
-    sizes = {
-        name: line_count(HWREPO / name)
-        for name in (*PEER_MODULES, *ANCHOR_MODULES)
-    }
+    sizes = {name: line_count(HWREPO / name) for name in (*PEER_MODULES, *ANCHOR_MODULES)}
     oversized = {name: size for name, size in sizes.items() if size >= IMPLEMENTATION_MAX_LINES}
 
     assert not oversized, f"Split connector footprint peer modules: {oversized}"

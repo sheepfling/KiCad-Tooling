@@ -144,6 +144,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     candidate_group_count: NonNegativeCount
     incomplete_pin_inventory_group_count: NonNegativeCount
     incomplete_pin_metadata_group_count: NonNegativeCount
+    differing_pin_metadata_group_count: NonNegativeCount = 0
     eligible_peer_group_count: NonNegativeCount
     peer_scope_group_count: NonNegativeCount
     evaluated_pin_group_count: NonNegativeCount
@@ -190,6 +191,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
         if (
             self.incomplete_pin_inventory_group_count
             + self.incomplete_pin_metadata_group_count
+            + self.differing_pin_metadata_group_count
             + self.eligible_peer_group_count
             != self.candidate_group_count
         ):
@@ -328,7 +330,9 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             "NO_CANDIDATES"
             if self.candidate_group_count == 0
             else "INCOMPLETE_EVIDENCE"
-            if self.eligible_peer_group_count == 0
+            if self.eligible_peer_group_count == 0 and self.differing_pin_metadata_group_count == 0
+            else "PARTIALLY_EVALUATED"
+            if self.differing_pin_metadata_group_count > 0
             else "NO_PEER_SCOPES"
             if self.peer_scope_group_count == 0
             else "NO_COMPARABLE_ASSIGNMENTS"

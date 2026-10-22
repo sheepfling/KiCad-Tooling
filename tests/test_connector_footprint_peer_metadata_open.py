@@ -69,6 +69,12 @@ def test_known_metadata_open_peer_is_reviewed() -> None:
         item.rule_id == "connector.footprint_peer_pin_metadata_assignment_divergence"
         for item in report.findings
     )
+    coverage = report.connector_peer_pin_coverage
+    assert coverage is not None
+    alias = coverage.footprint_alias_coverage
+    assert alias.status == "PARTIALLY_EVALUATED"
+    assert alias.incomplete_pin_metadata_group_count == 0
+    assert alias.differing_pin_metadata_group_count == 1
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -127,7 +133,9 @@ def test_one_known_metadata_difference_is_enough(different_field: str) -> None:
 def test_open_metadata_controls_require_partial_assignment_and_anchor(
     kwargs: dict[str, object],
 ) -> None:
-    report = lint_report(peer_metadata_divergence_netlist(**{"target_assignments": ("UART_RX_NET", None), **kwargs}))
+    report = lint_report(
+        peer_metadata_divergence_netlist(**{"target_assignments": ("UART_RX_NET", None), **kwargs})
+    )
 
     assert not any(item.rule_id == RULE_ID for item in report.findings)
 
@@ -150,7 +158,14 @@ def test_equal_or_missing_role_metadata_remains_outside_this_rule() -> None:
     )
 
     assert not any(item.rule_id == RULE_ID for item in lint_report(equal_metadata).findings)
-    assert not any(item.rule_id == RULE_ID for item in lint_report(missing_metadata).findings)
+    missing_report = lint_report(missing_metadata)
+    assert not any(item.rule_id == RULE_ID for item in missing_report.findings)
+    coverage = missing_report.connector_peer_pin_coverage
+    assert coverage is not None
+    alias = coverage.footprint_alias_coverage
+    assert alias.status == "INCOMPLETE_EVIDENCE"
+    assert alias.incomplete_pin_metadata_group_count == 1
+    assert alias.differing_pin_metadata_group_count == 0
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -185,7 +200,9 @@ def test_incomplete_metadata_in_another_reviewed_scope_does_not_suppress_candida
             "PORT_B_ANCHOR": ("J3.1", "J4.1"),
             "PORT_B_SIGNAL": ("J3.2", "J4.2"),
         },
-        component_symbols={reference: f"Synthetic:Alias{index}" for index, reference in enumerate(references)},
+        component_symbols={
+            reference: f"Synthetic:Alias{index}" for index, reference in enumerate(references)
+        },
         component_pin_numbers={reference: ("1", "2") for reference in references},
         pin_functions={
             "J1.1": "2",
@@ -308,7 +325,10 @@ def test_metadata_open_review_matches_cli_and_mcp(tmp_path: Path) -> None:
     )
     policy = DesignLintPolicy(
         rules=(
-            *(DesignLintRuleOverride(rule_id=rule, mode="off", reason=reason) for rule, reason in off_rule_specs),
+            *(
+                DesignLintRuleOverride(rule_id=rule, mode="off", reason=reason)
+                for rule, reason in off_rule_specs
+            ),
             DesignLintRuleOverride(
                 rule_id=RULE_ID,
                 mode="review",

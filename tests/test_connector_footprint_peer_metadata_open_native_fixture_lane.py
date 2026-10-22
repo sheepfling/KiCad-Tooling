@@ -152,6 +152,7 @@ def test_native_metadata_open_fault_and_control_are_repeatable(
         prepare_connector_return_fixture_context,
     )
     from kicad_tooling.hwrepo.electrical import selected_config
+
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(
         tmp_path,
@@ -174,9 +175,7 @@ def test_native_metadata_open_fault_and_control_are_repeatable(
     )
     events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
     native_events = tuple(
-        item
-        for item in events
-        if item.get("stage") == "peer-metadata-open-fixture/native-export"
+        item for item in events if item.get("stage") == "peer-metadata-open-fixture/native-export"
     )
     assert tuple(item["status"] for item in native_events) == ("START", "PASS")
     assert native_events[-1]["kicad_version"] == version
@@ -189,6 +188,11 @@ def test_native_metadata_open_fault_and_control_are_repeatable(
     assert fault.status == "REVIEW"
     assert any(item.rule_id == RULE_ID for item in fault.findings)
     assert not any(item.rule_id == RULE_ID for item in control.findings)
+    coverage = fault.connector_peer_pin_coverage
+    assert coverage is not None
+    alias = coverage.footprint_alias_coverage
+    assert alias.incomplete_pin_metadata_group_count == 0
+    assert alias.differing_pin_metadata_group_count == 1
     for case in FIXTURE_CASES:
         assert (
             context.normalized_netlist_hashes[case, "first"]

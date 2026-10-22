@@ -95,6 +95,7 @@ class ConnectorFootprintPeerPinScan:
     candidate_group_count: int
     incomplete_pin_inventory_group_count: int
     incomplete_pin_metadata_group_count: int
+    differing_pin_metadata_group_count: int
     eligible_peer_group_count: int
     peer_scope_group_count: int
     evaluated_pin_group_count: int

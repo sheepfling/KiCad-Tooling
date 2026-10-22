@@ -200,6 +200,11 @@ def test_native_metadata_divergence_fault_and_control_are_repeatable(
     fault = context.reports[FAULT_CASE, "first"]
     assert fault.status == "REVIEW"
     assert any(item.rule_id == RULE_ID for item in fault.findings)
+    coverage = fault.connector_peer_pin_coverage
+    assert coverage is not None
+    alias = coverage.footprint_alias_coverage
+    assert alias.incomplete_pin_metadata_group_count == 0
+    assert alias.differing_pin_metadata_group_count == 1
     for case in FIXTURE_CASES:
         assert (
             context.normalized_netlist_hashes[case, "first"]

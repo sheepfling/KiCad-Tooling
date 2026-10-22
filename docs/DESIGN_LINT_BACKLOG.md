@@ -8981,6 +8981,11 @@ is not a reason by itself to expand its scope or change its default policy.
   [native schematic fixtures](../tests/fixtures/design_lint/connector-footprint-peer-metadata-open-native/README.md)
   contain no proprietary project source. Reviewer precision and field value
   remain unmeasured.
+- **Coverage correction:** Complete, differing pin functions or electrical
+  types now have their own coverage count. They no longer appear as missing
+  metadata or suppress the distinction between partial evaluation and absent
+  evidence. The report schema advances to version 5; synthetic and exact-native
+  fault cases assert the separate counts.
 - **Focused selection:**
 
   ```sh

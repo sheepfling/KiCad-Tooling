@@ -59,7 +59,8 @@ def verify_footprint_alias_peer_metadata_divergence(
         or finding.evidence.get("common_anchor_pin_numbers") != ("2",)
         or alias.candidate_group_count != 1
         or alias.incomplete_pin_inventory_group_count != 0
-        or alias.incomplete_pin_metadata_group_count != 1
+        or alias.incomplete_pin_metadata_group_count != 0
+        or alias.differing_pin_metadata_group_count != 1
         or alias.eligible_peer_group_count != 0
     ):
         raise ValueError("Native metadata-divergence fault lost its exact assignment evidence")
@@ -74,7 +75,8 @@ def verify_footprint_alias_peer_metadata_divergence(
         or control_alias is None
         or control_nets.get("SHARED_PORT") != {"J1.1", "J2.1"}
         or control_nets.get("COMMON_REFERENCE") != {"J1.2", "J2.2"}
-        or control_alias.incomplete_pin_metadata_group_count != 1
+        or control_alias.incomplete_pin_metadata_group_count != 0
+        or control_alias.differing_pin_metadata_group_count != 1
     ):
         raise ValueError("Native common-target control produced a metadata-divergence finding")
 

@@ -67,10 +67,13 @@ def test_mismatched_pin_metadata_with_split_assignment_is_reviewed() -> None:
     assert finding.evidence["common_anchor_pin_numbers"] == ("1",)
     assert "does not infer that the nets should connect" in finding.message
 
+    assert report.schema_version == "5"
     coverage = report.connector_peer_pin_coverage
     assert coverage is not None
     alias = coverage.footprint_alias_coverage
-    assert alias.incomplete_pin_metadata_group_count == 1
+    assert alias.status == "PARTIALLY_EVALUATED"
+    assert alias.incomplete_pin_metadata_group_count == 0
+    assert alias.differing_pin_metadata_group_count == 1
     assert alias.eligible_peer_group_count == 0
 
 
@@ -81,6 +84,12 @@ def test_different_metadata_with_common_target_assignment_is_quiet() -> None:
     )
 
     assert not any(item.rule_id == RULE_ID for item in report.findings)
+    coverage = report.connector_peer_pin_coverage
+    assert coverage is not None
+    alias = coverage.footprint_alias_coverage
+    assert alias.status == "PARTIALLY_EVALUATED"
+    assert alias.incomplete_pin_metadata_group_count == 0
+    assert alias.differing_pin_metadata_group_count == 1
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -148,7 +157,10 @@ def test_unnamed_native_pin_function_is_missing_metadata_not_a_role_difference()
     assert not any(item.rule_id == RULE_ID for item in report.findings)
     coverage = report.connector_peer_pin_coverage
     assert coverage is not None
-    assert coverage.footprint_alias_coverage.incomplete_pin_metadata_group_count == 1
+    alias = coverage.footprint_alias_coverage
+    assert alias.status == "INCOMPLETE_EVIDENCE"
+    assert alias.incomplete_pin_metadata_group_count == 1
+    assert alias.differing_pin_metadata_group_count == 0
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

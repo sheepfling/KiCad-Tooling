@@ -97,12 +97,7 @@ def connector_footprint_peer_pin_metadata_open_outliers(
                 mismatch_fields = tuple(
                     field
                     for field, index in (("pin_function", 1), ("pin_electrical_type", 2))
-                    if len(
-                        {
-                            (values[index] or "").strip().casefold()
-                            for values in scoped_metadata
-                        }
-                    )
+                    if len({(values[index] or "").strip().casefold() for values in scoped_metadata})
                     > 1
                 )
                 if not mismatch_fields:

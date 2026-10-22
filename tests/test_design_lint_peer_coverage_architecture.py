@@ -55,6 +55,7 @@ PEER_COVERAGE_SERVICES = (
     "i2c_peer_reference_coverage.py",
     "serial_peer_reference_coverage.py",
     "usb_peer_reference_coverage.py",
+    "connector_footprint_peer_coverage.py",
 )
 
 
@@ -62,10 +63,12 @@ def test_internal_interface_coverage_services_import_theme_owners() -> None:
     expected_by_service = {
         "connector_peer_pin_coverage.py": {
             "connector_peer_pin_models": {
-                "ConnectorFootprintPeerPinCoverage",
                 "ConnectorPartIdPeerPinCoverage",
                 "ConnectorPeerPinHeuristicCoverage",
             }
+        },
+        "connector_footprint_peer_coverage.py": {
+            "connector_peer_pin_models": {"ConnectorFootprintPeerPinCoverage"},
         },
         "component_peer_pin_coverage.py": {
             "component_peer_pin_models": {"ComponentPeerPinRuleCoverage"},

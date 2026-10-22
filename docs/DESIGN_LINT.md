@@ -270,7 +270,9 @@ The first rules are:
   but present native function or electrical-type metadata differs. The missing-
   metadata case is handled separately below. Distinct connector roles and
   isolated interfaces may be intentional, so this prompt does not say the nets
-  should be joined.
+  should be joined. Coverage reports count complete-but-different metadata
+  separately from missing or unnamed metadata; the former is partially
+  evaluated evidence, while the latter remains incomplete evidence.
 - `connector.footprint_peer_pin_missing_metadata_assignment_divergence` reviews a split assignment
   when matched connector aliases have complete inventories but a target pin has missing, blank, or
   KiCad unnamed (`~`) function or electrical-type metadata. It requires one exact net per peer and a

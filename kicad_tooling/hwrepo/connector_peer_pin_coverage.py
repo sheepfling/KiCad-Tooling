@@ -24,6 +24,7 @@ from .connector_footprint_named_signal_all_open import evaluate_footprint_named_
 from .connector_footprint_named_signal_divergence import (
     evaluate_footprint_named_signal_assignment_divergence,
 )
+from .connector_footprint_peer_coverage import build_connector_footprint_peer_pin_coverage
 from .connector_footprint_peer_pins import scan_connector_footprint_peer_pin_assignments
 from .connector_identity import (
     connector_candidate_references,
@@ -32,7 +33,6 @@ from .connector_identity import (
     similar_connector_pin_groups,
 )
 from .connector_peer_pin_models import (
-    ConnectorFootprintPeerPinCoverage,
     ConnectorPartIdPeerPinCoverage,
     ConnectorPeerPinHeuristicCoverage,
 )
@@ -305,126 +305,34 @@ def connector_peer_pin_heuristic_coverage(
     named_passive_divergence = evaluate_footprint_named_passive_assignment_divergence(
         footprint_scan
     )
-    footprint_incomplete_count = sum(
-        (
-            footprint_scan.incomplete_pin_inventory_group_count,
-            footprint_scan.incomplete_pin_metadata_group_count,
-            footprint_scan.unassigned_assignment_pin_group_count,
-            footprint_scan.ambiguous_assignment_pin_group_count,
-        )
-    )
-    footprint_status = (
-        "NO_CANDIDATES"
-        if footprint_scan.candidate_group_count == 0
-        else "INCOMPLETE_EVIDENCE"
-        if footprint_scan.eligible_peer_group_count == 0
-        else "NO_PEER_SCOPES"
-        if footprint_scan.peer_scope_group_count == 0
-        else "NO_COMPARABLE_ASSIGNMENTS"
-        if footprint_scan.evaluated_pin_group_count == 0
-        else "NO_SHARED_ASSIGNMENT_ANCHOR"
-        if footprint_scan.common_anchor_group_count == 0
-        else "PARTIALLY_EVALUATED"
-        if footprint_incomplete_count > 0
-        else "NO_DIVERGENT_ASSIGNMENTS"
-        if (
-            footprint_scan.generic_different_assignment_pin_group_count
-            + named_signal_divergence.candidate_count
-            + named_power_input_divergence.candidate_count
-            + named_power_output_divergence.candidate_count
-            + named_passive_divergence.candidate_count
-            == 0
-        )
-        else "EVALUATED"
-    )
-    footprint_alias_coverage = ConnectorFootprintPeerPinCoverage(
-        status=footprint_status,
-        netlist_sha256=netlist_sha256,
-        candidate_group_count=footprint_scan.candidate_group_count,
-        incomplete_pin_inventory_group_count=(footprint_scan.incomplete_pin_inventory_group_count),
-        incomplete_pin_metadata_group_count=footprint_scan.incomplete_pin_metadata_group_count,
-        eligible_peer_group_count=footprint_scan.eligible_peer_group_count,
-        peer_scope_group_count=footprint_scan.peer_scope_group_count,
-        evaluated_pin_group_count=footprint_scan.evaluated_pin_group_count,
-        compared_pin_group_count=footprint_scan.compared_pin_group_count,
-        common_assignment_pin_group_count=footprint_scan.common_assignment_pin_group_count,
-        different_assignment_pin_group_count=footprint_scan.different_assignment_pin_group_count,
-        unassigned_assignment_pin_group_count=(
-            footprint_scan.unassigned_assignment_pin_group_count
-        ),
-        ambiguous_assignment_pin_group_count=(footprint_scan.ambiguous_assignment_pin_group_count),
-        generic_different_assignment_pin_group_count=(
-            footprint_scan.generic_different_assignment_pin_group_count
-        ),
-        non_generic_different_assignment_pin_group_count=(
-            footprint_scan.non_generic_different_assignment_pin_group_count
-        ),
-        common_anchor_group_count=footprint_scan.common_anchor_group_count,
-        unanchored_different_assignment_pin_group_count=(
-            footprint_scan.unanchored_different_assignment_pin_group_count
-        ),
-        divergence_finding_count=footprint_peer_pin_divergence_finding_count,
-        open_peer_pin_group_count=footprint_scan.open_peer_pin_group_count,
-        unanchored_open_peer_pin_group_count=(footprint_scan.unanchored_open_peer_pin_group_count),
+    footprint_alias_coverage = build_connector_footprint_peer_pin_coverage(
+        footprint_scan,
+        netlist_sha256,
+        generic_divergence_finding_count=footprint_peer_pin_divergence_finding_count,
         open_outlier_finding_count=footprint_peer_pin_open_outlier_finding_count,
-        all_open_peer_pin_group_count=footprint_scan.all_open_peer_pin_group_count,
-        unanchored_all_open_peer_pin_group_count=(
-            footprint_scan.unanchored_all_open_peer_pin_group_count
-        ),
         all_open_finding_count=footprint_peer_pin_all_open_finding_count,
-        named_signal_different_assignment_pin_group_count=(named_signal_divergence.candidate_count),
-        unanchored_named_signal_divergence_pin_group_count=(
-            named_signal_divergence.unanchored_count
-        ),
-        named_signal_divergence_finding_count=(footprint_named_signal_divergence_finding_count),
-        named_power_input_different_assignment_pin_group_count=(
-            named_power_input_divergence.candidate_count
-        ),
-        unanchored_named_power_input_divergence_pin_group_count=(
-            named_power_input_divergence.unanchored_count
-        ),
+        named_signal_divergence=named_signal_divergence,
+        named_signal_divergence_finding_count=footprint_named_signal_divergence_finding_count,
+        named_power_input_divergence=named_power_input_divergence,
         named_power_input_divergence_finding_count=(
             footprint_named_power_input_divergence_finding_count
         ),
-        named_power_input_all_open_peer_pin_group_count=(
-            named_power_input_all_open.candidate_count
-        ),
-        unanchored_named_power_input_all_open_peer_pin_group_count=(
-            named_power_input_all_open.unanchored_count
-        ),
+        named_power_input_all_open=named_power_input_all_open,
         named_power_input_all_open_finding_count=(
             footprint_named_power_input_all_open_finding_count
         ),
-        named_power_output_all_open_peer_pin_group_count=(
-            named_power_output_all_open.candidate_count
-        ),
-        unanchored_named_power_output_all_open_peer_pin_group_count=(
-            named_power_output_all_open.unanchored_count
-        ),
+        named_power_output_all_open=named_power_output_all_open,
         named_power_output_all_open_finding_count=(
             footprint_named_power_output_all_open_finding_count
         ),
-        named_signal_all_open_peer_pin_group_count=named_signal_all_open.candidate_count,
-        unanchored_named_signal_all_open_peer_pin_group_count=(
-            named_signal_all_open.unanchored_count
-        ),
+        named_signal_all_open=named_signal_all_open,
         named_signal_all_open_finding_count=footprint_named_signal_all_open_finding_count,
-        named_power_output_different_assignment_pin_group_count=(
-            named_power_output_divergence.candidate_count
-        ),
-        unanchored_named_power_output_divergence_pin_group_count=(
-            named_power_output_divergence.unanchored_count
-        ),
+        named_power_output_divergence=named_power_output_divergence,
         named_power_output_divergence_finding_count=(
             footprint_named_power_output_divergence_finding_count
         ),
-        named_passive_different_assignment_pin_group_count=(
-            named_passive_divergence.candidate_count
-        ),
-        unanchored_named_passive_divergence_pin_group_count=(
-            named_passive_divergence.unanchored_count
-        ),
-        named_passive_divergence_finding_count=(footprint_named_passive_divergence_finding_count),
+        named_passive_divergence=named_passive_divergence,
+        named_passive_divergence_finding_count=footprint_named_passive_divergence_finding_count,
     )
 
     if not candidate_references:
@@ -447,8 +355,11 @@ def connector_peer_pin_heuristic_coverage(
             "symbol/function rules. Generic peer assignments compare exact symbol and pin number; "
             "cross-symbol comparisons require a shared PART_ID plus matching component, inventory, "
             "function, and electrical-type evidence. PART_ID-free footprint aliases require exact "
-            "value, footprint, inventory, matching generic pin metadata, and a common assigned "
-            "anchor before a differing pin receives a review prompt. "
+            "value, footprint, and inventory. Generic assignment comparisons require matching pin "
+            "metadata and a common assigned anchor. Complete but differing function or "
+            "electrical-type metadata is counted separately and handled by metadata-specific "
+            "assignment and open-peer review prompts; missing metadata remains an incomplete-"
+            "evidence state. "
             "An explicit named power-input pin left open on every alias can also receive a review "
             "prompt under those evidence bounds; intentionally unused inputs remain possible. "
             "Coverage records evaluated evidence; it does not assert that peer nets must match."
