@@ -8936,10 +8936,11 @@ is not a reason by itself to expand its scope or change its default policy.
   missing anchor, common target, all-open target, ambiguity, incomplete pin
   inventory, DNP exclusion, source-matched peer scopes, deterministic output,
   policy overrides, exact ignores, and CLI/MCP parity. Separate source-hashed
-  native schematics exercise an explicit no-connect fault and common-net
-  control on KiCad 10.0.0 and 10.0.5; both version-parameterized tests passed
-  locally on 2026-10-22. The fixtures contain no product source or cohort
-  fixture. Reviewer precision and field value remain unmeasured.
+  [native schematic fixtures](../tests/fixtures/design_lint/connector-footprint-peer-missing-metadata-open-native/README.md)
+  exercise an explicit no-connect fault and common-net control on KiCad 10.0.0
+  and 10.0.5; both version-parameterized tests passed locally on 2026-10-22.
+  The fixtures contain no product source or cohort fixture. Reviewer precision
+  and field value remain unmeasured.
 - **Focused selection:**
 
   ```sh
