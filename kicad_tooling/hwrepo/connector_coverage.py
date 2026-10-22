@@ -8,12 +8,12 @@ from typing import Literal
 from .connector_coverage_models import (
     ConnectorCoverageEntry,
     ConnectorCoverageReport,
+    ConnectorInterfaceReview,
+    ConnectorInventoryReview,
     ConnectorMappedPinEvidence,
 )
 from .connector_identity import connector_candidate_references
 from .models import (
-    ConnectorInterfaceReview,
-    ConnectorInventoryReview,
     InterfacePin,
     InterfaceRecord,
     NetlistContract,
@@ -142,6 +142,7 @@ def evaluate(
                 role=interface_pins[interface_pin_number].role,
                 voltage_domain=interface_pins[interface_pin_number].voltage_domain,
                 symbol_function=observed.pin_functions.get(f"{reference}.{component_pin_number}"),
+                unconnected_reason=review.unconnected_pin_reasons.get(component_pin_number),
                 nets=tuple(sorted(nets_by_pin.get(f"{reference}.{component_pin_number}", ()))),
             )
             for interface_pin_number, component_pin_number in sorted(review.pin_map.items())
@@ -165,6 +166,19 @@ def evaluate(
                 issues.append("One or more exported component pins have no review disposition")
             if component_pins_unknown:
                 issues.append("Review names component pins absent from the exported symbol")
+
+        reasoned_open_assignments = tuple(
+            sorted(
+                component_pin_number
+                for component_pin_number in review.unconnected_pin_reasons
+                if nets_by_pin.get(f"{reference}.{component_pin_number}")
+            )
+        )
+        if reasoned_open_assignments:
+            issues.append(
+                "Pins with intentional no-connect reasons have net assignments: "
+                f"{reasoned_open_assignments}"
+            )
 
         entry_status: Literal["COVERED", "INCOMPLETE"] = "INCOMPLETE" if issues else "COVERED"
         entries.append(

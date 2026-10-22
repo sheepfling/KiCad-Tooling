@@ -13,6 +13,7 @@ from .connector_coverage_models import (
     ConnectorMappedPinEvidence,
 )
 from .connector_identity import power_function_key, similar_connector_pin_groups
+from .connector_mapped_interface_pins import unassigned_mapped_interface_signal_pins
 from .connector_peer_pin_all_open import all_open_generic_connector_peer_pin_candidates
 from .connector_peer_pin_findings import (
     connector_peer_pin_assignment_divergences,
@@ -135,7 +136,11 @@ def connector_pin_candidates(
         reviewed_connector_pins,
     )
 
-    named_open_connector_pins = frozenset(item.pin for item in unconnected_named_pins)
+    named_open_connector_pins = frozenset(item.pin for item in unconnected_named_pins) | frozenset(
+        pin
+        for pin, mapped in reviewed_connector_pins.items()
+        if mapped.unconnected_reason is not None
+    )
 
     unconnected_power_input_pins = unconnected_generic_power_input_connector_pins(
         observed,
@@ -475,5 +480,6 @@ def connector_pin_candidates(
             reviewed_connector_peer_assignment_groups,
         )
     )
+    found.extend(unassigned_mapped_interface_signal_pins(observed, connector_coverage))
 
     return tuple(found)

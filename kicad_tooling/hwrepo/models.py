@@ -104,6 +104,8 @@ CrystalNetworkCoverageReport = _crystal_network_models.CrystalNetworkCoverageRep
 
 AnalysisPending = _analysis_state_models.AnalysisPending
 AnalysisNotApplicable = _analysis_state_models.AnalysisNotApplicable
+ConnectorInterfaceReview = _connector_coverage_models.ConnectorInterfaceReview
+ConnectorInventoryReview = _connector_coverage_models.ConnectorInventoryReview
 ElectricalAnalysisContract = _electrical_analysis_contract_models.ElectricalAnalysisContract
 SpiceExpression = _electrical_simulation_models.SpiceExpression
 PowerLoad = _electrical_simulation_models.PowerLoad
@@ -733,47 +735,6 @@ SchematicGeometryRuleId = _schematic_geometry_models.SchematicGeometryRuleId
 SchematicGeometryRuleCoverageStatus = _schematic_geometry_models.SchematicGeometryRuleCoverageStatus
 SchematicGeometrySourceBinding = _schematic_geometry_models.SchematicGeometrySourceBinding
 SchematicGeometryCoverage = _schematic_geometry_models.SchematicGeometryCoverage
-
-
-class ConnectorInterfaceReview(StrictModel):
-    """Project-owned pinout coverage decision for one schematic component."""
-
-    reference: Identifier
-    disposition: Literal["interface", "not_applicable"]
-    basis: NonEmptyText
-    interface_id: Identifier | None = None
-    pin_map: Mapping[NonEmptyText, NonEmptyText] = Field(default_factory=dict)
-    unlisted_pin_reasons: Mapping[NonEmptyText, NonEmptyText] = Field(default_factory=dict)
-    peer_assignment_group: Identifier | None = None
-    peer_assignment_basis: NonEmptyText | None = None
-
-    @model_validator(mode="after")
-    def complete_disposition(self) -> ConnectorInterfaceReview:
-        if self.disposition == "interface":
-            if self.interface_id is None or not self.pin_map:
-                raise ValueError("Interface review needs an interface ID and a pin map")
-            targets = tuple(self.pin_map.values())
-            if len(set(targets)) != len(targets):
-                raise ValueError("Interface pin map must use each component pin at most once")
-            if set(targets) & set(self.unlisted_pin_reasons):
-                raise ValueError("A component pin cannot be mapped and listed as unlisted")
-        elif (
-            self.interface_id is not None
-            or self.pin_map
-            or self.unlisted_pin_reasons
-            or self.peer_assignment_group is not None
-            or self.peer_assignment_basis is not None
-        ):
-            raise ValueError("Not-applicable review cannot contain interface or peer-group data")
-        if (self.peer_assignment_group is None) != (self.peer_assignment_basis is None):
-            raise ValueError("Connector peer-assignment groups need a review basis")
-        return self
-
-
-class ConnectorInventoryReview(StrictModel):
-    """Project-owned basis for a complete connector-reference inventory review."""
-
-    basis: NonEmptyText
 
 
 class ProjectConfig(StrictModel):

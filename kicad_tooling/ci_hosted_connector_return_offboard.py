@@ -10,11 +10,13 @@ from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 def verify_offboard_connector_interfaces(ctx: ConnectorReturnFixtureContext):
     """Verify inventory and authored interface coverage for off-board connectors."""
     from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
+    from .hwrepo.connector_coverage_models import (
+        ConnectorInterfaceReview,
+        ConnectorInventoryReview,
+    )
     from .hwrepo.design_lint import evaluate
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
-        ConnectorInterfaceReview,
-        ConnectorInventoryReview,
         ContractCoachReport,
         DesignLintPolicy,
         InterfacePin,

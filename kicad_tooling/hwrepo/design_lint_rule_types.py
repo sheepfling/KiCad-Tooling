@@ -61,6 +61,7 @@ DesignLintRuleId = Literal[
     "connector.unconnected_power_output",
     "connector.unconnected_supply_pin",
     "connector.unconnected_return_pin",
+    "connector.mapped_interface_signal_unassigned",
     "connector.return_pin_on_positive_rail",
     "component.unconnected_power_input",
     "component.unconnected_power_output",

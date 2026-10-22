@@ -23,11 +23,11 @@ def connector_inventory_fixture_lane(
     import os
 
     from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
+    from .hwrepo.connector_coverage_models import ConnectorCoverageReport, ConnectorInventoryReview
     from .hwrepo.connector_pins import connector_candidate_references
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.models import ConnectorCoverageReport, ConnectorInventoryReview
     from .validate import read_netlist
 
     root = root.resolve()

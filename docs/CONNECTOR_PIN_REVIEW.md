@@ -169,6 +169,17 @@ switched, ORed, or isolated sources can be intentional. Use the electrical
 contract's `pin_connectivity` and `grounding` sections to author required
 relationships.
 
+For a mapped signal pin with a generic or missing native function and no net
+assignment, `connector.mapped_interface_signal_unassigned` requests review.
+Record an intentional open on the mapped component pin with
+`unconnected_pin_reasons`, for example
+`{"2": "Intentionally unused in this interface revision"}`. This field is
+separate from `unlisted_pin_reasons`: the former documents a mapped contact
+that is intentionally open, while the latter accounts for a symbol pin that
+is outside the selected interface. If a pin with an intentional-open reason is
+assigned to a net, connector coverage becomes incomplete. The lint remains a
+review prompt; it does not decide which net belongs on the contact.
+
 The project can also opt in to the return-distribution heuristic described in
 the [design lint guide](DESIGN_LINT.md#review-connector-return-contact-distribution).
 For that check, classify every mapped pin. Its threshold counts only `signal`

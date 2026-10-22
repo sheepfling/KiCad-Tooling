@@ -31,6 +31,8 @@ MODEL_OWNERS = {
             "ConnectorMappedPinEvidence",
             "ConnectorCoverageEntry",
             "ConnectorCoverageReport",
+            "ConnectorInterfaceReview",
+            "ConnectorInventoryReview",
         ),
     ),
     "connector_peer_pin_models.py": (

@@ -10,11 +10,13 @@ from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 def verify_connector_peer_scope(ctx: ConnectorReturnFixtureContext):
     """Verify connector peer-scope findings and controls."""
     from .hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
+    from .hwrepo.connector_coverage_models import (
+        ConnectorInterfaceReview,
+        ConnectorInventoryReview,
+    )
     from .hwrepo.design_lint import evaluate
     from .hwrepo.evidence import digest
     from .hwrepo.models import (
-        ConnectorInterfaceReview,
-        ConnectorInventoryReview,
         ContractCoachReport,
         DesignLintPolicy,
         InterfacePin,

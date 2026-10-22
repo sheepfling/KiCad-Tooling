@@ -2547,6 +2547,42 @@
       ]
     },
     {
+      "rule_id": "connector.mapped_interface_signal_unassigned",
+      "title": "Mapped connector signal pin has no net assignment",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted connector whose complete pin inventory and interface map are source-matched to the exported netlist and interface catalog, emit a REVIEW candidate for each role=signal contact with no net assignment, no explicit unconnected_pin_reasons disposition, a generic or missing native pin function, and no native power_in or power_out type.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The project interface map supplies a review role, not proof that every signal contact must be connected. An intentionally open contact needs an explicit unconnected_pin_reasons entry or a project rule override/ignore.",
+        "Only generic or missing native pin-function metadata is in scope; named signal contacts and typed power pins are left to their existing connector checks.",
+        "DNP references, stale or incomplete interface coverage, and evidence that does not match the exported pin inventory, pin functions, and nets are excluded.",
+        "The review does not determine the correct net, prove schematic intent, establish PCB copper continuity, or verify an off-board or physical connection."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_interface_signal_unassigned.test_open_generic_mapped_signal_pin_requests_review_with_source_evidence"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_interface_signal_unassigned.test_connected_documented_open_and_ineligible_pins_are_controls",
+        "tests.test_connector_mapped_interface_signal_unassigned.test_source_mismatched_or_digestless_coverage_cannot_trigger_review",
+        "tests.test_connector_mapped_interface_signal_unassigned.test_review_obeys_project_policy_and_exact_ignore"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_interface_signal_unassigned.test_review_is_stable_under_input_order_and_clears_when_connected"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_signal_pins",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_signal_pins"
+    },
+    {
       "rule_id": "connector.return_pin_on_positive_rail",
       "title": "Connector return pin is assigned to a positive rail",
       "status": "active",

@@ -85,6 +85,8 @@ def unconnected_named_connector_pins(
             category = "supply"
         role_source = "native_symbol"
         mapped = reviewed_connector_pins.get(pin)
+        if mapped is not None and mapped.unconnected_reason is not None:
+            continue
         if (
             category is None
             and mapped is not None

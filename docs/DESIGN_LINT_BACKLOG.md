@@ -399,7 +399,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 149 rules are implemented with synthetic regression coverage.
+The following 150 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 
@@ -470,6 +470,7 @@ skipped under prerelease policy.
 - `connector.return_pin_on_positive_rail`
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
+- `connector.mapped_interface_signal_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
 - `component.unconnected_power_input`
@@ -2763,7 +2764,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 149 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 150 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
 - **Cohort input:** The public
@@ -9020,6 +9021,39 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_metadata_open_outlier")'
   ```
 
+#### LINT-168 — Review unassigned generic signal contacts in mapped interfaces
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_interface_signal_unassigned`.
+- **Gap:** Peer heuristics can compare repeated connector pins, but a single
+  connector can still have an unassigned generic contact whose intended signal
+  role exists only in the project's independently reviewed interface map.
+- **Predicate:** Require a complete connector pin inventory, complete
+  source-matched interface map, current interface-catalog digest, a mapped
+  `role=signal` contact with no assigned net, no intentional-open reason, a
+  generic or missing native pin function, and no native `power_in` or
+  `power_out` electrical type. Exclude DNP references.
+- **Policy boundary:** The map supplies a review role, not proof that every
+  signal contact must connect. The finding asks whether a board connection is
+  missing or the contact is intentionally open. Record an intentional open in
+  `unconnected_pin_reasons`; assigning a net to a pin with such a reason makes
+  connector coverage incomplete. The check does not choose a target net or
+  establish PCB copper or off-board continuity.
+- **Evidence:** Tooling-owned synthetic fault and valid controls cover an open
+  generic UART contact, a connected contact, a reasoned intentional open,
+  DNP, non-signal roles, typed power pins, and source-mismatched or digestless
+  coverage. Metamorphic coverage checks ordering stability and that assigning
+  the contact clears the finding.
+  Policy tests cover REVIEW, block, off, and exact-ignore behavior. No customer
+  or proprietary board source is used. Exact native fixture coverage and
+  reviewer precision remain unmeasured.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_connector_mapped_interface_signal_unassigned.py \
+    -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -12101,7 +12135,7 @@ is not a reason by itself to expand its scope or change its default policy.
   [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 149 active rules. Each entry has a deterministic predicate, evidence
+contains 150 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
 The schematic geometry rules and the generic connector and component peer-pin
