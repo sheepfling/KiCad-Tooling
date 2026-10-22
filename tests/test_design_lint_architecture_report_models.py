@@ -106,3 +106,28 @@ def test_connectivity_snapshot_owners_stay_bounded_and_theme_owned() -> None:
         "design_lint_connectivity_snapshot_models"
     )
     assert "DesignLintPinMetadataChange" in reconciliation_source
+
+
+def test_report_validation_owners_stay_bounded_by_evidence_scope() -> None:
+    owners = {
+        "design_lint_report_evidence_validation.py": "validate_source_bound_evidence",
+        "design_lint_report_peer_coverage_validation.py": "validate_peer_coverage",
+        "design_lint_report_connector_coverage_validation.py": (
+            "validate_connector_peer_pin_coverage"
+        ),
+        "design_lint_report_catalog_validation.py": "validate_catalogued_findings",
+    }
+    for name, function_name in owners.items():
+        path = TOOLING / "hwrepo" / name
+        assert path.is_file(), f"Missing report validation owner: {name}"
+        source = path.read_text(encoding="utf-8")
+        assert len(source.splitlines()) < 500
+        tree = ast.parse(source, filename=path.as_posix())
+        assert any(
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == function_name
+            for node in tree.body
+        ), f"{function_name} must remain owned by {name}"
+
+    report_source = OWNER.read_text(encoding="utf-8")
+    for owner in owners:
+        assert f"from .{owner.removesuffix('.py')} import" in report_source
