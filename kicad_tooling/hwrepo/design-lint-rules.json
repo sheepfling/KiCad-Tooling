@@ -2968,7 +2968,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_design_lint_control_inputs.TestDesignLintControlInput.test_connected_control_bias_finding_is_order_stable_and_direct_resistor_clears_it",
-        "tests.test_design_lint_control_input_bias_paths.test_unbranched_fitted_resistor_chain_clears_control_bias_prompt"
+        "tests.test_design_lint_control_input_bias_paths.test_unbranched_fitted_resistor_chain_clears_control_bias_prompt",
+        "tests.test_design_lint_bootstrap_controls.test_bootstrap_classification_is_stable_under_net_relabeling_and_map_order"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/control_input_inventory.py#connected_control_inputs_without_visible_rail_resistor",

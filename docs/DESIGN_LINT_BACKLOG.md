@@ -2755,7 +2755,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 149 active rules; CI requires every new
+- **Status:** Baseline complete for all 150 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2767,6 +2767,11 @@ is not a reason by itself to expand its scope or change its default policy.
   audit: 150 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
+  Control-input metamorphic coverage now relabels both nets, reverses net and
+  pin-map order, and reverses capacitor pin inventory order; the recognized
+  BOOT/switch-capacitor topology stays quiet, while its unproven same-device
+  control retains the same review finding. The comparison uses rule and subject
+  identity, not source-bound evidence that must change with the input.
 - **Cohort input:** The public
   [kicad-happy-testharness methodology](https://github.com/aklofas/kicad-happy-testharness/blob/main/methodology.md)
   distinguishes baseline consistency from correctness and describes synthetic
@@ -4616,6 +4621,8 @@ is not a reason by itself to expand its scope or change its default policy.
   `PH` pin net. Bare `BOOT` elsewhere remains reviewable, including the
   unconnected-input rule. Synthetic controls preserve `BOOT0`, DNP-capacitor,
   wrong-symbol, incomplete-inventory, and different-device prompts. A
+  metamorphic case also preserves both the quiet and review outcomes when net
+  labels and typed-netlist mapping order change. A
   source-bound native fixture is registered in the KiCad 10.0.5 fixture lane.
   Its pinned local native-container run passed twice with the same normalized
   typed-netlist digest (`1f47dd17c62a0e8e962582fbcc104123d18e5deb6c09b978c858d15443e82d83`)

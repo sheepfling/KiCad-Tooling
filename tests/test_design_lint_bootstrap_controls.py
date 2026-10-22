@@ -71,6 +71,41 @@ def _bootstrap_capacitor_netlist(
     )
 
 
+def _relabel_and_reorder_netlist(netlist: NetlistContract) -> NetlistContract:
+    updates = {
+        field: dict(reversed(tuple(getattr(netlist, field).items())))
+        for field in (
+            "components",
+            "component_symbols",
+            "component_pin_numbers",
+            "pin_functions",
+            "pin_electrical_types",
+        )
+    }
+    updates["nets"] = {
+        f"RENAMED_NET_{index}": tuple(reversed(pins))
+        for index, (_name, pins) in enumerate(reversed(tuple(netlist.nets.items())), start=1)
+    }
+    updates["component_pin_numbers"] = {
+        reference: tuple(reversed(pin_numbers))
+        for reference, pin_numbers in updates["component_pin_numbers"].items()
+    }
+    return netlist.model_copy(update=updates)
+
+
+def _connected_bias_signature(
+    netlist: NetlistContract,
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    report = evaluate("synthetic-bootstrap-pin", coach(netlist), DesignLintPolicy())
+    return tuple(
+        sorted(
+            (finding.rule_id, tuple(finding.evidence["control_inputs"]))
+            for finding in report.findings
+            if finding.rule_id == "control.connected_control_input_without_visible_bias"
+        )
+    )
+
+
 def test_unconnected_bootstrap_pin_is_not_a_boot_mode_control() -> None:
     source = control_input_pins()
     bootstrap = source.model_copy(
@@ -124,6 +159,33 @@ def test_bare_boot_with_bootstrap_capacitor_is_not_a_bias_gap(switch_function: s
         and item.evidence["net"] == ("BOOTSTRAP_NODE",)
         for item in report.findings
     )
+
+
+@pytest.mark.parametrize(
+    ("switch_function", "expected"),
+    (
+        ("SW", ()),
+        (
+            "GPIO",
+            (
+                (
+                    "control.connected_control_input_without_visible_bias",
+                    ("U1.3: BOOT (boot/strap, input_low)",),
+                ),
+            ),
+        ),
+    ),
+    ids=("proved-bootstrap-topology", "unproven-topology"),
+)
+def test_bootstrap_classification_is_stable_under_net_relabeling_and_map_order(
+    switch_function: str,
+    expected: tuple[tuple[str, tuple[str, ...]], ...],
+) -> None:
+    source = _bootstrap_capacitor_netlist("BOOT", switch_function=switch_function)
+    transformed = _relabel_and_reorder_netlist(source)
+
+    assert _connected_bias_signature(source) == expected
+    assert _connected_bias_signature(transformed) == expected
 
 
 @pytest.mark.parametrize(
