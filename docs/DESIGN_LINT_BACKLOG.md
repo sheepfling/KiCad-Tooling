@@ -9059,8 +9059,9 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")' \
     tests/test_connector_mapped_interface_signal_unassigned.py
 
-  python -I -m pytest tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
-    -m 'design_lint and connector_lint and interface_lint and parity_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
+  python -I -m pytest \
+    tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
+    -m 'design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
   ```
 
   Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to include the two exact-version
