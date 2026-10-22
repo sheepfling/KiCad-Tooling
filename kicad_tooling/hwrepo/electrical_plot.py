@@ -15,7 +15,7 @@ from itertools import pairwise
 from pathlib import Path
 
 from .electrical import SimulationCase
-from .models import FrequencyAnalysis, SimulationMeasure, TransientAnalysis
+from .electrical_simulation_models import FrequencyAnalysis, SimulationMeasure, TransientAnalysis
 from .waveform_data import WaveformData, WaveformSeries
 
 

@@ -131,6 +131,11 @@ intended requirement.
   tests guard owner size, import boundaries, and export identity. This reduces
   `hwrepo/models.py` from 8,195 to 7,758 lines; shared finite/electrical measure
   aliases now have their canonical owner in `model_primitives.py`.
+  Electrical power-budget and simulator contracts now live in
+  `electrical_simulation_models.py`. Electrical, SPICE, plot, and chart
+  services import that owner directly while `models.py` retains
+  identity-compatible exports. Architecture tests protect its size and import
+  boundary; the registry shrank from 3,275 to 3,136 lines.
   CAN termination requirements now live in `can_termination_models.py`; the
   contract, evidence, and execution services import that owner directly while
   the shared registry retains identity-compatible exports. The protocol-model

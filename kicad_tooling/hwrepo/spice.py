@@ -12,7 +12,8 @@ from pathlib import Path
 from .contract_coach import run_command
 from .contracts import repo_path, write_model
 from .electrical import SimulationCase, regular_input_bytes
-from .models import CommandEvidence, ElectricalCheck, TransientAnalysis
+from .electrical_simulation_models import TransientAnalysis
+from .models import CommandEvidence, ElectricalCheck
 from .waveform_data import read_waveform
 
 # Analysis/control directives are generated here, never inherited from a model file.

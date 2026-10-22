@@ -14,18 +14,20 @@ from .analysis_state_models import (
 )
 from .contracts import parse_model_text, read_model, repo_path
 from .discovery import load_config, load_registry
+from .electrical_simulation_models import (
+    FrequencyAnalysis,
+    HighFrequencyAnalysis,
+    PowerAnalysis,
+    TransientAnalysis,
+)
 from .grounding_models import GroundingAnalysis
 from .models import (
     ElectricalAnalysisContract,
     ElectricalCheck,
-    FrequencyAnalysis,
-    HighFrequencyAnalysis,
     NetlistContract,
-    PowerAnalysis,
     ProjectConfig,
     ProjectKind,
     ProjectManifest,
-    TransientAnalysis,
 )
 from .pcb_test_access_models import TestAccessAnalysis
 from .pin_connectivity_models import PinConnectivityAnalysis
