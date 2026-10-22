@@ -23,6 +23,8 @@ OUTPUT_CAPABLE_TYPES = frozenset(
 
 _CONTROL_INPUT_TYPES = frozenset({"input", "input_low"})
 
+# A power-stage BOOTSTRAP terminal is not an MCU boot-mode strap. Keep the
+# ambiguous bare BOOT alias reviewable, but do not classify the distinct word.
 _CONTROL_FUNCTION_FAMILIES = {
     "reset": "reset",
     "resetn": "reset",
@@ -55,7 +57,6 @@ _CONTROL_FUNCTION_FAMILIES = {
     "boot1": "boot/strap",
     "bootsel": "boot/strap",
     "bootmode": "boot/strap",
-    "bootstrap": "boot/strap",
     "nrpiboot": "boot/strap",
     "strap0": "boot/strap",
     "strap1": "boot/strap",

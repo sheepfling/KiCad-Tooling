@@ -851,8 +851,10 @@ The first rules are:
   The exported pin type must be `input` or `input_low`. This prompts review of
   intentional non-use, internal or off-board handling, and a possibly missing
   connection. Pins on DNP components are excluded. It does not infer bias,
-  polarity, or an electrical requirement. The `POR` token is recognized as a
-  reset alias because KiCad's [MCU_Module:CHIP-PRO symbol][chip-pro-symbol]
+  polarity, or an electrical requirement. Power-stage `BOOTSTRAP` names are
+  not treated as boot-mode aliases; bare `BOOT` remains ambiguous and may
+  still warrant review. The `POR` token is recognized as a reset alias because
+  KiCad's [MCU_Module:CHIP-PRO symbol][chip-pro-symbol]
   names an input `POR_B`; the unrelated token `PORN` remains outside this
   alias.
 - `control.connected_control_input_without_visible_bias` reports one review
@@ -865,7 +867,9 @@ The first rules are:
   evidence for review and do not suppress it. The rule uses native
   `input`/`input_low` types, excludes DNP control components, and can be
   changed per project to `review`, `block`, or `off`, or cleared by an exact
-  ignore. It does not infer that a local resistor is required. DNP and
+  ignore. Power-stage `BOOTSTRAP` names are excluded; bare `BOOT` remains
+  ambiguous. This rule does not verify required bootstrap-capacitor topology.
+  It does not infer that a local resistor is required. DNP and
   zero-ohm resistors, branched or ambiguous paths, resistor arrays, jumpers,
   custom rail names, internal pulls, off-board bias, runtime drive, resistor
   adequacy, and PCB continuity are outside the heuristic. When the electrical

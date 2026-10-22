@@ -4604,6 +4604,18 @@ is not a reason by itself to expand its scope or change its default policy.
   The bounded reset alias set includes the `POR` token because the official
   KiCad `MCU_Module:CHIP-PRO` symbol names an input `POR_B`; `PORN` remains a
   negative control rather than a substring match.
+- **Power bootstrap pin boundary:** Cohort review found KiCad-Happy's LC
+  detector explicitly recognizes bootstrap capacitors between pins named
+  `BST`, `BOOT`, `BOOTSTRAP`, or `CBST` and a switching node
+  ([source](https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L698-L710)).
+  The tooling's exact `BOOTSTRAP` alias treated that power-stage input as a
+  boot-mode strap in both unconnected and connected-input checks. The
+  exact `BOOTSTRAP` alias is removed; bare `BOOT` remains reviewable because
+  it is also used for MCU boot-mode pins. Synthetic controls cover an
+  unconnected bootstrap terminal and a connected bootstrap-capacitor node,
+  while the existing `BOOT0` fault remains active. This only prevents
+  misclassification; it does not verify a required bootstrap capacitor,
+  part value, or topology. No cohort code or board project was imported.
 - **Unconnected-pin input:** KiCad's native XML uses synthetic names such as
   `unconnected-(J1-SHIELD-Pad3)` for pins without net assignments. The native
   adapter now retains those pin references in `NetlistContract.unconnected_nets`
