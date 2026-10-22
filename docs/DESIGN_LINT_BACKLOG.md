@@ -9047,15 +9047,20 @@ is not a reason by itself to expand its scope or change its default policy.
   Policy tests cover REVIEW, block, off, and exact-ignore behavior. Tooling-owned
   native fault/control schematics now cover a generic open signal contact and
   its correctly assigned UART control with digest-pinned KiCad 10.0.0 and
-  10.0.5 test lanes. The hosted exact-native run has not yet been recorded.
-  No customer or proprietary board source is used; reviewer precision remains
-  unmeasured.
+  10.0.5 test lanes. A synthetic CLI/MCP parity regression also confirms both
+  surfaces emit the same REVIEW finding with the current interface-catalog
+  digest and clear the rule when the signal pin is assigned. The hosted
+  exact-native run has not yet been recorded. No customer or proprietary board
+  source is used; reviewer precision remains unmeasured.
 - **Focused selection:**
 
   ```sh
   python -I -m pytest \
     -m 'design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")' \
     tests/test_connector_mapped_interface_signal_unassigned.py
+
+  python -I -m pytest tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
+    -m 'design_lint and connector_lint and interface_lint and parity_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_unassigned")'
   ```
 
   Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to include the two exact-version

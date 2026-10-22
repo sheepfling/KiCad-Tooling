@@ -2566,13 +2566,15 @@
       ],
       "fault_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_open_generic_mapped_signal_pin_requests_review_with_source_evidence",
-        "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable"
+        "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_connected_documented_open_and_ineligible_pins_are_controls",
         "tests.test_connector_mapped_interface_signal_unassigned.test_source_mismatched_or_digestless_coverage_cannot_trigger_review",
         "tests.test_connector_mapped_interface_signal_unassigned.test_review_obeys_project_policy_and_exact_ignore",
-        "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable"
+        "tests.test_connector_mapped_interface_signal_unassigned.test_native_mapped_signal_pin_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_mapped_interface_signal_unassigned.test_review_is_stable_under_input_order_and_clears_when_connected"

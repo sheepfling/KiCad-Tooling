@@ -1,0 +1,23 @@
+<export>
+  <components>
+    <comp ref="J1">
+      <value>Synthetic generic UART</value>
+      <footprint>Synthetic:3Pin</footprint>
+      <libsource lib="Synthetic" part="GenericUart" />
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Synthetic" part="GenericUart">
+      <pins>
+        <pin num="1" name="Pin_1" type="output" />
+        <pin num="2" name="2" type="input" />
+        <pin num="3" name="Pin_3" type="passive" />
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net name="UART_TX"><node ref="J1" pin="1" /></net>
+    <net name="UART_RX"><node ref="J1" pin="2" /></net>
+    <net name="SIGNAL_RETURN"><node ref="J1" pin="3" /></net>
+  </nets>
+</export>
