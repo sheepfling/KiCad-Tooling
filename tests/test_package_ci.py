@@ -20,6 +20,7 @@ from scripts.lint_gate_scope import (
     configured_native_fixtures,
     parse_tag_message,
     read_tag_scope,
+    required_native_fixtures_by_rule,
     write_github_scope,
 )
 
@@ -120,16 +121,20 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
     assert scope.native_fixtures == ("KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES",)
 
 
-def test_lint_tag_selects_bjt_base_drive_without_a_native_fixture_switch() -> None:
+def test_lint_tag_selects_bjt_base_drive_and_its_native_fixture_switch() -> None:
     repository = Path(__file__).resolve().parents[1]
+    fixtures = configured_native_fixtures(repository)
     scope = parse_tag_message(
-        "BJT base-drive rule gate\n\nLint-Rule: component.bjt_base_direct_drive\n",
-        configured_native_fixtures(repository),
+        "BJT base-drive rule gate\n\n"
+        "Lint-Rule: component.bjt_base_direct_drive\n"
+        "Native-Fixture: KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES\n",
+        fixtures,
         active_design_lint_rule_ids(),
+        required_native_fixtures_by_rule(),
     )
 
     assert scope.rule_id == "component.bjt_base_direct_drive"
-    assert scope.native_fixtures == ()
+    assert scope.native_fixtures == ("KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES",)
     assert scope.pytest_markexpr == (
         'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
     )
@@ -185,6 +190,10 @@ def test_lint_tag_selects_bjt_base_drive_without_a_native_fixture_switch() -> No
         (
             "component.bjt_terminal_order_on_named_rails",
             "KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES",
+        ),
+        (
+            "component.bjt_base_direct_drive",
+            "KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES",
         ),
     ),
 )

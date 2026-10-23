@@ -3147,15 +3147,18 @@
       "fault_fixtures": [
         "tests.test_bjt_base_drive.test_bjt_base_sharing_an_output_net_is_reviewed",
         "tests.test_bjt_base_drive.test_native_pin_functions_map_the_base_independent_of_pin_number",
-        "tests.test_bjt_base_drive.test_native_power_output_pin_type_is_also_output_capable"
+        "tests.test_bjt_base_drive.test_native_power_output_pin_type_is_also_output_capable",
+        "tests.test_bjt_base_drive_native_fixture.test_native_bjt_base_drive_fault_and_series_control_are_deterministic"
       ],
       "valid_control_fixtures": [
-        "tests.test_bjt_base_drive.test_series_resistor_and_incomplete_or_unsupported_cases_stay_quiet"
+        "tests.test_bjt_base_drive.test_series_resistor_and_incomplete_or_unsupported_cases_stay_quiet",
+        "tests.test_bjt_base_drive_native_fixture.test_native_bjt_base_drive_fault_and_series_control_are_deterministic"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_bjt_base_drive.test_input_ordering_preserves_the_fingerprint_and_evidence",
-        "tests.test_design_lint_determinism_components.test_bjt_base_direct_drive_fault_and_series_control_are_stable_across_hash_seeds"
+        "tests.test_design_lint_determinism_components.test_bjt_base_direct_drive_fault_and_series_control_are_stable_across_hash_seeds",
+        "tests.test_bjt_base_drive_native_fixture.test_native_bjt_base_drive_fault_and_series_control_are_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_bjt_base_drive.py#bjts_with_direct_output_base_drive",
@@ -3164,7 +3167,10 @@
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "components",
-      "implementation_owner": "kicad_tooling/hwrepo/component_bjt_base_drive.py#bjts_with_direct_output_base_drive"
+      "implementation_owner": "kicad_tooling/hwrepo/component_bjt_base_drive.py#bjts_with_direct_output_base_drive",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES"
+      ]
     },
     {
       "rule_id": "component.polarized_capacitor_reversed_on_named_rails",

@@ -21,6 +21,7 @@ def test_rule_owner_is_theme_scoped_and_stays_below_review_limits() -> None:
         "kicad_tooling/hwrepo/design_lint_component_candidates.py",
         "tests/design_lint_fixtures/bjt_base_drive.py",
         "tests/test_bjt_base_drive.py",
+        "tests/test_bjt_base_drive_native_fixture.py",
         "tests/test_design_lint_architecture_bjt_base_drive.py",
     )
     sizes = {path: line_count(REPO_ROOT / path) for path in modules}

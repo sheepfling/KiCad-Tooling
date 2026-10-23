@@ -95,6 +95,18 @@ metamorphic, CLI/MCP, and native cases can be selected together. Execution-cost
 markers live in `tests/execution_test_markers.py`; mixed modules mark only the
 test functions that actually run the exact native tool:
 
+The BJT base-drive review has synthetic rule/policy tests and an exact-version
+native source-export lane. Its native cases use only tooling-owned schematics:
+direct NPN/PNP drive faults and a series-resistor control.
+
+```sh
+.venv/bin/python -I -B -m pytest -q tests/test_bjt_base_drive.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
+KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q tests/test_bjt_base_drive_native_fixture.py \
+  -m 'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
+```
+
 The source-bound contract-coach tests are split by inspection/reporting and
 capture/runner behavior. Select them without running unrelated tests with:
 

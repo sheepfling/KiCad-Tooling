@@ -27,7 +27,7 @@ FIXTURES = {
 }
 EXPECTED_SOURCE_HASHES = {
     "fault": "deca669b12ceec4fbd21004d48f6eebbe86f68dd9820a727bb01adbd9a663c9d",
-    "control": "311ed906cd66f4368e0e7400ea6d4a8ec32e32cb37dd803e708e309b6d1587da",
+    "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
 }
 EXPECTED_SUBJECTS = {
     "fault": (

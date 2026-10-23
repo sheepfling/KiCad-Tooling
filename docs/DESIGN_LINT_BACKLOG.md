@@ -9523,12 +9523,19 @@ is not a reason by itself to expand its scope or change its default policy.
   resistor control; native pin-role remapping; unsupported, DNP, incomplete,
   ambiguous, and non-output controls; project `review`/`block`/`off` and exact
   ignore behavior; input-order stability; and three-process hash-seed stability.
-  All inputs are tooling-owned synthetic netlists.
+  Tooling-owned native schematic fault/control fixtures also repeat the direct
+  output-to-base and series-resistor topologies on digest-pinned KiCad 10.0.0
+  and 10.0.5, with source hashes, native pin-role/type evidence, and repeatable
+  netlist/ERC checks.
 - **Focused selection:**
 
   ```sh
   python -I -m pytest tests/test_bjt_base_drive.py \
     -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
+
+  KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES=1 python -I -m pytest \
+    tests/test_bjt_base_drive_native_fixture.py \
+    -m 'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

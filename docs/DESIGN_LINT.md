@@ -3627,6 +3627,13 @@ the transistor's operating point is safe. It does not evaluate footprint
 mapping, PCB copper, or physical behavior. Projects can override the rule to
 `block` or `off`, or ignore an exact reviewed finding.
 
+The exact-version native fixture lane exports a tooling-owned direct-drive
+fault and a series-resistor control twice on KiCad 10.0.0 and 10.0.5. It
+confirms native B/C/E functions, output pin types, net membership, and repeatable
+findings for both NPN and PNP examples. The control remains a schematic
+connectivity example; it does not establish resistor sizing or physical
+performance.
+
 ## Require an authored RS-485 topology
 
 When the reviewed bus design identifies the duplex arrangement and local
