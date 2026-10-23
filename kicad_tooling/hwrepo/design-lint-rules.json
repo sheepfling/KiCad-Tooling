@@ -4408,23 +4408,30 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each fitted U/IC with recognized, uniquely assigned native SDA/SCL pin functions on a distinct net pair, inspect each line with a recognized fitted direct or unbranched 1 kΩ–100 kΩ resistor path to a named positive rail. Emit a REVIEW candidate when no unique exact ordered bus requirement supplies an I2cPullupVoltageCompatibilityRequirement covering every recognized fitted U/IC endpoint pin on that line, or when its source-bound pull-up or voltage-compatibility check does not pass.",
+      "predicate": "For each fitted U/IC with recognized, uniquely assigned native SDA/SCL pin functions on a distinct net pair, inspect each line with a recognized fitted direct or unbranched 1 kΩ–100 kΩ resistor path to a named positive rail, or with a source-matched project-authored resistor-array channel in that range. Emit a REVIEW candidate when no unique exact ordered bus requirement supplies an I2cPullupVoltageCompatibilityRequirement covering every recognized fitted U/IC endpoint pin on that line, or when its source-bound pull-up or voltage-compatibility check does not pass.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "This is a contract-coverage prompt, not a voltage calculation or safety verdict. It does not infer rail voltage, input tolerance, level shifting, pin direction, or electrical compatibility from names.",
         "Only fitted U/IC endpoints with recognized SDA/SCL native function aliases and uniquely assigned nets are included. Connectors and off-board peers are not endpoint evidence; DNP, incomplete, ambiguous, and unsupported multi-segment endpoints are skipped.",
-        "Visible pull-ups are limited to recognized R-designated resistors or exact Device:R symbols in direct or unbranched paths from 1 kΩ through 100 kΩ. Resistor arrays, active pull-ups, internal pull-ups, and off-board pull-ups are not discovered by this rule.",
+        "Discrete visible pull-ups are limited to recognized R-designated resistors or exact Device:R symbols in direct or unbranched paths from 1 kΩ through 100 kΩ. A resistor array counts only when an exact project-authored channel map matches native component identity, complete pin inventory, fitted state, and signal/rail pin assignments; unmapped, stale, DNP, or ambiguous arrays are not discovered. Active, internal, and off-board pull-ups are not discovered.",
         "A complete input-limit map establishes only authored coverage. The separate electrical contract check evaluates its mapped maximum limits; neither check validates the cited datasheet or proves PCB connectivity."
       ],
       "fault_fixtures": [
         "tests.test_i2c_pullup_voltage_coverage.test_visible_pullups_without_exact_input_limits_request_review",
+        "tests.test_i2c_pullup_voltage_coverage.test_exact_mapped_array_channels_without_input_limits_request_review",
+        "tests.test_i2c_pullup_voltage_coverage.test_miswired_array_channel_is_excluded_without_hiding_valid_peer_channel",
         "tests.test_i2c_pullup_voltage_coverage.test_partial_input_limit_map_names_the_uncovered_peer_and_dnp_is_excluded",
-        "tests.test_i2c_pullup_voltage_coverage.test_failing_authored_voltage_limit_keeps_the_review_candidate_open"
+        "tests.test_i2c_pullup_voltage_coverage.test_failing_authored_voltage_limit_keeps_the_review_candidate_open",
+        "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
+        "tests.test_i2c_pullup_native_fixture_lane.test_native_array_channel_fault_and_control_on_supported_images"
       ],
       "valid_control_fixtures": [
         "tests.test_i2c_pullup_voltage_coverage.test_exact_input_limits_cover_all_recognized_endpoint_pins",
+        "tests.test_i2c_pullup_voltage_coverage.test_exact_voltage_limits_cover_source_bound_array_channels",
+        "tests.test_i2c_pullup_voltage_coverage.test_dnp_unmapped_or_stale_arrays_are_not_guessed_as_pullups",
+        "tests.test_i2c_pullup_voltage_coverage.test_array_channels_outside_visible_resistance_window_are_excluded",
         "tests.test_i2c_pullup_voltage_coverage.test_partial_input_limit_map_names_the_uncovered_peer_and_dnp_is_excluded",
         "tests.test_i2c_pullup_voltage_coverage.test_no_visible_local_pullup_is_outside_this_coverage_prompt",
         "tests.test_i2c_pullup_voltage_coverage.test_ambiguous_multiport_endpoint_is_not_classified"
@@ -4435,10 +4442,16 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_pullup_voltage_coverage.py#i2c_pullup_voltage_coverage",
+        "kicad_tooling/hwrepo/i2c_pullup_contract_paths.py#i2c_array_component_issues",
+        "kicad_tooling/hwrepo/i2c_pullup_contract_paths.py#i2c_array_channel_issue",
+        "kicad_tooling/hwrepo/resistor_paths.py#visible_resistor_pullups",
         "kicad_tooling/hwrepo/design_lint_i2c_candidates.py#i2c_pullup_candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_voltage_coverage.py#i2c_pullup_voltage_coverage"
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_voltage_coverage.py#i2c_pullup_voltage_coverage",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES"
+      ]
     },
     {
       "rule_id": "bus.i2c_peer_reference_review",

@@ -9,6 +9,8 @@ from .connector_identity import power_function_key
 from .models import NetlistContract
 
 RESISTOR_REFERENCE_PATTERN = re.compile(r"^R[A-Z]*[0-9]+$", re.IGNORECASE)
+VISIBLE_PULLUP_MIN_OHMS = 1_000.0
+VISIBLE_PULLUP_MAX_OHMS = 100_000.0
 
 _ENGINEERING_VALUE = re.compile(r"^(?P<whole>[0-9]+)(?P<unit>[krm])(?P<fraction>[0-9]+)$")
 
@@ -153,10 +155,10 @@ def visible_resistor_pullups(
     return visible_resistor_paths(
         observed,
         positive_power_nets(observed),
-        minimum_resistor_ohms=1_000,
-        maximum_resistor_ohms=100_000,
-        minimum_path_ohms=1_000,
-        maximum_path_ohms=100_000,
+        minimum_resistor_ohms=VISIBLE_PULLUP_MIN_OHMS,
+        maximum_resistor_ohms=VISIBLE_PULLUP_MAX_OHMS,
+        minimum_path_ohms=VISIBLE_PULLUP_MIN_OHMS,
+        maximum_path_ohms=VISIBLE_PULLUP_MAX_OHMS,
         include_device_r_symbol=include_device_r_symbol,
     )
 

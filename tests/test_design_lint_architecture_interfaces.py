@@ -138,18 +138,6 @@ DIGITAL_PEER_VOLTAGE_MODULES = (
 )
 
 
-I2C_PEER_REFERENCE_MODULES = (
-    "i2c_peer_reference_models.py",
-    "i2c_peer_reference_scan.py",
-)
-
-CONNECTOR_MAPPED_SIGNAL_MODULES = (
-    "connector_mapped_interface_pins.py",
-    "connector_mapped_signal_sharing.py",
-    "connector_mapped_signal_split_nets.py",
-)
-
-
 def test_connector_pin_analysis_facade_stays_small() -> None:
     facade = HWREPO / "connector_pins.py"
 
@@ -484,27 +472,3 @@ def test_digital_peer_voltage_review_stays_split_by_responsibility() -> None:
     }
 
     assert not oversized, f"Keep digital peer review modules below 500 lines: {oversized}"
-
-
-@pytest.mark.interface_lint
-def test_i2c_peer_reference_review_stays_in_focused_protocol_modules() -> None:
-    modules = [HWREPO / name for name in I2C_PEER_REFERENCE_MODULES]
-
-    assert all(path.is_file() for path in modules)
-    module_sizes = {path.name: _line_count(path) for path in modules}
-    oversized = {
-        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
-    }
-    assert not oversized, f"Keep I2C peer-reference modules below 500 lines: {oversized}"
-
-
-@pytest.mark.connector_lint
-def test_mapped_connector_signal_checks_stay_in_a_focused_owner_module() -> None:
-    modules = [HWREPO / name for name in CONNECTOR_MAPPED_SIGNAL_MODULES]
-
-    assert all(path.is_file() for path in modules)
-    module_sizes = {path.name: _line_count(path) for path in modules}
-    oversized = {
-        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
-    }
-    assert not oversized, f"Keep mapped connector signal checks below 500 lines: {oversized}"

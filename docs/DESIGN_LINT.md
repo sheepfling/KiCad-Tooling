@@ -3366,9 +3366,10 @@ this is not a waveform simulation.
 
 ### Review I2C pull-up input-limit coverage
 
-When a fitted discrete pull-up path reaches a named positive rail, lint reviews
-whether the project has recorded the rail ceiling and maximum bus voltage for
-every recognized fitted U/IC SDA or SCL pin on that line. Add a
+When a fitted discrete pull-up path or an exact mapped resistor-array channel
+reaches a named positive rail, lint reviews whether the project has recorded
+the rail ceiling and maximum bus voltage for every recognized fitted U/IC SDA
+or SCL pin on that line. Add a
 `voltage_compatibility` object to the corresponding `sda` or `scl` requirement;
 it records an independently reviewed scope, rail basis, and exact pin limits.
 The electrical contract checks the authored maximum rail voltage against those
@@ -3376,10 +3377,14 @@ pin limits. The lint rule only checks that the map covers recognized fitted
 peers; it does not infer voltage values or compatibility from names.
 
 The rule defaults to `review` and supports project `block`, `off`, and exact
-fingerprint ignores. It recognizes only conventional fitted resistor paths
-from 1 kΩ through 100 kΩ. Resistor arrays, active and internal pull-ups,
-connectors, and off-board endpoints are outside this coverage prompt. A passing
-coverage result does not validate cited datasheets or establish PCB continuity.
+fingerprint ignores. It recognizes conventional fitted resistor paths from
+1 kΩ through 100 kΩ. A resistor array counts only when the project supplies an
+exact channel map and native evidence matches its component identity, complete
+pin inventory, fitted state, and signal/rail pin assignments; unmapped, stale,
+miswired, and DNP channels are excluded. Active and internal pull-ups,
+connectors, and off-board endpoints remain outside this coverage prompt. A
+passing coverage result does not validate cited datasheets or establish PCB
+continuity.
 
 An optional `capacitance_scope` inventories fitted C-prefixed components and
 components with recognized capacitor-symbol identities whose native pin

@@ -6,7 +6,7 @@ import pytest
 
 from kicad_tooling.hwrepo.bus_heuristics import i2c_pullup_heuristic_coverage
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate
-from kicad_tooling.hwrepo.i2c_pullup_models import I2cPullupAnalysis
+from kicad_tooling.hwrepo.i2c_pullup_models import I2cPullupAnalysis, I2cPullupLineRequirement
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     ContractCoachReport,
@@ -15,6 +15,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
 )
+from tests.design_lint_fixtures.i2c_arrays import array_netlist, array_requirement
 from tests.electrical_i2c_support import (
     i2c_pullup_voltage_requirement,
     i2c_series_pullup_netlist,
@@ -70,7 +71,7 @@ def _voltage_requirement_for_two_endpoints() -> I2cPullupAnalysis:
     requirement = i2c_pullup_voltage_requirement()
     bus = requirement.buses[0]
 
-    def add_endpoint(line):
+    def add_endpoint(line: I2cPullupLineRequirement) -> I2cPullupLineRequirement:
         voltage = line.voltage_compatibility
         assert voltage is not None
         additional = voltage.input_limits[0].model_copy(
@@ -90,6 +91,36 @@ def _voltage_requirement_for_two_endpoints() -> I2cPullupAnalysis:
                 bus.model_copy(update={"sda": add_endpoint(bus.sda), "scl": add_endpoint(bus.scl)}),
             )
         }
+    )
+
+
+def _mapped_array_netlist(
+    *, dnp: tuple[str, ...] = (), wrong_sda_net: bool = False
+) -> NetlistContract:
+    netlist = array_netlist(dnp=dnp, wrong_sda_net=wrong_sda_net)
+    return netlist.model_copy(
+        update={
+            "components": {
+                **netlist.components,
+                "U1": ComponentContract(value="Synthetic I2C target", footprint="Synthetic:SOIC8"),
+            }
+        }
+    )
+
+
+def _array_requirement_with_voltage_limits() -> I2cPullupAnalysis:
+    requirement = array_requirement()
+    voltage_requirement = i2c_pullup_voltage_requirement()
+    bus = requirement.buses[0]
+    voltage_bus = voltage_requirement.buses[0]
+    sda = bus.sda.model_copy(
+        update={"voltage_compatibility": voltage_bus.sda.voltage_compatibility}
+    )
+    scl = bus.scl.model_copy(
+        update={"voltage_compatibility": voltage_bus.scl.voltage_compatibility}
+    )
+    return requirement.model_copy(
+        update={"buses": (bus.model_copy(update={"sda": sda, "scl": scl}),)}
     )
 
 
@@ -177,6 +208,89 @@ def test_no_visible_local_pullup_is_outside_this_coverage_prompt() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
+def test_exact_mapped_array_channels_without_input_limits_request_review() -> None:
+    netlist = _mapped_array_netlist()
+    result = coverage(netlist, array_requirement())
+
+    assert [
+        (entry.line, entry.signal_net, entry.pullup_rails, entry.endpoint_pins)
+        for entry in result.voltage_entries
+    ] == [
+        ("SDA", "I2C_SDA", ("+3V3",), ("U1.1",)),
+        ("SCL", "I2C_SCL", ("+3V3",), ("U1.2",)),
+    ]
+    assert all(entry.status == "OPEN" for entry in result.voltage_entries)
+    assert "bus.i2c_pullup_input_limit_coverage" in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
+def test_exact_voltage_limits_cover_source_bound_array_channels() -> None:
+    netlist = _mapped_array_netlist()
+    result = coverage(netlist, _array_requirement_with_voltage_limits())
+
+    assert [
+        (entry.line, entry.status, entry.covered_input_pins) for entry in result.voltage_entries
+    ] == [
+        ("SDA", "COVERED", ("U1.1",)),
+        ("SCL", "COVERED", ("U1.2",)),
+    ]
+    assert "bus.i2c_pullup_input_limit_coverage" not in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
+def test_dnp_unmapped_or_stale_arrays_are_not_guessed_as_pullups() -> None:
+    dnp_result = coverage(_mapped_array_netlist(dnp=("RN1",)), array_requirement())
+    unmapped_result = coverage(_mapped_array_netlist())
+    netlist = _mapped_array_netlist()
+    stale_netlist = netlist.model_copy(
+        update={
+            "components": {
+                **netlist.components,
+                "RN1": netlist.components["RN1"].model_copy(
+                    update={"part_id": "STALE-SYNTHETIC-PART"}
+                ),
+            }
+        }
+    )
+    stale_result = coverage(stale_netlist, array_requirement())
+
+    assert dnp_result.voltage_entries == ()
+    assert unmapped_result.voltage_entries == ()
+    assert stale_result.voltage_entries == ()
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
+def test_array_channels_outside_visible_resistance_window_are_excluded() -> None:
+    requirement = array_requirement()
+    array = requirement.arrays[0]
+    outside_window = array.model_copy(
+        update={
+            "channels": tuple(
+                channel.model_copy(update={"resistance_ohms": value})
+                for channel, value in zip(array.channels, (999.0, 100_001.0), strict=True)
+            )
+        }
+    )
+    out_of_range = requirement.model_copy(update={"arrays": (outside_window,)})
+
+    assert coverage(_mapped_array_netlist(), out_of_range).voltage_entries == ()
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
+def test_miswired_array_channel_is_excluded_without_hiding_valid_peer_channel() -> None:
+    netlist = _mapped_array_netlist(wrong_sda_net=True)
+    result = coverage(netlist, array_requirement())
+
+    assert [(entry.line, entry.endpoint_pins) for entry in result.voltage_entries] == [
+        ("SCL", ("U1.2",))
+    ]
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
 def test_ambiguous_multiport_endpoint_is_not_classified() -> None:
     netlist = i2c_series_pullup_netlist()
     multiport = netlist.model_copy(
@@ -211,6 +325,31 @@ def test_input_limit_coverage_policy_ignore_and_order_are_deterministic() -> Non
     coverage_result = coverage(netlist, i2c_series_pullup_requirement())
     reordered_result = coverage(reordered, i2c_series_pullup_requirement())
     assert coverage_result.voltage_entries == reordered_result.voltage_entries
+
+    array_netlist = _mapped_array_netlist()
+    array_requirement_spec = array_requirement()
+    reordered_array_netlist = array_netlist.model_copy(
+        update={
+            "components": dict(reversed(tuple(array_netlist.components.items()))),
+            "nets": {
+                net: tuple(reversed(pins))
+                for net, pins in reversed(tuple(array_netlist.nets.items()))
+            },
+            "component_symbols": dict(reversed(tuple(array_netlist.component_symbols.items()))),
+        }
+    )
+    reordered_array_requirement = array_requirement_spec.model_copy(
+        update={
+            "arrays": tuple(
+                array.model_copy(update={"channels": tuple(reversed(array.channels))})
+                for array in array_requirement_spec.arrays
+            )
+        }
+    )
+    assert (
+        coverage(array_netlist, array_requirement_spec).voltage_entries
+        == coverage(reordered_array_netlist, reordered_array_requirement).voltage_entries
+    )
 
     coach_report = ContractCoachReport(
         status="READY_FOR_REVIEW",

@@ -17,6 +17,7 @@ from tests.design_lint_fixtures.i2c_resistor_symbols import i2c_netlist_with_dev
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
 
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
 def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -92,7 +93,10 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
         case = path.name.split(".", 1)[0]
         return observations[case]
 
-    monkeypatch.setattr(electrical, "selected_config", lambda *_args: config)
+    def fake_selected_config(*_args: object) -> SimpleNamespace:
+        return config
+
+    monkeypatch.setattr(electrical, "selected_config", fake_selected_config)
     monkeypatch.setattr("kicad_tooling.hwrepo.contract_coach.run_command", fake_run_command)
     monkeypatch.setattr("kicad_tooling.validate.read_netlist", fake_read_netlist)
 

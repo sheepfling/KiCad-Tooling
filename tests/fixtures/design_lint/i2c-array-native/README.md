@@ -10,10 +10,10 @@ The native lane copies it into a temporary project-relative path, validates it
 through the shared contract reader, and binds its digest and path to lint
 coverage.
 
-| Fixture             | RN1.1       | Expected line checks                                  |
-| ------------------- | ----------- | ----------------------------------------------------- |
-| `control.kicad_sch` | `I2C_SDA`   | SDA and SCL pass                                      |
-| `fault.kicad_sch`   | `SDA_WRONG` | SDA fails with the exact pin/net mismatch; SCL passes |
+| Fixture             | RN1.1       | Expected line checks                                  | LINT-218 coverage                         |
+| ------------------- | ----------- | ----------------------------------------------------- | ----------------------------------------- |
+| `control.kicad_sch` | `I2C_SDA`   | SDA and SCL pass                                      | SDA and SCL prompt for missing limits    |
+| `fault.kicad_sch`   | `SDA_WRONG` | SDA fails with the exact pin/net mismatch; SCL passes | Miswired SDA excluded; SCL still prompts |
 
 The 4-pin array maps independent channels RN1.1–RN1.2 and RN1.3–RN1.4 to
 SDA/SCL and +3V3. The native export must retain the symbol ID, footprint,
@@ -39,9 +39,13 @@ mapped capacitance scope and the fault fails on X2. The same native-derived cont
 `bus.i2c_missing_pullup`: without the authored requirement, both fixtures
 remain review candidates. The control's passing SDA/SCL topology and electrical
 window checks resolve that hint; the wrong-SDA fault keeps it open even though
-SCL and both authored tolerance scopes pass. This proves the contract-to-lint
-integration on the exported netlist, not the array's internal construction or
-the correctness of its synthetic source assumptions.
+SCL and both authored tolerance scopes pass. For
+`bus.i2c_pullup_input_limit_coverage`, the exact mapped control array produces
+SDA and SCL prompts because the synthetic contract omits input-voltage limits.
+The wrong-SDA fault excludes that channel while retaining the valid SCL prompt.
+This proves the contract-to-lint integration on exported netlists, not the
+array's internal construction or the correctness of its synthetic source
+assumptions.
 
 Run the optional native lane from an installed editable Tooling checkout with
 the public reference-template checkout available:

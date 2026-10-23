@@ -11640,21 +11640,26 @@ is not a reason by itself to expand its scope or change its default policy.
   local pull-up had no such mapped coverage.
 - **Predicate:** For recognized, fitted U/IC SDA/SCL endpoints on distinct
   native nets, inspect each line with a visible fitted direct or unbranched
-  discrete resistor path to a named positive rail. Emit REVIEW if the exact
+  discrete resistor path, or an exact source-matched resistor-array channel,
+  from 1 kΩ through 100 kΩ to a named positive rail. Emit REVIEW if the exact
   ordered bus requirement is absent, omits voltage compatibility, or does not
   map every recognized fitted endpoint pin on that line.
 - **Boundary:** This is a completeness prompt. It does not infer rail voltage,
   input tolerance, or electrical safety from net or pin names. The separate
   electrical contract check evaluates authored limits. Connector/off-board
-  endpoints, DNP or ambiguous pins, arrays, active pull-ups, and external
-  pull-ups are outside this rule. A complete map still does not validate its
-  cited datasheet or prove PCB connectivity. Project policy can choose
-  `review`, `block`, `off`, or an exact fingerprint ignore.
+  endpoints, DNP or ambiguous pins, unmapped or stale array channels, active
+  pull-ups, and external pull-ups are outside this rule. A complete map still
+  does not validate its cited datasheet or prove PCB connectivity. Project
+  policy can choose `review`, `block`, `off`, or an exact fingerprint ignore.
 - **Fixtures:** Synthetic direct/series resistor paths cover missing voltage
   maps, partial two-device scope, exact complete scope, DNP exclusions, no
-  visible local pull-up, policy, exact ignore, and ordering stability. The new
-  rule is catalogued under the `interfaces` theme and its owner is a focused
-  I2C coverage module. It uses the existing shared typed lint evaluation path;
+  visible local pull-up, policy, exact ignore, and ordering stability. Exact
+  array-map faults and controls cover missing voltage limits, complete limits,
+  DNP/unmapped exclusion, and one miswired channel beside a valid peer
+  channel. The required native I2C array lane also checks limit coverage
+  against exported KiCad 10.0.0 and 10.0.5 netlists. The new rule is catalogued
+  under the `interfaces` theme and its owner is a focused I2C coverage module.
+  It uses the existing shared typed lint evaluation path;
   no surface-specific adapter is added.
 - **Focused selection:**
 

@@ -7,10 +7,18 @@ from collections.abc import Mapping
 from typing import Literal
 
 from .i2c_addressing import unmapped_i2c_responders
+from .i2c_pullup_contract_paths import (
+    i2c_array_channel_issue,
+    i2c_array_component_issues,
+)
 from .i2c_pullup_models import I2cPullupAnalysis
 from .i2c_pullup_voltage_models import I2cPullupVoltageCoverageEntry
 from .models import ElectricalCheck, NetlistContract
-from .resistor_paths import visible_resistor_pullups
+from .resistor_paths import (
+    VISIBLE_PULLUP_MAX_OHMS,
+    VISIBLE_PULLUP_MIN_OHMS,
+    visible_resistor_pullups,
+)
 
 
 def i2c_pullup_voltage_coverage(
@@ -67,11 +75,26 @@ def i2c_pullup_voltage_coverage(
             signals["SDA"].update(sda_pins)
             signals["SCL"].update(scl_pins)
 
-    pullups = visible_resistor_pullups(observed, include_device_r_symbol=True)
+    pullup_names_by_net: dict[str, str] = {}
+    pullup_rails_by_net: dict[str, set[str]] = {}
+    for net, paths in visible_resistor_pullups(observed, include_device_r_symbol=True).items():
+        if not paths:
+            continue
+        key = net.casefold()
+        pullup_names_by_net[key] = net
+        pullup_rails_by_net.setdefault(key, set()).update(path.rail_net for path in paths)
+
+    if state == "required" and spec is not None:
+        for key, (signal_net, rails) in _source_bound_array_pullups(observed, spec).items():
+            pullup_names_by_net.setdefault(key, signal_net)
+            pullup_rails_by_net.setdefault(key, set()).update(rails)
+
     pullups_by_net = {
-        net.casefold(): (net, tuple(sorted({path.rail_net for path in paths}, key=str.casefold)))
-        for net, paths in pullups.items()
-        if paths
+        key: (
+            pullup_names_by_net[key],
+            tuple(sorted(rails, key=lambda item: (item.casefold(), item))),
+        )
+        for key, rails in pullup_rails_by_net.items()
     }
     exact_buses = () if state != "required" or spec is None else spec.buses
     entries: list[I2cPullupVoltageCoverageEntry] = []
@@ -174,3 +197,52 @@ def i2c_pullup_voltage_coverage(
             )
 
     return tuple(entries)
+
+
+def _source_bound_array_pullups(
+    observed: NetlistContract, spec: I2cPullupAnalysis
+) -> dict[str, tuple[str, set[str]]]:
+    """Return only fitted, exact-mapped array channels inside the visible range."""
+    components = {
+        reference.casefold(): (reference, component)
+        for reference, component in observed.components.items()
+    }
+    symbols = {
+        reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
+    }
+    pin_numbers = {
+        reference.casefold(): {number.casefold() for number in numbers}
+        for reference, numbers in observed.component_pin_numbers.items()
+    }
+    dnp = {reference.casefold() for reference in observed.dnp_components}
+    pin_nets: dict[str, set[str]] = defaultdict(set)
+    for net, pins in observed.nets.items():
+        for pin in pins:
+            pin_nets[pin.casefold()].add(net)
+
+    line_pairs = {(line.net, line.rail) for bus in spec.buses for line in (bus.sda, bus.scl)}
+    pullups: dict[str, tuple[str, set[str]]] = {}
+    for array in spec.arrays:
+        if i2c_array_component_issues(array, components, symbols, pin_numbers, dnp):
+            continue
+        for channel in array.channels:
+            if (channel.signal_net, channel.rail_net) not in line_pairs:
+                continue
+            if not VISIBLE_PULLUP_MIN_OHMS <= channel.resistance_ohms <= VISIBLE_PULLUP_MAX_OHMS:
+                continue
+            if (
+                i2c_array_channel_issue(
+                    array.reference,
+                    channel.id,
+                    channel.signal_pin,
+                    channel.rail_pin,
+                    channel.signal_net,
+                    channel.rail_net,
+                    pin_nets,
+                )
+                is not None
+            ):
+                continue
+            key = channel.signal_net.casefold()
+            pullups.setdefault(key, (channel.signal_net, set()))[1].add(channel.rail_net)
+    return pullups

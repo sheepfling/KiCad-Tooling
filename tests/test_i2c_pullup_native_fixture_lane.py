@@ -26,6 +26,7 @@ pytestmark = [
     os.environ.get("KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES") != "1",
     reason="native I2C pull-up fixtures run in the digest-pinned package acceptance lane",
 )
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")
 def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Path) -> None:
     root = tmp_path / "project"
     shutil.copytree(
@@ -83,6 +84,8 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
         assert control["baseline_missing_pullup"] == "OPEN"
         assert control["heuristic_coverage"] == "COMPLETE"
         assert control["heuristic_findings"] == "none"
+        assert control["input_limit_coverage"] == "SDA:OPEN,SCL:OPEN"
+        assert control["input_limit_findings"] == "bus.i2c_pullup_input_limit_coverage"
         assert (control["sda_tolerance_scope"], control["scl_tolerance_scope"]) == (
             "PASS",
             "PASS",
@@ -95,6 +98,8 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
         assert fault["baseline_missing_pullup"] == "OPEN"
         assert fault["heuristic_coverage"] == "OPEN"
         assert fault["heuristic_findings"] == "bus.i2c_missing_pullup"
+        assert fault["input_limit_coverage"] == "SCL:OPEN"
+        assert fault["input_limit_findings"] == "bus.i2c_pullup_input_limit_coverage"
         assert (fault["sda_tolerance_scope"], fault["scl_tolerance_scope"]) == (
             "PASS",
             "PASS",

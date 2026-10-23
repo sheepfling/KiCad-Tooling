@@ -330,12 +330,29 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
                 }
             )
         )
+        input_limit_coverage = tuple(
+            f"{item.line}:{item.status}" for item in coverage.voltage_entries
+        )
+        input_limit_findings = tuple(
+            sorted(
+                {
+                    item.rule_id
+                    for item in lint_report.findings
+                    if item.rule_id == "bus.i2c_pullup_input_limit_coverage"
+                }
+            )
+        )
         expected_coverage = "COMPLETE" if case == "control" else "OPEN"
         expected_rule_findings = () if case == "control" else ("bus.i2c_missing_pullup",)
+        expected_input_limit_coverage = (
+            ("SDA:OPEN", "SCL:OPEN") if case == "control" else ("SCL:OPEN",)
+        )
         if (
             not baseline_has_hint
             or coverage.status != expected_coverage
             or lint_rule_findings != expected_rule_findings
+            or input_limit_coverage != expected_input_limit_coverage
+            or input_limit_findings != ("bus.i2c_pullup_input_limit_coverage",)
         ):
             raise ValueError(
                 f"Native I2C {case} heuristic/contract result differs from its reviewed expectation"
@@ -356,6 +373,8 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
             baseline_missing_pullup="OPEN" if baseline_has_hint else "QUIET",
             heuristic_coverage=coverage.status,
             heuristic_findings=",".join(lint_rule_findings) or "none",
+            input_limit_coverage=",".join(input_limit_coverage) or "none",
+            input_limit_findings=",".join(input_limit_findings) or "none",
             sda=checks["i2c-pullup/array-bus/sda"].status,
             scl=checks["i2c-pullup/array-bus/scl"].status,
             sda_tolerance_scope=checks[

@@ -25,6 +25,8 @@ def _python_modules() -> dict[str, Path]:
     }
 
 
+@pytest.mark.design_lint
+@pytest.mark.rule_gate_integrity
 def test_oversized_python_modules_are_explicit_legacy_and_must_shrink() -> None:
     document = json.loads(CEILINGS_PATH.read_text(encoding="utf-8"))
     assert document.get("line_limit") == LINE_LIMIT
