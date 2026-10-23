@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 176 rules are implemented with synthetic regression coverage.
+The following 177 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 176 active rules.
+The catalog currently contains 177 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -2928,7 +2928,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 175 active rules; CI requires every new
+- **Status:** Baseline complete for every active rule; CI requires each new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2937,7 +2937,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 176 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 177 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10401,6 +10401,61 @@ is not a reason by itself to expand its scope or change its default policy.
     tests/test_i2c_sda_scl_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_sda_scl_same_net")'
   ```
+
+#### LINT-195 — Review SPI data-role pins sharing one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.spi_data_input_output_same_net` review prompt.
+- **Gap:** Existing SPI checks cover shared output pins across devices, shared
+  chip-select inputs, and data-label polarity. They do not prompt when one
+  fitted IC's controller-to-peripheral and peripheral-to-controller data-role
+  pins resolve to one schematic net.
+- **Predicate:** Use the shared bounded SPI data aliases to pair exactly one
+  MOSI/SDI/COPI controller-to-peripheral role pin with one MISO/SDO/CIPO
+  peripheral-to-controller role pin on the same fitted U/IC and the same
+  optional native SPI channel index. The role names do not establish the IC's
+  configured electrical direction.
+  Require both function pins to appear in the native component pin inventory
+  and each to have one native net assignment. Emit one candidate when their
+  exact net names match, except when both native electrical types are `output`
+  because ERC can report that conflict. Skip DNP parts, duplicate or open role
+  pins, ambiguous assignments, inconsistent inventory, connector references,
+  and cross-channel pairs. If electrical-type metadata is absent, retain the
+  prompt with `unknown` evidence; only two explicit native outputs are deferred
+  to ERC.
+- **Boundary:** Loopback, single-wire modes, and part-specific arrangements can
+  intentionally join these pins. The default is off; project policy can
+  enable review, promote the candidate to block, or disable it, and exact
+  fingerprint ignores can record a reviewed exception. Native pin-function
+  names do not prove bus topology, chip mode, configured direction, or board
+  copper continuity.
+- **Fixtures:** Tooling-owned fault and separate-net control schematics retain
+  their exact function names, pin types, assignments, and inventory in repeated
+  digest-pinned KiCad 10.0.0 and 10.0.5 exports. The control adds a synthetic
+  controller MOSI output to drive its COPI input. Both cases have no ERC errors;
+  the fault yields one review candidate and the control stays quiet. Synthetic
+  tests cover MOSI/MISO, SDI/SDO, COPI/CIPO, channel indexing, cross-channel
+  rejection, DNP, open and multiply assigned pins, duplicate roles, incomplete
+  inventory, ERC-covered output conflicts, connector exclusion, policy,
+  fingerprint ignore, ordering, and repair. No project or cohort source is
+  stored.
+- **Fixture note:** [Synthetic fixtures][spi-same-net].
+- **Acceptance:** The scoped package gate passed on 2026-10-23 in
+  `build/ci/run-akip_eqj`, including package builds, installed-wheel checks,
+  and verification against the separate public template checkout. Native fault
+  and control fixtures separately passed on KiCad 10.0.0 and 10.0.5.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_data_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_data_input_output_same_net")'
+
+  KICAD_RUN_NATIVE_SPI_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_spi_data_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_data_input_output_same_net")'
+  ```
+
+[spi-same-net]: ../tests/fixtures/design_lint/spi-data-input-output-same-net/README.md
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

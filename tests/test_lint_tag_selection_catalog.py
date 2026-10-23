@@ -68,6 +68,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SPI_SHARED_DATA_OUTPUT_FIXTURES",
         ),
         (
+            "bus.spi_data_input_output_same_net",
+            "KICAD_RUN_NATIVE_SPI_DATA_SAME_NET_FIXTURES",
+        ),
+        (
             "power.ic_decoupling_below_project_minimum",
             "KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES",
         ),

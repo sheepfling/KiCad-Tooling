@@ -52,12 +52,33 @@ class UnmappedSpiParticipant:
     signal_assignments: tuple[str, ...]
 
 
+def _canonical_function_and_channel(value: str) -> tuple[str, str]:
+    """Normalize an SPI pin function and retain an optional numeric channel."""
+    function = re.sub(r"[^a-z0-9]", "", value.casefold())
+    channel = "default"
+    if function.startswith("spi"):
+        function = function[3:]
+        match = re.match(r"^(\d+)(.*)$", function)
+        if match is not None:
+            channel = f"index{match.group(1)}"
+            function = match.group(2)
+    return function, channel
+
+
 def _canonical_function(value: str) -> str:
     """Normalize exact SPI pin-function aliases without inspecting part names."""
-    function = re.sub(r"[^a-z0-9]", "", value.casefold())
-    if function.startswith("spi"):
-        function = function[3:].lstrip("0123456789")
+    function, _channel = _canonical_function_and_channel(value)
     return function
+
+
+def spi_data_function_role_and_channel(value: str) -> tuple[str, str] | None:
+    """Recognize bounded SPI data aliases while preserving an optional channel index."""
+    function, channel = _canonical_function_and_channel(value)
+    if function in _SPI_INPUT_DATA_FUNCTIONS:
+        return "input", channel
+    if function in _SPI_OUTPUT_DATA_FUNCTIONS:
+        return "output", channel
+    return None
 
 
 def is_spi_ic_reference(reference: str) -> bool:
@@ -72,7 +93,8 @@ def is_spi_chip_select_function(function: str) -> bool:
 
 def is_spi_data_output_function(function: str) -> bool:
     """Recognize bounded SPI peripheral-to-controller data pin aliases."""
-    return _canonical_function(function) in _SPI_OUTPUT_DATA_FUNCTIONS
+    role_channel = spi_data_function_role_and_channel(function)
+    return role_channel is not None and role_channel[0] == "output"
 
 
 def _mapped_references(analysis: SpiAnalysis | None) -> set[str]:

@@ -70,6 +70,7 @@ BUS_ANALYSIS_MODULES = (
     "serial_same_net.py",
     "serial_tx_output_sharing.py",
     "spi_data_label.py",
+    "spi_same_net.py",
     "spi_shared_chip_select.py",
     "spi_shared_data_outputs.py",
     "resistor_paths.py",
@@ -221,6 +222,25 @@ def test_bus_protocol_implementation_modules_stay_below_review_limit() -> None:
     assert not oversized, (
         "Split bus-protocol modules at the 500-line review threshold; "
         f"oversized modules: {oversized}"
+    )
+
+
+def test_spi_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.spi_data_input_output_same_net"
+    )
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/spi_same_net.py#spi_data_input_output_same_net_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/spi_participants.py#spi_data_function_role_and_channel"
+        in rule.implementation_refs
     )
 
 
@@ -463,6 +483,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "spi_peer_reference_candidates",
         "spi_bias_candidates",
         "spi_data_polarity_label_candidates",
+        "spi_data_input_output_same_net_candidates",
         "spi_chip_select_inputs_share_net_candidates",
         "spi_data_outputs_share_net_candidates",
         "unconnected_interface_candidates",

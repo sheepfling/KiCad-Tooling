@@ -4538,6 +4538,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/spi_shared_data_outputs.py#spi_data_outputs_share_net_candidates"
     },
     {
+      "rule_id": "bus.spi_data_input_output_same_net",
+      "title": "SPI data-role pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including exact pin functions, net assignments, electrical types, fitted state, and component pin inventory",
+      "predicate": "For one fitted U/IC reference and one native SPI channel, pair exactly one MOSI/SDI/COPI controller-to-peripheral data-role pin with exactly one MISO/SDO/CIPO peripheral-to-controller data-role pin. These function names do not establish the IC's configured electrical direction. Require both function pins in the native component pin inventory and exactly one net assignment each. Emit a review candidate when both names identify the same exact net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only bounded MOSI, SDI, COPI, MISO, SDO, and CIPO aliases on fitted U/IC references are recognized. These are bus data-role names and do not prove the IC’s configured direction. Connector references, DNP parts, open or multiply assigned pins, duplicate roles, cross-channel pairs, missing pin inventory, and inconsistent inventory are skipped.",
+        "A shared input/output net can be intentional for loopback, single-wire operation, or part-specific behavior. This rule defaults to off and asks for review; pin-function names do not prove protocol participation, device mode, required topology, or that the pins must be separate.",
+        "Missing electrical-type metadata is recorded as unknown; only two explicit native output types suppress this candidate because ERC can report that conflict.",
+        "The finding concerns native schematic net assignments only. It does not prove PCB copper continuity, off-board wiring, firmware state, or electrical suitability."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_data_same_net.test_same_ic_spi_data_input_and_output_on_one_net_prompt_review",
+        "tests.test_spi_data_same_net_native_fixture_lane.test_native_spi_data_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_data_same_net.test_aliases_pair_only_within_the_same_spi_channel",
+        "tests.test_spi_data_same_net.test_dnp_open_ambiguous_duplicate_and_incomplete_cases_are_skipped",
+        "tests.test_spi_data_same_net_native_fixture_lane.test_native_spi_data_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_spi_data_same_net.test_ordering_is_stable_and_separating_the_pair_clears_the_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_DATA_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_same_net.py#spi_data_input_output_same_net_candidates",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_data_function_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_same_net.py#spi_data_input_output_same_net_candidates"
+    },
+    {
       "rule_id": "bus.rs485_peer_reference_review",
       "title": "Mapped RS-485 peers on one pair use different explicit reference nets",
       "status": "active",

@@ -118,6 +118,7 @@ DesignLintRuleId = Literal[
     "bus.spi_unconnected_chip_select",
     "bus.spi_active_low_chip_select_without_pullup",
     "bus.spi_data_polarity_label_mismatch",
+    "bus.spi_data_input_output_same_net",
     "bus.spi_chip_select_inputs_share_net",
     "bus.spi_data_outputs_share_net",
     "bus.usb_c_unconnected_cc_pin",
