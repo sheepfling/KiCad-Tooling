@@ -31,6 +31,7 @@ from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain
 from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
+from tests.design_lint_fixtures.serial_tx_rx_label_mismatch import serial_tx_rx_label_netlist
 from tests.design_lint_fixtures.spi_clock_control_same_net import (
     spi_clock_chip_select_same_net_netlist,
     spi_clock_control_same_net_netlist,
@@ -233,6 +234,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         i2c_netlist_with_pullup_rails(("+3V3", "+5V"), ("+3V3",)),
         i2c_signal_label_netlist(reversed_labels=True),
         same_net_serial_netlist(),
+        serial_tx_rx_label_netlist(),
         serial_tx_output_netlist(),
         i2c_peer_netlist(),
         spi_peer_netlist(),

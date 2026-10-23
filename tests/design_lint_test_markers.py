@@ -200,6 +200,8 @@ _LINT_AREA_MODULES = {
             "tests/test_i2c_signal_label_native_fixture_lane.py",
             "tests/test_serial_tx_rx_same_net.py",
             "tests/test_serial_tx_rx_same_net_native_fixture_lane.py",
+            "tests/test_serial_tx_rx_label_mismatch.py",
+            "tests/test_serial_tx_rx_label_mismatch_native_fixture_lane.py",
             "tests/test_serial_tx_output_sharing.py",
             "tests/test_serial_tx_output_sharing_native_fixture_lane.py",
             "tests/test_spi_data_label_polarity.py",

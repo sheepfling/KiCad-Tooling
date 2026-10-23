@@ -10,7 +10,13 @@ PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_serial_tx_rx_label_mismatch_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_serial_tx_rx_same_net.py": {"interface_lint"},
+    "test_serial_tx_rx_label_mismatch.py": {"interface_lint"},
     "test_serial_tx_output_sharing.py": {"interface_lint"},
     "test_serial_tx_output_sharing_native_fixture_lane.py": {
         "interface_lint",

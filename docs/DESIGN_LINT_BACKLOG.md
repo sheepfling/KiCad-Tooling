@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 183 rules are implemented with synthetic regression coverage.
+The following 184 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 183 active rules.
+The catalog currently contains 184 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -522,6 +522,7 @@ skipped under prerelease policy.
 - `bus.i2c_sda_scl_same_net`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
+- `bus.serial_tx_rx_label_mismatch`
 - `bus.serial_tx_rx_same_net`
 - `bus.serial_tx_outputs_share_net`
 - `bus.spi_peer_reference_review`
@@ -2978,7 +2979,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 183 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 184 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10746,6 +10747,41 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_SPI_CLOCK_SELECT_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_spi_clock_select_label_mismatch_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_select_label_mismatch")'
+  ```
+
+#### LINT-202 — Review serial TX/RX labels that conflict with pin functions
+
+- **Status:** Implemented as the default-review
+  `bus.serial_tx_rx_label_mismatch` heuristic with project overrides and exact
+  finding ignores.
+- **Gap:** Serial same-net and shared-transmit rules do not compare a fitted
+  IC's explicit UART/USART TX or RX function with an opposite-role label while
+  the pins remain on separate valid nets.
+- **Predicate:** Require a fitted U/IC, a bounded TX/TXD or RX/RXD function, a
+  component pin-inventory match, one native assignment, and an explicit
+  UART/USART net label with the same recognized channel. Review an opposite
+  TX/RX role.
+- **Boundary:** Generic TX/RX labels, cross-prefix and different-channel
+  aliases, connectors, DNP parts, incomplete inventory, open or multiply
+  assigned pins remain unclassified. Endpoint naming conventions can differ;
+  this is a configurable review clue and does not establish the expected
+  topology, firmware behavior, PCB copper, or off-board wiring.
+- **Fixtures:** Synthetic fault/control tests cover role direction, aliases,
+  generic and unrelated labels, channel mismatch, DNP, connectors, assignment
+  and inventory boundaries, project policy, ignores, ordering, and repair.
+  Exact-version native exports repeat netlist and ERC on KiCad 10.0.0 and
+  10.0.5.
+- **Fixture note:** [Synthetic serial TX/RX label sources and hashes]
+  (../tests/fixtures/design_lint/serial-tx-rx-label-mismatch/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_serial_tx_rx_label_mismatch.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_tx_rx_label_mismatch")'
+
+  KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_serial_tx_rx_label_mismatch_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_tx_rx_label_mismatch")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

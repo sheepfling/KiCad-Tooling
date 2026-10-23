@@ -5914,6 +5914,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/serial_participants.py#unmapped_serial_peers"
     },
     {
+      "rule_id": "bus.serial_tx_rx_label_mismatch",
+      "title": "Serial TX/RX pin function conflicts with its net label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded serial pin functions, explicit UART/USART net labels, fitted state, exact assignments, and complete component pin inventory",
+      "predicate": "For each fitted U/IC pin with a bounded TX/TXD or RX/RXD function, require the native pin number in the component inventory and exactly one native net assignment. Emit a REVIEW candidate when an explicit UART/USART net label identifies the opposite TX/RX role on the same recognized channel.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Only the bounded TX/TXD and RX/RXD aliases accepted by serial_function_role_and_channel are recognized. Net labels must have the same explicit UART/USART channel prefix as the pin function; generic TX/RX labels, cross-prefix UART/USART aliases, and vendor-specific names remain unclassified.",
+        "A direction-label contradiction is a review cue because endpoint naming conventions can differ, especially at external interfaces. The rule does not establish the authoritative pin map or a required topology and supports project review, block, off, and exact finding ignores.",
+        "DNP components, connectors, missing or ambiguous components, incomplete or inconsistent pin inventories, open or multiply assigned pins, and mismatched channel labels are skipped.",
+        "The check observes schematic function metadata and net names only. It does not establish protocol behavior, firmware configuration, PCB copper, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_serial_tx_rx_label_mismatch.test_opposite_uart_labels_are_reviewed_while_pins_remain_separate",
+        "tests.test_serial_tx_rx_label_mismatch_native_fixture_lane.test_native_serial_tx_rx_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_serial_tx_rx_label_mismatch.test_matching_labels_generic_names_and_other_channels_remain_quiet",
+        "tests.test_serial_tx_rx_label_mismatch_native_fixture_lane.test_native_serial_tx_rx_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_serial_tx_rx_label_mismatch.test_findings_are_order_stable_and_correction_clears_them"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/serial_tx_rx_label_mismatch.py#serial_tx_rx_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/serial_tx_rx_label_mismatch.py#serial_tx_rx_label_mismatch_candidates"
+    },
+    {
       "rule_id": "bus.serial_tx_rx_same_net",
       "title": "Serial transmit and receive pins share one net",
       "status": "active",

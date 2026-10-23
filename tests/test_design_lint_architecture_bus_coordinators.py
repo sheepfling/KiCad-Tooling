@@ -97,6 +97,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "i2c_peer_reference_candidates",
         "i2c_signal_label_role_candidates",
         "i2c_sda_scl_same_net_candidates",
+        "serial_tx_rx_label_mismatch_candidates",
         "serial_tx_rx_same_net_candidates",
         "serial_tx_output_sharing_candidates",
         "spi_peer_reference_candidates",

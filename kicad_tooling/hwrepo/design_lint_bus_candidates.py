@@ -33,6 +33,7 @@ from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .serial_same_net import serial_tx_rx_same_net_candidates
 from .serial_tx_output_sharing import serial_tx_output_sharing_candidates
+from .serial_tx_rx_label_mismatch import serial_tx_rx_label_mismatch_candidates
 from .spi_clock_data_same_net import spi_clock_control_data_same_net_candidates
 from .spi_clock_select_label_mismatch import spi_clock_select_label_mismatch_candidates
 from .spi_control_same_net import spi_clock_chip_select_same_net_candidates
@@ -67,6 +68,7 @@ def bus_candidates(
         ),
         *i2c_signal_label_role_candidates(observed),
         *i2c_sda_scl_same_net_candidates(observed),
+        *serial_tx_rx_label_mismatch_candidates(observed),
         *serial_tx_rx_same_net_candidates(observed),
         *serial_tx_output_sharing_candidates(observed),
         *spi_peer_reference_candidates(
