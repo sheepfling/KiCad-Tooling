@@ -278,7 +278,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 181 active rules.
+The catalog currently contains 182 active rules.
 
 ### USB data pin/name polarity review
 
@@ -318,6 +318,31 @@ KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES=1 python -I -m pytest \
   tests/test_can_line_polarity_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_line_polarity_label_mismatch")'
 ```
+
+### CAN TX/RX pin and net-label direction review
+
+`bus.can_tx_rx_label_mismatch` compares explicit CAN/FDCAN TX/TXD and RX/RXD
+pin functions with assigned net labels that name the opposite direction. It
+requires a fitted U/IC reference, complete native pin inventory, and exactly
+one net assignment for each examined pin. Generic UART names, connectors,
+neutral labels, DNP parts, and incomplete assignments remain unclassified.
+The finding is a review cue because projects may use different endpoint
+naming conventions; the rule defaults off and supports project policy and
+exact finding ignores. It does not establish the correct pin map, transceiver
+behavior, PCB copper, or off-board wiring. Its focused checks are selectable
+with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_tx_rx_label_mismatch.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_tx_rx_label_mismatch")'
+
+KICAD_RUN_NATIVE_CAN_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_can_tx_rx_label_mismatch_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_rx_label_mismatch")'
+```
+
+The [synthetic fixture record](../tests/fixtures/design_lint/can-tx-rx-label-mismatch/README.md)
+contains the source hashes and native-lane boundaries.
 
 ### CAN controller TX/RX same-net review
 

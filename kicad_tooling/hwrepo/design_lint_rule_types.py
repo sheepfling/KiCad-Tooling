@@ -132,6 +132,7 @@ DesignLintRuleId = Literal[
     "bus.can_peer_reference_review",
     "bus.can_line_polarity_label_mismatch",
     "bus.can_tx_rx_same_net",
+    "bus.can_tx_rx_label_mismatch",
     "bus.can_tx_outputs_share_net",
     "bus.rs485_peer_reference_review",
     "bus.complementary_pair_assignment",

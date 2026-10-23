@@ -19,6 +19,7 @@ def test_selector_architecture_suites_are_in_the_catalog_gate() -> None:
     for module in (
         "tests/test_design_lint_architecture_pytest_markers.py",
         "tests/test_design_lint_architecture_pytest_collection.py",
+        "tests/test_design_lint_architecture_theme_suites.py",
     ):
         assert "catalog_lint" in design_lint_markers_for_path(module)
 
@@ -283,6 +284,13 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             (
                 "tests/test_can_tx_output_sharing.py::"
                 "test_multiple_fitted_can_tx_functions_on_one_net_are_reviewed"
+            ),
+        ),
+        (
+            "bus.can_tx_rx_label_mismatch",
+            (
+                "tests/test_can_tx_rx_label_mismatch.py::"
+                "test_explicit_can_tx_rx_functions_on_opposite_role_labels_are_reviewed"
             ),
         ),
         (

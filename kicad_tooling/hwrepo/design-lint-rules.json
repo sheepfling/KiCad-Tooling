@@ -4456,6 +4456,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates"
     },
     {
+      "rule_id": "bus.can_tx_rx_label_mismatch",
+      "title": "CAN controller TX/RX pin function conflicts with its net label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including explicit CAN/FDCAN functions, exact net assignments, fitted state, and complete component pin inventory",
+      "predicate": "For each fitted U/IC pin with an explicit bounded CAN/FDCAN TX/TXD or RX/RXD function, require the function pin to appear in the complete native component pin inventory and have exactly one native net assignment. Emit one REVIEW candidate when the assigned net name also has an explicit CAN/FDCAN TX/TXD or RX/RXD role and its direction differs from the pin function.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Only explicit CAN/FDCAN prefixes or suffixes with the bounded optional channel syntax accepted by can_signal_role_and_channel are recognized. Generic TX/RX, TXD/RXD, UART labels, vendor-specific aliases, and other naming conventions remain unclassified.",
+        "A direction-label contradiction is a review cue, not a pinout verdict. Different controller-side naming conventions can be intentional; the rule defaults off and supports project policy and exact finding ignores.",
+        "DNP references, connectors, missing or ambiguous components, incomplete or inconsistent pin inventories, open or multiply assigned pins, and labels without an explicit CAN/FDCAN direction remain outside the predicate.",
+        "The rule checks schematic function metadata and net names only. It does not establish a reviewed endpoint map, transceiver behavior, firmware configuration, PCB copper, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_tx_rx_label_mismatch.test_explicit_can_tx_rx_functions_on_opposite_role_labels_are_reviewed",
+        "tests.test_can_tx_rx_label_mismatch_native_fixture_lane.test_native_can_tx_rx_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_tx_rx_label_mismatch.test_matching_labels_and_unbounded_generic_names_are_controls",
+        "tests.test_can_tx_rx_label_mismatch_native_fixture_lane.test_native_can_tx_rx_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_can_tx_rx_label_mismatch.test_findings_are_order_stable_and_correction_clears_them"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_TX_RX_LABEL_MISMATCH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_tx_rx_label_mismatch.py#can_tx_rx_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_tx_rx_label_mismatch.py#can_tx_rx_label_mismatch_candidates"
+    },
+    {
       "rule_id": "bus.can_tx_outputs_share_net",
       "title": "Multiple CAN transmit functions share one net",
       "status": "active",

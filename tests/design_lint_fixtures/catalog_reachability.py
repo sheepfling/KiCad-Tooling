@@ -23,13 +23,20 @@ from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
     bjt_collector_emitter_netlist,
 )
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
+from tests.design_lint_fixtures.can_tx_output_sharing import can_tx_output_netlist
+from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.i2c_signal_label import i2c_signal_label_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
 from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
+from tests.design_lint_fixtures.spi_clock_control_same_net import (
+    spi_clock_chip_select_same_net_netlist,
+    spi_clock_control_same_net_netlist,
+)
 from tests.design_lint_fixtures.spi_data_label import spi_data_label_netlist
+from tests.design_lint_fixtures.spi_data_same_net import spi_data_same_net_netlist
 from tests.design_lint_fixtures.spi_shared_chip_select import spi_shared_chip_select_netlist
 from tests.design_lint_fixtures.spi_shared_data_outputs import spi_shared_data_output_netlist
 from tests.serial_participant_support import (
@@ -204,6 +211,11 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         serial_peer_voltage_netlist(),
         serial_reference_netlist(),
         can_netlist(),
+        can_tx_rx_same_net_netlist(),
+        can_tx_rx_same_net_netlist(shared=False).model_copy(
+            update={"nets": {"CAN1_RX": ("U1.1",), "CAN1_TX": ("U1.2",)}}
+        ),
+        can_tx_output_netlist(),
         can_netlist("121R").model_copy(
             update={
                 "nets": {
@@ -225,6 +237,9 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         spi_data_label_netlist(reversed_labels=True),
         spi_shared_chip_select_netlist(),
         spi_shared_data_output_netlist(),
+        spi_data_same_net_netlist(),
+        spi_clock_control_same_net_netlist(),
+        spi_clock_chip_select_same_net_netlist(),
         complementary_usb_netlist(negative_net=None),
         complementary_usb_netlist(),
         complementary_usb_netlist(positive_net="USB_DM", negative_net="USB_DP"),

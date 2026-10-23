@@ -20,23 +20,15 @@ import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
-import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_fixtures
-import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.external_protection_support as _external_protection_support
-import tests.pcb_decoupling_support as _pcb_decoupling_support
-import tests.pcb_rf_antenna_support as _pcb_rf_antenna_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
 import tests.test_crystal_networks as _tests_test_crystal_networks
 import tests.test_led_output_heuristics as _tests_test_led_output_heuristics
 import tests.test_mosfet_gate_connectivity as _tests_test_mosfet_gate_connectivity
 import tests.test_open_drain_heuristics as _tests_test_open_drain_heuristics
-import tests.test_pcb_drc_coverage as _tests_test_pcb_drc_coverage
-import tests.test_pcb_keepouts as _tests_test_pcb_keepouts
-import tests.test_pcb_protection_path as _tests_test_pcb_protection_path
-import tests.test_pcb_track_width as _tests_test_pcb_track_width
 import tests.test_power_paths as _tests_test_power_paths
 import tests.test_rc_filters as _tests_test_rc_filters
 import tests.test_regulator_feedback as _tests_test_regulator_feedback
@@ -56,10 +48,6 @@ from kicad_tooling.hwrepo.i2c_addressing import scan_i2c_address_map
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
-    PcbRfModuleAntennaMap,
-)
-from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
-    PcbTouchPadClearanceCoverageReport,
 )
 from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
@@ -304,114 +292,6 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         ),
     )
     emitted.update(item.rule_id for item in connector_distribution_result.findings)
-    decoupling_map = _pcb_decoupling_support.mapping(
-        _pcb_decoupling_support.requirement(maximum_um=None)
-    )
-    decoupling_result = evaluate(
-        "synthetic-decoupling",
-        _tests_design_lint_fixtures.coach(NetlistContract(components={}, nets={})),
-        DesignLintPolicy(pcb_decoupling_map=decoupling_map),
-        pcb_decoupling_coverage=_pcb_decoupling_support.coverage_report(
-            decoupling_map, _pcb_decoupling_support.snapshot()
-        ),
-    )
-    emitted.update(item.rule_id for item in decoupling_result.findings)
-    protection_path_map = _tests_test_pcb_protection_path.mapping()
-    protection_path_result = evaluate(
-        "synthetic-protection-path",
-        _tests_design_lint_fixtures.coach(NetlistContract(components={}, nets={})),
-        DesignLintPolicy(pcb_protection_path_map=protection_path_map),
-        pcb_protection_path_coverage=_tests_test_pcb_protection_path.coverage_report(
-            protection_path_map,
-            _tests_test_pcb_protection_path.snapshot(
-                entry_distance_nm=100001, via_offsets_nm=(2900000,)
-            ),
-        ),
-    )
-    emitted.update(item.rule_id for item in protection_path_result.findings)
-    track_width_map = _tests_test_pcb_track_width.mapping(
-        _tests_test_pcb_track_width.requirement(minimum_um=251)
-    )
-    track_width_result = evaluate(
-        "synthetic-track-width",
-        _tests_design_lint_fixtures.coach(NetlistContract(components={}, nets={})),
-        DesignLintPolicy(pcb_track_width_map=track_width_map),
-        pcb_track_width_coverage=_tests_test_pcb_track_width.coverage(
-            track_width_map,
-            _tests_test_pcb_track_width.snapshot(
-                _tests_test_pcb_track_width.track("001", "VDD", 250000)
-            ),
-        ),
-    )
-    emitted.update(item.rule_id for item in track_width_result.findings)
-    reference_hole = (
-        (4000000, 4000000),
-        (6000000, 4000000),
-        (6000000, 6000000),
-        (4000000, 6000000),
-    )
-    reference_map = _pcb_reference_plane_fixtures.mapping()
-    reference_result = evaluate(
-        "synthetic-reference-plane",
-        _tests_design_lint_fixtures.coach(NetlistContract(components={}, nets={})),
-        DesignLintPolicy(pcb_reference_plane_map=reference_map),
-        pcb_reference_plane_coverage=_pcb_reference_plane_fixtures.report(
-            reference_map,
-            _pcb_reference_plane_fixtures.snapshot(
-                _pcb_reference_plane_fixtures.track(),
-                zones=(
-                    _pcb_reference_plane_fixtures.zone(
-                        "00000000-0000-0000-0000-000000000001", holes=(reference_hole,)
-                    ),
-                ),
-            ),
-        ),
-    )
-    emitted.update(item.rule_id for item in reference_result.findings)
-    switching_loop_map = _pcb_switching_loop_fixtures.mapping()
-    switching_loop_result = evaluate(
-        "synthetic-switching-loop",
-        _tests_design_lint_fixtures.coach(_tests_design_lint_fixtures.observed()),
-        DesignLintPolicy(pcb_switching_loop_map=switching_loop_map),
-        pcb_switching_loop_coverage=_pcb_switching_loop_fixtures.coverage(
-            switching_loop_map, _pcb_switching_loop_fixtures.snapshot(expanded=True)
-        ),
-    )
-    emitted.update(item.rule_id for item in switching_loop_result.findings)
-    pair_result = evaluate(
-        "synthetic-differential-pair",
-        _tests_design_lint_fixtures.coach(_tests_design_lint_fixtures.observed()),
-        DesignLintPolicy(pcb_differential_pair_rule_map=_tests_test_pcb_drc_coverage.pair_map()),
-        pcb_differential_pair_coverage=_tests_test_pcb_drc_coverage.incomplete_report(),
-    )
-    emitted.update(item.rule_id for item in pair_result.findings)
-    from tests.design_lint_fixtures.pcb_signal_path import incomplete_signal_report, path_map
-
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _tests_design_lint_fixtures.observed(),
-            pcb_signal_path_coverage=incomplete_signal_report(path_map()),
-        )
-    )
-    keepout_map = _tests_test_pcb_keepouts.mapping_for()
-    keepout_result = evaluate(
-        "synthetic-keepout",
-        _tests_design_lint_fixtures.coach(NetlistContract(components={}, nets={})),
-        DesignLintPolicy(pcb_keepout_map=keepout_map),
-        pcb_keepout_coverage=_tests_test_pcb_keepouts.incomplete_report(keepout_map),
-    )
-    emitted.update(item.rule_id for item in keepout_result.findings)
-    rf_antenna_map = PcbRfModuleAntennaMap(
-        basis="Synthetic catalog reachability requirement",
-        requirements=(_pcb_rf_antenna_support.requirement(),),
-    )
-    rf_antenna_result = _pcb_rf_antenna_support.lint_report(
-        policy=DesignLintPolicy(pcb_rf_module_antenna_map=rf_antenna_map),
-        source_netlist=_pcb_rf_antenna_support.netlist(symbol="RF_Module:Other"),
-        observed_board=_pcb_rf_antenna_support.snapshot(),
-    )
-    emitted.update(item.rule_id for item in rf_antenna_result.findings)
     passive_result = _tests_test_two_pin_passives.lint_report(
         _tests_test_two_pin_passives.passive_netlist()
     )
@@ -489,14 +369,5 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id for item in candidates(rs485_source, rs485_peer_reference_scan=rs485_scan)
     )
-    touch_clearance_candidates = candidates(
-        NetlistContract(components={}, nets={}),
-        pcb_touch_pad_clearance_coverage=PcbTouchPadClearanceCoverageReport(
-            status="BLOCKED",
-            mode="review",
-            issue="Synthetic native geometry evidence is unavailable",
-        ),
-    )
-    emitted.update(item.rule_id for item in touch_clearance_candidates)
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

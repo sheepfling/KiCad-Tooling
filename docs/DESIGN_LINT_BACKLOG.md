@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 181 rules are implemented with synthetic regression coverage.
+The following 182 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 181 active rules.
+The catalog currently contains 182 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -548,6 +548,7 @@ skipped under prerelease policy.
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
 - `bus.can_tx_rx_same_net`
+- `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
 - `bus.complementary_pair_assignment`
 - `signal.named_pair_without_reviewed_requirement`
@@ -2976,7 +2977,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 181 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 182 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10666,6 +10667,45 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_can_tx_output_sharing_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
+  ```
+
+#### LINT-200 — Review CAN TX/RX direction labels that conflict with pin functions
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.can_tx_rx_label_mismatch` review prompt.
+- **Gap:** Existing CAN line polarity review compares CANH/CANL pin functions
+  with line labels. CAN TX/RX same-net review catches a short between a
+  controller's explicit transmit and receive pins. Neither catches crossed
+  TX/RX net labels when the pins remain on separate native nets.
+- **Predicate:** For fitted U/IC references, require an explicit bounded
+  CAN/FDCAN TX/TXD or RX/RXD function, a complete native component pin
+  inventory, and exactly one net assignment. Emit one review candidate when
+  that net name has an explicit CAN/FDCAN direction role opposite the pin
+  function. Keep generic UART names and connector pins outside the predicate.
+- **Boundary:** A direction-label contradiction is a review clue because
+  endpoint naming conventions may differ. The rule defaults off and supports
+  project policy and exact finding ignores. It does not infer a reviewed pin
+  map, transceiver behavior, firmware configuration, PCB copper, or off-board
+  wiring. DNP, open, multiply assigned, or inventory-inconsistent pins are
+  skipped.
+- **Fixtures:** Tooling-owned synthetic schematics contain crossed labels and
+  a matching control using passive pin types. Native netlist and ERC exports
+  are repeated on digest-pinned KiCad 10.0.0 and 10.0.5 images. The fault
+  produces two direction findings without ERC errors; the control is quiet.
+  Synthetic tests cover aliases, generic-name exclusions, connector and DNP
+  handling, inventory and assignment boundaries, project policy, exact
+  ignores, ordering, and repair. No cohort or project source is included.
+- **Fixture note:** [Synthetic CAN TX/RX label sources and hashes]
+  (../tests/fixtures/design_lint/can-tx-rx-label-mismatch/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_can_tx_rx_label_mismatch.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_tx_rx_label_mismatch")'
+
+  KICAD_RUN_NATIVE_CAN_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_can_tx_rx_label_mismatch_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_rx_label_mismatch")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

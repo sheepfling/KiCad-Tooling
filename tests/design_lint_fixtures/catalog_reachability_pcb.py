@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint import candidates, evaluate
 from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
     NetlistContract,
+    PcbRfModuleAntennaMap,
 )
 from kicad_tooling.hwrepo.pcb_board_only_footprint_models import (
     PcbBoardOnlyFootprint,
@@ -23,6 +24,43 @@ from kicad_tooling.hwrepo.pcb_pad_net_models import PcbSchematicBoardPadNetMisma
 from kicad_tooling.hwrepo.pcb_required_fitted_reference_models import (
     PcbRequiredFittedReferenceCoverage,
     PcbRequiredFittedReferenceMismatch,
+)
+from kicad_tooling.hwrepo.pcb_touch_pad_clearance_models import (
+    PcbTouchPadClearanceCoverageReport,
+)
+from tests import pcb_decoupling_support as _pcb_decoupling_support
+from tests import pcb_rf_antenna_support as _pcb_rf_antenna_support
+from tests.design_lint_fixtures import observed as observed_netlist
+from tests.design_lint_fixtures import pcb_reference_planes as _pcb_reference_plane_fixtures
+from tests.design_lint_fixtures import pcb_switching_loop as _pcb_switching_loop_fixtures
+from tests.design_lint_fixtures.pcb_signal_path import incomplete_signal_report, path_map
+from tests.test_pcb_drc_coverage import incomplete_report as incomplete_pair_report
+from tests.test_pcb_drc_coverage import pair_map
+from tests.test_pcb_keepouts import incomplete_report as incomplete_keepout_report
+from tests.test_pcb_keepouts import mapping_for as keepout_mapping
+from tests.test_pcb_protection_path import (
+    coverage_report as protection_path_coverage,
+)
+from tests.test_pcb_protection_path import (
+    mapping as protection_path_mapping,
+)
+from tests.test_pcb_protection_path import (
+    snapshot as protection_path_snapshot,
+)
+from tests.test_pcb_track_width import (
+    coverage as track_width_coverage,
+)
+from tests.test_pcb_track_width import (
+    mapping as track_width_mapping,
+)
+from tests.test_pcb_track_width import (
+    requirement as track_width_requirement,
+)
+from tests.test_pcb_track_width import (
+    snapshot as track_width_snapshot,
+)
+from tests.test_pcb_track_width import (
+    track as track_width_track,
 )
 
 
@@ -188,4 +226,128 @@ def pcb_rule_ids() -> set[str]:
             persisted_drc_exclusion,
         ),
     )
-    return {finding.rule_id for finding in report.findings}
+    result = {finding.rule_id for finding in report.findings}
+    empty_coach = coach
+    decoupling_map = _pcb_decoupling_support.mapping(
+        _pcb_decoupling_support.requirement(maximum_um=None)
+    )
+    decoupling_result = evaluate(
+        "synthetic-decoupling",
+        empty_coach,
+        DesignLintPolicy(pcb_decoupling_map=decoupling_map),
+        pcb_decoupling_coverage=_pcb_decoupling_support.coverage_report(
+            decoupling_map, _pcb_decoupling_support.snapshot()
+        ),
+    )
+    result.update(item.rule_id for item in decoupling_result.findings)
+
+    protection_map = protection_path_mapping()
+    protection_result = evaluate(
+        "synthetic-protection-path",
+        empty_coach,
+        DesignLintPolicy(pcb_protection_path_map=protection_map),
+        pcb_protection_path_coverage=protection_path_coverage(
+            protection_map,
+            protection_path_snapshot(entry_distance_nm=100001, via_offsets_nm=(2900000,)),
+        ),
+    )
+    result.update(item.rule_id for item in protection_result.findings)
+
+    track_map = track_width_mapping(track_width_requirement(minimum_um=251))
+    track_result = evaluate(
+        "synthetic-track-width",
+        empty_coach,
+        DesignLintPolicy(pcb_track_width_map=track_map),
+        pcb_track_width_coverage=track_width_coverage(
+            track_map,
+            track_width_snapshot(track_width_track("001", "VDD", 250000)),
+        ),
+    )
+    result.update(item.rule_id for item in track_result.findings)
+
+    reference_hole = (
+        (4000000, 4000000),
+        (6000000, 4000000),
+        (6000000, 6000000),
+        (4000000, 6000000),
+    )
+    reference_map = _pcb_reference_plane_fixtures.mapping()
+    reference_result = evaluate(
+        "synthetic-reference-plane",
+        empty_coach,
+        DesignLintPolicy(pcb_reference_plane_map=reference_map),
+        pcb_reference_plane_coverage=_pcb_reference_plane_fixtures.report(
+            reference_map,
+            _pcb_reference_plane_fixtures.snapshot(
+                _pcb_reference_plane_fixtures.track(),
+                zones=(
+                    _pcb_reference_plane_fixtures.zone(
+                        "00000000-0000-0000-0000-000000000001", holes=(reference_hole,)
+                    ),
+                ),
+            ),
+        ),
+    )
+    result.update(item.rule_id for item in reference_result.findings)
+
+    switching_loop_map = _pcb_switching_loop_fixtures.mapping()
+    switching_loop_result = evaluate(
+        "synthetic-switching-loop",
+        ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id="synthetic-switching-loop",
+            netlist_sha256=netlist_sha256,
+            observed=observed_netlist(),
+        ),
+        DesignLintPolicy(pcb_switching_loop_map=switching_loop_map),
+        pcb_switching_loop_coverage=_pcb_switching_loop_fixtures.coverage(
+            switching_loop_map, _pcb_switching_loop_fixtures.snapshot(expanded=True)
+        ),
+    )
+    result.update(item.rule_id for item in switching_loop_result.findings)
+
+    pair_result = evaluate(
+        "synthetic-differential-pair",
+        empty_coach,
+        DesignLintPolicy(pcb_differential_pair_rule_map=pair_map()),
+        pcb_differential_pair_coverage=incomplete_pair_report(),
+    )
+    result.update(item.rule_id for item in pair_result.findings)
+    result.update(
+        item.rule_id
+        for item in candidates(
+            observed_netlist(),
+            pcb_signal_path_coverage=incomplete_signal_report(path_map()),
+        )
+    )
+
+    keepout_map = keepout_mapping()
+    keepout_result = evaluate(
+        "synthetic-keepout",
+        empty_coach,
+        DesignLintPolicy(pcb_keepout_map=keepout_map),
+        pcb_keepout_coverage=incomplete_keepout_report(keepout_map),
+    )
+    result.update(item.rule_id for item in keepout_result.findings)
+
+    rf_map = PcbRfModuleAntennaMap(
+        basis="Synthetic catalog reachability requirement",
+        requirements=(_pcb_rf_antenna_support.requirement(),),
+    )
+    rf_result = _pcb_rf_antenna_support.lint_report(
+        policy=DesignLintPolicy(pcb_rf_module_antenna_map=rf_map),
+        source_netlist=_pcb_rf_antenna_support.netlist(symbol="RF_Module:Other"),
+        observed_board=_pcb_rf_antenna_support.snapshot(),
+    )
+    result.update(item.rule_id for item in rf_result.findings)
+
+    touch_candidates = candidates(
+        NetlistContract(components={}, nets={}),
+        pcb_touch_pad_clearance_coverage=PcbTouchPadClearanceCoverageReport(
+            status="BLOCKED",
+            mode="review",
+            issue="Synthetic native geometry evidence is unavailable",
+        ),
+    )
+    result.update(item.rule_id for item in touch_candidates)
+    return result

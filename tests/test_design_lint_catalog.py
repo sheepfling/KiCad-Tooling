@@ -81,6 +81,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.spi_clock_control_data_same_net",
             "bus.spi_clock_chip_select_same_net",
             "bus.can_tx_rx_same_net",
+            "bus.can_tx_rx_label_mismatch",
             "bus.can_tx_outputs_share_net",
         }
     )
@@ -127,6 +128,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.spi_clock_control_data_same_net",
             "bus.spi_clock_chip_select_same_net",
             "bus.can_tx_rx_same_net",
+            "bus.can_tx_rx_label_mismatch",
             "bus.can_tx_outputs_share_net",
         }
     )
