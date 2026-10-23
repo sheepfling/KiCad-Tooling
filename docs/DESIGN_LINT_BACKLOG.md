@@ -3187,8 +3187,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v83. The cross-process probe supports themed report
-  selectors and retains the complete 231-report inventory gate. Fault/control
+- **Status:** Implemented v84. The cross-process probe supports themed report
+  selectors and retains the complete 233-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3272,8 +3272,12 @@ is not a reason by itself to expand its scope or change its default policy.
   and the catalog links this case to LINT-209. This guards report stability; the
   synthetic receipt is not native execution evidence. The full inventory run
   also exposed that the former 209-report assertion lagged the existing probe by
-  20 reports; the documented and enforced count is now 231 including these two
-  new cases.
+  20 reports; v83 corrected the enforced count to 231. The v84 extension adds
+  LINT-208's common-return fault with a singleton peer scope and a shared-scope
+  control. Both reports keep the netlist and interface catalog fixed while the
+  reviewed scope coverage changes. The rule finding is compared across three
+  independently randomized processes, and its catalog links the determinism
+  case. The enforced total is 233 reports.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -11159,6 +11163,11 @@ is not a reason by itself to expand its scope or change its default policy.
   must report `J3` as having no return peer. The existing repeated-return
   prompt remains suppressed across the reviewed groups. All inputs are
   tooling-owned synthetic fixtures.
+- **Determinism:** LINT-080 compares complete reports for the common-return
+  singleton-scope fault and shared-scope control across three independent
+  Python processes. Their native-shaped netlist and interface-catalog digest
+  are fixed; the source-matched connector-coverage digest changes with the
+  authored scope, and only the fault emits this rule's finding.
 - **Focused selection:**
 
   ```sh

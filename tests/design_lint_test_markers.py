@@ -115,6 +115,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_return_scope.py",
             "tests/test_connector_supply_scope.py",
             "tests/test_connector_supply_domain_net_sharing.py",
+            "tests/test_design_lint_determinism_connector_scope_singletons.py",
             "tests/test_connector_return_distribution.py",
             "tests/test_verify_design_lint.py",
             "tests/test_external_protection_contract.py",

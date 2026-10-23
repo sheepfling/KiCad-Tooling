@@ -22,6 +22,7 @@ RETURN_PATH_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_determinism_pcb_protection.py",
         "tests/test_design_lint_determinism_pcb_return_paths.py",
         "tests/test_design_lint_determinism_returns.py",
+        "tests/test_design_lint_determinism_connector_scope_singletons.py",
         "tests/test_design_lint_mcp_parity_can_reference.py",
         "tests/test_design_lint_mcp_parity_connector_returns.py",
         "tests/test_design_lint_mcp_parity_return_labels.py",

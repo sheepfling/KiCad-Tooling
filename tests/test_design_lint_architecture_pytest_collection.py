@@ -371,6 +371,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "pcb.mechanical_edge_clearance_rule_coverage",
             "tests/test_design_lint_determinism_pcb_mechanical_edge.py::test_mechanical_edge_fault_and_control_reports_are_source_bound_and_deterministic",
         ),
+        (
+            "connector.return_supply_scope_singleton",
+            "tests/test_design_lint_determinism_connector_scope_singletons.py::test_return_scope_singleton_fault_and_control_reports_are_deterministic",
+        ),
     ),
 )
 def test_rule_marker_selects_catalogued_cases_without_external_checkout(

@@ -15,6 +15,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_component_inventory",
     "pcb_touch_pad_clearance",
     "pcb_mechanical_edge_clearance",
+    "connector_scope_singletons",
     "pcb_required_fitted_reference",
     "pcb_board_only_footprints",
     "pcb_dnp_mismatch",

@@ -174,7 +174,8 @@
         "tests.test_connector_peer_comparison_scope_singleton.test_project_policy_can_block_disable_or_ignore_scope_review"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_peer_comparison_scope_singleton.test_scope_candidate_is_stable_under_netlist_ordering"
+        "tests.test_connector_peer_comparison_scope_singleton.test_scope_candidate_is_stable_under_netlist_ordering",
+        "tests.test_design_lint_determinism_connector_scope_singletons.test_return_scope_singleton_fault_and_control_reports_are_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_scope_coverage_candidates.py#connector_scope_singleton_candidates",
