@@ -8,7 +8,7 @@ from tests.connector_footprint_peer_support import (
     peer_netlist,
 )
 from tests.design_lint_fixtures.connector_mapped_interface_signal import (
-    mapped_interface_signal_netlist,
+    mapped_interface_netlist,
 )
 from tests.design_lint_fixtures.connector_peer_missing_metadata_open import (
     missing_metadata_open_peer_netlist,
@@ -233,9 +233,15 @@ def named_connector_peer_fixture_contracts() -> dict[str, NetlistContract]:
         "footprint-alias-peer-missing-metadata-open-control": missing_metadata_open_peer_netlist(
             target_assignments=("SHARED_PORT", "SHARED_PORT")
         ),
-        "mapped-interface-signal-unassigned-fault": mapped_interface_signal_netlist(),
-        "mapped-interface-signal-unassigned-control": mapped_interface_signal_netlist(
+        "mapped-interface-signal-unassigned-fault": mapped_interface_netlist(),
+        "mapped-interface-signal-unassigned-control": mapped_interface_netlist(
             target_net="UART_RX"
+        ),
+        "mapped-interface-shield-unassigned-fault": mapped_interface_netlist(
+            target_function="SHIELD", target_type="passive"
+        ),
+        "mapped-interface-shield-unassigned-control": mapped_interface_netlist(
+            target_net="CHASSIS", target_function="SHIELD", target_type="passive"
         ),
     }
     return cases

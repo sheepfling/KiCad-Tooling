@@ -13,11 +13,8 @@ from kicad_tooling.ci_hosted_connector_return_fixture_sources import (
     CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES,
     connector_return_fixture_sources,
 )
-from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from kicad_tooling.hwrepo.connector_coverage_models import (
     ConnectorCoverageReport,
-    ConnectorInterfaceReview,
-    ConnectorInventoryReview,
 )
 from kicad_tooling.hwrepo.connector_peer_pin_models import ConnectorPinRole
 from kicad_tooling.hwrepo.design_lint import evaluate, fingerprint
@@ -29,14 +26,13 @@ from kicad_tooling.hwrepo.design_lint_finding_models import (
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.design_lint_types import Candidate
-from kicad_tooling.hwrepo.models import (
-    ContractCoachReport,
-    InterfacePin,
-    InterfaceRecord,
-    NetlistContract,
+from kicad_tooling.hwrepo.models import ContractCoachReport, NetlistContract
+from tests.connector_mapped_interface_support import (
+    CATALOG_SHA256,
+    interface_coverage,
 )
 from tests.design_lint_fixtures.connector_mapped_interface_signal import (
-    mapped_interface_signal_netlist as _netlist,
+    mapped_interface_netlist as _netlist,
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
@@ -44,7 +40,6 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.i
 RULE_ID = "connector.mapped_interface_signal_unassigned"
 PROJECT_ID = "synthetic-mapped-interface-signal"
 NETLIST_SHA256 = "a" * 64
-CATALOG_SHA256 = "b" * 64
 NATIVE_FAULT_CASE = "mapped-interface-signal-unassigned-fault"
 NATIVE_CONTROL_CASE = "mapped-interface-signal-unassigned-control"
 NATIVE_FIXTURE_CASES = (NATIVE_FAULT_CASE, NATIVE_CONTROL_CASE)
@@ -54,93 +49,23 @@ EXPECTED_NATIVE_SOURCE_HASHES = {
 }
 
 
-def _interface(*, target_role: ConnectorPinRole = "signal") -> InterfaceRecord:
-    return InterfaceRecord(
-        id="synthetic-uart-port",
-        revision="synthetic-1",
-        pins=(
-            InterfacePin(
-                number="1",
-                signal="UART_TX",
-                role="signal",
-                direction="output",
-                voltage_domain="logic-3v3",
-                mating="UART_RX",
-                orientation="straight",
-                mechanical_clearance="synthetic",
-            ),
-            InterfacePin(
-                number="2",
-                signal="UART_RX",
-                role=target_role,
-                direction="input",
-                voltage_domain="logic-3v3",
-                mating="UART_TX",
-                orientation="straight",
-                mechanical_clearance="synthetic",
-            ),
-            InterfacePin(
-                number="3",
-                signal="SIGNAL_RETURN",
-                role="return",
-                direction="passive",
-                voltage_domain="signal-return",
-                mating="SIGNAL_RETURN",
-                orientation="straight",
-                mechanical_clearance="synthetic",
-            ),
-        ),
-    )
-
-
 def _coverage(
     source: NetlistContract,
     *,
     unconnected_reason: str | None = None,
     target_role: ConnectorPinRole = "signal",
 ) -> ConnectorCoverageReport:
-    interface = _interface(target_role=target_role)
-    review = ConnectorInterfaceReview(
-        reference="J1",
-        disposition="interface",
-        basis="Synthetic independently reviewed UART connector pinout",
-        interface_id=interface.id,
-        pin_map={"1": "1", "2": "2", "3": "3"},
-        unconnected_pin_reasons=({} if unconnected_reason is None else {"2": unconnected_reason}),
-    )
-    return evaluate_connector_coverage(
+    return interface_coverage(
         source,
-        (interface.id,),
-        (review,),
-        interfaces={interface.id: interface},
-        interface_catalog_path="catalog/interfaces.json",
-        interface_catalog_sha256=CATALOG_SHA256,
-        inventory_review=ConnectorInventoryReview(
-            basis="Synthetic review covered the complete connector inventory"
-        ),
+        target_role=target_role,
+        unconnected_reason=unconnected_reason,
     )
 
 
 def _native_fixture_coverage(source: NetlistContract) -> ConnectorCoverageReport:
-    template = _interface()
-    interface = template.model_copy(update={"pins": template.pins[:2]})
-    review = ConnectorInterfaceReview(
-        reference="J1",
-        disposition="interface",
-        basis="Synthetic independently reviewed UART connector pinout",
-        interface_id=interface.id,
-        pin_map={"1": "1", "2": "2"},
-    )
-    return evaluate_connector_coverage(
+    return interface_coverage(
         source,
-        (interface.id,),
-        (review,),
-        interfaces={interface.id: interface},
-        interface_catalog_path="catalog/interfaces.json",
-        interface_catalog_sha256=CATALOG_SHA256,
-        inventory_review=ConnectorInventoryReview(
-            basis="Synthetic review covered the complete connector inventory"
-        ),
+        pin_numbers=("1", "2"),
     )
 
 

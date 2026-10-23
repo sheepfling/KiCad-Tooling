@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 150 rules are implemented with synthetic regression coverage.
+The following 151 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 150 active rules.
+The catalog currently contains 151 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -472,6 +472,7 @@ skipped under prerelease policy.
 - `connector.unconnected_supply_pin`
 - `connector.unconnected_return_pin`
 - `connector.mapped_interface_signal_unassigned`
+- `connector.mapped_interface_shield_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
 - `component.unconnected_power_input`
@@ -2756,7 +2757,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 150 active rules; CI requires every new
+- **Status:** Baseline complete for all 151 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2765,7 +2766,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 150 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 151 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9114,6 +9115,49 @@ is not a reason by itself to expand its scope or change its default policy.
 
   Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to include the two exact-version
   fault/control exports in package acceptance.
+
+#### LINT-169 — Review unassigned mapped connector shield contacts
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_interface_shield_unassigned`.
+- **Gap:** A connector pin may have a reviewed shield role even when its native
+  symbol pin name and electrical type do not identify that role. Generic peer
+  checks cannot safely infer whether an open shield should be bonded.
+- **Predicate:** Require a complete pin inventory and complete, source-matched
+  interface map with the current catalog digest. A fitted mapped
+  `role=shield` pin with no assigned net and no
+  `unconnected_pin_reasons` entry produces REVIEW. Exclude DNP references and
+  stale, incomplete, or source-mismatched evidence.
+- **Policy boundary:** The authored role identifies a contact for review; it
+  does not require a bond or select a bond point. A reviewer can record an
+  intentional open in `unconnected_pin_reasons`, or use the existing project
+  mode and exact-fingerprint ignore controls. The rule does not determine
+  signal-return commonality, PCB copper continuity, chassis or external
+  grounding, or physical connector assembly.
+- **Evidence:** Tooling-owned synthetic fault and controls cover an open
+  mapped shield, a connected shield, an intentional open, DNP exclusion,
+  non-shield roles, stale or digestless maps, policy overrides, exact ignores,
+  and metamorphic ordering/assignment changes. Digest-pinned native schematic
+  fault/control fixtures were exercised with KiCad 10.0.0 and 10.0.5. The
+  shared CLI/MCP parity regression checks both mapped signal and shield rules.
+  The [native fixture note](../tests/fixtures/design_lint/mapped-interface-shield-native/README.md)
+  records the source hashes and exact-version test lane.
+  No customer or proprietary board source is used; reviewer precision on real
+  projects remains unmeasured.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest \
+    tests/test_connector_mapped_interface_shield_unassigned.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_shield_unassigned")'
+
+  python -I -m pytest \
+    tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
+    -m 'design_lint_rule(rule_id="connector.mapped_interface_shield_unassigned")'
+  ```
+
+  Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to include the two exact-version
+  native exports in package acceptance.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

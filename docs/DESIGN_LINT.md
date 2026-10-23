@@ -114,7 +114,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 150 active rules.
+The catalog currently contains 151 active rules.
 
 ## Run the lint lane
 
@@ -1083,6 +1083,37 @@ bonded, or isolated relationships. Existing repeated-return findings continue
 to report suspicious net splits independently. Synthetic controls show that
 two returns on one net and two returns on separate nets have the same ratio
 result; the latter can still produce that separate repeated-return review.
+
+## Review an unassigned mapped shield contact
+
+`connector.mapped_interface_shield_unassigned` uses the `shield` role from a
+complete, source-matched connector interface map. If that fitted pin has no
+schematic net and no `unconnected_pin_reasons` entry, the default result is a
+`REVIEW` finding. It prompts the project reviewer to decide whether to add a
+board bond or document that the shield is intentionally isolated.
+
+Record an intentional open on the project-owned connector review:
+
+```json
+{
+  "reference": "J1",
+  "disposition": "interface",
+  "basis": "Reviewed connector pinout and chassis strategy",
+  "interface_id": "service-link",
+  "pin_map": {"4": "4"},
+  "unconnected_pin_reasons": {
+    "4": "Shield intentionally isolated for this interface revision"
+  }
+}
+```
+
+The shield classification does not determine a bond point, require a common
+signal return, prove PCB copper continuity, or establish external or chassis
+grounding. Incomplete or stale maps and DNP connectors are excluded. Project
+policy can set the rule to `block` or `off`, or ignore a finding by its exact
+fingerprint. Synthetic fault/control tests and exact KiCad 10.0.0/10.0.5 native
+fixtures verify that an unassigned mapped shield prompts and a connected or
+reasoned-open shield stays quiet.
 
 ## Review mapped PCB track widths
 

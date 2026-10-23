@@ -2590,6 +2590,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_signal_pins"
     },
     {
+      "rule_id": "connector.mapped_interface_shield_unassigned",
+      "title": "Mapped connector shield pin has no net assignment",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted connector whose complete pin inventory and interface map are source-matched to the exported netlist and interface catalog, emit a REVIEW candidate for each role=shield contact with no net assignment and no explicit unconnected_pin_reasons disposition.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The project interface map supplies an explicit shield role, but does not prove that the shield must be bonded on this board.",
+        "An intentionally isolated or unconnected shield needs an explicit unconnected_pin_reasons entry or a project rule override/ignore.",
+        "DNP references, stale or incomplete interface coverage, and evidence that does not match the exported pin inventory, pin functions, and nets are excluded.",
+        "The review does not select a bond point or establish PCB copper continuity, external grounding, chassis bonding, or physical connector assembly."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_interface_shield_unassigned.test_open_mapped_shield_contact_requests_review_with_source_evidence",
+        "tests.test_connector_mapped_interface_shield_unassigned.test_native_mapped_shield_contact_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_interface_shield_unassigned.test_connected_reasoned_dnp_and_nonshield_contacts_are_controls",
+        "tests.test_connector_mapped_interface_shield_unassigned.test_source_mismatched_or_digestless_coverage_cannot_trigger_review",
+        "tests.test_connector_mapped_interface_shield_unassigned.test_review_obeys_project_policy_and_exact_ignore",
+        "tests.test_connector_mapped_interface_shield_unassigned.test_native_mapped_shield_contact_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_mapped_interface_signal.test_mapped_interface_signal_review_cli_mcp_parity"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_interface_shield_unassigned.test_finding_is_order_stable_and_connection_clears_it"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_shield_pins",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_shield_pins"
+    },
+    {
       "rule_id": "connector.return_pin_on_positive_rail",
       "title": "Connector return pin is assigned to a positive rail",
       "status": "active",

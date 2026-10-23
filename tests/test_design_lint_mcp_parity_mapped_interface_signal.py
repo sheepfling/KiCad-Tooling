@@ -39,10 +39,17 @@ from tests.synthetic_design_lint_project import (
 )
 
 RULE_ID = "connector.mapped_interface_signal_unassigned"
-INTERFACE_ID = "synthetic-uart-port"
+SHIELD_RULE_ID = "connector.mapped_interface_shield_unassigned"
+INTERFACE_ID = "synthetic-connector-port"
 
 
-def _install_reviewed_interface(root: Path, island: Path) -> Path:
+def _install_reviewed_interface(
+    root: Path,
+    island: Path,
+    *,
+    target_role: str = "signal",
+) -> Path:
+    shield = target_role == "shield"
     interface = InterfaceRecord(
         id=INTERFACE_ID,
         revision="synthetic-1",
@@ -59,11 +66,11 @@ def _install_reviewed_interface(root: Path, island: Path) -> Path:
             ),
             InterfacePin(
                 number="2",
-                signal="UART_RX",
-                role="signal",
-                direction="input",
-                voltage_domain="logic-3v3",
-                mating="UART_TX",
+                signal="CHASSIS_SHIELD" if shield else "UART_RX",
+                role=target_role,
+                direction="passive" if shield else "input",
+                voltage_domain="chassis" if shield else "logic-3v3",
+                mating="CHASSIS_BOND" if shield else "UART_TX",
                 orientation="straight",
                 mechanical_clearance="synthetic",
             ),
@@ -110,6 +117,7 @@ def _install_reviewed_interface(root: Path, island: Path) -> Path:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SHIELD_RULE_ID)
 def test_mapped_interface_signal_review_cli_mcp_parity(tmp_path: Path) -> None:
     """A mapped open signal is REVIEW on both surfaces and clears when connected."""
     policy = DesignLintPolicy(
@@ -170,3 +178,22 @@ def test_mapped_interface_signal_review_cli_mcp_parity(tmp_path: Path) -> None:
         (item.rule_id, item.subject, item.disposition) for item in control.findings
     ]
     assert RULE_ID not in {item.rule_id for item in control.findings}
+
+    _install_reviewed_interface(root, island, target_role="shield")
+    install_synthetic_netlist(native, fault_netlist)
+    shield_fault = compare()
+    shield_findings = [item for item in shield_fault.findings if item.rule_id == SHIELD_RULE_ID]
+    assert shield_fault.connector_coverage is not None
+    assert shield_fault.connector_coverage.status == "COMPLETE"
+    assert shield_fault.status == "REVIEW"
+    assert len(shield_findings) == 1
+    assert shield_findings[0].evidence["interface_role"] == ("shield",)
+    assert shield_findings[0].evidence["assigned_nets"] == ()
+
+    shield_control_netlist = control_netlist.replace("UART_RX", "CHASSIS")
+    install_synthetic_netlist(native, shield_control_netlist)
+    shield_control = compare()
+    assert shield_control.status == "PASS", [
+        (item.rule_id, item.subject, item.disposition) for item in shield_control.findings
+    ]
+    assert SHIELD_RULE_ID not in {item.rule_id for item in shield_control.findings}

@@ -13,7 +13,10 @@ from .connector_coverage_models import (
     ConnectorMappedPinEvidence,
 )
 from .connector_identity import power_function_key, similar_connector_pin_groups
-from .connector_mapped_interface_pins import unassigned_mapped_interface_signal_pins
+from .connector_mapped_interface_pins import (
+    unassigned_mapped_interface_shield_pins,
+    unassigned_mapped_interface_signal_pins,
+)
 from .connector_peer_pin_all_open import all_open_generic_connector_peer_pin_candidates
 from .connector_peer_pin_findings import (
     connector_peer_pin_assignment_divergences,
@@ -481,5 +484,6 @@ def connector_pin_candidates(
         )
     )
     found.extend(unassigned_mapped_interface_signal_pins(observed, connector_coverage))
+    found.extend(unassigned_mapped_interface_shield_pins(observed, connector_coverage))
 
     return tuple(found)

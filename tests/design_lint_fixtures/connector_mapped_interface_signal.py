@@ -5,14 +5,14 @@ from __future__ import annotations
 from kicad_tooling.hwrepo.models import NetlistContract
 
 
-def mapped_interface_signal_netlist(
+def mapped_interface_netlist(
     *,
     target_net: str | None = None,
     target_function: str = "Pin_2",
     target_type: str = "input",
     dnp: tuple[str, ...] = (),
 ) -> NetlistContract:
-    """Build one reviewed UART connector with a controlled signal assignment."""
+    """Build one reviewed connector with a controlled contact assignment."""
     nets = {"UART_TX": ("J1.1",), "SIGNAL_RETURN": ("J1.3",)}
     if target_net is not None:
         nets[target_net] = ("J1.2",)

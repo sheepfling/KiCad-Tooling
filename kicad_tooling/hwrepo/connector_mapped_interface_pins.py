@@ -10,6 +10,7 @@ from .design_lint_types import Candidate
 from .models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.mapped_interface_signal_unassigned"
+SHIELD_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_unassigned"
 
 
 def unassigned_mapped_interface_signal_pins(
@@ -51,6 +52,54 @@ def unassigned_mapped_interface_signal_pins(
                     "interface_pin_number": (str(mapped.interface_pin_number),),
                     "interface_signal": (str(mapped.interface_signal),),
                     "interface_role": ("signal",),
+                    "native_pin_function": (mapped.symbol_function or "<missing>",),
+                    "native_pin_electrical_type": (electrical_type or "<missing>",),
+                    "assigned_nets": (),
+                    "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
+                },
+            )
+        )
+    return tuple(results)
+
+
+def unassigned_mapped_interface_shield_pins(
+    observed: NetlistContract,
+    coverage: ConnectorCoverageReport | None,
+) -> tuple[Candidate, ...]:
+    """Prompt when a reviewed shield contact has neither a net nor an open reason."""
+    if coverage is None:
+        return ()
+
+    dnp_references = {reference.casefold() for reference in observed.dnp_components}
+    results: list[Candidate] = []
+    for pin, mapped in sorted(source_matched_connector_pin_evidence(observed, coverage).items()):
+        reference = pin.rsplit(".", 1)[0]
+        electrical_type = observed.pin_electrical_types.get(pin)
+        if (
+            mapped.role != "shield"
+            or mapped.nets
+            or mapped.unconnected_reason is not None
+            or reference.casefold() in dnp_references
+        ):
+            continue
+
+        results.append(
+            Candidate(
+                rule_id=SHIELD_RULE_ID,
+                subject=f"{pin}: reviewed shield contact has no net assignment",
+                message=(
+                    f"The source-matched interface maps this pin to {mapped.interface_signal} "
+                    "as a shield contact, but the native netlist assigns it to no net. Review "
+                    "whether the shield needs an intentional board bond or should remain "
+                    "isolated; record an explicit unconnected-pin reason for an intentional "
+                    "open. This check does not establish the correct bond point or PCB copper "
+                    "continuity."
+                ),
+                evidence={
+                    "component_pin": (pin,),
+                    "interface_pin_number": (str(mapped.interface_pin_number),),
+                    "interface_signal": (str(mapped.interface_signal),),
+                    "interface_role": ("shield",),
                     "native_pin_function": (mapped.symbol_function or "<missing>",),
                     "native_pin_electrical_type": (electrical_type or "<missing>",),
                     "assigned_nets": (),
