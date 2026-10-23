@@ -43,10 +43,8 @@ from .ci_hosted_ic_rail_capacitors import (
     ic_rail_capacitor_fixture_lane as _run_ic_rail_capacitor_fixture_lane,
 )
 from .ci_hosted_led_rail import led_rail_fixture_lane
-from .ci_hosted_mosfet_gate_fixture import (
-    mosfet_gate_fixture_lane,
-    mosfet_terminal_order_fixture_lane,
-)
+from .ci_hosted_mosfet_gate_fixture import mosfet_gate_fixture_lane
+from .ci_hosted_mosfet_terminal_order_fixture import mosfet_terminal_order_fixture_lane
 from .ci_hosted_net_dc_reference import net_dc_reference_fixture_lane
 from .ci_hosted_open_drain_bias import (
     open_drain_bias_fixture_lane as _run_open_drain_bias_fixture_lane,

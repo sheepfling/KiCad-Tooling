@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_mosfet_gate_fixture import MOSFET_TERMINAL_ORDER_FIXTURE_CASES
+from kicad_tooling.ci_hosted_mosfet_terminal_order_fixture import (
+    MOSFET_TERMINAL_ORDER_FIXTURE_CASES,
+)
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.native_fixture_support import assert_native_fixture_mounts
@@ -67,7 +69,9 @@ def test_native_mosfet_terminal_order_faults_and_controls_are_repeatable(
     project: str,
     version: str,
 ) -> None:
-    from kicad_tooling.ci_hosted_mosfet_gate_fixture import mosfet_terminal_order_fixture_lane
+    from kicad_tooling.ci_hosted_mosfet_terminal_order_fixture import (
+        mosfet_terminal_order_fixture_lane,
+    )
 
     image = PINNED_NATIVE_KICAD_IMAGES[version]
     root, _ = synthetic_design_lint_project(

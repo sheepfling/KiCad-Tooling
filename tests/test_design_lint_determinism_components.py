@@ -147,6 +147,22 @@ def test_mosfet_gate_source_same_net_fault_and_control_are_stable_across_hash_se
     assert all(item["rule_id"] != rule_id for item in control["findings"])
 
 
+@pytest.mark.design_lint_rule(rule_id="component.mosfet_gate_drain_same_net")
+def test_mosfet_gate_drain_same_net_fault_and_control_are_stable_across_hash_seeds() -> None:
+    reports = hashseed_probe_reports(families=("components",))
+    fault = reports["mosfet_gate_drain_same_net_fault"]
+    control = reports["mosfet_gate_drain_same_net_control"]
+    rule_id = "component.mosfet_gate_drain_same_net"
+
+    fault_findings = [item for item in fault["findings"] if item["rule_id"] == rule_id]
+    assert fault["status"] == "REVIEW"
+    assert len(fault_findings) == 1
+    assert fault_findings[0]["evidence"]["gate_net"] == ["GATE_CTRL"]
+    assert fault_findings[0]["evidence"]["drain_net"] == ["GATE_CTRL"]
+    assert control["status"] == "PASS"
+    assert all(item["rule_id"] != rule_id for item in control["findings"])
+
+
 @pytest.mark.design_lint_rule(rule_id="component.bjt_terminal_order_on_named_rails")
 def test_bjt_rail_order_fault_and_control_are_stable_across_hash_seeds() -> None:
     reports = hashseed_probe_reports(families=("components",))

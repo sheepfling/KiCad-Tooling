@@ -22,8 +22,10 @@ from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
-from tests.design_lint_fixtures.mosfet_gate_source_same_net import mosfet_gate_source_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
+from tests.design_lint_fixtures.mosfet_terminal_same_net import (
+    mosfet_terminal_same_net_netlist,
+)
 from tests.test_led_output_heuristics import observed_report as led_output_observed_report
 from tests.test_led_output_heuristics import output_led_netlist as led_output_netlist
 from tests.test_mosfet_gate_connectivity import mosfet_netlist as mosfet_gate_netlist
@@ -118,7 +120,7 @@ def mosfet_drain_source_same_net_report(*, same_net: bool) -> dict[str, object]:
 
 def mosfet_gate_source_same_net_report(*, same_net: bool) -> dict[str, object]:
     """Serialize a same-net MOSFET gate/source tie or distinct-net control."""
-    observed = mosfet_gate_source_netlist(same_net=same_net)
+    observed = mosfet_terminal_same_net_netlist(pair="gate-source", same_net=same_net)
     policy = DesignLintPolicy(
         rules=(
             DesignLintRuleOverride(
@@ -129,6 +131,21 @@ def mosfet_gate_source_same_net_report(*, same_net: bool) -> dict[str, object]:
         )
     )
     return source_bound_component_report("synthetic-mosfet-gate-source-hashseed", observed, policy)
+
+
+def mosfet_gate_drain_same_net_report(*, same_net: bool) -> dict[str, object]:
+    """Serialize a MOSFET gate/drain tie or distinct-net control."""
+    observed = mosfet_terminal_same_net_netlist(pair="gate-drain", same_net=same_net)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="component.mosfet_gate_drain_same_net",
+                mode="review",
+                reason="Hash-seed stability fixture",
+            ),
+        )
+    )
+    return source_bound_component_report("synthetic-mosfet-gate-drain-hashseed", observed, policy)
 
 
 def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> dict[str, object]:
@@ -228,6 +245,8 @@ def report_cases() -> dict[str, object]:
         "mosfet_drain_source_same_net_control": mosfet_drain_source_same_net_report(same_net=False),
         "mosfet_gate_source_same_net_fault": mosfet_gate_source_same_net_report(same_net=True),
         "mosfet_gate_source_same_net_control": mosfet_gate_source_same_net_report(same_net=False),
+        "mosfet_gate_drain_same_net_fault": mosfet_gate_drain_same_net_report(same_net=True),
+        "mosfet_gate_drain_same_net_control": mosfet_gate_drain_same_net_report(same_net=False),
         "bjt_npn_terminal_order_fault": bjt_terminal_order_report(
             family="npn", reversed_order=True
         ),

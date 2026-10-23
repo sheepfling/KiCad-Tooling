@@ -24,7 +24,7 @@ def test_rule_owner_and_shared_symbol_inventory_stay_focused() -> None:
         "kicad_tooling/hwrepo/component_rail_potentials.py",
         "kicad_tooling/hwrepo/mosfet_gate_connectivity.py",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py",
-        "kicad_tooling/ci_hosted_mosfet_gate_fixture.py",
+        "kicad_tooling/ci_hosted_mosfet_terminal_order_fixture.py",
         "tests/design_lint_fixtures/mosfet_terminal_order.py",
         "tests/test_mosfet_terminal_order.py",
         "tests/test_mosfet_terminal_order_native_fixture.py",

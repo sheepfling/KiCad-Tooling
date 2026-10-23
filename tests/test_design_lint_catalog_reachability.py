@@ -18,7 +18,7 @@ import tests.design_lint_fixtures.connector_return_supply as _connector_return_s
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
-import tests.design_lint_fixtures.mosfet_gate_source_same_net as _mosfet_gate_source_same_net_fixtures
+import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
 import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_fixtures
 import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
@@ -173,7 +173,15 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(item.rule_id for item in candidates(_mosfet_gate_source_bias_fixtures.netlist()))
     emitted.update(
         item.rule_id
-        for item in candidates(_mosfet_gate_source_same_net_fixtures.mosfet_gate_source_netlist())
+        for item in candidates(
+            _mosfet_terminal_same_net_fixtures.mosfet_terminal_same_net_netlist(pair="gate-source")
+        )
+    )
+    emitted.update(
+        item.rule_id
+        for item in candidates(
+            _mosfet_terminal_same_net_fixtures.mosfet_terminal_same_net_netlist(pair="gate-drain")
+        )
     )
     emitted.update(
         item.rule_id for item in candidates(_tests_test_mosfet_gate_connectivity.mosfet_netlist())

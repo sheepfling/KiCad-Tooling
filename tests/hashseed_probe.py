@@ -95,6 +95,8 @@ REPORT_ORDER = (
     "mosfet_drain_source_same_net_control",
     "mosfet_gate_source_same_net_fault",
     "mosfet_gate_source_same_net_control",
+    "mosfet_gate_drain_same_net_fault",
+    "mosfet_gate_drain_same_net_control",
     "bjt_npn_terminal_order_fault",
     "bjt_npn_terminal_order_control",
     "bjt_pnp_terminal_order_fault",

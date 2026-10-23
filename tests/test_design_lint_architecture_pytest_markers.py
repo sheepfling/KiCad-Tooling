@@ -115,6 +115,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     },
     "test_mosfet_drain_source_same_net.py": {"component_lint"},
     "test_mosfet_gate_source_same_net.py": {"component_lint"},
+    "test_mosfet_gate_drain_same_net.py": {"component_lint"},
     "test_mosfet_drain_source_same_net_native_fixture.py": {
         "component_lint",
         "native_kicad",

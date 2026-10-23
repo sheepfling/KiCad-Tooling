@@ -62,6 +62,7 @@ DesignLintRuleId = Literal[
     "component.mosfet_gate_direct_drive",
     "component.mosfet_drain_source_same_net",
     "component.mosfet_gate_source_same_net",
+    "component.mosfet_gate_drain_same_net",
     "component.mosfet_terminal_order_on_named_rails",
     "component.bjt_terminal_order_on_named_rails",
     "component.bjt_collector_emitter_same_net",

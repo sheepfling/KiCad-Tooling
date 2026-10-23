@@ -20,6 +20,7 @@ from .design_lint_component_bjt_terminals import (
 )
 from .design_lint_component_mosfet_terminals import (
     mosfets_with_drain_source_on_same_net,
+    mosfets_with_gate_drain_on_same_net,
     mosfets_with_gate_source_on_same_net,
 )
 from .design_lint_rule_types import DesignLintRuleId
@@ -72,6 +73,7 @@ def component_candidates(
     found.extend(mosfets_with_unusual_drain_source_rail_order(observed))
     found.extend(mosfets_with_drain_source_on_same_net(observed))
     found.extend(mosfets_with_gate_source_on_same_net(observed))
+    found.extend(mosfets_with_gate_drain_on_same_net(observed))
     found.extend(bjts_with_unusual_collector_emitter_rail_order(observed))
     found.extend(bjts_with_collector_emitter_on_same_net(observed))
     found.extend(bjts_with_base_emitter_on_same_net(observed))

@@ -1,6 +1,6 @@
 # MOSFET gate native fixtures
 
-These tooling-owned KiCad schematics test four bounded review heuristics. The
+These tooling-owned KiCad schematics test five bounded review heuristics. The
 open-gate fault and gate-peer control exercise LINT-170. The gate-peer
 control is also the no-visible-bias fault for opt-in LINT-171; the
 `source-bias-control` adds a fitted 100 kΩ resistor directly across the same
@@ -11,7 +11,9 @@ ties the MOSFET gate and source for the opt-in LINT-184 review; this can be an
 intentional hold-off connection. `gate-source-control` keeps those nets
 separate and includes a fitted 100 kΩ resistor between them. A review finding
 asks for human review and does not establish whether a resistor or bias is
-required or adequate.
+required or adequate. `gate-drain-tie` ties the native gate and drain nets for
+the opt-in LINT-185 review; diode-connected MOSFETs are an intentional analog
+topology. The source-bias schematic is its distinct-net control.
 
 | Fixture                                | Source SHA-256                                                     |
 | -------------------------------------- | ------------------------------------------------------------------ |
@@ -20,6 +22,7 @@ required or adequate.
 | `source-bias-control.kicad_sch`        | `d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78` |
 | `series-gate-control.kicad_sch`        | `5f6a6b62155601ef51c1d9d3dad30dd2e5b8d02f22fa210f332fdf9566322323` |
 | `gate-source-tie.kicad_sch`            | `75849c215452527d32739eb43d9a8d7ec72ee2a0a31fc50e49360bbb8e62986c` |
+| `gate-drain-tie.kicad_sch`             | `3c420798532c410789fb7e9212c0fd92d41a76fb400b44ec6515f2ffc12d715e` |
 
 Run the exact-version native lane with the package acceptance switch:
 
@@ -33,9 +36,10 @@ The lane exports netlists and ERC reports twice using the project-selected,
 digest-pinned KiCad 10.0.0 and 10.0.5 images. It requires stable normalized
 exports, no native ERC errors, the LINT-170 finding only on the open-gate
 fault, the opt-in LINT-171 finding on the gate-peer case without source bias,
-the opt-in LINT-177 finding on direct-output cases, and the opt-in LINT-184
-finding only on the direct gate/source tie. The source-bias control is quiet
-for LINT-184. ERC warnings about the
+the opt-in LINT-177 finding on direct-output cases, the opt-in LINT-184 finding
+only on the direct gate/source tie, and the opt-in LINT-185 finding only on
+the gate/drain tie. The source-bias control is quiet for both same-net rules.
+ERC warnings about the
 deliberately minimal synthetic symbol and schematic geometry are retained in
 the normalized evidence and are not treated as electrical approval.
 

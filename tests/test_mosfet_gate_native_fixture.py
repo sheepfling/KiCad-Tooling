@@ -13,6 +13,9 @@ from kicad_tooling.ci_hosted_mosfet_gate_fixture import MOSFET_GATE_FIXTURE_CASE
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.component_mosfet_gate_drive import RULE_ID as DIRECT_DRIVE_RULE_ID
 from kicad_tooling.hwrepo.design_lint_component_mosfet_terminals import (
+    GATE_DRAIN_RULE_ID as GATE_DRAIN_SAME_NET_RULE_ID,
+)
+from kicad_tooling.hwrepo.design_lint_component_mosfet_terminals import (
     GATE_SOURCE_RULE_ID as GATE_SOURCE_SAME_NET_RULE_ID,
 )
 from kicad_tooling.hwrepo.models import DesignLintPolicy
@@ -36,6 +39,8 @@ EXPECTED_SOURCE_HASHES = {
     "series-gate-control": "5f6a6b62155601ef51c1d9d3dad30dd2e5b8d02f22fa210f332fdf9566322323",
     "gate-source-fault": "75849c215452527d32739eb43d9a8d7ec72ee2a0a31fc50e49360bbb8e62986c",
     "gate-source-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
+    "gate-drain-fault": "3c420798532c410789fb7e9212c0fd92d41a76fb400b44ec6515f2ffc12d715e",
+    "gate-drain-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
 }
 
 
@@ -54,6 +59,8 @@ def test_native_mosfet_gate_fixture_scope_matches_registered_cases() -> None:
         "series-gate-control": "mosfet-gate-native/series-gate-control.kicad_sch",
         "gate-source-fault": "mosfet-gate-native/gate-source-tie.kicad_sch",
         "gate-source-control": "mosfet-gate-native/source-bias-control.kicad_sch",
+        "gate-drain-fault": "mosfet-gate-native/gate-drain-tie.kicad_sch",
+        "gate-drain-control": "mosfet-gate-native/source-bias-control.kicad_sch",
     }
     assert EXPECTED_SOURCE_HASHES.keys() == actual.keys()
     for case, relative in actual.items():
@@ -67,6 +74,7 @@ def test_native_mosfet_gate_fixture_scope_matches_registered_cases() -> None:
 @pytest.mark.design_lint_rule(rule_id=SOURCE_BIAS_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=DIRECT_DRIVE_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=GATE_SOURCE_SAME_NET_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=GATE_DRAIN_SAME_NET_RULE_ID)
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.skipif(
@@ -106,6 +114,8 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
         "mosfet-gate-fixture/series-gate-control",
         "mosfet-gate-fixture/gate-source-fault",
         "mosfet-gate-fixture/gate-source-control",
+        "mosfet-gate-fixture/gate-drain-fault",
+        "mosfet-gate-fixture/gate-drain-control",
     }
     native = results["mosfet-gate-fixture/native-export"]
     assert native["status"] == "PASS"
@@ -122,6 +132,8 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
     series_gate_control = results["mosfet-gate-fixture/series-gate-control"]
     gate_source_fault = results["mosfet-gate-fixture/gate-source-fault"]
     gate_source_control = results["mosfet-gate-fixture/gate-source-control"]
+    gate_drain_fault = results["mosfet-gate-fixture/gate-drain-fault"]
+    gate_drain_control = results["mosfet-gate-fixture/gate-drain-control"]
     assert fault["rule_findings"] == "Q1.2: MOSFET gate has no other fitted pin on its net"
     assert control["rule_findings"] == "none"
     assert fault["source_bias_rule_findings"] == "none"
@@ -142,6 +154,10 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
         "Q1: MOSFET gate and source share one schematic net"
     )
     assert gate_source_control["gate_source_rule_findings"] == "none"
+    assert gate_drain_fault["gate_drain_rule_findings"] == (
+        "Q1: MOSFET gate and drain share one schematic net"
+    )
+    assert gate_drain_control["gate_drain_rule_findings"] == "none"
     assert gate_source_fault["direct_drive_rule_findings"] == (
         "Q1.2: MOSFET gate directly shares a net with an output-capable pin"
     )
@@ -152,6 +168,8 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
         ("series-gate-control", series_gate_control),
         ("gate-source-fault", gate_source_fault),
         ("gate-source-control", gate_source_control),
+        ("gate-drain-fault", gate_drain_fault),
+        ("gate-drain-control", gate_drain_control),
     ):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
