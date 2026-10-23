@@ -59,6 +59,7 @@ DesignLintRuleId = Literal[
     "component.mosfet_gate_without_peer",
     "component.mosfet_gate_without_visible_source_bias",
     "component.polarized_capacitor_reversed_on_named_rails",
+    "component.diode_anode_below_cathode_on_named_rails",
     "connector.no_connected_return",
     "connector.unconnected_power_input",
     "connector.unconnected_power_output",

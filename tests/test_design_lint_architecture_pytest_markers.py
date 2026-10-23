@@ -101,6 +101,11 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_diode_rail_orientation_native_fixture.py": {
+        "component_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_electrical_connector_evidence.py": {"connector_lint", "evidence_lint"},
     "test_electrical_connector_return_parity.py": {
         "connector_lint",

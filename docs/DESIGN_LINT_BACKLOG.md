@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 154 rules are implemented with synthetic regression coverage.
+The following 155 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 154 active rules.
+The catalog currently contains 155 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -482,6 +482,7 @@ skipped under prerelease policy.
 - `component.mosfet_gate_without_peer`
 - `component.mosfet_gate_without_visible_source_bias`
 - `component.polarized_capacitor_reversed_on_named_rails`
+- `component.diode_anode_below_cathode_on_named_rails`
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
 - `oscillator.output_load_path_mismatch`
@@ -588,6 +589,15 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **Diode rail-polarity review (2026-10-22):** LINT-173 reviews a fitted,
+  exact supported two-pin diode whose native `A` and `K` pins land on distinct
+  recognized numeric rails with the anode label below the cathode label.
+  Reverse-biased clamp and isolation circuits are valid, so this is a configurable
+  `REVIEW` prompt rather than an inferred defect. Fault/control native exports
+  are source-hash pinned and run twice on the exact KiCad 10.0.0/10.0.5 lanes.
+  The fixture harness is shared with polarized-capacitor acceptance; no project
+  or cohort board/source is used.
 
 - **Connector native-fixture registry completeness (2026-10-22):** The
   architecture gate now requires every active rule declaring
@@ -2784,7 +2794,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 154 active rules; CI requires every new
+- **Status:** Baseline complete for all 155 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2793,7 +2803,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 154 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 155 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9306,6 +9316,46 @@ is not a reason by itself to expand its scope or change its default policy.
   ```
 
   [polarized-capacitor-native]: ../tests/fixtures/design_lint/polarized-capacitor-native/README.md
+
+#### LINT-173 — Review reverse-biased diodes on explicitly ordered rails
+
+- **Status:** Implemented as `component.diode_anode_below_cathode_on_named_rails`,
+  default `REVIEW`.
+- **Predicate:** Recognize only fitted `Device:D` and `Device:D_Schottky`
+  symbols with complete native two-pin inventory and exactly one `A` and one
+  `K` function. Require one unambiguous assignment per pin to distinct nets,
+  then compare only numeric rails accepted by the shared
+  `explicit_voltage_rail_value` parser. Prompt when the anode's labeled value
+  is lower than the cathode's labeled value. The check uses native pin roles,
+  not assumed pin numbers.
+- **Boundary:** A reverse-biased diode may be a valid clamp or isolation path.
+  Rail names are review evidence rather than measured voltage. The rule does
+  not infer required current direction, forward drop, device ratings, circuit
+  requirements, PCB copper, or off-board behavior. Zener, TVS, multi-terminal,
+  custom, DNP, incomplete, ambiguous, open, and same-net parts are excluded.
+  Projects can retain `REVIEW`, block, disable, or exact-fingerprint-ignore the
+  finding.
+- **Fixtures:** Synthetic cases cover generic and Schottky symbols, native A/K
+  role mapping independent of pin number, signed rail ordering, forward/equal/
+  unknown/return controls, unsupported identities, DNP, incomplete or
+  ambiguous assignments, policy modes, exact ignores, ordering, and repair.
+  Minimal tooling-owned KiCad sources export netlist and ERC twice on pinned
+  KiCad 10.0.0 and 10.0.5. The gate checks exact source hashes, normalized
+  repeatability, zero ERC errors, and the fault/control finding difference.
+  See the [native fixture note][diode-rail-native]. This fixture is not an
+  electrical approval or field false-positive estimate.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_diode_rail_orientation.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.diode_anode_below_cathode_on_named_rails")'
+
+  KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1 python -I -m pytest \
+    tests/test_diode_rail_orientation_native_fixture.py \
+    -m 'design_lint and design_lint_rule(rule_id="component.diode_anode_below_cathode_on_named_rails")'
+  ```
+
+  [diode-rail-native]: ../tests/fixtures/design_lint/diode-rail-orientation-native/README.md
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

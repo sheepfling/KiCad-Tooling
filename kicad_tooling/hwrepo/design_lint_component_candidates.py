@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_diode_rail_orientation import diodes_with_anode_below_cathode_on_named_rails
 from .component_pin_patterns import UnconnectedNamedComponentPin, unconnected_named_component_pins
 from .component_polarized_capacitor_orientation import polarized_capacitors_on_reversed_named_rails
 from .component_return_pins import unconnected_component_return_pins
@@ -54,6 +55,7 @@ def component_candidates(
     found.extend(mosfet_gates_without_peer(observed))
     found.extend(mosfet_gates_without_visible_source_bias(observed))
     found.extend(polarized_capacitors_on_reversed_named_rails(observed))
+    found.extend(diodes_with_anode_below_cathode_on_named_rails(observed))
     for bridge in leds_directly_between_positive_and_return_nets(observed):
         found.append(
             Candidate(

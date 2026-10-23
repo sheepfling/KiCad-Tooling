@@ -75,5 +75,9 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_polarized_capacitor_native_fixture.py",
         "tests/test_polarized_capacitor_fixture_inventory.py",
         "tests/test_design_lint_architecture_polarized_capacitor.py",
+        "tests/test_diode_rail_orientation.py",
+        "tests/test_diode_rail_orientation_native_fixture.py",
+        "tests/test_diode_rail_fixture_inventory.py",
+        "tests/test_design_lint_architecture_diode_rail_orientation.py",
     }
 )
