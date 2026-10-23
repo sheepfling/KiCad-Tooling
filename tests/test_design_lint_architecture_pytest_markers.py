@@ -95,6 +95,7 @@ _RETURN_PATH_PEER_REFERENCE_SUITES = {
 }
 
 
+@pytest.mark.rule_gate_integrity
 def test_active_catalog_fixture_references_receive_their_rule_marker() -> None:
     for rule in rule_catalog().rules:
         if rule.status != "active":

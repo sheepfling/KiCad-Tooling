@@ -47,7 +47,10 @@ class LintGateScope:
     @property
     def pytest_markexpr(self) -> str:
         if self.rule_id is not None:
-            return f'design_lint and design_lint_rule(rule_id="{self.rule_id}")'
+            return (
+                "design_lint and "
+                f'(design_lint_rule(rule_id="{self.rule_id}") or rule_gate_integrity)'
+            )
         if self.area is None:
             raise ValueError("lint gate scope has no selector")
         if self.area in {"design_lint", "architecture"}:

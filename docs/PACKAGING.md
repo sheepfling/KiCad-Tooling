@@ -81,8 +81,11 @@ native fixture lanes. Use an annotated tag with exactly one `Lint-Area` or
 `Lint-Area` when a change spans rules within a theme. A rule selector must name
 an active rule in the packaged catalog;
 its catalogued fault, valid-control, metamorphic, parity, and native regressions are
-selected together. Each optional `Native-Fixture` line must name a switch already
-covered by the full acceptance job:
+selected together with the focused catalog and architecture checks for active rule
+owners, fixture/theme marker completeness, and catalog-to-test selector coverage.
+The cross-rule integrity slice is small and separate from the broader `catalog_lint`
+area. Unrelated design-lint test modules remain excluded. Each optional
+`Native-Fixture` line must name a switch already covered by the full acceptance job:
 
 ```text
 Lint-Area: interface_lint

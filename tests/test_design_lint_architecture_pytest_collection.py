@@ -24,6 +24,49 @@ def test_selector_architecture_suites_are_in_the_catalog_gate() -> None:
         assert "catalog_lint" in design_lint_markers_for_path(module)
 
 
+def test_rule_gate_also_collects_cross_rule_integrity_checks() -> None:
+    environment = os.environ.copy()
+    environment.pop("KICAD_TEMPLATE_ROOT", None)
+    result = subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "pytest",
+            "-q",
+            "-m",
+            'design_lint and (design_lint_rule(rule_id="bus.i2c_missing_pullup") or rule_gate_integrity)',
+            "--collect-only",
+        ),
+        cwd=Path(__file__).resolve().parents[1],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (
+        "tests/test_design_lint_architecture.py::test_each_active_rule_declares_a_source_owner_function"
+        in result.stdout
+    )
+    assert (
+        "tests/test_design_lint_architecture_catalog.py::test_active_rule_fixture_modules_have_design_lint_and_theme_markers"
+        in result.stdout
+    )
+    assert (
+        "tests/test_design_lint_architecture_pytest_markers.py::test_active_catalog_fixture_references_receive_their_rule_marker"
+        in result.stdout
+    )
+    assert (
+        "tests/test_design_lint_i2c_missing_pullups.py::test_connecting_one_line_leaves_only_the_other_pullup_missing"
+        in result.stdout
+    )
+    assert "tests/test_design_lint_backlog.py::" not in result.stdout
+    assert "tests/test_power_paths.py::" not in result.stdout
+
+
 def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
     environment = os.environ.copy()
     environment.pop("KICAD_TEMPLATE_ROOT", None)

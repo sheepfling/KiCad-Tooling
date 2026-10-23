@@ -274,6 +274,7 @@ def test_active_catalog_implementation_modules_stay_below_review_limit() -> None
     )
 
 
+@pytest.mark.rule_gate_integrity
 def test_each_active_rule_declares_a_source_owner_function() -> None:
     catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
     coordinators = {

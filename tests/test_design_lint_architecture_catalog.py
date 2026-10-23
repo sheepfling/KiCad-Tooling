@@ -148,6 +148,7 @@ def test_internal_services_import_rule_types_from_their_owner() -> None:
     )
 
 
+@pytest.mark.rule_gate_integrity
 def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> None:
     catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
     modules: dict[Path, set[str]] = {}

@@ -141,7 +141,7 @@ def test_message_file_preflight_validates_rule_scope_without_writing_github_outp
     assert main(["--message-file", str(message)]) == 0
 
     assert capsys.readouterr().out.splitlines() == [
-        'markexpr=design_lint and design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch")',
+        'markexpr=design_lint and (design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch") or rule_gate_integrity)',
         "KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES=1",
     ]
     assert not github_output.exists()
