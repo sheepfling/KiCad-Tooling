@@ -23,6 +23,7 @@ CAPACITANCE_SCOPE = "i2c-pullup/main/sda/electrical-window/capacitance-scope"
 
 def _check(
     *,
+    reference: str = "C1",
     value: str = "10p",
     part_id: str | None = "SYNTHETIC-CAP-10P",
     return_net: str = "GND",
@@ -31,10 +32,12 @@ def _check(
     maximum_residual_capacitance_pf: float = 25.0,
 ) -> ElectricalCheck:
     requirement = array_requirement_with_capacitance_scope(
+        reference=reference,
         maximum_effective_capacitance_pf=maximum_effective_capacitance_pf,
         maximum_residual_capacitance_pf=maximum_residual_capacitance_pf,
     )
     observed = array_netlist_with_capacitor(
+        reference=reference,
         value=value,
         part_id=part_id,
         return_net=return_net,
@@ -52,6 +55,22 @@ def test_exact_fitted_capacitor_and_residual_bound_pass() -> None:
     assert check.observed == 37.0
     assert "C1≤12pF" in check.detail
     assert "total upper bound 37.0pF versus bus maximum 50.0pF" in check.detail
+
+
+def test_explicit_non_c_reference_capacitor_mapping_passes() -> None:
+    check = _check(reference="X1")
+
+    assert check.status == "PASS"
+    assert "X1≤12pF" in check.detail
+    assert "C-prefixed" not in check.detail
+
+
+def test_unmapped_c_reference_stays_discovered_with_non_c_mapping() -> None:
+    check = _check(reference="X1", extra_capacitor=True)
+
+    assert check.status == "FAIL"
+    assert "X1≤12pF" in check.detail
+    assert "unmapped fitted capacitors on I2C_SDA: C2" in check.detail
 
 
 def test_unmapped_capacitor_on_the_bus_line_fails_scope() -> None:
@@ -161,17 +180,17 @@ def test_capacitance_check_is_stable_when_native_maps_are_reordered() -> None:
     assert original_check == reordered_check
 
 
-def test_capacitance_contract_rejects_noncapacitor_references() -> None:
+def test_capacitance_contract_accepts_explicit_non_c_reference() -> None:
     source = array_requirement_with_capacitance_scope().buses[0].sda.electrical_window
     assert source is not None
     assert source.capacitance_scope is not None
     contributor = source.capacitance_scope.contributors[0].model_dump()
-    contributor["reference"] = "R1"
-    contributor["signal_pin"] = "R1.1"
-    contributor["return_pin"] = "R1.2"
+    contributor["reference"] = "X1"
+    contributor["signal_pin"] = "X1.1"
+    contributor["return_pin"] = "X1.2"
 
-    with pytest.raises(ValidationError, match="C-prefixed"):
-        I2cPullupCapacitanceContributorRequirement.model_validate(contributor)
+    mapped = I2cPullupCapacitanceContributorRequirement.model_validate(contributor)
+    assert mapped.reference == "X1"
 
 
 def test_capacitance_contract_rejects_duplicate_casefolded_references() -> None:

@@ -49,14 +49,14 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")}
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {
-        "control": "94211a89731ef9d80276b387df2573984b928d4f7e5fa5072e6c89b5d5698553",
-        "fault": "796de070b60f4a290eeeb05ed619b9e921116315c9c224f4d3fac89a695f4306",
+        "control": "46fbdf1453e8254a633b7dee43b8877fc516758446314f4834f55a41db2a2479",
+        "fault": "a9d731c6b5520be75f53fd8904a47e973d824e80786539f1cf6c09433d635a65",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("I2C pull-up fixture sources differ from the reviewed hashes")
 
     contract_fixture = fixture_root / "pullups.json"
-    expected_contract_sha256 = "5a1c08085141504a567329d74abb0383cf981cbb9c7004efc03fffdd27385cbb"
+    expected_contract_sha256 = "38c97126ac75bb0dadf2153decdbcfa2f78101532d401920db54712bb204f5b2"
     if digest(contract_fixture) != expected_contract_sha256:
         raise ValueError("I2C pull-up requirement fixture differs from the reviewed hash")
     project_contract = root / "projects/synthetic-i2c-array/electrical.json"
@@ -184,13 +184,24 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         or control.components["RN1"].footprint != "Synthetic:RA4"
         or control.component_symbols.get("RN1") != "Synthetic:ResistorArray"
         or set(control.component_pin_numbers.get("RN1", ())) != {"1", "2", "3", "4"}
-        or control.nets.get("I2C_SDA") != ("RN1.1", "U1.1")
+        or set(control.nets.get("I2C_SDA", ())) != {"RN1.1", "U1.1", "X1.1"}
         or control.nets.get("I2C_SCL") != ("RN1.3", "U1.2")
         or control.nets.get("+3V3") != ("RN1.2", "RN1.4")
     ):
         raise ValueError(
             "Native I2C control lost its exact array identity, pins, or net assignments"
         )
+    capacitor = control.components.get("X1")
+    if (
+        capacitor is None
+        or capacitor.value != "10p"
+        or capacitor.footprint != "Synthetic:0603"
+        or control.component_symbols.get("X1") != "Device:C"
+        or set(control.component_pin_numbers.get("X1", ())) != {"1", "2"}
+        or "X1.1" not in control.nets.get("I2C_SDA", ())
+        or control.nets.get("GND") != ("X1.2",)
+    ):
+        raise ValueError("Native I2C control lost its explicitly mapped X1 capacitance evidence")
     control_checks = {item.id: item for item in reports[("control", "first")]}
     if any(
         control_checks[f"i2c-pullup/array-bus/{line}"].status != "PASS" for line in ("sda", "scl")
@@ -310,6 +321,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
             sda_capacitance_scope=checks[
                 "i2c-pullup/array-bus/sda/electrical-window/capacitance-scope"
             ].status,
+            sda_capacitance_contributors="X1",
             scl_capacitance_scope=checks[
                 "i2c-pullup/array-bus/scl/electrical-window/capacitance-scope"
             ].status,

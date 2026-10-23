@@ -7,7 +7,6 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from .component_references import is_capacitor_reference
 from .model_primitives import (
     CapacitancePf,
     Digest,
@@ -194,13 +193,6 @@ class I2cPullupCapacitanceContributorRequirement(StrictModel):
     nominal_capacitance_basis: NonEmptyText
     maximum_effective_capacitance_pf: CapacitancePf
     effective_capacitance_basis: NonEmptyText
-
-    @field_validator("reference")
-    @classmethod
-    def reference_is_capacitor(cls, value: str) -> str:
-        if not is_capacitor_reference(value):
-            raise ValueError("I2C capacitance contributor reference must be C-prefixed")
-        return value
 
     @model_validator(mode="after")
     def valid_component_mapping(self) -> I2cPullupCapacitanceContributorRequirement:

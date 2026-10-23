@@ -165,8 +165,11 @@ def test_failing_electrical_window_keeps_the_i2c_prompt_open() -> None:
 
 
 def test_exact_array_capacitance_scope_resolves_the_i2c_prompt() -> None:
-    netlist = array_netlist_with_capacitor()
-    result = coverage(netlist, array_requirement_with_capacitance_scope())
+    netlist = array_netlist_with_capacitor(reference="X1")
+    result = coverage(
+        netlist,
+        array_requirement_with_capacitance_scope(reference="X1"),
+    )
 
     assert result.status == "COMPLETE", result.entries[0].issues
     assert "i2c-pullup/main/sda/electrical-window/capacitance-scope" in (

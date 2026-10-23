@@ -39,7 +39,10 @@ def i2c_pullup_capacitance_check(
     requirements = {item.reference.casefold(): item for item in scope.contributors}
     issues: list[str] = []
     unreviewed = sorted(set(candidates) - set(requirements))
-    unobserved = sorted(set(requirements) - set(candidates))
+    attached_references = {
+        pin.rsplit(".", 1)[0].casefold() for pin in observed.nets.get(line_net, ())
+    }
+    unobserved = sorted(key for key in requirements if key not in attached_references or key in dnp)
     if unreviewed:
         issues.append(
             f"unmapped fitted capacitors on {line_net}: "
@@ -53,14 +56,10 @@ def i2c_pullup_capacitance_check(
 
     components_by_reference: dict[str, list[tuple[str, ComponentContract]]] = {}
     for reference, component in observed.components.items():
-        if is_capacitor_reference(reference):
-            components_by_reference.setdefault(reference.casefold(), []).append(
-                (reference, component)
-            )
+        components_by_reference.setdefault(reference.casefold(), []).append((reference, component))
     symbols_by_reference: dict[str, list[str]] = {}
     for reference, symbol in observed.component_symbols.items():
-        if is_capacitor_reference(reference):
-            symbols_by_reference.setdefault(reference.casefold(), []).append(symbol)
+        symbols_by_reference.setdefault(reference.casefold(), []).append(symbol)
 
     for requirement in scope.contributors:
         key = requirement.reference.casefold()

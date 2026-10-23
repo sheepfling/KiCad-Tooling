@@ -626,8 +626,9 @@ and optional ecosystem adapters are `P3`.
 - **LINT-010 source-evidence gap:** The optional capacitance scope now checks
   exact fitted contributors on native bus nets against reviewed effective-
   capacitance maxima and a residual-loading bound. Its focused `v0.5.3rc87`
-  gate passed. Future extensions still need explicit evidence and must not
-  infer component limits or loading from names.
+  gate passed. The next increment accepts explicitly mapped contributors with
+  non-C references while keeping automatic discovery limited to conventional
+  C-prefixed parts. Its focused synthetic and exact native gate is pending.
 - **LINT-206 mapped power-contact assignment:** The focused REVIEW heuristic
   is implemented for complete, source-matched interface maps assigning a
   generic connector contact the role `supply` or `return` when the native
@@ -4496,7 +4497,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v11. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v12. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
@@ -4527,8 +4528,12 @@ is not a reason by itself to expand its scope or change its default policy.
   missing or stale entries fail the electrical-window gate. Heuristic coverage
   now requires every configured voltage and electrical-window check to pass
   before it resolves the missing-pull-up prompt. An optional capacitance
-  scope inventories every fitted C-prefixed component directly attached to a
-  bus line, checks its exact symbol, footprint, optional `PART_ID`, two-pin
+  scope automatically inventories every fitted C-prefixed component directly
+  attached to a bus line and accepts other reference prefixes only through an
+  explicit contributor map. The synthetic and exact native fixture now map a
+  `Device:C` part as `X1`; an unmapped fitted `C2` remains a coverage failure.
+  Each mapped contributor checks its exact symbol,
+  footprint, optional `PART_ID`, two-pin
   inventory, signal/return pin nets, and nominal capacitance range, then sums
   reviewed maximum effective capacitance with a residual loading bound. The
   total must fit within the authored bus capacitance maximum; missing, stale,
@@ -4655,9 +4660,10 @@ is not a reason by itself to expand its scope or change its default policy.
   source documents remain reviewed inputs. Exact scoped tolerance coverage is
   checked, but source authenticity and correctness are not. The optional
   capacitance inventory and residual bound are also authored inputs and are
-  not independently verified; only directly attached C-prefixed schematic
-  devices are inventoried. Endpoint loading, board parasitics, and off-board
-  loading must be represented by the residual, while measured transient
+  not independently verified. C-prefixed attached devices are auto-discovered;
+  other reference prefixes require an explicit exact contributor map or must be
+  included in the residual bound. Endpoint loading, board parasitics, and
+  off-board loading must also be represented by the residual, while measured transient
   behavior remains outside this schematic check. Internal and off-board
   pull-ups remain an explicit not-applicable decision for this local-netlist
   contract.

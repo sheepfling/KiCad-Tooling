@@ -3055,14 +3055,15 @@ window checks must also pass before an authored requirement resolves the
 heuristic prompt. The window values and source notes remain project inputs;
 this is not a waveform simulation.
 
-An optional `capacitance_scope` inventories fitted C-prefixed components whose
-native pin assignments connect directly to the bus line. Each listed
-contributor binds the exact symbol, footprint, optional `PART_ID`, two-pin
-inventory, signal and return pins/nets, and nominal capacitance range. It also
-records a reviewed maximum effective capacitance for that component, which
-can include tolerance and DC-bias derating. A separate residual bound covers
-bus loading not represented by those local schematic capacitors. The sum of
-contributor maxima and residual must not exceed
+An optional `capacitance_scope` automatically inventories fitted C-prefixed
+components whose native pin assignments connect directly to the bus line. A
+contributor with another reference prefix can be counted when it is explicitly
+listed. Each listed contributor binds the exact symbol, footprint, optional
+`PART_ID`, two-pin inventory, signal and return pins/nets, and nominal
+capacitance range. It also records a reviewed maximum effective capacitance
+for that component, which can include tolerance and DC-bias derating. A
+separate residual bound covers bus loading not represented by those local
+schematic capacitors. The sum of contributor maxima and residual must not exceed
 `maximum_bus_capacitance_pf`:
 
 ```json
@@ -3089,7 +3090,9 @@ contributor maxima and residual must not exceed
 }
 ```
 
-Every fitted C-prefixed device attached to the line must be mapped; stale,
+Every fitted C-prefixed device attached to the line must be mapped. Other
+reference prefixes are not discovered automatically; explicitly map them as
+contributors or account for their loading in the residual bound. Stale,
 missing, DNP, identity, pin, net, or nominal-range mismatches fail the scope.
 The residual must account for endpoint pin loads, board parasitics, and any
 off-board loading included in the requirement. Configured sink-current,

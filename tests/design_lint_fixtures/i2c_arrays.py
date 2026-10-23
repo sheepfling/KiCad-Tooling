@@ -94,6 +94,7 @@ def array_requirement() -> I2cPullupAnalysis:
 
 def array_netlist_with_capacitor(
     *,
+    reference: str = "C1",
     value: str = "10p",
     part_id: str | None = "SYNTHETIC-CAP-10P",
     return_net: str = "GND",
@@ -101,26 +102,26 @@ def array_netlist_with_capacitor(
 ) -> NetlistContract:
     """Add one or two fitted local capacitors to the synthetic SDA bus."""
     observed = array_netlist()
-    references = ("C1", "C2") if extra_capacitor else ("C1",)
+    references = (reference, "C2") if extra_capacitor else (reference,)
     components = dict(observed.components)
     symbols = dict(observed.component_symbols)
     pin_functions = dict(observed.pin_functions)
     pin_numbers = dict(observed.component_pin_numbers)
     nets = {net: tuple(pins) for net, pins in observed.nets.items()}
-    for reference in references:
-        component_value = value if reference == "C1" else "4p"
-        component_part_id = part_id if reference == "C1" else "SYNTHETIC-CAP-4P"
-        components[reference] = ComponentContract(
+    for index, component_reference in enumerate(references):
+        component_value = value if index == 0 else "4p"
+        component_part_id = part_id if index == 0 else "SYNTHETIC-CAP-4P"
+        components[component_reference] = ComponentContract(
             value=component_value,
             footprint="Synthetic:0603",
             part_id=component_part_id,
         )
-        symbols[reference] = "Device:C"
-        pin_functions[f"{reference}.1"] = "1"
-        pin_functions[f"{reference}.2"] = "2"
-        pin_numbers[reference] = ("1", "2")
-        nets["I2C_SDA"] = (*nets.get("I2C_SDA", ()), f"{reference}.1")
-        nets[return_net] = (*nets.get(return_net, ()), f"{reference}.2")
+        symbols[component_reference] = "Device:C"
+        pin_functions[f"{component_reference}.1"] = "1"
+        pin_functions[f"{component_reference}.2"] = "2"
+        pin_numbers[component_reference] = ("1", "2")
+        nets["I2C_SDA"] = (*nets.get("I2C_SDA", ()), f"{component_reference}.1")
+        nets[return_net] = (*nets.get(return_net, ()), f"{component_reference}.2")
     return observed.model_copy(
         update={
             "components": components,
@@ -134,6 +135,7 @@ def array_netlist_with_capacitor(
 
 def array_requirement_with_capacitance_scope(
     *,
+    reference: str = "C1",
     maximum_bus_capacitance_pf: float = 50.0,
     maximum_effective_capacitance_pf: float = 12.0,
     maximum_residual_capacitance_pf: float = 25.0,
@@ -150,12 +152,12 @@ def array_requirement_with_capacitance_scope(
     )
     assert window is not None
     contributor = I2cPullupCapacitanceContributorRequirement(
-        reference="C1",
+        reference=reference,
         expected_symbol="Device:C",
         expected_footprint="Synthetic:0603",
         expected_part_id="SYNTHETIC-CAP-10P",
-        signal_pin="C1.1",
-        return_pin="C1.2",
+        signal_pin=f"{reference}.1",
+        return_pin=f"{reference}.2",
         return_net="GND",
         minimum_nominal_capacitance_pf=5.0,
         maximum_nominal_capacitance_pf=15.0,

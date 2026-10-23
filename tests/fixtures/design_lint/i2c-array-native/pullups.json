@@ -30,9 +30,23 @@
           ],
           "capacitance_scope": {
             "inventory_basis": "Synthetic inventory of capacitors attached to SDA",
-            "maximum_residual_capacitance_pf": 50.0,
+            "maximum_residual_capacitance_pf": 25.0,
             "residual_capacitance_basis": "Synthetic pin, route, and endpoint residual bound",
-            "contributors": []
+            "contributors": [
+              {
+                "reference": "X1",
+                "expected_symbol": "Device:C",
+                "expected_footprint": "Synthetic:0603",
+                "signal_pin": "X1.1",
+                "return_pin": "X1.2",
+                "return_net": "GND",
+                "minimum_nominal_capacitance_pf": 8.0,
+                "maximum_nominal_capacitance_pf": 12.0,
+                "nominal_capacitance_basis": "Synthetic exact-reference capacitor value range",
+                "maximum_effective_capacitance_pf": 12.0,
+                "effective_capacitance_basis": "Synthetic effective-capacitance upper bound"
+              }
+            ]
           }
         }
       },

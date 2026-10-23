@@ -5,7 +5,7 @@ after KiCad exports a native XML netlist. They contain only synthetic symbols,
 part identities, pin maps, and values.
 
 The synthetic project requirement is stored separately in `pullups.json`
-(SHA-256 `5a1c08085141504a567329d74abb0383cf981cbb9c7004efc03fffdd27385cbb`).
+(SHA-256 `38c97126ac75bb0dadf2153decdbcfa2f78101532d401920db54712bb204f5b2`).
 The native lane copies it into a temporary project-relative path, validates it
 through the shared contract reader, and binds its digest and path to lint
 coverage.
@@ -18,12 +18,17 @@ coverage.
 The 4-pin array maps independent channels RN1.1–RN1.2 and RN1.3–RN1.4 to
 SDA/SCL and +3V3. The native export must retain the symbol ID, footprint,
 value, expected project `PART_ID`, all four pins, and exact net assignments.
+Both schematics also include an explicit `Device:C` capacitor under the
+nonstandard reference `X1`, connected from SDA to GND. The authored capacitance
+scope maps its exact symbol, footprint, two-pin inventory, nets, nominal range,
+and effective-capacitance bound; native export must preserve that mapping.
 Each source is exported twice and compared after parsing to the normalized
 typed-netlist contract; raw XML hashes are retained because KiCad may vary
 metadata between exports.
 The authored contract binds a synthetic maximum resistor tolerance to each
-exact array channel, inventories any fitted capacitors on each bus line, and
-supplies the reviewed residual capacitance and rise-time bounds. Both exports
+exact array channel, explicitly maps X1, inventories conventional C-prefixed
+capacitors on each bus line, and supplies the reviewed residual capacitance
+and rise-time bounds. Both exports
 must retain and pass the native-derived channel tolerance and capacitance
 scope checks. The same native-derived contracts exercise
 `bus.i2c_missing_pullup`: without the authored requirement, both fixtures

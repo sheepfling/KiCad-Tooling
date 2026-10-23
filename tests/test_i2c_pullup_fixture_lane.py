@@ -11,7 +11,7 @@ import pytest
 from kicad_tooling.ci_hosted import HostedLog, i2c_pullup_native_fixture_lane
 from kicad_tooling.hwrepo import electrical
 from kicad_tooling.hwrepo.models import CommandEvidence
-from tests.design_lint_fixtures.i2c_arrays import array_netlist
+from tests.design_lint_fixtures.i2c_arrays import array_netlist_with_capacitor
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
@@ -26,17 +26,18 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
         "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3"
     )
     config = SimpleNamespace(kicad_version="10.0.0", image=image)
-    control = array_netlist().model_copy(
+    control = array_netlist_with_capacitor(reference="X1").model_copy(
         update={
             "nets": {
-                "I2C_SDA": ("RN1.1", "U1.1"),
+                "I2C_SDA": ("RN1.1", "U1.1", "X1.1"),
                 "I2C_SCL": ("RN1.3", "U1.2"),
                 "+3V3": ("RN1.2", "RN1.4"),
+                "GND": ("X1.2",),
             }
         }
     )
     fault_nets = dict(control.nets)
-    fault_nets["I2C_SDA"] = ("U1.1",)
+    fault_nets["I2C_SDA"] = ("U1.1", "X1.1")
     fault_nets["SDA_WRONG"] = ("RN1.1",)
     fault = control.model_copy(update={"nets": fault_nets})
     observations = {"control": control, "fault": fault}
@@ -96,6 +97,7 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     assert control_result["sda_tolerance_scope"] == "PASS"
     assert control_result["scl_tolerance_scope"] == "PASS"
     assert control_result["sda_capacitance_scope"] == "PASS"
+    assert control_result["sda_capacitance_contributors"] == "X1"
     assert control_result["scl_capacitance_scope"] == "PASS"
     assert fault_result["baseline_missing_pullup"] == "OPEN"
     assert fault_result["heuristic_coverage"] == "OPEN"
@@ -103,6 +105,7 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     assert fault_result["sda_tolerance_scope"] == "PASS"
     assert fault_result["scl_tolerance_scope"] == "PASS"
     assert fault_result["sda_capacitance_scope"] == "PASS"
+    assert fault_result["sda_capacitance_contributors"] == "X1"
     assert fault_result["scl_capacitance_scope"] == "PASS"
     assert control_result["contract_path"] == "projects/synthetic-i2c-array/electrical.json"
     assert control_result["contract_sha256"] == fault_result["contract_sha256"]
