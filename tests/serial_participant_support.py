@@ -76,6 +76,33 @@ def same_net_serial_netlist() -> NetlistContract:
     return source.model_copy(update={"nets": nets})
 
 
+def serial_tx_output_netlist(
+    *,
+    references: tuple[str, ...] = ("U1", "U2"),
+    electrical_types: tuple[str, ...] | None = None,
+    dnp: tuple[str, ...] = (),
+) -> NetlistContract:
+    """Build synthetic fitted IC transmitters sharing one exact net."""
+    pin_types = electrical_types or tuple("passive" for _ in references)
+    if len(pin_types) != len(references):
+        raise ValueError("One native electrical type is required for each synthetic transmitter")
+    components = {
+        reference: ComponentContract(value=f"Synthetic {reference}", footprint="Synthetic:IC")
+        for reference in references
+    }
+    pins = tuple(f"{reference}.1" for reference in references)
+    functions = {pin: f"USART{index}_TX" for index, pin in enumerate(pins, start=1)}
+    return NetlistContract(
+        components=components,
+        nets={"SERIAL_TX_BUS": pins},
+        dnp_components=dnp,
+        component_symbols={reference: "Synthetic:SerialTransmitter" for reference in references},
+        pin_functions=functions,
+        pin_electrical_types={pin: kind for pin, kind in zip(pins, pin_types, strict=True)},
+        component_pin_numbers={reference: ("1",) for reference in references},
+    )
+
+
 def alternate_function_serial_netlist(*, dnp: tuple[str, ...] = ()) -> NetlistContract:
     """Use explicit UART net labels with MCU package-pin functions and generic connector pins."""
     components = {

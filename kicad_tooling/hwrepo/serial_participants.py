@@ -101,6 +101,11 @@ def serial_function_role_and_channel(value: str) -> tuple[str, str] | None:
     return None
 
 
+def is_serial_ic_reference(reference: str) -> bool:
+    """Return whether a reference uses the bounded U/IC serial-device convention."""
+    return _IC_REFERENCE.fullmatch(reference) is not None
+
+
 def directly_linked_serial_peers(
     observed: NetlistContract,
     declared_connector_references: tuple[str, ...] = (),
@@ -129,8 +134,7 @@ def directly_linked_serial_peers(
             not separator
             or canonical_reference is None
             or not (
-                _IC_REFERENCE.fullmatch(canonical_reference)
-                or reference_key in connector_references
+                is_serial_ic_reference(canonical_reference) or reference_key in connector_references
             )
             or reference_key in dnp_references
         ):
@@ -298,7 +302,7 @@ def unmapped_serial_peers(
             if reference_key in connector_references:
                 net_connectors.add(reference_key)
                 continue
-            if not _IC_REFERENCE.fullmatch(canonical_reference):
+            if not is_serial_ic_reference(canonical_reference):
                 continue
             if number not in observed.component_pin_numbers.get(canonical_reference, ()):
                 continue

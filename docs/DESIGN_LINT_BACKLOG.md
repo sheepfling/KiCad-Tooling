@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 172 rules are implemented with synthetic regression coverage.
+The following 173 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 172 active rules.
+The catalog currently contains 173 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -522,6 +522,7 @@ skipped under prerelease policy.
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
 - `bus.serial_tx_rx_same_net`
+- `bus.serial_tx_outputs_share_net`
 - `bus.spi_peer_reference_review`
 - `bus.spi_peer_voltage_review`
 - `bus.serial_peer_voltage_review`
@@ -611,6 +612,12 @@ and optional ecosystem adapters are `P3`.
   unique native UART/USART transmit and receive pins in one channel share a
   net. It defaults off because single-wire and loopback topologies can be
   intentional; enabling it produces a configurable review prompt.
+
+- **Shared serial TX functions:** LINT-191 reviews one net assigned to TX/TXD
+  functions on multiple fitted ICs when native pin types do not already expose
+  an output-to-output ERC conflict. The default is off because tri-state and
+  half-duplex sharing can be intentional. Its synthetic fault and one-TX to
+  two-RX control both have clean native ERC results.
 
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
@@ -2902,7 +2909,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 172 active rules; CI requires every new
+- **Status:** Baseline complete for all 173 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2911,7 +2918,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 172 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 173 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10222,6 +10229,44 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Source note:** Both schematics use a tooling-owned synthetic UART symbol.
   No project or cohort design source is included.
+
+#### LINT-191 — Review multiple serial TX functions assigned to one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.serial_tx_outputs_share_net` review prompt.
+- **Gap:** LINT-190 looks for one component's TX/RX pair. Serial peer discovery
+  looks for directed TX-to-RX links. Neither calls out multiple fitted IC TX
+  functions on one net when symbol electrical types do not expose an ERC
+  output-to-output conflict.
+- **Predicate:** Use the bounded native TX/TXD function parser and fitted U/IC
+  references. Require exactly one uniquely assigned TX function per reference,
+  at least two distinct references on one exact net, and native electrical
+  type evidence for every included pin. Skip a net with two or more native
+  `output` pins because ERC covers that conflict. Group different channel
+  indices together because the net itself is shared across the devices.
+- **Boundary:** Multiple TX functions can be intentional on tri-state,
+  half-duplex, or project-specific nets. The prompt does not infer actual
+  driver behavior, connection intent, protocol participation, required peer
+  topology, firmware state, or PCB continuity. It defaults off and supports
+  per-project policy and exact finding ignores.
+- **Fixtures:** Two fitted TX functions on one passive-typed net are the fault;
+  one TX feeding two RX pins is the valid multi-drop control. The native lane
+  requires clean ERC errors for both, repeated netlist and ERC evidence, and
+  exactly one lint finding on the fault. Synthetic tests also cover native
+  output conflicts, DNP, open, multiply assigned, missing pin type, connector,
+  same-component, review/block/off/ignore policy, ordering, and separation.
+  Sources are tooling-owned and hashed; no project or cohort design files are
+  used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_serial_tx_output_sharing.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_tx_outputs_share_net")'
+
+  KICAD_RUN_NATIVE_SERIAL_TX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_serial_tx_output_sharing_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_tx_outputs_share_net")'
+  ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

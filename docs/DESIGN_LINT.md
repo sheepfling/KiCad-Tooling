@@ -183,6 +183,17 @@ schematics are exported repeatedly on digest-pinned KiCad 10.0.0 and 10.0.5
 images; see the
 [fixture note](../tests/fixtures/design_lint/serial-tx-rx-same-net/README.md).
 
+`bus.serial_tx_outputs_share_net` adds a separate opt-in review when TX/TXD
+functions on two fitted ICs share one net but native pin types do not already
+show two output drivers for ERC to report. It skips incomplete or ambiguous
+assignments and excludes connector pins. A single transmitter feeding several
+receivers is a valid control. Shared tri-state, half-duplex, or other
+project-specific nets can still be intentional, so this rule defaults to
+`off`. It does not infer driver behavior or protocol requirements. Its
+synthetic fault and one-to-two receiver control both pass native ERC without
+errors on the digest-pinned KiCad 10.0.0 and 10.0.5 lanes; see the
+[fixture note](../tests/fixtures/design_lint/serial-tx-output-sharing/README.md).
+
 ## Explore the rule catalog
 
 List all packaged rules, their implementation theme and source owner, default
@@ -198,7 +209,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 172 active rules.
+The catalog currently contains 173 active rules.
 
 ### USB data pin/name polarity review
 

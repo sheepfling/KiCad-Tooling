@@ -31,6 +31,7 @@ from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .serial_same_net import serial_tx_rx_same_net_candidates
+from .serial_tx_output_sharing import serial_tx_output_sharing_candidates
 from .spi_data_label import spi_data_polarity_label_candidates
 from .spi_peer_reference_scan import SpiPeerReferenceScan
 
@@ -59,6 +60,7 @@ def bus_candidates(
         ),
         *i2c_signal_label_role_candidates(observed),
         *serial_tx_rx_same_net_candidates(observed),
+        *serial_tx_output_sharing_candidates(observed),
         *spi_peer_reference_candidates(
             observed,
             spi_peer_reference_scan,

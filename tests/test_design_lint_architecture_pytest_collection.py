@@ -206,6 +206,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_serial_tx_rx_same_net.py::test_same_net_uart_tx_rx_pair_is_reviewed_and_full_duplex_control_is_quiet",
         ),
         (
+            "bus.serial_tx_outputs_share_net",
+            "tests/test_serial_tx_output_sharing.py::test_multiple_fitted_transmit_functions_on_one_net_are_reviewed",
+        ),
+        (
             "component.led_directly_across_supply_and_return",
             "tests/test_design_lint_led_topology.py::test_led_non_matching_topologies_remain_valid_controls[series-resistor]",
         ),

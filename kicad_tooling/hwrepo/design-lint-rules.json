@@ -5535,6 +5535,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/serial_same_net.py#serial_tx_rx_same_net_candidates"
     },
     {
+      "rule_id": "bus.serial_tx_outputs_share_net",
+      "title": "Multiple serial transmit functions share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including exact native TX/TXD functions, unique net assignments, pin electrical types, and fitted state",
+      "predicate": "For one net, group uniquely assigned bounded TX/TXD functions on fitted U/IC references. Emit one review candidate when at least two distinct references contribute exactly one TX function each, pin-type evidence is complete, and the net does not already contain two native output pins that ERC can classify as an output conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only bounded exported TX/TXD function aliases on U/IC references and native electrical types output, tri_state, bidirectional, or passive are considered. Generic alternate-function names, other reference conventions, unsupported types, incomplete pin types, and ambiguous assignments are skipped.",
+        "The rule ignores nets with two or more output-typed pins because native ERC covers that output-to-output conflict. Other shared TX-role pins can be intentional tri-state, half-duplex, or project-specific arrangements; this opt-in prompt asks for review and does not claim a defect or infer driver behavior.",
+        "The rule does not determine protocol participation, establish a required peer map, prove board copper continuity, or verify firmware and transceiver state."
+      ],
+      "fault_fixtures": [
+        "tests.test_serial_tx_output_sharing.test_multiple_fitted_transmit_functions_on_one_net_are_reviewed",
+        "tests.test_serial_tx_output_sharing_native_fixture_lane.test_native_serial_tx_output_sharing_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_serial_tx_output_sharing.test_one_transmitter_with_multiple_receiver_peers_is_a_valid_control",
+        "tests.test_serial_tx_output_sharing.test_native_output_conflicts_and_ambiguous_or_unsupported_groups_are_skipped",
+        "tests.test_serial_tx_output_sharing_native_fixture_lane.test_native_serial_tx_output_sharing_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_serial_tx_output_sharing.test_ordering_is_stable_and_separating_one_transmitter_clears_the_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SERIAL_TX_OUTPUT_SHARING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/serial_tx_output_sharing.py#serial_tx_output_sharing_candidates",
+        "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
+        "kicad_tooling/hwrepo/serial_participants.py#is_serial_ic_reference",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/serial_tx_output_sharing.py#serial_tx_output_sharing_candidates"
+    },
+    {
       "rule_id": "bus.spi_unmapped_participant",
       "title": "Likely SPI participant is missing from the project device map",
       "status": "active",
