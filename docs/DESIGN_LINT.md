@@ -3191,6 +3191,10 @@ This covers library-identified generic resistors without guessing from a
 component value or custom symbol name. Other resistor symbol IDs, custom
 symbols, incomplete pin inventories, DNP parts, and ambiguous assignments are
 not inferred; use an exact project-authored map when those parts are required.
+See the [synthetic fixture README][i2c-device-r-fixture] for the source-bound
+native checks and evidence boundary.
+
+[i2c-device-r-fixture]: ../tests/fixtures/design_lint/i2c-device-r-symbol-native/README.md
 
 When the review establishes an actual requirement, express it in the project's
 `i2c_pullups`, `can_termination`, grounding, or `pin_connectivity` electrical
