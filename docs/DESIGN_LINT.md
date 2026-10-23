@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 197 active rules.
+The catalog currently contains 198 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1800,6 +1800,44 @@ Run the exact-native lane with:
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")'
+```
+
+## Review distinct mapped signals sharing one connector net
+
+`connector.mapped_signals_share_net` prompts when a complete, source-matched
+connector map names two generic signal contacts differently, but the native
+schematic netlist assigns both contacts to the same net. It is a general
+connector-level review clue for mapped interfaces beyond the specific bus
+topologies covered by protocol rules.
+
+Different map names do not establish that the contacts must stay separate;
+intentional aliases and shared signals can be valid. The check excludes named
+native pin functions, DNP connectors, reasoned opens, stale or incomplete
+maps, digestless coverage, and pins with ambiguous multiple-net assignments.
+It does not infer signal direction or voltage and does not prove PCB copper
+continuity. Project policy can keep it at `review`, set it to `block` or `off`,
+or ignore a finding by exact fingerprint.
+
+The synthetic cases cover distinct names on one net, a same-name alias,
+separate nets, non-signal roles, named native functions, DNP, stale,
+incomplete, digestless, multiple-net evidence, policy, exact ignores, and input
+ordering. The exact KiCad 10.0.0 and 10.0.5 lane exports one tooling-owned
+generic two-pin connector whose pins share a net; only the authored map names
+change between the review fault and same-signal control.
+
+Run the focused synthetic slice with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_mapped_signals_share_net.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_signals_share_net")'
+```
+
+Run the exact-native lane with:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_mapped_signals_share_net_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_signals_share_net")'
 ```
 
 ## Review a mapped shield contact on a return-labeled net

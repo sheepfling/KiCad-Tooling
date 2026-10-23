@@ -29,6 +29,8 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_connector_mapped_interface_supply_on_return_net_native_fixture_lane.py",
         "tests/test_connector_mapped_interface_signal_on_named_rail.py",
         "tests/test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.py",
+        "tests/test_connector_mapped_signals_share_net.py",
+        "tests/test_connector_mapped_signals_share_net_native_fixture_lane.py",
         "tests/test_connector_mapped_interface_shield_on_return_net.py",
         "tests/test_connector_mapped_interface_shield_on_return_net_native_fixture_lane.py",
         "tests/test_connector_mapped_interface_shield_on_supply_rail.py",

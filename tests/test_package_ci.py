@@ -61,6 +61,7 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py",
         "kicad_tooling/ci_hosted_can_tx_output_sharing.py",
         "kicad_tooling/hwrepo/connector_return_distribution_models.py",
+        "kicad_tooling/hwrepo/connector_mapped_signal_sharing.py",
         "kicad_tooling/hwrepo/fixtures/pcb-return-four-port-db9-return-control.kicad_pcb",
         "kicad_tooling/hwrepo/fixtures/pcb-return-four-port-db9-connector-island.kicad_pcb",
         "kicad_tooling/hwrepo/fixtures/pcb-return-four-port-db9-single-open.kicad_pcb",
@@ -99,6 +100,7 @@ from scripts.lint_gate_scope import (
         "shared-tx-output-groups",
         "can-tx-output-sharing-native-fixture-lane",
         "connector-return-distribution-models",
+        "mapped-connector-signal-sharing-rule-owner",
         "four-port-return-control-board",
         "four-port-return-island-board",
         "four-port-return-open-contact-board",
@@ -168,7 +170,8 @@ def test_lint_tag_selects_bjt_base_drive_and_its_native_fixture_switch() -> None
     assert scope.rule_id == "component.bjt_base_direct_drive"
     assert scope.native_fixtures == ("KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES",)
     assert scope.pytest_markexpr == (
-        'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
+        'design_lint and (design_lint_rule(rule_id="component.bjt_base_direct_drive") '
+        "or rule_gate_integrity)"
     )
 
 
@@ -266,14 +269,15 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
         capture_output=True,
     )
     rule_scope = read_tag_scope("v0.5.0rc2", repository)
-    assert rule_scope.pytest_markexpr == f'design_lint and design_lint_rule(rule_id="{rule_id}")'
+    expected_rule_markexpr = (
+        f'design_lint and (design_lint_rule(rule_id="{rule_id}") or rule_gate_integrity)'
+    )
+    assert rule_scope.pytest_markexpr == expected_rule_markexpr
     assert rule_scope.native_fixtures == ("KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",)
     output.write_text("", encoding="utf-8")
     environment.write_text("", encoding="utf-8")
     write_github_scope(rule_scope)
-    assert output.read_text(encoding="utf-8") == (
-        f'markexpr=design_lint and design_lint_rule(rule_id="{rule_id}")\n'
-    )
+    assert output.read_text(encoding="utf-8") == (f"markexpr={expected_rule_markexpr}\n")
     assert environment.read_text(encoding="utf-8") == (
         "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES=1\n"
     )
@@ -318,7 +322,7 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     )
     serial_scope = read_tag_scope("v0.5.0rc4", repository)
     assert serial_scope.pytest_markexpr == (
-        f'design_lint and design_lint_rule(rule_id="{serial_rule_id}")'
+        f'design_lint and (design_lint_rule(rule_id="{serial_rule_id}") or rule_gate_integrity)'
     )
     assert serial_scope.native_fixtures == ("KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES",)
 

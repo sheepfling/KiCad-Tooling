@@ -140,7 +140,10 @@ I2C_PEER_REFERENCE_MODULES = (
     "i2c_peer_reference_scan.py",
 )
 
-CONNECTOR_MAPPED_SIGNAL_MODULES = ("connector_mapped_interface_pins.py",)
+CONNECTOR_MAPPED_SIGNAL_MODULES = (
+    "connector_mapped_interface_pins.py",
+    "connector_mapped_signal_sharing.py",
+)
 
 
 def test_connector_pin_analysis_facade_stays_small() -> None:

@@ -226,6 +226,8 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "mapped-interface-signal-native/fault.kicad_sch",
         "mapped-interface-signal-unassigned-control": fixture_root
         / "mapped-interface-signal-native/control.kicad_sch",
+        "mapped-distinct-signals-share-net": fixture_root
+        / "mapped-distinct-signals-shared-net/shared-net.kicad_sch",
         "mapped-interface-shield-unassigned-fault": fixture_root
         / "mapped-interface-shield-native/fault.kicad_sch",
         "mapped-interface-shield-unassigned-control": fixture_root
@@ -353,6 +355,7 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "component-peer-assignment-outlier-control": "22f1efb0f7df6458d4523c79bc6b1e5cdd31b57463b8072cd4002105106179dc",
     "mapped-interface-signal-unassigned-fault": "8d7cad1a7b1b0579890e0e2ad06af3b18f192f2a0ecf9260ebc3cae78c8c0554",
     "mapped-interface-signal-unassigned-control": "634af7ee73a4cdbcc1a52967df2f08a0ca68b1a3100a8e13fef34225ef2eb6e1",
+    "mapped-distinct-signals-share-net": "3716e8019bc5d5572d8a4f2e9112e01aecd69a8c035354c37e92aa481a0595ba",
     "mapped-interface-shield-unassigned-fault": "ef64edfafefdc9e724474c5686d8638577ec1c1719883f3f34f8b365de068821",
     "mapped-interface-shield-unassigned-control": "1cf322d88271b585ae9e97e356f1078b8573a9a2cd25122caf3352a28ed3cd9d",
     "stateful-contact-fault": "131715fd0c9d4b746a2dc3fe651356e775cfd9c5d5dcea8a98676bb741d881ff",

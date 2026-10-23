@@ -21,6 +21,7 @@ from .connector_mapped_interface_pins import (
     unassigned_mapped_interface_shield_pins,
     unassigned_mapped_interface_signal_pins,
 )
+from .connector_mapped_signal_sharing import mapped_distinct_signal_contacts_sharing_net
 from .connector_peer_candidate_evidence import (
     connector_group_evidence,
     connector_group_message,
@@ -420,6 +421,7 @@ def connector_pin_candidates(
     found.extend(mapped_other_contacts_on_named_rails(observed, connector_coverage))
     found.extend(mapped_supply_contacts_on_return_nets(observed, connector_coverage))
     found.extend(mapped_signal_contacts_on_named_rails(observed, connector_coverage))
+    found.extend(mapped_distinct_signal_contacts_sharing_net(observed, connector_coverage))
     found.extend(mapped_shield_contacts_on_return_nets(observed, connector_coverage))
     found.extend(mapped_shield_contacts_on_supply_rails(observed, connector_coverage))
     found.extend(
