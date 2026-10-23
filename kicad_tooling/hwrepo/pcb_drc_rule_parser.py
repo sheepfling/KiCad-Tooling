@@ -34,6 +34,7 @@ class NativeRuleConstraint:
         issue: str | None,
         severity: str | None,
         severity_issue: str | None,
+        layer: str | None,
     ) -> None:
         self.rule_name = rule_name
         self.condition = condition
@@ -43,6 +44,7 @@ class NativeRuleConstraint:
         self.issue = issue
         self.severity = severity
         self.severity_issue = severity_issue
+        self.layer = layer
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,9 +101,10 @@ def _parse_constraint(
     span: _Span,
     severity: str | None,
     severity_issue: str | None,
+    layer: str | None,
 ) -> NativeRuleConstraint | None:
     atoms = _atoms(source, span)
-    if len(atoms) != 2 or atoms[1] not in RULE_SEVERITY:
+    if len(atoms) != 2 or atoms[1] not in {*RULE_SEVERITY, "physical_clearance"}:
         return None
     name = atoms[1]
     fields: dict[str, int] = {}
@@ -131,6 +134,7 @@ def _parse_constraint(
         issue,
         severity,
         severity_issue,
+        layer,
     )
 
 
@@ -174,6 +178,12 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
                 )
             else:
                 severity = severity_atoms[1]
+        layer_clauses = [node for node in children if _atoms(source, node)[:1] == ("layer",)]
+        layer: str | None = None
+        if len(layer_clauses) == 1:
+            layer_atoms = _atoms(source, layer_clauses[0])
+            if len(layer_atoms) == 2:
+                layer = layer_atoms[1]
         for node in children:
             if _atoms(source, node)[:1] != ("constraint",):
                 continue
@@ -184,6 +194,7 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
                 node,
                 severity,
                 severity_issue,
+                layer,
             )
             if parsed is not None:
                 result.append(parsed)

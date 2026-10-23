@@ -159,6 +159,7 @@ DesignLintRuleId = Literal[
     "pcb.reference_plane_coverage",
     "pcb.switching_loop_geometry",
     "pcb.differential_pair_rule_coverage",
+    "pcb.mechanical_edge_clearance_rule_coverage",
     "pcb.signal_path_rule_coverage",
     "pcb.keepout_intent_coverage",
     "pcb.rf_module_antenna_keepout_coverage",

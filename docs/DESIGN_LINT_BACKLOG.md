@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 190 rules are implemented with synthetic regression coverage.
+The following 191 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 190 active rules.
+The catalog currently contains 191 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -596,6 +596,7 @@ skipped under prerelease policy.
 - `pcb.miscellaneous_drc_check_downgraded`
 - `pcb.warning_default_drc_check_ignored`
 - `pcb.drc_exclusion_present`
+- `pcb.mechanical_edge_clearance_rule_coverage`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
@@ -3009,7 +3010,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 190 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 191 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11158,6 +11159,45 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_connector_mixed_interface_return_native_lane.py \
     -m 'design_lint and connector_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.return_supply_scope_singleton")'
+  ```
+
+#### LINT-209 — Courtyard-to-edge DRC rule coverage
+
+- **Status:** Implemented as the opt-in, default-review coverage rule
+  `pcb.mechanical_edge_clearance_rule_coverage`.
+- **Gap:** KiCad's generic DRC cannot determine whether a connector body or
+  other fitted component needs a project-specific courtyard-to-edge margin.
+  Even a project-authored requirement can be ineffective if its custom native
+  rule is missing, targets a different layer or condition, has a weaker bound,
+  is downgraded, or competes with another rule on the same exact scope.
+- **Predicate:** For each project-authored front or back courtyard minimum,
+  require the named source-bound `physical_clearance` rule to target that exact
+  courtyard layer and `Edge.Cuts`, enforce the exact positive minimum, retain
+  blocking severity, and have no second rule with the same exact scope. The
+  review candidate reports the authored expectation, observed native rule, and
+  source and DRC evidence digests.
+- **Boundary:** The project owner selects the mechanical requirement and
+  custom rule name. This check confirms rule coverage; KiCad DRC measures the
+  actual board geometry. Neither result proves enclosure fit, manufacturing
+  tolerance, physical build quality, or mechanical approval. Other custom
+  condition expressions are not interpreted.
+- **Fixtures:** Synthetic parser and service tests cover exact matching,
+  missing or wrong rules, weak bounds, warning/ignore severity, ambiguous
+  duplicate constraints, competing exact-scope rules, opt-out behavior, and
+  stable order. Tooling-owned fault/control boards are registered for native
+  KiCad 10.0.0 and 10.0.5 DRC runs under
+  `KICAD_RUN_NATIVE_PCB_FIXTURES`. The boards contain no project source; see
+  the
+  [synthetic fixture note](../tests/fixtures/design_lint/pcb-mechanical-edge-clearance/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_pcb_mechanical_edge_clearance.py \
+    -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.mechanical_edge_clearance_rule_coverage")'
+
+  KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_pcb_mechanical_edge_clearance_native.py \
+    -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.mechanical_edge_clearance_rule_coverage")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

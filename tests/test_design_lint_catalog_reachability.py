@@ -24,6 +24,8 @@ import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
+import tests.test_connector_mapped_interface_power_contact_unassigned as _tests_test_mapped_power_contact
+import tests.test_connector_peer_comparison_scope_singleton as _tests_test_scope_singleton
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
 import tests.test_crystal_networks as _tests_test_crystal_networks
 import tests.test_led_output_heuristics as _tests_test_led_output_heuristics
@@ -227,6 +229,20 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         item.rule_id for item in candidates(stm32_netlist, stm32_pin_map_coverage=stm32_coverage)
     )
     emitted.update(pcb_rule_ids())
+    mapped_power_report, _ = _tests_test_mapped_power_contact._report(
+        _tests_test_mapped_power_contact._source(), role="supply"
+    )
+    emitted.update(item.rule_id for item in mapped_power_report.findings)
+    scoped_returns, scoped_coverage = _tests_test_scope_singleton.two_usb_one_serial_return_case(
+        common_return=True,
+        return_comparison_groups={
+            "J1": "usb-returns",
+            "J2": "serial-return",
+            "J3": "usb-returns",
+        },
+    )
+    scoped_report = _tests_test_scope_singleton._report(scoped_returns, scoped_coverage)
+    emitted.update(item.rule_id for item in scoped_report.findings)
     i2c_specification = _tests_i2c_address_fixtures.address_map(
         _tests_i2c_address_fixtures.responder("U1", address=80),
         _tests_i2c_address_fixtures.responder("U2", address=81, strap=False),

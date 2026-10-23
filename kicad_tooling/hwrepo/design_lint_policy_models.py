@@ -19,6 +19,7 @@ from .oscillator_output_path_models import OscillatorOutputPathMap
 from .pcb_decoupling_models import PcbDecouplingMap
 from .pcb_drc_models import PcbDifferentialPairRuleMap, PcbSignalPathRuleMap
 from .pcb_keepout_models import PcbKeepoutMap
+from .pcb_mechanical_edge_models import PcbMechanicalEdgeClearanceMap
 from .pcb_protection_path_models import PcbProtectionPathMap
 from .pcb_reference_plane_models import PcbReferencePlaneMap
 from .pcb_required_fitted_reference_models import PcbRequiredFittedReferenceMap
@@ -64,6 +65,7 @@ class DesignLintPolicy(StrictModel):
     pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None
     pcb_signal_path_rule_map: PcbSignalPathRuleMap | None = None
     pcb_keepout_map: PcbKeepoutMap | None = None
+    pcb_mechanical_edge_clearance_map: PcbMechanicalEdgeClearanceMap | None = None
     pcb_rf_module_antenna_map: PcbRfModuleAntennaMap | None = None
     pcb_touch_pad_clearance_map: PcbTouchPadClearanceMap | None = None
     pcb_required_fitted_reference_map: PcbRequiredFittedReferenceMap | None = None

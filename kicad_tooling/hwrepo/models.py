@@ -774,6 +774,7 @@ class ProjectConfig(StrictModel):
                 or self.design_lint.pcb_switching_loop_map is not None
                 or self.design_lint.pcb_differential_pair_rule_map is not None
                 or self.design_lint.pcb_signal_path_rule_map is not None
+                or self.design_lint.pcb_mechanical_edge_clearance_map is not None
                 or self.design_lint.pcb_keepout_map is not None
                 or self.design_lint.pcb_rf_module_antenna_map is not None
                 or self.design_lint.pcb_touch_pad_clearance_map is not None
@@ -878,6 +879,7 @@ class ProjectTestContract(StrictModel):
                 or self.design_lint.pcb_switching_loop_map is not None
                 or self.design_lint.pcb_differential_pair_rule_map is not None
                 or self.design_lint.pcb_signal_path_rule_map is not None
+                or self.design_lint.pcb_mechanical_edge_clearance_map is not None
                 or self.design_lint.pcb_keepout_map is not None
                 or self.design_lint.pcb_rf_module_antenna_map is not None
                 or self.design_lint.pcb_touch_pad_clearance_map is not None

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import os
-import subprocess
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -15,6 +13,7 @@ from kicad_tooling.hwrepo.pcb_dru_compilation import (
     PcbDruCompilationReport,
     run_pcb_dru_compilation_probe,
 )
+from tests.native_kicad_support import execute_kicad_cli
 from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 
 pytestmark = [
@@ -47,66 +46,6 @@ def _failure_context(report: PcbDruCompilationReport, output: Path) -> str:
     )
 
 
-def _docker_executor(image: str):
-    def execute(argv: tuple[str, ...], work: Path, output: Path, name: str) -> CommandEvidence:
-        user = () if os.name == "nt" else ("--user", f"{os.getuid()}:{os.getgid()}")
-        mapped: list[str] = []
-        for argument in argv[1:]:
-            candidate = Path(argument)
-            if candidate.is_absolute() and candidate.is_relative_to(work):
-                mapped.append(f"/probe/{candidate.relative_to(work).as_posix()}")
-            else:
-                mapped.append(argument)
-        docker_argv = (
-            "docker",
-            "run",
-            "--rm",
-            "--platform",
-            "linux/amd64",
-            "--network",
-            "none",
-            "--read-only",
-            "--tmpfs",
-            "/tmp:rw,nosuid,nodev,size=64m",
-            *user,
-            "-e",
-            "HOME=/tmp/kicad-dru-rule-probe",
-            "-v",
-            f"{work.resolve()}:/probe:rw",
-            "--entrypoint",
-            "kicad-cli",
-            image,
-            *mapped,
-        )
-        command = CommandEvidence(
-            argv=docker_argv,
-            started_utc=datetime.now(UTC).isoformat(),
-            returncode=127,
-        )
-        try:
-            result = subprocess.run(
-                docker_argv,
-                cwd=work,
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=False,
-            )
-            command = command.model_copy(
-                update={
-                    "returncode": result.returncode,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                }
-            )
-        except (OSError, subprocess.TimeoutExpired) as exc:
-            command = command.model_copy(update={"error": str(exc)})
-        write_model(output / f"{name}.command.json", command)
-        return command
-
-    return execute
-
-
 @pytest.mark.parametrize(("kicad_version", "image"), tuple(PINNED_NATIVE_KICAD_IMAGES.items()))
 def test_native_drc_proves_terminal_rule_and_rejects_malformed_custom_rules(
     tmp_path: Path, kicad_version: str, image: str
@@ -117,7 +56,18 @@ def test_native_drc_proves_terminal_rule_and_rejects_malformed_custom_rules(
     rules = root / "board.kicad_dru"
     output = root / "build/native"
     output.mkdir(parents=True)
-    executor = _docker_executor(image)
+
+    def executor(
+        argv: tuple[str, ...], work: Path, command_output: Path, name: str
+    ) -> CommandEvidence:
+        command = execute_kicad_cli(
+            image,
+            argv,
+            work,
+            home_directory="kicad-dru-rule-probe",
+        )
+        write_model(command_output / f"{name}.command.json", command)
+        return command
 
     project.write_bytes((FIXTURES / "control.kicad_pro").read_bytes())
     rules.write_bytes((FIXTURES / "control.kicad_dru").read_bytes())

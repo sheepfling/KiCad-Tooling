@@ -209,7 +209,12 @@ class PcbDifferentialPairRuleMap(StrictModel):
 
 
 PcbDrcConstraintName = Literal[
-    "track_width", "diff_pair_gap", "skew", "diff_pair_uncoupled", "length"
+    "track_width",
+    "diff_pair_gap",
+    "skew",
+    "diff_pair_uncoupled",
+    "length",
+    "physical_clearance",
 ]
 
 PcbDrcConstraintCoverageStatus = Literal[

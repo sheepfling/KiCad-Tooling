@@ -7713,6 +7713,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_rf_antenna.py#pcb_rf_module_antenna_entries"
     },
     {
+      "rule_id": "pcb.mechanical_edge_clearance_rule_coverage",
+      "title": "Project-authored courtyard-to-board-edge DRC coverage is missing or ambiguous",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored exact courtyard layer, native rule name, Edge.Cuts condition, and minimum compared with source-bound KiCad DRC rules",
+      "predicate": "For each project-authored mechanical clearance requirement, require one named native physical_clearance rule with the exact courtyard layer, Edge.Cuts condition, positive minimum, blocking severity, and no competing rule on the same exact scope. Emit a review candidate for missing, mismatched, suppressed, or ambiguous rule coverage.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native DRC fixtures"
+      ],
+      "limitations": [
+        "The project owner must author the courtyard side and minimum from an independently reviewed mechanical requirement. This rule does not choose a universal component-to-edge clearance.",
+        "The lint verifies source-bound rule coverage and ambiguity. KiCad native DRC measures the actual board geometry; this lint does not establish enclosure fit, manufacturing tolerance, fabricated geometry, or mechanical approval.",
+        "Rules with conditions other than the exact supported Edge.Cuts comparison are not interpreted. Their behavioral effects remain outside this bounded checker."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_mechanical_edge_clearance.test_wrong_or_suppressed_native_rule_is_incomplete",
+        "tests.test_pcb_mechanical_edge_clearance.test_duplicate_physical_clearance_constraints_are_ambiguous",
+        "tests.test_pcb_mechanical_edge_clearance.test_competing_rule_for_exact_same_scope_keeps_coverage_incomplete",
+        "tests.test_pcb_mechanical_edge_clearance.test_source_bound_scan_reports_missing_requirement_rule_and_policy_off",
+        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_detects_clearance_fault_and_accepts_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_mechanical_edge_clearance.test_project_authored_minimum_is_covered_by_exact_native_rule",
+        "tests.test_pcb_mechanical_edge_clearance.test_requirement_map_rejects_duplicate_side_or_rule_identity",
+        "tests.test_pcb_mechanical_edge_clearance_native.test_native_drc_detects_clearance_fault_and_accepts_control"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_mechanical_edge_clearance.test_rule_comparison_is_stable_under_native_rule_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_mechanical_edge_clearance.py#mechanical_edge_rule_coverage_issue",
+        "kicad_tooling/hwrepo/pcb_mechanical_edge_clearance.py#mechanical_edge_rule_coverage_candidates",
+        "kicad_tooling/hwrepo/pcb_mechanical_edge_models.py#PcbMechanicalEdgeClearanceMap",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_mechanical_edge_clearance.py#mechanical_edge_rule_coverage_issue"
+    },
+    {
       "rule_id": "pcb.touch_pad_reference_clearance",
       "title": "Configured pad-to-reference-copper clearance is below its project minimum",
       "status": "active",

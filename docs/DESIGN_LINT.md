@@ -301,7 +301,44 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 190 active rules.
+The catalog currently contains 191 active rules.
+
+### Review project-authored courtyard-to-edge DRC coverage
+
+`pcb.mechanical_edge_clearance_rule_coverage` audits a project-owned
+`pcb_mechanical_edge_clearance_map`. For each requirement, it checks that the
+source-bound `.kicad_dru` has the named `physical_clearance` rule for the exact
+front or back courtyard layer, the `Edge.Cuts` condition, the exact minimum,
+and blocking severity. It also prompts when another native rule declares the
+same exact scope. The rule is opt-in: projects that have no reviewed
+courtyard-to-edge minimum do not receive a prompt.
+
+```json
+{
+  "design_lint": {
+    "pcb_mechanical_edge_clearance_map": {
+      "schema_version": "1",
+      "basis": "Reviewed enclosure drawing, revision 2",
+      "requirements": [
+        {
+          "id": "front-connector-edge",
+          "basis": "Connector body clearance on reviewed enclosure drawing",
+          "courtyard_layer": "F.Courtyard",
+          "rule_name": "front-connector-board-edge",
+          "minimum_clearance_nm": 1500000
+        }
+      ]
+    }
+  }
+}
+```
+
+The `.kicad_dru` rule must compare `B.Layer == 'Edge.Cuts'` with the exact
+courtyard layer and minimum. This lint checks authored rule coverage; native
+KiCad DRC measures board geometry. Neither check establishes enclosure fit,
+manufacturing tolerance, or mechanical approval. For details, see
+[LINT-209](DESIGN_LINT_BACKLOG.md#lint-209--courtyard-to-edge-drc-rule-coverage)
+and the [fixture note](../tests/fixtures/design_lint/pcb-mechanical-edge-clearance/README.md).
 
 ### Distinct mapped connector supply domains sharing a net
 

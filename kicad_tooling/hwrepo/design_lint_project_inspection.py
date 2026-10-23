@@ -56,6 +56,7 @@ from .pcb_dru_rule_review import (
     excluded_custom_drc_rule_candidates,
     ignored_custom_drc_rule_candidates,
 )
+from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
 
 
 def inspect_design_lint_summary(
@@ -91,7 +92,15 @@ def inspect_design_lint_summary(
             raise ValueError("Native netlist hash is unavailable for connectivity snapshot capture")
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared source changed while reading design-lint policy")
+        mechanical_edge_rule_candidates = mechanical_edge_rule_coverage_candidates(
+            root,
+            config,
+            policy,
+            coach.source_hashes,
+            native_summary,
+        )
         pcb_dru_rule_candidates = (
+            *mechanical_edge_rule_candidates,
             *ignored_custom_drc_rule_candidates(root, config, coach.source_hashes),
             *excluded_custom_drc_rule_candidates(root, config, coach.source_hashes),
         )
