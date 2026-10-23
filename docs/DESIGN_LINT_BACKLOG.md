@@ -9140,8 +9140,8 @@ is not a reason by itself to expand its scope or change its default policy.
   and metamorphic ordering/assignment changes. Digest-pinned native schematic
   fault/control fixtures were exercised with KiCad 10.0.0 and 10.0.5. The
   shared CLI/MCP parity regression checks both mapped signal and shield rules.
-  The [native fixture note](../tests/fixtures/design_lint/mapped-interface-shield-native/README.md)
-  records the source hashes and exact-version test lane.
+  The [native fixture note][mapped-shield-fixture] records the source hashes
+  and exact-version test lane.
   No customer or proprietary board source is used; reviewer precision on real
   projects remains unmeasured.
 - **Focused selection:**
@@ -9149,7 +9149,7 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   python -I -m pytest \
     tests/test_connector_mapped_interface_shield_unassigned.py \
-    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_shield_unassigned")'
+    -m 'design_lint_rule(rule_id="connector.mapped_interface_shield_unassigned")'
 
   python -I -m pytest \
     tests/test_design_lint_mcp_parity_mapped_interface_signal.py \
@@ -9158,6 +9158,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
   Set `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` to include the two exact-version
   native exports in package acceptance.
+
+  [mapped-shield-fixture]: ../tests/fixtures/design_lint/mapped-interface-shield-native/README.md
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
