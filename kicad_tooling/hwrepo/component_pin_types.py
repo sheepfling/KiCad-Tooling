@@ -40,7 +40,7 @@ def fitted_output_pins_on_net(
         for pin, kind in observed.pin_electrical_types.items()
     }
 
-    peers = []
+    peers: list[tuple[str, str]] = []
     for pin in observed.nets.get(net, ()):
         reference = pin.rsplit(".", 1)[0]
         reference_key = reference.casefold()
