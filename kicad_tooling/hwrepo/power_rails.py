@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 
 from .models import NetlistContract
 from .power_rail_models import NumberedPowerRailGroup
@@ -43,6 +44,16 @@ _RAIL_STEMS = {
 }
 
 _EXPLICIT_VOLTAGE_RAIL_KEYS = frozenset({"1V8", "2V5", "3V3", "5V", "9V", "12V", "24V", "48V"})
+_EXPLICIT_VOLTAGE_RAIL_VALUES = {
+    "1V8": Decimal("1.8"),
+    "2V5": Decimal("2.5"),
+    "3V3": Decimal("3.3"),
+    "5V": Decimal(5),
+    "9V": Decimal(9),
+    "12V": Decimal(12),
+    "24V": Decimal(24),
+    "48V": Decimal(48),
+}
 
 
 def _numbered_positive_rail(name: str) -> tuple[str, int] | None:
@@ -68,6 +79,25 @@ def _numbered_positive_rail(name: str) -> tuple[str, int] | None:
     return f"{namespace} {canonical_stem}", int(match.group("index"))
 
 
+def explicit_voltage_rail_value(name: str) -> Decimal | None:
+    """Read a signed value from a narrowly recognized numeric rail spelling.
+
+    Only the explicit numeric rails already present in ``_RAIL_STEMS`` are
+    recognized. The label is evidence for review, not proof of potential.
+    """
+    compact = re.sub(r"\s+", "", name).casefold()
+    sign = Decimal(1)
+    if compact.startswith(("+", "-")):
+        if compact.startswith(("++", "+-", "--", "-+")):
+            return None
+        if compact.startswith("-"):
+            sign = Decimal(-1)
+        compact = compact[1:]
+    canonical = _RAIL_STEMS.get(compact)
+    magnitude = _EXPLICIT_VOLTAGE_RAIL_VALUES.get(canonical or "")
+    return None if magnitude is None else sign * magnitude
+
+
 def negative_voltage_rail_key(name: str) -> str | None:
     """Return a narrow key for a net label explicitly prefixed with minus.
 
@@ -75,10 +105,11 @@ def negative_voltage_rail_key(name: str) -> str | None:
     positive-rail vocabulary. The leading sign is evidence in the label, not
     proof of the net's electrical potential.
     """
-    compact = re.sub(r"\s+", "", name).casefold()
-    if not compact.startswith("-") or compact.startswith("--"):
+    value = explicit_voltage_rail_value(name)
+    if value is None or value >= 0:
         return None
-    canonical = _RAIL_STEMS.get(compact[1:])
+    compact = re.sub(r"\s+", "", name).casefold()[1:]
+    canonical = _RAIL_STEMS.get(compact)
     return canonical if canonical in _EXPLICIT_VOLTAGE_RAIL_KEYS else None
 
 

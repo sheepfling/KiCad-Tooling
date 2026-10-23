@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-import tests.can_peer_reference_support as _can_peer_reference_support
 import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.component_peer_power_input_support as _component_peer_power_input_support
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
@@ -24,12 +23,9 @@ import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixt
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.external_protection_support as _external_protection_support
-import tests.i2c_peer_reference_support as _i2c_peer_reference_support
 import tests.pcb_decoupling_support as _pcb_decoupling_support
 import tests.pcb_rf_antenna_support as _pcb_rf_antenna_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
-import tests.serial_peer_reference_support as _serial_peer_reference_support
-import tests.spi_peer_reference_support as _spi_peer_reference_support
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
 import tests.test_crystal_networks as _tests_test_crystal_networks
 import tests.test_led_output_heuristics as _tests_test_led_output_heuristics
@@ -42,7 +38,6 @@ import tests.test_pcb_track_width as _tests_test_pcb_track_width
 import tests.test_power_paths as _tests_test_power_paths
 import tests.test_rc_filters as _tests_test_rc_filters
 import tests.test_regulator_feedback as _tests_test_regulator_feedback
-import tests.test_spi_participants as _tests_test_spi_participants
 import tests.test_stm32_pin_map as _tests_test_stm32_pin_map
 import tests.test_two_pin_crystals as _tests_test_two_pin_crystals
 import tests.test_two_pin_diodes as _tests_test_two_pin_diodes
@@ -69,7 +64,10 @@ from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
 from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
-from tests.design_lint_fixtures.catalog_reachability import catalog_reachability_rule_ids
+from tests.design_lint_fixtures.catalog_reachability import (
+    catalog_reachability_rule_ids,
+    protocol_peer_candidate_rule_ids,
+)
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
 from tests.power_sequence_support import (
     power_sequence_map as synthetic_power_sequence_map,
@@ -165,28 +163,12 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         ),
         _power_pin_net_roles.positive_supply_on_return_netlist(),
         _power_pin_net_roles.supply_pin_on_rail_netlist("-5V"),
-        _tests_design_lint_fixtures.control_input_pins(),
-        _tests_design_lint_fixtures.control_input_pins(connected=True, visible_bias=False),
-        _tests_design_lint_fixtures.unconnected_protocol_pins(),
-        _tests_test_spi_participants.spi_netlist(),
-        _tests_design_lint_fixtures.spi_peer_voltage_netlist(),
-        _tests_design_lint_fixtures.serial_peer_voltage_netlist(),
-        _serial_peer_reference_support.serial_reference_netlist(),
-        _usb_peer_reference_support.usb_peer_netlist(),
-        _tests_design_lint_fixtures.i2c_netlist(),
-        _tests_design_lint_fixtures.i2c_netlist_with_parallel_sda(),
-        _tests_design_lint_fixtures.i2c_netlist_with_pullup_rails(("+3V3", "+5V"), ("+3V3",)),
-        _i2c_peer_reference_support.i2c_peer_netlist(),
-        _spi_peer_reference_support.spi_peer_netlist(),
-        _tests_design_lint_fixtures.spi_active_low_select_netlist(),
-        _tests_design_lint_fixtures.can_netlist(),
-        _can_peer_reference_support.can_peer_reference_netlist(),
-        _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),
         no_can_assignments,
-        _tests_design_lint_fixtures.complementary_usb_netlist(negative_net=None),
-        _tests_design_lint_fixtures.complementary_usb_netlist(),
+        _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),
+        _usb_peer_reference_support.usb_peer_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
+    emitted.update(protocol_peer_candidate_rule_ids())
     emitted.update(item.rule_id for item in candidates(_mosfet_gate_source_bias_fixtures.netlist()))
     emitted.update(
         item.rule_id for item in candidates(_tests_test_mosfet_gate_connectivity.mosfet_netlist())

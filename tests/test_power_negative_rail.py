@@ -10,7 +10,10 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintRuleOverride,
 )
-from kicad_tooling.hwrepo.power_rails import negative_voltage_rail_key
+from kicad_tooling.hwrepo.power_rails import (
+    explicit_voltage_rail_value,
+    negative_voltage_rail_key,
+)
 from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.power_pin_net_roles import supply_pin_on_rail_netlist
 
@@ -62,6 +65,28 @@ def test_named_supply_pin_on_negative_rail_is_reviewed() -> None:
 )
 def test_negative_rail_name_recognition_is_narrow(name: str, expected: str | None) -> None:
     assert negative_voltage_rail_key(name) == expected
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    (
+        ("+3V3", 3.3),
+        ("3.3 V", 3.3),
+        ("5.0V", 5.0),
+        ("-1V8", -1.8),
+        ("-12V", -12.0),
+        ("VCC", None),
+        ("NEG_5V", None),
+        ("--5V", None),
+    ),
+)
+def test_explicit_voltage_values_use_only_the_numeric_rail_vocabulary(
+    name: str,
+    expected: float | None,
+) -> None:
+    value = explicit_voltage_rail_value(name)
+    assert (None if value is None else float(value)) == expected
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 153 rules are implemented with synthetic regression coverage.
+The following 154 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 153 active rules.
+The catalog currently contains 154 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -481,6 +481,7 @@ skipped under prerelease policy.
 - `component.unconnected_return_pin`
 - `component.mosfet_gate_without_peer`
 - `component.mosfet_gate_without_visible_source_bias`
+- `component.polarized_capacitor_reversed_on_named_rails`
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
 - `oscillator.output_load_path_mismatch`
@@ -2783,7 +2784,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 153 active rules; CI requires every new
+- **Status:** Baseline complete for all 154 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2792,7 +2793,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 153 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 154 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9264,6 +9265,47 @@ is not a reason by itself to expand its scope or change its default policy.
   fault/control/metamorphic coverage, exact-version native evidence, project
   policy handling, and backlog documentation. No project or cohort fixture is
   used.
+
+#### LINT-172 — Review reversed polarized capacitors on named rails
+
+- **Status:** Implemented as the default-review rule
+  `component.polarized_capacitor_reversed_on_named_rails`.
+- **Gap:** Native ERC checks electrical pin types and connectivity, but a
+  passive polarized capacitor can connect to two valid, distinct nets with its
+  positive terminal assigned to the lower named rail.
+- **Predicate:** Recognize only KiCad's four exact `Device:C_Polarized`
+  identities, require a fitted component and complete `{1, 2}` pin inventory,
+  then require exactly one distinct net assignment per pin. KiCad maps pin 1
+  to the positive terminal. Prompt only when signed numeric rail labels order
+  pin 1 below pin 2, or when a clearly named negative rail / return is below a
+  positive symbolic rail. Conflicting label and peer-pin roles are excluded.
+- **Boundary:** This is a REVIEW heuristic. Net names and power-pin functions
+  do not prove actual voltage, transient behavior, capacitor rating, board
+  copper, or physical orientation. Unknown or unordered symbolic rails,
+  third-party symbols, incomplete or ambiguous assignments, and DNP parts are
+  not classified. Project policy can retain REVIEW, block, disable, or exact-
+  fingerprint-ignore the finding.
+- **Fixtures:** Synthetic regressions cover all four exact symbol identities,
+  positive and negative numeric rails, return references, correct orientation,
+  unordered and unknown rails, conflicting metadata, unsupported symbols,
+  incomplete inventories, DNP, open and ambiguous pins, project overrides,
+  exact ignores, correction, and deterministic ordering. Tooling-owned native
+  fault/control schematics export netlist and ERC twice under the pinned
+  KiCad 10.0.0 and 10.0.5 package-acceptance lane. The [fixture note][polarized-capacitor-native]
+  records the source boundary. The pin mapping follows the official KiCad
+  `Device` symbol library; no project or cohort source is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_polarized_capacitor_orientation.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.polarized_capacitor_reversed_on_named_rails")'
+
+  KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1 python -I -m pytest \
+    tests/test_polarized_capacitor_native_fixture.py \
+    -m 'design_lint and design_lint_rule(rule_id="component.polarized_capacitor_reversed_on_named_rails")'
+  ```
+
+  [polarized-capacitor-native]: ../tests/fixtures/design_lint/polarized-capacitor-native/README.md
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

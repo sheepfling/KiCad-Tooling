@@ -2945,7 +2945,8 @@
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
       "predicate": "For a fitted component with exact native symbol Transistor_FET:Q_NMOS_{DGS,DSG,GDS,GSD,SGD} or Q_PMOS_{DGS,DSG,GDS,GSD,SDG,SGD}, a complete three-pin inventory, and exactly one native G/Gate pin function, emit a REVIEW candidate when the gate is unassigned or its one assigned net contains no other fitted component pin.",
       "supported_kicad_versions": [
-        "KiCad 10.0.0 and 10.0.5 pinned native XML export lanes; exact project version is checked before export"
+        "10.0.0",
+        "10.0.5"
       ],
       "limitations": [
         "The supported native symbol identities are a narrow allowlist; other libraries, multi-gate devices, incomplete inventories, and noncanonical gate functions are outside the check.",
@@ -3024,6 +3025,50 @@
       ],
       "theme": "components",
       "implementation_owner": "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ]
+    },
+    {
+      "rule_id": "component.polarized_capacitor_reversed_on_named_rails",
+      "title": "Review polarized capacitor pin 1 below pin 2 on named rails",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For an exact supported Device:C_Polarized symbol with complete pin inventory {1,2}, a fitted component, and exactly one distinct net assignment per terminal, emit REVIEW when pin 1 is ordered below pin 2 by two explicit numeric rail labels, a negative numeric rail versus a named return or positive symbolic rail, or a named return versus a positive symbolic rail. Conflicting rail and pin-role evidence is excluded.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only Device:C_Polarized, Device:C_Polarized_Small, Device:C_Polarized_US, and Device:C_Polarized_Small_US are supported; pin 1 is the positive terminal in the exact KiCad 10 symbol definitions.",
+        "The check requires complete two-pin inventory and one unambiguous assignment per pin. DNP parts, unsupported symbols, same-net assignments, open pins, and pins assigned to multiple nets are excluded.",
+        "Only explicit numeric voltage labels and unambiguous named return or positive-supply roles are ordered. Unknown or unordered symbolic rails, mixed role evidence, actual voltages, transient behavior, capacitor ratings, PCB copper, and physical orientation are not evaluated."
+      ],
+      "fault_fixtures": [
+        "tests.test_polarized_capacitor_orientation.test_supported_polarized_symbol_with_lower_positive_terminal_is_reviewed",
+        "tests.test_polarized_capacitor_orientation.test_numeric_and_return_reversals_have_ordered_evidence",
+        "tests.test_polarized_capacitor_native_fixture.test_native_polarized_capacitor_fault_and_control_are_deterministic"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_polarized_capacitor_orientation.test_correct_unknown_or_conflicting_rail_evidence_is_not_a_finding",
+        "tests.test_polarized_capacitor_orientation.test_unsupported_identity_or_incomplete_component_is_not_a_finding",
+        "tests.test_polarized_capacitor_orientation.test_missing_ambiguous_or_same_net_assignments_are_not_findings",
+        "tests.test_polarized_capacitor_native_fixture.test_native_polarized_capacitor_fault_and_control_are_deterministic"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_polarized_capacitor_orientation.test_rail_assignment_correction_and_net_ordering_are_deterministic",
+        "tests.test_polarized_capacitor_native_fixture.test_native_polarized_capacitor_fault_and_control_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_polarized_capacitor_orientation.py#polarized_capacitors_on_reversed_named_rails",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_polarized_capacitor_orientation.py#polarized_capacitors_on_reversed_named_rails",
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
       ]

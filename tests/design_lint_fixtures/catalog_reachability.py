@@ -15,6 +15,7 @@ from tests.connector_footprint_peer_support import (
     peer_metadata_divergence_netlist,
 )
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
+from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
 from tests.test_connector_mapped_interface_signal_unassigned import _coverage, _netlist
 from tests.test_oscillator_output_paths import (
     oscillator_output_netlist,
@@ -117,6 +118,7 @@ def catalog_reachability_rule_ids() -> set[str]:
             peer_metadata_divergence_netlist(target_assignments=("UART_RX_NET", None))
         )
     )
+    result.update(item.rule_id for item in candidates(polarized_capacitor_netlist()))
     mapped_signal_source = _netlist()
     mapped_signal_coverage = _coverage(mapped_signal_source)
     result.update(
@@ -132,3 +134,45 @@ def catalog_reachability_rule_ids() -> set[str]:
         )
     )
     return result
+
+
+def protocol_peer_candidate_rule_ids() -> set[str]:
+    """Reach protocol and control-input candidate rules from synthetic netlists."""
+    from tests.can_peer_reference_support import can_peer_reference_netlist
+    from tests.design_lint_fixtures import (
+        can_netlist,
+        complementary_usb_netlist,
+        control_input_pins,
+        i2c_netlist,
+        i2c_netlist_with_parallel_sda,
+        i2c_netlist_with_pullup_rails,
+        serial_peer_voltage_netlist,
+        spi_active_low_select_netlist,
+        spi_peer_voltage_netlist,
+        unconnected_protocol_pins,
+    )
+    from tests.i2c_peer_reference_support import i2c_peer_netlist
+    from tests.serial_peer_reference_support import serial_reference_netlist
+    from tests.spi_peer_reference_support import spi_peer_netlist
+    from tests.test_spi_participants import spi_netlist
+
+    cases = (
+        control_input_pins(),
+        control_input_pins(connected=True, visible_bias=False),
+        unconnected_protocol_pins(),
+        spi_netlist(),
+        spi_peer_voltage_netlist(),
+        serial_peer_voltage_netlist(),
+        serial_reference_netlist(),
+        can_netlist(),
+        can_peer_reference_netlist(),
+        i2c_netlist(),
+        i2c_netlist_with_parallel_sda(),
+        i2c_netlist_with_pullup_rails(("+3V3", "+5V"), ("+3V3",)),
+        i2c_peer_netlist(),
+        spi_peer_netlist(),
+        spi_active_low_select_netlist(),
+        complementary_usb_netlist(negative_net=None),
+        complementary_usb_netlist(),
+    )
+    return {item.rule_id for source in cases for item in candidates(source)}

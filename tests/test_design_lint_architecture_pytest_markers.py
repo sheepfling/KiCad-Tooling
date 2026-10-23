@@ -96,6 +96,11 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_mosfet_gate_connectivity.py": {"component_lint"},
     "test_mosfet_gate_source_bias.py": {"component_lint"},
     "test_mosfet_gate_native_fixture.py": {"component_lint", "native_kicad", "slow"},
+    "test_polarized_capacitor_native_fixture.py": {
+        "component_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_electrical_connector_evidence.py": {"connector_lint", "evidence_lint"},
     "test_electrical_connector_return_parity.py": {
         "connector_lint",
