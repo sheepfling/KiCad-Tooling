@@ -2,20 +2,12 @@
 
 from __future__ import annotations
 
-from .component_mosfet_symbols import mosfet_channel_type
+from .component_mosfet_symbols import mosfet_channel_type, mosfet_terminal_role_numbers
 from .component_rail_potentials import named_net_potential, potential_is_lower
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
 RULE_ID = "component.mosfet_terminal_order_on_named_rails"
-_TERMINAL_FUNCTIONS = {
-    "d": "drain",
-    "drain": "drain",
-    "g": "gate",
-    "gate": "gate",
-    "s": "source",
-    "source": "source",
-}
 
 
 def mosfets_with_unusual_drain_source_rail_order(
@@ -60,16 +52,10 @@ def mosfets_with_unusual_drain_source_rail_order(
         ):
             continue
 
-        role_to_number: dict[str, str] = {}
-        for number in pin_numbers:
-            role = _TERMINAL_FUNCTIONS.get(functions.get(f"{reference}.{number}".casefold(), ""))
-            if role is None:
-                continue
-            if role in role_to_number:
-                role_to_number.clear()
-                break
-            role_to_number[role] = number
-        if set(role_to_number) != {"drain", "gate", "source"}:
+        role_to_number = mosfet_terminal_role_numbers(
+            reference, symbol, pin_numbers, observed.pin_functions
+        )
+        if role_to_number is None:
             continue
 
         drain_pin = f"{reference}.{role_to_number['drain']}"

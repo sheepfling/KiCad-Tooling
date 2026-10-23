@@ -113,6 +113,13 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_mosfet_drain_source_same_net.py": {"component_lint"},
+    "test_mosfet_drain_source_same_net_native_fixture.py": {
+        "component_lint",
+        "native_kicad",
+        "slow",
+    },
+    "test_design_lint_determinism_mosfet_drain_source.py": {"component_lint", "slow"},
     "test_bjt_terminal_order_native_fixture.py": {
         "component_lint",
         "native_kicad",

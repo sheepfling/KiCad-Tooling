@@ -16,6 +16,7 @@ from tests.design_lint_fixtures.bjt_base_bias import bjt_base_bias_netlist
 from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
+from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.test_led_output_heuristics import observed_report as led_output_observed_report
 from tests.test_led_output_heuristics import output_led_netlist as led_output_netlist
@@ -92,6 +93,23 @@ def mosfet_terminal_order_report(*, reversed_order: bool) -> dict[str, object]:
     )
 
 
+def mosfet_drain_source_same_net_report(*, same_net: bool) -> dict[str, object]:
+    """Serialize a same-net MOSFET terminal fault or distinct-net control."""
+    observed = mosfet_drain_source_netlist(same_net=same_net)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="component.mosfet_drain_source_same_net",
+                mode="review",
+                reason="Hash-seed stability fixture",
+            ),
+        )
+    )
+    return source_bound_component_report(
+        "synthetic-mosfet-main-terminals-hashseed", observed, policy
+    )
+
+
 def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> dict[str, object]:
     """Serialize an enabled BJT named-rail order fault or valid control."""
     observed = bjt_terminal_order_netlist(family=family, reversed_order=reversed_order)
@@ -140,6 +158,8 @@ def report_cases() -> dict[str, object]:
         "mosfet_gate_driver_control": mosfet_gate_peer_report(has_driver=True),
         "mosfet_terminal_order_fault": mosfet_terminal_order_report(reversed_order=True),
         "mosfet_terminal_order_control": mosfet_terminal_order_report(reversed_order=False),
+        "mosfet_drain_source_same_net_fault": mosfet_drain_source_same_net_report(same_net=True),
+        "mosfet_drain_source_same_net_control": mosfet_drain_source_same_net_report(same_net=False),
         "bjt_npn_terminal_order_fault": bjt_terminal_order_report(
             family="npn", reversed_order=True
         ),

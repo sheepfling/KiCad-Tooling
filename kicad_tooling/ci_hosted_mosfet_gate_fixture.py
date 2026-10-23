@@ -10,10 +10,11 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .ci_hosted_support import normalized_erc_report_bytes
 from .hwrepo.component_mosfet_gate_drive import RULE_ID as DIRECT_DRIVE_RULE_ID
 from .hwrepo.component_mosfet_terminal_order import RULE_ID as TERMINAL_ORDER_RULE_ID
 from .hwrepo.contract_coach import pinned_image, run_command
-from .hwrepo.contracts import KiCadErcReport, read_kicad_erc_report, write_model
+from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
@@ -36,40 +37,6 @@ MOSFET_TERMINAL_ORDER_FIXTURE_CASES = {
     "fault_pmos": "mosfet-terminal-order-native/fault_pmos.kicad_sch",
     "control_pmos": "mosfet-terminal-order-native/control_pmos.kicad_sch",
 }
-ErcDetailRow = tuple[str | None, int | float | None, int | float | None]
-ErcViolationRow = tuple[str, str, str | None, tuple[ErcDetailRow, ...]]
-
-
-def _normalized_erc_report(report: KiCadErcReport) -> bytes:
-    """Serialize every typed ERC detail in stable order, excluding raw JSON ordering."""
-    violations: list[ErcViolationRow] = []
-    for item in report.violations:
-        details = tuple(
-            sorted(
-                ((detail.description, detail.x, detail.y) for detail in item.items),
-                key=lambda detail: json.dumps(
-                    detail,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                    ensure_ascii=False,
-                ),
-            )
-        )
-        violations.append((item.type, item.severity, item.description, details))
-    violations.sort(
-        key=lambda violation: json.dumps(
-            violation,
-            sort_keys=True,
-            separators=(",", ":"),
-            ensure_ascii=False,
-        )
-    )
-    return json.dumps(
-        {"kicad_version": report.kicad_version, "violations": violations},
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    ).encode("utf-8")
 
 
 def mosfet_gate_fixture_lane(
@@ -181,7 +148,7 @@ def mosfet_gate_fixture_lane(
             erc = read_kicad_erc_report(erc_path)
             if erc.kicad_version != config.kicad_version:
                 raise ValueError("MOSFET gate ERC report differs from selected KiCad version")
-            erc_hashes[(case, run)] = hashlib.sha256(_normalized_erc_report(erc)).hexdigest()
+            erc_hashes[(case, run)] = hashlib.sha256(normalized_erc_report_bytes(erc)).hexdigest()
             erc_errors = tuple(item.type for item in erc.violations if item.severity == "error")
             erc_warning_counts[(case, run)] = sum(
                 item.severity == "warning" for item in erc.violations
@@ -391,7 +358,7 @@ def mosfet_terminal_order_fixture_lane(
             erc = read_kicad_erc_report(erc_path)
             if erc.kicad_version != config.kicad_version:
                 raise ValueError("MOSFET terminal-order ERC version differs from project pin")
-            erc_hashes[(case, run)] = hashlib.sha256(_normalized_erc_report(erc)).hexdigest()
+            erc_hashes[(case, run)] = hashlib.sha256(normalized_erc_report_bytes(erc)).hexdigest()
             erc_errors = tuple(item.type for item in erc.violations if item.severity == "error")
             if erc_errors:
                 raise ValueError(

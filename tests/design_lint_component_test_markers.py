@@ -88,5 +88,9 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_mosfet_terminal_order.py",
         "tests/test_mosfet_terminal_order_native_fixture.py",
         "tests/test_design_lint_architecture_mosfet_terminal_order.py",
+        "tests/test_mosfet_drain_source_same_net.py",
+        "tests/test_mosfet_drain_source_same_net_native_fixture.py",
+        "tests/test_design_lint_determinism_mosfet_drain_source.py",
+        "tests/test_design_lint_architecture_mosfet_drain_source.py",
     }
 )

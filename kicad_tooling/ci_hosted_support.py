@@ -9,6 +9,8 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .hwrepo.contracts import KiCadErcReport
+
 
 class HostedCommandError(RuntimeError):
     """A retained child failure whose exit code remains available to the caller."""
@@ -103,3 +105,42 @@ class HostedLog:
 
     def finish(self) -> None:
         self.event("lane", "PASS")
+
+
+def normalized_erc_report_bytes(report: KiCadErcReport) -> bytes:
+    """Serialize typed ERC evidence in stable order, excluding raw JSON ordering."""
+    violations: list[
+        tuple[
+            str,
+            str,
+            str | None,
+            tuple[tuple[str | None, int | float | None, int | float | None], ...],
+        ]
+    ] = []
+    for item in report.violations:
+        details = tuple(
+            sorted(
+                ((detail.description, detail.x, detail.y) for detail in item.items),
+                key=lambda detail: json.dumps(
+                    detail,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ),
+            )
+        )
+        violations.append((item.type, item.severity, item.description, details))
+    violations.sort(
+        key=lambda violation: json.dumps(
+            violation,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+    )
+    return json.dumps(
+        {"kicad_version": report.kicad_version, "violations": violations},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")

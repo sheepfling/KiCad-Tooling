@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 161 rules are implemented with synthetic regression coverage.
+The following 162 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 161 active rules.
+The catalog currently contains 162 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -484,8 +484,10 @@ skipped under prerelease policy.
 - `component.mosfet_gate_without_visible_source_bias`
 - `component.mosfet_gate_direct_drive`
 - `component.mosfet_terminal_order_on_named_rails`
+- `component.mosfet_drain_source_same_net`
 - `component.bjt_terminal_order_on_named_rails`
 - `component.bjt_base_direct_drive`
+- `component.bjt_base_without_visible_emitter_bias`
 - `component.polarized_capacitor_reversed_on_named_rails`
 - `component.diode_anode_below_cathode_on_named_rails`
 - `component.led_directly_across_supply_and_return`
@@ -594,6 +596,14 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **MOSFET same-net terminal review:** LINT-180 adds an opt-in, default-off
+  prompt when an exact supported fitted three-terminal MOSFET's native drain
+  and source are assigned to the same schematic net. It uses native pin
+  functions rather than assuming pin numbers. DNP, custom, incomplete,
+  duplicate, open, and ambiguous assignments remain unclassified. The check
+  reports a review clue only; it does not infer intended switching behavior or
+  establish PCB continuity.
 
 - **Direct MOSFET gate-drive review:** LINT-177 adds an opt-in, default-off
   review prompt when a supported fitted three-terminal MOSFET gate shares its
@@ -2835,7 +2845,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 161 active rules; CI requires every new
+- **Status:** Baseline complete for all 162 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2844,7 +2854,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 161 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 162 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9678,6 +9688,50 @@ is not a reason by itself to expand its scope or change its default policy.
 
   Source hashes and exact-version boundaries are recorded in the
   [MOSFET gate fixture note](../tests/fixtures/design_lint/mosfet-gate-native/README.md).
+
+#### LINT-180 — Review supported MOSFET drain and source on one net
+
+- **Status:** Implemented as `component.mosfet_drain_source_same_net`, an
+  opt-in review rule that defaults to `off`. Its scoped prerelease tag requires
+  `KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES`.
+- **Problem:** ERC may accept passive MOSFET channel pins assigned to the same
+  net. The netlist exposes that assignment even though it does not establish
+  that the design intended the switch to conduct.
+- **Predicate:** Require a fitted component with one exact supported
+  three-terminal `Transistor_FET:Q_NMOS_*` or `Q_PMOS_*` symbol, complete unique
+  pin inventory, native D/Drain, G/Gate, and S/Source pin functions, and one
+  unambiguous assignment for drain and source. Emit a review when those two
+  native pin assignments name the same net. Pin functions determine roles;
+  pin numbers are not assumed.
+- **Boundary:** A same-net assignment may be intentional, including a bypass
+  or configuration topology. The rule does not infer required switching,
+  current direction, body-diode behavior, or a project requirement. It does
+  not establish population state, symbol-to-footprint mapping, PCB copper,
+  external circuitry, or physical behavior. DNP, custom, multi-gate,
+  body-terminal, incomplete, duplicate-role, open, and ambiguous cases remain
+  unclassified. Project policy can enable `review`, promote to `block`, leave
+  it `off`, or exactly ignore a finding.
+- **Fixtures:** Synthetic NMOS and PMOS same-net faults; distinct-net controls;
+  reordered native pin functions; unsupported, DNP, incomplete, duplicate-role,
+  open, and multiply assigned boundaries; policy and ignore lifecycle; repair,
+  net-order, and hash-seed stability. A tooling-owned schematic fault and
+  valid control repeat netlist and ERC exports on the pinned KiCad 10.0.0 and
+  10.0.5 images. Both native cases have zero ERC errors; the fault emits one
+  finding and the control emits none. Source hashes and limitations are in the
+  [MOSFET same-net fixture note](../tests/fixtures/design_lint/mosfet-drain-source-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_mosfet_drain_source_same_net.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.mosfet_drain_source_same_net")'
+
+  python -I -m pytest tests/test_design_lint_determinism_mosfet_drain_source.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.mosfet_drain_source_same_net")'
+
+  KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1 python -I -m pytest \
+    tests/test_mosfet_drain_source_same_net_native_fixture.py \
+    -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.mosfet_drain_source_same_net")'
+  ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

@@ -60,6 +60,7 @@ DesignLintRuleId = Literal[
     "component.mosfet_gate_without_peer",
     "component.mosfet_gate_without_visible_source_bias",
     "component.mosfet_gate_direct_drive",
+    "component.mosfet_drain_source_same_net",
     "component.mosfet_terminal_order_on_named_rails",
     "component.bjt_terminal_order_on_named_rails",
     "component.bjt_base_direct_drive",

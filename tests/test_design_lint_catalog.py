@@ -64,7 +64,9 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.mosfet_gate_without_visible_source_bias",
             "component.mosfet_gate_direct_drive",
             "component.mosfet_terminal_order_on_named_rails",
+            "component.mosfet_drain_source_same_net",
             "component.bjt_terminal_order_on_named_rails",
+            "component.bjt_base_without_visible_emitter_bias",
         }
     )
     assert all(
@@ -93,7 +95,9 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.mosfet_gate_without_visible_source_bias",
             "component.mosfet_gate_direct_drive",
             "component.mosfet_terminal_order_on_named_rails",
+            "component.mosfet_drain_source_same_net",
             "component.bjt_terminal_order_on_named_rails",
+            "component.bjt_base_without_visible_emitter_bias",
         }
     )
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)
