@@ -85,7 +85,7 @@ def i2c_buses_without_local_pullups(observed: NetlistContract) -> tuple[I2cPullu
                 evidence["SDA"].add(sda_pin)
                 evidence["SCL"].add(scl_pin)
 
-    pullup_nets = set(visible_resistor_pullups(observed))
+    pullup_nets = set(visible_resistor_pullups(observed, include_device_r_symbol=True))
 
     gaps: list[I2cPullupGap] = []
     for (sda_net, scl_net), evidence in sorted(buses.items()):
@@ -288,7 +288,7 @@ def i2c_buses_with_low_equivalent_pullup_resistance(
                 evidence["SDA"].add(sda_pin)
                 evidence["SCL"].add(scl_pin)
 
-    visible_pullups = visible_resistor_pullups(observed)
+    visible_pullups = visible_resistor_pullups(observed, include_device_r_symbol=True)
     findings: list[I2cLowEquivalentResistance] = []
     for (sda_net, scl_net), evidence in sorted(buses.items()):
         affected: list[str] = []
@@ -367,7 +367,7 @@ def i2c_buses_with_multiple_pullup_rail_families(
                 evidence["SDA"].add(sda_pin)
                 evidence["SCL"].add(scl_pin)
 
-    visible_pullups = visible_resistor_pullups(observed)
+    visible_pullups = visible_resistor_pullups(observed, include_device_r_symbol=True)
     rail_families_by_net = positive_power_net_families(observed)
     findings: list[I2cMultiplePullupRailFamilies] = []
     for (sda_net, scl_net), bus_pins in sorted(buses.items()):

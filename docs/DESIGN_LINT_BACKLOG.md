@@ -4506,7 +4506,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v13. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v14. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
@@ -4548,6 +4548,11 @@ is not a reason by itself to expand its scope or change its default policy.
   reviewed maximum effective capacitance with a residual loading bound. The
   total must fit within the authored bus capacitance maximum; missing, stale,
   DNP, or mismatched contributors keep the heuristic prompt open.
+  I2C pull-up discovery and direct mapped-resistor comparisons also accept an
+  exact native `Device:R` symbol under a non-R reference when the exported pin
+  inventory is exactly 1 and 2 and both pins have unique assignments. Other
+  symbol identities and custom resistor symbols remain outside automatic
+  recognition.
 - **Tagged acceptance (2026-10-23):** `v0.5.3rc90` (GitHub Actions run
   `40001892568`) passed the focused `bus.i2c_missing_pullup` selection with
   `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES=1`. The exact native fault/control
@@ -4563,8 +4568,10 @@ is not a reason by itself to expand its scope or change its default policy.
   installed-wheel playtest passed against a separate project checkout, and
   Ubuntu, macOS, and Windows preview jobs passed. The package-release job was
   skipped under prerelease policy.
-- **Problem:** The review heuristic recognizes direct conventional resistors
-  and unbranched resistor chains but cannot resolve resistor arrays, branched
+- **Problem:** The review heuristic recognizes R-designated conventional
+  resistors, exact `Device:R` symbols with complete two-pin inventories under
+  non-R references, and unbranched resistor chains, but cannot resolve
+  resistor arrays, branched
   networks, or rail-voltage compatibility on its own. Only a matching passing
   authored contract resolves the array hint; missing, pending, not-applicable,
   mismatched, or failing requirements leave it open. The optional voltage
@@ -4572,7 +4579,8 @@ is not a reason by itself to expand its scope or change its default policy.
   review valid internal, remote, or deliberately different pull-ups.
 - **Evidence and check:** The review heuristic sums each recognized unbranched
   series chain and calculates the parallel equivalent of fitted conventional
-  R-reference paths to one named positive rail; it flags equivalents below
+  R-reference paths and exact two-pin `Device:R` symbol paths to one named
+  positive rail; it flags equivalents below
   1 kΩ. Every resistor and path total must be in the 1 kΩ–100 kΩ band, and
   each intermediate net must contain exactly the two resistor pins. A
   project-owned `i2c_pullups` electrical requirement names each SDA/SCL net,
@@ -4602,6 +4610,12 @@ is not a reason by itself to expand its scope or change its default policy.
   per-resistor tolerance and basis are supplied. Scoped entries verify exact
   element coverage, but neither form verifies cited source contents or that
   the authored limits are correct.
+- **Symbol-identity regressions:** Synthetic tests cover the exact `Device:R`
+  identity under a non-R reference, strict two-pin inventory, unique
+  assignments, DNP exclusion, unsupported symbol identities, low-equivalent
+  detection, mixed-rail review, and a mapped direct-pull-up contract. The
+  native fixture repeats the exported `X1` symbol, value, pins, and net
+  assignments on KiCad 10.0.0 and 10.0.5 before the pull-up path is accepted.
 - **Boundary:** The voltage comparison does not verify that the rail ceiling
   or datasheet limits are correct. Its `operating` or `absolute_maximum` limit
   kind is recorded but not independently validated. The optional resistor

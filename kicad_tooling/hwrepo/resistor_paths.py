@@ -52,13 +52,18 @@ def resistance_ohms(value: str) -> float | None:
 
 
 def direct_resistors(
-    observed: NetlistContract, *, include_zero_ohm: bool = False
+    observed: NetlistContract,
+    *,
+    include_zero_ohm: bool = False,
+    include_device_r_symbol: bool = False,
 ) -> tuple[DirectResistor, ...]:
     """Return fitted two-terminal resistors with two unique net assignments.
 
     Zero-ohm bridges are excluded for path/value heuristics by default. A
     topology completeness check can include them because they can bypass a
-    mapped series element.
+    mapped series element. Callers may opt into the exact native ``Device:R``
+    identity for non-R references; that path requires complete pins 1 and 2
+    with one unique net assignment per pin.
     """
     pin_nets: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
@@ -70,7 +75,14 @@ def direct_resistors(
     dnp = {reference.casefold() for reference in observed.dnp_components}
     resistors: list[DirectResistor] = []
     for reference, component in observed.components.items():
-        if reference.casefold() in dnp or RESISTOR_REFERENCE_PATTERN.fullmatch(reference) is None:
+        symbol_identified = (
+            RESISTOR_REFERENCE_PATTERN.fullmatch(reference) is None
+            and include_device_r_symbol
+            and observed.component_symbols.get(reference) == "Device:R"
+        )
+        if reference.casefold() in dnp or (
+            RESISTOR_REFERENCE_PATTERN.fullmatch(reference) is None and not symbol_identified
+        ):
             continue
         resistance = resistance_ohms(component.value)
         if resistance is None or resistance < 0 or (resistance == 0 and not include_zero_ohm):
@@ -78,6 +90,13 @@ def direct_resistors(
         pins = component_pins.get(reference, set())
         known_pin_numbers = observed.component_pin_numbers.get(reference)
         if len(pins) != 2 or (known_pin_numbers is not None and len(known_pin_numbers) != 2):
+            continue
+        if symbol_identified and (
+            known_pin_numbers is None
+            or len(known_pin_numbers) != 2
+            or set(known_pin_numbers) != {"1", "2"}
+            or {pin.rsplit(".", 1)[-1] for pin in pins} != {"1", "2"}
+        ):
             continue
         terminals = [pin_nets.get(pin, set()) for pin in pins]
         if any(len(nets) != 1 for nets in terminals):
@@ -127,7 +146,9 @@ def positive_power_net_families(observed: NetlistContract) -> dict[str, str]:
     return families
 
 
-def visible_resistor_pullups(observed: NetlistContract) -> dict[str, list[VisiblePullupPath]]:
+def visible_resistor_pullups(
+    observed: NetlistContract, *, include_device_r_symbol: bool = False
+) -> dict[str, list[VisiblePullupPath]]:
     """Find direct or unbranched fitted resistor chains from a signal net to a named rail."""
     return visible_resistor_paths(
         observed,
@@ -136,6 +157,7 @@ def visible_resistor_pullups(observed: NetlistContract) -> dict[str, list[Visibl
         maximum_resistor_ohms=100_000,
         minimum_path_ohms=1_000,
         maximum_path_ohms=100_000,
+        include_device_r_symbol=include_device_r_symbol,
     )
 
 
@@ -147,18 +169,21 @@ def visible_resistor_paths(
     maximum_resistor_ohms: float | None = None,
     minimum_path_ohms: float | None = None,
     maximum_path_ohms: float | None = None,
+    include_device_r_symbol: bool = False,
 ) -> dict[str, list[VisibleResistorPath]]:
     """Find direct or unbranched fitted resistor chains to explicit target nets.
 
     Optional bounds preserve the I2C pull-up heuristic's conservative resistor
     window. Other review heuristics can ask only whether a conventional fitted
     resistor path is visible without assigning an electrical value requirement.
+    Non-R references are included only when the caller opts into the exact
+    native ``Device:R`` identity and complete two-pin evidence.
     """
     targets = {net.casefold(): net for net in target_nets}
     actual_net_names = {net.casefold(): net for net in observed.nets}
     resistors = {
         item.reference: item
-        for item in direct_resistors(observed)
+        for item in direct_resistors(observed, include_device_r_symbol=include_device_r_symbol)
         if (minimum_resistor_ohms is None or item.resistance_ohms >= minimum_resistor_ohms)
         and (maximum_resistor_ohms is None or item.resistance_ohms <= maximum_resistor_ohms)
     }

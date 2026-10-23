@@ -3184,6 +3184,14 @@ Older contracts without this section remain readable and make no I2C
 pull-up-range claim. Direct paths, exact series paths, and mapped resistor
 arrays are only evaluated when the contract declares them.
 
+The deterministic I2C resistor-path checks also recognize an exact native
+`Device:R` symbol under a non-R reference when KiCad exports the complete
+two-pin inventory (`1` and `2`) and both pins have unique net assignments.
+This covers library-identified generic resistors without guessing from a
+component value or custom symbol name. Other resistor symbol IDs, custom
+symbols, incomplete pin inventories, DNP parts, and ambiguous assignments are
+not inferred; use an exact project-authored map when those parts are required.
+
 When the review establishes an actual requirement, express it in the project's
 `i2c_pullups`, `can_termination`, grounding, or `pin_connectivity` electrical
 contract. Those stronger checks can verify specified bus topology or pin

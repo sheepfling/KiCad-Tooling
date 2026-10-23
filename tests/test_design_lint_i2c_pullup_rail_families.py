@@ -17,6 +17,7 @@ from tests.design_lint_fixtures import (
     i2c_netlist_with_pullup_rails,
     policy_without_i2c_map_prompt,
 )
+from tests.design_lint_fixtures.i2c_resistor_symbols import i2c_netlist_with_device_r_symbol
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -162,3 +163,24 @@ def test_i2c_pullup_rail_finding_is_order_stable() -> None:
         reordered_finding.fingerprint,
         reordered_finding.evidence,
     )
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_multiple_pullup_rail_families")
+def test_i2c_rail_family_review_recognizes_exact_device_r_symbol_under_non_r_reference() -> None:
+    policy = policy_without_i2c_map_prompt()
+    fault = i2c_netlist_with_device_r_symbol(rail="+5V", base_pullups=("SCL",))
+    report = evaluate("synthetic-i2c-symbol-rail", coach(fault), policy)
+    finding = next(
+        item
+        for item in report.findings
+        if item.rule_id == "bus.i2c_multiple_pullup_rail_families"
+    )
+
+    assert finding.evidence["rail_families"] == ("3v3", "5v")
+    assert "SDA: X1=4700Ω to +5V (5v)" in finding.evidence["pullup_paths"]
+
+    control = i2c_netlist_with_device_r_symbol(rail="+3V3", base_pullups=("SCL",))
+    control_report = evaluate("synthetic-i2c-symbol-rail-control", coach(control), policy)
+    assert "bus.i2c_multiple_pullup_rail_families" not in {
+        item.rule_id for item in control_report.findings
+    }

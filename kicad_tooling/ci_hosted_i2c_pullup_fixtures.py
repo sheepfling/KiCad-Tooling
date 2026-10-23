@@ -33,6 +33,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         ElectricalCheck,
         NetlistContract,
     )
+    from .hwrepo.resistor_paths import visible_resistor_pullups
     from .validate import read_netlist
 
     root = root.resolve()
@@ -46,11 +47,18 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     fixture_root = (
         Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/i2c-array-native"
     )
-    fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")}
+    fixtures = {
+        **{case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")},
+        "symbol_resistor": (
+            Path(__file__).resolve().parents[1]
+            / "tests/fixtures/design_lint/i2c-device-r-symbol-native/symbol_resistor.kicad_sch"
+        ),
+    }
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {
         "control": "46fbdf1453e8254a633b7dee43b8877fc516758446314f4834f55a41db2a2479",
         "fault": "c4ec4dbb38f9a076d3f8969fd77b9f2f869648c1ca490f1c973e4b92ba16f595",
+        "symbol_resistor": "1793291946117b88171d407379c6e768fb10e8b26feae7736f2206c57e5806b4",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("I2C pull-up fixture sources differ from the reviewed hashes")
@@ -74,8 +82,9 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     inputs = scratch / "input"
     inputs.mkdir()
     for case, fixture in fixtures.items():
-        shutil.copyfile(fixture, inputs / fixture.name)
-        if digest(inputs / fixture.name) != source_hashes[case]:
+        input_fixture = inputs / f"{case}.kicad_sch"
+        shutil.copyfile(fixture, input_fixture)
+        if digest(input_fixture) != source_hashes[case]:
             raise ValueError(f"Synthetic I2C {case} fixture changed while preparing native input")
     output = scratch / "output"
     output.mkdir()
@@ -87,7 +96,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in control fault; do\n"
+        "for case in control fault symbol_resistor; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml \\\n"
         '      --output "/output/${case}.${run}.netlist.xml" \\\n'
@@ -214,6 +223,30 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         or "X2.2" not in fault.nets.get("GND", ())
     ):
         raise ValueError("Native I2C fault lost its unmapped non-C capacitor evidence")
+
+    symbol_resistor = observations[("symbol_resistor", "first")]
+    symbol_paths = visible_resistor_pullups(
+        symbol_resistor,
+        include_device_r_symbol=True,
+    ).get("I2C_SDA", ())
+    if (
+        symbol_resistor.components.get("X1") is None
+        or symbol_resistor.components["X1"].value != "4.7k"
+        or symbol_resistor.component_symbols.get("X1") != "Device:R"
+        or set(symbol_resistor.component_pin_numbers.get("X1", ())) != {"1", "2"}
+        or symbol_resistor.nets.get("I2C_SDA") != ("X1.1",)
+        or symbol_resistor.nets.get("+3V3") != ("X1.2",)
+        or len(symbol_paths) != 1
+        or symbol_paths[0].references != ("X1",)
+    ):
+        raise ValueError(
+            "Native non-R Device:R fixture did not resolve as an exact pull-up path: "
+            f"component={symbol_resistor.components.get('X1')!r}, "
+            f"symbol={symbol_resistor.component_symbols.get('X1')!r}, "
+            f"pin_numbers={symbol_resistor.component_pin_numbers.get('X1')!r}, "
+            f"I2C_SDA={symbol_resistor.nets.get('I2C_SDA')!r}, "
+            f"+3V3={symbol_resistor.nets.get('+3V3')!r}, paths={symbol_paths!r}"
+        )
     control_checks = {item.id: item for item in reports[("control", "first")]}
     if any(
         control_checks[f"i2c-pullup/array-bus/{line}"].status != "PASS" for line in ("sda", "scl")
@@ -256,7 +289,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     ):
         raise ValueError("Native I2C fault did not discover its unmapped X2 capacitor")
 
-    for case in fixtures:
+    for case in ("control", "fault"):
         first_hash = normalized_hashes[(case, "first")]
         repeat_hash = normalized_hashes[(case, "repeat")]
         if first_hash != repeat_hash:
@@ -342,3 +375,26 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
             repeatable="true",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
         )
+
+    symbol_hash = normalized_hashes[("symbol_resistor", "first")]
+    symbol_repeat_hash = normalized_hashes[("symbol_resistor", "repeat")]
+    if symbol_hash != symbol_repeat_hash:
+        raise ValueError("Native non-R Device:R exports differ after typed normalization")
+    log.event(
+        "i2c-pullup-fixture/symbol-resistor",
+        "PASS",
+        project=project,
+        kicad_version=config.kicad_version,
+        image=pinned,
+        source_sha256=source_hashes["symbol_resistor"],
+        netlist_sha256=raw_hashes[("symbol_resistor", "first")],
+        repeat_netlist_sha256=raw_hashes[("symbol_resistor", "repeat")],
+        normalized_netlist_sha256=symbol_hash,
+        repeat_normalized_netlist_sha256=symbol_repeat_hash,
+        component_reference="X1",
+        component_symbol="Device:R",
+        component_pins="1,2",
+        pullup_path="X1=4700Ω to +3V3",
+        repeatable="true",
+        command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
+    )

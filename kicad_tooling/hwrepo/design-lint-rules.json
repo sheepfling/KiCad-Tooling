@@ -3862,17 +3862,18 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A component with distinct assigned SDA and SCL nets has either line without a visible 1 kΩ through 100 kΩ path to a named positive rail. A path is one conventional fitted resistor or an unbranched series chain of fitted conventional resistors, with each resistor and the total nominal resistance in range; every intermediate net must contain exactly the two recognized resistor pins.",
+      "predicate": "A component with distinct assigned SDA and SCL nets has either line without a visible 1 kΩ through 100 kΩ path to a named positive rail. A path is one conventional R-designated fitted resistor, an exact native Device:R symbol with complete two-pin inventory (including a non-R reference), or an unbranched series chain of supported fitted resistors, with each resistor and the total nominal resistance in range; every intermediate net must contain exactly the two recognized resistor pins.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Internal device pull-ups and off-board pull-ups are invisible in this netlist and can produce valid review findings.",
-        "Branched or otherwise ambiguous resistor junctions are not followed. The heuristic itself checks nominal topology only; it does not analyze resistor placement, tolerance, bus capacitance, voltage compatibility, or timing.",
+        "For a non-R reference, only the exact native Device:R library ID with a complete pin-number inventory of 1 and 2 is recognized; custom resistor symbols, other resistor symbol IDs, missing inventory, and ambiguous pin assignments are not inferred. Branched or otherwise ambiguous resistor junctions are not followed. The heuristic itself checks nominal topology only; it does not analyze resistor placement, tolerance, bus capacitance, voltage compatibility, or timing.",
         "A missing-path hint is resolved only by an exact project-authored I2C requirement whose SDA and SCL checks and every configured voltage or electrical-window check pass against this native netlist. When per-element tolerance entries are supplied, their resistor references or array-channel IDs must exactly cover the mapped elements on each line. A configured capacitance scope must map every fitted C-prefixed component and every recognized capacitor-symbol component directly attached to each line; opaque non-C symbols require an explicit contributor map or their loading must be included in the authored residual bound. Mapped contributors must pass exact identity, pin/net, and nominal-value checks plus the authored effective-capacitance budget. Missing, pending, not-applicable, mismatched, or failing requirements leave the review open. Tolerance and capacitance source bases remain reviewed inputs; the checker does not verify cited documents or extract board, endpoint, or off-board capacitance."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_does_not_accept_unverified_symbol_resistors",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_connecting_one_line_leaves_only_the_other_pullup_missing",
         "tests.test_i2c_pullup_heuristic_coverage.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
@@ -3900,6 +3901,8 @@
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_recognizes_exact_device_r_symbol_and_is_order_stable",
+        "tests.test_electrical_i2c_contracts.test_direct_pullup_contract_accepts_exact_device_r_symbol_under_non_r_reference",
         "tests.test_i2c_pullup_heuristic_coverage.test_valid_mapped_array_resolves_only_its_exact_missing_path_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_channel_tolerance_scope_resolves_the_i2c_prompt",
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_capacitance_scope_resolves_the_i2c_prompt",
@@ -3916,6 +3919,7 @@
       "metamorphic_fixtures": [
         "tests.test_i2c_pullup_capacitance.test_capacitance_check_is_stable_when_native_maps_are_reordered",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path",
+        "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_recognizes_exact_device_r_symbol_and_is_order_stable",
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
@@ -3938,22 +3942,24 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a recognized assigned SDA/SCL bus, fitted conventional R-reference resistors from 1 kΩ through 100 kΩ are grouped into direct or unbranched series paths with total nominal resistance in the same range. Paths to one named positive rail are combined in parallel; a line is reported when its nominal equivalent resistance is below 1 kΩ.",
+      "predicate": "For a recognized assigned SDA/SCL bus, fitted R-designated resistors and exact native Device:R symbols with complete two-pin inventories under non-R references, each from 1 kΩ through 100 kΩ, are grouped into direct or unbranched series paths with total nominal resistance in the same range. Paths to one named positive rail are combined in parallel; a line is reported when its nominal equivalent resistance is below 1 kΩ.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The 1 kΩ boundary is a broad review threshold, not a universal electrical requirement; project-specific requirements and rule modes remain authoritative.",
-        "Only directly connected or unbranched series paths of discrete resistors are recognized; arrays, branched paths, multiple pull-up rails, internal pull-ups, and remote pull-ups are not calculated.",
+        "Non-R references require the exact native Device:R symbol ID and complete pin-number inventory 1 and 2. Custom resistor symbols and other resistor identities are unsupported. Only directly connected or unbranched series paths of discrete resistors are recognized; arrays, branched paths, multiple pull-up rails, internal pull-ups, and remote pull-ups are not calculated.",
         "This heuristic uses nominal resistance only and does not establish resistor tolerance, sink-current margin, bus voltage compatibility, capacitance, rise time, or timing. A separate project-authored electrical-window check can optionally apply a maximum per-resistor tolerance bound, but does not verify its cited source or scope."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
-        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths"
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
-        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths"
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_series_pullup_paths",
+        "tests.test_design_lint_i2c_equivalent_resistance.test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -3973,20 +3979,22 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For an assigned SDA/SCL pair recognized from one fitted component's native pin functions, collect fitted conventional direct or unbranched resistor paths between 1 kΩ and 100 kΩ to recognized positive rails. Emit one review candidate when the combined SDA/SCL paths use more than one distinct normalized positive-rail family.",
+      "predicate": "For an assigned SDA/SCL pair recognized from one fitted component's native pin functions, collect fitted R-designated direct or unbranched resistor paths and exact native Device:R symbols with complete two-pin inventories under non-R references, between 1 kΩ and 100 kΩ, to recognized positive rails. Emit one review candidate when the combined SDA/SCL paths use more than one distinct normalized positive-rail family.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Rail families come from a narrow net-name or pin-function allowlist. Custom positive rail names without a recognized power-pin function are not included.",
         "Different families are a review cue, not proof of incompatible voltages. The check does not resolve rail values, device input limits, level shifting, rail sequencing, external pull-ups, resistor arrays, or active pull-up circuits.",
-        "Only fitted conventional resistor paths with each resistor and total path in the 1 kΩ–100 kΩ detection range are followed; this is not a universal I2C resistor requirement."
+        "Non-R references require the exact native Device:R symbol ID and complete pin-number inventory 1 and 2; custom resistor symbols and other identities are unsupported. Only fitted resistor paths with each resistor and total path in the 1 kΩ–100 kΩ detection range are followed; this is not a universal I2C resistor requirement."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_pullups_to_distinct_rail_families_request_review"
+        "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_pullups_to_distinct_rail_families_request_review",
+        "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_rail_family_review_recognizes_exact_device_r_symbol_under_non_r_reference"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_pullups_to_distinct_rail_families_request_review",
+        "tests.test_design_lint_i2c_pullup_rail_families.test_i2c_rail_family_review_recognizes_exact_device_r_symbol_under_non_r_reference",
         "tests.test_design_lint_i2c_pullup_rail_families.test_same_family_rails_remain_valid_controls"
       ],
       "metamorphic_status": "covered",

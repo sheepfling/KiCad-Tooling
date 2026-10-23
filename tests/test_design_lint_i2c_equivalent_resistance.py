@@ -18,6 +18,7 @@ from tests.design_lint_fixtures import (
     i2c_netlist_with_parallel_sda,
     i2c_netlist_with_series_sda,
 )
+from tests.design_lint_fixtures.i2c_resistor_symbols import i2c_netlist_with_device_r_symbol
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -107,3 +108,33 @@ def test_i2c_low_equivalent_includes_series_pullup_paths() -> None:
         DesignLintPolicy(),
     )
     assert not any(item.rule_id == "bus.i2c_low_equivalent_resistance" for item in valid.findings)
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_low_equivalent_resistance")
+def test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference() -> None:
+    source = i2c_netlist_with_device_r_symbol(
+        value="1k",
+        base_pullups=("SDA", "SCL"),
+        base_resistance="4.7k",
+    )
+    report = evaluate("synthetic-i2c-symbol-equivalent", coach(source), DesignLintPolicy())
+
+    finding = next(
+        item
+        for item in report.findings
+        if item.rule_id == "bus.i2c_low_equivalent_resistance"
+    )
+    assert finding.evidence["lines"] == ("SDA",)
+    assert any(
+        item.startswith("X1=1000Ω to +3V3") for item in finding.evidence["pullup_resistors"]
+    )
+    assert finding.evidence["equivalent_ohms"] == ("SDA=824.561Ω",)
+
+    valid = i2c_netlist_with_device_r_symbol(
+        base_pullups=("SDA", "SCL"),
+        base_resistance="4.7k",
+    )
+    valid_report = evaluate("synthetic-i2c-symbol-equivalent-control", coach(valid), DesignLintPolicy())
+    assert "bus.i2c_low_equivalent_resistance" not in {
+        item.rule_id for item in valid_report.findings
+    }

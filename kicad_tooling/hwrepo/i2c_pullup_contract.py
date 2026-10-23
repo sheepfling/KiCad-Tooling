@@ -27,7 +27,7 @@ def i2c_pullup_checks(
     spec: I2cPullupAnalysis, observed: NetlistContract
 ) -> tuple[ElectricalCheck, ...]:
     """Compare authored bus ranges with direct, exact series, and mapped array paths."""
-    resistors = direct_resistors(observed)
+    resistors = direct_resistors(observed, include_device_r_symbol=True)
     components = {
         reference.casefold(): (reference, component)
         for reference, component in observed.components.items()

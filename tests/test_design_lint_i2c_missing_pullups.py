@@ -13,12 +13,14 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     DesignLintRuleOverride,
 )
+from kicad_tooling.hwrepo.resistor_paths import direct_resistors
 from tests.design_lint_fixtures import (
     coach,
     i2c_netlist,
     i2c_netlist_with_series_sda,
     policy_without_i2c_map_prompt,
 )
+from tests.design_lint_fixtures.i2c_resistor_symbols import i2c_netlist_with_device_r_symbol
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -62,6 +64,65 @@ def test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors() -> None:
         "synthetic-i2c", coach(i2c_netlist(pullups=("SDA", "SCL"), rail="-5V")), policy
     )
     assert negative_rail.status == "REVIEW"
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_missing_pullup")
+@pytest.mark.parametrize(
+    ("updates", "symbol"),
+    (
+        ({"component_symbols": {"X1": "Device:C"}}, "Device:C"),
+        ({"component_symbols": {"X1": "Custom:Resistor"}}, "Custom:Resistor"),
+        ({"dnp_components": ("X1",)}, "Device:R"),
+        ({"component_pin_numbers": {}}, "Device:R"),
+        (
+            {
+                "component_pin_numbers": {"X1": ("1", "2", "3")},
+                "nets": {
+                    "SDA_BUS": ("U1.1", "X1.1"),
+                    "SCL_BUS": ("U1.2", "R2.1"),
+                    "+3V3": ("R2.2", "X1.2"),
+                    "AUX_UNCONNECTED_ROLE": ("X1.3",),
+                },
+            },
+            "Device:R",
+        ),
+    ),
+)
+def test_i2c_missing_pullup_does_not_accept_unverified_symbol_resistors(
+    updates: dict[str, object],
+    symbol: str,
+) -> None:
+    source = i2c_netlist_with_device_r_symbol(symbol=symbol).model_copy(update=updates)
+    report = evaluate(
+        "synthetic-i2c-symbol-boundary",
+        coach(source),
+        policy_without_i2c_map_prompt(),
+    )
+
+    assert "bus.i2c_missing_pullup" in {item.rule_id for item in report.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_missing_pullup")
+def test_i2c_missing_pullup_recognizes_exact_device_r_symbol_and_is_order_stable() -> None:
+    source = i2c_netlist_with_device_r_symbol()
+    policy = policy_without_i2c_map_prompt()
+    report = evaluate("synthetic-i2c-symbol-resistor", coach(source), policy)
+    reordered = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
+        }
+    )
+    reordered_report = evaluate("synthetic-i2c-symbol-resistor", coach(reordered), policy)
+
+    assert "bus.i2c_missing_pullup" not in {item.rule_id for item in report.findings}
+    assert "bus.i2c_missing_pullup" not in {item.rule_id for item in reordered_report.findings}
+    assert "X1" not in {item.reference for item in direct_resistors(source)}
+    assert "X1" in {
+        item.reference for item in direct_resistors(source, include_device_r_symbol=True)
+    }
 
 
 @pytest.mark.parametrize("resistance", ("1k", "100k"))

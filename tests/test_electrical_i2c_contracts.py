@@ -52,6 +52,41 @@ def test_direct_pullups_check_exact_rail_and_parallel_resistance() -> None:
     assert "unexpected direct pull-ups to +5V" in wrong_rail["i2c-pullup/control/scl"].detail
 
 
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_missing_pullup")
+def test_direct_pullup_contract_accepts_exact_device_r_symbol_under_non_r_reference() -> None:
+    source = i2c_pullup_netlist(sda_values=("4.7k", "4.7k"))
+    components = {
+        ("X1" if reference == "R1" else reference): component
+        for reference, component in source.components.items()
+    }
+    nets = {
+        net: tuple("X1.1" if pin == "R1.1" else "X1.2" if pin == "R1.2" else pin for pin in pins)
+        for net, pins in source.nets.items()
+    }
+    pin_functions = {
+        ("X1.1" if pin == "R1.1" else "X1.2" if pin == "R1.2" else pin): function
+        for pin, function in source.pin_functions.items()
+    }
+    component_symbols = {
+        ("X1" if reference == "R1" else reference): symbol
+        for reference, symbol in source.component_symbols.items()
+    }
+    observed = source.model_copy(
+        update={
+            "components": components,
+            "nets": nets,
+            "pin_functions": pin_functions,
+            "component_symbols": component_symbols,
+            "component_pin_numbers": {"X1": ("1", "2")},
+        }
+    )
+
+    checks = _checks(i2c_pullup_requirement(), observed)
+
+    assert checks["i2c-pullup/control/sda"].status == "PASS"
+    assert checks["i2c-pullup/control/sda"].observed == 2_350
+
+
 def test_electrical_window_checks_authored_sink_current_and_rise_time_bounds() -> None:
     passing = _checks(i2c_pullup_window_requirement(), i2c_series_pullup_netlist())
     minimum_id = "i2c-pullup/series-bus/sda/electrical-window/minimum-sink-resistance"

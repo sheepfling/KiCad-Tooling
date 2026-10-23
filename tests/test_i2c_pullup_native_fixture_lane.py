@@ -67,13 +67,16 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
             "i2c-pullup-fixture/native-export",
             "i2c-pullup-fixture/control",
             "i2c-pullup-fixture/fault",
+            "i2c-pullup-fixture/symbol-resistor",
         }
         assert results["i2c-pullup-fixture/native-export"]["status"] == "PASS"
         control = results["i2c-pullup-fixture/control"]
         fault = results["i2c-pullup-fixture/fault"]
+        symbol_resistor = results["i2c-pullup-fixture/symbol-resistor"]
         normalized_hashes_by_version[version] = {
             "control": control["normalized_netlist_sha256"],
             "fault": fault["normalized_netlist_sha256"],
+            "symbol_resistor": symbol_resistor["normalized_netlist_sha256"],
         }
         assert (control["sda"], control["scl"]) == ("PASS", "PASS")
         assert (fault["sda"], fault["scl"]) == ("FAIL", "PASS")
@@ -102,6 +105,16 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
         )
         assert fault["sda_capacitance_contributors"] == "X1"
         assert fault["sda_capacitance_unmapped"] == "X2"
+        assert symbol_resistor["status"] == "PASS"
+        assert symbol_resistor["component_reference"] == "X1"
+        assert symbol_resistor["component_symbol"] == "Device:R"
+        assert symbol_resistor["component_pins"] == "1,2"
+        assert symbol_resistor["pullup_path"] == "X1=4700Ω to +3V3"
+        assert symbol_resistor["repeatable"] == "true"
+        assert (
+            symbol_resistor["normalized_netlist_sha256"]
+            == symbol_resistor["repeat_normalized_netlist_sha256"]
+        )
         assert control["contract_path"] == "projects/synthetic-i2c-array/electrical.json"
         assert control["contract_sha256"] == fault["contract_sha256"]
         for result in (control, fault):

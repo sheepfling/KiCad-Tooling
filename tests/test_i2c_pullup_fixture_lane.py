@@ -12,6 +12,7 @@ from kicad_tooling.ci_hosted import HostedLog, i2c_pullup_native_fixture_lane
 from kicad_tooling.hwrepo import electrical
 from kicad_tooling.hwrepo.models import CommandEvidence
 from tests.design_lint_fixtures.i2c_arrays import array_netlist_with_capacitor
+from tests.design_lint_fixtures.i2c_resistor_symbols import i2c_netlist_with_device_r_symbol
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
 
@@ -41,7 +42,19 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     fault_nets["I2C_SDA"] = ("U1.1", "X1.1", "X2.1")
     fault_nets["SDA_WRONG"] = ("RN1.1",)
     fault = fault.model_copy(update={"nets": fault_nets})
-    observations = {"control": control, "fault": fault}
+    symbol_resistor = i2c_netlist_with_device_r_symbol()
+    observations = {
+        "control": control,
+        "fault": fault,
+        "symbol_resistor": symbol_resistor.model_copy(
+            update={
+                "nets": {
+                    "I2C_SDA": ("X1.1",),
+                    "+3V3": ("X1.2",),
+                }
+            }
+        ),
+    }
 
     def fake_run_command(
         command_root: Path,
@@ -60,6 +73,7 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
         assert {path.name for path in source_directory.iterdir()} == {
             "control.kicad_sch",
             "fault.kicad_sch",
+            "symbol_resistor.kicad_sch",
         }
         for case in observations:
             for run in ("first", "repeat"):
@@ -92,6 +106,7 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     }
     control_result = results["i2c-pullup-fixture/control"]
     fault_result = results["i2c-pullup-fixture/fault"]
+    symbol_resistor_result = results["i2c-pullup-fixture/symbol-resistor"]
     assert control_result["baseline_missing_pullup"] == "OPEN"
     assert control_result["heuristic_coverage"] == "COMPLETE"
     assert control_result["heuristic_findings"] == "none"
@@ -111,3 +126,8 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     assert fault_result["scl_capacitance_scope"] == "PASS"
     assert control_result["contract_path"] == "projects/synthetic-i2c-array/electrical.json"
     assert control_result["contract_sha256"] == fault_result["contract_sha256"]
+    assert symbol_resistor_result["component_reference"] == "X1"
+    assert symbol_resistor_result["component_symbol"] == "Device:R"
+    assert symbol_resistor_result["component_pins"] == "1,2"
+    assert symbol_resistor_result["pullup_path"] == "X1=4700Ω to +3V3"
+    assert symbol_resistor_result["repeatable"] == "true"
