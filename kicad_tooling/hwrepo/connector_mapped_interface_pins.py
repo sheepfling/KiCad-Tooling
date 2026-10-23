@@ -4,15 +4,17 @@ from __future__ import annotations
 
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
-from .connector_identity import pin_function_is_generic
+from .connector_identity import is_named_supply_function, pin_function_is_generic
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .return_nets import is_return_like_net_name
 
 RULE_ID: DesignLintRuleId = "connector.mapped_interface_signal_unassigned"
 SHIELD_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_unassigned"
 POWER_CONTACT_RULE_ID: DesignLintRuleId = "connector.mapped_interface_power_contact_unassigned"
 OTHER_CONTACT_RULE_ID: DesignLintRuleId = "connector.mapped_interface_other_unassigned"
+OTHER_NAMED_RAIL_RULE_ID: DesignLintRuleId = "connector.mapped_interface_other_named_rail"
 
 
 def unassigned_mapped_interface_signal_pins(
@@ -205,6 +207,63 @@ def unassigned_mapped_interface_other_pins(
                     "interface_role": ("other",),
                     "native_pin_function": (mapped.symbol_function or "<missing>",),
                     "assigned_nets": (),
+                    "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
+                },
+            )
+        )
+    return tuple(results)
+
+
+def mapped_other_contacts_on_named_rails(
+    observed: NetlistContract,
+    coverage: ConnectorCoverageReport | None,
+) -> tuple[Candidate, ...]:
+    """Review generic contacts mapped as other when assigned to a named rail-like net."""
+    if coverage is None or coverage.status != "COMPLETE":
+        return ()
+
+    dnp_references = {reference.casefold() for reference in observed.dnp_components}
+    results: list[Candidate] = []
+    for pin, mapped in sorted(source_matched_connector_pin_evidence(observed, coverage).items()):
+        reference = pin.rsplit(".", 1)[0]
+        if (
+            mapped.role != "other"
+            or mapped.unconnected_reason is not None
+            or reference.casefold() in dnp_references
+            or not pin_function_is_generic(mapped.symbol_function)
+            or len(mapped.nets) != 1
+        ):
+            continue
+
+        net_name = mapped.nets[0]
+        if is_named_supply_function(net_name):
+            label_clue = "supply-like"
+        elif is_return_like_net_name(net_name):
+            label_clue = "return-like"
+        else:
+            continue
+
+        results.append(
+            Candidate(
+                rule_id=OTHER_NAMED_RAIL_RULE_ID,
+                subject=f"{pin}: generic other contact is assigned to {label_clue} net {net_name}",
+                message=(
+                    f"The source-matched interface maps this generic contact to "
+                    f"{mapped.interface_signal} with role=other, while its single native net "
+                    f"label ({net_name}) is recognized as {label_clue}. Review the pin map "
+                    "and assignment: a label is a review clue and does not prove the pin's "
+                    "electrical role, required connection, voltage, or intended reference. "
+                    "This check does not choose a net, require separate contacts to share a "
+                    "net, or establish PCB copper continuity."
+                ),
+                evidence={
+                    "component_pin": (pin,),
+                    "interface_pin_number": (str(mapped.interface_pin_number),),
+                    "interface_signal": (str(mapped.interface_signal),),
+                    "interface_role": ("other",),
+                    "native_pin_function": (mapped.symbol_function or "<missing>",),
+                    "assigned_nets": (net_name,),
+                    "net_label_role_clue": (f"{label_clue} label",),
                     "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
                 },
             )

@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 192 active rules.
+The catalog currently contains 193 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1683,6 +1683,46 @@ Run its focused slice with:
 ```sh
 .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_other_unassigned.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_other_unassigned")'
+```
+
+## Review a mapped `other` contact on a named supply or return net
+
+`connector.mapped_interface_other_named_rail` prompts when a complete,
+source-matched interface map assigns a fitted, generic-function contact the
+role `other`, while its only native schematic net has a recognized supply or
+return-like label such as `+5V`, `VBUS`, `GND`, `0V`, or `RET`. The finding
+localizes a map/assignment combination for review; it does not decide that the
+contact must be supply or return.
+
+This is a naming heuristic. Net labels do not establish voltage, electrical
+function, required connectivity, or whether separate return domains should be
+common. Named native functions, multiply assigned pins, DNP connectors, stale
+or incomplete maps, and unrelated net names are excluded. The rule does not
+prove PCB copper continuity or external wiring. Project policy can leave the
+finding at `review`, set it to `block` or `off`, or ignore it by exact
+fingerprint.
+
+Synthetic fault/control cases cover supply and return labels, ordinary nets,
+explicitly mapped roles, named pin functions, DNP references, stale and
+incomplete evidence, policy, exact ignores, and input-order stability. The
+native fault/control reuses the source-hashed tooling-owned `ret-control`
+schematic: one generic pin is mapped as `other` for the fault and as `return`
+for the control. The schematic export is identical in both cases and is
+checked with exact KiCad 10.0.0 and 10.0.5 images.
+
+Run its focused synthetic slice with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_mapped_interface_other_named_rail.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_other_named_rail")'
+```
+
+Run the exact-native lane with:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_mapped_interface_other_named_rail_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_other_named_rail")'
 ```
 
 ## Review mapped PCB track widths

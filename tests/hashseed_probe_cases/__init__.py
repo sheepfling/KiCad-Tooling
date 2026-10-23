@@ -17,6 +17,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_mechanical_edge_clearance",
     "connector_scope_singletons",
     "mapped_interface_other_unassigned",
+    "mapped_interface_other_named_rail",
     "pcb_required_fitted_reference",
     "pcb_board_only_footprints",
     "pcb_dnp_mismatch",

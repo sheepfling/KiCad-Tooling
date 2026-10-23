@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 192 rules are implemented with synthetic regression coverage.
+The following 193 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 192 active rules.
+The catalog currently contains 193 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -477,6 +477,7 @@ skipped under prerelease policy.
 - `connector.mapped_interface_signal_unassigned`
 - `connector.mapped_interface_shield_unassigned`
 - `connector.mapped_interface_other_unassigned`
+- `connector.mapped_interface_other_named_rail`
 - `connector.mapped_interface_power_contact_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
@@ -644,6 +645,13 @@ and optional ecosystem adapters are `P3`.
   decision when it is left unassigned; it does not infer electrical intent.
   It includes synthetic fault/control, policy, metamorphic, hash-seed, and
   exact-version native export coverage.
+- **LINT-211 mapped other contact on a named rail:** A complete, source-matched
+  map can mark a generic contact `other` while its only assigned net has a
+  recognized supply or return-like label. The default REVIEW localizes that
+  map/assignment for inspection without inferring the pin role, required
+  connectivity, or shared return domains. Synthetic fault/control, policy,
+  hash-seed, and exact-version native export coverage use the same
+  source-hashed tooling-owned DB9 schematic.
 - **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
   cross-rule slice that verifies every active rule has a valid theme-owned
   predicate, catalogued fixtures retain their theme markers, and catalogued
@@ -3017,7 +3025,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 192 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 193 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3194,8 +3202,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v85. The cross-process probe supports themed report
-  selectors and retains the complete 235-report inventory gate. Fault/control
+- **Status:** Implemented v86. The cross-process probe supports themed report
+  selectors and retains the complete 237-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3289,6 +3297,14 @@ is not a reason by itself to expand its scope or change its default policy.
   catalog fixed and change only the source-matched connector assignment; only
   the open contact emits LINT-210. The full reports are compared across three
   independently randomized processes. The enforced total is 235 reports.
+  The v86 extension adds LINT-211's generic role=other contact assigned to a
+  recognized supply or return-like net label, with an unrelated-net control.
+  It confirms the localized review while the existing multiple-return-label
+  check stays quiet, and compares full reports across three independently
+  randomized processes. Its native fault and mapped-return control reuse the
+  same source-hashed tooling-owned DB9 schematic; the exported netlist is
+  unchanged while only the synthetic interface map changes. The complete
+  inventory now contains 237 reports.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -11276,6 +11292,50 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_connector_mapped_interface_other_unassigned.py \
     -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_other_unassigned")'
+  ```
+
+#### LINT-211 — Review mapped-other contacts on named supply or return nets
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_interface_other_named_rail`.
+- **Gap:** LINT-210 reviews generic contacts mapped as `other` when they are
+  left unassigned. A contact can instead be connected to one clearly named
+  supply or return-like net while its independently authored interface map
+  still says `other`. Group-level return-label heuristics do not localize a
+  single such contact.
+- **Predicate:** For a fitted connector with complete, source-matched interface
+  coverage and a current catalog digest, emit a REVIEW candidate when a generic
+  or missing native pin function mapped as `other` has exactly one assigned net
+  whose label matches the narrow supply vocabulary or a bounded return token.
+  DNP, named-function, multiply assigned, stale, incomplete, digestless, and
+  unrelated-net cases are excluded.
+- **Boundary:** This is naming evidence for review. It does not change the
+  authored role to supply or return, infer voltage, select a net, require
+  contacts to share a net, or declare return domains common. It does not prove
+  PCB copper continuity, off-board wiring, or physical bonding. Projects can
+  use the normal rule mode and exact-ignore controls.
+- **Fixtures:** Synthetic cases cover `+5V`, `VBUS`, `GND`, `0V`, and `RET`,
+  unrelated data, explicit return/supply maps, named native functions, DNP,
+  stale and incomplete coverage, multiply assigned pins, block/off/ignore, and
+  deterministic input reordering. Exact KiCad 10.0.0 and 10.0.5 exports reuse
+  the source-hashed tooling-owned `ret-control` schematic; the fault maps J1.7
+  as `other` and the control maps the same pin as `return`.
+- **Incremental-value test:** A single `RET_USB` label with one generic mapped
+  `other` pin triggers this localized rule while the existing
+  `net.return_labels_without_pin_roles` group rule stays quiet. The assignment
+  and native netlist remain fixed in the exact-native comparison; only the
+  synthetic map role changes.
+- **Determinism:** LINT-080 compares complete named-rail fault and unrelated-net
+  control reports across three independently randomized Python processes.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_other_named_rail.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_other_named_rail")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_interface_other_named_rail_native_fixture_lane.py \
+    -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_other_named_rail")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

@@ -181,6 +181,10 @@ PYTEST_NATIVE_LINT_SUITES = {
         "connector_lint",
         "interface_lint",
     },
+    "test_connector_mapped_interface_other_named_rail_native_fixture_lane.py": {
+        "connector_lint",
+        "interface_lint",
+    },
     "test_design_lint_determinism_connector_all_open.py": {"connector_lint"},
     "test_design_lint_connector_power_pins.py": {"connector_lint", "power_lint"},
     "test_connector_stateful_contacts.py": {"connector_lint", "interface_lint"},

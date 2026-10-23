@@ -228,6 +228,8 @@ REPORT_ORDER = (
     "connector_return_scope_singleton_control",
     "mapped_interface_other_fault",
     "mapped_interface_other_control",
+    "mapped_other_named_rail_fault",
+    "mapped_other_named_rail_control",
     "pcb_required_fitted_reference_dnp_fault",
     "pcb_required_fitted_reference_fitted_control",
     "pcb_board_only_mounting_hole_candidate",
@@ -272,6 +274,9 @@ REPORT_BUILDERS = {
     "connector_scope_singletons": ("tests.hashseed_probe_cases.connector_scope_singletons"),
     "mapped_interface_other_unassigned": (
         "tests.hashseed_probe_cases.mapped_interface_other_unassigned"
+    ),
+    "mapped_interface_other_named_rail": (
+        "tests.hashseed_probe_cases.mapped_interface_other_named_rail"
     ),
     "pcb_required_fitted_reference": ("tests.hashseed_probe_cases.pcb_required_fitted_reference"),
     "pcb_board_only_footprints": "tests.hashseed_probe_cases.pcb_board_only_footprints",

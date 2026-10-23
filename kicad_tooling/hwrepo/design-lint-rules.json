@@ -2829,6 +2829,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_other_pins"
     },
     {
+      "rule_id": "connector.mapped_interface_other_named_rail",
+      "title": "Mapped other contact is assigned to a named rail-like net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface role and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate when a generic or missing native pin function mapped as role=other has exactly one assigned net whose label matches the narrow supply vocabulary or a bounded return token.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A recognized supply-like or return-like net label is a review clue, not proof of the contact's electrical role, required connection, voltage, or intended reference.",
+        "The map role other is not automatically changed to supply or return. This rule never requires separate connector contacts to share a net or infers that return domains should be common.",
+        "DNP references, stale or incomplete interface evidence, digestless coverage, named native functions, multiply assigned contacts, and ordinary net labels are excluded.",
+        "The review does not establish schematic intent, select a target net, prove PCB copper continuity, or verify external wiring or physical bonding."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_interface_other_named_rail.test_generic_other_contact_on_single_return_label_requests_review",
+        "tests.test_connector_mapped_interface_other_named_rail.test_only_recognized_supply_or_return_labels_are_review_clues",
+        "tests.test_connector_mapped_interface_other_named_rail.test_four_db9_map_role_change_localizes_one_generic_contact",
+        "tests.test_connector_mapped_interface_other_named_rail_native_fixture_lane.test_native_single_other_pin_on_ret_is_reviewed_and_role_control_is_clean"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_interface_other_named_rail.test_ordinary_net_and_explicit_or_mapped_roles_are_controls",
+        "tests.test_connector_mapped_interface_other_named_rail.test_stale_incomplete_digestless_and_multi_net_evidence_are_controls",
+        "tests.test_connector_mapped_interface_other_named_rail.test_review_policy_and_exact_ignore_apply",
+        "tests.test_connector_mapped_interface_other_named_rail_native_fixture_lane.test_native_single_other_pin_on_ret_is_reviewed_and_role_control_is_clean"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_interface_other_named_rail.test_candidate_is_stable_under_netlist_mapping_order",
+        "tests.test_design_lint_determinism_mapped_interface_other_named_rail.test_other_named_rail_fault_and_control_reports_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_other_contacts_on_named_rails",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_other_contacts_on_named_rails"
+    },
+    {
       "rule_id": "connector.mapped_interface_power_contact_unassigned",
       "title": "Mapped connector supply or return contact has no net assignment",
       "status": "active",

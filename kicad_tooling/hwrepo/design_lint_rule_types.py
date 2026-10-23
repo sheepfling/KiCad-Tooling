@@ -83,6 +83,7 @@ DesignLintRuleId = Literal[
     "connector.mapped_interface_shield_unassigned",
     "connector.mapped_interface_power_contact_unassigned",
     "connector.mapped_interface_other_unassigned",
+    "connector.mapped_interface_other_named_rail",
     "connector.return_pin_on_positive_rail",
     "component.unconnected_power_input",
     "component.unconnected_power_output",
