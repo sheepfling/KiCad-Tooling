@@ -15,6 +15,7 @@ from tests.design_lint_fixtures import (
 from tests.design_lint_fixtures.bjt_base_bias import bjt_base_bias_netlist
 from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
 from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
+    bjt_base_emitter_netlist,
     bjt_collector_emitter_netlist,
 )
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
@@ -143,6 +144,21 @@ def bjt_collector_emitter_same_net_report(*, same_net: bool) -> dict[str, object
     return source_bound_component_report("synthetic-bjt-main-terminals-hashseed", observed, policy)
 
 
+def bjt_base_emitter_same_net_report(*, same_net: bool) -> dict[str, object]:
+    """Serialize an enabled BJT base/emitter same-net fault or control."""
+    observed = bjt_base_emitter_netlist(same_net=same_net)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="component.bjt_base_emitter_same_net",
+                mode="review",
+                reason="Hash-seed stability fixture",
+            ),
+        )
+    )
+    return source_bound_component_report("synthetic-bjt-base-emitter-hashseed", observed, policy)
+
+
 def bjt_base_drive_report(*, series_resistor: bool) -> dict[str, object]:
     """Serialize direct BJT output drive and its visible series-resistor control."""
     observed = bjt_base_drive_netlist(series_resistor=series_resistor)
@@ -196,6 +212,8 @@ def report_cases() -> dict[str, object]:
         "bjt_collector_emitter_same_net_control": bjt_collector_emitter_same_net_report(
             same_net=False
         ),
+        "bjt_base_emitter_same_net_fault": bjt_base_emitter_same_net_report(same_net=True),
+        "bjt_base_emitter_same_net_control": bjt_base_emitter_same_net_report(same_net=False),
         "bjt_base_direct_drive_fault": bjt_base_drive_report(series_resistor=False),
         "bjt_base_series_resistor_control": bjt_base_drive_report(series_resistor=True),
         "bjt_base_bias_fault": bjt_base_bias_report(bias_resistor=False),

@@ -3216,6 +3216,51 @@
       ]
     },
     {
+      "rule_id": "component.bjt_base_emitter_same_net",
+      "title": "Review supported BJT base and emitter on one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted exact supported basic three-terminal Transistor_BJT:Q_NPN_* or Q_PNP_* symbol, a complete unique three-pin inventory with native B, C, and E functions, and one unambiguous net assignment for base and emitter, emit an opt-in REVIEW candidate when those pins are assigned to the same native net.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only the exact twelve-symbol basic BJT allowlist, complete pin inventory, unique native B/C/E functions, and unambiguous base/emitter assignments participate. Custom, compound, Darlington, DNP, incomplete, duplicate-role, open, and multiply assigned cases are not classified.",
+        "A same-net assignment is a review clue, not proof of a design defect. It may intentionally hold a transistor off; the rule does not establish symbol-to-footprint mapping, PCB copper, external circuitry, or physical behavior.",
+        "The rule defaults off. It does not infer required transistor behavior, current direction, device suitability, or a project requirement. Project policy may enable review, promote it to block, leave it off, or ignore an exact finding fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_bjt_base_emitter_same_net.test_base_emitter_same_net_fault_is_opt_in_and_distinct_net_control_is_quiet",
+        "tests.test_bjt_base_emitter_same_net.test_native_pin_functions_find_reordered_base_and_emitter_roles",
+        "tests.test_bjt_terminal_order_native_fixture.test_native_bjt_base_emitter_same_net_fault_and_control_are_deterministic"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_bjt_base_emitter_same_net.test_base_emitter_same_net_fault_is_opt_in_and_distinct_net_control_is_quiet",
+        "tests.test_bjt_base_emitter_same_net.test_unsupported_dnp_incomplete_duplicate_open_and_ambiguous_cases_are_unclassified",
+        "tests.test_bjt_terminal_order_native_fixture.test_native_bjt_base_emitter_same_net_fault_and_control_are_deterministic"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_bjt_base_emitter_same_net.test_repair_and_netlist_order_preserve_deterministic_evidence",
+        "tests.test_design_lint_determinism_components.test_bjt_base_emitter_same_net_fault_and_control_are_stable_across_hash_seeds",
+        "tests.test_bjt_terminal_order_native_fixture.test_native_bjt_base_emitter_same_net_fault_and_control_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_component_bjt_terminals.py#bjts_with_base_emitter_on_same_net",
+        "kicad_tooling/hwrepo/component_bjt_symbols.py#basic_bjt_role_numbers",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_component_bjt_terminals.py#bjts_with_base_emitter_on_same_net",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "component.bjt_terminal_order_on_named_rails",
       "title": "Review BJT collector/emitter order against named rails",
       "status": "active",

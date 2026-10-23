@@ -125,6 +125,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_bjt_base_emitter_same_net.py": {"component_lint"},
     "test_bjt_base_drive_native_fixture.py": {
         "component_lint",
         "native_kicad",

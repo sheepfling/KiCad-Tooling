@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 163 rules are implemented with synthetic regression coverage.
+The following 164 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 163 active rules.
+The catalog currently contains 164 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -487,6 +487,7 @@ skipped under prerelease policy.
 - `component.mosfet_drain_source_same_net`
 - `component.bjt_terminal_order_on_named_rails`
 - `component.bjt_collector_emitter_same_net`
+- `component.bjt_base_emitter_same_net`
 - `component.bjt_base_direct_drive`
 - `component.bjt_base_without_visible_emitter_bias`
 - `component.polarized_capacitor_reversed_on_named_rails`
@@ -597,6 +598,13 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **BJT base/emitter same-net review:** LINT-182 adds an opt-in, default-off
+  prompt for exact supported basic three-terminal BJT symbols whose native
+  base and emitter pins share a schematic net. It closes the same-net case
+  excluded by LINT-179's visible-bias check. A shared base/emitter net can be
+  intentional, including holding a transistor off; the rule asks for review
+  and does not infer required behavior or PCB continuity.
 
 - **BJT same-net terminal review:** LINT-181 adds an opt-in, default-off
   review prompt for exact supported basic three-terminal NPN/PNP symbols whose
@@ -2854,7 +2862,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 163 active rules; CI requires every new
+- **Status:** Baseline complete for all 164 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2863,7 +2871,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 163 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 164 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9790,6 +9798,55 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Source note:** The source hash and shared-control boundary are recorded in
   [`bjt-ce-same-net-native`](../tests/fixtures/design_lint/bjt-ce-same-net-native/README.md).
+
+#### LINT-182 — Review supported BJT base and emitter on one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `component.bjt_base_emitter_same_net` review prompt. Its scoped prerelease
+  tag selects the exact KiCad 10.0.0 and 10.0.5 native BJT fixture lane.
+- **Gap:** LINT-179 checks for a visible base/emitter bias resistor only when
+  the base and emitter use distinct nets. It leaves a directly shared base and
+  emitter assignment unclassified.
+- **Predicate:** Recognize the exact twelve basic NPN/PNP symbol identities
+  supported by the shared B/C/E role mapper. Require a fitted component, a
+  complete unique three-pin inventory, unique native B/C/E functions, and one
+  unambiguous assignment for both base and emitter. Review only when those
+  assignments name the same net. Native functions determine roles; pin numbers
+  are not assumed.
+- **Boundary:** The observation is a configurable review clue, not a project
+  requirement or proof of a defect. A shared base/emitter net can intentionally
+  hold a transistor off. The rule does not establish symbol-to-footprint
+  mapping, external circuitry, PCB copper, population state, device suitability,
+  or physical behavior. DNP, custom, compound, Darlington, incomplete,
+  duplicate-role, open, and multiply assigned cases remain unclassified.
+  Project policy may enable review, promote it to block, leave it off, or
+  exactly ignore a finding.
+- **Fixtures:** Synthetic NPN/PNP same-net faults and distinct-net controls;
+  reordered native terminal numbers; unsupported, DNP, incomplete,
+  duplicate-role, open, and ambiguous boundaries; policy and ignore lifecycle;
+  repaired topology; netlist ordering and three-process hash-seed stability.
+  A tooling-owned source has both NPN and PNP base/emitter same-net cases; the
+  valid-control source is reused from the existing synthetic BJT native lane.
+  The cases are registered for repeated digest-pinned KiCad 10.0.0 and 10.0.5
+  exports with zero ERC errors and normalized report comparisons. The local and
+  hosted exact-version lane results are recorded with the tagged acceptance.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_bjt_base_emitter_same_net.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_emitter_same_net")'
+
+  python -I -m pytest tests/test_design_lint_determinism_components.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_emitter_same_net")'
+
+  KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES=1 python -I -m pytest \
+    tests/test_bjt_terminal_order_native_fixture.py \
+    -m 'design_lint and native_kicad and design_lint_rule(rule_id="component.bjt_base_emitter_same_net")'
+  ```
+
+- **Source note:** The fault source hash and shared-control boundary are
+  recorded in
+  [`bjt-be-same-net-native`](../tests/fixtures/design_lint/bjt-be-same-net-native/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

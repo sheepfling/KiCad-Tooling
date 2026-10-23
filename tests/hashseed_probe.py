@@ -99,6 +99,8 @@ REPORT_ORDER = (
     "bjt_pnp_terminal_order_control",
     "bjt_collector_emitter_same_net_fault",
     "bjt_collector_emitter_same_net_control",
+    "bjt_base_emitter_same_net_fault",
+    "bjt_base_emitter_same_net_control",
     "bjt_base_direct_drive_fault",
     "bjt_base_series_resistor_control",
     "bjt_base_bias_fault",

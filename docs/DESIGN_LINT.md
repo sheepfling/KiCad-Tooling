@@ -180,7 +180,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 163 active rules.
+The catalog currently contains 164 active rules.
 
 ## Run the lint lane
 
@@ -3726,13 +3726,35 @@ does not evaluate indirect paths, unparsed values, PCB routing, or physical
 behavior. It skips unsupported and compound symbols, DNP devices, incomplete
 or ambiguous pin data, open bases, and same-net base/emitter assignments.
 Projects can set the rule to `review`, promote it to `block`, leave it `off`,
-or ignore an exact reviewed finding.
+or ignore an exact reviewed finding. Same-net base/emitter assignments have
+their own separate review rule.
 
 The synthetic fixtures cover NPN and PNP faults, direct base-emitter resistor
 controls, output-drive delegation, DNP and unsupported cases, policy behavior,
 and ordering. Digest-pinned native schematic fixtures repeat netlist and ERC
 exports on KiCad 10.0.0 and 10.0.5; their source hashes are recorded in the
 [fixture README](../tests/fixtures/design_lint/bjt-base-bias-native/README.md).
+
+## Review BJT base and emitter assigned to one net
+
+The opt-in catalog rule `component.bjt_base_emitter_same_net` defaults to
+`off`. It prompts when an exact supported basic NPN or PNP symbol has complete
+native B/C/E pin roles and its base and emitter pins have one unambiguous
+assignment to the same schematic net. Pin functions determine terminal roles;
+pin numbers are not assumed.
+
+A shared base/emitter net may intentionally hold the transistor off. This is a
+review clue, not a required connection or proof of a defect. The rule skips DNP,
+custom or compound devices, incomplete pin evidence, duplicate role metadata,
+open pins, and ambiguous assignments. It does not establish PCB continuity,
+footprint pin mapping, external circuitry, or physical behavior. Project
+policy can enable review, promote it to block, leave it off, or ignore an exact
+finding.
+
+Tooling-owned NPN and PNP fault fixtures and a distinct-net control repeat
+native netlist and ERC exports on digest-pinned KiCad 10.0.0 and 10.0.5. Source
+hashes are recorded in the
+[fixture README](../tests/fixtures/design_lint/bjt-be-same-net-native/README.md).
 
 ## Require an authored RS-485 topology
 

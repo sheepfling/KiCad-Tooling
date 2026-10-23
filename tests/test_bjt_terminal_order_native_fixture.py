@@ -52,6 +52,21 @@ SAME_NET_EXPECTED_SUBJECTS = {
     ),
     "control": None,
 }
+BASE_EMITTER_SAME_NET_FIXTURES = {
+    "fault": "bjt-be-same-net-native/fault.kicad_sch",
+    "control": "bjt-terminal-order-native/control.kicad_sch",
+}
+BASE_EMITTER_SAME_NET_SOURCE_HASHES = {
+    "fault": "3ff07964aaea5f8a879d82eaf918902c8b5a1ff83dee877a8609613a6c91b77b",
+    "control": "2b68e0bb4818e82917047e2e9caf07b0b9ebf25cf5fd939a6bb4b7a1f7c45845",
+}
+BASE_EMITTER_SAME_NET_EXPECTED_SUBJECTS = {
+    "fault": (
+        "Q1: BJT base and emitter share one schematic net",
+        "Q2: BJT base and emitter share one schematic net",
+    ),
+    "control": None,
+}
 
 
 def test_native_bjt_terminal_order_fixture_sources_are_pinned() -> None:
@@ -212,6 +227,85 @@ def test_native_bjt_collector_emitter_same_net_fault_and_control_are_determinist
         assert result["kicad_version"] == version
         assert result["image"] == image
         assert result["source_sha256"] == EXPECTED_SAME_NET_SOURCE_HASHES[case]
+        assert result["rule_findings"] == expected_text
+        assert reports[case].status == ("REVIEW" if expected is not None else "PASS")
+        assert result["erc_errors"] == "none"
+        assert result["repeatable"] == "true"
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+        assert result["normalized_erc_sha256"] == result["repeat_normalized_erc_sha256"]
+
+
+@pytest.mark.design_lint_rule(rule_id="component.bjt_base_emitter_same_net")
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES") != "1",
+    reason="native BJT terminal fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+def test_native_bjt_base_emitter_same_net_fault_and_control_are_deterministic(
+    tmp_path: Path,
+    version: str,
+) -> None:
+    fixture_root = Path(__file__).parent / "fixtures/design_lint"
+    for case, relative in BASE_EMITTER_SAME_NET_FIXTURES.items():
+        assert (
+            hashlib.sha256((fixture_root / relative).read_bytes()).hexdigest()
+            == BASE_EMITTER_SAME_NET_SOURCE_HASHES[case]
+        )
+
+    image = PINNED_NATIVE_KICAD_IMAGES[version]
+    root, _ = synthetic_design_lint_project(
+        tmp_path,
+        DesignLintPolicy(),
+        project_id="controller",
+        kicad_version=version,
+        image=image,
+    )
+    log = HostedLog(root, f"native-bjt-base-emitter-same-net-{version}")
+    reports = component_lint_fixture_lane(
+        root,
+        project="controller",
+        image=image,
+        log=log,
+        fixture_prefix="bjt-base-emitter-same-net-fixture",
+        project_id_prefix="synthetic-bjt-base-emitter-same-net",
+        rule_id="component.bjt_base_emitter_same_net",
+        fixtures=BASE_EMITTER_SAME_NET_FIXTURES,
+        expected_subjects=BASE_EMITTER_SAME_NET_EXPECTED_SUBJECTS,
+        policy=DesignLintPolicy(
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="component.bjt_base_emitter_same_net",
+                    mode="review",
+                    reason="Synthetic native fixture enables the BJT base/emitter review",
+                ),
+            )
+        ),
+    )
+    events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
+    prefix = "bjt-base-emitter-same-net-fixture/"
+    results = {
+        event["stage"]: event for event in events if event.get("stage", "").startswith(prefix)
+    }
+    assert set(results) == {f"{prefix}native-export", f"{prefix}fault", f"{prefix}control"}
+    native = results[f"{prefix}native-export"]
+    assert native["status"] == "PASS"
+    assert native["kicad_version"] == version
+    assert native["image"] == image
+    assert native["source_hashes"] == ",".join(
+        f"{case}:{BASE_EMITTER_SAME_NET_SOURCE_HASHES[case]}"
+        for case in BASE_EMITTER_SAME_NET_FIXTURES
+    )
+    assert_native_fixture_mounts(root, native["command_receipt"])
+
+    for case, expected in BASE_EMITTER_SAME_NET_EXPECTED_SUBJECTS.items():
+        result = results[f"{prefix}{case}"]
+        expected_text = "; ".join(expected) if expected is not None else "none"
+        assert result["status"] == "PASS"
+        assert result["kicad_version"] == version
+        assert result["image"] == image
+        assert result["source_sha256"] == BASE_EMITTER_SAME_NET_SOURCE_HASHES[case]
         assert result["rule_findings"] == expected_text
         assert reports[case].status == ("REVIEW" if expected is not None else "PASS")
         assert result["erc_errors"] == "none"
