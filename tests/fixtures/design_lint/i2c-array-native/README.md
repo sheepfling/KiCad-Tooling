@@ -10,8 +10,8 @@ The native lane copies it into a temporary project-relative path, validates it
 through the shared contract reader, and binds its digest and path to lint
 coverage.
 
-| Fixture             | RN1.1       | Expected line checks                                  | LINT-218 coverage                         |
-| ------------------- | ----------- | ----------------------------------------------------- | ----------------------------------------- |
+| Fixture             | RN1.1       | Expected line checks                                  | LINT-218 coverage                        |
+| ------------------- | ----------- | ----------------------------------------------------- | ---------------------------------------- |
 | `control.kicad_sch` | `I2C_SDA`   | SDA and SCL pass                                      | SDA and SCL prompt for missing limits    |
 | `fault.kicad_sch`   | `SDA_WRONG` | SDA fails with the exact pin/net mismatch; SCL passes | Miswired SDA excluded; SCL still prompts |
 
