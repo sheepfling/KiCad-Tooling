@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.mosfet_stress_models import MosfetVoltageInterval
 from tests.design_lint_fixtures import (
     coach,
 )
+from tests.design_lint_fixtures.bjt_base_bias import bjt_base_bias_netlist
 from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
@@ -112,6 +113,21 @@ def bjt_base_drive_report(*, series_resistor: bool) -> dict[str, object]:
     return source_bound_component_report("synthetic-bjt-base-drive-hashseed", observed)
 
 
+def bjt_base_bias_report(*, bias_resistor: bool) -> dict[str, object]:
+    """Serialize an opt-in BJT base-bias fault or direct-resistor control."""
+    observed = bjt_base_bias_netlist(bias_value="100k" if bias_resistor else None)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="component.bjt_base_without_visible_emitter_bias",
+                mode="review",
+                reason="Hash-seed stability fixture",
+            ),
+        )
+    )
+    return source_bound_component_report("synthetic-bjt-base-bias-hashseed", observed, policy)
+
+
 def report_cases() -> dict[str, object]:
     return {
         "diode_rail_named_return_fault": diode_rail_orientation_report(
@@ -138,6 +154,8 @@ def report_cases() -> dict[str, object]:
         ),
         "bjt_base_direct_drive_fault": bjt_base_drive_report(series_resistor=False),
         "bjt_base_series_resistor_control": bjt_base_drive_report(series_resistor=True),
+        "bjt_base_bias_fault": bjt_base_bias_report(bias_resistor=False),
+        "bjt_base_bias_resistor_control": bjt_base_bias_report(bias_resistor=True),
         "diode_fault": evaluate(
             "synthetic-two-pin-diode-hash-seed-fault", coach(diode_netlist()), DesignLintPolicy()
         ).model_dump(mode="json"),

@@ -97,6 +97,8 @@ REPORT_ORDER = (
     "bjt_pnp_terminal_order_control",
     "bjt_base_direct_drive_fault",
     "bjt_base_series_resistor_control",
+    "bjt_base_bias_fault",
+    "bjt_base_bias_resistor_control",
     "diode_fault",
     "diode_control",
     "crystal_fault",

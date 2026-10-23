@@ -3263,6 +3263,54 @@
       ]
     },
     {
+      "rule_id": "component.bjt_base_without_visible_emitter_bias",
+      "title": "Review BJT base peers without a visible base-emitter bias resistor",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For an exact supported basic three-terminal Transistor_BJT:Q_NPN or Q_PNP symbol with complete unique native B/C/E pin roles, distinct unambiguous base/emitter assignments, and another fitted pin on the base net, emit an opt-in REVIEW candidate when no recognized fitted nonzero two-terminal resistor directly spans the base and emitter nets. A direct output-capable peer is left to component.bjt_base_direct_drive.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only the twelve exact basic NPN/PNP symbol pin-order identities, complete three-pin inventories, and native B/C/E functions are in scope. Compound, Darlington, custom, incomplete, ambiguous, open, same-net, and DNP devices are unclassified.",
+        "The prompt is opt-in and defaults off. A push-pull driver, internal bias, or other topology may intentionally omit an external base-emitter resistor; a base peer does not prove that a defined off-state is required.",
+        "Only a recognized fitted nonzero two-terminal resistor with an unambiguous direct assignment across the exact base/emitter nets clears the prompt. Unparsed values, arrays, custom reference designators, indirect paths, PCB routing, off-board bias, resistor adequacy, and physical behavior are not evaluated.",
+        "A direct output-capable pin on the base net is delegated to component.bjt_base_direct_drive to avoid duplicating the higher-specificity review."
+      ],
+      "fault_fixtures": [
+        "tests.test_bjt_base_bias.test_series_driven_bjt_without_visible_base_emitter_resistor_is_opt_in",
+        "tests.test_bjt_base_bias.test_unrelated_unfitted_or_unrecognized_resistors_do_not_clear_review",
+        "tests.test_bjt_base_bias_native_fixture.test_native_bjt_base_bias_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_bjt_base_bias.test_direct_nonzero_base_emitter_resistor_is_a_control",
+        "tests.test_bjt_base_bias.test_direct_output_drive_is_left_to_the_more_specific_rule",
+        "tests.test_bjt_base_bias.test_open_peer_dnp_and_unsupported_bjt_cases_are_not_classified",
+        "tests.test_bjt_base_bias_native_fixture.test_native_bjt_base_bias_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_bjt_base_bias.test_input_order_and_repair_preserve_stable_findings",
+        "tests.test_design_lint_determinism_bjt_base_bias.test_bjt_base_bias_fault_and_resistor_control_are_stable_across_hash_seeds",
+        "tests.test_bjt_base_bias_native_fixture.test_native_bjt_base_bias_fault_and_control_are_repeatable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_bjt_base_bias.py#bjts_without_visible_emitter_bias",
+        "kicad_tooling/hwrepo/component_bjt_symbols.py#basic_bjt_role_numbers",
+        "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_bjt_base_bias.py#bjts_without_visible_emitter_bias",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "component.polarized_capacitor_reversed_on_named_rails",
       "title": "Review polarized capacitor pin 1 below pin 2 on named rails",
       "status": "active",

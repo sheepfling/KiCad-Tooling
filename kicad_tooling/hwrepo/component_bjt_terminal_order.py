@@ -2,21 +2,12 @@
 
 from __future__ import annotations
 
+from .component_bjt_symbols import basic_bjt_role_numbers
 from .component_rail_potentials import named_net_potential, potential_is_lower
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
 RULE_ID = "component.bjt_terminal_order_on_named_rails"
-_SUPPORTED_SYMBOLS = frozenset(
-    f"transistor_bjt:q_{family}_{order}"
-    for family in ("npn", "pnp")
-    for order in ("bce", "bec", "cbe", "ceb", "ebc", "ecb")
-)
-_TERMINAL_FUNCTIONS = {
-    "b": "base",
-    "c": "collector",
-    "e": "emitter",
-}
 
 
 def bjts_with_unusual_collector_emitter_rail_order(
@@ -52,26 +43,10 @@ def bjts_with_unusual_collector_emitter_rail_order(
         reference_key = reference.casefold()
         normalized_symbol = symbol.casefold()
         pin_numbers = inventories.get(reference_key, ())
-        if (
-            reference_key not in fitted
-            or reference_key in dnp
-            or normalized_symbol not in _SUPPORTED_SYMBOLS
-            or len(pin_numbers) != 3
-            or len({number.casefold() for number in pin_numbers}) != 3
-        ):
+        if reference_key not in fitted or reference_key in dnp:
             continue
-
-        role_to_number: dict[str, str] = {}
-        duplicate_role = False
-        for number in pin_numbers:
-            role = _TERMINAL_FUNCTIONS.get(functions.get(f"{reference}.{number}".casefold(), ""))
-            if role is None:
-                continue
-            if role in role_to_number:
-                duplicate_role = True
-                break
-            role_to_number[role] = number
-        if duplicate_role or set(role_to_number) != {"base", "collector", "emitter"}:
+        role_to_number = basic_bjt_role_numbers(reference, symbol, pin_numbers, functions)
+        if role_to_number is None:
             continue
 
         collector_pin = f"{reference}.{role_to_number['collector']}"

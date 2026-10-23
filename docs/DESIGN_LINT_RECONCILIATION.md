@@ -1312,14 +1312,15 @@ tests, and each rule's
 metamorphic review status, registered cases, or reasoned not-applicable basis.
 Its source is
 `kicad_tooling/hwrepo/design-lint-rules.json`. The current rules are marked
-`synthetic_validated`; the catalog currently contains 160 active rules. They
+`synthetic_validated`; the catalog currently contains 161 active rules. They
 have synthetic regression coverage, but no proprietary or customer board has
-been used to claim field validation. Existing netlist rules default to
-`review`; schematic geometry rules and generic all-open connector and
-component peer heuristics default to `off`. These prompts need project-specific
-review because a generic contact may be intentionally unused. Both connector
-and component generic-peer heuristics remain default-off, including the
-strict-majority peer-assignment outlier prompt.
+been used to claim field validation. Of these rules, 138 default to `review`,
+22 default to `off`, and `pcb.required_fitted_reference` defaults to `block`.
+Off-by-default checks include schematic geometry, generic peer assignment,
+selected component topology reviews, including the new BJT base-bias prompt,
+and board-only footprint review. These prompts need project-specific review
+because a generic contact may be intentionally unused. The catalog remains the
+source of truth for each rule's default.
 
 ## Source and fixture links
 

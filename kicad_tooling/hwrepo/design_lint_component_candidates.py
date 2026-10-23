@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_bjt_base_bias import bjts_without_visible_emitter_bias
 from .component_bjt_base_drive import bjts_with_direct_output_base_drive
 from .component_bjt_terminal_order import bjts_with_unusual_collector_emitter_rail_order
 from .component_diode_rail_orientation import diodes_with_anode_below_cathode_on_named_rails
@@ -62,6 +63,7 @@ def component_candidates(
     found.extend(mosfets_with_unusual_drain_source_rail_order(observed))
     found.extend(bjts_with_unusual_collector_emitter_rail_order(observed))
     found.extend(bjts_with_direct_output_base_drive(observed))
+    found.extend(bjts_without_visible_emitter_bias(observed))
     found.extend(polarized_capacitors_on_reversed_named_rails(observed))
     found.extend(diodes_with_anode_below_cathode_on_named_rails(observed))
     for bridge in leds_directly_between_positive_and_return_nets(observed):

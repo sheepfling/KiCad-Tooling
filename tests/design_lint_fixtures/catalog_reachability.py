@@ -15,12 +15,16 @@ from tests.connector_footprint_peer_support import (
     peer_metadata_divergence_netlist,
 )
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
+from tests.design_lint_fixtures.bjt_base_bias import bjt_base_bias_netlist
 from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
+from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
 from tests.test_connector_mapped_interface_signal_unassigned import _coverage, _netlist
+from tests.test_connector_stateful_contacts import _map as _stateful_contact_map
+from tests.test_connector_stateful_contacts import _observed as _stateful_contact_netlist
 from tests.test_oscillator_output_paths import (
     oscillator_output_netlist,
     oscillator_output_path_map,
@@ -127,6 +131,15 @@ def catalog_reachability_rule_ids() -> set[str]:
     result.update(item.rule_id for item in candidates(mosfet_terminal_order_netlist()))
     result.update(item.rule_id for item in candidates(bjt_terminal_order_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_drive_netlist()))
+    result.update(item.rule_id for item in candidates(bjt_base_bias_netlist()))
+    result.update(item.rule_id for item in candidates(mosfet_gate_drive_netlist()))
+    result.update(
+        item.rule_id
+        for item in candidates(
+            _stateful_contact_netlist(tip_pair_same_net=True),
+            connector_stateful_contact_map=_stateful_contact_map(),
+        )
+    )
     mapped_signal_source = _netlist()
     mapped_signal_coverage = _coverage(mapped_signal_source)
     result.update(

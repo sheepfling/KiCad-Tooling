@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 160 rules are implemented with synthetic regression coverage.
+The following 161 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 160 active rules.
+The catalog currently contains 161 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -2835,7 +2835,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 160 active rules; CI requires every new
+- **Status:** Baseline complete for all 161 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2844,7 +2844,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 160 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 161 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9592,6 +9592,46 @@ is not a reason by itself to expand its scope or change its default policy.
 
   Fixture sources and their hashes are under
   [`stateful-connector-contacts`](../tests/fixtures/design_lint/stateful-connector-contacts/README.md).
+
+#### LINT-179 — Review BJT bases without a visible base-emitter bias resistor
+
+- **Status:** Implemented as `component.bjt_base_without_visible_emitter_bias`,
+  an opt-in review rule that defaults to `off`.
+- **Problem:** A BJT base may have a visible series-drive path but no visible
+  resistor directly between base and emitter. That can merit checking how the
+  base is defined when its drive is disabled or unpowered, but a resistor is
+  not universally required.
+- **Predicate:** For an exact supported basic NPN/PNP symbol, require a fitted
+  component, complete unique B/C/E pin roles, distinct unambiguous base and
+  emitter nets, and another fitted pin on the base net. Prompt when no
+  recognized fitted nonzero two-terminal resistor directly spans those nets.
+  A direct output-capable peer is left to the more specific
+  `component.bjt_base_direct_drive` rule.
+- **Boundary:** The prompt does not assert that an external resistor is
+  required or adequate. Push-pull drive, internal bias, and other topologies
+  can be valid. It does not evaluate unparsed values, arrays, indirect paths,
+  PCB routing, off-board bias, or physical behavior. Unsupported, DNP,
+  incomplete, open, same-net, and ambiguous cases are not classified.
+- **Fixtures:** Synthetic NPN and PNP cases cover opt-in defaults, direct
+  base-emitter resistor controls, unrelated/DNP/zero/unparsed resistors,
+  output-drive delegation, unsupported and incomplete cases, policy and exact
+  ignore behavior, ordering, repair, and cross-process hash-seed stability.
+  Hash-pinned schematic fault/control sources repeat native netlist and ERC
+  exports on KiCad 10.0.0 and 10.0.5; see the
+  [fixture record](../tests/fixtures/design_lint/bjt-base-bias-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_bjt_base_bias.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_without_visible_emitter_bias")'
+
+  python -I -m pytest tests/test_design_lint_determinism_bjt_base_bias.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_without_visible_emitter_bias")'
+
+  KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES=1 python -I -m pytest \
+    tests/test_bjt_base_bias_native_fixture.py \
+    -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.bjt_base_without_visible_emitter_bias")'
+  ```
 
 #### LINT-177 — Review MOSFET gates directly connected to output-capable pins
 

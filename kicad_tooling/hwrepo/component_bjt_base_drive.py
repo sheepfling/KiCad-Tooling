@@ -2,24 +2,12 @@
 
 from __future__ import annotations
 
+from .component_bjt_symbols import basic_bjt_role_numbers
 from .component_pin_types import fitted_output_pins_on_net
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
 RULE_ID = "component.bjt_base_direct_drive"
-_SUPPORTED_SYMBOLS = frozenset(
-    f"transistor_bjt:q_{family}_{order}"
-    for family in ("npn", "pnp")
-    for order in ("bce", "bec", "cbe", "ceb", "ebc", "ecb")
-)
-_BJT_PIN_ROLES = {
-    "b": "base",
-    "base": "base",
-    "c": "collector",
-    "collector": "collector",
-    "e": "emitter",
-    "emitter": "emitter",
-}
 
 
 def bjts_with_direct_output_base_drive(
@@ -53,25 +41,10 @@ def bjts_with_direct_output_base_drive(
     ):
         reference_key = reference.casefold()
         pin_numbers = inventories.get(reference_key, ())
-        if (
-            reference_key not in fitted
-            or reference_key in dnp
-            or symbol.casefold() not in _SUPPORTED_SYMBOLS
-            or len(pin_numbers) != 3
-            or len({number.casefold() for number in pin_numbers}) != 3
-        ):
+        if reference_key not in fitted or reference_key in dnp:
             continue
-
-        role_to_number: dict[str, str] = {}
-        for number in pin_numbers:
-            role = _BJT_PIN_ROLES.get(functions.get(f"{reference}.{number}".casefold(), ""))
-            if role is None:
-                continue
-            if role in role_to_number:
-                role_to_number.clear()
-                break
-            role_to_number[role] = number
-        if set(role_to_number) != {"base", "collector", "emitter"}:
+        role_to_number = basic_bjt_role_numbers(reference, symbol, pin_numbers, functions)
+        if role_to_number is None:
             continue
 
         base_pin = f"{reference}.{role_to_number['base']}"

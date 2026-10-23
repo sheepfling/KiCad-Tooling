@@ -124,6 +124,13 @@ _PYTEST_NATIVE_LINT_SUITES = {
         "slow",
     },
     "test_bjt_base_drive.py": {"component_lint"},
+    "test_bjt_base_bias.py": {"component_lint"},
+    "test_design_lint_determinism_bjt_base_bias.py": {"component_lint", "slow"},
+    "test_bjt_base_bias_native_fixture.py": {
+        "component_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_electrical_connector_evidence.py": {"connector_lint", "evidence_lint"},
     "test_electrical_connector_return_parity.py": {
         "connector_lint",

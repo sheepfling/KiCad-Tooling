@@ -34,6 +34,8 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/package_build.py",
         "kicad_tooling/pytest_scope.py",
         "kicad_tooling/hwrepo/component_bjt_base_drive.py",
+        "kicad_tooling/hwrepo/component_bjt_base_bias.py",
+        "kicad_tooling/hwrepo/component_bjt_symbols.py",
         "kicad_tooling/hwrepo/component_pin_types.py",
         "kicad_tooling/hwrepo/component_role_models.py",
         "kicad_tooling/hwrepo/power_path_models.py",
@@ -56,6 +58,8 @@ from scripts.lint_gate_scope import (
         "package-build-service",
         "pytest-scope-service",
         "bjt-base-drive-rule",
+        "bjt-base-bias-rule",
+        "bjt-symbol-role-owner",
         "component-pin-type-service",
         "component-role-models",
         "power-path-models",
@@ -197,6 +201,10 @@ def test_lint_tag_selects_bjt_base_drive_and_its_native_fixture_switch() -> None
         ),
         (
             "component.bjt_base_direct_drive",
+            "KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES",
+        ),
+        (
+            "component.bjt_base_without_visible_emitter_bias",
             "KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES",
         ),
         (

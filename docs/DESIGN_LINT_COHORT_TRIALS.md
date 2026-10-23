@@ -2147,11 +2147,14 @@ for dispositions and timing; leave unmeasured values unstated.
   [trial fixture record](../tests/fixtures/design_lint/cohort-stm32-pin-checker/README.md).
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 160 active rules. Each entry has a deterministic predicate, evidence
+contains 161 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-The schematic geometry rules and the generic connector and component peer-pin
-heuristics default to `off`; other active rules default to `review`.
+Of the 161 active rules, 138 default to `review`, 22 to `off`, and
+`pcb.required_fitted_reference` to `block`. Off-by-default checks include
+schematic geometry, generic peer assignment, selected component topology
+reviews such as the BJT base-bias prompt, and board-only footprint review; the
+catalog is authoritative for each rule's default.
 The report carries this catalog and a SHA-256 digest of its packaged bytes.
 Tests assert that catalog IDs match the closed policy type, each active rule is
 reachable from a synthetic fault case, and every named fixture still exists and

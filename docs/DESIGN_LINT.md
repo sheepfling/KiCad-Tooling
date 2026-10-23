@@ -180,7 +180,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 160 active rules.
+The catalog currently contains 161 active rules.
 
 ## Run the lint lane
 
@@ -3708,6 +3708,31 @@ confirms native B/C/E functions, output pin types, net membership, and repeatabl
 findings for both NPN and PNP examples. The control remains a schematic
 connectivity example; it does not establish resistor sizing or physical
 performance.
+
+## Review BJT bases without a visible base-emitter bias resistor
+
+The opt-in catalog rule `component.bjt_base_without_visible_emitter_bias`
+defaults to `off`. When enabled, it prompts if an exact supported basic BJT
+has complete native base, collector, and emitter roles; the base and emitter
+have distinct unambiguous nets; another fitted pin shares the base net; and no
+recognized fitted nonzero two-terminal resistor directly spans the base and
+emitter nets. A direct output-capable peer is left to
+`component.bjt_base_direct_drive`.
+
+This is a review question about a possible off-state path. Push-pull drive,
+internal bias, or another topology can make an external resistor unnecessary.
+The rule does not determine whether a resistor is required or adequate and
+does not evaluate indirect paths, unparsed values, PCB routing, or physical
+behavior. It skips unsupported and compound symbols, DNP devices, incomplete
+or ambiguous pin data, open bases, and same-net base/emitter assignments.
+Projects can set the rule to `review`, promote it to `block`, leave it `off`,
+or ignore an exact reviewed finding.
+
+The synthetic fixtures cover NPN and PNP faults, direct base-emitter resistor
+controls, output-drive delegation, DNP and unsupported cases, policy behavior,
+and ordering. Digest-pinned native schematic fixtures repeat netlist and ERC
+exports on KiCad 10.0.0 and 10.0.5; their source hashes are recorded in the
+[fixture README](../tests/fixtures/design_lint/bjt-base-bias-native/README.md).
 
 ## Require an authored RS-485 topology
 

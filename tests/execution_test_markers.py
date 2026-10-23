@@ -6,6 +6,7 @@ _NATIVE_KICAD_MODULES = frozenset(
     {
         "tests/test_component_rating_native_fixture_lane.py",
         "tests/test_polarized_capacitor_native_fixture.py",
+        "tests/test_bjt_base_bias_native_fixture.py",
         "tests/test_can_native_fixture_lanes.py",
         "tests/test_empty_netlist_evidence_native_fixture_lane.py",
         "tests/test_i2c_pullup_native_fixture_lane.py",
@@ -57,6 +58,7 @@ _SLOW_MODULES = frozenset(
         "tests/test_spi_peer_reference_native_fixture_lane.py",
         "tests/test_component_rating_native_fixture_lane.py",
         "tests/test_polarized_capacitor_native_fixture.py",
+        "tests/test_bjt_base_bias_native_fixture.py",
         "tests/test_pcb_access_native_fixture_lane.py",
         "tests/test_pcb_reference_plane_native_fixture_lane.py",
         "tests/test_pcb_switching_loop_native_fixture_lane.py",
