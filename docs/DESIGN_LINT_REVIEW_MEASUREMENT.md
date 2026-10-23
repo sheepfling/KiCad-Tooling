@@ -116,7 +116,7 @@ blocking comparison.
 
 ## Existing rule-specific protocols
 
-- [LINT-031](DESIGN_LINT_BACKLOG.md#lint-031--candidate-analyzer-trial-and-incremental-value-register)
+- [LINT-031](DESIGN_LINT_COHORT_TRIALS.md#lint-031--candidate-analyzer-trial-and-incremental-value-register)
   records cohort feature trials, version/license/install friction, unique and
   duplicate findings, misses, and maintenance cost.
 - [LINT-086](DESIGN_LINT_BACKLOG.md#lint-086--usb-peers-use-different-explicit-reference-nets)
