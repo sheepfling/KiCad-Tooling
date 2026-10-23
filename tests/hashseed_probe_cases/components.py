@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.mosfet_stress_models import MosfetVoltageInterval
 from tests.design_lint_fixtures import (
     coach,
 )
+from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
@@ -105,6 +106,12 @@ def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> dict[str,
     return source_bound_component_report("synthetic-bjt-terminal-order-hashseed", observed, policy)
 
 
+def bjt_base_drive_report(*, series_resistor: bool) -> dict[str, object]:
+    """Serialize direct BJT output drive and its visible series-resistor control."""
+    observed = bjt_base_drive_netlist(series_resistor=series_resistor)
+    return source_bound_component_report("synthetic-bjt-base-drive-hashseed", observed)
+
+
 def report_cases() -> dict[str, object]:
     return {
         "diode_rail_named_return_fault": diode_rail_orientation_report(
@@ -129,6 +136,8 @@ def report_cases() -> dict[str, object]:
         "bjt_pnp_terminal_order_control": bjt_terminal_order_report(
             family="pnp", reversed_order=False
         ),
+        "bjt_base_direct_drive_fault": bjt_base_drive_report(series_resistor=False),
+        "bjt_base_series_resistor_control": bjt_base_drive_report(series_resistor=True),
         "diode_fault": evaluate(
             "synthetic-two-pin-diode-hash-seed-fault", coach(diode_netlist()), DesignLintPolicy()
         ).model_dump(mode="json"),

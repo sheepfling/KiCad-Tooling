@@ -217,9 +217,9 @@ def test_visible_series_resistor_and_unrecognized_output_are_controls(
 
 
 @pytest.mark.parametrize(
-    "pin_type", ("bidirectional", "tri_state", "open_collector", "open_emitter")
+    "pin_type", ("bidirectional", "tri_state", "open_collector", "open_emitter", "power_out")
 )
-def test_open_drain_output_is_reviewed(pin_type: str) -> None:
+def test_output_capable_pin_type_is_reviewed(pin_type: str) -> None:
     report = observed_report(output_led_netlist(output_type=pin_type))
     assert RULE_ID in {item.rule_id for item in report.findings}
 

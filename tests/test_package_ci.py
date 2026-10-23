@@ -32,6 +32,8 @@ from scripts.lint_gate_scope import (
         "kicad_tooling/hwrepo/native_pcb_probe_touch_clearance.py.in",
         "kicad_tooling/package_build.py",
         "kicad_tooling/pytest_scope.py",
+        "kicad_tooling/hwrepo/component_bjt_base_drive.py",
+        "kicad_tooling/hwrepo/component_pin_types.py",
         "kicad_tooling/hwrepo/component_role_models.py",
         "kicad_tooling/hwrepo/power_path_models.py",
         "kicad_tooling/hwrepo/power_sequence_models.py",
@@ -52,6 +54,8 @@ from scripts.lint_gate_scope import (
         "native-touch-clearance-probe",
         "package-build-service",
         "pytest-scope-service",
+        "bjt-base-drive-rule",
+        "component-pin-type-service",
         "component-role-models",
         "power-path-models",
         "power-sequence-models",
@@ -114,6 +118,21 @@ def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> Non
     )
     assert scope.pytest_markexpr == "design_lint and interface_lint"
     assert scope.native_fixtures == ("KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES",)
+
+
+def test_lint_tag_selects_bjt_base_drive_without_a_native_fixture_switch() -> None:
+    repository = Path(__file__).resolve().parents[1]
+    scope = parse_tag_message(
+        "BJT base-drive rule gate\n\nLint-Rule: component.bjt_base_direct_drive\n",
+        configured_native_fixtures(repository),
+        active_design_lint_rule_ids(),
+    )
+
+    assert scope.rule_id == "component.bjt_base_direct_drive"
+    assert scope.native_fixtures == ()
+    assert scope.pytest_markexpr == (
+        'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
+    )
 
 
 @pytest.mark.parametrize(

@@ -114,7 +114,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 157 active rules.
+The catalog currently contains 158 active rules.
 
 ## Run the lint lane
 
@@ -3608,6 +3608,24 @@ drain, gate, and source; multi-pin power packages and Kelvin terminals need an
 explicit extension. When the section is declared required, its missing
 coverage and over-limit checks participate in the electrical gate. This is
 source-bound requirement evidence, not electrical or manufacturing approval.
+
+## Review BJT bases directly connected to output pins
+
+The catalog rule `component.bjt_base_direct_drive` defaults to
+`REVIEW` when a supported basic BJT's native base net also contains a fitted
+pin whose native electrical type is output-capable (`output`, `power_out`,
+`bidirectional`, `tri_state`, `open_collector`, or `open_emitter`). Because
+both pins occupy the same native net, the schematic has no series resistor
+between those two pins. Review the intended driver and base-current limit.
+
+The rule recognizes only the twelve basic KiCad NPN and PNP pin-order symbols
+with complete, unique B/C/E pin functions. It skips DNP devices, custom and
+compound symbols, incomplete or ambiguous assignments, and pins without
+native output-type metadata. It does not prove that a resistor is required or
+missing elsewhere, that the driver lacks internal current limiting, or that
+the transistor's operating point is safe. It does not evaluate footprint
+mapping, PCB copper, or physical behavior. Projects can override the rule to
+`block` or `off`, or ignore an exact reviewed finding.
 
 ## Require an authored RS-485 topology
 

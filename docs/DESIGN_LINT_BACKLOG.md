@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 157 rules are implemented with synthetic regression coverage.
+The following 158 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 157 active rules.
+The catalog currently contains 158 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -483,6 +483,7 @@ skipped under prerelease policy.
 - `component.mosfet_gate_without_visible_source_bias`
 - `component.mosfet_terminal_order_on_named_rails`
 - `component.bjt_terminal_order_on_named_rails`
+- `component.bjt_base_direct_drive`
 - `component.polarized_capacitor_reversed_on_named_rails`
 - `component.diode_anode_below_cathode_on_named_rails`
 - `component.led_directly_across_supply_and_return`
@@ -2821,7 +2822,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 157 active rules; CI requires every new
+- **Status:** Baseline complete for all 158 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2830,7 +2831,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 157 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 158 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9498,6 +9499,37 @@ is not a reason by itself to expand its scope or change its default policy.
 
   Source hashes and fixture boundaries are in the
   [BJT terminal-order fixture note](../tests/fixtures/design_lint/bjt-terminal-order-native/README.md).
+
+#### LINT-176 — Review direct BJT base drive from output-capable pins
+
+- **Status:** Implemented as `component.bjt_base_direct_drive`, a default-review
+  prompt over exact basic NPN/PNP symbols and native pin-role/type metadata.
+- **Problem:** A BJT base directly sharing a native net with an output-capable
+  pin has no visible series resistor between those two pins. The baseline had
+  no dedicated review for this recognizable missing-current-limiting pattern.
+- **Predicate:** Require one fitted, supported three-pin BJT symbol, a complete
+  unique B/C/E pin-role inventory, and one unambiguous base-net assignment.
+  Emit a finding only when that net also contains a fitted pin with native
+  `output`, `power_out`, `bidirectional`, `tri_state`, `open_collector`, or
+  `open_emitter` electrical type. A separate net joined through a fitted
+  series resistor is a quiet control.
+- **Boundary:** This is a review clue, not a required-resistor contract. Some
+  drivers provide current limiting internally, and topology or application
+  requirements may make a direct connection intentional. The check does not
+  calculate base current, verify transistor ratings, or inspect footprint
+  mapping, PCB copper, or physical behavior. Custom, compound, DNP,
+  incomplete, ambiguous, and unknown-output-type cases remain unclassified.
+- **Fixtures:** Synthetic NPN and PNP direct-drive faults; a visible series-
+  resistor control; native pin-role remapping; unsupported, DNP, incomplete,
+  ambiguous, and non-output controls; project `review`/`block`/`off` and exact
+  ignore behavior; input-order stability; and three-process hash-seed stability.
+  All inputs are tooling-owned synthetic netlists.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_bjt_base_drive.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
+  ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

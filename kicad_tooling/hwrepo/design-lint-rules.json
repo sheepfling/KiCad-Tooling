@@ -3128,6 +3128,45 @@
       ]
     },
     {
+      "rule_id": "component.bjt_base_direct_drive",
+      "title": "Review BJT bases directly connected to output-capable pins",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For an exact allowlist of basic three-terminal Transistor_BJT:Q_NPN_* or Q_PNP_* symbols with a complete pin inventory, unique native B/C/E functions, and one unambiguous base net, emit REVIEW when that net also contains a fitted output-capable pin with native `output`, `power_out`, `bidirectional`, `tri_state`, `open_collector`, or `open_emitter` electrical type.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only the twelve exact basic NPN and PNP pin-order symbols participate. Darlington, compound, custom, DNP, incomplete, duplicate-role, and ambiguous devices are excluded.",
+        "A finding requires native electrical-type metadata for another fitted pin on the exact same base net. Unknown pin types, unassigned pins, and output pins assigned to multiple nets are excluded.",
+        "A direct net assignment is a review clue, not proof that an external resistor is required or absent from the wider circuit. Driver-internal current limiting, device current, base-current requirements, footprint mapping, PCB copper, and physical behavior are not evaluated."
+      ],
+      "fault_fixtures": [
+        "tests.test_bjt_base_drive.test_bjt_base_sharing_an_output_net_is_reviewed",
+        "tests.test_bjt_base_drive.test_native_pin_functions_map_the_base_independent_of_pin_number",
+        "tests.test_bjt_base_drive.test_native_power_output_pin_type_is_also_output_capable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_bjt_base_drive.test_series_resistor_and_incomplete_or_unsupported_cases_stay_quiet"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_bjt_base_drive.test_input_ordering_preserves_the_fingerprint_and_evidence",
+        "tests.test_design_lint_determinism_components.test_bjt_base_direct_drive_fault_and_series_control_are_stable_across_hash_seeds"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_bjt_base_drive.py#bjts_with_direct_output_base_drive",
+        "kicad_tooling/hwrepo/component_pin_types.py#is_output_capable_pin_type",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_bjt_base_drive.py#bjts_with_direct_output_base_drive"
+    },
+    {
       "rule_id": "component.polarized_capacitor_reversed_on_named_rails",
       "title": "Review polarized capacitor pin 1 below pin 2 on named rails",
       "status": "active",
@@ -6773,7 +6812,7 @@
       ],
       "fault_fixtures": [
         "tests.test_led_output_heuristics.test_direct_output_to_led_and_return_is_reviewable_and_configurable",
-        "tests.test_led_output_heuristics.test_open_drain_output_is_reviewed",
+        "tests.test_led_output_heuristics.test_output_capable_pin_type_is_reviewed",
         "tests.test_led_output_heuristics.test_parallel_resistor_does_not_clear_led_output_review",
         "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
       "tests.test_led_output_heuristics.test_custom_led_role_map_is_exact_and_stale_identity_blocks_lint",

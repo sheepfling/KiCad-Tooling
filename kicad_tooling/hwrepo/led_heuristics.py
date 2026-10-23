@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .casefold_mapping_lookup import lookup_unique_casefold
+from .component_pin_types import is_output_capable_pin_type
 from .component_role_models import ComponentRoleBinding, ComponentRoleMap
 from .component_roles import (
     component_role_binding_digest,
@@ -20,9 +21,6 @@ from .resistor_paths import (
 from .return_nets import is_return_like_net_name
 
 _SUPPORTED_LED_SYMBOLS = frozenset({"device:led"})
-_OUTPUT_PIN_TYPES = frozenset(
-    {"output", "bidirectional", "tri_state", "open_collector", "open_emitter"}
-)
 _CANONICAL_RETURN_NET_NAMES = frozenset(
     {"0v", "gnd", "agnd", "dgnd", "pgnd", "vss", "vssa", "vssd", "vssp", "rtn", "return"}
 )
@@ -195,7 +193,7 @@ def leds_directly_driven_without_visible_series_resistor(
         pin_type = raw_type.strip().casefold()
         if (
             reference.casefold() not in dnp
-            and pin_type in _OUTPUT_PIN_TYPES
+            and is_output_capable_pin_type(pin_type)
             and (assigned := pin_nets.get(pin.casefold())) is not None
             and len(assigned) == 1
         ):
