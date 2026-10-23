@@ -14656,6 +14656,9 @@ acceptance threads while new lint features proceed:
    prompt review, the common-return control is quiet, and data-pin comparisons
    stay scoped. This is a deterministic review regression, not a universal
    common-ground rule.
+   The tooling-owned synthetic source, maps, native-evidence boundary, and
+   exact hashes are recorded in the
+   [mixed-interface return fixture notes](../tests/fixtures/design_lint/mixed-interface-return-peers/README.md).
 2. Keep LINT-077's exact-version native lane in GitHub CI. The local KiCad
    10.0.0/10.0.5 exports now repeat with matching normalized netlist/ERC
    evidence; before a project adopts this check, its owner must source and
