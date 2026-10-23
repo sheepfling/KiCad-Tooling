@@ -7,6 +7,7 @@ from .design_lint_types import Candidate
 from .models import NetlistContract
 
 RULE_ID = "component.mosfet_drain_source_same_net"
+GATE_SOURCE_RULE_ID = "component.mosfet_gate_source_same_net"
 
 
 def mosfets_with_drain_source_on_same_net(
@@ -67,6 +68,73 @@ def mosfets_with_drain_source_on_same_net(
                     "channel_type": (channel_type,),
                     "drain_pin": (drain_pin,),
                     "drain_net": (drain_net,),
+                    "source_pin": (source_pin,),
+                    "source_net": (source_net,),
+                },
+            )
+        )
+    return tuple(findings)
+
+
+def mosfets_with_gate_source_on_same_net(
+    observed: NetlistContract,
+) -> tuple[Candidate, ...]:
+    """Review fitted, supported MOSFETs whose gate and source share one net."""
+    fitted = {reference.casefold() for reference in observed.components}
+    dnp = {reference.casefold() for reference in observed.dnp_components}
+    inventories = {
+        reference.casefold(): tuple(numbers)
+        for reference, numbers in observed.component_pin_numbers.items()
+    }
+    nets_by_pin: dict[str, list[str]] = {}
+    for net, pins in observed.nets.items():
+        for pin in pins:
+            nets_by_pin.setdefault(pin.casefold(), []).append(net)
+
+    findings: list[Candidate] = []
+    for reference, symbol in sorted(
+        observed.component_symbols.items(), key=lambda item: (item[0].casefold(), item[0])
+    ):
+        reference_key = reference.casefold()
+        channel_type = mosfet_channel_type(symbol)
+        if reference_key not in fitted or reference_key in dnp or channel_type is None:
+            continue
+        roles = mosfet_terminal_role_numbers(
+            reference,
+            symbol,
+            inventories.get(reference_key, ()),
+            observed.pin_functions,
+        )
+        if roles is None:
+            continue
+
+        gate_pin = f"{reference}.{roles['gate']}"
+        source_pin = f"{reference}.{roles['source']}"
+        gate_nets = nets_by_pin.get(gate_pin.casefold(), ())
+        source_nets = nets_by_pin.get(source_pin.casefold(), ())
+        if len(gate_nets) != 1 or len(source_nets) != 1:
+            continue
+        gate_net, source_net = gate_nets[0], source_nets[0]
+        if gate_net.casefold() != source_net.casefold():
+            continue
+
+        findings.append(
+            Candidate(
+                rule_id=GATE_SOURCE_RULE_ID,
+                subject=f"{reference}: MOSFET gate and source share one schematic net",
+                message=(
+                    "The native schematic assigns this supported MOSFET's gate and source to "
+                    "the same net, so they are not independently controlled in this netlist. "
+                    "Review whether this is an intentional hold-off or bypass connection, or "
+                    "whether a gate-control connection is missing. This prompt does not prove "
+                    "a defect, board copper continuity, or physical behavior."
+                ),
+                evidence={
+                    "component": (reference,),
+                    "symbol": (symbol,),
+                    "channel_type": (channel_type,),
+                    "gate_pin": (gate_pin,),
+                    "gate_net": (gate_net,),
                     "source_pin": (source_pin,),
                     "source_net": (source_net,),
                 },

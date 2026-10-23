@@ -18,7 +18,10 @@ from .design_lint_component_bjt_terminals import (
     bjts_with_base_emitter_on_same_net,
     bjts_with_collector_emitter_on_same_net,
 )
-from .design_lint_component_mosfet_terminals import mosfets_with_drain_source_on_same_net
+from .design_lint_component_mosfet_terminals import (
+    mosfets_with_drain_source_on_same_net,
+    mosfets_with_gate_source_on_same_net,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .led_heuristics import (
@@ -68,6 +71,7 @@ def component_candidates(
     found.extend(mosfets_with_direct_output_gate_drive(observed))
     found.extend(mosfets_with_unusual_drain_source_rail_order(observed))
     found.extend(mosfets_with_drain_source_on_same_net(observed))
+    found.extend(mosfets_with_gate_source_on_same_net(observed))
     found.extend(bjts_with_unusual_collector_emitter_rail_order(observed))
     found.extend(bjts_with_collector_emitter_on_same_net(observed))
     found.extend(bjts_with_base_emitter_on_same_net(observed))

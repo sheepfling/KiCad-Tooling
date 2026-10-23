@@ -12,6 +12,9 @@ import pytest
 from kicad_tooling.ci_hosted_mosfet_gate_fixture import MOSFET_GATE_FIXTURE_CASES
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.component_mosfet_gate_drive import RULE_ID as DIRECT_DRIVE_RULE_ID
+from kicad_tooling.hwrepo.design_lint_component_mosfet_terminals import (
+    GATE_SOURCE_RULE_ID as GATE_SOURCE_SAME_NET_RULE_ID,
+)
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from kicad_tooling.hwrepo.mosfet_gate_connectivity import SOURCE_BIAS_RULE_ID
 from tests.native_fixture_support import assert_native_fixture_mounts
@@ -31,6 +34,8 @@ EXPECTED_SOURCE_HASHES = {
     "control": "e95ed1a5673723dc690e1fad27d534f3f834c371a489957c0c7050f642d18a75",
     "source-bias-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
     "series-gate-control": "5f6a6b62155601ef51c1d9d3dad30dd2e5b8d02f22fa210f332fdf9566322323",
+    "gate-source-fault": "75849c215452527d32739eb43d9a8d7ec72ee2a0a31fc50e49360bbb8e62986c",
+    "gate-source-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
 }
 
 
@@ -47,6 +52,8 @@ def test_native_mosfet_gate_fixture_scope_matches_registered_cases() -> None:
         "control": "mosfet-gate-native/control.kicad_sch",
         "source-bias-control": "mosfet-gate-native/source-bias-control.kicad_sch",
         "series-gate-control": "mosfet-gate-native/series-gate-control.kicad_sch",
+        "gate-source-fault": "mosfet-gate-native/gate-source-tie.kicad_sch",
+        "gate-source-control": "mosfet-gate-native/source-bias-control.kicad_sch",
     }
     assert EXPECTED_SOURCE_HASHES.keys() == actual.keys()
     for case, relative in actual.items():
@@ -59,6 +66,7 @@ def test_native_mosfet_gate_fixture_scope_matches_registered_cases() -> None:
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=SOURCE_BIAS_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=DIRECT_DRIVE_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=GATE_SOURCE_SAME_NET_RULE_ID)
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.skipif(
@@ -96,6 +104,8 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
         "mosfet-gate-fixture/control",
         "mosfet-gate-fixture/source-bias-control",
         "mosfet-gate-fixture/series-gate-control",
+        "mosfet-gate-fixture/gate-source-fault",
+        "mosfet-gate-fixture/gate-source-control",
     }
     native = results["mosfet-gate-fixture/native-export"]
     assert native["status"] == "PASS"
@@ -110,6 +120,8 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
     control = results["mosfet-gate-fixture/control"]
     source_bias_control = results["mosfet-gate-fixture/source-bias-control"]
     series_gate_control = results["mosfet-gate-fixture/series-gate-control"]
+    gate_source_fault = results["mosfet-gate-fixture/gate-source-fault"]
+    gate_source_control = results["mosfet-gate-fixture/gate-source-control"]
     assert fault["rule_findings"] == "Q1.2: MOSFET gate has no other fitted pin on its net"
     assert control["rule_findings"] == "none"
     assert fault["source_bias_rule_findings"] == "none"
@@ -126,11 +138,20 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
         "Q1.2: MOSFET gate directly shares a net with an output-capable pin"
     )
     assert series_gate_control["direct_drive_rule_findings"] == "none"
+    assert gate_source_fault["gate_source_rule_findings"] == (
+        "Q1: MOSFET gate and source share one schematic net"
+    )
+    assert gate_source_control["gate_source_rule_findings"] == "none"
+    assert gate_source_fault["direct_drive_rule_findings"] == (
+        "Q1.2: MOSFET gate directly shares a net with an output-capable pin"
+    )
     for case, result in (
         ("fault", fault),
         ("control", control),
         ("source-bias-control", source_bias_control),
         ("series-gate-control", series_gate_control),
+        ("gate-source-fault", gate_source_fault),
+        ("gate-source-control", gate_source_control),
     ):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version

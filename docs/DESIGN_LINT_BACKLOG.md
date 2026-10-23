@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 165 rules are implemented with synthetic regression coverage.
+The following 166 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 165 active rules.
+The catalog currently contains 166 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -485,6 +485,7 @@ skipped under prerelease policy.
 - `component.mosfet_gate_direct_drive`
 - `component.mosfet_terminal_order_on_named_rails`
 - `component.mosfet_drain_source_same_net`
+- `component.mosfet_gate_source_same_net`
 - `component.bjt_terminal_order_on_named_rails`
 - `component.bjt_collector_emitter_same_net`
 - `component.bjt_base_emitter_same_net`
@@ -599,6 +600,11 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **MOSFET gate/source same-net review:** LINT-184 adds an opt-in, default-off
+  prompt for exact supported three-terminal MOSFET symbols whose native gate
+  and source pins share a schematic net. A direct tie can intentionally hold
+  the device off; the rule asks for review and does not declare it a defect.
 
 - **BJT base/collector same-net review:** LINT-183 adds an opt-in, default-off
   prompt for exact supported basic three-terminal BJT symbols whose native
@@ -2869,7 +2875,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 165 active rules; CI requires every new
+- **Status:** Baseline complete for all 166 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2878,7 +2884,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 165 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 166 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9901,6 +9907,53 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Source note:** Tooling-owned fault and shared-control hashes are recorded
   in [`bjt-bc-same-net-native`](../tests/fixtures/design_lint/bjt-bc-same-net-native/README.md).
+
+#### LINT-184 — Review supported MOSFET gate and source on one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `component.mosfet_gate_source_same_net` review prompt. Its scoped prerelease
+  tag requires `KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES`.
+- **Gap:** LINT-170 and LINT-171 review an open MOSFET gate or a visible gate
+  peer without source bias. Both skip the case where gate and source are
+  assigned directly to one net. LINT-180 covers a different pair: drain and
+  source.
+- **Predicate:** Require a fitted component with an exact supported
+  three-terminal `Transistor_FET:Q_NMOS_*` or `Q_PMOS_*` symbol, complete unique
+  pin inventory, native D/Drain, G/Gate, and S/Source pin functions, and one
+  unambiguous gate and source net assignment. Emit a review when gate and
+  source have the same native net. Pin functions determine roles; pin numbers
+  are not assumed.
+- **Boundary:** A gate/source tie can intentionally hold a device off or serve
+  a bypass/configuration topology. This is a review clue, not a defect claim
+  or requirement. It does not establish device behavior, external circuitry,
+  symbol-to-footprint mapping, PCB copper, or physical behavior. DNP, custom,
+  multi-gate, body-terminal, incomplete, duplicate-role, open, and ambiguous
+  cases remain unclassified. Project policy can enable `review`, promote to
+  `block`, leave it `off`, or exactly ignore a finding.
+- **Fixtures:** Synthetic NMOS and PMOS tie faults; distinct-net control;
+  reordered pin numbers; unsupported, DNP, incomplete, duplicate-role, open,
+  and multiply assigned boundaries; explicit ignore for an intentional
+  hold-off tie; repair, mapping-order, and three-process hash-seed stability.
+  Tooling-owned native fault and resistor-control schematics are exported
+  twice on digest-pinned KiCad 10.0.0 and 10.0.5 images. The shared gate lane
+  also verifies zero ERC errors and stable native evidence. Fixture hashes are
+  in the [MOSFET gate fixture note](../tests/fixtures/design_lint/mosfet-gate-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_mosfet_gate_source_same_net.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.mosfet_gate_source_same_net")'
+
+  python -I -m pytest tests/test_design_lint_determinism_components.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.mosfet_gate_source_same_net")'
+
+  KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1 python -I -m pytest \
+    tests/test_mosfet_gate_native_fixture.py \
+    -m 'design_lint and native_kicad and design_lint_rule(rule_id="component.mosfet_gate_source_same_net")'
+  ```
+
+- **Source note:** Only synthetic MOSFET and driver symbols are used; no
+  project design or cohort fixture is included.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

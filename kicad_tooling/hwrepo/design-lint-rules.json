@@ -7606,6 +7606,51 @@
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
       ]
+    },
+    {
+      "rule_id": "component.mosfet_gate_source_same_net",
+      "title": "Review supported MOSFET gate and source on one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted component using an exact supported three-terminal Transistor_FET:Q_NMOS_* or Q_PMOS_* symbol, a complete unique three-pin inventory with native D/Drain, G/Gate, and S/Source functions, and exactly one unambiguous net assignment for gate and source, emit an opt-in REVIEW candidate when gate and source are assigned to the same native net.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only the exact supported three-terminal NMOS/PMOS symbol allowlist, complete pin inventory, and unique native D/G/S functions participate. Custom, multi-gate, body-terminal, DNP, incomplete, duplicate-role, open, and ambiguous cases are not classified.",
+        "A gate/source tie can be an intentional hold-off or bypass connection. The finding asks for review and does not prove a defect, infer required MOSFET behavior, or establish symbol-to-footprint mapping, PCB copper, external circuitry, or physical behavior.",
+        "The rule defaults off. Project policy may enable review, promote it to block, leave it off, or ignore an exact finding fingerprint."
+      ],
+      "fault_fixtures": [
+        "tests.test_mosfet_gate_source_same_net.test_gate_source_same_net_fault_is_opt_in_and_distinct_net_control_is_quiet",
+        "tests.test_mosfet_gate_source_same_net.test_native_pin_functions_map_reordered_mosfet_terminals",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_mosfet_gate_source_same_net.test_gate_source_same_net_fault_is_opt_in_and_distinct_net_control_is_quiet",
+        "tests.test_mosfet_gate_source_same_net.test_unsupported_dnp_incomplete_duplicate_open_and_ambiguous_cases_are_unclassified",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_mosfet_gate_source_same_net.test_repair_and_netlist_order_preserve_deterministic_evidence",
+        "tests.test_design_lint_determinism_components.test_mosfet_gate_source_same_net_fault_and_control_are_stable_across_hash_seeds",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_component_mosfet_terminals.py#mosfets_with_gate_source_on_same_net",
+        "kicad_tooling/hwrepo/component_mosfet_symbols.py#mosfet_terminal_role_numbers",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_component_mosfet_terminals.py#mosfets_with_gate_source_on_same_net",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ]
     }
   ]
 }
