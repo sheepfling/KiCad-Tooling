@@ -4614,12 +4614,55 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_clock_data_same_net.py#spi_clock_control_data_same_net_candidates",
+        "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups",
         "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/spi_clock_data_same_net.py#spi_clock_control_data_same_net_candidates"
+    },
+    {
+      "rule_id": "bus.spi_clock_chip_select_same_net",
+      "title": "SPI clock and chip-select share a net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded pin functions, exact net assignments, electrical types, fitted state, and component pin inventory",
+      "predicate": "For one fitted U/IC reference and one native SPI channel, pair exactly one SCK/SCLK clock pin with exactly one recognized chip-select pin. Require both function pins in the native component pin inventory and exactly one net assignment each. Emit a review candidate when both pins resolve to the same exact net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Only bounded SCK/SCLK and CS/CSN/NCS/NSS/SS/SSN/SSEL/CE0/CE1/CHIP_SELECT aliases on fitted U/IC references are recognized. The parser preserves an optional numeric SPI channel prefix; vendor-specific names and connector references remain unclassified.",
+        "Pin-function names do not prove the IC's configured mode, actual protocol participation, or required topology. Intentional pin multiplexing is possible, so this rule defaults to off and asks for review.",
+        "DNP parts, duplicate roles, open or multiply assigned pins, cross-channel pairs, missing component pin inventory, and inconsistent pin assignments are skipped. Two explicit native output types defer to ERC; absent electrical types remain unknown evidence.",
+        "The finding concerns native schematic net assignments only. It does not prove PCB copper continuity, off-board wiring, firmware state, or electrical suitability."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_clock_chip_select_same_net.test_same_channel_spi_clock_and_chip_select_sharing_one_net_is_reviewed",
+        "tests.test_spi_clock_control_same_net_native_fixture_lane.test_native_spi_clock_control_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_clock_chip_select_same_net.test_separate_controls_and_other_supported_cases_are_quiet",
+        "tests.test_spi_clock_control_same_net_native_fixture_lane.test_native_spi_clock_control_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_spi_clock_chip_select_same_net.test_fingerprints_are_stable_and_repair_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_control_same_net.py#spi_clock_chip_select_same_net_candidates",
+        "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_control_same_net.py#spi_clock_chip_select_same_net_candidates"
     },
     {
       "rule_id": "bus.rs485_peer_reference_review",

@@ -79,6 +79,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.spi_data_input_output_same_net",
             "bus.i2c_sda_scl_same_net",
             "bus.spi_clock_control_data_same_net",
+            "bus.spi_clock_chip_select_same_net",
         }
     )
     assert all(
@@ -122,6 +123,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.spi_data_input_output_same_net",
             "bus.i2c_sda_scl_same_net",
             "bus.spi_clock_control_data_same_net",
+            "bus.spi_clock_chip_select_same_net",
         }
     )
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)

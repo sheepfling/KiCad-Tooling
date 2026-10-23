@@ -229,6 +229,29 @@ select to data combinations; MOSI/MISO shorts remain with the more specific
 control pass native ERC without errors on KiCad 10.0.0 and 10.0.5; see the
 [fixture note](../tests/fixtures/design_lint/spi-clock-control-same-net/README.md).
 
+`bus.spi_clock_chip_select_same_net` separately reviews one fitted IC whose
+bounded SCK/SCLK and chip-select function pins share one exact native net on
+the same optional SPI channel. It requires both pins in the native component
+inventory with one unambiguous net assignment. DNP, connector, duplicate-role,
+open, cross-channel, and inventory-inconsistent cases are skipped; two
+explicit native output types are left to ERC, while missing type evidence
+remains `unknown`. The default is `off` because these function names cannot
+establish device configuration and the signals may be intentionally
+multiplexed. The source-hashed synthetic fault and separate-net control both
+pass native ERC on KiCad 10.0.0 and 10.0.5; see the
+[fixture note](../tests/fixtures/design_lint/spi-clock-control-same-net/README.md).
+
+Select the SPI clock/chip-select check with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_spi_clock_chip_select_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_clock_chip_select_same_net")'
+
+KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_spi_clock_control_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_chip_select_same_net")'
+```
+
 Select this rule's fast and exact-native checks with:
 
 ```sh
@@ -255,7 +278,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 178 active rules.
+The catalog currently contains 179 active rules.
 
 ### USB data pin/name polarity review
 

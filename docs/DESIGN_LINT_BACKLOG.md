@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 178 rules are implemented with synthetic regression coverage.
+The following 179 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 178 active rules.
+The catalog currently contains 179 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -535,6 +535,7 @@ skipped under prerelease policy.
 - `bus.spi_data_polarity_label_mismatch`
 - `bus.spi_data_input_output_same_net`
 - `bus.spi_clock_control_data_same_net`
+- `bus.spi_clock_chip_select_same_net`
 - `bus.spi_chip_select_inputs_share_net`
 - `bus.spi_data_outputs_share_net`
 - `bus.usb_c_unconnected_cc_pin`
@@ -653,6 +654,16 @@ and optional ecosystem adapters are `P3`.
   LINT-195. Synthetic tests cover channel aliases, DNP, open and multiply
   assigned pins, duplicate roles, missing inventory, ERC output conflicts,
   policy, exact ignores, stable ordering, and repair.
+
+- **SPI clock/chip-select same-net review:** LINT-197 reports a fitted IC
+  whose bounded clock and chip-select function pins share one exact net on the
+  same optional SPI channel. It defaults off because function names do not
+  establish the configured mode and some devices intentionally multiplex
+  these roles. Synthetic tests cover channel aliases, separate-net controls,
+  DNP, open and multiply assigned pins, duplicate roles, missing inventory,
+  connector exclusion, ERC output conflicts, policy, exact ignores, stable
+  fingerprints, and repair. Source-hashed native fault/control schematics
+  export clean ERC results repeatedly on KiCad 10.0.0 and 10.0.5.
 
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
@@ -2953,7 +2964,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 178 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 179 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10516,6 +10527,44 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_spi_clock_control_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_control_data_same_net")'
+  ```
+
+#### LINT-197 — Review SPI clock and chip-select pins sharing a net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.spi_clock_chip_select_same_net` review prompt.
+- **Gap:** Existing SPI checks review clock/control-to-data shorts, data
+  input/output shorts, shared chip-selects across devices, and shared data
+  outputs. They do not review one fitted IC with its clock and chip-select
+  pins on the same exact native net.
+- **Predicate:** Reuse the bounded SPI role assignment service. On a fitted
+  IC, recognize exactly one clock and one chip-select role on the same
+  optional channel; require both in the native component pin inventory and
+  exactly one native net assignment each; report only when those net names
+  match. Skip duplicate roles, DNP, connectors, open or multiply assigned
+  pins, cross-channel pairs, and incomplete inventory. Leave a pair of two
+  explicit output types to ERC and preserve absent types as `unknown`.
+- **Boundary:** The prompt does not infer device configuration, intended
+  multiplexing, protocol membership, required topology, or PCB copper. It
+  defaults off for project review and supports project-level policy and exact
+  finding ignores.
+- **Fixtures:** The tooling-owned synthetic source adds a separate SCK/NSS
+  shared-net fault and a separate-net control alongside the LINT-196
+  clock/data pair. Both native fault/control cases pass clean, repeatable ERC
+  exports on the pinned KiCad 10.0.0 and 10.0.5 lanes. Synthetic pytest
+  regressions cover alias/channel handling, inventory and assignment
+  boundaries, duplicate roles, DNP, connectors, ERC deferral, policy, ignores,
+  stable findings, and repair. The fixture contains no project or cohort
+  source.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_clock_chip_select_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_clock_chip_select_same_net")'
+
+  KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_spi_clock_control_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_chip_select_same_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

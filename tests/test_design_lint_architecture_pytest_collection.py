@@ -265,6 +265,13 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             ),
         ),
         (
+            "bus.spi_clock_chip_select_same_net",
+            (
+                "tests/test_spi_clock_chip_select_same_net.py::"
+                "test_same_channel_spi_clock_and_chip_select_sharing_one_net_is_reviewed"
+            ),
+        ),
+        (
             "bus.serial_peer_voltage_review",
             "tests/test_design_lint_serial_peer_voltage.py::test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
         ),

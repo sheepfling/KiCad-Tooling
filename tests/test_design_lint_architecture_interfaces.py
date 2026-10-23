@@ -72,6 +72,8 @@ BUS_ANALYSIS_MODULES = (
     "spi_data_label.py",
     "spi_same_net.py",
     "spi_clock_data_same_net.py",
+    "spi_control_same_net.py",
+    "spi_role_assignments.py",
     "spi_shared_chip_select.py",
     "spi_shared_data_outputs.py",
     "resistor_paths.py",
@@ -260,6 +262,29 @@ def test_spi_clock_control_data_same_net_rule_uses_a_focused_predicate_owner() -
     assert rule.implementation_owner in rule.implementation_refs
     assert (
         "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel"
+        in rule.implementation_refs
+    )
+    assert (
+        "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups"
+        in rule.implementation_refs
+    )
+
+
+def test_spi_clock_chip_select_same_net_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.spi_clock_chip_select_same_net"
+    )
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/spi_control_same_net.py#spi_clock_chip_select_same_net_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups"
         in rule.implementation_refs
     )
 
@@ -505,6 +530,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "spi_data_polarity_label_candidates",
         "spi_data_input_output_same_net_candidates",
         "spi_clock_control_data_same_net_candidates",
+        "spi_clock_chip_select_same_net_candidates",
         "spi_chip_select_inputs_share_net_candidates",
         "spi_data_outputs_share_net_candidates",
         "unconnected_interface_candidates",

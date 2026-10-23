@@ -1,4 +1,4 @@
-"""Exact-version native exports for SPI clock/control same-net fixtures."""
+"""Exact-version native exports for SPI signal-role same-net fixtures."""
 
 from __future__ import annotations
 
@@ -54,15 +54,27 @@ def test_native_spi_clock_control_same_net_fault_and_control_repeat(
     assert set(results) == {
         "spi-clock-control-same-net-fixture/native-export",
         "spi-clock-control-same-net-fixture/control",
-        "spi-clock-control-same-net-fixture/fault",
+        "spi-clock-control-same-net-fixture/clock_data_fault",
+        "spi-clock-control-same-net-fixture/clock_select_fault",
     }
     native_export = results["spi-clock-control-same-net-fixture/native-export"]
     assert_native_fixture_mounts(tmp_path, native_export["command_receipt"])
-    fault = results["spi-clock-control-same-net-fixture/fault"]
+    clock_data_fault = results["spi-clock-control-same-net-fixture/clock_data_fault"]
+    clock_select_fault = results["spi-clock-control-same-net-fixture/clock_select_fault"]
     control = results["spi-clock-control-same-net-fixture/control"]
-    assert fault["subjects"] == "U1: SPI clock SCK and data input COPI share SPI_ROLE_SHARED"
+    assert (
+        clock_data_fault["subjects"]
+        == "U1: SPI clock SCK and data input COPI share SPI_ROLE_SHARED"
+    )
+    assert clock_data_fault["clock_chip_select_subjects"] == "none"
+    assert clock_select_fault["subjects"] == "none"
+    assert (
+        clock_select_fault["clock_chip_select_subjects"]
+        == "U1: SPI clock SCK and chip select NSS share SPI_CONTROL_SHARED"
+    )
     assert control["subjects"] == "none"
-    for result in (fault, control):
+    assert control["clock_chip_select_subjects"] == "none"
+    for result in (clock_data_fault, clock_select_fault, control):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
         assert result["image"] == image
