@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .capacitor_symbols import is_capacitor_symbol
 from .connector_identity import connector_candidate_references, power_function_key
 from .models import NetlistContract
 from .return_nets import is_return_like_net_name
@@ -14,11 +15,6 @@ class PowerRailCapacitorGap:
     net: str
     input_pins: tuple[str, ...]
     component_references: tuple[str, ...]
-
-
-def _is_capacitor_symbol(symbol: str) -> bool:
-    part = symbol.rsplit(":", 1)[-1].casefold()
-    return part in {"c", "cp"} or part.startswith(("c_", "cp_")) or "capacitor" in part
 
 
 def ic_power_rails_without_fitted_capacitors(
@@ -47,7 +43,7 @@ def ic_power_rails_without_fitted_capacitors(
     capacitor_references = {
         reference.casefold()
         for reference, symbol in observed.component_symbols.items()
-        if _is_capacitor_symbol(symbol) and reference.casefold() not in dnp
+        if is_capacitor_symbol(symbol) and reference.casefold() not in dnp
     }
     capacitor_references.update(
         reference.casefold()

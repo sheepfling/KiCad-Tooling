@@ -5,14 +5,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from .capacitor_symbols import is_capacitor_symbol
 from .connector_identity import connector_candidate_references
 from .models import NetlistContract
 from .return_nets import is_return_like_net_name
-
-_CAPACITOR_SYMBOL = re.compile(
-    r"^(?:Device:C(?:_[A-Za-z0-9_]+)?|Device:CP(?:_[A-Za-z0-9_]+)?|"
-    r"[^:]+:[^:]*[Cc]apacitor[^:]*)$"
-)
 
 
 @dataclass(frozen=True)
@@ -56,7 +52,7 @@ def connector_capacitor_only_nets(
         for reference, symbol in observed.component_symbols.items()
         if reference.casefold() not in dnp
         and reference.casefold() not in ambiguous_symbols
-        and _CAPACITOR_SYMBOL.fullmatch(symbol) is not None
+        and is_capacitor_symbol(symbol)
     }
 
     nets_by_pin: dict[str, set[str]] = {}

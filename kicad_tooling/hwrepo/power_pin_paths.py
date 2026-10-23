@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
+from .capacitor_symbols import is_capacitor_symbol
 from .connector_identity import connector_candidate_references, power_function_key
 from .models import NetlistContract
 from .resistor_paths import (
@@ -15,10 +16,6 @@ from .resistor_paths import (
 )
 from .return_nets import is_return_like_net_name
 
-_CAPACITOR_SYMBOL = re.compile(
-    r"^(?:Device:C(?:_[A-Za-z0-9_]+)?|Device:CP(?:_[A-Za-z0-9_]+)?|"
-    r"[^:]+:[^:]*[Cc]apacitor[^:]*)$"
-)
 _RESISTOR_SYMBOL = re.compile(r"^Device:R(?:_[A-Za-z0-9_]+)?$", re.IGNORECASE)
 _INDUCTOR_SYMBOL = re.compile(r"^Device:L(?:_[A-Za-z0-9_]+)?$", re.IGNORECASE)
 _SUPPORTED_FIXED_PATH_SYMBOLS = frozenset(
@@ -94,7 +91,7 @@ def _fitted_capacitors_to_return(
     dnp = {reference.casefold() for reference in observed.dnp_components}
     capacitors_by_supply_net: dict[str, set[str]] = {}
     for reference, symbol in observed.component_symbols.items():
-        if reference.casefold() in dnp or _CAPACITOR_SYMBOL.fullmatch(symbol) is None:
+        if reference.casefold() in dnp or not is_capacitor_symbol(symbol):
             continue
         if _casefold_lookup(observed.components, reference) is None:
             continue

@@ -18,19 +18,24 @@ coverage.
 The 4-pin array maps independent channels RN1.1–RN1.2 and RN1.3–RN1.4 to
 SDA/SCL and +3V3. The native export must retain the symbol ID, footprint,
 value, expected project `PART_ID`, all four pins, and exact net assignments.
-Both schematics also include an explicit `Device:C` capacitor under the
-nonstandard reference `X1`, connected from SDA to GND. The authored capacitance
-scope maps its exact symbol, footprint, two-pin inventory, nets, nominal range,
-and effective-capacitance bound; native export must preserve that mapping.
+Both schematics include an explicit `Device:C` capacitor under the nonstandard
+reference `X1`, connected from SDA to GND. The authored capacitance scope maps
+its exact symbol, footprint, two-pin inventory, nets, nominal range, and
+effective-capacitance bound; native export must preserve that mapping. The
+fault schematic also puts an unmapped `Device:C` symbol at `X2` on SDA, proving
+that symbol-based discovery catches a capacitor even when its reference is not
+C-prefixed.
 Each source is exported twice and compared after parsing to the normalized
 typed-netlist contract; raw XML hashes are retained because KiCad may vary
 metadata between exports.
 The authored contract binds a synthetic maximum resistor tolerance to each
 exact array channel, explicitly maps X1, inventories conventional C-prefixed
-capacitors on each bus line, and supplies the reviewed residual capacitance
-and rise-time bounds. Both exports
-must retain and pass the native-derived channel tolerance and capacitance
-scope checks. The same native-derived contracts exercise
+parts and recognized capacitor-symbol IDs on each bus line, and supplies the
+reviewed residual capacitance and rise-time bounds. The control passes with
+X1 mapped; the fault remains open and names X2 as an unmapped fitted
+capacitor. Both exports
+must retain the native-derived channel tolerance checks; the control passes its
+mapped capacitance scope and the fault fails on X2. The same native-derived contracts exercise
 `bus.i2c_missing_pullup`: without the authored requirement, both fixtures
 remain review candidates. The control's passing SDA/SCL topology and electrical
 window checks resolve that hint; the wrong-SDA fault keeps it open even though

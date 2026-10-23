@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from .capacitance_values import parse_capacitance_pf
+from .capacitor_symbols import is_capacitor_symbol
 from .component_references import is_capacitor_reference
 from .i2c_pullup_models import I2cPullupElectricalWindow
 from .models import ComponentContract, ElectricalCheck, NetlistContract
@@ -23,6 +24,11 @@ def i2c_pullup_capacitance_check(
         return None
 
     dnp = {reference.casefold() for reference in observed.dnp_components}
+    capacitor_symbols = {
+        reference.casefold()
+        for reference, symbol in observed.component_symbols.items()
+        if is_capacitor_symbol(symbol)
+    }
     candidates: dict[str, str] = {}
     pin_nets: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
@@ -31,7 +37,7 @@ def i2c_pullup_capacitance_check(
             reference = pin.rsplit(".", 1)[0]
             if (
                 net == line_net
-                and is_capacitor_reference(reference)
+                and (is_capacitor_reference(reference) or reference.casefold() in capacitor_symbols)
                 and reference.casefold() not in dnp
             ):
                 candidates.setdefault(reference.casefold(), reference)

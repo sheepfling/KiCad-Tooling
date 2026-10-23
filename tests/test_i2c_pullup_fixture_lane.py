@@ -36,10 +36,11 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
             }
         }
     )
-    fault_nets = dict(control.nets)
-    fault_nets["I2C_SDA"] = ("U1.1", "X1.1")
+    fault = array_netlist_with_capacitor(reference="X1", extra_capacitor=True, extra_reference="X2")
+    fault_nets = dict(fault.nets)
+    fault_nets["I2C_SDA"] = ("U1.1", "X1.1", "X2.1")
     fault_nets["SDA_WRONG"] = ("RN1.1",)
-    fault = control.model_copy(update={"nets": fault_nets})
+    fault = fault.model_copy(update={"nets": fault_nets})
     observations = {"control": control, "fault": fault}
 
     def fake_run_command(
@@ -104,8 +105,9 @@ def test_native_array_lane_checks_contract_resolution_against_typed_exports(
     assert fault_result["heuristic_findings"] == "bus.i2c_missing_pullup"
     assert fault_result["sda_tolerance_scope"] == "PASS"
     assert fault_result["scl_tolerance_scope"] == "PASS"
-    assert fault_result["sda_capacitance_scope"] == "PASS"
+    assert fault_result["sda_capacitance_scope"] == "FAIL"
     assert fault_result["sda_capacitance_contributors"] == "X1"
+    assert fault_result["sda_capacitance_unmapped"] == "X2"
     assert fault_result["scl_capacitance_scope"] == "PASS"
     assert control_result["contract_path"] == "projects/synthetic-i2c-array/electrical.json"
     assert control_result["contract_sha256"] == fault_result["contract_sha256"]

@@ -133,12 +133,12 @@
         "tests.test_connector_supply_domain_net_sharing.test_finding_is_stable_under_netlist_and_review_ordering"
       ],
       "implementation_refs": [
-        "kicad_tooling/hwrepo/design_lint_connector_supply_domains.py#mapped_supply_domains_shared_net_candidates",
+        "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
         "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
       ],
       "theme": "connectors",
-      "implementation_owner": "kicad_tooling/hwrepo/design_lint_connector_supply_domains.py#mapped_supply_domains_shared_net_candidates"
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates"
     },
     {
       "rule_id": "connector.stateful_contact_topology_mismatch",
@@ -3869,7 +3869,7 @@
       "limitations": [
         "Internal device pull-ups and off-board pull-ups are invisible in this netlist and can produce valid review findings.",
         "Branched or otherwise ambiguous resistor junctions are not followed. The heuristic itself checks nominal topology only; it does not analyze resistor placement, tolerance, bus capacitance, voltage compatibility, or timing.",
-        "A missing-path hint is resolved only by an exact project-authored I2C requirement whose SDA and SCL checks and every configured voltage or electrical-window check pass against this native netlist. When per-element tolerance entries are supplied, their resistor references or array-channel IDs must exactly cover the mapped elements on each line. A configured capacitance scope must map every fitted C-prefixed component directly attached to each line; a contributor with another reference prefix is counted only when explicitly mapped, and any other unlisted loading must be included in the authored residual bound. Mapped contributors must pass exact identity, pin/net, and nominal-value checks plus the authored effective-capacitance budget. Missing, pending, not-applicable, mismatched, or failing requirements leave the review open. Tolerance and capacitance source bases remain reviewed inputs; the checker does not verify cited documents or extract board, endpoint, or off-board capacitance."
+        "A missing-path hint is resolved only by an exact project-authored I2C requirement whose SDA and SCL checks and every configured voltage or electrical-window check pass against this native netlist. When per-element tolerance entries are supplied, their resistor references or array-channel IDs must exactly cover the mapped elements on each line. A configured capacitance scope must map every fitted C-prefixed component and every recognized capacitor-symbol component directly attached to each line; opaque non-C symbols require an explicit contributor map or their loading must be included in the authored residual bound. Mapped contributors must pass exact identity, pin/net, and nominal-value checks plus the authored effective-capacitance budget. Missing, pending, not-applicable, mismatched, or failing requirements leave the review open. Tolerance and capacitance source bases remain reviewed inputs; the checker does not verify cited documents or extract board, endpoint, or off-board capacitance."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
@@ -3883,6 +3883,7 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_overbudget_array_capacitance_keeps_the_i2c_prompt_open",
         "tests.test_i2c_pullup_capacitance.test_unmapped_capacitor_on_the_bus_line_fails_scope",
         "tests.test_i2c_pullup_capacitance.test_unmapped_c_reference_stays_discovered_with_non_c_mapping",
+        "tests.test_i2c_pullup_capacitance.test_unmapped_non_c_capacitor_symbol_is_discovered_on_the_line",
         "tests.test_i2c_pullup_capacitance.test_changed_part_identity_fails_mapped_capacitor",
         "tests.test_i2c_pullup_capacitance.test_changed_symbol_footprint_or_pin_inventory_fails_exact_mapping",
         "tests.test_i2c_pullup_capacitance.test_nominal_value_outside_reviewed_range_fails_mapped_capacitor",
@@ -3904,6 +3905,7 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_capacitance_scope_resolves_the_i2c_prompt",
         "tests.test_i2c_pullup_capacitance.test_exact_fitted_capacitor_and_residual_bound_pass",
         "tests.test_i2c_pullup_capacitance.test_explicit_non_c_reference_capacitor_mapping_passes",
+        "tests.test_i2c_pullup_capacitance.test_non_c_capacitor_outside_the_scoped_line_is_not_a_candidate",
         "tests.test_i2c_pullup_capacitance.test_capacitance_contract_accepts_explicit_non_c_reference",
         "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",

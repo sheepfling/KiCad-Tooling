@@ -95,6 +95,7 @@ def array_requirement() -> I2cPullupAnalysis:
 def array_netlist_with_capacitor(
     *,
     reference: str = "C1",
+    extra_reference: str = "C2",
     value: str = "10p",
     part_id: str | None = "SYNTHETIC-CAP-10P",
     return_net: str = "GND",
@@ -102,7 +103,7 @@ def array_netlist_with_capacitor(
 ) -> NetlistContract:
     """Add one or two fitted local capacitors to the synthetic SDA bus."""
     observed = array_netlist()
-    references = (reference, "C2") if extra_capacitor else (reference,)
+    references = (reference, extra_reference) if extra_capacitor else (reference,)
     components = dict(observed.components)
     symbols = dict(observed.component_symbols)
     pin_functions = dict(observed.pin_functions)
@@ -136,6 +137,7 @@ def array_netlist_with_capacitor(
 def array_requirement_with_capacitance_scope(
     *,
     reference: str = "C1",
+    include_contributor: bool = True,
     maximum_bus_capacitance_pf: float = 50.0,
     maximum_effective_capacitance_pf: float = 12.0,
     maximum_residual_capacitance_pf: float = 25.0,
@@ -169,7 +171,7 @@ def array_requirement_with_capacitance_scope(
         inventory_basis="Synthetic inventory of fitted capacitors attached to SDA",
         maximum_residual_capacitance_pf=maximum_residual_capacitance_pf,
         residual_capacitance_basis="Synthetic endpoint, route, and pin-load residual",
-        contributors=(contributor,),
+        contributors=(contributor,) if include_contributor else (),
     )
     sda_window = window.model_copy(update={"capacitance_scope": scope})
     sda = bus.sda.model_copy(

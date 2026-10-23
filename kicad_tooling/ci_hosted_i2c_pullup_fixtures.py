@@ -50,7 +50,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {
         "control": "46fbdf1453e8254a633b7dee43b8877fc516758446314f4834f55a41db2a2479",
-        "fault": "a9d731c6b5520be75f53fd8904a47e973d824e80786539f1cf6c09433d635a65",
+        "fault": "c4ec4dbb38f9a076d3f8969fd77b9f2f869648c1ca490f1c973e4b92ba16f595",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("I2C pull-up fixture sources differ from the reviewed hashes")
@@ -202,6 +202,18 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         or control.nets.get("GND") != ("X1.2",)
     ):
         raise ValueError("Native I2C control lost its explicitly mapped X1 capacitance evidence")
+    fault = observations[("fault", "first")]
+    extra_capacitor = fault.components.get("X2")
+    if (
+        extra_capacitor is None
+        or extra_capacitor.value != "4p"
+        or extra_capacitor.footprint != "Synthetic:0603"
+        or fault.component_symbols.get("X2") != "Device:C"
+        or set(fault.component_pin_numbers.get("X2", ())) != {"1", "2"}
+        or "X2.1" not in fault.nets.get("I2C_SDA", ())
+        or "X2.2" not in fault.nets.get("GND", ())
+    ):
+        raise ValueError("Native I2C fault lost its unmapped non-C capacitor evidence")
     control_checks = {item.id: item for item in reports[("control", "first")]}
     if any(
         control_checks[f"i2c-pullup/array-bus/{line}"].status != "PASS" for line in ("sda", "scl")
@@ -220,7 +232,6 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     ):
         raise ValueError("Native mapped I2C capacitance scope did not pass")
 
-    fault = observations[("fault", "first")]
     fault_checks = {item.id: item for item in reports[("fault", "first")]}
     sda_fault = fault_checks["i2c-pullup/array-bus/sda"]
     if (
@@ -236,12 +247,14 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         for line in ("sda", "scl")
     ):
         raise ValueError("Native pin/net fault unexpectedly changed authored tolerance coverage")
-    if any(
-        fault_checks[f"i2c-pullup/array-bus/{line}/electrical-window/capacitance-scope"].status
+    fault_capacitance = fault_checks["i2c-pullup/array-bus/sda/electrical-window/capacitance-scope"]
+    if (
+        fault_capacitance.status != "FAIL"
+        or "unmapped fitted capacitors on I2C_SDA: X2" not in fault_capacitance.detail
+        or fault_checks["i2c-pullup/array-bus/scl/electrical-window/capacitance-scope"].status
         != "PASS"
-        for line in ("sda", "scl")
     ):
-        raise ValueError("Native pin/net fault unexpectedly changed authored capacitance coverage")
+        raise ValueError("Native I2C fault did not discover its unmapped X2 capacitor")
 
     for case in fixtures:
         first_hash = normalized_hashes[(case, "first")]
@@ -322,6 +335,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
                 "i2c-pullup/array-bus/sda/electrical-window/capacitance-scope"
             ].status,
             sda_capacitance_contributors="X1",
+            sda_capacitance_unmapped="X2" if case == "fault" else "none",
             scl_capacitance_scope=checks[
                 "i2c-pullup/array-bus/scl/electrical-window/capacitance-scope"
             ].status,

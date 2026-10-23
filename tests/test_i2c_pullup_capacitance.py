@@ -24,20 +24,24 @@ CAPACITANCE_SCOPE = "i2c-pullup/main/sda/electrical-window/capacitance-scope"
 def _check(
     *,
     reference: str = "C1",
+    extra_reference: str = "C2",
     value: str = "10p",
     part_id: str | None = "SYNTHETIC-CAP-10P",
     return_net: str = "GND",
     extra_capacitor: bool = False,
+    include_contributor: bool = True,
     maximum_effective_capacitance_pf: float = 12.0,
     maximum_residual_capacitance_pf: float = 25.0,
 ) -> ElectricalCheck:
     requirement = array_requirement_with_capacitance_scope(
         reference=reference,
+        include_contributor=include_contributor,
         maximum_effective_capacitance_pf=maximum_effective_capacitance_pf,
         maximum_residual_capacitance_pf=maximum_residual_capacitance_pf,
     )
     observed = array_netlist_with_capacitor(
         reference=reference,
+        extra_reference=extra_reference,
         value=value,
         part_id=part_id,
         return_net=return_net,
@@ -63,6 +67,34 @@ def test_explicit_non_c_reference_capacitor_mapping_passes() -> None:
     assert check.status == "PASS"
     assert "X1≤12pF" in check.detail
     assert "C-prefixed" not in check.detail
+
+
+def test_unmapped_non_c_capacitor_symbol_is_discovered_on_the_line() -> None:
+    check = _check(reference="X1", include_contributor=False)
+
+    assert check.status == "FAIL"
+    assert "unmapped fitted capacitors on I2C_SDA: X1" in check.detail
+
+
+def test_non_c_capacitor_outside_the_scoped_line_is_not_a_candidate() -> None:
+    requirement = array_requirement_with_capacitance_scope(include_contributor=False)
+    baseline = array_netlist_with_capacitor(reference="X1")
+    observed = baseline.model_copy(
+        update={
+            "nets": {
+                **baseline.nets,
+                "I2C_SDA": ("RN1.1", "U1.1"),
+                "AUX": ("X1.1",),
+            }
+        }
+    )
+
+    check = next(
+        check for check in i2c_pullup_checks(requirement, observed) if check.id == CAPACITANCE_SCOPE
+    )
+
+    assert check.status == "PASS"
+    assert "X1" not in check.detail
 
 
 def test_unmapped_c_reference_stays_discovered_with_non_c_mapping() -> None:

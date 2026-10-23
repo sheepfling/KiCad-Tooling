@@ -10,7 +10,7 @@ from .design_lint_connector_footprint_candidates import (
     connector_footprint_peer_pin_candidates,
 )
 from .design_lint_connector_pin_candidates import connector_pin_candidates
-from .design_lint_connector_supply_domains import (
+from .design_lint_connectors_supply_domains import (
     mapped_supply_domains_shared_net_candidates,
 )
 from .design_lint_return_domain_candidates import return_domain_candidates

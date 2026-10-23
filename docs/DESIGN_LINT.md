@@ -3055,15 +3055,17 @@ window checks must also pass before an authored requirement resolves the
 heuristic prompt. The window values and source notes remain project inputs;
 this is not a waveform simulation.
 
-An optional `capacitance_scope` automatically inventories fitted C-prefixed
-components whose native pin assignments connect directly to the bus line. A
-contributor with another reference prefix can be counted when it is explicitly
-listed. Each listed contributor binds the exact symbol, footprint, optional
-`PART_ID`, two-pin inventory, signal and return pins/nets, and nominal
-capacitance range. It also records a reviewed maximum effective capacitance
-for that component, which can include tolerance and DC-bias derating. A
-separate residual bound covers bus loading not represented by those local
-schematic capacitors. The sum of contributor maxima and residual must not exceed
+An optional `capacitance_scope` inventories fitted C-prefixed components and
+components with recognized capacitor-symbol identities whose native pin
+assignments connect directly to the bus line. A contributor with another
+reference prefix can be counted either through that symbol-based discovery or
+by an explicit map when its symbol identity is opaque. Each listed contributor
+binds the exact symbol, footprint, optional `PART_ID`, two-pin inventory,
+signal and return pins/nets, and nominal capacitance range. It also records a
+reviewed maximum effective capacitance for that component, which can include
+tolerance and DC-bias derating. A separate residual bound covers bus loading
+not represented by those local schematic capacitors. The sum of contributor
+maxima and residual must not exceed
 `maximum_bus_capacitance_pf`:
 
 ```json
@@ -3090,10 +3092,11 @@ schematic capacitors. The sum of contributor maxima and residual must not exceed
 }
 ```
 
-Every fitted C-prefixed device attached to the line must be mapped. Other
-reference prefixes are not discovered automatically; explicitly map them as
-contributors or account for their loading in the residual bound. Stale,
-missing, DNP, identity, pin, net, or nominal-range mismatches fail the scope.
+Every fitted C-prefixed device and recognized capacitor-symbol component
+attached to the line must be mapped. A non-C reference with an opaque symbol is
+not discovered automatically; explicitly map it as a contributor or account
+for its loading in the residual bound. Stale, missing, DNP, identity, pin,
+net, or nominal-range mismatches fail the scope.
 The residual must account for endpoint pin loads, board parasitics, and any
 off-board loading included in the requirement. Configured sink-current,
 rise-time, tolerance, and capacitance checks must all pass before an authored
