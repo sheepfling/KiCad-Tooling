@@ -145,7 +145,7 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
     normalized_hashes: dict[tuple[str, str], str] = {}
     reports: dict[tuple[str, str], DesignLintReport] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
-    for case in ("control", "fault"):
+    for case in sources:
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
             if not netlist_path.is_file():
