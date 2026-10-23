@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 193 active rules.
+The catalog currently contains 194 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1723,6 +1723,45 @@ Run the exact-native lane with:
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_interface_other_named_rail_native_fixture_lane.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_other_named_rail")'
+```
+
+## Review a mapped supply contact on a return-labeled net
+
+`connector.mapped_interface_supply_on_return_net` prompts when a complete,
+source-matched interface map marks a fitted generic-function contact as
+`supply`, while the contact has one native schematic assignment to a
+return-labeled net such as `GND`, `0V`, or `RET`. It asks the reviewer to check
+the pin map, voltage domain, and assignment. A named return label is evidence
+for review; it does not prove that the electrical potential or interface map is
+wrong.
+
+The check excludes named native power functions, DNP connectors, multiply
+assigned pins, stale or incomplete maps, missing catalog digests, and labels
+without a bounded return token. It does not choose a replacement net, set a
+voltage requirement, require other contacts to share that net, or prove PCB
+copper continuity or external bonding. Project policy can leave the rule at
+`review`, set it to `block` or `off`, or ignore a finding by exact fingerprint.
+
+Synthetic fault/control tests cover recognized and unrelated labels, mapped
+roles, named native functions, evidence invalidation, DNP, policy, exact
+ignores, stable ordering, and a one-pin mutation across four connectors. The
+exact-native fault/control reuses the source-hashed tooling-owned `ret-control`
+schematic: the same generic J1.7 pin is mapped as `supply` for the fault and
+`return` for the control, with exports checked against KiCad 10.0.0 and 10.0.5.
+
+Run the focused synthetic slice with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_mapped_interface_supply_on_return_net.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_supply_on_return_net")'
+```
+
+Run the exact-native lane with:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_mapped_interface_supply_on_return_net_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_supply_on_return_net")'
 ```
 
 ## Review mapped PCB track widths

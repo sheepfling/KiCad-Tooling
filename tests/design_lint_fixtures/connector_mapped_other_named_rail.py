@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from hashlib import sha256
 
 from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
@@ -10,6 +11,7 @@ from kicad_tooling.hwrepo.connector_coverage_models import (
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
 )
+from kicad_tooling.hwrepo.connector_peer_pin_models import ConnectorPinRole
 from kicad_tooling.hwrepo.contracts import model_json_bytes
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
@@ -73,8 +75,10 @@ def native_return_board_coverage(
     observed: NetlistContract,
     *,
     other_pins: frozenset[str] = frozenset(),
+    role_overrides: Mapping[str, ConnectorPinRole] | None = None,
 ) -> ConnectorCoverageReport:
-    """Build a complete, test-authored interface catalog for the synthetic DB9 export."""
+    """Build complete test-authored connector coverage with optional role mutations."""
+    role_overrides = role_overrides or {}
     interfaces: dict[str, InterfaceRecord] = {}
     reviews: list[ConnectorInterfaceReview] = []
     for reference, pin_numbers in sorted(observed.component_pin_numbers.items()):
@@ -82,12 +86,13 @@ def native_return_board_coverage(
         pins: list[InterfacePin] = []
         for number in sorted(pin_numbers):
             component_pin = f"{reference}.{number}"
-            role = (
+            role = role_overrides.get(
+                component_pin,
                 "other"
                 if component_pin in other_pins
                 else "return"
                 if number in {"7", "9"}
-                else "signal"
+                else "signal",
             )
             pins.append(
                 InterfacePin(

@@ -15,6 +15,7 @@ SHIELD_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_unassigned
 POWER_CONTACT_RULE_ID: DesignLintRuleId = "connector.mapped_interface_power_contact_unassigned"
 OTHER_CONTACT_RULE_ID: DesignLintRuleId = "connector.mapped_interface_other_unassigned"
 OTHER_NAMED_RAIL_RULE_ID: DesignLintRuleId = "connector.mapped_interface_other_named_rail"
+SUPPLY_RETURN_NET_RULE_ID: DesignLintRuleId = "connector.mapped_interface_supply_on_return_net"
 
 
 def unassigned_mapped_interface_signal_pins(
@@ -264,6 +265,59 @@ def mapped_other_contacts_on_named_rails(
                     "native_pin_function": (mapped.symbol_function or "<missing>",),
                     "assigned_nets": (net_name,),
                     "net_label_role_clue": (f"{label_clue} label",),
+                    "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
+                },
+            )
+        )
+    return tuple(results)
+
+
+def mapped_supply_contacts_on_return_nets(
+    observed: NetlistContract,
+    coverage: ConnectorCoverageReport | None,
+) -> tuple[Candidate, ...]:
+    """Review generic mapped supply contacts assigned to return-labeled nets."""
+    if coverage is None or coverage.status != "COMPLETE":
+        return ()
+
+    dnp_references = {reference.casefold() for reference in observed.dnp_components}
+    results: list[Candidate] = []
+    for pin, mapped in sorted(source_matched_connector_pin_evidence(observed, coverage).items()):
+        reference = pin.rsplit(".", 1)[0]
+        if (
+            mapped.role != "supply"
+            or mapped.unconnected_reason is not None
+            or reference.casefold() in dnp_references
+            or not pin_function_is_generic(mapped.symbol_function)
+            or len(mapped.nets) != 1
+        ):
+            continue
+
+        net_name = mapped.nets[0]
+        if not is_return_like_net_name(net_name):
+            continue
+
+        results.append(
+            Candidate(
+                rule_id=SUPPLY_RETURN_NET_RULE_ID,
+                subject=f"{pin}: mapped supply contact is assigned to return-like net {net_name}",
+                message=(
+                    f"The source-matched interface maps this generic contact to "
+                    f"{mapped.interface_signal} as a supply contact, while its single native "
+                    f"net label ({net_name}) is recognized as return-like. Review the pin map, "
+                    "voltage domain, and net assignment. The map and label are review clues; "
+                    "they do not prove electrical potential, an actual mismatch, or required "
+                    "connectivity, and this check does not establish PCB copper continuity."
+                ),
+                evidence={
+                    "component_pin": (pin,),
+                    "interface_pin_number": (str(mapped.interface_pin_number),),
+                    "interface_signal": (str(mapped.interface_signal),),
+                    "interface_role": ("supply",),
+                    "interface_voltage_domain": (str(mapped.voltage_domain or "<missing>"),),
+                    "native_pin_function": (mapped.symbol_function or "<missing>",),
+                    "assigned_nets": (net_name,),
+                    "net_label_role_clue": ("return-like label",),
                     "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
                 },
             )

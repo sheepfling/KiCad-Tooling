@@ -18,6 +18,7 @@ HASHSEED_REPORT_FAMILIES = (
     "connector_scope_singletons",
     "mapped_interface_other_unassigned",
     "mapped_interface_other_named_rail",
+    "mapped_interface_supply_return_net",
     "pcb_required_fitted_reference",
     "pcb_board_only_footprints",
     "pcb_dnp_mismatch",

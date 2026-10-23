@@ -2873,6 +2873,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_other_contacts_on_named_rails"
     },
     {
+      "rule_id": "connector.mapped_interface_supply_on_return_net",
+      "title": "Mapped supply contact is assigned to a return-labeled net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface role and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate when a generic or missing native pin function mapped as role=supply has exactly one assigned net whose label contains a bounded return token.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The map role and return-like label are independent review clues, not proof of electrical potential, an actual mismatch, or required connectivity.",
+        "Only generic or missing native pin functions are considered; named native power functions remain with their existing specific check.",
+        "DNP references, stale or incomplete interface evidence, digestless coverage, multiply assigned contacts, and labels without a bounded return token are excluded.",
+        "The review does not select a target net, prove PCB copper continuity, or verify external wiring or physical bonding."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_generic_mapped_supply_on_return_label_requests_review",
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_bounded_return_labels_are_review_clues",
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_four_port_case_localizes_one_supply_role_map_mutation",
+        "tests.test_connector_mapped_interface_supply_on_return_net_native_fixture_lane.test_native_generic_supply_map_on_ret_is_reviewed_and_return_role_is_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_ordinary_or_supply_labels_and_other_mapped_roles_are_controls",
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_named_native_supply_function_stays_with_existing_specific_rule",
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_dnp_stale_incomplete_digestless_and_multi_net_cases_are_controls",
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_review_policy_and_exact_ignore_apply",
+        "tests.test_connector_mapped_interface_supply_on_return_net_native_fixture_lane.test_native_generic_supply_map_on_ret_is_reviewed_and_return_role_is_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_interface_supply_on_return_net.test_candidate_is_stable_under_netlist_mapping_order",
+        "tests.test_design_lint_determinism_mapped_interface_supply_on_return_net.test_supply_return_net_fault_and_control_reports_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_supply_contacts_on_return_nets",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_supply_contacts_on_return_nets"
+    },
+    {
       "rule_id": "connector.mapped_interface_power_contact_unassigned",
       "title": "Mapped connector supply or return contact has no net assignment",
       "status": "active",

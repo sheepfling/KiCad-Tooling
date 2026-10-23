@@ -12,6 +12,7 @@ import tests.component_peer_power_input_support as _component_peer_power_input_s
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
+import tests.design_lint_fixtures.connector_mapped_supply_return_net as _mapped_supply_return_net
 import tests.design_lint_fixtures.connector_named_power_aliases as _connector_named_power_aliases
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
@@ -163,6 +164,11 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _usb_peer_reference_support.usb_peer_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
+    mapped_supply_source = _mapped_supply_return_net.mapped_supply_return_net_netlist()
+    mapped_supply_report, _ = _mapped_supply_return_net.mapped_supply_return_net_report(
+        mapped_supply_source
+    )
+    emitted.update(item.rule_id for item in mapped_supply_report.findings)
     emitted.update(protocol_peer_candidate_rule_ids())
     emitted.update(item.rule_id for item in candidates(_mosfet_gate_source_bias_fixtures.netlist()))
     emitted.update(
