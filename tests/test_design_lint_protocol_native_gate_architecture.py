@@ -70,6 +70,13 @@ _PROTOCOL_NATIVE_CASES = (
         "test_native_can_tx_rx_label_fault_and_control_repeat",
         id="can-tx-rx-label-mismatch",
     ),
+    pytest.param(
+        "bus.spi_clock_select_label_mismatch",
+        "KICAD_RUN_NATIVE_SPI_CLOCK_SELECT_LABEL_FIXTURES",
+        "tests.test_spi_clock_select_label_mismatch_native_fixture_lane."
+        "test_native_spi_clock_select_label_fault_and_control_repeat",
+        id="spi-clock-select-label-mismatch",
+    ),
 )
 
 

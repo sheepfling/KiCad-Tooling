@@ -70,6 +70,7 @@ BUS_ANALYSIS_MODULES = (
     "serial_same_net.py",
     "serial_tx_output_sharing.py",
     "spi_data_label.py",
+    "spi_clock_select_label_mismatch.py",
     "spi_same_net.py",
     "spi_clock_data_same_net.py",
     "spi_control_same_net.py",

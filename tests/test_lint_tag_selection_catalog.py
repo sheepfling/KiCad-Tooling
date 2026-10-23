@@ -60,6 +60,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SPI_DATA_POLARITY_FIXTURES",
         ),
         (
+            "bus.spi_clock_select_label_mismatch",
+            "KICAD_RUN_NATIVE_SPI_CLOCK_SELECT_LABEL_FIXTURES",
+        ),
+        (
             "bus.spi_chip_select_inputs_share_net",
             "KICAD_RUN_NATIVE_SPI_SHARED_CHIP_SELECT_FIXTURES",
         ),

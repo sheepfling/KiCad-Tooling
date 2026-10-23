@@ -102,6 +102,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "spi_peer_reference_candidates",
         "spi_bias_candidates",
         "spi_data_polarity_label_candidates",
+        "spi_clock_select_label_mismatch_candidates",
         "spi_data_input_output_same_net_candidates",
         "spi_clock_control_data_same_net_candidates",
         "spi_clock_chip_select_same_net_candidates",

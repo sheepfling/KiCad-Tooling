@@ -4582,6 +4582,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/spi_data_label.py#spi_data_polarity_label_candidates"
     },
     {
+      "rule_id": "bus.spi_clock_select_label_mismatch",
+      "title": "SPI clock or chip-select pin function conflicts with its net label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded SPI pin functions, exact net assignments, fitted state, and component pin inventory",
+      "predicate": "For each fitted U/IC pin with a bounded SPI clock or chip-select function, require its native pin number to appear in the component inventory and require exactly one native net assignment. Emit a REVIEW candidate when the assigned net name resolves to the opposite SPI clock or chip-select role under spi_signal_role_and_channel.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Recognition is limited to the clock and chip-select aliases accepted by spi_signal_role_and_channel, including optional SPI prefixes and numeric channels. Generic CLOCK/SELECT, vendor-specific aliases, and other naming conventions remain unclassified.",
+        "A role-label contradiction is a review cue because endpoint naming conventions can be part-specific. The rule does not assert that one signal label is authoritative and does not infer an electrically required topology.",
+        "DNP references, connectors, open or multiply assigned pins, and pins missing from the component inventory are skipped. Project-authored interface maps remain authoritative for required endpoint relationships.",
+        "The check observes schematic pin functions and native net names only. It does not establish device configuration, protocol behavior, PCB copper, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_clock_select_label_mismatch.test_crossed_spi_clock_select_labels_are_reviewed",
+        "tests.test_spi_clock_select_label_mismatch_native_fixture_lane.test_native_spi_clock_select_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_clock_select_label_mismatch.test_matching_aliases_and_unrelated_net_names_remain_quiet",
+        "tests.test_spi_clock_select_label_mismatch_native_fixture_lane.test_native_spi_clock_select_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_spi_clock_select_label_mismatch.test_findings_are_order_stable_and_correction_clears_them"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_CLOCK_SELECT_LABEL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_clock_select_label_mismatch.py#spi_clock_select_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/spi_role_assignments.py#spi_role_assignment_groups",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_clock_select_label_mismatch.py#spi_clock_select_label_mismatch_candidates"
+    },
+    {
       "rule_id": "bus.spi_chip_select_inputs_share_net",
       "title": "Multiple SPI chip-select inputs share one net",
       "status": "active",

@@ -273,6 +273,13 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             ),
         ),
         (
+            "bus.spi_clock_select_label_mismatch",
+            (
+                "tests/test_spi_clock_select_label_mismatch.py::"
+                "test_crossed_spi_clock_select_labels_are_reviewed"
+            ),
+        ),
+        (
             "bus.can_tx_rx_same_net",
             (
                 "tests/test_can_tx_rx_same_net.py::"

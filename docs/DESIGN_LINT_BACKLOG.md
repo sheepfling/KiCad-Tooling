@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 182 rules are implemented with synthetic regression coverage.
+The following 183 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 182 active rules.
+The catalog currently contains 183 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -533,6 +533,7 @@ skipped under prerelease policy.
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_active_low_chip_select_without_pullup`
 - `bus.spi_data_polarity_label_mismatch`
+- `bus.spi_clock_select_label_mismatch`
 - `bus.spi_data_input_output_same_net`
 - `bus.spi_clock_control_data_same_net`
 - `bus.spi_clock_chip_select_same_net`
@@ -2977,7 +2978,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 182 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 183 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10706,6 +10707,45 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CAN_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_can_tx_rx_label_mismatch_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_rx_label_mismatch")'
+  ```
+
+#### LINT-201 — Review SPI clock/select labels that conflict with pin functions
+
+- **Status:** Implemented as the default-`review`
+  `bus.spi_clock_select_label_mismatch` heuristic, with project overrides for
+  `review`, `block`, `off`, and exact finding ignores.
+- **Gap:** SPI data checks compare MOSI/MISO pin functions with their net
+  labels, and same-net checks catch clock/select shorts. No rule compares
+  explicit SCK/SCLK or chip-select functions against an explicitly opposite
+  SPI net name while the pins remain on separate nets.
+- **Predicate:** For a fitted U/IC, compare bounded SPI `clock` and
+  `chip_select` pin functions with their unique native net assignment. Require
+  each compared pin in the component pin inventory. Emit a review candidate
+  when the assigned net name resolves to the other role using the shared
+  `spi_signal_role_and_channel` parser.
+- **Boundary:** DNP components, connectors, open or multiply assigned pins,
+  inventory-inconsistent role groups, neutral labels, generic `CLOCK` or
+  `SELECT`, and vendor-specific aliases remain unclassified. A role-label
+  contradiction can be intentional for a particular part; the rule does not
+  establish the authoritative pin map, required topology, protocol behavior,
+  PCB copper, or off-board wiring.
+- **Fixtures:** Tooling-owned synthetic fault and matching control schematics
+  use passive pin types to isolate the lint from ERC driver checks. Synthetic
+  tests cover aliases, channel handling, neutral and unrelated labels, DNP,
+  connectors, open and multiply assigned pins, incomplete inventory, policy,
+  exact ignore, ordering, and repair. The native fault/control lane repeats
+  netlist and ERC exports on digest-pinned KiCad 10.0.0 and 10.0.5 images.
+- **Fixture note:** [Synthetic SPI clock/select label sources and hashes]
+  (../tests/fixtures/design_lint/spi-clock-select-label-mismatch/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_clock_select_label_mismatch.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_clock_select_label_mismatch")'
+
+  KICAD_RUN_NATIVE_SPI_CLOCK_SELECT_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_spi_clock_select_label_mismatch_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_select_label_mismatch")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

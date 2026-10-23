@@ -34,6 +34,7 @@ from .rs485_peer_reference_types import Rs485PeerReferenceScan
 from .serial_same_net import serial_tx_rx_same_net_candidates
 from .serial_tx_output_sharing import serial_tx_output_sharing_candidates
 from .spi_clock_data_same_net import spi_clock_control_data_same_net_candidates
+from .spi_clock_select_label_mismatch import spi_clock_select_label_mismatch_candidates
 from .spi_control_same_net import spi_clock_chip_select_same_net_candidates
 from .spi_data_label import spi_data_polarity_label_candidates
 from .spi_peer_reference_scan import SpiPeerReferenceScan
@@ -75,6 +76,7 @@ def bus_candidates(
         ),
         *spi_bias_candidates(observed),
         *spi_data_polarity_label_candidates(observed),
+        *spi_clock_select_label_mismatch_candidates(observed),
         *spi_data_input_output_same_net_candidates(observed),
         *spi_clock_control_data_same_net_candidates(observed),
         *spi_clock_chip_select_same_net_candidates(observed),
