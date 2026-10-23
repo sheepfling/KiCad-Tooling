@@ -2893,6 +2893,7 @@ in the project-owned `tests/electrical.json` contract:
         "expected_symbol": "Synthetic:ResistorArray",
         "expected_footprint": "Synthetic:RA4",
         "expected_value": "4x4.7k",
+        "expected_part_id": "SYNTHETIC-ARRAY-47K",
         "basis": "Synthetic reviewed datasheet and pin map",
         "channels": [
           {
@@ -3048,17 +3049,21 @@ each leg must match its component identity and resistance range, and every
 native pin inventory must contain exactly two pins assigned to the expected
 nets. Intermediate nets must contain only the two adjacent resistor pins.
 For each array, the contract supplies exact reference, symbol, footprint,
-value, channel pins, signal and rail nets, and nominal channel resistance.
+value, channel pins, signal and rail nets, and nominal channel resistance. An
+optional `expected_part_id` binds the map to the schematic's exact `PART_ID`
+property; a mismatch or missing native `PART_ID` fails the array check. This
+can catch a part substitution that keeps the same symbol, footprint, and value.
 Every native array pin must appear in a channel map or have an explicit
 `unmapped_pin_reasons` entry. The netlist can verify these identities and
 assignments; it cannot establish the array's internal pin topology or channel
 resistance. Those values must come from an independently reviewed datasheet
-pin map. A direct pull-up to another recognized positive rail also fails the
-check. DNP components do not satisfy a required path or channel. The project
-contract must be reviewed independently; unless an optional voltage map is
-provided, the rule does not determine rail voltage or pin limits. It does not
-check bus capacitance, rise time, transient behavior, sink-current margin, or
-suitability of an external/internal pull-up.
+pin map. `expected_part_id` binds project identity but does not verify catalog
+contents or cited datasheet claims. A direct pull-up to another recognized
+positive rail also fails the check. DNP components do not satisfy a required
+path or channel. The project contract must be reviewed independently; unless
+an optional voltage map is provided, the rule does not determine rail voltage
+or pin limits. It does not check bus capacitance, rise time, transient
+behavior, sink-current margin, or suitability of an external/internal pull-up.
 
 Set `i2c_pullups` to `{"mode":"not_applicable","reason":"..."}` when the
 project has no board-local discrete pull-up requirement, including a reviewed

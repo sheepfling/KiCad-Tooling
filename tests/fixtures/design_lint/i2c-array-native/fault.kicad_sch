@@ -51,6 +51,7 @@
     (property "Reference" "RN1" (at 100 88.9 0) (effects (font (size 1.27 1.27)) (justify left)))
     (property "Value" "4x4.7k" (at 100 91.44 0) (effects (font (size 1.27 1.27)) (justify left)))
     (property "Footprint" "Synthetic:RA4" (at 100 100 0) (effects (font (size 1.27 1.27)) hide))
+    (property "PART_ID" "SYNTHETIC-ARRAY-47K" (at 100 100 0) (effects (font (size 1.27 1.27)) hide))
     (property "Datasheet" "" (at 100 100 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "72000000-0000-4000-8000-000000000003"))
     (pin "2" (uuid "72000000-0000-4000-8000-000000000004"))

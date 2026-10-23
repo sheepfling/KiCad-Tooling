@@ -3833,6 +3833,7 @@
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_connecting_one_line_leaves_only_the_other_pullup_missing",
         "tests.test_i2c_pullup_heuristic_coverage.test_missing_or_failing_exact_requirement_keeps_the_review_prompt_open",
+        "tests.test_i2c_pullup_heuristic_coverage.test_changed_array_part_identity_keeps_missing_pullup_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_requirement_for_a_different_ordered_bus_does_not_resolve_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",

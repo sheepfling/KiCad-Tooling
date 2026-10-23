@@ -25,6 +25,7 @@
       "expected_symbol": "Synthetic:ResistorArray",
       "expected_footprint": "Synthetic:RA4",
       "expected_value": "4x4.7k",
+      "expected_part_id": "SYNTHETIC-ARRAY-47K",
       "basis": "Synthetic array pin map and nominal channel values",
       "channels": [
         {

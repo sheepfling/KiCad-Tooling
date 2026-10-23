@@ -16,13 +16,16 @@ from kicad_tooling.hwrepo.models import (
 def array_netlist(
     *,
     symbol: str = "Synthetic:ResistorArray",
+    part_id: str | None = "SYNTHETIC-ARRAY-47K",
     dnp: tuple[str, ...] = (),
     swapped_sda_channel: bool = False,
     wrong_sda_net: bool = False,
 ) -> NetlistContract:
     sda_assignments = ("RN1.2", "RN1.1") if swapped_sda_channel else ("RN1.1", "RN1.2")
     return NetlistContract(
-        components={"RN1": ComponentContract(value="4x4.7k", footprint="Synthetic:RA4")},
+        components={
+            "RN1": ComponentContract(value="4x4.7k", footprint="Synthetic:RA4", part_id=part_id)
+        },
         nets={
             "I2C_SDA": ("U1.1",) if wrong_sda_net else ("U1.1", sda_assignments[0]),
             "I2C_SCL": ("U1.2", "RN1.3", sda_assignments[0])
@@ -58,6 +61,7 @@ def array_requirement() -> I2cPullupAnalysis:
                 expected_symbol="Synthetic:ResistorArray",
                 expected_footprint="Synthetic:RA4",
                 expected_value="4x4.7k",
+                expected_part_id="SYNTHETIC-ARRAY-47K",
                 basis="Synthetic array datasheet and pin map",
                 channels=(
                     I2cPullupArrayChannelRequirement(

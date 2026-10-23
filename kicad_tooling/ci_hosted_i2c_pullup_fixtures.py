@@ -49,14 +49,14 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
     fixtures = {case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault")}
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {
-        "control": "922e40c8815a302e8af30e3eb7e4a53b1b3361be419cc0c56fe3025619a7243d",
-        "fault": "062648e3ec3d9c71e976fc40370d4d7a1ab4d6064e73d79fe191878ee052efc4",
+        "control": "94211a89731ef9d80276b387df2573984b928d4f7e5fa5072e6c89b5d5698553",
+        "fault": "796de070b60f4a290eeeb05ed619b9e921116315c9c224f4d3fac89a695f4306",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("I2C pull-up fixture sources differ from the reviewed hashes")
 
     contract_fixture = fixture_root / "pullups.json"
-    expected_contract_sha256 = "fca70e7c1200d0f2b7acfb4d9609ac5f68b67b75d9ef4e08f5fc82dda1630e65"
+    expected_contract_sha256 = "90dfd00357f0a09bdb67742bc61ffdf3bb4167e2e5b7db2902f5812b8e24d539"
     if digest(contract_fixture) != expected_contract_sha256:
         raise ValueError("I2C pull-up requirement fixture differs from the reviewed hash")
     project_contract = root / "projects/synthetic-i2c-array/electrical.json"

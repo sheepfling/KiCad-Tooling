@@ -622,11 +622,11 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
-- **LINT-010 source-evidence gap:** Review the remaining pull-up-array source
-  identity, per-element resistance-tolerance, and bus-capacitance boundaries.
-  Add a deterministic check only where the project-authored requirement and
-  source evidence support a synthetic fault/control pair; labels alone must not
-  supply component limits.
+- **LINT-010 source-evidence gap:** Review per-element resistance-tolerance
+  scope and bus-capacitance boundaries. Mapped arrays can now bind to an exact
+  project `PART_ID`; add further deterministic checks only where the authored
+  requirement and source evidence support a synthetic fault/control pair.
+  Labels alone must not supply component limits.
 
 ### Previously prioritized additions now in the catalog
 
@@ -4489,17 +4489,18 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v7. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v8. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
   nominal ranges, two-pin inventories, and source-bound junction checks. The
   review heuristic also recognizes direct resistors and unbranched discrete
   series chains. The electrical contract supports explicitly mapped
-  resistor-array channels with exact component identity, full native pin
-  disposition, per-channel pin/net assignments, and datasheet-sourced nominal
-  resistance. An optional authored rail-to-input voltage comparison now has
-  source-bound synthetic coverage. A passing source-bound requirement for the
+  resistor-array channels with exact component identity, optional exact native
+  `PART_ID` matching, full native pin disposition, per-channel pin/net
+  assignments, and datasheet-sourced nominal resistance. An optional authored
+  rail-to-input voltage comparison now has source-bound synthetic coverage. A
+  passing source-bound requirement for the
   exact ordered SDA/SCL net pair resolves the generic missing-pull-up hint
   only when both authored line checks pass, including optional voltage
   compatibility and resistor-window checks. The optional resistor window
@@ -4531,15 +4532,19 @@ is not a reason by itself to expand its scope or change its default policy.
   pins. The electrical lane fails on a missing or mismatched direct, series,
   or mapped-array path, an intermediate series branch, an incomplete array
   pin disposition, an out-of-range equivalent, or a direct pull-up to another
-  recognized positive rail. An optional per-line voltage map compares a
-  project-authored maximum pull-up rail voltage with exact SDA/SCL input pins,
+  recognized positive rail. An optional expected array `PART_ID` catches a
+  part substitution that preserves symbol, footprint, and value. An optional
+  per-line voltage map compares a project-authored maximum pull-up rail voltage
+  with exact SDA/SCL input pins,
   their symbol and footprint identities, native pin inventories, net
   assignments, and independently sourced maximum bus-voltage limits. The
   input-scope basis records how the project reviewed completeness; omitted
   endpoints are not auto-discovered. Values and source bases are bound by the
   electrical contract digest.
   Array internals and authored nominal channel resistance still depend on an
-  independently reviewed datasheet pin map. Resolving this schematic hint
+  independently reviewed datasheet pin map. `PART_ID` matching binds the
+  array map to project identity but does not verify catalog contents or cited
+  datasheet claims. Resolving this schematic hint
   does not prove physical board return paths, copper connectivity, fitted
   resistor behavior, or off-board pull-up behavior. Project rule overrides or
   exact ignores continue to control only heuristic disposition. The optional
@@ -4554,7 +4559,9 @@ is not a reason by itself to expand its scope or change its default policy.
   active pull-ups, verify the authored resistor-tolerance source, model device
   dynamics, or predict measured waveforms. Netlist topology does not establish transient
   compatibility or off-board behavior.
-- **Fixtures:** Two direct 4.7 kΩ resistors passing at 2.35 kΩ equivalent;
+- **Fixtures:** Exact mapped-array `PART_ID` control and wrong/missing identity
+  faults, plus an opt-out control; two direct 4.7 kΩ resistors passing at
+  2.35 kΩ equivalent;
   parallel 1 kΩ resistors failing the configured range; missing path; wrong
   rail; DNP exclusion; valid two-leg series chain alone and in parallel with a
   direct path; wrong series identity, value, net, pin inventory, or branched

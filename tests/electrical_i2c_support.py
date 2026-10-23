@@ -243,6 +243,7 @@ def i2c_pullup_array_requirement(
                 expected_symbol="Synthetic:ResistorArray",
                 expected_footprint="Synthetic:RA4",
                 expected_value="4x4.7k",
+                expected_part_id="SYNTHETIC-ARRAY-47K",
                 basis="Synthetic reviewed array datasheet and pin-pair map",
                 channels=(
                     I2cPullupArrayChannelRequirement(
@@ -275,6 +276,7 @@ def i2c_pullup_array_netlist(
     value: str = "4x4.7k",
     symbol: str = "Synthetic:ResistorArray",
     footprint: str = "Synthetic:RA4",
+    part_id: str | None = "SYNTHETIC-ARRAY-47K",
     sda_signal_net: str = "I2C_SDA",
     extra_pin: bool = False,
     dnp: tuple[str, ...] = (),
@@ -290,7 +292,7 @@ def i2c_pullup_array_netlist(
     return NetlistContract(
         components={
             "U1": ComponentContract(value="Synthetic I2C target", footprint="Synthetic:SOIC8"),
-            "RN1": ComponentContract(value=value, footprint=footprint),
+            "RN1": ComponentContract(value=value, footprint=footprint, part_id=part_id),
         },
         nets=nets,
         dnp_components=dnp,

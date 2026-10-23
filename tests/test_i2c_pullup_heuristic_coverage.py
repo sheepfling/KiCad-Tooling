@@ -72,6 +72,20 @@ def test_valid_mapped_array_resolves_only_its_exact_missing_path_hint() -> None:
     assert "Native netlist SHA-256: " + "a" * 64 in rendered
 
 
+def test_changed_array_part_identity_keeps_missing_pullup_prompt_open() -> None:
+    netlist = array_netlist(part_id="SYNTHETIC-ARRAY-10K")
+    result = coverage(netlist, array_requirement())
+
+    assert result.status == "OPEN"
+    assert any(
+        "PART_ID is SYNTHETIC-ARRAY-10K; expected SYNTHETIC-ARRAY-47K" in issue
+        for issue in result.entries[0].issues
+    )
+    assert "bus.i2c_missing_pullup" in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
 @pytest.mark.parametrize(
     ("spec", "state", "observed"),
     (

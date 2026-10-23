@@ -108,13 +108,14 @@ class I2cPullupArrayChannelRequirement(StrictModel):
 
 
 class I2cPullupArrayRequirement(StrictModel):
-    """Exact component and complete pin disposition for a mapped resistor array."""
+    """Exact component identity and complete pin disposition for a mapped resistor array."""
 
     reference: Identifier
     expected_symbol: NonEmptyText
     expected_footprint: NonEmptyText
     expected_value: NonEmptyText
     basis: NonEmptyText
+    expected_part_id: Identifier | None = None
     channels: Annotated[tuple[I2cPullupArrayChannelRequirement, ...], Field(min_length=1)]
     unmapped_pin_reasons: Mapping[Reference, NonEmptyText] = Field(default_factory=dict)
 

@@ -327,6 +327,24 @@ def test_resistor_array_requires_a_complete_explicit_channel_map() -> None:
     assert covered["i2c-pullup/array-bus/sda"].status == "PASS"
 
 
+def test_resistor_array_part_identity_is_an_explicit_project_gate() -> None:
+    specification = i2c_pullup_array_requirement()
+    array = specification.arrays[0]
+    legacy = specification.model_copy(
+        update={"arrays": (array.model_copy(update={"expected_part_id": None}),)}
+    )
+    changed_part = i2c_pullup_array_netlist(part_id="SYNTHETIC-ARRAY-10K")
+
+    strict_checks = _checks(specification, changed_part)
+    assert strict_checks["i2c-pullup/array-bus/sda"].status == "FAIL"
+    assert "PART_ID is SYNTHETIC-ARRAY-10K; expected SYNTHETIC-ARRAY-47K" in (
+        strict_checks["i2c-pullup/array-bus/sda"].detail
+    )
+
+    legacy_checks = _checks(legacy, changed_part)
+    assert legacy_checks["i2c-pullup/array-bus/sda"].status == "PASS"
+
+
 @pytest.mark.parametrize(
     ("faulty_netlist", "expected_detail"),
     (
@@ -344,6 +362,16 @@ def test_resistor_array_requires_a_complete_explicit_channel_map() -> None:
             i2c_pullup_array_netlist(footprint="Synthetic:RA8"),
             "footprint is Synthetic:RA8",
             id="wrong-footprint",
+        ),
+        pytest.param(
+            i2c_pullup_array_netlist(part_id="SYNTHETIC-ARRAY-10K"),
+            "PART_ID is SYNTHETIC-ARRAY-10K",
+            id="wrong-part-id",
+        ),
+        pytest.param(
+            i2c_pullup_array_netlist(part_id=None),
+            "PART_ID is missing",
+            id="missing-part-id",
         ),
         pytest.param(
             i2c_pullup_array_netlist(sda_signal_net="WRONG_SDA"),

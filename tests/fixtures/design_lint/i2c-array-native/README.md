@@ -5,7 +5,7 @@ after KiCad exports a native XML netlist. They contain only synthetic symbols,
 part identities, pin maps, and values.
 
 The synthetic project requirement is stored separately in `pullups.json`
-(SHA-256 `fca70e7c1200d0f2b7acfb4d9609ac5f68b67b75d9ef4e08f5fc82dda1630e65`).
+(SHA-256 `90dfd00357f0a09bdb67742bc61ffdf3bb4167e2e5b7db2902f5812b8e24d539`).
 The native lane copies it into a temporary project-relative path, validates it
 through the shared contract reader, and binds its digest and path to lint
 coverage.
@@ -17,9 +17,10 @@ coverage.
 
 The 4-pin array maps independent channels RN1.1–RN1.2 and RN1.3–RN1.4 to
 SDA/SCL and +3V3. The native export must retain the symbol ID, footprint,
-value, all four pins, and exact net assignments. Each source is exported twice
-and compared after parsing to the normalized typed-netlist contract; raw XML
-hashes are retained because KiCad may vary metadata between exports.
+value, expected project `PART_ID`, all four pins, and exact net assignments.
+Each source is exported twice and compared after parsing to the normalized
+typed-netlist contract; raw XML hashes are retained because KiCad may vary
+metadata between exports.
 The same native-derived contracts also exercise `bus.i2c_missing_pullup`:
 without the authored requirement, both fixtures remain review candidates. The
 control's passing SDA and SCL array checks resolve that hint; the wrong-SDA

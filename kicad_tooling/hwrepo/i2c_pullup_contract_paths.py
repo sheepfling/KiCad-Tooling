@@ -37,6 +37,11 @@ def i2c_array_component_issues(
             issues.append(
                 f"{array.reference} value is {component.value}; expected {array.expected_value}"
             )
+        if array.expected_part_id is not None and component.part_id != array.expected_part_id:
+            issues.append(
+                f"{array.reference} PART_ID is {component.part_id or 'missing'}; "
+                f"expected {array.expected_part_id}"
+            )
     observed_symbol = symbols.get(reference_key)
     if observed_symbol != array.expected_symbol:
         issues.append(
