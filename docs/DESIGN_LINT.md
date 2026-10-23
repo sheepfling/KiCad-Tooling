@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 191 active rules.
+The catalog currently contains 192 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1644,6 +1644,45 @@ Run its focused slice with:
 ```sh
 .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_power_contact_unassigned.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_power_contact_unassigned")'
+```
+
+## Review an open mapped connector contact with role `other`
+
+`connector.mapped_interface_other_unassigned` prompts when a complete,
+source-matched interface map classifies a fitted generic or unnamed connector
+contact as `other`, but the native netlist leaves it open without an
+`unconnected_pin_reasons` entry. This asks the reviewer to confirm the
+classification or document an intentional open; `other` does not prove that
+the contact is electrical or that it needs a connection. Connected contacts,
+DNP connectors, named native functions, stale or incomplete maps, and contacts
+with a reasoned-open disposition are controls.
+
+Record an intentional open in the project-owned connector review:
+
+```json
+{
+  "reference": "J1",
+  "disposition": "interface",
+  "basis": "Reviewed connector pinout and interface operating modes",
+  "interface_id": "service-link",
+  "pin_map": {"8": "8"},
+  "unconnected_pin_reasons": {
+    "8": "Reviewed as intentionally unused in this interface revision"
+  }
+}
+```
+
+The lint does not infer the contact's electrical function, choose a target
+net, or establish PCB copper continuity or off-board wiring. Project policy
+can set the rule to `block` or `off`, or ignore a finding by its exact
+fingerprint. Synthetic fault/control tests are paired with exact KiCad
+10.0.0/10.0.5 native exports of tooling-owned connector schematics.
+
+Run its focused slice with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_mapped_interface_other_unassigned.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_other_unassigned")'
 ```
 
 ## Review mapped PCB track widths

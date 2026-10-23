@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 191 rules are implemented with synthetic regression coverage.
+The following 192 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 191 active rules.
+The catalog currently contains 192 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -476,6 +476,7 @@ skipped under prerelease policy.
 - `connector.unconnected_return_pin`
 - `connector.mapped_interface_signal_unassigned`
 - `connector.mapped_interface_shield_unassigned`
+- `connector.mapped_interface_other_unassigned`
 - `connector.mapped_interface_power_contact_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
@@ -637,6 +638,12 @@ and optional ecosystem adapters are `P3`.
   netlist leaves it open without a reasoned intentional-open decision. The
   check does not pick a net or infer commoning. Tagged acceptance passed as
   `v0.5.3rc89` (GitHub Actions run `39999226135`).
+- **LINT-210 mapped other-contact disposition:** A complete source-matched
+  interface can classify a generic connector contact as `other`. The new
+  REVIEW heuristic asks for an assignment or a reasoned intentional-open
+  decision when it is left unassigned; it does not infer electrical intent.
+  It includes synthetic fault/control, policy, metamorphic, hash-seed, and
+  exact-version native export coverage.
 - **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
   cross-rule slice that verifies every active rule has a valid theme-owned
   predicate, catalogued fixtures retain their theme markers, and catalogued
@@ -3010,7 +3017,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 191 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 192 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3187,8 +3194,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v84. The cross-process probe supports themed report
-  selectors and retains the complete 233-report inventory gate. Fault/control
+- **Status:** Implemented v85. The cross-process probe supports themed report
+  selectors and retains the complete 235-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3277,7 +3284,11 @@ is not a reason by itself to expand its scope or change its default policy.
   control. Both reports keep the netlist and interface catalog fixed while the
   reviewed scope coverage changes. The rule finding is compared across three
   independently randomized processes, and its catalog links the determinism
-  case. The enforced total is 233 reports.
+  case. The v85 extension adds a generic connector contact mapped as role=other
+  with no net and an assigned-contact control. Both reports keep the interface
+  catalog fixed and change only the source-matched connector assignment; only
+  the open contact emits LINT-210. The full reports are compared across three
+  independently randomized processes. The enforced total is 235 reports.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -11220,6 +11231,51 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_pcb_mechanical_edge_clearance_native.py \
     -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.mechanical_edge_clearance_rule_coverage")'
+  ```
+
+#### LINT-210 — Review open generic connector contacts mapped as other
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_interface_other_unassigned`.
+- **Gap:** LINT-001 verifies that every discovered connector has complete
+  interface and symbol-pin review coverage. The focused open-contact checks
+  cover mapped `signal`, `shield`, `supply`, and `return` roles, but a generic
+  contact explicitly mapped as `other` can still be left open without either a
+  net assignment or a project-authored reason for its intentional open.
+- **Predicate:** For a fitted connector with complete, source-matched interface
+  coverage and a current catalog digest, emit a REVIEW candidate when a mapped
+  `other` contact has generic or missing native pin-function metadata, no
+  assigned net, and no `unconnected_pin_reasons` entry. Stale, incomplete,
+  digestless, DNP, named-function, and connected contacts are excluded.
+- **Boundary:** `other` does not establish that a contact is electrical or
+  should connect. The prompt asks the reviewer to verify the role or record an
+  intentional open. It does not infer the intended net, replace a pinout source,
+  or establish PCB continuity or off-board wiring. Projects can use the existing
+  rule override and exact-ignore controls.
+- **Fixtures:** Synthetic cases cover the open generic contact, assigned
+  control, intentional-open reason, DNP, named-function and other-role controls,
+  stale/digestless/incomplete evidence, block/off/exact-ignore policy, and stable
+  report ordering. The native fault/control reuses the source-hashed, tooling-
+  owned mapped connector schematic pair and evaluates the new role against the
+  exact KiCad 10.0.0 and 10.0.5 netlists; it adds no board or proprietary
+  fixture.
+- **Incremental-value test:** Connector coverage remains `COMPLETE` for both
+  the fault and control, and existing role-specific open-contact rules stay
+  quiet for the `other` role. The new candidate identifies the unexplained open
+  pin and disappears when the pin is assigned or given an intentional-open
+  reason.
+- **Determinism:** LINT-080 compares full open-contact and assigned-contact
+  reports across three independently randomized Python processes; only the
+  fault emits this rule's finding.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_other_unassigned.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_other_unassigned")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_interface_other_unassigned.py \
+    -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_other_unassigned")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

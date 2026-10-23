@@ -24,6 +24,7 @@ import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
+import tests.test_connector_mapped_interface_other_unassigned as _tests_test_mapped_other_contact
 import tests.test_connector_mapped_interface_power_contact_unassigned as _tests_test_mapped_power_contact
 import tests.test_connector_peer_comparison_scope_singleton as _tests_test_scope_singleton
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
@@ -233,6 +234,8 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_mapped_power_contact._source(), role="supply"
     )
     emitted.update(item.rule_id for item in mapped_power_report.findings)
+    mapped_other_report, _ = _tests_test_mapped_other_contact._report()
+    emitted.update(item.rule_id for item in mapped_other_report.findings)
     scoped_returns, scoped_coverage = _tests_test_scope_singleton.two_usb_one_serial_return_case(
         common_return=True,
         return_comparison_groups={

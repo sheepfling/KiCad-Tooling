@@ -69,6 +69,8 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_inventory_coverage.py",
             "tests/test_connector_supply_peer_coverage.py",
             "tests/test_connector_return_role_coverage.py",
+            "tests/test_connector_mapped_interface_other_unassigned.py",
+            "tests/test_design_lint_determinism_mapped_interface_other_unassigned.py",
             "tests/test_electrical_connector_pin_contracts.py",
             "tests/test_pin_connectivity_acceptance.py",
             "tests/test_design_lint_mcp_parity_connector_identity.py",
@@ -154,6 +156,8 @@ _LINT_AREA_MODULES = {
     "interface_lint": frozenset(
         {
             "tests/test_connector_stateful_contacts.py",
+            "tests/test_connector_mapped_interface_other_unassigned.py",
+            "tests/test_design_lint_determinism_mapped_interface_other_unassigned.py",
             "tests/test_connector_signal_peer_pin_all_open.py",
             "tests/test_connector_footprint_peer_metadata_open.py",
             "tests/test_connector_footprint_signal_input.py",

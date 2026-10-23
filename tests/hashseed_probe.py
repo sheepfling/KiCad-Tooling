@@ -226,6 +226,8 @@ REPORT_ORDER = (
     "pcb_mechanical_edge_coverage_control",
     "connector_return_scope_singleton_fault",
     "connector_return_scope_singleton_control",
+    "mapped_interface_other_fault",
+    "mapped_interface_other_control",
     "pcb_required_fitted_reference_dnp_fault",
     "pcb_required_fitted_reference_fitted_control",
     "pcb_board_only_mounting_hole_candidate",
@@ -268,6 +270,9 @@ REPORT_BUILDERS = {
     "pcb_touch_pad_clearance": "tests.hashseed_probe_cases.pcb_touch_pad_clearance",
     "pcb_mechanical_edge_clearance": ("tests.hashseed_probe_cases.pcb_mechanical_edge_clearance"),
     "connector_scope_singletons": ("tests.hashseed_probe_cases.connector_scope_singletons"),
+    "mapped_interface_other_unassigned": (
+        "tests.hashseed_probe_cases.mapped_interface_other_unassigned"
+    ),
     "pcb_required_fitted_reference": ("tests.hashseed_probe_cases.pcb_required_fitted_reference"),
     "pcb_board_only_footprints": "tests.hashseed_probe_cases.pcb_board_only_footprints",
     "pcb_dnp_mismatch": "tests.hashseed_probe_cases.pcb_dnp_mismatch",

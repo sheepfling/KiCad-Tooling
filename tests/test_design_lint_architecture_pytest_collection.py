@@ -375,6 +375,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "connector.return_supply_scope_singleton",
             "tests/test_design_lint_determinism_connector_scope_singletons.py::test_return_scope_singleton_fault_and_control_reports_are_deterministic",
         ),
+        (
+            "connector.mapped_interface_other_unassigned",
+            "tests/test_design_lint_determinism_mapped_interface_other_unassigned.py::test_other_contact_fault_and_control_reports_are_deterministic",
+        ),
     ),
 )
 def test_rule_marker_selects_catalogued_cases_without_external_checkout(

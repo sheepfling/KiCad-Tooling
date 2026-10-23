@@ -2787,6 +2787,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_shield_pins"
     },
     {
+      "rule_id": "connector.mapped_interface_other_unassigned",
+      "title": "Mapped generic connector contact has no net or intentional-open reason",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface role and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate for each role=other contact with a generic or missing native pin function, no assigned net, and no intentional-open reason.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The role other does not establish that the contact is electrical or that it must be connected. Review its function and record an intentional-open reason when appropriate.",
+        "Only generic or missing native pin-function metadata is in scope; named contacts remain with their existing specific checks.",
+        "DNP references, stale or incomplete interface coverage, and evidence that does not match the exported pin inventory, pin functions, and nets are excluded.",
+        "The review does not infer the contact's electrical function, select a target net, or establish PCB copper continuity or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_interface_other_unassigned.test_open_generic_other_contact_requests_review_with_source_evidence",
+        "tests.test_connector_mapped_interface_other_unassigned.test_native_other_contact_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_interface_other_unassigned.test_connected_reasoned_dnp_and_ineligible_contacts_are_controls",
+        "tests.test_connector_mapped_interface_other_unassigned.test_stale_or_incomplete_interface_evidence_cannot_trigger_review",
+        "tests.test_connector_mapped_interface_other_unassigned.test_review_obeys_project_policy_and_exact_ignore",
+        "tests.test_connector_mapped_interface_other_unassigned.test_native_other_contact_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_interface_other_unassigned.test_finding_is_order_stable_and_clears_when_connected",
+        "tests.test_design_lint_determinism_mapped_interface_other_unassigned.test_other_contact_fault_and_control_reports_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_other_pins",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_other_pins"
+    },
+    {
       "rule_id": "connector.mapped_interface_power_contact_unassigned",
       "title": "Mapped connector supply or return contact has no net assignment",
       "status": "active",
