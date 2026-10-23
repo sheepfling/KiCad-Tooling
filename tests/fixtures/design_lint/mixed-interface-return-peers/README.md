@@ -27,8 +27,8 @@ Reviewed input SHA-256 values:
 
 | Input                    | SHA-256                                                            |
 | ------------------------ | ------------------------------------------------------------------ |
-| `fault.kicad_sch`        | `00b59baf0a11d507872a56c633245807d6abf2bb4cefd34a3b855ff7bd96e354` |
-| `control.kicad_sch`      | `476bb3396e62037d27fb84423ef3c6d4097ae1382788a34def6a92a3acc8ccc3` |
+| `fault.kicad_sch`        | `53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83` |
+| `control.kicad_sch`      | `b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45` |
 | `interfaces.json`        | `e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99` |
 | `connector-reviews.json` | `57cd1b4cdf7663f41e0223ff48f83742b7ba3f592abd7664175c17c1c2c0c373` |
 
