@@ -5,16 +5,15 @@ from __future__ import annotations
 import hashlib
 
 from kicad_tooling.hwrepo.design_lint import evaluate
-from kicad_tooling.hwrepo.models import (
-    DesignLintPolicy,
-    NetlistContract,
-)
+from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintRuleOverride
+from kicad_tooling.hwrepo.models import DesignLintPolicy, NetlistContract
 from kicad_tooling.hwrepo.mosfet_stress import mosfet_stress_checks
 from kicad_tooling.hwrepo.mosfet_stress_models import MosfetVoltageInterval
 from tests.design_lint_fixtures import (
     coach,
 )
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
+from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.test_led_output_heuristics import observed_report as led_output_observed_report
 from tests.test_led_output_heuristics import output_led_netlist as led_output_netlist
 from tests.test_mosfet_gate_connectivity import mosfet_netlist as mosfet_gate_netlist
@@ -50,13 +49,14 @@ def mosfet_stress_check_result(*, q2_over_limit: bool) -> dict[str, object]:
 def source_bound_component_report(
     project_id: str,
     observed: NetlistContract,
+    policy: DesignLintPolicy | None = None,
 ) -> dict[str, object]:
     """Serialize component lint against a hash of its normalized netlist."""
     digest = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
     return evaluate(
         project_id,
         coach(observed, netlist_sha256=digest),
-        DesignLintPolicy(),
+        policy or DesignLintPolicy(),
     ).model_dump(mode="json")
 
 
@@ -72,6 +72,23 @@ def mosfet_gate_peer_report(*, has_driver: bool) -> dict[str, object]:
     return source_bound_component_report("synthetic-mosfet-gate-hashseed", observed)
 
 
+def mosfet_terminal_order_report(*, reversed_order: bool) -> dict[str, object]:
+    """Serialize an enabled MOSFET named-rail order fault or valid control."""
+    observed = mosfet_terminal_order_netlist(reversed_order=reversed_order)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="component.mosfet_terminal_order_on_named_rails",
+                mode="review",
+                reason="Hash-seed stability fixture",
+            ),
+        )
+    )
+    return source_bound_component_report(
+        "synthetic-mosfet-terminal-order-hashseed", observed, policy
+    )
+
+
 def report_cases() -> dict[str, object]:
     return {
         "diode_rail_named_return_fault": diode_rail_orientation_report(
@@ -82,6 +99,8 @@ def report_cases() -> dict[str, object]:
         ),
         "mosfet_gate_no_peer_fault": mosfet_gate_peer_report(has_driver=False),
         "mosfet_gate_driver_control": mosfet_gate_peer_report(has_driver=True),
+        "mosfet_terminal_order_fault": mosfet_terminal_order_report(reversed_order=True),
+        "mosfet_terminal_order_control": mosfet_terminal_order_report(reversed_order=False),
         "diode_fault": evaluate(
             "synthetic-two-pin-diode-hash-seed-fault", coach(diode_netlist()), DesignLintPolicy()
         ).model_dump(mode="json"),

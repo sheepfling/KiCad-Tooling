@@ -89,6 +89,8 @@ REPORT_ORDER = (
     "diode_rail_named_return_control",
     "mosfet_gate_no_peer_fault",
     "mosfet_gate_driver_control",
+    "mosfet_terminal_order_fault",
+    "mosfet_terminal_order_control",
     "diode_fault",
     "diode_control",
     "crystal_fault",

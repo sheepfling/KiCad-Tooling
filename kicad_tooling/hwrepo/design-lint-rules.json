@@ -3032,6 +3032,56 @@
       ]
     },
     {
+      "rule_id": "component.mosfet_terminal_order_on_named_rails",
+      "title": "Review MOSFET drain/source order against named rails",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For an exact allowlisted three-terminal Transistor_FET:Q_NMOS_* or Q_PMOS_* identity with complete pin inventory, unique native D/Drain, G/Gate, and S/Source functions, and distinct unambiguous drain/source assignments, emit an opt-in REVIEW candidate when explicit rail evidence puts an NMOS drain below its source or a PMOS source below its drain.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only the exact eleven supported built-in three-terminal NMOS and PMOS identities participate. Custom, dual-gate, dual-MOSFET, depletion-mode, DNP, incomplete, ambiguous, and unassigned devices are excluded.",
+        "Ordering uses explicit numeric rail labels or unambiguous native positive/return roles. Unordered symbolic rails, conflicting roles, same-net terminals, and incomplete pin assignments are not classified.",
+        "The conventional NMOS/PMOS order is not a project requirement. Back-to-back switches, reverse-current control, low-side PMOS, analog use, or other topologies can intentionally use the reported orientation. The rule defaults to off; a candidate does not prove voltage, exact footprint pin mapping, body-diode behavior, or a defect."
+      ],
+      "fault_fixtures": [
+        "tests.test_mosfet_terminal_order.test_reversed_named_rail_order_is_visible_only_after_project_enables_review",
+        "tests.test_mosfet_terminal_order.test_native_pin_functions_determine_terminals_independent_of_pin_numbers",
+        "tests.test_mosfet_terminal_order.test_signed_numeric_rails_are_ordered_and_unordered_symbolic_rails_stay_quiet",
+        "tests.test_mosfet_terminal_order_native_fixture.test_native_mosfet_terminal_order_faults_and_controls_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_mosfet_terminal_order.test_reversed_named_rail_order_is_visible_only_after_project_enables_review",
+        "tests.test_mosfet_terminal_order.test_unsupported_incomplete_dnp_and_ambiguous_devices_are_not_classified",
+        "tests.test_mosfet_terminal_order.test_signed_numeric_rails_are_ordered_and_unordered_symbolic_rails_stay_quiet",
+        "tests.test_mosfet_terminal_order_native_fixture.test_native_mosfet_terminal_order_faults_and_controls_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_mosfet_terminal_order.test_net_mapping_order_and_rail_repair_keep_fingerprints_stable",
+        "tests.test_mosfet_terminal_order_native_fixture.test_native_mosfet_terminal_order_faults_and_controls_are_repeatable",
+        "tests.test_design_lint_determinism_components.test_mosfet_rail_order_fault_and_control_are_stable_across_hash_seeds"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_mosfet_terminal_order.py#mosfets_with_unusual_drain_source_rail_order",
+        "kicad_tooling/hwrepo/component_mosfet_symbols.py#mosfet_channel_type",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#named_net_potential",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#potential_is_lower",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/ci_hosted_mosfet_gate_fixture.py#mosfet_terminal_order_fixture_lane"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_mosfet_terminal_order.py#mosfets_with_unusual_drain_source_rail_order",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "component.polarized_capacitor_reversed_on_named_rails",
       "title": "Review polarized capacitor pin 1 below pin 2 on named rails",
       "status": "active",

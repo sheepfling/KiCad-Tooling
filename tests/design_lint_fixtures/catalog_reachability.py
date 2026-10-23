@@ -16,6 +16,7 @@ from tests.connector_footprint_peer_support import (
 )
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
+from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
 from tests.test_connector_mapped_interface_signal_unassigned import _coverage, _netlist
 from tests.test_oscillator_output_paths import (
@@ -121,6 +122,7 @@ def catalog_reachability_rule_ids() -> set[str]:
     )
     result.update(item.rule_id for item in candidates(polarized_capacitor_netlist()))
     result.update(item.rule_id for item in candidates(diode_rail_netlist()))
+    result.update(item.rule_id for item in candidates(mosfet_terminal_order_netlist()))
     mapped_signal_source = _netlist()
     mapped_signal_coverage = _coverage(mapped_signal_source)
     result.update(

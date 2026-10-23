@@ -112,3 +112,20 @@ def test_mosfet_gate_fault_and_driver_control_are_stable_across_hash_seeds() -> 
     assert len(control_source_bias_findings) == 1
     assert control_source_bias_findings[0]["mode"] == "off"
     assert control_source_bias_findings[0]["disposition"] == "RULE_OFF"
+
+
+@pytest.mark.design_lint_rule(rule_id="component.mosfet_terminal_order_on_named_rails")
+def test_mosfet_rail_order_fault_and_control_are_stable_across_hash_seeds() -> None:
+    reports = hashseed_probe_reports(families=("components",))
+    fault = reports["mosfet_terminal_order_fault"]
+    control = reports["mosfet_terminal_order_control"]
+    rule_id = "component.mosfet_terminal_order_on_named_rails"
+
+    fault_findings = [finding for finding in fault["findings"] if finding["rule_id"] == rule_id]
+    assert fault["status"] == "REVIEW"
+    assert len(fault_findings) == 1
+    assert fault_findings[0]["evidence"]["drain_net"] == ["GND"]
+    assert fault_findings[0]["evidence"]["source_net"] == ["+5V"]
+    assert control["status"] == "PASS"
+    assert all(item["rule_id"] != rule_id for item in control["findings"])
+    assert all(item["disposition"] == "RULE_OFF" for item in control["findings"])

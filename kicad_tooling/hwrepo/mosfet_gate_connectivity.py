@@ -2,27 +2,13 @@
 
 from __future__ import annotations
 
+from .component_mosfet_symbols import SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS
 from .design_lint_types import Candidate
 from .models import NetlistContract
 from .resistor_paths import direct_resistors
 
 RULE_ID = "component.mosfet_gate_without_peer"
 SOURCE_BIAS_RULE_ID = "component.mosfet_gate_without_visible_source_bias"
-_SUPPORTED_SYMBOLS = frozenset(
-    {
-        "transistor_fet:q_nmos_dgs",
-        "transistor_fet:q_nmos_dsg",
-        "transistor_fet:q_nmos_gds",
-        "transistor_fet:q_nmos_gsd",
-        "transistor_fet:q_nmos_sgd",
-        "transistor_fet:q_pmos_dgs",
-        "transistor_fet:q_pmos_dsg",
-        "transistor_fet:q_pmos_gds",
-        "transistor_fet:q_pmos_gsd",
-        "transistor_fet:q_pmos_sdg",
-        "transistor_fet:q_pmos_sgd",
-    }
-)
 _GATE_FUNCTIONS = frozenset({"g", "gate"})
 
 
@@ -51,7 +37,7 @@ def mosfet_gates_without_peer(observed: NetlistContract) -> tuple[Candidate, ...
         if (
             reference_key not in components
             or reference_key in unpopulated
-            or symbol.casefold() not in _SUPPORTED_SYMBOLS
+            or symbol.casefold() not in SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS
         ):
             continue
 
@@ -142,7 +128,7 @@ def mosfet_gates_without_visible_source_bias(observed: NetlistContract) -> tuple
         if (
             reference_key not in components
             or reference_key in unpopulated
-            or symbol.casefold() not in _SUPPORTED_SYMBOLS
+            or symbol.casefold() not in SUPPORTED_THREE_TERMINAL_MOSFET_SYMBOLS
         ):
             continue
         pin_numbers = inventories.get(reference_key, ())

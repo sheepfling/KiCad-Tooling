@@ -79,5 +79,8 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_diode_rail_orientation_native_fixture.py",
         "tests/test_diode_rail_fixture_inventory.py",
         "tests/test_design_lint_architecture_diode_rail_orientation.py",
+        "tests/test_mosfet_terminal_order.py",
+        "tests/test_mosfet_terminal_order_native_fixture.py",
+        "tests/test_design_lint_architecture_mosfet_terminal_order.py",
     }
 )

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 155 rules are implemented with synthetic regression coverage.
+The following 156 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 155 active rules.
+The catalog currently contains 156 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -481,6 +481,7 @@ skipped under prerelease policy.
 - `component.unconnected_return_pin`
 - `component.mosfet_gate_without_peer`
 - `component.mosfet_gate_without_visible_source_bias`
+- `component.mosfet_terminal_order_on_named_rails`
 - `component.polarized_capacitor_reversed_on_named_rails`
 - `component.diode_anode_below_cathode_on_named_rails`
 - `component.led_directly_across_supply_and_return`
@@ -589,6 +590,18 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **MOSFET rail-order review (2026-10-23):** LINT-174 adds a configurable,
+  default-off prompt when explicit numeric or named rail evidence places an
+  NMOS drain below its source or a PMOS source below its drain. It maps native
+  D/G/S function names, independent of pin numbers, and recognizes only the
+  existing exact eleven-symbol allowlist. Synthetic controls cover both
+  channel families, reordered pin numbers, signed numeric rails, unsupported
+  identities, DNP devices, incomplete inventories, ambiguous assignments, and
+  repair. Source-hashed native fault/control pairs are registered for KiCad
+  10.0.0 and 10.0.5. This is a question about conventional terminal order, not
+  a requirement; valid reverse-current, back-to-back, and low-side PMOS circuits
+  can be intentional. No project or cohort board/source is used.
 
 - **Diode rail-polarity review (2026-10-22):** LINT-173 reviews a fitted,
   exact supported two-pin diode whose native `A` and `K` pins resolve to
@@ -2797,7 +2810,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 155 active rules; CI requires every new
+- **Status:** Baseline complete for all 156 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2806,7 +2819,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 155 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 156 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -2983,8 +2996,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v81. The cross-process probe supports themed report
-  selectors and retains the complete 207-report inventory gate. Fault/control
+- **Status:** Implemented v82. The cross-process probe supports themed report
+  selectors and retains the complete 209-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3056,6 +3069,11 @@ is not a reason by itself to expand its scope or change its default policy.
   The v81 extension asserts that this fitted-peer control clears LINT-170 while
   LINT-171 remains explicitly `RULE_OFF`; it also verifies the fault/control
   reports bind different normalized-netlist hashes.
+  The v82 extension adds input-hashed MOSFET drain/source rail-order fault and
+  conventional-order control reports with explicit project review policy. It
+  checks the NMOS finding and control, then compares their complete source-bound
+  reports across three randomized processes. This adds deterministic regression
+  evidence only; the heuristic remains default-off.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -9381,6 +9399,50 @@ is not a reason by itself to expand its scope or change its default policy.
   ```
 
   [diode-rail-native]: ../tests/fixtures/design_lint/diode-rail-orientation-native/README.md
+
+#### LINT-174 — Review MOSFET drain/source order on named rails
+
+- **Status:** Implemented as the opt-in `component.mosfet_terminal_order_on_named_rails`
+  review prompt. It defaults to `off` because reverse-current, back-to-back,
+  low-side PMOS, and analog topologies can intentionally use the observed order.
+- **Predicate:** Recognize only the exact three-terminal NMOS and PMOS symbol
+  identities already used by the gate checks. Require a complete three-pin
+  inventory, unique native D/Drain, G/Gate, and S/Source roles, distinct
+  unambiguous drain/source net assignments, and conservative ordering from
+  explicit numeric labels or unambiguous positive/return roles. Review when an
+  NMOS drain resolves below its source or a PMOS source resolves below its
+  drain. Native pin-function fields determine terminal roles; pin numbers do
+  not.
+- **Boundary:** This is a configurable heuristic, not a project requirement or
+  proof of a defect. Net names do not establish measured voltage, exact
+  symbol-to-footprint pin mapping, body-diode behavior, current direction, or
+  PCB continuity. Unsupported identities, incomplete or ambiguous assignments,
+  same-net terminals, DNP parts, conflicting roles, and unordered symbolic
+  rails remain unclassified. Project policy can enable REVIEW, block, disable,
+  or exactly ignore a finding.
+- **Fixtures:** Synthetic tests cover both channel families, conventional
+  controls, pin-function mapping independent of pin number, signed numeric
+  rails, unknown rail names, unsupported identities, DNP, incomplete
+  inventories, ambiguous assignments, correction, input ordering, all policy
+  modes, and exact-ignore lifecycle. Tooling-owned native fault/control
+  schematics cover NMOS and PMOS rail order. The exact-version lane exports
+  netlists and ERC twice on digest-pinned KiCad 10.0.0 and 10.0.5, verifies
+  source hashes and normalized repeatability, and requires no ERC errors. The
+  full fault/control reports also run through LINT-080's three-process
+  hash-seed gate. No project or cohort source is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_mosfet_terminal_order.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.mosfet_terminal_order_on_named_rails")'
+
+  KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1 python -I -m pytest \
+    tests/test_mosfet_terminal_order_native_fixture.py \
+    -m 'design_lint and design_lint_rule(rule_id="component.mosfet_terminal_order_on_named_rails")'
+  ```
+
+  Source hashes and native evidence boundaries are in the
+  [MOSFET terminal-order fixture note](../tests/fixtures/design_lint/mosfet-terminal-order-native/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

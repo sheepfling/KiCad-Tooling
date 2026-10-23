@@ -58,6 +58,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         "component_peer_generic_mixed_open_fixture_lane",
         "component_rating_fixtures_lane",
         "mosfet_gate_fixture_lane",
+        "mosfet_terminal_order_fixture_lane",
         "power_sequence_fixture_lane",
         "ic_rail_capacitor_fixture_lane",
         "power_pin_net_role_fixture_lane",
