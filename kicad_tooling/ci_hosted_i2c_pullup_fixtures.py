@@ -56,7 +56,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         raise ValueError("I2C pull-up fixture sources differ from the reviewed hashes")
 
     contract_fixture = fixture_root / "pullups.json"
-    expected_contract_sha256 = "90dfd00357f0a09bdb67742bc61ffdf3bb4167e2e5b7db2902f5812b8e24d539"
+    expected_contract_sha256 = "36e27e3e50cff133ebdbe9100b572d2bb7944350796c6891da7d0a527cb459ce"
     if digest(contract_fixture) != expected_contract_sha256:
         raise ValueError("I2C pull-up requirement fixture differs from the reviewed hash")
     project_contract = root / "projects/synthetic-i2c-array/electrical.json"
@@ -196,6 +196,12 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         control_checks[f"i2c-pullup/array-bus/{line}"].status != "PASS" for line in ("sda", "scl")
     ):
         raise ValueError("Native mapped I2C resistor-array control did not pass both lines")
+    if any(
+        control_checks[f"i2c-pullup/array-bus/{line}/electrical-window/tolerance-scope"].status
+        != "PASS"
+        for line in ("sda", "scl")
+    ):
+        raise ValueError("Native mapped I2C tolerance scope did not cover every array channel")
 
     fault = observations[("fault", "first")]
     fault_checks = {item.id: item for item in reports[("fault", "first")]}
@@ -207,6 +213,12 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         or fault_checks["i2c-pullup/array-bus/scl"].status != "PASS"
     ):
         raise ValueError("Native I2C array pin/net fault lost its exact line-specific failure")
+    if any(
+        fault_checks[f"i2c-pullup/array-bus/{line}/electrical-window/tolerance-scope"].status
+        != "PASS"
+        for line in ("sda", "scl")
+    ):
+        raise ValueError("Native pin/net fault unexpectedly changed authored tolerance coverage")
 
     for case in fixtures:
         first_hash = normalized_hashes[(case, "first")]
@@ -277,6 +289,12 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
             heuristic_findings=",".join(lint_rule_findings) or "none",
             sda=checks["i2c-pullup/array-bus/sda"].status,
             scl=checks["i2c-pullup/array-bus/scl"].status,
+            sda_tolerance_scope=checks[
+                "i2c-pullup/array-bus/sda/electrical-window/tolerance-scope"
+            ].status,
+            scl_tolerance_scope=checks[
+                "i2c-pullup/array-bus/scl/electrical-window/tolerance-scope"
+            ].status,
             repeatable="true",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),
         )

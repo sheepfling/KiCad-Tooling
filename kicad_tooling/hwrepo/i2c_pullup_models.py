@@ -169,6 +169,14 @@ class I2cPullupVoltageCompatibilityRequirement(StrictModel):
         return self
 
 
+class I2cPullupResistorToleranceRequirement(StrictModel):
+    """Reviewed tolerance bound for one native resistor or mapped array channel."""
+
+    element_id: Reference
+    maximum_tolerance_percent: Annotated[float, Field(gt=0, lt=100, allow_inf_nan=False)]
+    basis: NonEmptyText
+
+
 class I2cPullupElectricalWindow(StrictModel):
     """Reviewed I2C pull-up limits for sink current and RC rise time."""
 
@@ -186,6 +194,7 @@ class I2cPullupElectricalWindow(StrictModel):
         Annotated[float, Field(gt=0, lt=100, allow_inf_nan=False)] | None
     ) = None
     resistor_tolerance_basis: NonEmptyText | None = None
+    resistor_tolerances: tuple[I2cPullupResistorToleranceRequirement, ...] = ()
 
     @model_validator(mode="after")
     def valid_pullup_voltage_window(self) -> I2cPullupElectricalWindow:
@@ -197,6 +206,11 @@ class I2cPullupElectricalWindow(StrictModel):
             self.resistor_tolerance_basis is None
         ):
             raise ValueError("I2C resistor tolerance and its basis must be supplied together")
+        if self.resistor_tolerances and self.maximum_per_resistor_tolerance_percent is not None:
+            raise ValueError("I2C resistor tolerance must use either a global or scoped bound")
+        element_ids = [item.element_id.casefold() for item in self.resistor_tolerances]
+        if len(element_ids) != len(set(element_ids)):
+            raise ValueError("I2C resistor tolerance element IDs must be unique")
         return self
 
 

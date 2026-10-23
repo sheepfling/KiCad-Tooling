@@ -6,13 +6,18 @@ import pytest
 
 from kicad_tooling.hwrepo.bus_heuristics import i2c_pullup_heuristic_coverage
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, text_report
+from kicad_tooling.hwrepo.i2c_pullup_models import I2cPullupResistorToleranceRequirement
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
     I2cPullupAnalysis,
     NetlistContract,
 )
-from tests.design_lint_fixtures.i2c_arrays import array_netlist, array_requirement
+from tests.design_lint_fixtures.i2c_arrays import (
+    array_netlist,
+    array_requirement,
+)
+from tests.electrical_i2c_support import i2c_pullup_window_requirement
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -36,13 +41,57 @@ def coverage(
     )
 
 
+def _array_requirement_with_scoped_tolerances(
+    *, wrong_scl_element: bool = False, maximum_bus_capacitance_pf: float = 50.0
+) -> I2cPullupAnalysis:
+    requirement = array_requirement()
+    bus = requirement.buses[0]
+    base_window = (
+        i2c_pullup_window_requirement(maximum_bus_capacitance_pf=maximum_bus_capacitance_pf)
+        .buses[0]
+        .sda.electrical_window
+    )
+    assert base_window is not None
+
+    def element(element_id: str) -> I2cPullupResistorToleranceRequirement:
+        return I2cPullupResistorToleranceRequirement(
+            element_id=element_id,
+            maximum_tolerance_percent=5.0,
+            basis=f"Synthetic array datasheet tolerance for {element_id}",
+        )
+
+    sda_window = base_window.model_copy(update={"resistor_tolerances": (element("RN1.sda"),)})
+    scl_window = base_window.model_copy(
+        update={"resistor_tolerances": (element("RN1.sda" if wrong_scl_element else "RN1.scl"),)}
+    )
+    updated_bus = bus.model_copy(
+        update={
+            "sda": bus.sda.model_copy(
+                update={
+                    "minimum_ohms": 4_000,
+                    "maximum_ohms": 5_000,
+                    "electrical_window": sda_window,
+                }
+            ),
+            "scl": bus.scl.model_copy(
+                update={
+                    "minimum_ohms": 4_000,
+                    "maximum_ohms": 5_000,
+                    "electrical_window": scl_window,
+                }
+            ),
+        }
+    )
+    return requirement.model_copy(update={"buses": (updated_bus,)})
+
+
 def test_valid_mapped_array_resolves_only_its_exact_missing_path_hint() -> None:
     netlist = array_netlist()
     baseline = candidates(netlist)
     assert "bus.i2c_missing_pullup" in {item.rule_id for item in baseline}
 
     result = coverage(netlist, array_requirement())
-    assert result.status == "COMPLETE"
+    assert result.status == "COMPLETE", result.entries[0].issues
     assert len(result.entries) == 1
     entry = result.entries[0]
     assert entry.status == "COVERED"
@@ -70,6 +119,47 @@ def test_valid_mapped_array_resolves_only_its_exact_missing_path_hint() -> None:
     assert "projects/synthetic/electrical.json" in rendered
     assert "b" * 64 in rendered
     assert "Native netlist SHA-256: " + "a" * 64 in rendered
+
+
+def test_exact_array_channel_tolerance_scope_resolves_the_i2c_prompt() -> None:
+    netlist = array_netlist()
+    result = coverage(netlist, _array_requirement_with_scoped_tolerances())
+
+    assert result.status == "COMPLETE", result.entries[0].issues
+    assert result.entries[0].status == "COVERED"
+    assert "i2c-pullup/main/sda/electrical-window/tolerance-scope" in result.entries[0].check_ids
+    assert "i2c-pullup/main/scl/electrical-window/tolerance-scope" in result.entries[0].check_ids
+    assert "bus.i2c_missing_pullup" not in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
+def test_wrong_array_channel_tolerance_scope_keeps_the_i2c_prompt_open() -> None:
+    netlist = array_netlist()
+    result = coverage(
+        netlist,
+        _array_requirement_with_scoped_tolerances(wrong_scl_element=True),
+    )
+
+    assert result.status == "OPEN"
+    assert any("RN1.scl" in issue for issue in result.entries[0].issues)
+    assert "bus.i2c_missing_pullup" in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
+def test_failing_electrical_window_keeps_the_i2c_prompt_open() -> None:
+    netlist = array_netlist()
+    result = coverage(
+        netlist,
+        _array_requirement_with_scoped_tolerances(maximum_bus_capacitance_pf=1_000),
+    )
+
+    assert result.status == "OPEN"
+    assert any("maximum-rise-resistance" in issue for issue in result.entries[0].issues)
+    assert "bus.i2c_missing_pullup" in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
 
 
 def test_changed_array_part_identity_keeps_missing_pullup_prompt_open() -> None:

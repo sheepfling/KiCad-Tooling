@@ -2982,14 +2982,38 @@ idealized 30%-to-70% relation `tr = 0.8473 × Rp × Cb`:
 ```
 
 The authored `minimum_ohms` and `maximum_ohms` are checked against those
-derived bounds. Equality passes. When both optional tolerance fields are
-present, the check applies the per-resistor bound to the nominal equivalent
+derived bounds. Equality passes. When both optional global tolerance fields
+are present, the check applies the per-resistor bound to the nominal equivalent
 range, then verifies that its worst-case minimum and maximum remain inside the
-derived physical window. The bound must cover every resistor element in the
-mapped local pull-up network; the tool does not verify the cited datasheets or
-which parts the basis covers. Omit both fields for the existing nominal-only
-check. The window values and source notes remain project inputs; this is not a
-capacitance extraction or waveform simulation.
+derived physical window. For more precise source coverage, use
+`resistor_tolerances` instead of the global percentage and basis:
+
+```json
+"resistor_tolerances": [
+  {
+    "element_id": "R10",
+    "maximum_tolerance_percent": 1.0,
+    "basis": "Synthetic R10 manufacturer tolerance specification"
+  },
+  {
+    "element_id": "RN1.sda",
+    "maximum_tolerance_percent": 5.0,
+    "basis": "Synthetic resistor-array SDA channel tolerance specification"
+  }
+]
+```
+
+Use a discrete resistor's exact reference or a mapped array channel ID formed
+as `ARRAY_REFERENCE.CHANNEL_ID`. Scoped IDs must exactly match every mapped
+pull-up element on that line; omitted or stale entries fail the scope check
+and keep the `bus.i2c_missing_pullup` prompt open. The largest scoped
+percentage is applied conservatively to the full nominal range. Global and
+scoped tolerance modes cannot be combined. Omit both modes for the existing
+nominal-only check. Neither mode verifies the cited datasheets or that their
+contents support the authored bounds. Configured sink-current and rise-time
+window checks must also pass before an authored requirement resolves the
+heuristic prompt. The window values and source notes remain project inputs;
+this is not a capacitance extraction or waveform simulation.
 The authored `maximum_low_level_voltage_v` and `minimum_sink_current_ma` must
 describe the same guaranteed operating point for the weakest applicable bus
 device, and the capacitance scope must include all local and remote endpoints

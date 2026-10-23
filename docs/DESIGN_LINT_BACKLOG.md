@@ -622,11 +622,11 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
-- **LINT-010 source-evidence gap:** Review per-element resistance-tolerance
-  scope and bus-capacitance boundaries. Mapped arrays can now bind to an exact
-  project `PART_ID`; add further deterministic checks only where the authored
-  requirement and source evidence support a synthetic fault/control pair.
-  Labels alone must not supply component limits.
+- **LINT-010 source-evidence gap:** Mapped arrays bind to exact project
+  `PART_ID` values, and optional per-element tolerance evidence now has exact
+  resistor/channel coverage. Next, review deterministic ways to compare
+  explicitly mapped bus-capacitance contributors with the authored upper
+  bound. Do not infer component limits or total bus capacitance from labels.
 
 ### Previously prioritized additions now in the catalog
 
@@ -4489,7 +4489,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v8. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v9. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
@@ -4512,7 +4512,14 @@ is not a reason by itself to expand its scope or change its default policy.
   conservative worst-case bound to the nominal range before comparing it with
   the derived sink-current and rise-time limits. The report retains the
   electrical contract digest, native netlist digest, bus ID, and exact passing
-  check IDs used for that resolution.
+  check IDs used for that resolution. A line may optionally declare separate
+  maximum tolerance entries keyed by exact discrete-resistor references or
+  mapped array channel IDs. When scoped entries are used, their IDs must match
+  every mapped pull-up element on that line exactly; the largest authored
+  percentage is applied conservatively to the line's full nominal range, and
+  missing or stale entries fail the electrical-window gate. Heuristic coverage
+  now requires every configured voltage and electrical-window check to pass
+  before it resolves the missing-pull-up prompt.
 - **Problem:** The review heuristic recognizes direct conventional resistors
   and unbranched resistor chains but cannot resolve resistor arrays, branched
   networks, or rail-voltage compatibility on its own. Only a matching passing
@@ -4548,9 +4555,10 @@ is not a reason by itself to expand its scope or change its default policy.
   does not prove physical board return paths, copper connectivity, fitted
   resistor behavior, or off-board pull-up behavior. Project rule overrides or
   exact ignores continue to control only heuristic disposition. The optional
-  resistor window remains nominal-only unless a maximum per-resistor tolerance
-  and basis are supplied. The tool does not verify that source or its coverage
-  of every resistor element.
+  resistor window remains nominal-only unless a global or scoped maximum
+  per-resistor tolerance and basis are supplied. Scoped entries verify exact
+  element coverage, but neither form verifies cited source contents or that
+  the authored limits are correct.
 - **Boundary:** The voltage comparison does not verify that the rail ceiling
   or datasheet limits are correct. Its `operating` or `absolute_maximum` limit
   kind is recorded but not independently validated. The optional resistor
@@ -4578,7 +4586,11 @@ is not a reason by itself to expand its scope or change its default policy.
   upper-bound equality, violations on both sides, and an empty calculated
   window; per-resistor tolerance controls for worst-case pass, exact inclusive
   boundaries, lower- and upper-side failures, missing basis, and out-of-range
-  percentages; CLI/MCP parity for passing and excessive-capacitance controls.
+  percentages; exact scoped coverage for series-resistor and mapped-array
+  elements, stale/missing element faults, and a valid tolerance control;
+  electrical-window failures and incomplete tolerance scopes keep the
+  `bus.i2c_missing_pullup` review prompt open. Existing CLI/MCP parity covers
+  passing and excessive-capacitance controls.
   Release verification replays authored voltage and resistor-window checks
   against the source-hashed netlist and rejects omission of any result.
 - **Native fixture evidence (2026-10-03):** The synthetic mapped-array
@@ -4613,11 +4625,14 @@ is not a reason by itself to expand its scope or change its default policy.
   for the prerelease tag. This validates contract-to-lint behavior on
   native-derived synthetic connectivity, not array internals or physical
   resistor behavior.
-- **Remaining:** Rail ceiling and pin-voltage limits remain reviewed inputs;
-  the checker does not verify cited source documents or whether the authored
-  resistor-tolerance bound covers every element. Actual bus capacitance and
-  transient behavior remain reviewed inputs. Internal and off-board pull-ups
-  remain an explicit not-applicable decision for this local-netlist contract.
+- **Remaining:** Rail ceiling, pin-voltage limits, tolerance values, and cited
+  source documents remain reviewed inputs. Exact scoped tolerance coverage is
+  checked, but source authenticity and correctness are not. The authored bus
+  capacitance maximum is not yet reconciled against an explicit inventory of
+  local capacitors, endpoint loading, board parasitics, or off-board loading;
+  measured transient behavior remains outside this schematic check. Internal
+  and off-board pull-ups remain an explicit not-applicable decision for this
+  local-netlist contract.
 
 #### LINT-011 — CAN termination topology and bus-end declarations
 

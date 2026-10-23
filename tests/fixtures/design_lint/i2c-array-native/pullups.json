@@ -9,13 +9,51 @@
         "net": "I2C_SDA",
         "rail": "+3V3",
         "minimum_ohms": 4000,
-        "maximum_ohms": 5000
+        "maximum_ohms": 5000,
+        "electrical_window": {
+          "maximum_pullup_voltage_v": 3.3,
+          "pullup_voltage_basis": "Synthetic reviewed I2C rail ceiling",
+          "maximum_low_level_voltage_v": 0.4,
+          "low_level_voltage_basis": "Synthetic reviewed I2C low-level ceiling",
+          "minimum_sink_current_ma": 3.0,
+          "sink_current_basis": "Synthetic reviewed I2C sink-current floor",
+          "maximum_bus_capacitance_pf": 50.0,
+          "bus_capacitance_basis": "Synthetic reviewed bus capacitance bound",
+          "maximum_rise_time_ns": 300.0,
+          "rise_time_basis": "Synthetic reviewed I2C rise-time ceiling",
+          "resistor_tolerances": [
+            {
+              "element_id": "RN1.sda",
+              "maximum_tolerance_percent": 5.0,
+              "basis": "Synthetic array channel tolerance source"
+            }
+          ]
+        }
       },
       "scl": {
         "net": "I2C_SCL",
         "rail": "+3V3",
         "minimum_ohms": 4000,
-        "maximum_ohms": 5000
+        "maximum_ohms": 5000,
+        "electrical_window": {
+          "maximum_pullup_voltage_v": 3.3,
+          "pullup_voltage_basis": "Synthetic reviewed I2C rail ceiling",
+          "maximum_low_level_voltage_v": 0.4,
+          "low_level_voltage_basis": "Synthetic reviewed I2C low-level ceiling",
+          "minimum_sink_current_ma": 3.0,
+          "sink_current_basis": "Synthetic reviewed I2C sink-current floor",
+          "maximum_bus_capacitance_pf": 50.0,
+          "bus_capacitance_basis": "Synthetic reviewed bus capacitance bound",
+          "maximum_rise_time_ns": 300.0,
+          "rise_time_basis": "Synthetic reviewed I2C rise-time ceiling",
+          "resistor_tolerances": [
+            {
+              "element_id": "RN1.scl",
+              "maximum_tolerance_percent": 5.0,
+              "basis": "Synthetic array channel tolerance source"
+            }
+          ]
+        }
       }
     }
   ],

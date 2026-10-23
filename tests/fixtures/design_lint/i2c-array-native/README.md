@@ -5,7 +5,7 @@ after KiCad exports a native XML netlist. They contain only synthetic symbols,
 part identities, pin maps, and values.
 
 The synthetic project requirement is stored separately in `pullups.json`
-(SHA-256 `90dfd00357f0a09bdb67742bc61ffdf3bb4167e2e5b7db2902f5812b8e24d539`).
+(SHA-256 `36e27e3e50cff133ebdbe9100b572d2bb7944350796c6891da7d0a527cb459ce`).
 The native lane copies it into a temporary project-relative path, validates it
 through the shared contract reader, and binds its digest and path to lint
 coverage.
@@ -21,11 +21,16 @@ value, expected project `PART_ID`, all four pins, and exact net assignments.
 Each source is exported twice and compared after parsing to the normalized
 typed-netlist contract; raw XML hashes are retained because KiCad may vary
 metadata between exports.
-The same native-derived contracts also exercise `bus.i2c_missing_pullup`:
-without the authored requirement, both fixtures remain review candidates. The
-control's passing SDA and SCL array checks resolve that hint; the wrong-SDA
-fault keeps it open even though SCL passes. This proves the contract-to-lint
-integration on the exported netlist, not the array's internal construction.
+The authored contract also binds a synthetic maximum resistor tolerance to
+each exact array channel and supplies the reviewed bus capacitance and
+rise-time bounds. Both exports must retain and pass the native-derived channel
+tolerance-scope checks. The same native-derived contracts exercise
+`bus.i2c_missing_pullup`: without the authored requirement, both fixtures
+remain review candidates. The control's passing SDA/SCL topology and electrical
+window checks resolve that hint; the wrong-SDA fault keeps it open even though
+SCL and both authored tolerance scopes pass. This proves the contract-to-lint
+integration on the exported netlist, not the array's internal construction or
+the correctness of its synthetic source assumptions.
 
 Run the optional native lane from an installed editable Tooling checkout with
 the public reference-template checkout available:

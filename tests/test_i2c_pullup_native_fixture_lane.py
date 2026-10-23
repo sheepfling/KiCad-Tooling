@@ -80,9 +80,17 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
         assert control["baseline_missing_pullup"] == "OPEN"
         assert control["heuristic_coverage"] == "COMPLETE"
         assert control["heuristic_findings"] == "none"
+        assert (control["sda_tolerance_scope"], control["scl_tolerance_scope"]) == (
+            "PASS",
+            "PASS",
+        )
         assert fault["baseline_missing_pullup"] == "OPEN"
         assert fault["heuristic_coverage"] == "OPEN"
         assert fault["heuristic_findings"] == "bus.i2c_missing_pullup"
+        assert (fault["sda_tolerance_scope"], fault["scl_tolerance_scope"]) == (
+            "PASS",
+            "PASS",
+        )
         assert control["contract_path"] == "projects/synthetic-i2c-array/electrical.json"
         assert control["contract_sha256"] == fault["contract_sha256"]
         for result in (control, fault):

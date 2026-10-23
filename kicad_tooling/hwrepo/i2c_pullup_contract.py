@@ -58,16 +58,27 @@ def i2c_pullup_checks(
     results: list[ElectricalCheck] = []
     for bus in spec.buses:
         for name, line in (("SDA", bus.sda), ("SCL", bus.scl)):
+            tolerance_elements: dict[str, str] = {}
             direct_paths = tuple(
                 item
                 for item in resistors
                 if {item.first_net, item.second_net} == {line.net, line.rail}
+            )
+            tolerance_elements.update(
+                (item.reference.casefold(), item.reference) for item in direct_paths
             )
             mapped_channels = tuple(
                 (array, channel)
                 for array in spec.arrays
                 for channel in array.channels
                 if channel.signal_net == line.net and channel.rail_net == line.rail
+            )
+            tolerance_elements.update(
+                (
+                    f"{array.reference}.{channel.id}".casefold(),
+                    f"{array.reference}.{channel.id}",
+                )
+                for array, channel in mapped_channels
             )
             array_values: list[float] = []
             array_path_names: list[str] = []
@@ -98,6 +109,9 @@ def i2c_pullup_checks(
             for series_path in spec.series_paths:
                 if (series_path.signal_net, series_path.rail_net) != (line.net, line.rail):
                     continue
+                tolerance_elements.update(
+                    (item.reference.casefold(), item.reference) for item in series_path.resistors
+                )
                 series_check, series_value = i2c_series_path_check(
                     series_path,
                     observed,
@@ -178,7 +192,11 @@ def i2c_pullup_checks(
                     ),
                 )
             )
-            results.extend(_i2c_pullup_electrical_window_checks(bus.id, name, line))
+            results.extend(
+                _i2c_pullup_electrical_window_checks(
+                    bus.id, name, line, tuple(tolerance_elements.values())
+                )
+            )
             if line.voltage_compatibility is not None:
                 results.append(
                     _i2c_pullup_voltage_compatibility_check(
@@ -193,7 +211,10 @@ def i2c_pullup_checks(
 
 
 def _i2c_pullup_electrical_window_checks(
-    bus_id: str, line_name: str, line: I2cPullupLineRequirement
+    bus_id: str,
+    line_name: str,
+    line: I2cPullupLineRequirement,
+    expected_tolerance_elements: tuple[str, ...],
 ) -> tuple[ElectricalCheck, ...]:
     window = line.electrical_window
     if window is None:
@@ -208,6 +229,45 @@ def _i2c_pullup_electrical_window_checks(
         window.maximum_rise_time_ns * 1_000 / (0.8473 * window.maximum_bus_capacitance_pf)
     )
     tolerance = window.maximum_per_resistor_tolerance_percent
+    tolerance_scope_passed: bool | None = None
+    tolerance_scope_check: ElectricalCheck | None = None
+    tolerance_basis = window.resistor_tolerance_basis
+    if window.resistor_tolerances:
+        authored_tolerances = {
+            item.element_id.casefold(): item for item in window.resistor_tolerances
+        }
+        expected = {item.casefold(): item for item in expected_tolerance_elements}
+        missing = sorted(set(expected) - set(authored_tolerances))
+        unexpected = sorted(set(authored_tolerances) - set(expected))
+        tolerance_scope_passed = bool(expected) and not missing and not unexpected
+        tolerance = max(item.maximum_tolerance_percent for item in window.resistor_tolerances)
+        tolerance_basis = "; ".join(
+            f"{item.element_id}: {item.maximum_tolerance_percent:g}% ({item.basis})"
+            for item in window.resistor_tolerances
+        )
+        scope_issues = []
+        if missing:
+            scope_issues.append(
+                "missing tolerance entries for " + ", ".join(expected[item] for item in missing)
+            )
+        if unexpected:
+            scope_issues.append(
+                "tolerance entries do not match a mapped pull-up element: "
+                + ", ".join(authored_tolerances[item].element_id for item in unexpected)
+            )
+        if not expected:
+            scope_issues.append("no mapped pull-up elements were found")
+        scope_detail = (
+            "Every mapped pull-up resistor element has an exact authored tolerance bound. "
+            f"Elements: {', '.join(expected.values())}. Sources: {tolerance_basis}."
+            if tolerance_scope_passed
+            else "; ".join(scope_issues)
+        )
+        tolerance_scope_check = ElectricalCheck(
+            id=f"i2c-pullup/{bus_id}/{line_name.casefold()}/electrical-window/tolerance-scope",
+            status="PASS" if tolerance_scope_passed else "FAIL",
+            detail=scope_detail,
+        )
     tolerance_fraction = 0.0 if tolerance is None else tolerance / 100
     minimum_actual_ohms = line.minimum_ohms * (1 - tolerance_fraction)
     maximum_actual_ohms = line.maximum_ohms * (1 + tolerance_fraction)
@@ -227,13 +287,15 @@ def _i2c_pullup_electrical_window_checks(
     )
     minimum_status = "PASS" if feasible and minimum_meets_window else "FAIL"
     maximum_status = "PASS" if feasible and maximum_meets_window else "FAIL"
+    if tolerance_scope_passed is False:
+        minimum_status = maximum_status = "FAIL"
     prefix = f"i2c-pullup/{bus_id}/{line_name.casefold()}/electrical-window"
     minimum_note = (
         ""
         if tolerance is None
         else (
             f"; with the project-authored maximum per-resistor tolerance of {tolerance:g}% "
-            f"({window.resistor_tolerance_basis}), the conservative minimum is "
+            f"({tolerance_basis}), the conservative minimum is "
             f"{minimum_actual_ohms:g}Ω"
         )
     )
@@ -242,11 +304,11 @@ def _i2c_pullup_electrical_window_checks(
         if tolerance is None
         else (
             f"; with the project-authored maximum per-resistor tolerance of {tolerance:g}% "
-            f"({window.resistor_tolerance_basis}), the conservative maximum is "
+            f"({tolerance_basis}), the conservative maximum is "
             f"{maximum_actual_ohms:g}Ω"
         )
     )
-    return (
+    checks = (
         ElectricalCheck(
             id=f"{prefix}/minimum-sink-resistance",
             status=minimum_status,
@@ -280,6 +342,7 @@ def _i2c_pullup_electrical_window_checks(
             ),
         ),
     )
+    return ((tolerance_scope_check,) if tolerance_scope_check is not None else ()) + checks
 
 
 def _i2c_pullup_voltage_compatibility_check(

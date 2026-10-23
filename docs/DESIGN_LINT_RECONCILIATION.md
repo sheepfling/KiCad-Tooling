@@ -943,7 +943,9 @@ have been connected.
   source-bound electrical checks. This includes a mapped
   resistor-array channel only when its component identity, complete native
   pin disposition, channel nets, and required resistance range pass. Any
-  associated authored voltage-compatibility check must also pass. The report
+  associated authored voltage-compatibility and electrical-window checks must
+  also pass. Optional scoped tolerance entries must exactly cover every mapped
+  resistor and array channel on their line. The report
   records the electrical-contract digest, native-netlist digest, requirement
   ID, and check IDs used; absent, pending, not-applicable, mismatched, and
   failing requirements leave the heuristic prompt open. This resolves a

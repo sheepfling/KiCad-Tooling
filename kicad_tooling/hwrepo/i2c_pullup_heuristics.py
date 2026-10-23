@@ -204,6 +204,27 @@ def i2c_pullup_heuristic_coverage(
                 elif voltage_check.status != "PASS":
                     issues.append(f"{line_name} voltage compatibility: {voltage_check.detail}")
 
+            if line.electrical_window is not None:
+                window_suffixes = [
+                    "minimum-sink-resistance",
+                    "maximum-rise-resistance",
+                ]
+                if line.electrical_window.resistor_tolerances:
+                    window_suffixes.append("tolerance-scope")
+                for suffix in window_suffixes:
+                    window_id = f"{check_id}/electrical-window/{suffix}"
+                    required_check_ids.append(window_id)
+                    window_check = checks_by_id.get(window_id)
+                    if window_check is None:
+                        issues.append(
+                            f"{line_name}: the authored electrical-window check "
+                            f"{suffix} did not produce evidence."
+                        )
+                    elif window_check.status != "PASS":
+                        issues.append(
+                            f"{line_name} electrical window ({suffix}): {window_check.detail}"
+                        )
+
         entries.append(
             I2cPullupHeuristicEntry(
                 sda_net=gap.sda_net,
