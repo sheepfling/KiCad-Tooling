@@ -15,6 +15,7 @@ from tests.connector_footprint_peer_support import (
     peer_metadata_divergence_netlist,
 )
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
+from tests.test_connector_mapped_interface_signal_unassigned import _coverage, _netlist
 from tests.test_oscillator_output_paths import (
     oscillator_output_netlist,
     oscillator_output_path_map,
@@ -115,5 +116,11 @@ def catalog_reachability_rule_ids() -> set[str]:
         for item in candidates(
             peer_metadata_divergence_netlist(target_assignments=("UART_RX_NET", None))
         )
+    )
+    mapped_signal_source = _netlist()
+    mapped_signal_coverage = _coverage(mapped_signal_source)
+    result.update(
+        item.rule_id
+        for item in candidates(mapped_signal_source, connector_coverage=mapped_signal_coverage)
     )
     return result
