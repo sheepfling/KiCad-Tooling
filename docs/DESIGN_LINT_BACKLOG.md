@@ -628,7 +628,8 @@ and optional ecosystem adapters are `P3`.
   capacitance maxima and a residual-loading bound. Its focused `v0.5.3rc87`
   gate passed. The next increment accepts explicitly mapped contributors with
   non-C references while keeping automatic discovery limited to conventional
-  C-prefixed parts. Its focused synthetic and exact native gate is pending.
+  C-prefixed parts. Tagged acceptance passed as `v0.5.3rc90` (GitHub Actions
+  run `40001892568`).
 - **LINT-206 mapped power-contact assignment:** The focused REVIEW heuristic
   is implemented for complete, source-matched interface maps assigning a
   generic connector contact the role `supply` or `return` when the native
@@ -4538,6 +4539,13 @@ is not a reason by itself to expand its scope or change its default policy.
   reviewed maximum effective capacitance with a residual loading bound. The
   total must fit within the authored bus capacitance maximum; missing, stale,
   DNP, or mismatched contributors keep the heuristic prompt open.
+- **Tagged acceptance (2026-10-23):** `v0.5.3rc90` (GitHub Actions run
+  `40001892568`) passed the focused `bus.i2c_missing_pullup` selection with
+  `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES=1`. The exact native fault/control
+  fixture passed on digest-pinned KiCad 10.0.0 and 10.0.5 with matching
+  normalized results. The installed-wheel playtest passed against a separate
+  project checkout; Ubuntu, macOS, and Windows preview jobs passed. The
+  package-release job was skipped under prerelease policy.
 - **Problem:** The review heuristic recognizes direct conventional resistors
   and unbranched resistor chains but cannot resolve resistor arrays, branched
   networks, or rail-voltage compatibility on its own. Only a matching passing
