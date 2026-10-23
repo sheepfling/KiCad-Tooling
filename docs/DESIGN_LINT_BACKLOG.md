@@ -9580,7 +9580,8 @@ is not a reason by itself to expand its scope or change its default policy.
   gate lane includes direct-drive and series-resistor source fixtures and
   repeats netlist/ERC exports under the project-selected KiCad 10.0.0 and
   10.0.5 images. The series-resistor schematic clears this rule while the
-  direct-drive case produces one target finding.
+  direct-drive case asserts exactly one target finding, guarding against
+  duplicate registration in the candidate dispatcher.
 - **Focused selection:**
 
   ```sh

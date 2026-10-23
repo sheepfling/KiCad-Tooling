@@ -50,7 +50,9 @@ def findings(report: DesignLintReport) -> tuple[DesignLintFinding, ...]:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_output_capable_pin_directly_sharing_gate_net_is_reviewed() -> None:
-    finding = findings(lint(netlist()))[0]
+    matches = findings(lint(netlist()))
+    assert len(matches) == 1
+    finding = matches[0]
 
     assert finding.subject == "Q1.2: MOSFET gate directly shares a net with an output-capable pin"
     assert finding.evidence == {
