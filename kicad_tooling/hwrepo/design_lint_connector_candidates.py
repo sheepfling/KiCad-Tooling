@@ -10,6 +10,9 @@ from .design_lint_connector_footprint_candidates import (
     connector_footprint_peer_pin_candidates,
 )
 from .design_lint_connector_pin_candidates import connector_pin_candidates
+from .design_lint_connector_supply_domains import (
+    mapped_supply_domains_shared_net_candidates,
+)
 from .design_lint_return_domain_candidates import return_domain_candidates
 from .design_lint_types import Candidate
 from .models import NetlistContract
@@ -31,6 +34,7 @@ def connector_candidates(
             reviewed_connector_references=reviewed_connector_references,
             power_output_review_enabled=power_output_review_enabled,
         ),
+        *mapped_supply_domains_shared_net_candidates(observed, connector_coverage),
         *connector_footprint_peer_pin_candidates(
             observed,
             reviewed_connector_references,

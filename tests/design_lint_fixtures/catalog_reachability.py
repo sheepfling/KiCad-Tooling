@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from kicad_tooling.hwrepo.connector_coverage import evaluate as evaluate_connector_coverage
 from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.schematic_geometry import scan_wire_ends_on_pin_lines
 from tests.connector_footprint_peer_support import (
@@ -25,6 +26,12 @@ from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.can_tx_output_sharing import can_tx_output_netlist
 from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_netlist
+from tests.design_lint_fixtures.connector_coverage import (
+    connector_supply_role_catalog,
+    connector_supply_role_netlist,
+    connector_supply_role_reviews,
+    inventory_review,
+)
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.i2c_signal_label import i2c_signal_label_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
@@ -162,6 +169,24 @@ def catalog_reachability_rule_ids() -> set[str]:
     result.update(item.rule_id for item in candidates(bjt_base_collector_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_drive_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_bias_netlist()))
+    supply_domain_netlist = connector_supply_role_netlist(common_supply=True)
+    supply_domain_catalog = connector_supply_role_catalog(serial_voltage_domain="serial-vbus")
+    supply_domain_coverage = evaluate_connector_coverage(
+        supply_domain_netlist,
+        tuple(sorted(supply_domain_catalog)),
+        connector_supply_role_reviews(),
+        interfaces=supply_domain_catalog,
+        interface_catalog_path="catalog/interfaces.json",
+        interface_catalog_sha256="d" * 64,
+        inventory_review=inventory_review(),
+    )
+    result.update(
+        item.rule_id
+        for item in candidates(
+            supply_domain_netlist,
+            connector_coverage=supply_domain_coverage,
+        )
+    )
     result.update(item.rule_id for item in candidates(mosfet_gate_drive_netlist()))
     result.update(item.rule_id for item in candidates(mosfet_drain_source_netlist()))
     result.update(

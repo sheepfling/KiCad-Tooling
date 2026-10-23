@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 186 rules are implemented with synthetic regression coverage.
+The following 187 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 186 active rules.
+The catalog currently contains 187 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -419,6 +419,7 @@ jobs. Its annotated tag passed the local scope resolver; the package job was
 skipped under prerelease policy.
 
 - `connector.repeated_pin_function`
+- `connector.mapped_supply_domains_share_net`
 - `connector.stateful_contact_topology_mismatch`
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
@@ -621,13 +622,13 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
-- **Configurable connector supply comparison scopes:** Extend LINT-083 so
-  projects can group mapped same-domain supply contacts independently of return
-  and signal-peer comparisons. Only complete source-matched maps may narrow
-  comparisons; stale or missing scope keeps the broad review. A same-group
-  split remains a lint prompt, and different groups make no claim about
-  electrical isolation or required common power. The focused synthetic gate
-  covers these boundaries.
+- **LINT-010 source-evidence gap:** Review the remaining pull-up-array source
+  identity, per-element resistance-tolerance, and bus-capacitance boundaries.
+  Add a deterministic check only where the project-authored requirement and
+  source evidence support a synthetic fault/control pair; labels alone must not
+  supply component limits.
+
+### Previously prioritized additions now in the catalog
 
 - **Serial TX/RX same-net review:** LINT-190 detects a fitted component whose
   unique native UART/USART transmit and receive pins in one channel share a
@@ -2989,7 +2990,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 186 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 187 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10888,6 +10889,36 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_rs485_data_input_output_same_net.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_data_input_output_same_net")'
   KICAD_RUN_NATIVE_RS485_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_rs485_data_input_output_same_net_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_data_input_output_same_net")'
+  ```
+
+#### LINT-205 — Review distinct mapped connector supply domains sharing a net
+
+- **Status:** Implemented as the configurable, default-review
+  `connector.mapped_supply_domains_share_net` heuristic.
+- **Gap:** LINT-083 compares connector supply contacts assigned to the same
+  authored domain when their native nets differ. It does not prompt when
+  complete project maps classify supply contacts in different domains that
+  share one exact native net.
+- **Predicate:** Use only complete, source-matched connector entries. Group
+  fitted supply pins by their one unambiguous native net and exact authored
+  `voltage_domain`; emit one finding for a net with two or more domain names.
+  The finding carries the pin assignments and interface-catalog digest.
+- **Boundary:** This remains a review cue. Distinct domain identifiers do not
+  establish different nominal voltages, incompatibility, or an unintended
+  connection. Stale, incomplete, open, ambiguous, and DNP pin evidence is
+  skipped. This exact-net comparison does not resolve net ties or component
+  paths and says nothing about PCB copper or external wiring.
+- **Fixtures:** Synthetic tests cover the distinct-domain shared-net fault,
+  intentional same-domain and separate-net controls, stale or missing maps,
+  ambiguous and DNP pins, project block/off and exact-ignore decisions, and
+  stable ordering. This predicate consumes existing source-bound netlist and
+  connector-coverage records; native export is unchanged, so it adds no native
+  fixture of its own.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
+    -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

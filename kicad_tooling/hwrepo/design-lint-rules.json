@@ -103,6 +103,44 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups"
     },
     {
+      "rule_id": "connector.mapped_supply_domains_share_net",
+      "title": "Distinct mapped connector supply domains share a net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, compared with source-matched project connector coverage",
+      "predicate": "Complete source-matched connector interface entries classify two or more unambiguous fitted supply pins with distinct exact voltage_domain identifiers on one exact native schematic net. Emit one review candidate per shared net and include the mapped pins, domains, and current interface-catalog digest.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "This is a REVIEW heuristic. Distinct authored voltage_domain identifiers do not prove different nominal voltages, electrical incompatibility, or that a shared net is unintended.",
+        "Only pins from complete source-matched connector entries are considered. Missing, incomplete, stale, open, multiply assigned, or DNP pin evidence is skipped; an unreviewed connector elsewhere can remain outside the comparison.",
+        "The predicate requires one exact common native schematic-net assignment. It does not detect net-tie components that preserve separate KiCad nets, or infer relationships through switches, protection, or other components.",
+        "Native schematic net equality does not establish PCB copper geometry, current capacity, external wiring, physical continuity, or manufacturing correctness."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_supply_domain_net_sharing.test_distinct_mapped_supply_domains_on_one_net_prompt_review"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_supply_domain_net_sharing.test_intentional_same_domain_and_distinct_net_controls_are_quiet",
+        "tests.test_connector_supply_domain_net_sharing.test_stale_or_missing_source_matched_maps_do_not_prompt",
+        "tests.test_connector_supply_domain_net_sharing.test_multiply_assigned_and_dnp_supply_contacts_are_skipped",
+        "tests.test_connector_supply_domain_net_sharing.test_project_policy_can_block_disable_or_ignore_the_review"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_supply_domain_net_sharing.test_finding_is_stable_under_netlist_and_review_ordering"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_connector_supply_domains.py#mapped_supply_domains_shared_net_candidates",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_connector_supply_domains.py#mapped_supply_domains_shared_net_candidates"
+    },
+    {
       "rule_id": "connector.stateful_contact_topology_mismatch",
       "title": "Mapped stateful connector contacts do not have distinct assignments",
       "theme": "connectors",

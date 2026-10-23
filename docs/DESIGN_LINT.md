@@ -301,7 +301,28 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 186 active rules.
+The catalog currently contains 187 active rules.
+
+### Distinct mapped connector supply domains sharing a net
+
+`connector.mapped_supply_domains_share_net` prompts when complete,
+source-matched project interface entries classify fitted connector contacts as
+supplies in distinct `voltage_domain` groups and the native netlist assigns
+them to one exact schematic net. It emits one `review` finding per shared net
+with the affected pins, map classifications, and interface-catalog digest.
+
+Treat this as a request to check the pinout and map. Distinct domain names do
+not prove different voltages or incompatibility, and an intentional common node
+is a valid control. Incomplete, stale, open, ambiguous, and DNP pin evidence is
+excluded. The rule can be promoted, disabled, or ignored per project using the
+normal `design_lint` policy.
+
+Select the synthetic regression slice with:
+
+```sh
+python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
+  -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
+```
 
 ### USB data pin/name polarity review
 
