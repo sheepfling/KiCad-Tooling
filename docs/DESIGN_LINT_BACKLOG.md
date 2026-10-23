@@ -4568,6 +4568,14 @@ is not a reason by itself to expand its scope or change its default policy.
   installed-wheel playtest passed against a separate project checkout, and
   Ubuntu, macOS, and Windows preview jobs passed. The package-release job was
   skipped under prerelease policy.
+- **Tagged acceptance (2026-10-23):** `v0.5.3rc95` (GitHub Actions run
+  `40011028028`) passed the focused design-lint regressions, rule-catalog and
+  architecture checks, and the native `Device:R` source fixture on digest-pinned
+  KiCad 10.0.0 and 10.0.5 with matching normalized exports. Ruff format/lint,
+  Pyright, Windows typing, `rumdl`, `mdrepo`, wheel/sdist builds, and the
+  installed-wheel playtest against a separate project checkout passed. Ubuntu,
+  macOS, and Windows preview jobs passed; package publication was skipped under
+  prerelease policy.
 - **Problem:** The review heuristic recognizes R-designated conventional
   resistors, exact `Device:R` symbols with complete two-pin inventories under
   non-R references, and unbranched resistor chains, but cannot resolve
