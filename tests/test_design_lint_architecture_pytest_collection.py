@@ -198,6 +198,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_design_lint_i2c_pullup_rail_families.py::test_same_family_rails_remain_valid_controls[sda_rails0-scl_rails0]",
         ),
         (
+            "bus.i2c_signal_label_role_mismatch",
+            "tests/test_i2c_signal_label_roles.py::test_crossed_i2c_line_labels_are_reviewed_while_both_pins_stay_assigned",
+        ),
+        (
             "component.led_directly_across_supply_and_return",
             "tests/test_design_lint_led_topology.py::test_led_non_matching_topologies_remain_valid_controls[series-resistor]",
         ),

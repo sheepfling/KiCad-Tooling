@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 170 rules are implemented with synthetic regression coverage.
+The following 171 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 170 active rules.
+The catalog currently contains 171 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -518,6 +518,7 @@ skipped under prerelease policy.
 - `bus.i2c_address_mismatch`
 - `bus.i2c_address_collision`
 - `bus.i2c_unmapped_responder`
+- `bus.i2c_signal_label_role_mismatch`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
 - `bus.spi_peer_reference_review`
@@ -2895,7 +2896,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 170 active rules; CI requires every new
+- **Status:** Baseline complete for all 171 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2904,7 +2905,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 170 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 171 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10143,6 +10144,41 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Source note:** Both schematics contain only a small synthetic SPI
   controller symbol and labels. No product or proprietary design source is
   included.
+
+#### LINT-189 — Review I2C SDA/SCL pin/name role contradictions
+
+- **Status:** Implemented as the default-`review`
+  `bus.i2c_signal_label_role_mismatch` heuristic, with project overrides for
+  `review`, `block`, `off`, and exact finding ignores.
+- **Gap:** I2C address, pull-up, and peer checks do not compare a fitted
+  endpoint's native SDA/SCL function with an explicitly SDA/SCL-named assigned
+  net. Crossed line labels can therefore retain complete pin assignments.
+- **Predicate:** For each fitted pin with one unique exported net, reuse the
+  bounded `i2c_signal_role` aliases to identify the pin function and net role.
+  Emit a candidate only when both are recognized and opposite.
+- **Boundary:** This is a deterministic review clue, not an interface-map
+  requirement or defect verdict. It does not establish I2C membership,
+  endpoint intent, physical routing, or continuity. Indexed, vendor-specific,
+  neutral, open, multiply assigned, and DNP cases remain unclassified.
+- **Fixtures:** Synthetic crossed-line fault and matching control; neutral and
+  indexed labels, vendor aliases, DNP, open, multiply assigned, policy, exact
+  ignore, order stability, and label-repair controls. Source-hashed native
+  control/fault schematics are exported twice on digest-pinned KiCad 10.0.0 and
+  10.0.5 images.
+- **Fixture note:** [README](../tests/fixtures/design_lint/i2c-signal-label-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_i2c_signal_label_roles.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_signal_label_role_mismatch")'
+
+  KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 python -I -m pytest \
+    tests/test_i2c_signal_label_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_label_role_mismatch")'
+  ```
+
+- **Source note:** Both schematics contain only a synthetic I2C controller
+  symbol and labels. No product or proprietary design source is included.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

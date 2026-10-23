@@ -5408,6 +5408,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_addressing.py#unmapped_i2c_responders"
     },
     {
+      "rule_id": "bus.i2c_signal_label_role_mismatch",
+      "title": "I2C signal-pin function conflicts with its net name",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with exactly one assigned native net, emit a REVIEW candidate when the bounded SDA or SCL native pin function conflicts with the recognized SDA or SCL role in that net name.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Recognition reuses the bounded SDA, I2C_SDA, SCL, and I2C_SCL aliases from i2c_signal_role; indexed and vendor-specific names remain unclassified.",
+        "A name contradiction is a review clue, not a project-authored pinout requirement or defect verdict. The rule does not establish I2C bus membership, endpoint intent, PCB routing, or physical continuity.",
+        "DNP, open, and multiply assigned pins are skipped. A project-authored interface map remains authoritative for required endpoint relationships."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2c_signal_label_roles.test_crossed_i2c_line_labels_are_reviewed_while_both_pins_stay_assigned",
+        "tests.test_i2c_signal_label_native_fixture_lane.test_native_i2c_signal_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2c_signal_label_roles.test_matching_aliases_and_neutral_or_indexed_labels_stay_unclassified",
+        "tests.test_i2c_signal_label_roles.test_dnp_open_and_multiply_assigned_pins_are_not_classified",
+        "tests.test_i2c_signal_label_native_fixture_lane.test_native_i2c_signal_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i2c_signal_label_roles.test_reordering_is_stable_and_correcting_labels_clears_the_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2c_signal_label.py#i2c_signal_label_role_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_signal_label.py#i2c_signal_label_role_candidates"
+    },
+    {
       "rule_id": "bus.serial_unmapped_peer",
       "title": "Likely UART endpoint is missing from the project peer map",
       "status": "active",

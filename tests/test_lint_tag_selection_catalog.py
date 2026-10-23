@@ -40,6 +40,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES",
         ),
         (
+            "bus.i2c_signal_label_role_mismatch",
+            "KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES",
+        ),
+        (
             "bus.spi_data_polarity_label_mismatch",
             "KICAD_RUN_NATIVE_SPI_DATA_POLARITY_FIXTURES",
         ),

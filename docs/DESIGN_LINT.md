@@ -180,7 +180,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 170 active rules.
+The catalog currently contains 171 active rules.
 
 ### USB data pin/name polarity review
 
@@ -239,6 +239,25 @@ python -I -m pytest tests/test_spi_data_label_polarity.py \
 KICAD_RUN_NATIVE_SPI_DATA_POLARITY_FIXTURES=1 python -I -m pytest \
   tests/test_spi_data_polarity_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_data_polarity_label_mismatch")'
+```
+
+### I2C signal pin/name role review
+
+`bus.i2c_signal_label_role_mismatch` compares bounded SDA/SCL pin functions
+with recognized SDA/SCL net names. Opposite roles produce a configurable
+`review` finding; projects can promote it to `block`, turn it `off`, or ignore
+one exact finding. Indexed or vendor-specific names, DNP pins, and open or
+ambiguous assignments remain unclassified. This is a naming clue, not proof of
+bus intent, routing, or physical continuity. Its focused checks are selectable
+with:
+
+```sh
+python -I -m pytest tests/test_i2c_signal_label_roles.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_signal_label_role_mismatch")'
+
+KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 python -I -m pytest \
+  tests/test_i2c_signal_label_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_label_role_mismatch")'
 ```
 
 ## Run the lint lane

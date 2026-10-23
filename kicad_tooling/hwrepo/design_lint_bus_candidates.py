@@ -26,6 +26,7 @@ from .i2c_address_models import (
 )
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
+from .i2c_signal_label import i2c_signal_label_role_candidates
 from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
@@ -55,6 +56,7 @@ def bus_candidates(
             i2c_peer_reference_scan,
             component_peer_findings,
         ),
+        *i2c_signal_label_role_candidates(observed),
         *spi_peer_reference_candidates(
             observed,
             spi_peer_reference_scan,
