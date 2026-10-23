@@ -6,7 +6,7 @@ import argparse
 import os
 import re
 import subprocess
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -150,6 +150,11 @@ def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
     _, separator, message = result.stdout.partition("\n\n")
     if not separator:
         raise ValueError(f"annotated lint tag {tag_name} has no message")
+    return read_message_scope(message, repository)
+
+
+def read_message_scope(message: str, repository: Path) -> LintGateScope:
+    """Validate a proposed tag message against this checkout's workflow and catalog."""
     native_fixtures_by_rule = required_native_fixtures_by_rule()
     scope = parse_tag_message(
         message,
@@ -161,10 +166,10 @@ def read_tag_scope(tag_name: str, repository: Path) -> LintGateScope:
     return scope
 
 
-def write_github_scope(scope: LintGateScope) -> None:
+def write_github_scope(scope: LintGateScope, *, write_github_files: bool = True) -> None:
     """Publish validated values through GitHub Actions environment files."""
     output = os.environ.get("GITHUB_OUTPUT")
-    if output:
+    if write_github_files and output:
         with Path(output).open("a", encoding="utf-8") as stream:
             stream.write(f"markexpr={scope.pytest_markexpr}\n")
             if scope.test_paths:
@@ -175,7 +180,7 @@ def write_github_scope(scope: LintGateScope) -> None:
             print(f"pytestpaths={','.join(scope.test_paths)}")
 
     environment = os.environ.get("GITHUB_ENV")
-    if environment:
+    if write_github_files and environment:
         with Path(environment).open("a", encoding="utf-8") as stream:
             stream.writelines(f"{fixture}=1\n" for fixture in scope.native_fixtures)
     else:
@@ -183,13 +188,24 @@ def write_github_scope(scope: LintGateScope) -> None:
             print(f"{fixture}=1")
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--tag", required=True, help="Annotated prerelease Git tag to inspect")
-    args = parser.parse_args()
+    selector = parser.add_mutually_exclusive_group(required=True)
+    selector.add_argument("--tag", help="Annotated prerelease Git tag to inspect")
+    selector.add_argument(
+        "--message-file",
+        type=Path,
+        help="Preflight a proposed annotated tag message before creating the tag",
+    )
+    args = parser.parse_args(argv)
     repository = Path(__file__).resolve().parents[1]
-    scope = read_tag_scope(args.tag, repository)
-    write_github_scope(scope)
+    if args.tag is not None:
+        scope = read_tag_scope(args.tag, repository)
+        write_github_scope(scope)
+    else:
+        message = args.message_file.read_text(encoding="utf-8")
+        scope = read_message_scope(message, repository)
+        write_github_scope(scope, write_github_files=False)
     return 0
 
 

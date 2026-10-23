@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.lint_gate_scope import parse_tag_message, read_tag_scope, write_github_scope
+from scripts.lint_gate_scope import main, parse_tag_message, read_tag_scope, write_github_scope
 
 pytestmark = pytest.mark.architecture
 
@@ -122,3 +122,40 @@ def test_annotated_area_tag_rejects_a_missing_test_module(tmp_path: Path) -> Non
     )
     with pytest.raises(ValueError, match="missing or outside tests"):
         read_tag_scope("v0.9.0rc2", repository)
+
+
+def test_message_file_preflight_validates_rule_scope_without_writing_github_outputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    message = tmp_path / "lint-tag-message.txt"
+    message.write_text(
+        "Lint-Rule: bus.rs485_data_direction_label_mismatch\n"
+        "Native-Fixture: KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES\n",
+        encoding="utf-8",
+    )
+    github_output = tmp_path / "github-output"
+    github_environment = tmp_path / "github-environment"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(github_output))
+    monkeypatch.setenv("GITHUB_ENV", str(github_environment))
+
+    assert main(["--message-file", str(message)]) == 0
+
+    assert capsys.readouterr().out.splitlines() == [
+        'markexpr=design_lint and design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch")',
+        "KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES=1",
+    ]
+    assert not github_output.exists()
+    assert not github_environment.exists()
+
+
+def test_message_file_preflight_rejects_missing_required_native_fixture(
+    tmp_path: Path,
+) -> None:
+    message = tmp_path / "lint-tag-message.txt"
+    message.write_text(
+        "Lint-Rule: bus.rs485_data_direction_label_mismatch\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="requires Native-Fixture declarations"):
+        main(["--message-file", str(message)])
