@@ -11,7 +11,7 @@ from ERC output-driver diagnostics.
   `d8af98143c7c94d2227206c5e6e93d03f8a82f32c9dbf87f93c6ad37bba4bc3a`.
 - `separate-data-nets-control.kicad_sch`: D is on `HOST_TX`; R is on
   `HOST_RX`. SHA-256:
-  `457198946c70c987a76ff18a4ea992e780db650dcd908497941fe2e8401f5d90`.
+  `17edbd6020658f7b4ef29413928ed93fdca4b13a41c2b09c783fe4ce330ccfc8`.
 
 The heuristic requires explicit RS-485 text or a bounded MAX48xx, SP3485,
 ADM48xx, SN65HVD485, or THVD identity marker in the native symbol library ID or

@@ -21,7 +21,7 @@ RS485_DATA_SAME_NET_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.rs485_data_input_output_same_net"
 _SOURCE_HASHES = {
     "fault": "d8af98143c7c94d2227206c5e6e93d03f8a82f32c9dbf87f93c6ad37bba4bc3a",
-    "control": "457198946c70c987a76ff18a4ea992e780db650dcd908497941fe2e8401f5d90",
+    "control": "17edbd6020658f7b4ef29413928ed93fdca4b13a41c2b09c783fe4ce330ccfc8",
 }
 
 
