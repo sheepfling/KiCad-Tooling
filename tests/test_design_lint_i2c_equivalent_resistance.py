@@ -120,21 +120,19 @@ def test_i2c_low_equivalent_includes_exact_device_r_symbol_under_non_r_reference
     report = evaluate("synthetic-i2c-symbol-equivalent", coach(source), DesignLintPolicy())
 
     finding = next(
-        item
-        for item in report.findings
-        if item.rule_id == "bus.i2c_low_equivalent_resistance"
+        item for item in report.findings if item.rule_id == "bus.i2c_low_equivalent_resistance"
     )
     assert finding.evidence["lines"] == ("SDA",)
-    assert any(
-        item.startswith("X1=1000Ω to +3V3") for item in finding.evidence["pullup_resistors"]
-    )
+    assert any(item.startswith("X1=1000Ω to +3V3") for item in finding.evidence["pullup_resistors"])
     assert finding.evidence["equivalent_ohms"] == ("SDA=824.561Ω",)
 
     valid = i2c_netlist_with_device_r_symbol(
         base_pullups=("SDA", "SCL"),
         base_resistance="4.7k",
     )
-    valid_report = evaluate("synthetic-i2c-symbol-equivalent-control", coach(valid), DesignLintPolicy())
+    valid_report = evaluate(
+        "synthetic-i2c-symbol-equivalent-control", coach(valid), DesignLintPolicy()
+    )
     assert "bus.i2c_low_equivalent_resistance" not in {
         item.rule_id for item in valid_report.findings
     }

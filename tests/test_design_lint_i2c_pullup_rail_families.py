@@ -171,9 +171,7 @@ def test_i2c_rail_family_review_recognizes_exact_device_r_symbol_under_non_r_ref
     fault = i2c_netlist_with_device_r_symbol(rail="+5V", base_pullups=("SCL",))
     report = evaluate("synthetic-i2c-symbol-rail", coach(fault), policy)
     finding = next(
-        item
-        for item in report.findings
-        if item.rule_id == "bus.i2c_multiple_pullup_rail_families"
+        item for item in report.findings if item.rule_id == "bus.i2c_multiple_pullup_rail_families"
     )
 
     assert finding.evidence["rail_families"] == ("3v3", "5v")
