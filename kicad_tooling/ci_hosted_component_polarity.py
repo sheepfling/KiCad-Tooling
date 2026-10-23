@@ -72,7 +72,7 @@ def component_polarity_fixture_lane(
     project_id_prefix: str,
     rule_id: str,
     fixtures: dict[str, str],
-    expected_subjects: dict[str, str | None],
+    expected_subjects: dict[str, str | tuple[str, ...] | None],
 ) -> None:
     """Export and compare source-hashed polarity fault/control fixtures twice."""
     root = root.resolve()
@@ -217,7 +217,10 @@ def component_polarity_fixture_lane(
             raise ValueError(f"Native component polarity {case} finding differs between repeats")
         findings = tuple(item for item in runs["first"].findings if item.rule_id == rule_id)
         expected = expected_subjects[case]
-        if tuple(item.subject for item in findings) != (() if expected is None else (expected,)):
+        expected_subjects_for_case = (
+            () if expected is None else (expected,) if isinstance(expected, str) else expected
+        )
+        if tuple(item.subject for item in findings) != expected_subjects_for_case:
             raise ValueError(
                 f"Native component polarity {case} target findings differ from expectation"
             )

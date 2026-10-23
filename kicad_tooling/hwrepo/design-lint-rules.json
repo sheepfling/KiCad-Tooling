@@ -3082,6 +3082,52 @@
       ]
     },
     {
+      "rule_id": "component.bjt_terminal_order_on_named_rails",
+      "title": "Review BJT collector/emitter order against named rails",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For an exact allowlist of basic three-terminal Transistor_BJT:Q_NPN_* or Q_PNP_* symbols with complete pin inventory and unique native B/C/E functions, emit an opt-in REVIEW candidate when explicit rail evidence places an NPN collector below its emitter or a PNP emitter below its collector.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only the twelve exact basic NPN and PNP pin-order symbols are supported. Darlington, compound, custom, DNP, incomplete, duplicate-role, and ambiguous devices are excluded.",
+        "Ordering uses explicit numeric rail labels or unambiguous native positive/return roles. Unordered symbolic rails, conflicting roles, same-net terminals, and incomplete collector/emitter assignments are not classified.",
+        "The conventional collector/emitter order is not a project requirement. Reverse-active, switching, amplifier, or other topologies can intentionally use the reported orientation. The rule defaults to off and does not prove measured voltage, physical pin mapping, device suitability, or a defect."
+      ],
+      "fault_fixtures": [
+        "tests.test_bjt_terminal_order.test_reversed_named_rail_order_is_default_off_and_valid_orientation_is_quiet",
+        "tests.test_bjt_terminal_order.test_native_terminal_functions_are_independent_of_pin_numbers_and_signed_rails",
+        "tests.test_bjt_terminal_order_native_fixture.test_native_bjt_terminal_order_fault_and_control_are_deterministic"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_bjt_terminal_order.test_reversed_named_rail_order_is_default_off_and_valid_orientation_is_quiet",
+        "tests.test_bjt_terminal_order.test_unsupported_incomplete_dnp_and_ambiguous_devices_are_not_classified",
+        "tests.test_bjt_terminal_order_native_fixture.test_native_bjt_terminal_order_fault_and_control_are_deterministic"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_bjt_terminal_order.test_input_reordering_and_rail_repair_keep_findings_stable",
+        "tests.test_design_lint_determinism_components.test_bjt_rail_order_fault_and_control_are_stable_across_hash_seeds",
+        "tests.test_bjt_terminal_order_native_fixture.test_native_bjt_terminal_order_fault_and_control_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_bjt_terminal_order.py#bjts_with_unusual_collector_emitter_rail_order",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#named_net_potential",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#potential_is_lower",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_bjt_terminal_order.py#bjts_with_unusual_collector_emitter_rail_order",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "component.polarized_capacitor_reversed_on_named_rails",
       "title": "Review polarized capacitor pin 1 below pin 2 on named rails",
       "status": "active",

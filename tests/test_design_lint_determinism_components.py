@@ -129,3 +129,19 @@ def test_mosfet_rail_order_fault_and_control_are_stable_across_hash_seeds() -> N
     assert control["status"] == "PASS"
     assert all(item["rule_id"] != rule_id for item in control["findings"])
     assert all(item["disposition"] == "RULE_OFF" for item in control["findings"])
+
+
+@pytest.mark.design_lint_rule(rule_id="component.bjt_terminal_order_on_named_rails")
+def test_bjt_rail_order_fault_and_control_are_stable_across_hash_seeds() -> None:
+    reports = hashseed_probe_reports(families=("components",))
+    rule_id = "component.bjt_terminal_order_on_named_rails"
+
+    for family in ("npn", "pnp"):
+        fault = reports[f"bjt_{family}_terminal_order_fault"]
+        control = reports[f"bjt_{family}_terminal_order_control"]
+        fault_findings = [item for item in fault["findings"] if item["rule_id"] == rule_id]
+        assert fault["status"] == "REVIEW"
+        assert len(fault_findings) == 1
+        assert fault_findings[0]["evidence"]["transistor_family"] == [family]
+        assert control["status"] == "PASS"
+        assert all(item["rule_id"] != rule_id for item in control["findings"])

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 156 rules are implemented with synthetic regression coverage.
+The following 157 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 156 active rules.
+The catalog currently contains 157 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -482,6 +482,7 @@ skipped under prerelease policy.
 - `component.mosfet_gate_without_peer`
 - `component.mosfet_gate_without_visible_source_bias`
 - `component.mosfet_terminal_order_on_named_rails`
+- `component.bjt_terminal_order_on_named_rails`
 - `component.polarized_capacitor_reversed_on_named_rails`
 - `component.diode_anode_below_cathode_on_named_rails`
 - `component.led_directly_across_supply_and_return`
@@ -590,6 +591,16 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **BJT collector/emitter rail-order review:** LINT-175 adds a configurable,
+  default-off prompt for exact basic NPN/PNP symbols when explicit rail evidence
+  reverses conventional collector/emitter order. It reuses the shared
+  conservative rail-potential service and native B/C/E pin functions.
+  Synthetic cases cover both transistor families, valid controls, exact-ignore
+  and policy behavior, ambiguous or unsupported inputs, and hash-seed stability.
+  Minimal fault/control schematics are registered for digest-pinned KiCad
+  10.0.0 and 10.0.5 exports. Reverse-active and other valid topologies remain
+  possible.
 
 - **MOSFET rail-order review (2026-10-23):** LINT-174 adds a configurable,
   default-off prompt when explicit numeric or named rail evidence places an
@@ -2810,7 +2821,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 156 active rules; CI requires every new
+- **Status:** Baseline complete for all 157 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2819,7 +2830,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 156 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 157 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9443,6 +9454,50 @@ is not a reason by itself to expand its scope or change its default policy.
 
   Source hashes and native evidence boundaries are in the
   [MOSFET terminal-order fixture note](../tests/fixtures/design_lint/mosfet-terminal-order-native/README.md).
+
+#### LINT-175 — Review BJT collector/emitter order on named rails
+
+- **Status:** Implemented as the opt-in
+  `component.bjt_terminal_order_on_named_rails` review prompt. It defaults to
+  `off` because a circuit may intentionally use reverse-active behavior or
+  another topology with the conventional collector/emitter relationship
+  reversed.
+- **Predicate:** Recognize only the twelve basic NPN/PNP `Transistor_BJT`
+  identities with one complete native three-pin inventory and unique B, C,
+  and E functions. Compare unambiguous collector/emitter assignments using
+  the shared conservative potential resolver. Review when the NPN collector is
+  lower than the emitter or the PNP emitter is lower than the collector.
+  Native functions determine terminal roles; pin numbers do not.
+- **Boundary:** This is a configurable review clue, not a project requirement
+  or proof of a defect. Rail names do not establish measured voltage, actual
+  footprint pin mapping, device suitability, physical connectivity, or
+  intended current direction. Darlington and compound symbols, custom
+  identities, DNP parts, incomplete or ambiguous assignments, same-net
+  terminals, conflicting roles, and unordered symbolic rails remain
+  unclassified. Project policy can enable REVIEW, block, disable, or exactly
+  ignore a finding.
+- **Fixtures:** Synthetic regressions cover both transistor families, valid
+  orientation controls, role mapping independent of pin number, signed numeric
+  rails, unsupported identities, DNP, incomplete inventory, duplicate roles,
+  ambiguous assignments, policy modes, exact-ignore lifecycle, input ordering,
+  rail repair, and three-process hash-seed stability. Tooling-owned native
+  fault/control schematics contain both NPN and PNP cases. The exact-version
+  lane exports each source twice on digest-pinned KiCad 10.0.0 and 10.0.5,
+  checks native B/C/E functions and normalized report stability, and requires
+  no ERC errors. No cohort code or project source is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_bjt_terminal_order.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_terminal_order_on_named_rails")'
+
+  KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES=1 python -I -m pytest \
+    tests/test_bjt_terminal_order_native_fixture.py \
+    -m 'design_lint and design_lint_rule(rule_id="component.bjt_terminal_order_on_named_rails")'
+  ```
+
+  Source hashes and fixture boundaries are in the
+  [BJT terminal-order fixture note](../tests/fixtures/design_lint/bjt-terminal-order-native/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

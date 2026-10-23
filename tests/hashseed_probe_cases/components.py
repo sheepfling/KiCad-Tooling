@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo.mosfet_stress_models import MosfetVoltageInterval
 from tests.design_lint_fixtures import (
     coach,
 )
+from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.test_led_output_heuristics import observed_report as led_output_observed_report
@@ -89,6 +90,21 @@ def mosfet_terminal_order_report(*, reversed_order: bool) -> dict[str, object]:
     )
 
 
+def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> dict[str, object]:
+    """Serialize an enabled BJT named-rail order fault or valid control."""
+    observed = bjt_terminal_order_netlist(family=family, reversed_order=reversed_order)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="component.bjt_terminal_order_on_named_rails",
+                mode="review",
+                reason="Hash-seed stability fixture",
+            ),
+        )
+    )
+    return source_bound_component_report("synthetic-bjt-terminal-order-hashseed", observed, policy)
+
+
 def report_cases() -> dict[str, object]:
     return {
         "diode_rail_named_return_fault": diode_rail_orientation_report(
@@ -101,6 +117,18 @@ def report_cases() -> dict[str, object]:
         "mosfet_gate_driver_control": mosfet_gate_peer_report(has_driver=True),
         "mosfet_terminal_order_fault": mosfet_terminal_order_report(reversed_order=True),
         "mosfet_terminal_order_control": mosfet_terminal_order_report(reversed_order=False),
+        "bjt_npn_terminal_order_fault": bjt_terminal_order_report(
+            family="npn", reversed_order=True
+        ),
+        "bjt_npn_terminal_order_control": bjt_terminal_order_report(
+            family="npn", reversed_order=False
+        ),
+        "bjt_pnp_terminal_order_fault": bjt_terminal_order_report(
+            family="pnp", reversed_order=True
+        ),
+        "bjt_pnp_terminal_order_control": bjt_terminal_order_report(
+            family="pnp", reversed_order=False
+        ),
         "diode_fault": evaluate(
             "synthetic-two-pin-diode-hash-seed-fault", coach(diode_netlist()), DesignLintPolicy()
         ).model_dump(mode="json"),
