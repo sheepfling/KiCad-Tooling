@@ -44,6 +44,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES",
         ),
         (
+            "bus.i2c_sda_scl_same_net",
+            "KICAD_RUN_NATIVE_I2C_SDA_SCL_SAME_NET_FIXTURES",
+        ),
+        (
             "bus.serial_tx_rx_same_net",
             "KICAD_RUN_NATIVE_SERIAL_TX_RX_SAME_NET_FIXTURES",
         ),

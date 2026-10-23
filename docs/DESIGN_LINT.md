@@ -230,7 +230,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 175 active rules.
+The catalog currently contains 176 active rules.
 
 ### USB data pin/name polarity review
 
@@ -308,6 +308,30 @@ python -I -m pytest tests/test_i2c_signal_label_roles.py \
 KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 python -I -m pytest \
   tests/test_i2c_signal_label_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_label_role_mismatch")'
+```
+
+### I2C SDA/SCL same-net review
+
+`bus.i2c_sda_scl_same_net` prompts when one fitted U/IC has exactly one
+recognized SDA pin and one recognized SCL pin, both present in its native pin
+inventory and assigned to the same exact net. The rule defaults off because
+pin-function names do not prove that a part implements standard I2C or that
+its pins must be separate. If both pins are native `output` types, the rule
+leaves the conflict to ERC. DNP, open, multiply assigned, multi-port, indexed,
+vendor-specific, and inventory-inconsistent cases remain unclassified. A
+project can enable review, promote the finding to `block`, turn it `off`, or
+ignore one exact fingerprint. The schematic netlist does not prove PCB
+continuity or external wiring.
+Source hashes and fixture details are in the
+[tooling-owned fixture README](../tests/fixtures/design_lint/i2c-sda-scl-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i2c_signal_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_sda_scl_same_net")'
+
+KICAD_RUN_NATIVE_I2C_SDA_SCL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_i2c_sda_scl_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_sda_scl_same_net")'
 ```
 
 ## Run the lint lane

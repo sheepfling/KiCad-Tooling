@@ -5532,6 +5532,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_signal_label.py#i2c_signal_label_role_candidates"
     },
     {
+      "rule_id": "bus.i2c_sda_scl_same_net",
+      "title": "I2C SDA and SCL pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted U/IC reference with a complete native component pin inventory, use the bounded i2c_signal_role aliases to identify exactly one native SDA pin and one native SCL pin; emit a review candidate only when each pin has one unambiguous assignment to the same exact native net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only bounded SDA, I2C_SDA, SCL, and I2C_SCL function aliases are recognized. Indexed and vendor-specific functions, connector-only endpoints, and multi-port parts with multiple pins per role are excluded.",
+        "Native function names are clues and do not prove that a part implements standard I2C or establish that its signal pins must remain separate. The default is off; project policy can enable review, promote the finding to block, or disable it, and an exact fingerprint ignore records a reviewed exception.",
+        "Open, multiply assigned, DNP, missing-inventory, and inventory-inconsistent pins are skipped. When both pins have native output types, ERC can report their conflict and this heuristic is suppressed. If type metadata is absent or does not show two outputs, the candidate remains a review clue. This schematic-net check does not prove PCB copper continuity, external wiring, device behavior, or firmware configuration."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2c_signal_same_net.test_sda_and_scl_on_one_net_prompt_review_while_distinct_lines_are_control",
+        "tests.test_i2c_sda_scl_same_net_native_fixture_lane.test_native_i2c_sda_scl_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2c_signal_same_net.test_sda_and_scl_on_one_net_prompt_review_while_distinct_lines_are_control",
+        "tests.test_i2c_signal_same_net.test_dnp_open_ambiguous_duplicate_role_and_incomplete_inventory_are_skipped",
+        "tests.test_i2c_signal_same_net.test_two_native_output_pins_are_left_to_the_erc_conflict_check",
+        "tests.test_i2c_sda_scl_same_net_native_fixture_lane.test_native_i2c_sda_scl_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i2c_signal_same_net.test_ordering_is_stable_and_separating_the_signals_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_SDA_SCL_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2c_same_net.py#i2c_sda_scl_same_net_candidates",
+        "kicad_tooling/hwrepo/i2c_addressing.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_same_net.py#i2c_sda_scl_same_net_candidates"
+    },
+    {
       "rule_id": "bus.serial_unmapped_peer",
       "title": "Likely UART endpoint is missing from the project peer map",
       "status": "active",

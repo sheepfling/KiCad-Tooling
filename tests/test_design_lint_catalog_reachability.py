@@ -16,6 +16,7 @@ import tests.design_lint_fixtures.connector_named_power_aliases as _connector_na
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
+import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
@@ -165,6 +166,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _power_pin_net_roles.positive_supply_on_return_netlist(),
         _power_pin_net_roles.supply_pin_on_rail_netlist("-5V"),
         no_can_assignments,
+        _i2c_signal_label_fixtures.i2c_signal_same_net_netlist(),
         _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),
         _usb_peer_reference_support.usb_peer_netlist(),
     )

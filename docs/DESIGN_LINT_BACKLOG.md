@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 175 rules are implemented with synthetic regression coverage.
+The following 176 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 175 active rules.
+The catalog currently contains 176 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -519,6 +519,7 @@ skipped under prerelease policy.
 - `bus.i2c_address_collision`
 - `bus.i2c_unmapped_responder`
 - `bus.i2c_signal_label_role_mismatch`
+- `bus.i2c_sda_scl_same_net`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
 - `bus.serial_tx_rx_same_net`
@@ -631,6 +632,11 @@ and optional ecosystem adapters are `P3`.
   an ERC output conflict. It defaults off because a tri-state MISO bus can be
   intentional; its synthetic fault and one-device control use source-hashed
   native fixtures with clean, repeatable exports on the pinned KiCad versions.
+
+- **I2C SDA/SCL same-net review:** LINT-194 reports a fitted IC whose one
+  recognized SDA and SCL function pin are both assigned to the same native
+  net. It is default-off because function names do not prove standard I2C
+  intent; source-hashed native fault/control schematics have clean ERC results.
 
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
@@ -2931,7 +2937,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 175 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 176 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10356,6 +10362,44 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_SPI_SHARED_DATA_OUTPUT_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_spi_shared_data_outputs_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_data_outputs_share_net")'
+  ```
+
+#### LINT-194 — Review I2C SDA/SCL pins sharing one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.i2c_sda_scl_same_net` review prompt.
+- **Gap:** Existing I2C peer-reference analysis skips endpoints whose SDA and
+  SCL pins resolve to one net. Label-role and pull-up rules also require
+  distinct recognized signal roles on distinct nets, leaving a same-net pair
+  without a focused review finding.
+- **Predicate:** Use the shared bounded `i2c_signal_role` aliases on fitted
+  U/IC references. Require a native component pin inventory containing exactly
+  one SDA and one SCL function pin, with each assigned to exactly one native
+  net. Emit a candidate only when both exact net names match, except when both
+  pins have native `output` type because ERC can report the conflict. Skip DNP,
+  open, multiply assigned, duplicate-role, indexed/vendor-specific, absent or
+  inconsistent inventory cases.
+- **Boundary:** This does not prove the part implements standard I2C, infer
+  project bus membership, or state that the two pins must be separate. It is
+  default-off and supports project policy and exact fingerprint ignores. It
+  does not establish PCB copper continuity, device behavior, or external
+  wiring.
+- **Fixtures:** A tooling-owned fault connects SDA and SCL to `I2C_SHARED`; a
+  valid control assigns distinct `I2C_SDA` and `I2C_SCL` nets. Both fixtures
+  preserve their native net assignments and have no ERC errors on digest-pinned
+  KiCad 10.0.0 and 10.0.5. Synthetic tests cover aliases, DNP, open and
+  multiply assigned pins, duplicate roles, missing or inconsistent inventory,
+  policy, exact ignore, stable ordering, and repair. No project or cohort
+  source is stored.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_i2c_signal_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_sda_scl_same_net")'
+
+  KICAD_RUN_NATIVE_I2C_SDA_SCL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_i2c_sda_scl_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_sda_scl_same_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

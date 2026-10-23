@@ -17,3 +17,9 @@ def i2c_signal_label_netlist(*, reversed_labels: bool = False) -> NetlistContrac
         pin_functions={"U1.1": "SDA", "U1.2": "SCL"},
         component_pin_numbers={"U1": ("1", "2")},
     )
+
+
+def i2c_signal_same_net_netlist() -> NetlistContract:
+    """Create a synthetic I2C controller whose SDA and SCL share one net."""
+    observed = i2c_signal_label_netlist()
+    return observed.model_copy(update={"nets": {"I2C_SHARED": ("U1.1", "U1.2")}})
