@@ -84,6 +84,13 @@ _PROTOCOL_NATIVE_CASES = (
         "test_native_serial_tx_rx_label_fault_and_control_repeat",
         id="serial-tx-rx-label-mismatch",
     ),
+    pytest.param(
+        "bus.rs485_data_direction_label_mismatch",
+        "KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES",
+        "tests.test_rs485_data_direction_label_mismatch_native_fixture_lane."
+        "test_native_rs485_data_direction_fault_and_control_repeat",
+        id="rs485-data-direction-label-mismatch",
+    ),
 )
 
 

@@ -56,6 +56,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES",
         ),
         (
+            "bus.rs485_data_direction_label_mismatch",
+            "KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES",
+        ),
+        (
             "bus.serial_tx_outputs_share_net",
             "KICAD_RUN_NATIVE_SERIAL_TX_OUTPUT_SHARING_FIXTURES",
         ),

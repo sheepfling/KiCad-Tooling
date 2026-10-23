@@ -4880,6 +4880,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/rs485_peer_reference_scan.py#scan_rs485_peer_references"
     },
     {
+      "rule_id": "bus.rs485_data_direction_label_mismatch",
+      "title": "RS-485 data pin conflicts with its UART direction label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with exactly one recognized RS-485 driver-data input function (D, DI, DRIVERINPUT, or DRIVERDATAIN) and one receiver-data output function (R, RO, RECEIVEROUTPUT, or RECEIVERDATAOUT), require both pins in the native component pin inventory and each with one net assignment. When their net names explicitly identify UART/USART TX/RX roles on the same channel, emit a REVIEW candidate for a direction contradiction: driver-data input corresponds to host TX and receiver-data output corresponds to host RX.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Recognition is limited to the listed D/DI driver-input and R/RO receiver-output aliases. Other vendor-specific pin-function spellings and generic TX/RX labels are not classified.",
+        "The reviewed direction mapping follows the documented driver-input and receiver-output roles; names are a review clue, not a project-authored pin-map requirement or defect verdict. The rule does not infer UART connectivity, transceiver operating mode, firmware behavior, PCB copper, or off-board wiring.",
+        "Only fitted U/IC references with exactly one paired role, complete native component pin inventory membership, unique pin assignments, and explicit same-channel UART/USART net labels are considered. DNP, open, multiply assigned, duplicate-role, connector, incomplete-inventory, generic-label, and cross-channel cases remain outside the predicate."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_data_direction_label_mismatch.test_crossed_driver_and_receiver_labels_are_reviewed",
+        "tests.test_rs485_data_direction_label_mismatch_native_fixture_lane.test_native_rs485_data_direction_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_data_direction_label_mismatch.test_correct_aliases_and_matching_labels_are_controls",
+        "tests.test_rs485_data_direction_label_mismatch_native_fixture_lane.test_native_rs485_data_direction_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_rs485_data_direction_label_mismatch.test_reordering_is_stable_and_correcting_assignments_clears_candidates"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_direction_label_candidates",
+        "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_pin_role",
+        "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_direction_label_candidates"
+    },
+    {
       "rule_id": "bus.complementary_pair_assignment",
       "title": "Complementary signal pair has incomplete net assignment",
       "status": "active",

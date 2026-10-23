@@ -111,7 +111,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "spi_data_outputs_share_net_candidates",
         "unconnected_interface_candidates",
         "can_candidates",
-        "rs485_peer_reference_candidates",
+        "rs485_candidates",
         "complementary_signal_candidates",
         "usb_data_polarity_label_candidates",
         "named_differential_pair_candidates",

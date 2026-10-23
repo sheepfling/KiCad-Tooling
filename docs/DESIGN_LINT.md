@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 184 active rules.
+The catalog currently contains 185 active rules.
 
 ### USB data pin/name polarity review
 
@@ -3680,8 +3680,12 @@ internal transfer, direction, power, or enable behavior. The checker does not
 derive voltage limits from domain names, verify that cited limit sources or
 conditions are correct, model transients or actual device behavior, verify PCB
 copper paths, or infer external wiring. Level-shifted links and external peers
-do not receive the direct voltage comparison. It covers logic-level UART
-mapping only; RS-232 and RS-485 need separate rules and requirements.
+do not receive the direct voltage comparison. The authored `serial_peers`
+contract covers logic-level UART mapping. A separate configurable
+`bus.rs485_data_direction_label_mismatch` heuristic reviews bounded D/DI and
+R/RO transceiver functions against explicit same-channel UART/USART TX/RX net
+labels; it does not replace a reviewed RS-485 topology map. RS-232 needs
+separate rules and requirements.
 
 ## Check mapped digital-peer voltage limits
 
@@ -4099,6 +4103,17 @@ hashes are recorded in the
 [fixture README](../tests/fixtures/design_lint/bjt-bc-same-net-native/README.md).
 
 ## Require an authored RS-485 topology
+
+The `bus.rs485_data_direction_label_mismatch` review heuristic checks a fitted
+transceiver with one native D/DI driver-data input and one R/RO receiver-data
+output against explicit UART/USART TX/RX labels on the same channel. It can
+prompt when those directions disagree, but does not determine which UART
+endpoint is intended or verify the differential bus topology. The default is
+`review`; projects may use `block`, `off`, or exact finding ignores through the
+design-lint policy.
+
+See the [synthetic fault/control fixture record][rs485-data-fixture] for
+source hashes and reproduction details.
 
 When the reviewed bus design identifies the duplex arrangement and local
 electrical strategy, record each differential pair, endpoint pin map,
@@ -4769,3 +4784,4 @@ pad. Review the physical access path and first-article test separately.
 [misc-drc-items-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [misc-drc-settings-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/board_design_settings.cpp
 [misc-drc-settings-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/board_design_settings.cpp
+[rs485-data-fixture]: ../tests/fixtures/design_lint/rs485-data-direction-label-mismatch/README.md

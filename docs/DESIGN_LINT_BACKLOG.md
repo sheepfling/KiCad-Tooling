@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 184 rules are implemented with synthetic regression coverage.
+The following 185 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 184 active rules.
+The catalog currently contains 185 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -530,6 +530,7 @@ skipped under prerelease policy.
 - `bus.serial_peer_voltage_review`
 - `bus.serial_peer_reference_review`
 - `bus.rs485_peer_reference_review`
+- `bus.rs485_data_direction_label_mismatch`
 - `bus.usb_peer_reference_review`
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_active_low_chip_select_without_pullup`
@@ -2979,7 +2980,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 184 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 185 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10784,6 +10785,46 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_tx_rx_label_mismatch")'
   ```
 
+#### LINT-203 — Review RS-485 transceiver data pins against UART labels
+
+- **Status:** Implemented as the configurable, default-review
+  `bus.rs485_data_direction_label_mismatch` heuristic.
+- **Gap:** UART controller pin-function checks do not cover transceiver pins
+  named D/DI and R/RO. Those pins can remain on valid, separate nets while
+  their explicit UART/USART TX and RX labels are crossed.
+- **Predicate:** Require one fitted U/IC with exactly one bounded driver-data
+  input function (D, DI, DRIVERINPUT, or DRIVERDATAIN) and one receiver-data
+  output function (R, RO, RECEIVEROUTPUT, or RECEIVERDATAOUT). Both pins must
+  appear in the native component inventory and have unique assignments. Only
+  explicit UART/USART TX/RX labels on the same channel are compared. A driver
+  data input corresponds to host TX; a receiver data output corresponds to
+  host RX.
+- **Boundary:** The function aliases and serial label parser are deliberately
+  narrow. D/DI and R/RO pin meanings are documented in the TI SN65HVD485E
+  [pin-function table][rs485-ti-pin-functions] and Analog Devices
+  MAX481/MAX485-family [pin descriptions][rs485-adi-pin-functions].
+  This is a review cue; it does not prove a required connection, transceiver
+  mode, firmware behavior, PCB copper, or off-board wiring. DNP, connectors,
+  open or multiply assigned pins, duplicate roles, incomplete native
+  inventories, generic labels, and cross-channel pairs are outside scope.
+- **Fixtures:** Synthetic fault/control tests cover D/R and DI/RO aliases,
+  correct wiring, generic and cross-channel labels, DNP, open and ambiguous
+  assignments, pin inventory, component-reference, project-policy, exact
+  ignore, ordering, and repair. Repeated native netlist/ERC exports run on
+  KiCad 10.0.0 and 10.0.5.
+- **Fixture note:** [Synthetic RS-485 data-direction sources and hashes]
+  (../tests/fixtures/design_lint/rs485-data-direction-label-mismatch/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_rs485_data_direction_label_mismatch.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch")'
+
+  KICAD_RUN_NATIVE_RS485_DATA_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_rs485_data_direction_label_mismatch_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
@@ -14735,3 +14776,5 @@ quality, or first-article continuity.
 [lint086-cp2102]: https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102
 [lint086-fusb302]: https://github.com/bentwire/USB-C-FUSB302-PI/tree/7d95292262b42767bbeefebadb6bafe055923d50
 [lint086-16nx]: https://github.com/16n-faderbank/16nx/tree/ca7de2233011407fdd791839d711547bf41d33d3
+[rs485-ti-pin-functions]: https://www.ti.com/lit/ds/symlink/sn65hvd485e.pdf
+[rs485-adi-pin-functions]: https://www.analog.com/media/en/technical-documentation/data-sheets/max1487-max491.pdf

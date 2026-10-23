@@ -3,7 +3,21 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
+from .models import NetlistContract
+from .rs485_data_label_mismatch import rs485_data_direction_label_candidates
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
+
+
+def rs485_candidates(
+    observed: NetlistContract,
+    scan: Rs485PeerReferenceScan | None = None,
+    component_peer_findings: tuple[Candidate, ...] = (),
+) -> tuple[Candidate, ...]:
+    """Combine RS-485 data-role and mapped reference-review candidates."""
+    reference_candidates = (
+        rs485_peer_reference_candidates(scan, component_peer_findings) if scan is not None else ()
+    )
+    return (*reference_candidates, *rs485_data_direction_label_candidates(observed))
 
 
 def rs485_peer_reference_candidates(
