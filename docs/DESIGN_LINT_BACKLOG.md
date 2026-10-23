@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 168 rules are implemented with synthetic regression coverage.
+The following 169 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 168 active rules.
+The catalog currently contains 169 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -536,6 +536,7 @@ skipped under prerelease policy.
 - `bus.can_missing_termination`
 - `bus.can_peer_assignment_divergence`
 - `bus.can_peer_reference_review`
+- `bus.can_line_polarity_label_mismatch`
 - `bus.complementary_pair_assignment`
 - `signal.named_pair_without_reviewed_requirement`
 - `net.numbered_returns`
@@ -602,6 +603,10 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
+  pin functions with explicit CANH/CANL net names. A contradiction is a
+  configurable review prompt, not proof of a pinout requirement.
 
 - **MOSFET gate/drain same-net review:** LINT-185 adds an opt-in, default-off
   prompt when a supported fitted three-terminal MOSFET has its native gate and
@@ -2884,7 +2889,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 168 active rules; CI requires every new
+- **Status:** Baseline complete for all 169 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2893,7 +2898,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 168 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 169 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10052,6 +10057,47 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Source note:** The schematics use only synthetic USB connector and PHY
   symbols. No product, customer, or proprietary board source is included.
+
+#### LINT-187 — Review CAN pin/net-name line contradictions
+
+- **Status:** Implemented as the default-`review`
+  `bus.can_line_polarity_label_mismatch` heuristic, with project overrides for
+  `review`, `block`, `off`, and exact finding ignores.
+- **Gap:** CAN termination and peer checks do not compare a fitted endpoint's
+  CANH/CANL pin function against an explicitly CANH/CANL-named net. A complete
+  pair can therefore retain valid pair completeness and termination while
+  the endpoint labels contradict its native functions.
+- **Predicate:** For each fitted pin with one unique exported net, recognize
+  the pin function and net name through the existing bounded CANH/CAN_HIGH and
+  CANL/CAN_LOW alias parser. Emit a candidate only when both roles are known
+  and opposite. Same-symbol pair shorts remain owned by the complementary-pair
+  rule.
+- **Boundary:** This is a deterministic review clue, not a connector pinout
+  requirement or defect verdict. Names do not establish bus membership,
+  transceiver behavior, physical line mapping, PCB routing, or continuity.
+  Neutral, numbered, vendor-specific, or unrecognized labels, DNP pins, open
+  pins, and multiply assigned pins are outside the predicate.
+- **Fixtures:** A synthetic reversed CANH/CANL net assignment keeps the pair
+  complete and a 121 Ω terminator across the named pair. Correct names, neutral
+  and indexed names, DNP, open, multiply assigned, same-symbol-short, policy,
+  ordering, and repair controls cover the boundaries. A source-hashed native
+  schematic fault/control pair is exported twice on digest-pinned KiCad 10.0.0
+  and 10.0.5 images. The native fixture note is
+  [CAN line-polarity fixture note](../tests/fixtures/design_lint/can-line-polarity-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_can_line_polarity.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_line_polarity_label_mismatch")'
+
+  KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES=1 python -I -m pytest \
+    tests/test_can_line_polarity_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_line_polarity_label_mismatch")'
+  ```
+
+- **Source note:** The schematics use tooling-owned synthetic CAN symbols and
+  passive components. No product, customer, or proprietary design source is
+  included.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

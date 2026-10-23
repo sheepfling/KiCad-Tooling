@@ -63,6 +63,7 @@ I2C_PEER_REFERENCE_MODELS = {
 BUS_ANALYSIS_MODULES = (
     "bus_signal_roles.py",
     "bus_signal_pairs.py",
+    "can_line_polarity.py",
     "design_lint_interfaces_usb_data_polarity.py",
     "resistor_paths.py",
     "peer_reference_assignments.py",

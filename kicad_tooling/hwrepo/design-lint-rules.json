@@ -4374,6 +4374,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_peer_reference_scan.py#scan_can_peer_references"
     },
     {
+      "rule_id": "bus.can_line_polarity_label_mismatch",
+      "title": "CAN pin function conflicts with its net name",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with exactly one assigned native net, emit a REVIEW candidate when the bounded CANH/CAN_HIGH or CANL/CAN_LOW pin-function role conflicts with the recognized role in that net name.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Recognition is bounded to the CANH/CAN_HIGH and CANL/CAN_LOW aliases accepted by can_function_role; neutral, numbered, vendor-specific, and otherwise unrecognized names remain unclassified.",
+        "A name contradiction is a review clue, not a project-authored pinout requirement or defect verdict. The rule does not establish CAN membership, intended line mapping, transceiver behavior, physical polarity, PCB routing, or off-board continuity.",
+        "DNP, open, and multiply assigned pins are skipped. An opposite-role pair shorted within one symbol remains covered by bus.complementary_pair_assignment."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_line_polarity.test_crossed_can_lines_are_flagged_while_the_complete_pair_and_termination_stay_valid",
+        "tests.test_can_line_polarity_native_fixture_lane.test_native_can_line_polarity_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_line_polarity.test_recognized_names_match_and_neutral_or_unbounded_names_stay_unclassified",
+        "tests.test_can_line_polarity_native_fixture_lane.test_native_can_line_polarity_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_can_line_polarity.test_netlist_reordering_is_stable_and_corrected_line_assignments_clear"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_line_polarity.py#can_line_polarity_label_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#can_function_role",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_line_polarity.py#can_line_polarity_label_candidates"
+    },
+    {
       "rule_id": "bus.rs485_peer_reference_review",
       "title": "Mapped RS-485 peers on one pair use different explicit reference nets",
       "status": "active",

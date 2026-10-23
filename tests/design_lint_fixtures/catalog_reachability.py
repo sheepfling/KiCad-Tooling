@@ -196,6 +196,14 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         serial_peer_voltage_netlist(),
         serial_reference_netlist(),
         can_netlist(),
+        can_netlist("121R").model_copy(
+            update={
+                "nets": {
+                    "CAN_HIGH": ("U1.2", "R1.1"),
+                    "CAN_LOW": ("U1.1", "R1.2"),
+                }
+            }
+        ),
         can_peer_reference_netlist(),
         i2c_netlist(),
         i2c_netlist_with_parallel_sda(),

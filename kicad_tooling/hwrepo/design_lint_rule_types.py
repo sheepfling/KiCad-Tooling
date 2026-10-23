@@ -120,6 +120,7 @@ DesignLintRuleId = Literal[
     "bus.can_missing_termination",
     "bus.can_peer_assignment_divergence",
     "bus.can_peer_reference_review",
+    "bus.can_line_polarity_label_mismatch",
     "bus.rs485_peer_reference_review",
     "bus.complementary_pair_assignment",
     "bus.usb_data_polarity_label_mismatch",

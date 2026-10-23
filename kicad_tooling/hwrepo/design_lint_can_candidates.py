@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .can_line_polarity import can_line_polarity_label_candidates
 from .can_peer_heuristics import can_peer_assignment_divergences
 from .can_peer_reference_scan import (
     CanPeerReferenceScan,
@@ -36,6 +37,7 @@ def can_candidates(
                 },
             )
         )
+    found.extend(can_line_polarity_label_candidates(observed))
     for divergence in can_peer_assignment_divergences(observed):
         found.append(
             Candidate(

@@ -189,6 +189,8 @@ _LINT_AREA_MODULES = {
             "tests/test_can_peer_reference_architecture.py",
             "tests/test_design_lint_mcp_parity_can_reference.py",
             "tests/test_can_native_fixture_lanes.py",
+            "tests/test_can_line_polarity.py",
+            "tests/test_can_line_polarity_native_fixture_lane.py",
             "tests/test_digital_peer_spi_voltage_fixture_lane.py",
             "tests/test_digital_peer_serial_voltage_fixture_lane.py",
             "tests/test_design_lint_serial_peer_voltage.py",
