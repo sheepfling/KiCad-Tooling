@@ -148,7 +148,7 @@ def test_policy_can_block_disable_or_exactly_ignore_the_review() -> None:
                     fingerprint=fingerprint,
                     reason="MOSFET reversal reviewed for the circuit topology",
                 ),
-            )
+            ),
         ),
     )
 
