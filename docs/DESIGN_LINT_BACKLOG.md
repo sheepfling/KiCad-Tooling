@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 195 rules are implemented with synthetic regression coverage.
+The following 196 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 195 active rules.
+The catalog currently contains 196 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -480,6 +480,7 @@ skipped under prerelease policy.
 - `connector.mapped_interface_other_named_rail`
 - `connector.mapped_interface_supply_on_return_net`
 - `connector.mapped_interface_signal_on_named_rail`
+- `connector.mapped_interface_shield_on_return_net`
 - `connector.mapped_interface_power_contact_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
@@ -666,6 +667,12 @@ and optional ecosystem adapters are `P3`.
   possible accidental power-contact classifications, while allowing intentional
   signal straps to be reviewed, ignored by exact fingerprint, or configured
   per project.
+- **LINT-214 mapped shield contact on a return-labeled net:** A complete,
+  source-matched interface can classify a fitted connector contact as `shield`
+  while its only assigned net has a bounded return-like label. The default
+  REVIEW asks whether connecting the shield to a net with that return-like label
+  is intentional;
+  it does not infer that shields and signal returns must be isolated or bonded.
 - **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
   cross-rule slice that verifies every active rule has a valid theme-owned
   predicate, catalogued fixtures retain their theme markers, and catalogued
@@ -3039,7 +3046,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 195 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 196 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11442,6 +11449,48 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.py \
     -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")'
+  ```
+
+#### LINT-214 — Review mapped shields on return-labeled nets
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_interface_shield_on_return_net`.
+- **Gap:** A project interface map can mark a connector contact as a chassis or
+  cable shield while the native schematic assigns that pin to a bounded
+  return-like net. ERC does not know whether the shield-to-return bond is
+  intentional.
+- **Predicate:** For a fitted connector with complete, source-matched interface
+  coverage and a current catalog digest, emit a REVIEW candidate when a
+  `shield`-role contact has exactly one assigned net whose label matches a
+  bounded return token, regardless of native pin-function text. DNP,
+  reasoned-open, stale, incomplete, digestless, multiply assigned,
+  ordinary-label, and positive-rail cases are excluded.
+- **Boundary:** The map role and net label are review clues. Shield-to-return
+  connections can be intentional; the rule does not prescribe isolation or
+  commoning. It does not prove a required shield bond,
+  common-ground relationship, PCB copper continuity, external wiring, or
+  chassis bonding. Project policy can keep review mode, set `block` or `off`,
+  or ignore a finding by exact fingerprint.
+- **Fixtures:** Synthetic tests cover bounded return labels, ordinary and
+  positive-label controls, other mapped roles, a named native `SHIELD` function,
+  reasoned opens, DNP, stale and incomplete
+  evidence, policy, exact ignores, a one-pin mutation across four connectors,
+  and stable ordering. Exact KiCad 10.0.0 and 10.0.5 exports reuse the
+  source-hashed tooling-owned `ret-control` schematic; the fault maps J1.7 as
+  `shield` and the control maps it as `return`.
+- **Determinism:** A hash-seed probe compares complete fault and ordinary-net
+  control reports across independently randomized Python processes; a separate
+  metamorphic test reverses native netlist mapping order.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_interface_shield_on_return_net.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_shield_on_return_net")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_interface_shield_on_return_net_native_fixture_lane.py \
+    -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_shield_on_return_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

@@ -100,7 +100,13 @@ def native_return_board_coverage(
                     signal=f"PIN_{number}",
                     role=role,
                     direction="passive",
-                    voltage_domain="signal-return" if role == "return" else "unspecified",
+                    voltage_domain=(
+                        "signal-return"
+                        if role == "return"
+                        else "chassis"
+                        if role == "shield"
+                        else "unspecified"
+                    ),
                     mating=f"PIN_{number}",
                     orientation="straight",
                     mechanical_clearance="synthetic fixture mapping",

@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 195 active rules.
+The catalog currently contains 196 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1800,6 +1800,47 @@ Run the exact-native lane with:
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")'
+```
+
+## Review a mapped shield contact on a return-labeled net
+
+`connector.mapped_interface_shield_on_return_net` prompts when a complete,
+source-matched interface map identifies a fitted contact as `shield`, while
+its only native schematic assignment has a bounded return-like label such as
+`GND`, `0V`, `DGND`, `SIGNAL_RETURN`, or `RET`. This asks the reviewer whether
+connecting the shield to a net with that return-like label is intentional. A
+shield connection can be valid, and the map and label do not establish an
+electrical fault. The source-matched shield role drives the review; native
+pin-function text is recorded as evidence but does not suppress the candidate.
+
+The check excludes DNP connectors, reasoned open contacts, stale or incomplete
+maps, missing catalog digests, multiply assigned contacts, and ordinary or
+positive-rail labels. It does not infer a required shield bond, common-ground
+relationship, PCB copper continuity, external wiring, or chassis bond. Project
+policy can keep it at `review`, set it to `block` or `off`, or ignore a finding
+by exact fingerprint.
+
+Synthetic fault/control cases cover bounded return labels, ordinary and
+positive labels, other mapped roles, DNP, stale and incomplete evidence,
+policy, exact ignores, a one-pin mutation across four connectors, and stable
+ordering. The exact-native fault/control reuses the source-hashed tooling-owned
+`ret-control` schematic: J1.7 is mapped as `shield` for the fault and `return`
+for the control, with exports checked against KiCad 10.0.0 and 10.0.5.
+
+Run the focused synthetic slice with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_connector_mapped_interface_shield_on_return_net.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_shield_on_return_net")'
+```
+
+Run the exact-native lane with:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_mapped_interface_shield_on_return_net_native_fixture_lane.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_shield_on_return_net")'
 ```
 
 ## Review mapped PCB track widths

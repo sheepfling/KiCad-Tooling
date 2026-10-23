@@ -91,6 +91,21 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.mapped_interface_shield_unassigned": {
             "tests.test_connector_mapped_interface_shield_unassigned.test_native_mapped_shield_contact_fault_and_control_are_repeatable",
         },
+        "connector.mapped_interface_shield_on_return_net": {
+            "tests.test_connector_mapped_interface_shield_on_return_net_native_fixture_lane.test_native_mapped_shield_on_ret_is_reviewed_and_return_role_is_control",
+        },
+        "connector.mapped_interface_other_unassigned": {
+            "tests.test_connector_mapped_interface_other_unassigned.test_native_other_contact_fault_and_control_are_repeatable",
+        },
+        "connector.mapped_interface_other_named_rail": {
+            "tests.test_connector_mapped_interface_other_named_rail_native_fixture_lane.test_native_single_other_pin_on_ret_is_reviewed_and_role_control_is_clean",
+        },
+        "connector.mapped_interface_supply_on_return_net": {
+            "tests.test_connector_mapped_interface_supply_on_return_net_native_fixture_lane.test_native_generic_supply_map_on_ret_is_reviewed_and_return_role_is_control",
+        },
+        "connector.mapped_interface_signal_on_named_rail": {
+            "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control",
+        },
         "connector.mapped_interface_power_contact_unassigned": {
             "tests.test_connector_mapped_interface_power_contact_unassigned.test_native_mapped_power_contact_fault_and_control_are_repeatable",
         },

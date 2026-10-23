@@ -17,6 +17,7 @@ OTHER_CONTACT_RULE_ID: DesignLintRuleId = "connector.mapped_interface_other_unas
 OTHER_NAMED_RAIL_RULE_ID: DesignLintRuleId = "connector.mapped_interface_other_named_rail"
 SUPPLY_RETURN_NET_RULE_ID: DesignLintRuleId = "connector.mapped_interface_supply_on_return_net"
 SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "connector.mapped_interface_signal_on_named_rail"
+SHIELD_RETURN_NET_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_on_return_net"
 
 
 def _named_rail_role_clue(net_name: str) -> str | None:
@@ -379,6 +380,59 @@ def mapped_signal_contacts_on_named_rails(
                     "native_pin_function": (mapped.symbol_function or "<missing>",),
                     "assigned_nets": (net_name,),
                     "net_label_role_clue": (f"{label_clue} label",),
+                    "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
+                },
+            )
+        )
+    return tuple(results)
+
+
+def mapped_shield_contacts_on_return_nets(
+    observed: NetlistContract,
+    coverage: ConnectorCoverageReport | None,
+) -> tuple[Candidate, ...]:
+    """Review mapped connector shields assigned to return-labeled nets."""
+    if coverage is None or coverage.status != "COMPLETE":
+        return ()
+
+    dnp_references = {reference.casefold() for reference in observed.dnp_components}
+    results: list[Candidate] = []
+    for pin, mapped in sorted(source_matched_connector_pin_evidence(observed, coverage).items()):
+        reference = pin.rsplit(".", 1)[0]
+        if (
+            mapped.role != "shield"
+            or mapped.unconnected_reason is not None
+            or reference.casefold() in dnp_references
+            or len(mapped.nets) != 1
+        ):
+            continue
+
+        net_name = mapped.nets[0]
+        if _named_rail_role_clue(net_name) != "return-like":
+            continue
+
+        results.append(
+            Candidate(
+                rule_id=SHIELD_RETURN_NET_RULE_ID,
+                subject=f"{pin}: mapped shield contact is assigned to return-like net {net_name}",
+                message=(
+                    f"The source-matched interface maps this contact to "
+                    f"{mapped.interface_signal} as a shield, while its single native net label "
+                    f"({net_name}) is recognized as return-like. Review whether bonding this "
+                    "connecting this shield to the return-labeled net is intentional. The "
+                    "interface map and net label do not prove a required bond or electrical "
+                    "relationship, and this check does "
+                    "not establish PCB copper continuity, external wiring, or chassis bonding."
+                ),
+                evidence={
+                    "component_pin": (pin,),
+                    "interface_pin_number": (str(mapped.interface_pin_number),),
+                    "interface_signal": (str(mapped.interface_signal),),
+                    "interface_role": ("shield",),
+                    "interface_voltage_domain": (str(mapped.voltage_domain or "<missing>"),),
+                    "native_pin_function": (mapped.symbol_function or "<missing>",),
+                    "assigned_nets": (net_name,),
+                    "net_label_role_clue": ("return-like label",),
                     "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
                 },
             )

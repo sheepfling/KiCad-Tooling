@@ -28,6 +28,7 @@ import tests.rs485_peer_reference_support as _rs485_peer_reference_support
 import tests.test_connector_mapped_interface_other_named_rail as _tests_test_mapped_other_rail
 import tests.test_connector_mapped_interface_other_unassigned as _tests_test_mapped_other_contact
 import tests.test_connector_mapped_interface_power_contact_unassigned as _tests_test_mapped_power_contact
+import tests.test_connector_mapped_interface_shield_on_return_net as _tests_test_mapped_shield_return
 import tests.test_connector_mapped_interface_signal_on_named_rail as _tests_test_mapped_signal_rail
 import tests.test_connector_peer_comparison_scope_singleton as _tests_test_scope_singleton
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
@@ -252,6 +253,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_mapped_signal_rail.mapped_named_rail_netlist(target_net="GND")
     )
     emitted.update(item.rule_id for item in mapped_signal_rail_report.findings)
+    mapped_shield_return_report, _ = _tests_test_mapped_shield_return._report(
+        _tests_test_mapped_shield_return.mapped_named_rail_netlist(target_net="RET")
+    )
+    emitted.update(item.rule_id for item in mapped_shield_return_report.findings)
     scoped_returns, scoped_coverage = _tests_test_scope_singleton.two_usb_one_serial_return_case(
         common_return=True,
         return_comparison_groups={
