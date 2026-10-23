@@ -1,12 +1,13 @@
-"""Synthetic native-netlist inputs for numeric-rail diode direction review."""
+"""Synthetic numeric and named-return inputs for diode direction review."""
 
 from __future__ import annotations
 
 from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 NATIVE_FIXTURE_SHA256 = {
-    "fault": "811b5eeaa973d5183ad849d0115cfe754f8902393bb95ca5869b7b91ef28a195",
-    "control": "3dee00e1841431bf4e09f59cea48616ffb5674664a0b213cdf15565cf5713183",
+    "fault_numeric": "811b5eeaa973d5183ad849d0115cfe754f8902393bb95ca5869b7b91ef28a195",
+    "fault_return": "a9d451916cdb836be6ad2b7f2561fc609827c3daabc9d6645190d34713442c33",
+    "control": "98089723702153b63e9e8ce8ad67bf53277215ded30ad149dad6ef52330f78e4",
 }
 
 

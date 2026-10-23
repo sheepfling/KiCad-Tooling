@@ -591,13 +591,14 @@ and optional ecosystem adapters are `P3`.
 ### Current execution focus
 
 - **Diode rail-polarity review (2026-10-22):** LINT-173 reviews a fitted,
-  exact supported two-pin diode whose native `A` and `K` pins land on distinct
-  recognized numeric rails with the anode label below the cathode label.
-  Reverse-biased clamp and isolation circuits are valid, so this is a configurable
-  `REVIEW` prompt rather than an inferred defect. Fault/control native exports
-  are source-hash pinned and run twice on the exact KiCad 10.0.0/10.0.5 lanes.
-  The fixture harness is shared with polarized-capacitor acceptance; no project
-  or cohort board/source is used.
+  exact supported two-pin diode whose native `A` and `K` pins resolve to
+  differently ordered numeric rails, or a named return and a positive rail.
+  A shared potential resolver now serves this heuristic and the existing
+  polarized-capacitor rule, preserving the same conflict exclusions. Reverse-
+  biased clamp and isolation circuits are valid, so this remains a configurable
+  `REVIEW` prompt rather than an inferred defect. Synthetic native fixtures now
+  cover both `+3V3`/`+5V` and `GND`/`+3V3` ordering on the exact KiCad
+  10.0.0/10.0.5 lanes. No project or cohort board/source is used.
 
 - **Connector native-fixture registry completeness (2026-10-22):** The
   architecture gate now requires every active rule declaring
@@ -9324,24 +9325,30 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Predicate:** Recognize only fitted `Device:D` and `Device:D_Schottky`
   symbols with complete native two-pin inventory and exactly one `A` and one
   `K` function. Require one unambiguous assignment per pin to distinct nets,
-  then compare only numeric rails accepted by the shared
-  `explicit_voltage_rail_value` parser. Prompt when the anode's labeled value
-  is lower than the cathode's labeled value. The check uses native pin roles,
-  not assumed pin numbers.
+  then compare conservative potential evidence from explicit numeric labels
+  and unambiguous native positive/return roles. This includes a named return
+  below a numeric or symbolic positive rail and a numeric negative rail below
+  a symbolic positive rail. The check uses native pin roles, not assumed pin
+  numbers.
 - **Boundary:** A reverse-biased diode may be a valid clamp or isolation path.
-  Rail names are review evidence rather than measured voltage. The rule does
-  not infer required current direction, forward drop, device ratings, circuit
-  requirements, PCB copper, or off-board behavior. Zener, TVS, multi-terminal,
+  Rail names and native pin roles are review evidence rather than measured
+  voltage. Conflicting return and positive roles and unordered symbolic
+  positive rails are excluded. The rule does not infer required current
+  direction, forward drop, device ratings, circuit requirements, PCB copper,
+  or off-board behavior. Zener, TVS, multi-terminal,
   custom, DNP, incomplete, ambiguous, open, and same-net parts are excluded.
   Projects can retain `REVIEW`, block, disable, or exact-fingerprint-ignore the
   finding.
 - **Fixtures:** Synthetic cases cover generic and Schottky symbols, native A/K
-  role mapping independent of pin number, signed rail ordering, forward/equal/
-  unknown/return controls, unsupported identities, DNP, incomplete or
+  role mapping independent of pin number, signed numeric rails, negative-to-
+  symbolic-positive ordering, named returns, positive roles from peer-pin
+  functions, conflicting role controls,
+  forward/equal/unknown controls, unsupported identities, DNP, incomplete or
   ambiguous assignments, policy modes, exact ignores, ordering, and repair.
   Minimal tooling-owned KiCad sources export netlist and ERC twice on pinned
   KiCad 10.0.0 and 10.0.5. The gate checks exact source hashes, normalized
-  repeatability, zero ERC errors, and the fault/control finding difference.
+  repeatability, zero ERC errors, numeric-rail and named-return faults, and
+  the forward-oriented return control.
   See the [native fixture note][diode-rail-native]. This fixture is not an
   electrical approval or field false-positive estimate.
 - **Focused selection:**

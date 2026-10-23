@@ -2,14 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from decimal import Decimal
-
-from .connector_identity import is_return_function, power_function_key
+from .component_rail_potentials import named_net_potential, potential_is_lower
 from .design_lint_types import Candidate
 from .models import NetlistContract
-from .power_rails import explicit_voltage_rail_value
-from .return_nets import is_return_like_net_name
 
 RULE_ID = "component.polarized_capacitor_reversed_on_named_rails"
 _SUPPORTED_SYMBOLS = frozenset(
@@ -21,87 +16,6 @@ _SUPPORTED_SYMBOLS = frozenset(
     }
 )
 _COMPLETE_PIN_NUMBERS = frozenset({"1", "2"})
-
-
-@dataclass(frozen=True)
-class _NetPotential:
-    value: Decimal | None
-    positive_symbolic: bool
-    return_reference: bool
-    evidence: tuple[str, ...]
-
-
-def _net_potential(
-    net_name: str,
-    pins: tuple[str, ...],
-    pin_functions: dict[str, str],
-) -> _NetPotential | None:
-    """Resolve only explicit numeric labels or unambiguous named rail roles."""
-    numeric_values: set[Decimal] = set()
-    evidence: set[str] = set()
-    positive_symbolic = False
-    return_reference = is_return_like_net_name(net_name)
-    net_value = explicit_voltage_rail_value(net_name)
-    if net_value is not None:
-        numeric_values.add(net_value)
-        evidence.add(f"explicit net label {net_name} = {net_value} V")
-    if power_function_key(net_name) is not None:
-        positive_symbolic = True
-        evidence.add(f"positive supply net label {net_name}")
-
-    for pin in pins:
-        function = pin_functions.get(pin.casefold())
-        if function is None:
-            continue
-        value = explicit_voltage_rail_value(function)
-        if value is not None:
-            numeric_values.add(value)
-            evidence.add(f"pin role {pin}={function} = {value} V")
-        if power_function_key(function) is not None:
-            positive_symbolic = True
-            evidence.add(f"positive supply pin role {pin}={function}")
-        if is_return_function(function):
-            return_reference = True
-            evidence.add(f"return pin role {pin}={function}")
-
-    if len(numeric_values) > 1 or (positive_symbolic and return_reference):
-        return None
-    if numeric_values:
-        value = next(iter(numeric_values))
-        if (return_reference and value != 0) or (positive_symbolic and value < 0):
-            return None
-        if return_reference:
-            evidence.add("named return/reference role")
-        return _NetPotential(
-            value=value,
-            positive_symbolic=positive_symbolic,
-            return_reference=return_reference,
-            evidence=tuple(sorted(evidence)),
-        )
-    if return_reference:
-        evidence.add("named return/reference role")
-        return _NetPotential(
-            value=Decimal(0),
-            positive_symbolic=False,
-            return_reference=True,
-            evidence=tuple(sorted(evidence)),
-        )
-    if positive_symbolic:
-        return _NetPotential(
-            value=None,
-            positive_symbolic=True,
-            return_reference=False,
-            evidence=tuple(sorted(evidence)),
-        )
-    return None
-
-
-def _is_lower(left: _NetPotential, right: _NetPotential) -> bool:
-    if left.value is not None and right.value is not None:
-        return left.value < right.value
-    if left.value is not None and left.value < 0 and right.positive_symbolic:
-        return True
-    return left.return_reference and right.positive_symbolic
 
 
 def polarized_capacitors_on_reversed_named_rails(
@@ -152,12 +66,12 @@ def polarized_capacitors_on_reversed_named_rails(
         if positive_net.casefold() == negative_net.casefold():
             continue
 
-        positive_potential = _net_potential(
+        positive_potential = named_net_potential(
             positive_net,
             observed.nets[positive_net],
             functions,
         )
-        negative_potential = _net_potential(
+        negative_potential = named_net_potential(
             negative_net,
             observed.nets[negative_net],
             functions,
@@ -165,7 +79,7 @@ def polarized_capacitors_on_reversed_named_rails(
         if (
             positive_potential is None
             or negative_potential is None
-            or not _is_lower(positive_potential, negative_potential)
+            or not potential_is_lower(positive_potential, negative_potential)
         ):
             continue
 

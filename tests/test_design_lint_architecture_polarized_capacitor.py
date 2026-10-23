@@ -26,6 +26,7 @@ def test_polarized_capacitor_predicate_has_a_small_theme_owned_module() -> None:
     rule = next(item for item in rule_catalog().rules if item.rule_id == RULE_ID)
     review_modules = (
         source,
+        REPO_ROOT / "kicad_tooling/hwrepo/component_rail_potentials.py",
         REPO_ROOT / "kicad_tooling/ci_hosted_polarized_capacitor.py",
         REPO_ROOT / "tests/design_lint_fixtures/polarized_capacitor.py",
         REPO_ROOT / "tests/test_polarized_capacitor_orientation.py",
@@ -40,3 +41,7 @@ def test_polarized_capacitor_predicate_has_a_small_theme_owned_module() -> None:
     assert rule.theme == "components"
     assert rule.implementation_owner == OWNER
     assert OWNER in rule.implementation_refs
+    assert {
+        "kicad_tooling/hwrepo/component_rail_potentials.py#named_net_potential",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#potential_is_lower",
+    } <= set(rule.implementation_refs)

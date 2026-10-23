@@ -45,7 +45,8 @@ def test_native_diode_rail_fault_and_control_are_deterministic(
         if (fixture_root / relative).is_file()
     }
     assert actual_paths == {
-        "fault": "diode-rail-orientation-native/fault.kicad_sch",
+        "fault_numeric": "diode-rail-orientation-native/fault.kicad_sch",
+        "fault_return": "diode-rail-orientation-native/fault-return.kicad_sch",
         "control": "diode-rail-orientation-native/control.kicad_sch",
     }
     assert NATIVE_FIXTURE_SHA256.keys() == actual_paths.keys()
@@ -73,7 +74,8 @@ def test_native_diode_rail_fault_and_control_are_deterministic(
     }
     assert set(results) == {
         "diode-rail-fixture/native-export",
-        "diode-rail-fixture/fault",
+        "diode-rail-fixture/fault_numeric",
+        "diode-rail-fixture/fault_return",
         "diode-rail-fixture/control",
     }
     native = results["diode-rail-fixture/native-export"]
@@ -85,11 +87,17 @@ def test_native_diode_rail_fault_and_control_are_deterministic(
     )
     assert_native_fixture_mounts(root, native["command_receipt"])
 
-    fault = results["diode-rail-fixture/fault"]
+    numeric_fault = results["diode-rail-fixture/fault_numeric"]
+    return_fault = results["diode-rail-fixture/fault_return"]
     control = results["diode-rail-fixture/control"]
-    assert fault["rule_findings"] == "D1: diode anode is below its cathode on named rails"
+    assert numeric_fault["rule_findings"] == "D1: diode anode is below its cathode on named rails"
+    assert return_fault["rule_findings"] == "D1: diode anode is below its cathode on named rails"
     assert control["rule_findings"] == "none"
-    for case, result in (("fault", fault), ("control", control)):
+    for case, result in (
+        ("fault_numeric", numeric_fault),
+        ("fault_return", return_fault),
+        ("control", control),
+    ):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
         assert result["image"] == image

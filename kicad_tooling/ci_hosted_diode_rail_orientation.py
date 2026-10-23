@@ -12,7 +12,8 @@ if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog
 
 DIODE_RAIL_FIXTURE_CASES = {
-    "fault": "diode-rail-orientation-native/fault.kicad_sch",
+    "fault_numeric": "diode-rail-orientation-native/fault.kicad_sch",
+    "fault_return": "diode-rail-orientation-native/fault-return.kicad_sch",
     "control": "diode-rail-orientation-native/control.kicad_sch",
 }
 
@@ -35,7 +36,8 @@ def diode_rail_fixture_lane(
         rule_id=RULE_ID,
         fixtures=DIODE_RAIL_FIXTURE_CASES,
         expected_subjects={
-            "fault": "D1: diode anode is below its cathode on named rails",
+            "fault_numeric": "D1: diode anode is below its cathode on named rails",
+            "fault_return": "D1: diode anode is below its cathode on named rails",
             "control": None,
         },
     )

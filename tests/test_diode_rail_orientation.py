@@ -57,10 +57,10 @@ def test_supported_diode_with_anode_below_cathode_is_reviewed(symbol: str) -> No
     assert finding.subject == "D1: diode anode is below its cathode on named rails"
     assert finding.evidence["anode_pin"] == ("D1.2",)
     assert finding.evidence["anode_net"] == ("+3V3",)
-    assert finding.evidence["anode_label_value_volts"] == ("3.3",)
+    assert finding.evidence["anode_ordering_value_volts"] == ("3.3",)
     assert finding.evidence["cathode_pin"] == ("D1.1",)
     assert finding.evidence["cathode_net"] == ("+5V",)
-    assert finding.evidence["cathode_label_value_volts"] == ("5",)
+    assert finding.evidence["cathode_ordering_value_volts"] == ("5",)
     assert "Reverse-biased clamp and isolation uses can be valid" in finding.message
 
 
@@ -77,6 +77,55 @@ def test_signed_rail_values_define_polarity_order(anode_net: str, cathode_net: s
 
     assert finding.evidence["anode_net"] == (anode_net,)
     assert finding.evidence["cathode_net"] == (cathode_net,)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.parametrize(
+    ("anode_net", "cathode_net"),
+    (
+        pytest.param("GND", "+3V3", id="named-return-to-numeric-positive-rail"),
+        pytest.param("0V", "VCC", id="named-return-to-symbolic-positive-rail"),
+        pytest.param("GND", "VDD", id="return-label-to-symbolic-positive-rail"),
+    ),
+)
+def test_named_return_below_positive_rail_is_reviewed(
+    anode_net: str,
+    cathode_net: str,
+) -> None:
+    finding = diode_findings(lint(netlist(anode_net=anode_net, cathode_net=cathode_net)))[0]
+
+    assert finding.evidence["anode_net"] == (anode_net,)
+    assert finding.evidence["cathode_net"] == (cathode_net,)
+    assert finding.evidence["anode_ordering_value_volts"] == ("0",)
+    assert finding.evidence["anode_potential_basis"]
+    assert finding.evidence["cathode_potential_basis"]
+    if cathode_net in {"VCC", "VDD"}:
+        assert "cathode_ordering_value_volts" not in finding.evidence
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_peer_pin_roles_can_order_otherwise_unlabeled_return_and_supply_nets() -> None:
+    source = netlist(
+        anode_net="REFERENCE",
+        cathode_net="SUPPLY",
+        pin_functions={"D1.1": "K", "D1.2": "A", "U1.1": "AGND", "U2.1": "VDD"},
+        nets={"REFERENCE": ("D1.2", "U1.1"), "SUPPLY": ("D1.1", "U2.1")},
+    )
+
+    finding = diode_findings(lint(source))[0]
+
+    assert "named return/reference role" in finding.evidence["anode_potential_basis"]
+    assert "return pin role U1.1=AGND" in finding.evidence["anode_potential_basis"]
+    assert "positive supply pin role U2.1=VDD" in finding.evidence["cathode_potential_basis"]
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_negative_numeric_rail_is_below_positive_symbolic_net() -> None:
+    finding = diode_findings(lint(netlist(anode_net="-5V", cathode_net="VCC")))[0]
+
+    assert finding.evidence["anode_ordering_value_volts"] == ("-5",)
+    assert "positive supply net label VCC" in finding.evidence["cathode_potential_basis"]
+    assert "cathode_ordering_value_volts" not in finding.evidence
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -156,6 +205,18 @@ def test_open_ambiguous_and_same_net_assignments_are_not_classified() -> None:
     assert not diode_findings(lint(incomplete))
     assert not diode_findings(lint(ambiguous))
     assert not diode_findings(lint(same_net))
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_conflicting_return_and_positive_role_on_one_net_is_not_ordered() -> None:
+    conflict = netlist(
+        anode_net="GND",
+        cathode_net="+5V",
+        pin_functions={"D1.1": "K", "D1.2": "A", "U1.1": "VDD"},
+        nets={"GND": ("D1.2", "U1.1"), "+5V": ("D1.1",)},
+    )
+
+    assert not diode_findings(lint(conflict))
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

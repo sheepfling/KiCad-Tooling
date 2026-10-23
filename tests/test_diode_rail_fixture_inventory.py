@@ -20,6 +20,7 @@ def test_native_fixture_scope_is_minimal_and_hash_pinned() -> None:
         "README.md",
         "control.kicad_sch",
         "fault.kicad_sch",
+        "fault-return.kicad_sch",
     }
     assert set(DIODE_RAIL_FIXTURE_CASES) == set(NATIVE_FIXTURE_SHA256)
     for case, relative in DIODE_RAIL_FIXTURE_CASES.items():

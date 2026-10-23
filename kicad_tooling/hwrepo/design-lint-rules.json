@@ -3064,6 +3064,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_polarized_capacitor_orientation.py#polarized_capacitors_on_reversed_named_rails",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#named_net_potential",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#potential_is_lower",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
@@ -3075,29 +3077,33 @@
     },
     {
       "rule_id": "component.diode_anode_below_cathode_on_named_rails",
-      "title": "Diode anode below cathode on explicitly named voltage rails",
+      "title": "Diode anode below cathode on named rails or returns",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted exact Device:D or Device:D_Schottky symbol with a complete two-pin inventory, exactly one native A and K pin function, and one distinct unambiguous net per pin, emit REVIEW when both net labels are recognized numeric voltage rails and the anode label is lower than the cathode label.",
+      "predicate": "For a fitted exact Device:D or Device:D_Schottky symbol with a complete two-pin inventory, exactly one native A and K pin function, and one distinct unambiguous net per pin, emit REVIEW when conservative native net evidence orders the anode below the cathode using explicit numeric labels, a numeric negative rail against a named positive role, or a named return against a named positive role.",
       "supported_kicad_versions": [
         "10.0.0",
         "10.0.5"
       ],
       "limitations": [
         "Only the exact Device:D and Device:D_Schottky identities, complete two-pin inventories, and explicit native A/K pin functions participate. Zener, TVS, multi-terminal, custom, DNP, incomplete, open, ambiguous, or same-net cases are excluded.",
-        "Only two distinct labels recognized by explicit_voltage_rail_value are ordered. Symbolic rails, return names, unrecognized labels, actual measured voltage, current direction, component requirements, ratings, PCB copper, and off-board circuitry are not evaluated.",
+        "Ordering uses explicit numeric rail labels or an unambiguous positive/return role from native net and pin-function evidence. Two symbolic positive rails, mixed or conflicting role evidence, and unrecognized labels are not ordered. Labels and pin functions are review evidence, not measured voltage or proof of the required current direction.",
         "Reverse-biased clamp and isolation uses can be intentional. The default REVIEW prompt does not claim a defect; project policy can disable, block, or exact-fingerprint-ignore it."
       ],
       "fault_fixtures": [
         "tests.test_diode_rail_orientation.test_supported_diode_with_anode_below_cathode_is_reviewed",
         "tests.test_diode_rail_orientation.test_signed_rail_values_define_polarity_order",
+        "tests.test_diode_rail_orientation.test_named_return_below_positive_rail_is_reviewed",
+        "tests.test_diode_rail_orientation.test_peer_pin_roles_can_order_otherwise_unlabeled_return_and_supply_nets",
+        "tests.test_diode_rail_orientation.test_negative_numeric_rail_is_below_positive_symbolic_net",
         "tests.test_diode_rail_orientation.test_native_pin_functions_define_anode_and_cathode_not_pin_numbers",
         "tests.test_diode_rail_orientation_native_fixture.test_native_diode_rail_fault_and_control_are_deterministic"
       ],
       "valid_control_fixtures": [
         "tests.test_diode_rail_orientation.test_forward_equal_unknown_and_return_controls_are_quiet",
+        "tests.test_diode_rail_orientation.test_conflicting_return_and_positive_role_on_one_net_is_not_ordered",
         "tests.test_diode_rail_orientation.test_unsupported_or_incomplete_diodes_are_not_classified",
         "tests.test_diode_rail_orientation.test_open_ambiguous_and_same_net_assignments_are_not_classified",
         "tests.test_diode_rail_orientation_native_fixture.test_native_diode_rail_fault_and_control_are_deterministic"
@@ -3109,6 +3115,8 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_diode_rail_orientation.py#diodes_with_anode_below_cathode_on_named_rails",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#named_net_potential",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#potential_is_lower",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
         "kicad_tooling/ci_hosted_component_polarity.py#component_polarity_fixture_lane"

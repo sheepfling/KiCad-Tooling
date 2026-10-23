@@ -19,6 +19,7 @@ OWNER = (
 def test_rule_owner_fixture_service_and_regressions_stay_below_review_limit() -> None:
     rule = next(item for item in rule_catalog().rules if item.rule_id == RULE_ID)
     modules = (
+        "kicad_tooling/hwrepo/component_rail_potentials.py",
         "kicad_tooling/hwrepo/component_diode_rail_orientation.py",
         "kicad_tooling/ci_hosted_component_polarity.py",
         "kicad_tooling/ci_hosted_diode_rail_orientation.py",
@@ -33,4 +34,8 @@ def test_rule_owner_fixture_service_and_regressions_stay_below_review_limit() ->
     assert rule.theme == "components"
     assert rule.implementation_owner == OWNER
     assert OWNER in rule.implementation_refs
+    assert {
+        "kicad_tooling/hwrepo/component_rail_potentials.py#named_net_potential",
+        "kicad_tooling/hwrepo/component_rail_potentials.py#potential_is_lower",
+    } <= set(rule.implementation_refs)
     assert all(size < IMPLEMENTATION_MAX_LINES for size in sizes.values()), sizes
