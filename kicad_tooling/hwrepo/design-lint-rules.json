@@ -3017,7 +3017,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_mosfet_gate_source_bias.test_adding_source_bias_and_reordering_net_inventory_clear_stably",
-        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable",
+        "tests.test_design_lint_determinism_components.test_mosfet_gate_fault_and_driver_control_are_stable_across_hash_seeds"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias",

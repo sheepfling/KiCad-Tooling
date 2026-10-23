@@ -2983,7 +2983,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v80. The cross-process probe supports themed report
+- **Status:** Implemented v81. The cross-process probe supports themed report
   selectors and retains the complete 207-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
@@ -3053,6 +3053,9 @@ is not a reason by itself to expand its scope or change its default policy.
   synthetic disconnected MOSFET-gate fault and fitted-driver control to the
   same process matrix. It asserts the gate finding and its absence from the
   fitted-peer control; other catalogued findings may remain serialized.
+  The v81 extension asserts that this fitted-peer control clears LINT-170 while
+  LINT-171 remains explicitly `RULE_OFF`; it also verifies the fault/control
+  reports bind different normalized-netlist hashes.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -9240,8 +9243,8 @@ is not a reason by itself to expand its scope or change its default policy.
   unrelated native ERC warnings without treating them as approval. LINT-080
   also hashes the normalized synthetic netlists and compares complete
   serialized fault/control reports across three independent processes; the
-  fitted-peer control clears this rule even if unrelated candidates remain in
-  the report.
+  fitted-peer control clears LINT-170, while LINT-171 remains visible with its
+  default `RULE_OFF` disposition and does not change the overall `PASS` result.
 - **Focused selection:**
 
   ```sh

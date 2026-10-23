@@ -90,16 +90,25 @@ def test_named_return_diode_fault_and_control_are_stable_across_hash_seeds() -> 
 
 
 @pytest.mark.design_lint_rule(rule_id="component.mosfet_gate_without_peer")
+@pytest.mark.design_lint_rule(rule_id="component.mosfet_gate_without_visible_source_bias")
 def test_mosfet_gate_fault_and_driver_control_are_stable_across_hash_seeds() -> None:
     reports = hashseed_probe_reports(families=("components",))
     fault = reports["mosfet_gate_no_peer_fault"]
     control = reports["mosfet_gate_driver_control"]
     rule_id = "component.mosfet_gate_without_peer"
+    source_bias_rule_id = "component.mosfet_gate_without_visible_source_bias"
 
     fault_findings = [finding for finding in fault["findings"] if finding["rule_id"] == rule_id]
+    control_source_bias_findings = [
+        finding for finding in control["findings"] if finding["rule_id"] == source_bias_rule_id
+    ]
     assert fault["status"] == "REVIEW"
     assert len(fault_findings) == 1
     assert fault_findings[0]["evidence"]["gate_pin"] == ["Q1.2"]
     assert fault_findings[0]["evidence"]["other_fitted_net_members"] == []
     assert control["status"] == "PASS"
     assert all(finding["rule_id"] != rule_id for finding in control["findings"])
+    assert fault["netlist_sha256"] != control["netlist_sha256"]
+    assert len(control_source_bias_findings) == 1
+    assert control_source_bias_findings[0]["mode"] == "off"
+    assert control_source_bias_findings[0]["disposition"] == "RULE_OFF"
