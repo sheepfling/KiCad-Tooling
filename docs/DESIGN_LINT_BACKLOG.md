@@ -632,8 +632,8 @@ and optional ecosystem adapters are `P3`.
   is implemented for complete, source-matched interface maps assigning a
   generic connector contact the role `supply` or `return` when the native
   netlist leaves it open without a reasoned intentional-open decision. The
-  check does not pick a net or infer commoning. Its exact native fault/control
-  lane is pending the tagged gate.
+  check does not pick a net or infer commoning. Tagged acceptance passed as
+  `v0.5.3rc89` (GitHub Actions run `39999226135`).
 
 ### Previously prioritized additions now in the catalog
 
@@ -11005,6 +11005,12 @@ is not a reason by itself to expand its scope or change its default policy.
   supply/return maps to the exported source. It is registered in the
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` gate for KiCad 10.0.0 and 10.0.5.
   No board project or proprietary source is used.
+- **Tagged acceptance (2026-10-23):** `v0.5.3rc89` (GitHub Actions run
+  `39999226135`) passed the focused rule selection with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, the exact KiCad 10.0.0/10.0.5
+  native fault/control lane, and the installed-wheel playtest against a
+  separate project checkout. Ubuntu, macOS, and Windows preview jobs passed;
+  the package-release job was skipped under prerelease policy.
 - **Focused selection:**
 
   ```sh
