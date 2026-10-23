@@ -634,6 +634,16 @@ and optional ecosystem adapters are `P3`.
   netlist leaves it open without a reasoned intentional-open decision. The
   check does not pick a net or infer commoning. Tagged acceptance passed as
   `v0.5.3rc89` (GitHub Actions run `39999226135`).
+- **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
+  cross-rule slice that verifies every active rule has a valid theme-owned
+  predicate, catalogued fixtures retain their theme markers, and catalogued
+  tests retain their rule selectors. This catches metadata and fixture-wiring
+  regressions beside the changed rule while keeping the broader catalog suite
+  out of the gate. Local selection passed with 42 tests and one gated native
+  skip; hosted acceptance for `v0.5.3rc92` passed (GitHub Actions run
+  `40005344535`) with the I2C native fixture switch enabled, the separate
+  installed-wheel playtest, and all three preview jobs. The prerelease package
+  job was skipped by policy.
 
 ### Previously prioritized additions now in the catalog
 
