@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 167 rules are implemented with synthetic regression coverage.
+The following 168 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 167 active rules.
+The catalog currently contains 168 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -531,6 +531,7 @@ skipped under prerelease policy.
 - `bus.usb_c_unconnected_cc_pin`
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
+- `bus.usb_data_polarity_label_mismatch`
 - `bus.can_unconnected_line`
 - `bus.can_missing_termination`
 - `bus.can_peer_assignment_divergence`
@@ -2309,12 +2310,13 @@ is not a reason by itself to expand its scope or change its default policy.
   faults and complete controls; lane-indexed USB-C anti-control; exact-symbol
   project aliases with fault/control/stale-map checks. Repeated native exports
   on KiCad 10.0.0 and 10.0.5 verify the built-in pin-function text survives
-  netlist normalization. Cross-component peer pairing, polarity, and PCB
-  constraints require separate requirements and evidence.
-- **Remaining:** Model explicit connector-to-device pair maps only when a
-  cohort fixture demonstrates detection beyond existing `pin_connectivity`
-  contracts. Do not infer that similarly named connector or device pins must
-  connect across symbols.
+  netlist normalization. A separate `bus.usb_data_polarity_label_mismatch`
+  review now catches a bounded pin-function/net-name side contradiction even
+  when the pair remains complete. Cross-component intent and PCB constraints
+  still require separate requirements and evidence.
+- **Remaining:** Add explicit connector-to-device pair maps only when
+  independently authored interface intent is available. Do not infer that
+  similarly named connector or device pins must connect across symbols.
 
 #### LINT-004 — Rule catalog and fault/control coverage ledger
 
@@ -2882,7 +2884,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 167 active rules; CI requires every new
+- **Status:** Baseline complete for all 168 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2891,7 +2893,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 167 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 168 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10009,6 +10011,47 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Source note:** The fault and control schematics use synthetic MOSFET,
   resistor, and driver symbols; no project or cohort design source is used.
+
+#### LINT-186 — Review USB data pin/net-name polarity contradictions
+
+- **Status:** Implemented as the default-`review`
+  `bus.usb_data_polarity_label_mismatch` heuristic, with project overrides for
+  `review`, `block`, `off`, and exact finding ignores.
+- **Gap:** `bus.complementary_pair_assignment` verifies pair completeness and
+  distinct net assignments but deliberately does not compare pin-side naming
+  with net-side naming. A complete pair can still have a connector endpoint
+  label reversed relative to the paired signal.
+- **Predicate:** For each fitted pin with one unique exported net, recognize the
+  native pin function and net name through the existing bounded USB D+/D−
+  alias parser. Emit a candidate only when both aliases identify the same
+  unindexed or numbered port group and opposite sides. A same-symbol pair
+  short remains owned by the complementary-pair rule.
+- **Boundary:** This is a deterministic review clue, not a connector pinout
+  requirement or defect verdict. Names do not prove device pinout, endpoint
+  intent, physical polarity, PCB routing, or continuity. Neutral/unrecognized
+  labels, different port indices, DNP, open, and multiply assigned pins are
+  outside the predicate.
+- **Fixtures:** Synthetic reversed-label and cross-symbol faults; correct
+  labels; neutral and differently indexed controls; DNP, open, ambiguous, and
+  same-symbol short boundaries; order stability and correction metamorphism;
+  and a source-hashed native KiCad schematic pair. Exact native netlists are
+  exported twice on digest-pinned KiCad 10.0.0 and 10.0.5 images. The crossed
+  connector case confirms the existing pair-completeness rule stays quiet.
+  The native fixture note is
+  [USB data-polarity fixture note](../tests/fixtures/design_lint/usb-data-polarity-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_usb_data_polarity.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_data_polarity_label_mismatch")'
+
+  KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES=1 python -I -m pytest \
+    tests/test_usb_data_polarity_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_data_polarity_label_mismatch")'
+  ```
+
+- **Source note:** The schematics use only synthetic USB connector and PHY
+  symbols. No product, customer, or proprietary board source is included.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

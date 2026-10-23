@@ -205,5 +205,6 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         spi_active_low_select_netlist(),
         complementary_usb_netlist(negative_net=None),
         complementary_usb_netlist(),
+        complementary_usb_netlist(positive_net="USB_DM", negative_net="USB_DP"),
     )
     return {item.rule_id for source in cases for item in candidates(source)}

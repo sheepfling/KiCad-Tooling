@@ -122,6 +122,7 @@ DesignLintRuleId = Literal[
     "bus.can_peer_reference_review",
     "bus.rs485_peer_reference_review",
     "bus.complementary_pair_assignment",
+    "bus.usb_data_polarity_label_mismatch",
     "mcu.stm32_cubemx_pin_map",
     "signal.named_pair_without_reviewed_requirement",
     "protection.unreviewed_interface_pin",

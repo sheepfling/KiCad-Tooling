@@ -11,6 +11,7 @@ from .design_lint_i2c_candidates import (
     i2c_pullup_candidates,
     i2c_responder_coverage_candidates,
 )
+from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
 from .design_lint_rs485_candidates import rs485_peer_reference_candidates
 from .design_lint_signal_pair_candidates import (
     complementary_signal_candidates,
@@ -67,6 +68,7 @@ def bus_candidates(
             else ()
         ),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
+        *usb_data_polarity_label_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
         *i2c_address_candidates(i2c_address_coverage),
         *i2c_responder_coverage_candidates(observed, i2c_address_map),

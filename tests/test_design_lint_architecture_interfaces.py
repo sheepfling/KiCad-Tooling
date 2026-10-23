@@ -63,6 +63,7 @@ I2C_PEER_REFERENCE_MODELS = {
 BUS_ANALYSIS_MODULES = (
     "bus_signal_roles.py",
     "bus_signal_pairs.py",
+    "design_lint_interfaces_usb_data_polarity.py",
     "resistor_paths.py",
     "peer_reference_assignments.py",
     "i2c_pullup_contract_paths.py",
@@ -416,6 +417,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "design_lint_can_candidates.py",
         "design_lint_rs485_candidates.py",
         "design_lint_signal_pair_candidates.py",
+        "design_lint_interfaces_usb_data_polarity.py",
     )
 
     assert _line_count(facade) < FACADE_MAX_LINES
@@ -452,6 +454,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "can_candidates",
         "rs485_peer_reference_candidates",
         "complementary_signal_candidates",
+        "usb_data_polarity_label_candidates",
         "named_differential_pair_candidates",
         "i2c_address_candidates",
         "i2c_responder_coverage_candidates",

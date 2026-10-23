@@ -32,6 +32,10 @@ from scripts.lint_gate_scope import (
         ),
         ("bus.i2c_missing_pullup", "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES"),
         (
+            "bus.usb_data_polarity_label_mismatch",
+            "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
+        ),
+        (
             "power.ic_decoupling_below_project_minimum",
             "KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES",
         ),

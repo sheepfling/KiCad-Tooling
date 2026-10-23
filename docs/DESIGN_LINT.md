@@ -180,7 +180,27 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 167 active rules.
+The catalog currently contains 168 active rules.
+
+### USB data pin/name polarity review
+
+`bus.usb_data_polarity_label_mismatch` compares bounded native USB D+/D− pin
+functions with an explicitly polarity-named assigned net. A same-port
+contradiction produces a configurable `review` finding; projects can promote it
+to `block`, turn it `off`, or ignore one exact finding. Neutral net names,
+unrecognized aliases, differently indexed ports, DNP pins, and open or
+ambiguous assignments remain unclassified. This clue does not prove connector
+intent, device pinout, physical polarity, or PCB routing. Its focused checks are
+selectable with:
+
+```sh
+python -I -m pytest tests/test_usb_data_polarity.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_data_polarity_label_mismatch")'
+
+KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES=1 python -I -m pytest \
+  tests/test_usb_data_polarity_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_data_polarity_label_mismatch")'
+```
 
 ## Run the lint lane
 

@@ -4184,6 +4184,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_data_paths.py#usb_data_path_mismatches"
     },
     {
+      "rule_id": "bus.usb_data_polarity_label_mismatch",
+      "title": "USB data pin function conflicts with its net name",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with exactly one exported net, report a review candidate when the bounded USB 2.0 D+/D- pin-function alias and the assigned net name both identify the same unindexed or numbered port group but opposite sides.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Recognition uses only the bounded USB D+/D- aliases accepted by usb_data_function_identity; unrecognized or differently indexed names remain unclassified.",
+        "The mismatch is a review clue, not a project requirement or defect verdict. It does not establish a device pinout, intended connector pairing, physical polarity, PCB routing, or off-board continuity.",
+        "DNP, open, and multiply assigned pins are skipped. An opposite-side pair shorted within one symbol remains covered by bus.complementary_pair_assignment."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_data_polarity.test_reversed_usb_net_labels_are_flagged_without_pair_completeness_duplicate",
+        "tests.test_usb_data_polarity.test_crossed_connector_to_device_pair_remains_visible",
+        "tests.test_usb_data_polarity_native_fixture_lane.test_native_usb_data_polarity_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_data_polarity.test_valid_neutral_and_uncertain_assignments_are_not_classified",
+        "tests.test_usb_data_polarity.test_review_block_off_and_exact_ignore_policy_are_supported",
+        "tests.test_usb_data_polarity_native_fixture_lane.test_native_usb_data_polarity_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_data_polarity.test_reordering_netlist_is_stable_and_corrected_labels_clear_the_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_interfaces_usb_data_polarity.py#usb_data_polarity_label_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_interfaces_usb_data_polarity.py#usb_data_polarity_label_candidates"
+    },
+    {
       "rule_id": "bus.can_unconnected_line",
       "title": "Recognized CAN line pin is unassigned",
       "status": "active",
