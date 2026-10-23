@@ -28,6 +28,7 @@ from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain
 from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
+from tests.design_lint_fixtures.spi_data_label import spi_data_label_netlist
 from tests.test_connector_mapped_interface_signal_unassigned import _coverage, _netlist
 from tests.test_connector_stateful_contacts import _map as _stateful_contact_map
 from tests.test_connector_stateful_contacts import _observed as _stateful_contact_netlist
@@ -211,6 +212,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         i2c_peer_netlist(),
         spi_peer_netlist(),
         spi_active_low_select_netlist(),
+        spi_data_label_netlist(reversed_labels=True),
         complementary_usb_netlist(negative_net=None),
         complementary_usb_netlist(),
         complementary_usb_netlist(positive_net="USB_DM", negative_net="USB_DP"),

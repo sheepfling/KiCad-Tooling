@@ -4414,6 +4414,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_line_polarity.py#can_line_polarity_label_candidates"
     },
     {
+      "rule_id": "bus.spi_data_polarity_label_mismatch",
+      "title": "SPI data-pin function conflicts with its net name",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with exactly one exported net, report a review candidate when the bounded MOSI/MISO native pin function and assigned net name identify opposite data roles.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Recognition is limited to MOSI, MISO, SPI_MOSI, and SPI_MISO after punctuation and case normalization; indexed and vendor-specific aliases remain unclassified.",
+        "Endpoint naming can depend on device perspective. A contradiction is a review clue, not a pinout requirement or defect verdict, and it does not establish bus intent, signal routing, or physical continuity.",
+        "DNP, open, and multiply assigned pins are skipped. Project-authored interface maps remain authoritative for required endpoint relationships."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_data_label_polarity.test_reversed_spi_data_labels_are_reviewed_while_the_data_pins_remain_assigned",
+        "tests.test_spi_data_label_polarity.test_miso_pin_on_the_named_mosi_net_emits_one_review_candidate",
+        "tests.test_spi_data_polarity_native_fixture_lane.test_native_spi_data_polarity_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_data_label_polarity.test_matching_aliases_and_neutral_or_indexed_labels_remain_unclassified",
+        "tests.test_spi_data_label_polarity.test_dnp_open_and_multiply_assigned_pins_are_not_classified",
+        "tests.test_spi_data_polarity_native_fixture_lane.test_native_spi_data_polarity_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_spi_data_label_polarity.test_reordering_is_stable_and_correcting_labels_clears_the_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_DATA_POLARITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_data_label.py#spi_data_polarity_label_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_data_label.py#spi_data_polarity_label_candidates"
+    },
+    {
       "rule_id": "bus.rs485_peer_reference_review",
       "title": "Mapped RS-485 peers on one pair use different explicit reference nets",
       "status": "active",

@@ -113,6 +113,7 @@ DesignLintRuleId = Literal[
     "bus.usb_peer_reference_review",
     "bus.spi_unconnected_chip_select",
     "bus.spi_active_low_chip_select_without_pullup",
+    "bus.spi_data_polarity_label_mismatch",
     "bus.usb_c_unconnected_cc_pin",
     "bus.usb_c_unreviewed_port",
     "bus.usb_data_path_mismatch",

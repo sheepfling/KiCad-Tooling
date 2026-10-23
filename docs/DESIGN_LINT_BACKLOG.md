@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 169 rules are implemented with synthetic regression coverage.
+The following 170 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 169 active rules.
+The catalog currently contains 170 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -528,6 +528,7 @@ skipped under prerelease policy.
 - `bus.usb_peer_reference_review`
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_active_low_chip_select_without_pullup`
+- `bus.spi_data_polarity_label_mismatch`
 - `bus.usb_c_unconnected_cc_pin`
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
@@ -607,6 +608,11 @@ and optional ecosystem adapters are `P3`.
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
   configurable review prompt, not proof of a pinout requirement.
+
+- **SPI data pin/name polarity review:** LINT-188 compares bounded MOSI/MISO
+  pin functions with explicit SPI_MOSI/SPI_MISO net names. Endpoint naming
+  conventions can vary, so a contradiction remains a configurable review
+  prompt rather than a wiring verdict.
 
 - **MOSFET gate/drain same-net review:** LINT-185 adds an opt-in, default-off
   prompt when a supported fitted three-terminal MOSFET has its native gate and
@@ -2889,7 +2895,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 169 active rules; CI requires every new
+- **Status:** Baseline complete for all 170 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2898,7 +2904,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 169 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 170 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10097,6 +10103,45 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Source note:** The schematics use tooling-owned synthetic CAN symbols and
   passive components. No product, customer, or proprietary design source is
+  included.
+
+#### LINT-188 — Review SPI data pin/net-name role contradictions
+
+- **Status:** Implemented as the default-`review`
+  `bus.spi_data_polarity_label_mismatch` heuristic, with project overrides for
+  `review`, `block`, `off`, and exact finding ignores.
+- **Gap:** SPI participant and pair checks can establish that data pins are
+  assigned without comparing a supported MOSI/MISO pin function with the
+  explicitly named data net. A swapped endpoint label can therefore retain
+  complete assignments.
+- **Predicate:** For each fitted pin with exactly one exported net, recognize
+  only MOSI, MISO, SPI_MOSI, and SPI_MISO after punctuation/case normalization.
+  Emit a review candidate when the native pin function and net name identify
+  opposite data roles. Unindexed aliases only; do not guess across indexed
+  buses or vendor-specific names.
+- **Boundary:** MOSI/MISO perspective depends on endpoint convention and part
+  documentation. A contradiction is a review clue, not a pinout requirement
+  or defect verdict. It does not establish bus intent, signal routing, or
+  physical continuity. Project-authored interface maps remain authoritative.
+- **Fixtures:** Synthetic reversed-label fault and matching-label control;
+  neutral/indexed labels, vendor aliases, DNP, open, multiply assigned,
+  policy/ignore, order stability, and label-repair cases. Source-hashed native
+  control/fault schematics export twice on digest-pinned KiCad 10.0.0 and
+  10.0.5 images.
+- **Fixture note:** [README](../tests/fixtures/design_lint/spi-data-polarity-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_spi_data_label_polarity.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_data_polarity_label_mismatch")'
+
+  KICAD_RUN_NATIVE_SPI_DATA_POLARITY_FIXTURES=1 python -I -m pytest \
+    tests/test_spi_data_polarity_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_data_polarity_label_mismatch")'
+  ```
+
+- **Source note:** Both schematics contain only a small synthetic SPI
+  controller symbol and labels. No product or proprietary design source is
   included.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

@@ -29,6 +29,7 @@ from .i2c_pullup_models import I2cPullupHeuristicCoverage
 from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
+from .spi_data_label import spi_data_polarity_label_candidates
 from .spi_peer_reference_scan import SpiPeerReferenceScan
 
 
@@ -60,6 +61,7 @@ def bus_candidates(
             component_peer_findings,
         ),
         *spi_bias_candidates(observed),
+        *spi_data_polarity_label_candidates(observed),
         *unconnected_interface_candidates(observed),
         *can_candidates(observed, can_peer_reference_scan, component_peer_findings),
         *(

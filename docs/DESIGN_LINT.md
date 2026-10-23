@@ -180,7 +180,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 169 active rules.
+The catalog currently contains 170 active rules.
 
 ### USB data pin/name polarity review
 
@@ -219,6 +219,26 @@ python -I -m pytest tests/test_can_line_polarity.py \
 KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES=1 python -I -m pytest \
   tests/test_can_line_polarity_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_line_polarity_label_mismatch")'
+```
+
+### SPI data pin/name role review
+
+`bus.spi_data_polarity_label_mismatch` compares supported MOSI/MISO pin
+functions with unindexed `MOSI`, `MISO`, `SPI_MOSI`, and `SPI_MISO` net names.
+A contradiction produces a configurable `review` finding; projects can
+promote it to `block`, turn it `off`, or ignore one exact finding. Neutral,
+indexed, and vendor-specific labels, DNP pins, and open or ambiguous
+assignments remain unclassified. Endpoint naming can depend on part
+convention, so this clue does not establish bus intent, routing, or physical
+continuity. Its focused checks are selectable with:
+
+```sh
+python -I -m pytest tests/test_spi_data_label_polarity.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_data_polarity_label_mismatch")'
+
+KICAD_RUN_NATIVE_SPI_DATA_POLARITY_FIXTURES=1 python -I -m pytest \
+  tests/test_spi_data_polarity_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_data_polarity_label_mismatch")'
 ```
 
 ## Run the lint lane
