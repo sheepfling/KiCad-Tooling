@@ -1,0 +1,23 @@
+{
+  "schema_version": "1",
+  "interfaces": [
+    {
+      "id": "usb-interface",
+      "revision": "synthetic-1",
+      "pins": [
+        {"number": "1", "signal": "D+", "role": "signal", "direction": "bidirectional", "voltage_domain": "usb-data", "mating": "D+", "orientation": "straight", "mechanical_clearance": "synthetic"},
+        {"number": "2", "signal": "D-", "role": "signal", "direction": "bidirectional", "voltage_domain": "usb-data", "mating": "D-", "orientation": "straight", "mechanical_clearance": "synthetic"},
+        {"number": "3", "signal": "GND", "role": "return", "direction": "passive", "voltage_domain": "return", "mating": "GND", "orientation": "straight", "mechanical_clearance": "synthetic"}
+      ]
+    },
+    {
+      "id": "serial-interface",
+      "revision": "synthetic-1",
+      "pins": [
+        {"number": "1", "signal": "TX", "role": "signal", "direction": "output", "voltage_domain": "logic", "mating": "RX", "orientation": "straight", "mechanical_clearance": "synthetic"},
+        {"number": "2", "signal": "RX", "role": "signal", "direction": "input", "voltage_domain": "logic", "mating": "TX", "orientation": "straight", "mechanical_clearance": "synthetic"},
+        {"number": "3", "signal": "RETURN", "role": "return", "direction": "passive", "voltage_domain": "return", "mating": "RETURN", "orientation": "straight", "mechanical_clearance": "synthetic"}
+      ]
+    }
+  ]
+}

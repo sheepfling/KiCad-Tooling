@@ -25,6 +25,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES",
         ),
         ("connector.repeated_pin_function", "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"),
+        (
+            "connector.repeated_pin_function",
+            "KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES",
+        ),
         ("component.peer_power_output_unconnected", "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"),
         (
             "component.peer_bidirectional_pin_unconnected",
@@ -156,26 +160,29 @@ from scripts.lint_gate_scope import (
         ("power.regulator_feedback_mismatch", "KICAD_RUN_NATIVE_REGULATOR_FEEDBACK_FIXTURES"),
     ),
 )
-def test_lint_tag_selects_one_active_rule_and_its_configured_native_fixture(
+def test_lint_tag_selects_rule_and_all_its_configured_native_fixtures(
     rule_id: str,
     native_fixture: str,
 ) -> None:
     repository = Path(__file__).resolve().parents[1]
     fixtures = configured_native_fixtures(repository)
     rule_ids = active_design_lint_rule_ids()
+    required_by_rule = required_native_fixtures_by_rule()
     assert rule_id in rule_ids
     assert native_fixture in fixtures
+    required_fixtures = required_by_rule[rule_id]
+    assert native_fixture in required_fixtures
+    assert set(required_fixtures) <= fixtures
+    native_fixture_lines = "".join(f"Native-Fixture: {item}\n" for item in required_fixtures)
 
     scope = parse_tag_message(
-        "Focused deterministic lint gate\n\n"
-        f"Lint-Rule: {rule_id}\n"
-        f"Native-Fixture: {native_fixture}\n",
+        f"Focused deterministic lint gate\n\nLint-Rule: {rule_id}\n{native_fixture_lines}",
         fixtures,
         rule_ids,
-        required_native_fixtures_by_rule(),
+        required_by_rule,
     )
 
     assert scope.area is None
     assert scope.rule_id == rule_id
     assert scope.pytest_markexpr == f'design_lint and design_lint_rule(rule_id="{rule_id}")'
-    assert scope.native_fixtures == (native_fixture,)
+    assert scope.native_fixtures == required_fixtures

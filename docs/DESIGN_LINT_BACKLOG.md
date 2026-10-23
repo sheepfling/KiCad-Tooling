@@ -14651,7 +14651,11 @@ acceptance threads while new lint features proceed:
    candidate-generating heuristic, and project intent remains in project-owned
    contracts. LINT-083 keeps optional peer-comparison scopes source-matched and
    restores broad comparisons whenever a participating connector review is
-   stale or incomplete.
+   stale or incomplete. Its native connector-return coverage now includes two
+   USB peers and one serial peer: mapped returns split across peer groups
+   prompt review, the common-return control is quiet, and data-pin comparisons
+   stay scoped. This is a deterministic review regression, not a universal
+   common-ground rule.
 2. Keep LINT-077's exact-version native lane in GitHub CI. The local KiCad
    10.0.0/10.0.5 exports now repeat with matching normalized netlist/ERC
    evidence; before a project adopts this check, its owner must source and

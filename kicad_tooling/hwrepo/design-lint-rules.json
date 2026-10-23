@@ -36,6 +36,7 @@
         "tests.test_design_lint_connector_roles.test_connector_identity_uses_standard_symbols_and_project_reviewed_custom_refs",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
         "tests.test_connector_return_role_coverage.test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed",
+        "tests.test_connector_mixed_interface_return_native_lane.test_native_mixed_interface_returns_are_source_bound_and_repeatable",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
@@ -54,6 +55,7 @@
         "tests.test_design_lint_connector_peer_pins.test_generic_pin_function_placeholder_common_assignment_is_a_control",
         "tests.test_connector_return_role_coverage.test_reviewed_return_roles_refine_connector_net_heuristics",
         "tests.test_connector_return_role_coverage.test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed",
+        "tests.test_connector_mixed_interface_return_native_lane.test_native_mixed_interface_returns_are_source_bound_and_repeatable",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
@@ -65,13 +67,15 @@
         "tests.test_design_lint_numbered_returns.test_neutral_net_renaming_preserves_repeated_pin_review",
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_return_role_coverage.test_split_return_across_two_usb_and_one_serial_peer_group_is_reviewed",
+        "tests.test_connector_mixed_interface_return_native_lane.test_native_mixed_interface_returns_are_source_bound_and_repeatable",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering",
         "tests.test_design_lint_determinism_connector_peers.test_connector_peer_reports_remain_deterministic",
         "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic"
       ],
       "required_native_fixtures": [
-        "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES"
+        "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES",
+        "KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
