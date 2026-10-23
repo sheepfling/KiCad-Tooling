@@ -279,6 +279,13 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             ),
         ),
         (
+            "bus.can_tx_outputs_share_net",
+            (
+                "tests/test_can_tx_output_sharing.py::"
+                "test_multiple_fitted_can_tx_functions_on_one_net_are_reviewed"
+            ),
+        ),
+        (
             "bus.serial_peer_voltage_review",
             "tests/test_design_lint_serial_peer_voltage.py::test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
         ),

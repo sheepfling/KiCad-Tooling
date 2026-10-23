@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal, Protocol, cast
 
+from .component_references import is_integrated_circuit_reference
 from .connector_identity import connector_candidate_references
 from .models import NetlistContract
 from .return_nets import is_return_like_net_name
@@ -78,7 +79,6 @@ class SerialNativePeerLink:
 
 
 _SAFE_FUNCTION = re.compile(r"^[a-zA-Z0-9_ ]+$")
-_IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
 _PREFIXED_FUNCTION = re.compile(r"^(uart|usart)[_ ]*([0-9]*)[_ ]*(txd?|rxd?)$")
 _UNPREFIXED_FUNCTION = re.compile(r"^(txd?|rxd?)[_ ]*([0-9]*)$")
 _SERIAL_OUTPUT_TYPES = frozenset({"output", "tri_state", "bidirectional"})
@@ -103,7 +103,7 @@ def serial_function_role_and_channel(value: str) -> tuple[str, str] | None:
 
 def is_serial_ic_reference(reference: str) -> bool:
     """Return whether a reference uses the bounded U/IC serial-device convention."""
-    return _IC_REFERENCE.fullmatch(reference) is not None
+    return is_integrated_circuit_reference(reference)
 
 
 def directly_linked_serial_peers(

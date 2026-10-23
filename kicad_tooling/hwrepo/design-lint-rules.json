@@ -4447,12 +4447,56 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates",
-        "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates"
+    },
+    {
+      "rule_id": "bus.can_tx_outputs_share_net",
+      "title": "Multiple CAN transmit functions share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including explicit CAN/FDCAN TX functions, exact net assignments, electrical types, fitted state, and complete pin inventory",
+      "predicate": "For one exact native net, group bounded CAN/FDCAN TX/TXD functions from fitted U/IC references. Require each counted pin in its component inventory with one native net assignment and supported native electrical type. Emit one review candidate when at least two distinct references contribute exactly one TX function each, except when two or more counted pins are native output pins that ERC can report.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Recognition is bounded to explicit CAN/FDCAN TX/TXD names with an optional numeric channel adjacent to a protocol prefix or suffix. Generic UART TX names, vendor-specific aliases, connector references, unsupported pin types, incomplete pin inventories, and ambiguous assignments remain unclassified.",
+        "Different channel indices on one exact net are grouped because the net is shared. Multiple transmitters can still be intentional; the rule defaults off and asks for review without asserting a defect or required bus topology.",
+        "Two or more native output types defer to ERC. The check does not prove driver behavior, controller mode, protocol participation, transceiver state, firmware behavior, PCB copper continuity, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_tx_output_sharing.test_multiple_fitted_can_tx_functions_on_one_net_are_reviewed",
+        "tests.test_can_tx_output_sharing_native_fixture_lane.test_native_can_tx_output_sharing_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_tx_output_sharing.test_single_tx_to_receiver_and_split_tx_nets_are_valid_controls",
+        "tests.test_can_tx_output_sharing.test_connectors_unknown_pin_types_and_native_output_conflicts_are_skipped",
+        "tests.test_can_tx_output_sharing_native_fixture_lane.test_native_can_tx_output_sharing_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_can_tx_output_sharing.test_order_is_stable_and_separating_one_tx_clears_the_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_tx_output_sharing.py#can_tx_output_sharing_candidates",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py#tx_output_sharing_groups",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_tx_output_sharing.py#can_tx_output_sharing_candidates"
     },
     {
       "rule_id": "bus.spi_data_polarity_label_mismatch",
@@ -5863,6 +5907,8 @@
         "kicad_tooling/hwrepo/serial_tx_output_sharing.py#serial_tx_output_sharing_candidates",
         "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
         "kicad_tooling/hwrepo/serial_participants.py#is_serial_ic_reference",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py#tx_output_sharing_groups",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

@@ -278,7 +278,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 180 active rules.
+The catalog currently contains 181 active rules.
 
 ### USB data pin/name polarity review
 
@@ -342,6 +342,31 @@ Select the CAN TX/RX check with:
 KICAD_RUN_NATIVE_CAN_TX_RX_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_can_tx_rx_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_rx_same_net")'
+```
+
+### Multiple CAN TX outputs sharing one net
+
+`bus.can_tx_outputs_share_net` reviews a fitted group of two or more CAN/FDCAN
+transmit-function pins on one exact net. It requires one unambiguous TX pin
+per fitted U/IC reference, a complete native pin inventory, one net assignment,
+and supported electrical types. Two explicit native outputs are left to ERC;
+unknown pin types are skipped. Different channel numbers are grouped when the
+net itself is shared. The default is `off` because shared transmit paths can be
+intentional; the review does not infer device mode, driver behavior, or required
+bus topology. The synthetic fault and one-TX-to-RX control have clean ERC on
+KiCad 10.0.0 and 10.0.5. See the
+[fixture record](../tests/fixtures/design_lint/can-tx-output-sharing/README.md)
+for source hashes and fixture limits.
+
+Select the CAN TX output-sharing check with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_tx_output_sharing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
+
+KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_can_tx_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
 ```
 
 ### SPI data pin/name role review

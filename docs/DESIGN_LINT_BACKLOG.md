@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 180 rules are implemented with synthetic regression coverage.
+The following 181 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 180 active rules.
+The catalog currently contains 181 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -548,6 +548,7 @@ skipped under prerelease policy.
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
 - `bus.can_tx_rx_same_net`
+- `bus.can_tx_outputs_share_net`
 - `bus.complementary_pair_assignment`
 - `signal.named_pair_without_reviewed_requirement`
 - `net.numbered_returns`
@@ -2975,7 +2976,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 180 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 181 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10615,6 +10616,56 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CAN_TX_RX_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_can_tx_rx_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_rx_same_net")'
+  ```
+
+#### LINT-199 — Review multiple CAN TX functions sharing one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.can_tx_outputs_share_net` review prompt.
+- **Gap:** The serial TX-sharing check recognizes bounded UART/USART TX names.
+  The CAN TX/RX same-net check reviews one component's transmit and receive
+  pins. Neither reports two fitted CAN controllers whose explicit TX functions
+  share a schematic net when native pin types do not expose an ERC output
+  conflict.
+- **Predicate:** On each exact native net, group fitted U/IC pins whose bounded
+  CAN/FDCAN function parser identifies TX/TXD. Require each counted pin in its
+  exact component inventory with one net assignment and a supported native
+  electrical type. Emit one candidate when at least two distinct references
+  contribute exactly one TX pin each. Group different channel indices because
+  the exact net is physically shared. Leave groups with two or more explicit
+  native outputs to ERC.
+- **Boundary:** Only explicit CAN/FDCAN prefix or suffix names are recognized;
+  generic UART TX names, connector references, missing inventory, unknown pin
+  types, duplicate per-component TX roles, DNP, open, or multiply assigned
+  pins are excluded. A shared line can be intentional, so the rule defaults
+  off and supports project review policy and exact finding ignores. It does not
+  establish driver behavior, device mode, required topology, PCB copper, or
+  off-board wiring.
+- **Fixtures:** Tooling-owned fault and valid-control schematics use passive
+  native pin types to isolate the predicate from ERC output checks. The fault
+  shares two fitted `CAN1_TX` functions; the control connects one transmitter
+  to one receiver and keeps the other transmitter separate. Repeated native
+  netlist/ERC exports on digest-pinned KiCad 10.0.0 and 10.0.5 images retain
+  the expected finding only on the fault. Synthetic tests cover aliases,
+  channels, DNP, open and multiply assigned pins, duplicate roles, connector
+  exclusion, incomplete inventory, ERC deferral, policy, exact ignore,
+  ordering, and repair. The signal-pair TX grouping predicate is shared with
+  the serial TX output-sharing rule, whose regression suite remains passing.
+- **Acceptance:** The focused gate passed on 2026-10-23 in
+  `build/ci/run-hxpnlhkg`, including both pinned native versions, package
+  builds, installed-wheel checks, and playtest against the separate public
+  synthetic project checkout.
+- **Fixture note:** [Synthetic CAN TX-sharing sources and hashes]
+  (../tests/fixtures/design_lint/can-tx-output-sharing/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_can_tx_output_sharing.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
+
+  KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_can_tx_output_sharing_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

@@ -56,6 +56,13 @@ _PROTOCOL_NATIVE_CASES = (
         "test_native_can_tx_rx_same_net_fault_and_control_repeat",
         id="can-tx-rx-same-net",
     ),
+    pytest.param(
+        "bus.can_tx_outputs_share_net",
+        "KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES",
+        "tests.test_can_tx_output_sharing_native_fixture_lane."
+        "test_native_can_tx_output_sharing_fault_and_control_repeat",
+        id="can-tx-output-sharing",
+    ),
 )
 
 
