@@ -5,10 +5,10 @@ fault has an open gate pin; the control connects the same supported native
 three-terminal MOSFET symbol to a synthetic output pin. A passive peer is also
 covered by the source-independent synthetic tests.
 
-| Case | Source SHA-256 |
-| --- | --- |
-| `fault.kicad_sch` | `5cd4983eb3ac3abc6370f8d5626fae3fbe8b1e38ce26b32d31e0cb3c7d9a8c6c` |
+| Fixture             | Source SHA-256                                                     |
+| ------------------- | ------------------------------------------------------------------ |
 | `control.kicad_sch` | `e95ed1a5673723dc690e1fad27d534f3f834c371a489957c0c7050f642d18a75` |
+| `fault.kicad_sch`   | `5cd4983eb3ac3abc6370f8d5626fae3fbe8b1e38ce26b32d31e0cb3c7d9a8c6c` |
 
 Run the exact-version native lane with the package acceptance switch:
 
