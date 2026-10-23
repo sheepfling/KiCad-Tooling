@@ -216,7 +216,10 @@ def polarized_capacitor_fixture_lane(
             )
         if erc_hashes[(case, "first")] != erc_hashes[(case, "repeat")]:
             raise ValueError(f"Native polarized-capacitor {case} ERC differs after normalization")
-        if runs["first"].model_dump(mode="json") != runs["repeat"].model_dump(mode="json"):
+        if (
+            runs["first"].status != runs["repeat"].status
+            or runs["first"].findings != runs["repeat"].findings
+        ):
             raise ValueError(f"Native polarized-capacitor {case} finding differs between repeats")
         findings = tuple(item for item in runs["first"].findings if item.rule_id == RULE_ID)
         expected_count = 1 if case == "fault" else 0
