@@ -9220,6 +9220,10 @@ is not a reason by itself to expand its scope or change its default policy.
 
   The package acceptance workflow enables the shared component-rating native
   fixture lane, which now also runs this focused MOSFET gate source pair.
+  See the [native fixture note][mosfet-gate-native] for source hashes and lane
+  details.
+
+  [mosfet-gate-native]: ../tests/fixtures/design_lint/mosfet-gate-native/README.md
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
