@@ -31,6 +31,7 @@ from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_ord
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
 from tests.design_lint_fixtures.spi_data_label import spi_data_label_netlist
 from tests.design_lint_fixtures.spi_shared_chip_select import spi_shared_chip_select_netlist
+from tests.design_lint_fixtures.spi_shared_data_outputs import spi_shared_data_output_netlist
 from tests.serial_participant_support import (
     same_net_serial_netlist,
     serial_tx_output_netlist,
@@ -223,6 +224,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         spi_active_low_select_netlist(),
         spi_data_label_netlist(reversed_labels=True),
         spi_shared_chip_select_netlist(),
+        spi_shared_data_output_netlist(),
         complementary_usb_netlist(negative_net=None),
         complementary_usb_netlist(),
         complementary_usb_netlist(positive_net="USB_DM", negative_net="USB_DP"),

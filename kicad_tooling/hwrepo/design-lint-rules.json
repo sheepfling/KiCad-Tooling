@@ -4497,6 +4497,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/spi_shared_chip_select.py#spi_chip_select_inputs_share_net_candidates"
     },
     {
+      "rule_id": "bus.spi_data_outputs_share_net",
+      "title": "Multiple SPI data-output pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including pin function, exact net assignments, native electrical type, component pin inventory, and fitted state",
+      "predicate": "For one exact net, group uniquely assigned MISO/SDO/CIPO function pins on fitted U/IC references with complete native pin inventory and supported electrical types. Native input pins are receivers and are not counted. Emit one review candidate when at least two distinct references contribute exactly one counted data-output pin each. Skip incomplete or ambiguous groups and groups with two or more native output-typed pins because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only exact MISO, SDO, and CIPO aliases on fitted U/IC references are considered. Connectors, DNP parts, open pins, ambiguous net assignments, incomplete pin inventories, and missing or unsupported native electrical types are skipped.",
+        "Shared tri-state data nets and other multi-device topologies can be intentional. This rule defaults to off and asks for review; it does not infer device role, bus membership, driver behavior, chip-select coordination, or a required SPI topology.",
+        "The finding concerns schematic net assignments only. It does not prove PCB copper continuity, off-board wiring, firmware state, or electrical suitability."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_shared_data_outputs.test_multiple_fitted_spi_data_outputs_on_one_net_are_reviewed",
+        "tests.test_spi_shared_data_outputs_native_fixture_lane.test_native_spi_shared_data_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_shared_data_outputs.test_separate_output_nets_and_one_device_to_controller_are_valid_controls",
+        "tests.test_spi_shared_data_outputs.test_native_output_conflicts_and_incomplete_groups_are_skipped",
+        "tests.test_spi_shared_data_outputs_native_fixture_lane.test_native_spi_shared_data_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_spi_shared_data_outputs.test_aliases_ordering_and_separating_an_endpoint_are_metamorphic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_SHARED_DATA_OUTPUT_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_shared_data_outputs.py#spi_data_outputs_share_net_candidates",
+        "kicad_tooling/hwrepo/spi_participants.py#is_spi_data_output_function",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_shared_data_outputs.py#spi_data_outputs_share_net_candidates"
+    },
+    {
       "rule_id": "bus.rs485_peer_reference_review",
       "title": "Mapped RS-485 peers on one pair use different explicit reference nets",
       "status": "active",

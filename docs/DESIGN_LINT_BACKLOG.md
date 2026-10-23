@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 174 rules are implemented with synthetic regression coverage.
+The following 175 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 174 active rules.
+The catalog currently contains 175 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -533,6 +533,7 @@ skipped under prerelease policy.
 - `bus.spi_active_low_chip_select_without_pullup`
 - `bus.spi_data_polarity_label_mismatch`
 - `bus.spi_chip_select_inputs_share_net`
+- `bus.spi_data_outputs_share_net`
 - `bus.usb_c_unconnected_cc_pin`
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
@@ -624,6 +625,12 @@ and optional ecosystem adapters are `P3`.
   chip-select input pins on multiple fitted ICs. It defaults off because
   broadcast selection can be intentional; its synthetic fault and
   separate-select control both have clean native ERC results.
+
+- **Shared SPI data outputs:** LINT-193 reviews fitted IC MISO/SDO/CIPO pins
+  that share one exact schematic net when native types do not already expose
+  an ERC output conflict. It defaults off because a tri-state MISO bus can be
+  intentional; its synthetic fault and one-device control use source-hashed
+  native fixtures with clean, repeatable exports on the pinned KiCad versions.
 
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
@@ -2915,7 +2922,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 174 active rules; CI requires every new
+- **Status:** Baseline complete for all 175 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2924,7 +2931,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 174 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 175 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10308,6 +10315,47 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_SPI_SHARED_CHIP_SELECT_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_spi_shared_chip_select_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_chip_select_inputs_share_net")'
+  ```
+
+#### LINT-193 — Review SPI data-output pins sharing one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.spi_data_outputs_share_net` review prompt.
+- **Gap:** SPI roster checks require project-authored device membership and
+  exact pin maps. When two fitted ICs expose MISO/SDO/CIPO functions on one
+  exact net but their native pin types are passive or tri-state, ERC may have
+  no output-to-output conflict to report.
+- **Predicate:** Recognize only bounded MISO, SDO, and CIPO pin-function
+  aliases on fitted U/IC references. Require complete native pin inventory,
+  one exact assigned net, and supported electrical pin types for every counted
+  endpoint. Native input pins are receivers and do not count. Emit one
+  candidate when at least two distinct references contribute exactly one
+  counted output-function pin each. Skip incomplete or ambiguous groups and
+  groups with two or more native output-typed pins because ERC can report that
+  conflict.
+- **Boundary:** Tri-state shared MISO buses and other multi-device arrangements
+  can be intentional. The prompt defaults off and does not infer endpoint
+  roles, bus membership, select coordination, driver behavior, or required
+  topology. It does not establish PCB copper continuity or external wiring.
+- **Fixtures:** Tooling-owned synthetic fault and valid-control schematics are
+  hashed and exported twice on digest-pinned KiCad 10.0.0 and 10.0.5. Both
+  have no native ERC errors; the fault emits one review candidate and the
+  control remains quiet. Synthetic tests cover aliases, receiver exclusion,
+  DNP, open and ambiguous assignments, missing types/inventory, output
+  conflicts, connector exclusions, intentional policy/ignore, stable ordering,
+  and separating an endpoint. No project or cohort design source is used.
+- **Acceptance:** The scoped package gate passed on 2026-10-23 in
+  `build/ci/run-6jqlq3c2`, including both native fixture versions, package
+  builds, installed-wheel checks, and the separate public demo checkout.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_shared_data_outputs.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_data_outputs_share_net")'
+
+  KICAD_RUN_NATIVE_SPI_SHARED_DATA_OUTPUT_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_spi_shared_data_outputs_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_data_outputs_share_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

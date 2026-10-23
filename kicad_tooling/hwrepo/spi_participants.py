@@ -70,6 +70,11 @@ def is_spi_chip_select_function(function: str) -> bool:
     return _canonical_function(function) in _SPI_SELECT_FUNCTIONS
 
 
+def is_spi_data_output_function(function: str) -> bool:
+    """Recognize bounded SPI peripheral-to-controller data pin aliases."""
+    return _canonical_function(function) in _SPI_OUTPUT_DATA_FUNCTIONS
+
+
 def _mapped_references(analysis: SpiAnalysis | None) -> set[str]:
     if analysis is None:
         return set()

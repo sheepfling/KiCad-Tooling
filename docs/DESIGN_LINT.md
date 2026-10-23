@@ -205,6 +205,16 @@ control both pass native ERC without errors on the digest-pinned KiCad 10.0.0
 and 10.0.5 lanes; see the
 [fixture note](../tests/fixtures/design_lint/spi-shared-chip-select/README.md).
 
+`bus.spi_data_outputs_share_net` adds a separate opt-in review when MISO/SDO/CIPO
+function pins on multiple fitted ICs share one exact schematic net and native
+types do not already show two output drivers for ERC to report. Native input
+pins are receivers and do not count; ambiguous assignments and incomplete pin
+inventories are skipped. Tri-state shared MISO buses can be intentional, so
+the rule defaults to `off`. It does not infer bus membership, device role, or
+select coordination. Its synthetic fault and one-device control pass native
+ERC without errors on the digest-pinned KiCad 10.0.0 and 10.0.5 lanes; see the
+[fixture note](../tests/fixtures/design_lint/spi-shared-data-outputs/README.md).
+
 ## Explore the rule catalog
 
 List all packaged rules, their implementation theme and source owner, default
@@ -220,7 +230,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 174 active rules.
+The catalog currently contains 175 active rules.
 
 ### USB data pin/name polarity review
 

@@ -19,7 +19,13 @@ PYTEST_NATIVE_LINT_SUITES = {
     },
     "test_spi_data_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
     "test_spi_shared_chip_select.py": {"interface_lint"},
+    "test_spi_shared_data_outputs.py": {"interface_lint"},
     "test_spi_shared_chip_select_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
+    "test_spi_shared_data_outputs_native_fixture_lane.py": {
         "interface_lint",
         "native_kicad",
         "slow",
