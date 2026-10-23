@@ -3049,6 +3049,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_shield_contacts_on_return_nets"
     },
     {
+      "rule_id": "connector.mapped_interface_shield_on_supply_rail",
+      "title": "Mapped shield contact is assigned to a supply-labeled net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface role and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate when a role=shield contact has exactly one assigned net whose label matches the shared named-supply recognizer, regardless of native pin-function text.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The interface shield role and supply-like label are review clues, not proof of actual voltage, a wiring defect, or an unintended shield connection; an intentionally driven or biased shield is not ruled out.",
+        "DNP connectors, reasoned open contacts, stale or incomplete interface evidence, missing catalog digests, multiply assigned contacts, and labels outside the shared supply-name vocabulary are excluded.",
+        "The check does not infer the required shield reference, prescribe bonding, or establish electrical behavior, PCB copper continuity, external wiring, or chassis bonding."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_interface_shield_on_supply_rail.test_mapped_shield_on_supply_label_requests_review",
+        "tests.test_connector_mapped_interface_shield_on_supply_rail.test_recognized_supply_labels_request_review",
+        "tests.test_connector_mapped_interface_shield_on_supply_rail.test_native_pin_function_text_does_not_override_mapped_shield_role",
+        "tests.test_connector_mapped_interface_shield_on_supply_rail_native_fixture_lane.test_native_mapped_shield_on_supply_rail_fault_and_supply_role_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_interface_shield_on_supply_rail.test_non_supply_labels_and_other_mapped_roles_are_controls",
+        "tests.test_connector_mapped_interface_shield_on_supply_rail.test_stale_incomplete_digestless_and_multi_net_evidence_are_controls",
+        "tests.test_connector_mapped_interface_shield_on_supply_rail.test_review_policy_and_exact_ignore_apply",
+        "tests.test_connector_mapped_interface_shield_on_supply_rail_native_fixture_lane.test_native_mapped_shield_on_supply_rail_fault_and_supply_role_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_interface_shield_on_supply_rail.test_candidate_is_stable_under_netlist_mapping_order",
+        "tests.test_design_lint_determinism_mapped_interface_shield_on_supply_rail.test_shield_supply_rail_fault_and_control_reports_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_shield_contacts_on_supply_rails",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_shield_contacts_on_supply_rails"
+    },
+    {
       "rule_id": "connector.return_pin_on_positive_rail",
       "title": "Connector return pin is assigned to a positive rail",
       "status": "active",

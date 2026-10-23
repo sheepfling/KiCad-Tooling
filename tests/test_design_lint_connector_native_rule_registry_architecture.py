@@ -94,6 +94,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.mapped_interface_shield_on_return_net": {
             "tests.test_connector_mapped_interface_shield_on_return_net_native_fixture_lane.test_native_mapped_shield_on_ret_is_reviewed_and_return_role_is_control",
         },
+        "connector.mapped_interface_shield_on_supply_rail": {
+            "tests.test_connector_mapped_interface_shield_on_supply_rail_native_fixture_lane.test_native_mapped_shield_on_supply_rail_fault_and_supply_role_control",
+        },
         "connector.mapped_interface_other_unassigned": {
             "tests.test_connector_mapped_interface_other_unassigned.test_native_other_contact_fault_and_control_are_repeatable",
         },

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 196 rules are implemented with synthetic regression coverage.
+The following 197 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 196 active rules.
+The catalog currently contains 197 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -481,6 +481,7 @@ skipped under prerelease policy.
 - `connector.mapped_interface_supply_on_return_net`
 - `connector.mapped_interface_signal_on_named_rail`
 - `connector.mapped_interface_shield_on_return_net`
+- `connector.mapped_interface_shield_on_supply_rail`
 - `connector.mapped_interface_power_contact_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
@@ -3046,7 +3047,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 196 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 197 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11491,6 +11492,54 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_connector_mapped_interface_shield_on_return_net_native_fixture_lane.py \
     -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_shield_on_return_net")'
+  ```
+
+#### LINT-215 — Review mapped shields on supply-labeled nets
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_interface_shield_on_supply_rail`.
+- **Gap:** LINT-214 prompts when a source-matched connector map calls a contact
+  a shield while the native netlist assigns it to a return-like label. The
+  corresponding supply-like assignment was previously a control for LINT-214
+  and had no shield-specific review prompt.
+- **Predicate:** For a fitted connector with complete, source-matched
+  interface coverage and a current catalog digest, emit a REVIEW candidate
+  when a `shield`-role contact has exactly one assigned net whose label is
+  recognized by the shared named-supply vocabulary. The rule is independent
+  of native pin-function text. DNP, reasoned-open, stale, incomplete,
+  digestless, multiply assigned, and labels outside the bounded vocabulary are
+  excluded.
+- **Boundary:** The map role and label are review clues. A shield can be
+  intentionally driven or biased, and a supply-like label does not measure
+  voltage or prove a wiring defect. The rule does not prescribe shield
+  bonding, infer the required reference, or establish electrical behavior,
+  PCB copper continuity, external wiring, or chassis bonding. Project policy
+  can keep review mode, set `block` or `off`, or ignore a finding by exact
+  fingerprint.
+- **Fixtures:** Synthetic cases cover recognized positive and negative supply
+  labels, unrelated and return-like labels, other mapped roles, a native
+  function-text mismatch, DNP, stale, incomplete, digestless and multiply
+  assigned evidence, policy, exact ignores, and input-order stability. The
+  exact KiCad 10.0.0 and 10.0.5 fault/control lane uses the source-hashed,
+  tooling-owned generic power-input schematic that exports J1.1 and J2.1 on
+  `+5V`; only the authored role for J1.1 changes between `shield` and `supply`.
+- **Incremental value:** The supply-labeled fault produces one pin-localized
+  shield review while the same native source mapped as supply is quiet for
+  this rule. LINT-214's return-label rule stays quiet on `+5V`; the finding
+  comes from the new role/label combination rather than duplicated return
+  review.
+- **Determinism:** A mapping-order metamorphic case and a three-process
+  hash-seed probe compare complete fault/control reports.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_interface_shield_on_supply_rail.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_shield_on_supply_rail")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_interface_shield_on_supply_rail_native_fixture_lane.py \
+    -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_shield_on_supply_rail")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
