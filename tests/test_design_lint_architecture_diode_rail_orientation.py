@@ -21,7 +21,7 @@ def test_rule_owner_fixture_service_and_regressions_stay_below_review_limit() ->
     modules = (
         "kicad_tooling/hwrepo/component_rail_potentials.py",
         "kicad_tooling/hwrepo/component_diode_rail_orientation.py",
-        "kicad_tooling/ci_hosted_component_polarity.py",
+        "kicad_tooling/ci_hosted_component_lint.py",
         "kicad_tooling/ci_hosted_diode_rail_orientation.py",
         "tests/design_lint_fixtures/diode_rail_orientation.py",
         "tests/test_diode_rail_orientation.py",

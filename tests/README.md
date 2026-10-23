@@ -272,6 +272,9 @@ python -I -B -m pytest -q -m "design_lint and power_lint" \
   tests/test_electrical_power_connectivity.py
 python -I -B -m pytest -q tests/test_regulator_feedback.py \
   -m 'design_lint and power_lint'
+KICAD_RUN_NATIVE_REGULATOR_FEEDBACK_FIXTURES=1 \
+  python -I -B -m pytest -q tests/test_regulator_feedback_native_fixture.py \
+  -m 'design_lint and power_lint and design_lint_rule(rule_id="power.regulator_feedback_mismatch")'
 python -I -B -m pytest -q tests/test_power_sequences.py \
   -m 'design_lint and power_lint'
 python -I -B -m pytest -q tests/test_power_sequences.py \

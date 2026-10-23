@@ -955,7 +955,12 @@ continuity, or feedback routing. Compensation capacitors do not affect the
 nominal DC equation and are not evaluated. Existing power-connectivity checks
 only verify authored source/load pin membership, so they remain unchanged when
 a divider value changes; the synthetic regression confirms the new rule adds
-that setpoint coverage. This check uses synthetic fixtures only.
+that setpoint coverage. The exact-version native fixture lane exports a valid
+divider, an out-of-range upper-resistor value, and a split feedback node twice
+on KiCad 10.0.0 and 10.0.5. It verifies the mapped pin functions and nets,
+component identities and values, repeatability, and ERC error absence against
+the explicit synthetic map. The fixtures do not validate an actual regulator,
+datasheet, or analog performance.
 
 ## Review a mapped first-order RC filter
 

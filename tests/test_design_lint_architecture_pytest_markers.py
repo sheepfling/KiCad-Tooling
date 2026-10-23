@@ -87,6 +87,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_electrical_can_termination.py": {"interface_lint"},
     "test_electrical_power_connectivity.py": {"power_lint"},
     "test_regulator_feedback.py": {"power_lint"},
+    "test_regulator_feedback_native_fixture.py": {"power_lint", "native_kicad", "slow"},
     "test_power_sequences.py": {"power_lint"},
     "test_power_paths.py": {"power_lint"},
     "test_power_sequence_fixture_lane.py": {"power_lint"},

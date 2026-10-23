@@ -1,4 +1,4 @@
-"""Shared exact-version native acceptance for component polarity lint fixtures."""
+"""Shared exact-version native acceptance for component design-lint fixtures."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def _normalized_erc_digest(report: KiCadErcReport) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
-def component_polarity_fixture_lane(
+def component_lint_fixture_lane(
     root: Path,
     *,
     project: str,
@@ -73,14 +73,15 @@ def component_polarity_fixture_lane(
     rule_id: str,
     fixtures: dict[str, str],
     expected_subjects: dict[str, str | tuple[str, ...] | None],
-) -> None:
-    """Export and compare source-hashed polarity fault/control fixtures twice."""
+    policy: DesignLintPolicy | None = None,
+) -> dict[str, DesignLintReport]:
+    """Export and compare source-hashed component lint fixtures twice."""
     root = root.resolve()
     config = selected_config(root, project)
     if config.image != image or config.kicad_version not in {"10.0.0", "10.0.5"}:
-        raise ValueError("Component polarity fixtures require pinned KiCad 10.0.0/10.0.5 images")
+        raise ValueError("Component lint fixtures require pinned KiCad 10.0.0/10.0.5 images")
     if not fixtures or set(fixtures) != set(expected_subjects):
-        raise ValueError("Every component-polarity fixture requires one expected target finding")
+        raise ValueError("Every native design-lint fixture requires an expected target result")
 
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     source_hashes = {case: digest(fixture_root / path) for case, path in fixtures.items()}
@@ -149,9 +150,7 @@ def component_polarity_fixture_lane(
     receipt = scratch / "native.command.json"
     write_model(receipt, command)
     if command.returncode != 0 or command.error is not None:
-        raise ValueError(
-            f"Native component polarity export failed: {command.stderr or command.error}"
-        )
+        raise ValueError(f"Native component lint export failed: {command.stderr or command.error}")
     log.event(
         f"{fixture_prefix}/native-export",
         "PASS",
@@ -165,6 +164,7 @@ def component_polarity_fixture_lane(
     hashes: dict[tuple[str, str, str], str] = {}
     erc_errors: dict[tuple[str, str], tuple[str, ...]] = {}
     reports: dict[str, dict[str, DesignLintReport]] = {}
+    selected_policy = policy if policy is not None else DesignLintPolicy()
     for case in fixtures:
         reports[case] = {}
         for run in ("first", "repeat"):
@@ -180,16 +180,14 @@ def component_polarity_fixture_lane(
             hashes[(case, run, "netlist")] = hashlib.sha256(normalized_netlist).hexdigest()
             erc = read_kicad_erc_report(erc_path)
             if erc.kicad_version != config.kicad_version:
-                raise ValueError(
-                    "Component polarity ERC report differs from selected KiCad version"
-                )
+                raise ValueError("Component lint ERC report differs from selected KiCad version")
             hashes[(case, run, "erc")] = _normalized_erc_digest(erc)
             erc_errors[(case, run)] = tuple(
                 sorted(item.type for item in erc.violations if item.severity == "error")
             )
             if erc_errors[(case, run)]:
                 raise ValueError(
-                    f"Native component polarity fixture has ERC errors: {erc_errors[(case, run)]}"
+                    f"Native component lint fixture has ERC errors: {erc_errors[(case, run)]}"
                 )
             project_id = f"{project_id_prefix}-{case}"
             reports[case][run] = evaluate(
@@ -200,21 +198,19 @@ def component_polarity_fixture_lane(
                     observed=observed,
                     netlist_sha256=digest(netlist_path),
                 ),
-                DesignLintPolicy(),
+                selected_policy,
             )
 
     for case, runs in reports.items():
         if hashes[(case, "first", "netlist")] != hashes[(case, "repeat", "netlist")]:
-            raise ValueError(
-                f"Native component polarity {case} netlist differs after normalization"
-            )
+            raise ValueError(f"Native component lint {case} netlist differs after normalization")
         if hashes[(case, "first", "erc")] != hashes[(case, "repeat", "erc")]:
-            raise ValueError(f"Native component polarity {case} ERC differs after normalization")
+            raise ValueError(f"Native component lint {case} ERC differs after normalization")
         if (
             runs["first"].status != runs["repeat"].status
             or runs["first"].findings != runs["repeat"].findings
         ):
-            raise ValueError(f"Native component polarity {case} finding differs between repeats")
+            raise ValueError(f"Native component lint {case} finding differs between repeats")
         findings = tuple(item for item in runs["first"].findings if item.rule_id == rule_id)
         expected = expected_subjects[case]
         expected_subjects_for_case = (
@@ -222,7 +218,7 @@ def component_polarity_fixture_lane(
         )
         if tuple(item.subject for item in findings) != expected_subjects_for_case:
             raise ValueError(
-                f"Native component polarity {case} target findings differ from expectation"
+                f"Native component lint {case} target findings differ from expectation"
             )
         log.event(
             f"{fixture_prefix}/{case}",
@@ -239,3 +235,4 @@ def component_polarity_fixture_lane(
             erc_errors="none",
             repeatable="true",
         )
+    return {case: runs["first"] for case, runs in reports.items()}

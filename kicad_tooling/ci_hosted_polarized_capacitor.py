@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .ci_hosted_component_polarity import component_polarity_fixture_lane
+from .ci_hosted_component_lint import component_lint_fixture_lane
 from .hwrepo.component_polarized_capacitor_orientation import RULE_ID
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ def polarized_capacitor_fixture_lane(
     log: HostedLog,
 ) -> None:
     """Run exact-version fault/control exports for polarized capacitors."""
-    component_polarity_fixture_lane(
+    component_lint_fixture_lane(
         root,
         project=project,
         image=image,

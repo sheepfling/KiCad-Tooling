@@ -195,6 +195,10 @@ def test_lint_tag_selects_bjt_base_drive_and_its_native_fixture_switch() -> None
             "component.bjt_base_direct_drive",
             "KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES",
         ),
+        (
+            "power.regulator_feedback_mismatch",
+            "KICAD_RUN_NATIVE_REGULATOR_FEEDBACK_FIXTURES",
+        ),
     ),
 )
 def test_lint_tag_selects_one_active_rule_and_its_configured_native_fixture(

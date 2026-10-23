@@ -10743,7 +10743,12 @@ is not a reason by itself to expand its scope or change its default policy.
   wrong output/reference net; stale regulator identity; changed resistor value;
   unsupported value; DNP resistor; extra direct fitted resistor on FB;
   compensation capacitor; unmapped fixed-output control; and a non-finite
-  arithmetic range that must report incomplete coverage. All are synthetic.
+  arithmetic range that must report incomplete coverage. Tooling-owned native
+  control, out-of-range-value, and split-feedback fixtures now exercise the
+  authored map against repeated KiCad 10.0.0/10.0.5 netlist and ERC exports.
+  The native lane checks exact source hashes, mapped pin nets and functions,
+  resistor values, output calculations, and the no-finding control; it does not
+  establish datasheet truth or analog performance.
 - **Done:** Typed project map, source-bound coverage report, review/block/off
   policy, catalogued rule, CLI/MCP parity, and an explicit synthetic baseline
   test are implemented. No external cohort source, dependency, or private

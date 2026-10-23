@@ -301,6 +301,7 @@ _LINT_AREA_MODULES = {
             "tests/test_ic_rail_capacitor_native_fixture_lane.py",
             "tests/test_power_sequences.py",
             "tests/test_regulator_feedback.py",
+            "tests/test_regulator_feedback_native_fixture.py",
             "tests/test_two_pin_fuses.py",
             "tests/test_two_pin_switches.py",
         }

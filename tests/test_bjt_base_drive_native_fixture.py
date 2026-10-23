@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_component_polarity import component_polarity_fixture_lane
+from kicad_tooling.ci_hosted_component_lint import component_lint_fixture_lane
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.component_bjt_base_drive import RULE_ID
 from kicad_tooling.hwrepo.models import DesignLintPolicy
@@ -77,7 +77,7 @@ def test_native_bjt_base_drive_fault_and_series_control_are_deterministic(
         image=image,
     )
     log = HostedLog(root, f"native-bjt-base-drive-{version}")
-    component_polarity_fixture_lane(
+    component_lint_fixture_lane(
         root,
         project="controller",
         image=image,
