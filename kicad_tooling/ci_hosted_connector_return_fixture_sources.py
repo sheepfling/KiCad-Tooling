@@ -230,6 +230,8 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "mapped-interface-shield-native/fault.kicad_sch",
         "mapped-interface-shield-unassigned-control": fixture_root
         / "mapped-interface-shield-native/control.kicad_sch",
+        "stateful-contact-fault": fixture_root / "stateful-connector-contacts/fault.kicad_sch",
+        "stateful-contact-control": fixture_root / "stateful-connector-contacts/control.kicad_sch",
     }
 
 
@@ -353,4 +355,6 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "mapped-interface-signal-unassigned-control": "634af7ee73a4cdbcc1a52967df2f08a0ca68b1a3100a8e13fef34225ef2eb6e1",
     "mapped-interface-shield-unassigned-fault": "ef64edfafefdc9e724474c5686d8638577ec1c1719883f3f34f8b365de068821",
     "mapped-interface-shield-unassigned-control": "1cf322d88271b585ae9e97e356f1078b8573a9a2cd25122caf3352a28ed3cd9d",
+    "stateful-contact-fault": "131715fd0c9d4b746a2dc3fe651356e775cfd9c5d5dcea8a98676bb741d881ff",
+    "stateful-contact-control": "0d44469c1e8d5284289688e7f95154a600b43393cff13c7c2bf8ff9b129ac652",
 }

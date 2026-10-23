@@ -58,6 +58,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_named_power_output_native_fixture_lane.py",
             "tests/test_design_lint_mcp_parity_connector_power_output.py",
             "tests/test_connector_contact_ratings.py",
+            "tests/test_connector_stateful_contacts.py",
             "tests/test_electrical_connector_evidence.py",
             "tests/test_electrical_connector_rating_parity.py",
             "tests/test_electrical_connector_pin_relationship_parity.py",
@@ -145,6 +146,7 @@ _LINT_AREA_MODULES = {
     ),
     "interface_lint": frozenset(
         {
+            "tests/test_connector_stateful_contacts.py",
             "tests/test_connector_signal_peer_pin_all_open.py",
             "tests/test_connector_footprint_peer_metadata_open.py",
             "tests/test_connector_footprint_signal_input.py",

@@ -58,6 +58,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.footprint_named_power_input_assignment_divergence": {
             "tests.test_connector_footprint_named_power_input_native_fixture_lane.test_native_named_power_input_divergence_fault_and_control_are_repeatable",
         },
+        "connector.stateful_contact_topology_mismatch": {
+            "tests.test_connector_stateful_contacts.test_native_stateful_contact_fault_and_control_are_repeatable",
+        },
         "connector.footprint_named_power_input_open_outlier": {
             "tests.test_ci_hosted_connector_returns.test_footprint_alias_open_peer_is_validated_on_pinned_native_versions",
         },

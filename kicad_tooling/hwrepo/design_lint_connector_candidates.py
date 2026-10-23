@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from .connector_coverage import source_matched_connector_peer_assignment_groups
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_stateful_contact_models import ConnectorStatefulContactMap
+from .connector_stateful_contacts import stateful_connector_contact_findings
 from .design_lint_connector_footprint_candidates import (
     connector_footprint_peer_pin_candidates,
 )
@@ -19,6 +21,7 @@ def connector_candidates(
     connector_coverage: ConnectorCoverageReport | None = None,
     reviewed_connector_references: tuple[str, ...] = (),
     power_output_review_enabled: bool = True,
+    stateful_contact_map: ConnectorStatefulContactMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Collect connector pin findings followed by return-domain review prompts."""
     return (
@@ -38,4 +41,5 @@ def connector_candidates(
             connector_coverage=connector_coverage,
             reviewed_connector_references=reviewed_connector_references,
         ),
+        *stateful_connector_contact_findings(observed, stateful_contact_map),
     )

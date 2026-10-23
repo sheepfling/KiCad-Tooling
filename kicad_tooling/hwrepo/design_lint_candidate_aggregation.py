@@ -14,6 +14,7 @@ from .component_peer_pin_scan import ComponentPeerPinAssignmentScans
 from .component_role_models import ComponentRoleMap
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_distribution_models import ConnectorReturnDistributionCoverageReport
+from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .control_input_models import ControlInputBiasHeuristicCoverage
 from .crystal_network_models import CrystalNetworkCoverageReport
 from .design_lint_bus_candidates import bus_candidates
@@ -148,6 +149,7 @@ def candidates(
     connector_power_output_review_enabled: bool = True,
     ic_decoupling_map: IcDecouplingMap | None = None,
     oscillator_output_path_map: OscillatorOutputPathMap | None = None,
+    connector_stateful_contact_map: ConnectorStatefulContactMap | None = None,
 ) -> tuple[Candidate, ...]:
     """Aggregate thematic candidates and preserve one active-catalog lifecycle."""
     found: list[Candidate] = []
@@ -172,6 +174,7 @@ def candidates(
             connector_coverage=connector_coverage,
             reviewed_connector_references=reviewed_connector_references,
             power_output_review_enabled=connector_power_output_review_enabled,
+            stateful_contact_map=connector_stateful_contact_map,
         )
     )
     found.extend(return_distribution_candidates(connector_return_distribution))

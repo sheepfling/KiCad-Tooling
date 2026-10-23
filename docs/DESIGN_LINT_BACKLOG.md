@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 159 rules are implemented with synthetic regression coverage.
+The following 160 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 159 active rules.
+The catalog currently contains 160 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -419,6 +419,7 @@ jobs. Its annotated tag passed the local scope resolver; the package job was
 skipped under prerelease policy.
 
 - `connector.repeated_pin_function`
+- `connector.stateful_contact_topology_mismatch`
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_assignment_divergence`
@@ -2834,7 +2835,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 159 active rules; CI requires every new
+- **Status:** Baseline complete for all 160 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2843,7 +2844,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 159 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 160 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9550,6 +9551,48 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
   ```
 
+#### LINT-178 — Review mapped stateful connector contacts that are hardwired or open
+
+- **Status:** Implemented as `connector.stateful_contact_topology_mismatch`, a
+  configurable review rule that runs only when a project supplies an exact
+  connector contact-state map.
+- **Problem:** A mechanical jack or similar connector can contain contacts
+  whose electrical connection changes with an external state. The schematic
+  can accidentally place both contact terminals on one net, bypassing the
+  physical switch; generic ERC cannot know the contact's state or intent.
+- **Predicate:** For each mapped, fitted connector, require exact symbol,
+  value, footprint, PART_ID, and complete native pin inventory. For every
+  source-backed stateful contact pair, require both pins to have one
+  unambiguous and different native net assignment. Report hardwired pairs,
+  unassigned or ambiguous pins, and stale maps. A valid isolated contact
+  remains quiet when each terminal has its own net.
+- **Boundary:** No contact behavior is inferred from connector names or pin
+  text. The project owner supplies the exact part identity, pin numbers,
+  state, and source basis. The check does not validate the physical part,
+  mechanical operation, board copper, or contact continuity; unused pairs
+  should be omitted from the active map. DNP connectors are skipped. The
+  project may set this rule to `review`, `block`, or `off`, and may ignore an
+  exact finding.
+- **Fixtures:** Synthetic tests cover a permanently bypassed pair, distinct
+  assigned control, no-map non-inference, unassigned contact, DNP, stale
+  identity, exact-map validation, review/block/off policy, and input-order
+  stability. Hash-pinned
+  synthetic schematics are registered for repeated KiCad 10.0.0 and 10.0.5
+  native exports in the connector acceptance lane.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_connector_stateful_contacts.py \
+    -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.stateful_contact_topology_mismatch")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 python -I -m pytest \
+    tests/test_connector_stateful_contacts.py \
+    -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.stateful_contact_topology_mismatch")'
+  ```
+
+  Fixture sources and their hashes are under
+  [`stateful-connector-contacts`](../tests/fixtures/design_lint/stateful-connector-contacts/README.md).
+
 #### LINT-177 — Review MOSFET gates directly connected to output-capable pins
 
 - **Status:** Implemented as `component.mosfet_gate_direct_drive`, an opt-in,
@@ -13160,14 +13203,14 @@ only when its project-specific source data, applicability, deterministic
 comparison, and valid alternatives can be tested without importing a product
 design.
 
-| Candidate family                                     | Existing overlap                                                              | First bounded work                                                                                                                                                                                                                                          | Stop or defer when                                                                                                                                                                                                                    |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                        | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                                | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                                                 |
-| Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts       | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.           | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings.                    |
-| Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps         | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.              | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                                                |
-| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review     | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5.  | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
-| Audio jack switch-contact state                      | LINT-001 connector coverage and LINT-069 project-authored custom-symbol roles | Trial a project-owned exact connector pin/state map for inserted and removed plug states, with fixtures for normal-open/normal-closed contacts and intentionally unused pins. First prove the native source contains enough identity and pin data.          | KiCad schematic connectivity cannot represent the mechanical state, the library switch pins lack reviewed identities, or the tool would need to infer an audio circuit from reference/value naming.                                   |
-| Symbol-library convention admission                  | Board design lint does not validate symbol-library authoring conventions      | LINT-031's pinned KLC S5.1 trial detects its upstream fault/control pair, but warns on a valid generic `Connector` symbol. Consider a separate optional library-admission preflight only if custom or supplier library intake becomes an explicit workflow. | Keep outside electrical design lint; KLC permits exceptions and manual review, and the current checker misclassifies generic Connector libraries.                                                                                     |
+| Candidate family                                     | Existing overlap                                                                               | First bounded work                                                                                                                                                                                                                                          | Stop or defer when                                                                                                                                                                                                                    |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wireless module antenna and RF feed review           | Covered by implemented opt-in LINT-097                                                         | No extra check from KO-001 review; keep its project map and synthetic fault/control suite. Reconsider only if a runtime trial shows a distinct, bounded gap.                                                                                                | Defer if exact module identity, vendor-backed geometry, or module-versus-external-antenna distinction is unavailable.                                                                                                                 |
+| Transformer-isolated converter feedback topology     | LINT-036 regulator feedback and LINT-034 interface/protection contracts                        | Trial an authored map for exact controller feedback pins, optocoupler/secondary reference parts, and expected connectivity. Use source-bound device limits only for explicit comparisons; do not label topology matching as loop-stability proof.           | The candidate depends on generic component-name guesses, copied reference designs, or undocumented compensation assumptions; the local check duplicates a source-bound feedback contract without clearer findings.                    |
+| Supercapacitor and energy-storage operating envelope | LINT-064 voltage ratings, LINT-071 power ratings, and power-path maps                          | Inventory the distinct requirement fields needed for exact storage-part identity, working voltage, charge/discharge path, and owner-authored operating bounds. Build fault/control cases only after selecting a narrow source-backed use case.              | Safe charge current, inrush, hold-up, life, or energy behavior would be inferred from symbol connectivity without part-specific ratings, state assumptions, and reviewed calculations.                                                |
+| PWM LED driver-to-load topology                      | LINT-048 direct LED assignment and LINT-063 output-driven LED path review                      | The explicit power map now covers two synthetic channels: both exact A-to-K paths suppress their prompts, while a partial map leaves the unmatched channel reviewable. One- and two-channel native source fixtures are registered for KiCad 10.0.0/10.0.5.  | The proposal merely rediscovers a directly driven LED, assumes PWM means a missing resistor, or needs current/brightness limits that the project has not supplied. The mapped role does not establish current regulation or adequacy. |
+| Audio jack switch-contact state                      | Implemented by LINT-178 using project-authored exact connector identity and contact-state maps | Keep the synthetic fault/control and exact-version native gate; add mapped variants only when a distinct stateful-contact failure has source-backed pin identity and a valid control.                                                                       | Defer any broader discovery rule if exact part identity, source-backed contact states, or a useful deterministic failure cannot be supplied without guessing from symbol or reference names.                                          |
+| Symbol-library convention admission                  | Board design lint does not validate symbol-library authoring conventions                       | LINT-031's pinned KLC S5.1 trial detects its upstream fault/control pair, but warns on a valid generic `Connector` symbol. Consider a separate optional library-admission preflight only if custom or supplier library intake becomes an explicit workflow. | Keep outside electrical design lint; KLC permits exceptions and manual review, and the current checker misclassifies generic Connector libraries.                                                                                     |
 
 #### kicad-happy TF-001 isolated-feedback trial (2026-10-19)
 
@@ -13350,7 +13393,33 @@ they support bounded review hypotheses, not field effectiveness or approval of
 a candidate implementation. Keep false-positive rate, reviewer effort, and
 maintenance cost open wherever they were not measured.
 
-## Suggested delivery order
+## Development priorities
+
+Current development is feature-first. Add deterministic lint coverage and the
+quality gate that proves it useful; cross-surface parity is a targeted
+regression when a shared service or interface changes, not the lead work item.
+
+1. Add one bounded lint at a time from demonstrated board-review gaps or cohort
+   candidates. Require explicit inputs for electrical intent, synthetic fault
+   and valid-control cases, stable evidence, and documented unsupported cases.
+2. Complete each lint gate with a focused pytest module and selectors, the
+   narrowest area marker, an active catalog owner, metamorphic coverage, and an
+   exact native fault/control lane when native exports are part of the evidence.
+   Keep each feature in its theme-owned implementation module and below the
+   architecture size limit. Commit, tag, and push after its focused release
+   gate passes.
+3. Continue from unimplemented rows in the domain-specific backlog only when
+   they add a distinct deterministic check. Reviewer-effort measurement may
+   guide default policy, but does not block additive project-configurable
+   rules that have synthetic counterexamples and clear limits.
+4. Run CLI/MCP parity regressions when the shared typed service or one of those
+   adapters changes. Keep broad parity-only cleanup behind concrete lint and
+   quality-gate work.
+
+### Existing acceptance work to retain
+
+The following notes preserve existing native, protocol, geometry, and cohort
+acceptance threads while new lint features proceed:
 
 1. Maintain the implemented rule catalog and synthetic fault/control fixtures.
    The LINT-054 baseline now covers all active rules; classify every added rule

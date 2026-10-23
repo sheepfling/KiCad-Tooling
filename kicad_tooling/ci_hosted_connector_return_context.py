@@ -199,6 +199,47 @@ def prepare_connector_return_fixture_context(
                 netlist_sha256=netlist_hashes[case, run],
             )
             policy = DesignLintPolicy()
+            if case in {"stateful-contact-fault", "stateful-contact-control"}:
+                from .hwrepo.connector_stateful_contact_models import (
+                    ConnectorStatefulContactMap,
+                )
+
+                policy = DesignLintPolicy(
+                    connector_stateful_contact_map=ConnectorStatefulContactMap.model_validate_json(
+                        json.dumps(
+                            {
+                                "basis": "Synthetic exact audio-jack contact map for native lint regression",
+                                "requirements": [
+                                    {
+                                        "id": "synthetic-audio-jack-contact-map",
+                                        "reference": "J1",
+                                        "expected_symbol": "Synthetic:AudioJack_2Contact",
+                                        "expected_value": "Synthetic Audio Jack",
+                                        "expected_footprint": "Synthetic:AudioJack_2Contact",
+                                        "expected_part_id": "SYNTH-AUDIO-JACK-001",
+                                        "native_pin_numbers": ["1", "2"],
+                                        "contact_pairs": [
+                                            {
+                                                "id": "tip-normal-contact",
+                                                "first_pin": "1",
+                                                "second_pin": "2",
+                                                "closed_when": "plug_removed",
+                                                "source_basis": "Synthetic fixture contact table",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            }
+                        )
+                    ),
+                    rules=(
+                        DesignLintRuleOverride(
+                            rule_id="connector.stateful_contact_topology_mismatch",
+                            mode="review",
+                            reason="Synthetic native fixture explicitly enables the mapped contact check",
+                        ),
+                    ),
+                )
             if case in {
                 "all-open-generic-peer-fault",
                 "all-open-generic-peer-control",

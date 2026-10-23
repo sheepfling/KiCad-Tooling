@@ -8,6 +8,7 @@ from pydantic import model_validator
 
 from .component_role_models import ComponentRoleMap
 from .connector_return_distribution_models import ConnectorReturnDistributionMap
+from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .crystal_network_models import CrystalNetworkMap
 from .design_lint_finding_models import DesignLintIgnore, DesignLintRuleOverride
 from .external_protection_models import ExternalProtectionMap
@@ -54,6 +55,7 @@ class DesignLintPolicy(StrictModel):
     regulator_feedback_map: RegulatorFeedbackMap | None = None
     rc_filter_map: RcFilterMap | None = None
     connector_return_distribution_map: ConnectorReturnDistributionMap | None = None
+    connector_stateful_contact_map: ConnectorStatefulContactMap | None = None
     pcb_decoupling_map: PcbDecouplingMap | None = None
     pcb_protection_path_map: PcbProtectionPathMap | None = None
     pcb_track_width_map: PcbTrackWidthMap | None = None

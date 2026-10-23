@@ -182,6 +182,8 @@ _PYTEST_NATIVE_LINT_SUITES = {
     },
     "test_design_lint_determinism_connector_all_open.py": {"connector_lint"},
     "test_design_lint_connector_power_pins.py": {"connector_lint", "power_lint"},
+    "test_connector_stateful_contacts.py": {"connector_lint", "interface_lint"},
+    "test_connector_stateful_contact_architecture.py": {"connector_lint", "interface_lint"},
     "test_design_lint_connector_named_power_input_peers.py": {
         "connector_lint",
         "power_lint",

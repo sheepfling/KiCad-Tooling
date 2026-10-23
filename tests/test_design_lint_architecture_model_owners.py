@@ -145,6 +145,26 @@ def test_new_touch_clearance_models_stay_in_their_theme_owner() -> None:
     assert all(not hasattr(compatibility_models, name) for name in NEW_THEME_MODELS)
 
 
+def test_stateful_contact_models_have_a_connector_theme_owner() -> None:
+    from kicad_tooling.hwrepo import connector_stateful_contact_models
+
+    names = (
+        "ConnectorStatefulContactPair",
+        "ConnectorStatefulContactRequirement",
+        "ConnectorStatefulContactMap",
+    )
+    owner_path = HWREPO / "connector_stateful_contact_models.py"
+    assert line_count(owner_path) < IMPLEMENTATION_MAX_LINES
+    assert set(names) <= _top_level_definitions(owner_path)
+    assert all(
+        getattr(connector_stateful_contact_models, name).__module__
+        == connector_stateful_contact_models.__name__
+        for name in names
+    )
+    assert not (set(names) & _top_level_definitions(HWREPO / "models.py"))
+    assert all(not hasattr(compatibility_models, name) for name in names)
+
+
 def test_oscillator_output_path_models_stay_in_their_theme_owner() -> None:
     from kicad_tooling.hwrepo import oscillator_output_path_models
 
@@ -223,6 +243,7 @@ def test_design_lint_policy_imports_typed_maps_from_theme_owners() -> None:
             "rc_filter_models",
             "regulator_feedback_models",
             "signal_pair_models",
+            "connector_stateful_contact_models",
         }
         for alias in node.names
     }
@@ -233,4 +254,5 @@ def test_design_lint_policy_imports_typed_maps_from_theme_owners() -> None:
         "RcFilterMap",
         "RegulatorFeedbackMap",
         "ComplementaryPinFunctionAliasMap",
+        "ConnectorStatefulContactMap",
     } <= imported

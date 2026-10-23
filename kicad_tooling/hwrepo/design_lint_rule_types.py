@@ -6,6 +6,7 @@ from typing import Literal
 
 DesignLintRuleId = Literal[
     "connector.repeated_pin_function",
+    "connector.stateful_contact_topology_mismatch",
     "connector.peer_pin_assignment_outlier",
     "connector.peer_pin_assignment_divergence",
     "connector.footprint_peer_pin_assignment_divergence",

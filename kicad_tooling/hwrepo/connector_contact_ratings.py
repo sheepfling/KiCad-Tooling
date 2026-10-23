@@ -4,16 +4,14 @@ from __future__ import annotations
 
 from .connector_contact_rating_models import ConnectorContactRatingAnalysis
 from .models import ElectricalCheck, NetlistContract
+from .netlist_pin_assignments import netlist_pin_net_index
 
 
 def connector_contact_rating_checks(
     spec: ConnectorContactRatingAnalysis, observed: NetlistContract
 ) -> tuple[ElectricalCheck, ...]:
     """Check contact current only when native identity and pin mapping match."""
-    pin_nets: dict[str, set[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            pin_nets.setdefault(pin.casefold(), set()).add(net)
+    pin_nets = netlist_pin_net_index(observed)
 
     pin_functions = {
         pin.casefold(): function.casefold() for pin, function in observed.pin_functions.items()

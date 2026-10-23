@@ -110,6 +110,61 @@ useful for that project. The
 [native fixture note](../tests/fixtures/design_lint/mosfet-gate-native/README.md)
 documents the tooling-owned direct-drive and series-resistor cases.
 
+## Review project-mapped stateful connector contacts
+
+`connector.stateful_contact_topology_mismatch` checks a mechanical connector
+contact only when the project supplies its exact identity and source-backed
+contact map. Without the map, the tool does not infer switch contacts from
+audio-jack names, symbol text, or pin numbers. For each mapped fitted part, it
+checks the native symbol, value, footprint, PART_ID, and complete pin inventory.
+Each mapped stateful pair must have two distinct, unambiguous schematic net
+assignments; a single net permanently bypasses the physical contact.
+
+Add an entry under `design_lint` in the project's `tests/contract.json` after
+reviewing its exact part datasheet and symbol pin mapping:
+
+```json
+{
+  "design_lint": {
+    "connector_stateful_contact_map": {
+      "schema_version": "1",
+      "basis": "Reviewed synthetic audio-jack contact table, revision 1",
+      "requirements": [
+        {
+          "id": "headphone-jack-contact-state",
+          "reference": "J1",
+          "expected_symbol": "Synthetic:AudioJack_2Contact",
+          "expected_value": "Synthetic Audio Jack",
+          "expected_footprint": "Synthetic:AudioJack_2Contact",
+          "expected_part_id": "SYNTH-AUDIO-JACK-001",
+          "native_pin_numbers": ["1", "2"],
+          "contact_pairs": [
+            {
+              "id": "tip-normal-contact",
+              "first_pin": "1",
+              "second_pin": "2",
+              "closed_when": "plug_removed",
+              "source_basis": "Reviewed contact table, row 1"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+With this map, tying J1.1 and J1.2 to one native net produces a review finding;
+separate assigned nets are the valid control. A missing or ambiguous pin
+assignment and a stale identity map are also review findings. The rule defaults
+to `review` when mapped and supports project `block`, `off`, and exact-ignore
+decisions. `off` findings remain visible with `RULE_OFF` disposition. Omit a
+contact pair from the map when the project intentionally leaves it unused.
+This schematic check does not prove the contact's mechanical behavior, PCB
+copper continuity, or first-article continuity. The
+[synthetic fault/control fixtures](../tests/fixtures/design_lint/stateful-connector-contacts/README.md)
+show the bounded topology check.
+
 ## Explore the rule catalog
 
 List all packaged rules, their implementation theme and source owner, default
@@ -125,7 +180,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 159 active rules.
+The catalog currently contains 160 active rules.
 
 ## Run the lint lane
 

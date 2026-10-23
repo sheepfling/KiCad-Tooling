@@ -81,6 +81,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups"
     },
     {
+      "rule_id": "connector.stateful_contact_topology_mismatch",
+      "title": "Mapped stateful connector contacts do not have distinct assignments",
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_stateful_contacts.py#stateful_connector_contact_findings",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, compared with a source-bounded project-authored exact connector and contact-state map",
+      "predicate": "For each explicitly mapped, fitted connector, require exact native symbol, value, footprint, PART_ID, and complete pin inventory agreement. For each source-backed physical contact pair whose conductive state changes between plug-inserted and plug-removed states, require both schematic pins to have one unambiguous and different native net assignment. Report a stale exact-identity map, an unassigned or ambiguous mapped contact, or two stateful contacts permanently tied to one schematic net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The check runs only for exact connector references explicitly listed in the project-authored map; it does not discover audio jacks or infer switch contacts from reference, value, symbol name, or pin-function text.",
+        "Contact state and pin identity must be reviewed against the exact part source by the project owner. The check does not verify that the source symbol or footprint matches the physical part or that the switch operates mechanically.",
+        "Different schematic nets preserve the contact pair's ability to change state; they do not prove board copper continuity, the physical contact path, or behavior in either external state.",
+        "Only mapped fitted parts with exact native identity and complete pin inventories are compared. DNP parts are skipped; stale maps produce review findings, and unsupported or missing native evidence cannot establish electrical behavior.",
+        "A mapped contact pair intentionally unused by the design should not be included in the active stateful-contact requirement. This check does not infer that every mechanical switch contact must be wired."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_stateful_contacts.test_hardwired_stateful_contacts_are_reviewed",
+        "tests.test_connector_stateful_contacts.test_unassigned_mapped_stateful_contact_is_reviewed",
+        "tests.test_connector_stateful_contacts.test_exact_part_identity_mismatch_is_visible_as_stale_map_evidence",
+        "tests.test_connector_stateful_contacts.test_native_stateful_contact_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_stateful_contacts.test_distinct_assigned_stateful_contacts_are_quiet",
+        "tests.test_connector_stateful_contacts.test_audio_jack_like_symbol_is_not_inferred_without_a_project_map",
+        "tests.test_connector_stateful_contacts.test_dnp_connector_is_not_treated_as_a_fitted_contact_fault",
+        "tests.test_connector_stateful_contacts.test_native_stateful_contact_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_stateful_contacts.test_contact_findings_are_stable_under_netlist_order_changes"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_stateful_contacts.py#stateful_connector_contact_findings",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ]
+    },
+    {
       "rule_id": "connector.peer_pin_assignment_outlier",
       "title": "Comparable connector peer pin has an outlier assignment",
       "status": "active",
