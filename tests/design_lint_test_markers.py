@@ -72,6 +72,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_architecture_connector_return_distribution_models.py",
             "tests/test_design_lint_mcp_parity_connector_returns.py",
             "tests/test_design_lint_mcp_parity_peer_pins.py",
+            "tests/test_design_lint_connector_native_rule_registry_architecture.py",
             "tests/test_connector_inventory_fixture_lane.py",
             "tests/test_connector_part_id_peers.py",
             "tests/test_connector_footprint_peer_pins.py",

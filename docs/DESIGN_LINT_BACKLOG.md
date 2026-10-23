@@ -586,6 +586,14 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
+- **Connector native-fixture registry completeness (2026-10-22):** The
+  architecture gate now requires every active rule declaring
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` to list its exact fault and control
+  test references. The audit exposed eleven rules missing from that explicit
+  registry; each now points to its existing native fixture cases. This adds
+  no electrical predicate. The focused architecture, catalog-fixture, and
+  marker suites pass locally.
+
 - **Pin-connectivity regression review (2026-10-13):** LINT-131 extends the
   source-bound reconciliation baseline with each native pin's net name and peer
   set. A change to an unconnected contact, connector return, power pin, or peer
