@@ -17,6 +17,16 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.catalog_lint, pytest.mark.arc
 
 _NON_RULE_NATIVE_TESTS = {
     (
+        "tests.test_bjt_base_bias_native_fixture",
+        None,
+        "test_native_bjt_base_bias_fixture_sources_are_pinned",
+    ): "This test pins synthetic fixture source hashes for native BJT bias tests; it does not execute the native tool or implement a separate lint predicate.",
+    (
+        "tests.test_bjt_terminal_order_native_fixture",
+        None,
+        "test_native_bjt_terminal_order_fixture_sources_are_pinned",
+    ): "This test pins synthetic fixture source hashes for native BJT terminal tests; it does not execute the native tool or implement a separate lint predicate.",
+    (
         "tests.test_can_native_fixture_lanes",
         None,
         "test_native_can_split_termination_fault_and_control",

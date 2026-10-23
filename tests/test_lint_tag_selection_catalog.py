@@ -52,6 +52,10 @@ from scripts.lint_gate_scope import (
             "component.bjt_terminal_order_on_named_rails",
             "KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES",
         ),
+        (
+            "component.bjt_collector_emitter_same_net",
+            "KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES",
+        ),
         ("component.bjt_base_direct_drive", "KICAD_RUN_NATIVE_COMPONENT_BASE_DRIVE_FIXTURES"),
         (
             "component.bjt_base_without_visible_emitter_bias",

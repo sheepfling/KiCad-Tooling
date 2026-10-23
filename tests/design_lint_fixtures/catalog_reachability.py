@@ -17,6 +17,9 @@ from tests.connector_footprint_peer_support import (
 from tests.design_lint_fixtures import observed, schematic_geometry_fixtures
 from tests.design_lint_fixtures.bjt_base_bias import bjt_base_bias_netlist
 from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
+from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
+    bjt_collector_emitter_netlist,
+)
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
@@ -131,6 +134,7 @@ def catalog_reachability_rule_ids() -> set[str]:
     result.update(item.rule_id for item in candidates(diode_rail_netlist()))
     result.update(item.rule_id for item in candidates(mosfet_terminal_order_netlist()))
     result.update(item.rule_id for item in candidates(bjt_terminal_order_netlist()))
+    result.update(item.rule_id for item in candidates(bjt_collector_emitter_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_drive_netlist()))
     result.update(item.rule_id for item in candidates(bjt_base_bias_netlist()))
     result.update(item.rule_id for item in candidates(mosfet_gate_drive_netlist()))

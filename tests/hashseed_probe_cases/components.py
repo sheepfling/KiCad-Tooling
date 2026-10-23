@@ -14,6 +14,9 @@ from tests.design_lint_fixtures import (
 )
 from tests.design_lint_fixtures.bjt_base_bias import bjt_base_bias_netlist
 from tests.design_lint_fixtures.bjt_base_drive import bjt_base_drive_netlist
+from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
+    bjt_collector_emitter_netlist,
+)
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
@@ -125,6 +128,21 @@ def bjt_terminal_order_report(*, family: str, reversed_order: bool) -> dict[str,
     return source_bound_component_report("synthetic-bjt-terminal-order-hashseed", observed, policy)
 
 
+def bjt_collector_emitter_same_net_report(*, same_net: bool) -> dict[str, object]:
+    """Serialize a BJT same-net terminal fault or distinct-net control."""
+    observed = bjt_collector_emitter_netlist(same_net=same_net)
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id="component.bjt_collector_emitter_same_net",
+                mode="review",
+                reason="Hash-seed stability fixture",
+            ),
+        )
+    )
+    return source_bound_component_report("synthetic-bjt-main-terminals-hashseed", observed, policy)
+
+
 def bjt_base_drive_report(*, series_resistor: bool) -> dict[str, object]:
     """Serialize direct BJT output drive and its visible series-resistor control."""
     observed = bjt_base_drive_netlist(series_resistor=series_resistor)
@@ -171,6 +189,12 @@ def report_cases() -> dict[str, object]:
         ),
         "bjt_pnp_terminal_order_control": bjt_terminal_order_report(
             family="pnp", reversed_order=False
+        ),
+        "bjt_collector_emitter_same_net_fault": bjt_collector_emitter_same_net_report(
+            same_net=True
+        ),
+        "bjt_collector_emitter_same_net_control": bjt_collector_emitter_same_net_report(
+            same_net=False
         ),
         "bjt_base_direct_drive_fault": bjt_base_drive_report(series_resistor=False),
         "bjt_base_series_resistor_control": bjt_base_drive_report(series_resistor=True),

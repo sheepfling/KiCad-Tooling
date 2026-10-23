@@ -147,6 +147,22 @@ def test_bjt_rail_order_fault_and_control_are_stable_across_hash_seeds() -> None
         assert all(item["rule_id"] != rule_id for item in control["findings"])
 
 
+@pytest.mark.design_lint_rule(rule_id="component.bjt_collector_emitter_same_net")
+def test_bjt_same_net_fault_and_distinct_net_control_are_stable_across_hash_seeds() -> None:
+    reports = hashseed_probe_reports(families=("components",))
+    fault = reports["bjt_collector_emitter_same_net_fault"]
+    control = reports["bjt_collector_emitter_same_net_control"]
+    rule_id = "component.bjt_collector_emitter_same_net"
+
+    fault_findings = [item for item in fault["findings"] if item["rule_id"] == rule_id]
+    assert fault["status"] == "REVIEW"
+    assert len(fault_findings) == 1
+    assert fault_findings[0]["evidence"]["collector_net"] == ["CE_SHARED"]
+    assert fault_findings[0]["evidence"]["emitter_net"] == ["CE_SHARED"]
+    assert control["status"] == "PASS"
+    assert all(item["rule_id"] != rule_id for item in control["findings"])
+
+
 @pytest.mark.design_lint_rule(rule_id="component.bjt_base_direct_drive")
 def test_bjt_base_direct_drive_fault_and_series_control_are_stable_across_hash_seeds() -> None:
     reports = hashseed_probe_reports(families=("components",))
