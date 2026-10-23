@@ -18,6 +18,12 @@ PYTEST_NATIVE_LINT_SUITES = {
         "slow",
     },
     "test_spi_data_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
+    "test_spi_shared_chip_select.py": {"interface_lint"},
+    "test_spi_shared_chip_select_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_usb_data_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
     "test_design_lint_decoupling.py": {"component_lint", "power_lint"},
     "test_design_lint_dc_reference.py": {"power_lint"},

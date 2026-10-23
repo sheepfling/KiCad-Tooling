@@ -56,6 +56,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SPI_DATA_POLARITY_FIXTURES",
         ),
         (
+            "bus.spi_chip_select_inputs_share_net",
+            "KICAD_RUN_NATIVE_SPI_SHARED_CHIP_SELECT_FIXTURES",
+        ),
+        (
             "power.ic_decoupling_below_project_minimum",
             "KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES",
         ),

@@ -194,6 +194,17 @@ synthetic fault and one-to-two receiver control both pass native ERC without
 errors on the digest-pinned KiCad 10.0.0 and 10.0.5 lanes; see the
 [fixture note](../tests/fixtures/design_lint/serial-tx-output-sharing/README.md).
 
+`bus.spi_chip_select_inputs_share_net` adds an opt-in review when input-typed
+SPI chip-select pins on multiple fitted ICs share one assigned schematic net.
+It uses bounded native function aliases, fitted state, pin inventory, unique
+net assignments, and native pin types; a single controller output driving one
+device stays quiet. Broadcast selection can be intentional, so the rule
+defaults to `off`. It does not infer device behavior, SPI role, active polarity,
+or required topology. Its synthetic shared-select fault and separate-select
+control both pass native ERC without errors on the digest-pinned KiCad 10.0.0
+and 10.0.5 lanes; see the
+[fixture note](../tests/fixtures/design_lint/spi-shared-chip-select/README.md).
+
 ## Explore the rule catalog
 
 List all packaged rules, their implementation theme and source owner, default
@@ -209,7 +220,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 173 active rules.
+The catalog currently contains 174 active rules.
 
 ### USB data pin/name polarity review
 

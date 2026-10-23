@@ -250,6 +250,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_design_lint_peer_voltage.py::test_spi_peer_voltage_prompt_requires_unambiguous_native_evidence",
         ),
         (
+            "bus.spi_chip_select_inputs_share_net",
+            "tests/test_spi_shared_chip_select.py::test_multiple_fitted_device_select_inputs_on_one_net_are_reviewed",
+        ),
+        (
             "bus.serial_peer_voltage_review",
             "tests/test_design_lint_serial_peer_voltage.py::test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
         ),

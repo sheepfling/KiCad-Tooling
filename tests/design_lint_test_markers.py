@@ -199,6 +199,8 @@ _LINT_AREA_MODULES = {
             "tests/test_serial_tx_output_sharing_native_fixture_lane.py",
             "tests/test_spi_data_label_polarity.py",
             "tests/test_spi_data_polarity_native_fixture_lane.py",
+            "tests/test_spi_shared_chip_select.py",
+            "tests/test_spi_shared_chip_select_native_fixture_lane.py",
             "tests/test_digital_peer_spi_voltage_fixture_lane.py",
             "tests/test_digital_peer_serial_voltage_fixture_lane.py",
             "tests/test_design_lint_serial_peer_voltage.py",

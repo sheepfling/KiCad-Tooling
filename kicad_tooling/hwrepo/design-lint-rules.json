@@ -4455,6 +4455,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/spi_data_label.py#spi_data_polarity_label_candidates"
     },
     {
+      "rule_id": "bus.spi_chip_select_inputs_share_net",
+      "title": "Multiple SPI chip-select inputs share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including pin function, exact net assignments, native electrical type, and fitted state",
+      "predicate": "For one exact net, group uniquely assigned chip-select function pins with native input type on fitted U/IC references. Emit one review candidate when at least two distinct references contribute exactly one such input each. Skip a net with two or more native output-typed chip-select pins because ERC can classify that output conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only bounded chip-select aliases on fitted U/IC references with native input type and a complete component pin inventory are considered. Vendor-specific functions, connectors, unsupported types, open pins, missing types, and ambiguous net assignments are skipped.",
+        "Multiple input pins can intentionally share one select signal for broadcast operations or device-specific topologies. The rule defaults to off and asks for review; it does not declare a wiring defect or infer active polarity, device behavior, or intended SPI membership.",
+        "The finding concerns schematic net assignments only. It does not prove controller behavior, SPI transactions, PCB copper continuity, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_shared_chip_select.test_multiple_fitted_device_select_inputs_on_one_net_are_reviewed",
+        "tests.test_spi_shared_chip_select_native_fixture_lane.test_native_spi_shared_chip_select_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_shared_chip_select.test_separate_select_nets_and_controller_to_one_device_are_valid_controls",
+        "tests.test_spi_shared_chip_select.test_unfitted_ambiguous_unsupported_and_non_ic_endpoints_are_skipped",
+        "tests.test_spi_shared_chip_select_native_fixture_lane.test_native_spi_shared_chip_select_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_spi_shared_chip_select.test_alias_recognition_ordering_and_separating_one_select_is_metamorphic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_SHARED_CHIP_SELECT_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_shared_chip_select.py#spi_chip_select_inputs_share_net_candidates",
+        "kicad_tooling/hwrepo/spi_participants.py#is_spi_chip_select_function",
+        "kicad_tooling/hwrepo/spi_participants.py#is_spi_ic_reference",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_shared_chip_select.py#spi_chip_select_inputs_share_net_candidates"
+    },
+    {
       "rule_id": "bus.rs485_peer_reference_review",
       "title": "Mapped RS-485 peers on one pair use different explicit reference nets",
       "status": "active",

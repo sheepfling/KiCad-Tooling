@@ -13,7 +13,19 @@ _SPI_DEVICE_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
 _SPI_CLOCK_FUNCTIONS = {"sck", "sclk"}
 _SPI_INPUT_DATA_FUNCTIONS = {"mosi", "sdi", "copi"}
 _SPI_OUTPUT_DATA_FUNCTIONS = {"miso", "sdo", "cipo"}
-_SPI_SELECT_FUNCTIONS = {"cs", "csn", "ncs", "nss", "ss", "ssel", "ce0", "ce1"}
+_SPI_SELECT_FUNCTIONS = {
+    "cs",
+    "csn",
+    "ncs",
+    "nss",
+    "ss",
+    "ssn",
+    "ssel",
+    "ce0",
+    "ce1",
+    "chipselect",
+    "chipselectn",
+}
 
 SpiRosterState = Literal["not_configured", "pending", "not_applicable", "required"]
 
@@ -46,6 +58,16 @@ def _canonical_function(value: str) -> str:
     if function.startswith("spi"):
         function = function[3:].lstrip("0123456789")
     return function
+
+
+def is_spi_ic_reference(reference: str) -> bool:
+    """Return whether a reference follows the bounded fitted IC convention."""
+    return _SPI_DEVICE_REFERENCE.fullmatch(reference) is not None
+
+
+def is_spi_chip_select_function(function: str) -> bool:
+    """Recognize bounded chip-select aliases, including indexed SPI NSS names."""
+    return _canonical_function(function) in _SPI_SELECT_FUNCTIONS
 
 
 def _mapped_references(analysis: SpiAnalysis | None) -> set[str]:
@@ -89,14 +111,14 @@ def unmapped_spi_participants(
         if not separator:
             continue
         canonical_reference = references.get(reference.casefold())
-        if canonical_reference is None or not _SPI_DEVICE_REFERENCE.fullmatch(canonical_reference):
+        if canonical_reference is None or not is_spi_ic_reference(canonical_reference):
             continue
         reference_key = canonical_reference.casefold()
         if reference_key in dnp_references or reference_key in mapped_references:
             continue
 
         role = _canonical_function(function)
-        if role in _SPI_SELECT_FUNCTIONS:
+        if is_spi_chip_select_function(function):
             select_pins.setdefault(reference_key, set()).add(pin)
             continue
         if role not in (
