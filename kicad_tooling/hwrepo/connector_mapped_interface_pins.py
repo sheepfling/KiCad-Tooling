@@ -11,6 +11,7 @@ from .models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "connector.mapped_interface_signal_unassigned"
 SHIELD_RULE_ID: DesignLintRuleId = "connector.mapped_interface_shield_unassigned"
+POWER_CONTACT_RULE_ID: DesignLintRuleId = "connector.mapped_interface_power_contact_unassigned"
 
 
 def unassigned_mapped_interface_signal_pins(
@@ -52,6 +53,57 @@ def unassigned_mapped_interface_signal_pins(
                     "interface_pin_number": (str(mapped.interface_pin_number),),
                     "interface_signal": (str(mapped.interface_signal),),
                     "interface_role": ("signal",),
+                    "native_pin_function": (mapped.symbol_function or "<missing>",),
+                    "native_pin_electrical_type": (electrical_type or "<missing>",),
+                    "assigned_nets": (),
+                    "interface_catalog_sha256": (str(coverage.interface_catalog_sha256),),
+                },
+            )
+        )
+    return tuple(results)
+
+
+def unassigned_mapped_interface_power_contacts(
+    observed: NetlistContract,
+    coverage: ConnectorCoverageReport | None,
+) -> tuple[Candidate, ...]:
+    """Prompt on open generic supply/return contacts in current mapped interfaces."""
+    if coverage is None or coverage.status != "COMPLETE":
+        return ()
+
+    dnp_references = {reference.casefold() for reference in observed.dnp_components}
+    results: list[Candidate] = []
+    for pin, mapped in sorted(source_matched_connector_pin_evidence(observed, coverage).items()):
+        reference = pin.rsplit(".", 1)[0]
+        electrical_type = observed.pin_electrical_types.get(pin)
+        if (
+            mapped.role not in {"supply", "return"}
+            or mapped.nets
+            or mapped.unconnected_reason is not None
+            or reference.casefold() in dnp_references
+            or not pin_function_is_generic(mapped.symbol_function)
+        ):
+            continue
+
+        role = str(mapped.role)
+        results.append(
+            Candidate(
+                rule_id=POWER_CONTACT_RULE_ID,
+                subject=f"{pin}: reviewed {role} contact has no net assignment",
+                message=(
+                    f"The source-matched interface maps this generic contact to "
+                    f"{mapped.interface_signal} as a {role} contact, but the native netlist "
+                    "assigns it to no net. Review whether the contact needs a board connection "
+                    "or is intentionally open; record an explicit unconnected-pin reason for "
+                    "an intentional open. This check does not infer the correct net, require "
+                    "different contacts to share a net, or establish PCB copper continuity."
+                ),
+                evidence={
+                    "component_pin": (pin,),
+                    "interface_pin_number": (str(mapped.interface_pin_number),),
+                    "interface_signal": (str(mapped.interface_signal),),
+                    "interface_role": (role,),
+                    "interface_voltage_domain": (str(mapped.voltage_domain or "<missing>"),),
                     "native_pin_function": (mapped.symbol_function or "<missing>",),
                     "native_pin_electrical_type": (electrical_type or "<missing>",),
                     "assigned_nets": (),

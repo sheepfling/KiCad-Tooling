@@ -210,6 +210,14 @@ def catalog_reachability_rule_ids() -> set[str]:
             connector_coverage=_coverage(mapped_shield_source, target_role="shield"),
         )
     )
+    mapped_power_source = _netlist()
+    result.update(
+        item.rule_id
+        for item in candidates(
+            mapped_power_source,
+            connector_coverage=_coverage(mapped_power_source, target_role="return"),
+        )
+    )
     return result
 
 

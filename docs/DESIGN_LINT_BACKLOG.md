@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 187 rules are implemented with synthetic regression coverage.
+The following 188 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 187 active rules.
+The catalog currently contains 188 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -475,6 +475,7 @@ skipped under prerelease policy.
 - `connector.unconnected_return_pin`
 - `connector.mapped_interface_signal_unassigned`
 - `connector.mapped_interface_shield_unassigned`
+- `connector.mapped_interface_power_contact_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
 - `component.unconnected_power_input`
@@ -622,11 +623,17 @@ and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
 
-- **LINT-010 source-evidence gap:** Mapped arrays bind to exact project
-  `PART_ID` values, and optional per-element tolerance evidence now has exact
-  resistor/channel coverage. Next, review deterministic ways to compare
-  explicitly mapped bus-capacitance contributors with the authored upper
-  bound. Do not infer component limits or total bus capacitance from labels.
+- **LINT-010 source-evidence gap:** The optional capacitance scope now checks
+  exact fitted contributors on native bus nets against reviewed effective-
+  capacitance maxima and a residual-loading bound. Its focused `v0.5.3rc87`
+  gate passed. Future extensions still need explicit evidence and must not
+  infer component limits or loading from names.
+- **LINT-206 mapped power-contact assignment:** The focused REVIEW heuristic
+  is implemented for complete, source-matched interface maps assigning a
+  generic connector contact the role `supply` or `return` when the native
+  netlist leaves it open without a reasoned intentional-open decision. The
+  check does not pick a net or infer commoning. Its exact native fault/control
+  lane is pending the tagged gate.
 
 ### Previously prioritized additions now in the catalog
 
@@ -2990,7 +2997,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 187 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 188 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4489,7 +4496,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v10. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v11. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
@@ -4638,6 +4645,12 @@ is not a reason by itself to expand its scope or change its default policy.
   for the prerelease tag. This validates contract-to-lint behavior on
   native-derived synthetic connectivity, not array internals or physical
   resistor behavior.
+- **Tagged acceptance (2026-10-23):** `v0.5.3rc87` (GitHub Actions run
+  `39995597850`)
+  resolved to `bus.i2c_missing_pullup` with
+  `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES=1`. The focused lint, installed-wheel
+  external-project playtest, and Ubuntu/macOS/Windows preview jobs passed; the
+  package-release job was skipped under prerelease policy.
 - **Remaining:** Rail ceiling, pin-voltage limits, tolerance values, and cited
   source documents remain reviewed inputs. Exact scoped tolerance coverage is
   checked, but source authenticity and correctness are not. The optional
@@ -4925,8 +4938,14 @@ is not a reason by itself to expand its scope or change its default policy.
   zero connected-bias candidates: `Device:C`
   (`1f47dd17c62a0e8e962582fbcc104123d18e5deb6c09b978c858d15443e82d83`) and `Device:C_Small`
   (`803284fdb8a3f1e76cef39efa11b599e523ed4f941f0945dd78cc2d7ab2d41ef`). The four-source fixture
-  manifest is `173897d8682ffa2e48412469164c6329235ddeb6b6a197898e0c7349a891358b`. Hosted CI has not
-  yet run this extension. This screen does not verify a required capacitor, part value, placement,
+  manifest is `173897d8682ffa2e48412469164c6329235ddeb6b6a197898e0c7349a891358b`.
+  Hosted `v0.5.3rc88` (GitHub Actions run `39996593383`)
+  passed the focused lint with `KICAD_RUN_NATIVE_CONTROL_INPUT_FIXTURES=1`,
+  the installed-wheel external-project playtest, and Ubuntu/macOS/Windows
+  preview jobs. The pinned KiCad 10.0.5 native control-input fixture lane
+  completed. The
+  package-release job was skipped under prerelease policy. This screen does
+  not verify a required capacitor, part value, placement,
   or PCB connectivity. No cohort code or board project was imported.
 - **Unconnected-pin input:** KiCad's native XML uses synthetic names such as
   `unconnected-(J1-SHIELD-Pad3)` for pins without net assignments. The native
@@ -10956,6 +10975,41 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
     -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
+  ```
+
+#### LINT-206 — Review unassigned mapped connector supply and return contacts
+
+- **Status:** Implemented as the configurable, default-review
+  `connector.mapped_interface_power_contact_unassigned` heuristic.
+- **Gap:** LINT-168 covers generic mapped signal contacts, LINT-169 covers
+  mapped shields, and the named supply/return rules depend on recognizable
+  native pin functions. A generic connector pin mapped as `supply` or `return`
+  can remain open on a single connector without a focused review candidate.
+- **Predicate:** Require complete source-matched connector pin coverage and a
+  current interface-catalog digest. For each fitted pin with an explicit
+  `supply` or `return` role, generic or missing native function metadata, no
+  net assignment, and no `unconnected_pin_reasons` entry, emit one REVIEW
+  candidate. Stale, incomplete, ambiguous, and DNP evidence is excluded.
+- **Policy boundary:** The map makes the pin role reviewable; it does not say
+  the contact must connect, choose a target net, require connector returns to
+  be common, or prove PCB copper or off-board continuity. The reviewer can
+  record an intentional open or use the rule's project policy and exact-ignore
+  controls. Named native pin functions remain with their existing checks.
+- **Evidence:** Synthetic fault cases cover both supply and return roles,
+  including native `power_in`/`power_out` types on generic-function contacts.
+  Valid controls cover assigned contacts, reasoned intentional opens, DNP,
+  unrelated interface roles, named native supply functions, stale/digestless/
+  incomplete maps, policy, exact ignores, order stability, and repair. The
+  exact native test reuses the digest-pinned tooling-owned generic
+  connector open/assigned schematics and applies independently-authored
+  supply/return maps to the exported source. It is registered in the
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES` gate for KiCad 10.0.0 and 10.0.5.
+  No board project or proprietary source is used.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_connector_mapped_interface_power_contact_unassigned.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_power_contact_unassigned")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

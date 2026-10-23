@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 187 active rules.
+The catalog currently contains 188 active rules.
 
 ### Distinct mapped connector supply domains sharing a net
 
@@ -1531,6 +1531,46 @@ policy can set the rule to `block` or `off`, or ignore a finding by its exact
 fingerprint. Synthetic fault/control tests and exact KiCad 10.0.0/10.0.5 native
 fixtures verify that an unassigned mapped shield prompts and a connected or
 reasoned-open shield stays quiet.
+
+## Review an unassigned mapped supply or return contact
+
+`connector.mapped_interface_power_contact_unassigned` fills the single-
+connector gap for generic or unnamed native pins. When a complete, current
+connector interface map assigns a fitted contact the role `supply` or `return`
+and the native netlist leaves it open without a reasoned disposition, the
+default result is a `REVIEW` finding. Named native functions stay with their
+specific open-pin checks.
+
+Record an intentional open on the project-owned connector review:
+
+```json
+{
+  "reference": "J1",
+  "disposition": "interface",
+  "basis": "Reviewed connector pinout and interface operating modes",
+  "interface_id": "serial-port",
+  "pin_map": {"7": "7"},
+  "unconnected_pin_reasons": {
+    "7": "Return contact is intentionally unused in this isolated mode"
+  }
+}
+```
+
+The map tells the lint which contact role to review; it does not require that
+the contact be connected, choose a target net, or require returns on similar
+connectors to be common. The lint cannot establish PCB copper or off-board
+continuity. Incomplete or stale maps and DNP connectors are excluded. Project
+policy can set the rule to `block` or `off`, or ignore a finding by its exact
+fingerprint. Synthetic supply/return faults and assigned/reasoned-open controls
+are paired with exact KiCad 10.0.0/10.0.5 native exports of tooling-owned
+connector schematics.
+
+Run its focused slice with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_mapped_interface_power_contact_unassigned.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_power_contact_unassigned")'
+```
 
 ## Review mapped PCB track widths
 

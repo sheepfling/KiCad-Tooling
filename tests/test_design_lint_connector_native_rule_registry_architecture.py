@@ -91,6 +91,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.mapped_interface_shield_unassigned": {
             "tests.test_connector_mapped_interface_shield_unassigned.test_native_mapped_shield_contact_fault_and_control_are_repeatable",
         },
+        "connector.mapped_interface_power_contact_unassigned": {
+            "tests.test_connector_mapped_interface_power_contact_unassigned.test_native_mapped_power_contact_fault_and_control_are_repeatable",
+        },
         "connector.footprint_named_signal_mode_dependent_open_outlier": {
             "tests.test_connector_footprint_named_signal_mode_dependent_open_native_fixture_lane.test_native_mode_dependent_signal_fault_and_control_are_repeatable",
         },

@@ -11,6 +11,7 @@ from .connector_coverage import (
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_identity import similar_connector_pin_groups
 from .connector_mapped_interface_pins import (
+    unassigned_mapped_interface_power_contacts,
     unassigned_mapped_interface_shield_pins,
     unassigned_mapped_interface_signal_pins,
 )
@@ -414,5 +415,6 @@ def connector_pin_candidates(
     )
     found.extend(unassigned_mapped_interface_signal_pins(observed, connector_coverage))
     found.extend(unassigned_mapped_interface_shield_pins(observed, connector_coverage))
+    found.extend(unassigned_mapped_interface_power_contacts(observed, connector_coverage))
 
     return tuple(found)
