@@ -232,6 +232,8 @@ REPORT_ORDER = (
     "mapped_other_named_rail_control",
     "mapped_supply_return_net_fault",
     "mapped_supply_return_net_control",
+    "mapped_signal_named_rail_fault",
+    "mapped_signal_named_rail_control",
     "pcb_required_fitted_reference_dnp_fault",
     "pcb_required_fitted_reference_fitted_control",
     "pcb_board_only_mounting_hole_candidate",
@@ -282,6 +284,9 @@ REPORT_BUILDERS = {
     ),
     "mapped_interface_supply_return_net": (
         "tests.hashseed_probe_cases.mapped_interface_supply_return_net"
+    ),
+    "mapped_interface_signal_named_rail": (
+        "tests.hashseed_probe_cases.mapped_interface_signal_named_rail"
     ),
     "pcb_required_fitted_reference": ("tests.hashseed_probe_cases.pcb_required_fitted_reference"),
     "pcb_board_only_footprints": "tests.hashseed_probe_cases.pcb_board_only_footprints",

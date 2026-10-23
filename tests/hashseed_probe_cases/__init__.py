@@ -19,6 +19,7 @@ HASHSEED_REPORT_FAMILIES = (
     "mapped_interface_other_unassigned",
     "mapped_interface_other_named_rail",
     "mapped_interface_supply_return_net",
+    "mapped_interface_signal_named_rail",
     "pcb_required_fitted_reference",
     "pcb_board_only_footprints",
     "pcb_dnp_mismatch",

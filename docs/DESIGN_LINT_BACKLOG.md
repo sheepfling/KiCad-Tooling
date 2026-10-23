@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 194 rules are implemented with synthetic regression coverage.
+The following 195 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 194 active rules.
+The catalog currently contains 195 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -479,6 +479,7 @@ skipped under prerelease policy.
 - `connector.mapped_interface_other_unassigned`
 - `connector.mapped_interface_other_named_rail`
 - `connector.mapped_interface_supply_on_return_net`
+- `connector.mapped_interface_signal_on_named_rail`
 - `connector.mapped_interface_power_contact_unassigned`
 - `connector.unconnected_power_input`
 - `connector.unconnected_power_output`
@@ -658,6 +659,13 @@ and optional ecosystem adapters are `P3`.
   while its only assigned net has a bounded return-like label. The default
   REVIEW prompts for inspection of the map, voltage domain, and assignment;
   neither label nor map independently proves an electrical mismatch.
+- **LINT-213 mapped signal contact on a named rail:** A complete,
+  source-matched interface can classify a generic connector pin as `signal`
+  while its only assigned net has a recognized supply or bounded return-like
+  label. The default REVIEW highlights the pin-map/label combination, including
+  possible accidental power-contact classifications, while allowing intentional
+  signal straps to be reviewed, ignored by exact fingerprint, or configured
+  per project.
 - **Single-rule gate integrity:** `Lint-Rule` prerelease tags now add a narrow
   cross-rule slice that verifies every active rule has a valid theme-owned
   predicate, catalogued fixtures retain their theme markers, and catalogued
@@ -3031,7 +3039,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 194 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 195 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11388,6 +11396,52 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_connector_mapped_interface_supply_on_return_net_native_fixture_lane.py \
     -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_supply_on_return_net")'
+  ```
+
+#### LINT-213 — Review mapped signal contacts on named rails
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_interface_signal_on_named_rail`.
+- **Gap:** A connector map may identify a contact as `signal` even though the
+  native netlist assigns it only to a recognized supply-like or return-like
+  net. Native pin-function checks do not establish this project-specific map
+  mismatch when the KiCad pin function is generic.
+- **Predicate:** For a fitted connector with complete, source-matched
+  interface coverage and a current catalog digest, emit a REVIEW candidate
+  when a generic or missing native pin function mapped as `signal` has exactly
+  one assigned net whose label matches the narrow supply vocabulary or a
+  bounded return token. DNP, named-function, multiply assigned, stale,
+  incomplete, digestless, and unrelated-net cases are excluded.
+- **Boundary:** This is a heuristic review clue. Signal contacts can be
+  intentionally strapped to a rail, and a net label does not prove voltage or
+  electrical function. The rule does not alter project intent, select a net,
+  prove a wiring defect, or establish PCB copper continuity, external wiring,
+  or physical bonding. Project policy can keep review mode, set `block` or
+  `off`, or ignore a finding by exact fingerprint.
+- **Fixtures:** Synthetic cases cover bounded return and supply labels,
+  ordinary-net and mapped-role controls, named native functions, DNP, stale,
+  incomplete, digestless, and multiply assigned evidence, policy and exact
+  ignores, stable ordering, and a four-connector map mutation that localizes
+  one pin without changing the native netlist. Exact KiCad 10.0.0 and 10.0.5
+  exports reuse the source-hashed tooling-owned `ret-control` schematic; the
+  fault maps J1.7 as `signal` and the control maps it as `return`.
+- **Incremental-value test:** The synthetic and exact-native fault/control
+  cases emit only for the generic source-matched signal contact on `RET`; the
+  return-role map is quiet. This checks an independently authored interface
+  map against the exported net assignment without claiming to know whether a
+  strap is intentional.
+- **Determinism:** LINT-080 compares complete named-rail fault and ordinary-net
+  control reports across independently randomized Python processes; an
+  additional metamorphic test reverses native map ordering.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_mapped_interface_signal_on_named_rail.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.py \
+    -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_interface_signal_on_named_rail")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

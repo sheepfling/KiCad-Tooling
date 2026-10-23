@@ -2962,6 +2962,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#unassigned_mapped_interface_power_contacts"
     },
     {
+      "rule_id": "connector.mapped_interface_signal_on_named_rail",
+      "title": "Mapped signal contact is assigned to a named supply or return net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface role and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate when a generic or missing native pin function mapped as role=signal has exactly one assigned net whose label matches the narrow supply vocabulary or a bounded return token.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The map role and named rail-like label are review clues, not proof of electrical potential, an actual mismatch, or required connectivity; intentional signal straps can be valid.",
+        "Only generic or missing native pin functions are considered. Named native pin functions, DNP references, stale or incomplete interface evidence, digestless coverage, multiply assigned contacts, and ordinary net labels are excluded.",
+        "The review does not change the authored map, select a replacement net, or prove PCB copper continuity, external wiring, or physical bonding."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_generic_mapped_signal_on_named_rail_requests_review",
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_bounded_supply_and_return_labels_are_review_clues",
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_four_port_case_localizes_one_signal_role_map_mutation",
+        "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_unrelated_net_and_other_mapped_roles_are_controls",
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_stale_incomplete_digestless_and_multi_net_evidence_are_controls",
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_review_policy_and_exact_ignore_apply",
+        "tests.test_connector_mapped_interface_signal_on_named_rail_native_fixture_lane.test_native_generic_signal_map_on_ret_is_reviewed_and_return_role_is_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_interface_signal_on_named_rail.test_candidate_is_stable_under_netlist_mapping_order",
+        "tests.test_design_lint_determinism_mapped_interface_signal_on_named_rail.test_signal_named_rail_fault_and_control_reports_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_signal_contacts_on_named_rails",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_interface_pins.py#mapped_signal_contacts_on_named_rails"
+    },
+    {
       "rule_id": "connector.return_pin_on_positive_rail",
       "title": "Connector return pin is assigned to a positive rail",
       "status": "active",
