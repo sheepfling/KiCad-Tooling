@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 189 active rules.
+The catalog currently contains 190 active rules.
 
 ### Distinct mapped connector supply domains sharing a net
 
@@ -322,6 +322,23 @@ Select the synthetic regression slice with:
 ```sh
 python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
   -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
+```
+
+### Mapped connector return/supply scopes with isolated peers
+
+`connector.return_supply_scope_singleton` reviews a source-matched generic
+return or same-domain generic supply comparison scope when one connector
+reference has no peer inside that scope. It reports that the scoped peer checks
+cannot compare those contacts with the other mapped connectors. A singleton
+scope can be intentional for a separate or isolated interface; the finding does
+not require common nets or prove isolation. Stale or incomplete scope evidence
+keeps the existing broad comparison and does not create this finding.
+
+Select the synthetic regression slice with:
+
+```sh
+python -I -m pytest tests/test_connector_peer_comparison_scope_singleton.py \
+  -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.return_supply_scope_singleton")'
 ```
 
 ### USB data pin/name polarity review

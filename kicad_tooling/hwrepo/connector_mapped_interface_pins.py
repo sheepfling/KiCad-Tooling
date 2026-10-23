@@ -66,6 +66,8 @@ def unassigned_mapped_interface_signal_pins(
 def unassigned_mapped_interface_power_contacts(
     observed: NetlistContract,
     coverage: ConnectorCoverageReport | None,
+    *,
+    excluded_pins: frozenset[str] = frozenset(),
 ) -> tuple[Candidate, ...]:
     """Prompt on open generic supply/return contacts in current mapped interfaces."""
     if coverage is None or coverage.status != "COMPLETE":
@@ -80,6 +82,7 @@ def unassigned_mapped_interface_power_contacts(
             mapped.role not in {"supply", "return"}
             or mapped.nets
             or mapped.unconnected_reason is not None
+            or pin.casefold() in excluded_pins
             or reference.casefold() in dnp_references
             or not pin_function_is_generic(mapped.symbol_function)
         ):

@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 
 MIXED_INTERFACE_RETURN_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 _RULE_ID = "connector.repeated_pin_function"
+_SCOPE_RULE_ID = "connector.return_supply_scope_singleton"
 _FIXTURE_RELATIVE_ROOT = Path("tests/fixtures/design_lint/mixed-interface-return-peers")
 _SOURCE_HASHES = {
     "fault": "53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83",
@@ -268,6 +269,9 @@ def mixed_interface_return_fixture_lane(
         target_findings = tuple(
             item for item in reports[case, "first"].findings if item.rule_id == _RULE_ID
         )
+        scope_findings = tuple(
+            item for item in reports[case, "first"].findings if item.rule_id == _SCOPE_RULE_ID
+        )
         if case == "fault":
             if len(target_findings) != 1 or target_findings[0].mode != "review":
                 raise ValueError("Split mixed-interface returns lost their review finding")
@@ -286,8 +290,14 @@ def mixed_interface_return_fixture_lane(
                 or len(target_findings[0].evidence.get("return_comparison_basis", ())) != 3
             ):
                 raise ValueError("Mixed-interface return review lost reviewed scope evidence")
+            if scope_findings:
+                raise ValueError(
+                    "One shared return-comparison scope should retain all connector peers"
+                )
         elif target_findings:
             raise ValueError("Common mixed-interface return control retained a review finding")
+        elif scope_findings:
+            raise ValueError("Common return control retained a singleton-scope finding")
         log.event(
             f"mixed-interface-return-fixture/{case}",
             "PASS",
@@ -333,6 +343,13 @@ def mixed_interface_return_fixture_lane(
     scoped_findings = tuple(item for item in scoped_report.findings if item.rule_id == _RULE_ID)
     if scoped_findings:
         raise ValueError("Separate source-reviewed return scopes retained a cross-group prompt")
+    singleton_scope_findings = tuple(
+        item for item in scoped_report.findings if item.rule_id == _SCOPE_RULE_ID
+    )
+    if len(singleton_scope_findings) != 1 or singleton_scope_findings[0].evidence.get(
+        "isolated_references"
+    ) != ("J3",):
+        raise ValueError("Singleton reviewed return scope did not produce its coverage prompt")
     log.event(
         "mixed-interface-return-fixture/separate-scope-control",
         "PASS",
@@ -346,6 +363,8 @@ def mixed_interface_return_fixture_lane(
         normalized_netlist_sha256=normalized_hashes["fault", "first"],
         connector_coverage=scoped_coverage.status,
         findings="none",
+        scope_findings=";".join(item.rule_id for item in singleton_scope_findings),
+        isolated_references=";".join(singleton_scope_findings[0].evidence["isolated_references"]),
     )
     log.event(
         "mixed-interface-return-fixture/native-export",

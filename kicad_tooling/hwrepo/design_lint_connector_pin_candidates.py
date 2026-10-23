@@ -154,6 +154,7 @@ def connector_pin_candidates(
         supply_comparison_groups=reviewed_connector_supply_comparison_groups,
     )
 
+    repeated_pin_evidence: set[str] = set()
     for group in repeated_connector_pin_groups:
         group_pin_keys = {pin.casefold() for pin in group.pins}
         if group_pin_keys and group_pin_keys <= unconnected_power_input_pin_keys:
@@ -181,6 +182,7 @@ def connector_pin_candidates(
                 },
             )
         )
+        repeated_pin_evidence.update(group.pins)
 
     for group in connector_peer_pin_assignment_outliers(
         observed,
@@ -320,13 +322,6 @@ def connector_pin_candidates(
             )
         )
 
-    repeated_pin_evidence = {
-        pin
-        for item in found
-        if item.rule_id == "connector.repeated_pin_function"
-        for pin in item.evidence
-    }
-
     for pin in unconnected_named_pins:
         # A repeated-function finding already reports missing members in its group.
         if pin.pin in repeated_pin_evidence:
@@ -415,6 +410,12 @@ def connector_pin_candidates(
     )
     found.extend(unassigned_mapped_interface_signal_pins(observed, connector_coverage))
     found.extend(unassigned_mapped_interface_shield_pins(observed, connector_coverage))
-    found.extend(unassigned_mapped_interface_power_contacts(observed, connector_coverage))
+    found.extend(
+        unassigned_mapped_interface_power_contacts(
+            observed,
+            connector_coverage,
+            excluded_pins=frozenset(pin.casefold() for pin in repeated_pin_evidence),
+        )
+    )
 
     return tuple(found)

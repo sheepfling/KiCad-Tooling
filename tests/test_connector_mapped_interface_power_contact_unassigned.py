@@ -106,9 +106,9 @@ def _findings(report: DesignLintReport):
     return tuple(item for item in report.findings if item.rule_id == RULE_ID)
 
 
-@pytest.mark.parametrize("role", ("supply", "return"))
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_open_generic_mapped_power_contact_requests_review(role: ConnectorPinRole) -> None:
+def test_open_generic_mapped_supply_contact_requests_review() -> None:
+    role: ConnectorPinRole = "supply"
     report, coverage = _report(_source(), role=role)
 
     assert coverage.status == "COMPLETE"
@@ -126,6 +126,20 @@ def test_open_generic_mapped_power_contact_requests_review(role: ConnectorPinRol
         "assigned_nets": (),
         "interface_catalog_sha256": (CATALOG_SHA256,),
     }
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+def test_open_mapped_return_contacts_are_reported_once_by_peer_rule() -> None:
+    report, coverage = _report(_source(), role="return")
+
+    assert coverage.status == "COMPLETE"
+    assert not _findings(report)
+    peer_findings = tuple(
+        item for item in report.findings if item.rule_id == "connector.repeated_pin_function"
+    )
+    assert len(peer_findings) == 1
+    assert peer_findings[0].evidence["J1.2"] == ()
+    assert peer_findings[0].evidence["J1.3"] == ("SIGNAL_RETURN",)
 
 
 @pytest.mark.parametrize("role", ("supply", "return"))
@@ -195,9 +209,9 @@ def test_finding_is_order_stable_and_clears_when_contact_is_assigned() -> None:
             "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
         }
     )
-    first = _findings(_report(source)[0])[0]
-    second = _findings(_report(reordered)[0])[0]
-    repaired, _ = _report(_source(target_net="REVIEWED_POWER_NET"))
+    first = _findings(_report(source, role="supply")[0])[0]
+    second = _findings(_report(reordered, role="supply")[0])[0]
+    repaired, _ = _report(_source(target_net="REVIEWED_POWER_NET"), role="supply")
 
     assert (first.fingerprint, first.evidence) == (second.fingerprint, second.evidence)
     assert first.fingerprint == fingerprint(
@@ -214,9 +228,10 @@ def test_finding_is_order_stable_and_clears_when_contact_is_assigned() -> None:
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_review_policy_and_exact_ignore_apply() -> None:
     source = _source()
-    baseline = _findings(_report(source)[0])[0]
+    baseline = _findings(_report(source, role="supply")[0])[0]
     blocked, _ = _report(
         source,
+        role="supply",
         policy=DesignLintPolicy(
             rules=(
                 DesignLintRuleOverride(
@@ -229,6 +244,7 @@ def test_review_policy_and_exact_ignore_apply() -> None:
     )
     disabled, _ = _report(
         source,
+        role="supply",
         policy=DesignLintPolicy(
             rules=(
                 DesignLintRuleOverride(
@@ -241,6 +257,7 @@ def test_review_policy_and_exact_ignore_apply() -> None:
     )
     ignored, _ = _report(
         source,
+        role="supply",
         policy=DesignLintPolicy(
             ignores=(
                 DesignLintIgnore(

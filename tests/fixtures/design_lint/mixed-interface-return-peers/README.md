@@ -15,12 +15,18 @@ groups. The fault is also evaluated with
 scope while J3 has another, so the cross-group return prompt is suppressed. This
 review-scope control does not claim electrical isolation or continuity.
 
-The control schematic puts all three mapped return pins on `COMMON_RETURN`.
-It should produce no finding for `connector.repeated_pin_function`. This
-control demonstrates deterministic behavior for this reviewed fixture; it
-does not establish that every real USB or serial design must common its
-returns. A review finding prompts a project engineer to decide whether the
-separation is intended and supported by the interface requirements.
+The control schematic puts all three mapped return pins on `COMMON_RETURN` and
+keeps them in one return-comparison group. It should produce no finding for
+`connector.repeated_pin_function` or
+`connector.return_supply_scope_singleton`. This control demonstrates
+deterministic behavior for this reviewed fixture; it does not establish that
+every real USB or serial design must common its returns.
+
+The separate-group map deliberately puts J3 in a singleton return-comparison
+scope. `connector.repeated_pin_function` stays quiet across the reviewed
+boundary, while `connector.return_supply_scope_singleton` asks the reviewer to
+confirm that J3's narrower scope is intentional. It does not declare the
+returns common, separate, or electrically isolated.
 
 `interfaces.json` and both connector-review maps are part of the source-bound
 test input. The hosted lane verifies the exact source hashes, connector-map

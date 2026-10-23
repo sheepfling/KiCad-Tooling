@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 189 rules are implemented with synthetic regression coverage.
+The following 190 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 189 active rules.
+The catalog currently contains 190 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -420,6 +420,7 @@ skipped under prerelease policy.
 
 - `connector.repeated_pin_function`
 - `connector.mapped_supply_domains_share_net`
+- `connector.return_supply_scope_singleton`
 - `connector.stateful_contact_topology_mismatch`
 - `connector.peer_pin_assignment_outlier`
 - `connector.peer_pin_assignment_divergence`
@@ -3008,7 +3009,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 189 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 190 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11116,6 +11117,47 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_usb_data_polarity_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_peer_data_pair_crossed")'
+  ```
+
+#### LINT-208 — Review mapped connector return/supply scopes with isolated peers
+
+- **Status:** Implemented as the default-review coverage heuristic
+  `connector.return_supply_scope_singleton`.
+- **Gap:** LINT-083 lets a project scope return and same-domain supply
+  comparisons so unrelated interfaces do not create broad peer prompts. A
+  narrow scope can also leave a mapped connector with no comparison partner;
+  the scoped peer rule then has no opportunity to surface a split or open
+  assignment for that connector.
+- **Predicate:** Starting from the same unscoped groups recognized by
+  connector peer-pin analysis, consider only source-matched generic mapped
+  return contacts and generic mapped supplies in one exact authored voltage domain.
+  When every participating connector has a current comparison scope, emit a
+  REVIEW candidate if one or more scope partitions contain no other connector
+  reference. Missing, partial, stale, or incomplete scope evidence preserves
+  the existing broad comparison and does not trigger this rule.
+- **Boundary:** A singleton group may be intentional for a separate or
+  isolated interface. This rule asks the reviewer to check that the selected
+  scope is deliberate; it does not say returns or supplies must be common,
+  infer isolation, or replace pin-connectivity and grounding requirements.
+  Signal-contact `peer_assignment_group` scopes remain outside this rule.
+- **Fixtures:** Synthetic cases cover a singleton return group, singleton
+  supply groups in one authored voltage domain, shared-scope controls, two
+  distinct scopes that each retain two peers, incomplete and stale source
+  evidence, project block/off/exact-ignore behavior, and stable ordering. The
+  digest-pinned mixed USB/serial native lane on KiCad 10.0.0 and 10.0.5 now
+  checks a common-scope control plus a source-matched separate-scope case that
+  must report `J3` as having no return peer. The existing repeated-return
+  prompt remains suppressed across the reviewed groups. All inputs are
+  tooling-owned synthetic fixtures.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_peer_comparison_scope_singleton.py \
+    -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.return_supply_scope_singleton")'
+
+  KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_connector_mixed_interface_return_native_lane.py \
+    -m 'design_lint and connector_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="connector.return_supply_scope_singleton")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

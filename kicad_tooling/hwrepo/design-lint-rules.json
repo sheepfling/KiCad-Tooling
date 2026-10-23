@@ -29,6 +29,7 @@
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
         "tests.test_verify_design_lint.test_empty_connectivity_expectations_still_raise_native_connector_review",
         "tests.test_design_lint_connector_returns.test_return_pin_disagreement_within_one_connector_needs_review",
+        "tests.test_connector_mapped_interface_power_contact_unassigned.test_open_mapped_return_contacts_are_reported_once_by_peer_rule",
         "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",
         "tests.test_design_lint_connector_returns.test_explicit_return_roles_review_split_neutral_net_names",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
@@ -139,6 +140,53 @@
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates"
+    },
+    {
+      "rule_id": "connector.return_supply_scope_singleton",
+      "title": "Mapped connector return or supply scope leaves a peer without comparison",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, compared with source-matched project connector coverage",
+      "predicate": "For each otherwise comparable group of generic, source-matched mapped return contacts or generic mapped supply contacts in the same exact authored voltage domain, require at least two fitted connector references and current source-matched pinout and comparison-scope evidence for every participant. Emit one REVIEW candidate when a return_comparison_group or supply_comparison_group leaves one or more participating references without another reference in its scope. Incomplete or stale scope evidence retains the existing broad comparison and does not trigger this rule. Signal-contact peer_assignment_group scopes are outside this predicate.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "This is a coverage REVIEW prompt. A singleton scope may be intentional for isolated interfaces; the finding does not require common nets, infer electrical isolation, or decide whether connector returns or supplies should be bonded.",
+        "Only source-matched mapped return contacts and generic mapped supplies in one exact authored voltage_domain are considered. Unmapped return/supply contacts, named supply functions handled by other peer checks, and unsupported or ambiguous pin metadata remain outside this rule.",
+        "Mapped returns are considered by this rule only when their native pin function is generic and enters the shared return group; named native return functions remain with their existing peer checks.",
+        "Stale, incomplete, missing, or partial scope evidence retains the existing broad comparison. Only current complete source-matched interface pin evidence can produce a scope finding.",
+        "Native schematic assignments do not establish PCB copper geometry, external wiring, physical continuity, or manufacturing correctness."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_peer_comparison_scope_singleton.test_scoped_return_peer_without_comparison_partner_is_reviewed",
+        "tests.test_connector_peer_comparison_scope_singleton.test_singleton_supply_scopes_are_reviewed_with_common_scope_control",
+        "tests.test_connector_peer_comparison_scope_singleton.test_project_policy_can_block_disable_or_ignore_scope_review",
+        "tests.test_connector_mixed_interface_return_native_lane.test_native_mixed_interface_returns_are_source_bound_and_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_peer_comparison_scope_singleton.test_one_shared_scope_keeps_common_return_control_quiet",
+        "tests.test_connector_peer_comparison_scope_singleton.test_singleton_supply_scopes_are_reviewed_with_common_scope_control",
+        "tests.test_connector_peer_comparison_scope_singleton.test_distinct_scopes_with_multiple_peers_each_are_quiet",
+        "tests.test_connector_peer_comparison_scope_singleton.test_missing_or_stale_scopes_do_not_create_a_coverage_candidate",
+        "tests.test_connector_peer_comparison_scope_singleton.test_project_policy_can_block_disable_or_ignore_scope_review"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_peer_comparison_scope_singleton.test_scope_candidate_is_stable_under_netlist_ordering"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_scope_coverage_candidates.py#connector_scope_singleton_candidates",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
+        "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
+        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_scope_coverage_candidates.py#connector_scope_singleton_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_MIXED_INTERFACE_RETURN_FIXTURES"
+      ]
     },
     {
       "rule_id": "connector.stateful_contact_topology_mismatch",
@@ -2756,7 +2804,7 @@
         "The review does not select a target net, require distinct contacts to share a net, establish PCB copper continuity, or verify external wiring."
       ],
       "fault_fixtures": [
-        "tests.test_connector_mapped_interface_power_contact_unassigned.test_open_generic_mapped_power_contact_requests_review",
+        "tests.test_connector_mapped_interface_power_contact_unassigned.test_open_generic_mapped_supply_contact_requests_review",
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_source_mapped_role_reviews_open_native_power_types",
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_native_mapped_power_contact_fault_and_control_are_repeatable"
       ],
@@ -2765,7 +2813,8 @@
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_named_supply_function_stays_with_existing_specific_check",
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_stale_or_incomplete_interface_evidence_cannot_trigger_review",
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_review_policy_and_exact_ignore_apply",
-        "tests.test_connector_mapped_interface_power_contact_unassigned.test_native_mapped_power_contact_fault_and_control_are_repeatable"
+        "tests.test_connector_mapped_interface_power_contact_unassigned.test_native_mapped_power_contact_fault_and_control_are_repeatable",
+        "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_finding_is_order_stable_and_clears_when_contact_is_assigned"

@@ -74,3 +74,5 @@ def test_native_mixed_interface_returns_are_source_bound_and_repeatable(
     assert separate_scope["kicad_version"] == version
     assert separate_scope["connector_coverage"] == "COMPLETE"
     assert separate_scope["findings"] == "none"
+    assert separate_scope["scope_findings"] == "connector.return_supply_scope_singleton"
+    assert separate_scope["isolated_references"] == "J3"

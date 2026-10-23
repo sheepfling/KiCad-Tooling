@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .connector_coverage import source_matched_connector_peer_assignment_groups
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_scope_coverage_candidates import connector_scope_singleton_candidates
 from .connector_stateful_contact_models import ConnectorStatefulContactMap
 from .connector_stateful_contacts import stateful_connector_contact_findings
 from .design_lint_connector_footprint_candidates import (
@@ -35,6 +36,7 @@ def connector_candidates(
             power_output_review_enabled=power_output_review_enabled,
         ),
         *mapped_supply_domains_shared_net_candidates(observed, connector_coverage),
+        *connector_scope_singleton_candidates(observed, connector_coverage),
         *connector_footprint_peer_pin_candidates(
             observed,
             reviewed_connector_references,
