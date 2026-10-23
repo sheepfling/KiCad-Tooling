@@ -14,8 +14,9 @@ from .ci_hosted_support import normalized_erc_report_bytes
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
+from .hwrepo.design_lint_finding_models import DesignLintFinding, DesignLintRuleOverride
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintRuleOverride
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
 from .validate import read_netlist
 
 if TYPE_CHECKING:
@@ -123,7 +124,7 @@ def mosfet_drain_source_fixture_lane(
     for case in FIXTURE_CASES:
         netlist_hashes: list[str] = []
         erc_hashes: list[str] = []
-        findings_by_run: list[tuple[dict[str, object], ...]] = []
+        findings_by_run: list[tuple[DesignLintFinding, ...]] = []
         report_statuses: list[str] = []
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -160,9 +161,7 @@ def mosfet_drain_source_fixture_lane(
                     )
                 ),
             )
-            selected = tuple(
-                item.model_dump(mode="json") for item in report.findings if item.rule_id == RULE_ID
-            )
+            selected = tuple(item for item in report.findings if item.rule_id == RULE_ID)
             findings_by_run.append(selected)
             report_statuses.append(report.status)
 
@@ -186,7 +185,7 @@ def mosfet_drain_source_fixture_lane(
             normalized_erc_sha256=erc_hashes[0],
             repeat_normalized_erc_sha256=erc_hashes[1],
             lint_status=report_statuses[0],
-            rule_findings=";".join(str(item["subject"]) for item in findings_by_run[0]) or "none",
+            rule_findings=";".join(item.subject for item in findings_by_run[0]) or "none",
             erc_errors="none",
             repeatable="true",
         )

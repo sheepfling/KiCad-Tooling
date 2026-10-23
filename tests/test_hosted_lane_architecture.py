@@ -135,7 +135,7 @@ def test_connector_return_fixture_lane_is_split_by_theme() -> None:
     assert ret_label_lane_lines < 30, (
         f"Keep the RET-label native lane focused: {ret_label_lane_lines} lines"
     )
-    assert len(modules) == 29, "Keep connector return fixture work in named theme modules"
+    assert len(modules) == 31, "Keep connector return fixture work in named theme modules"
     assert not oversized_modules, (
         f"Split connector return modules by responsibility: {oversized_modules}"
     )

@@ -21,9 +21,10 @@ from .hwrepo.design_lint_component_mosfet_terminals import (
 from .hwrepo.design_lint_component_mosfet_terminals import (
     GATE_SOURCE_RULE_ID as GATE_SOURCE_SAME_NET_RULE_ID,
 )
+from .hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintRuleOverride
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy
 from .hwrepo.mosfet_gate_connectivity import RULE_ID, SOURCE_BIAS_RULE_ID
 from .validate import read_netlist
 

@@ -78,6 +78,7 @@ from . import usb_peer_reference_models as _usb_peer_reference_models
 from . import usb_reference_pin_models as _usb_reference_pin_models
 from .model_primitives import (
     Digest,
+    ElectricalPositive,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     FiniteMeasure,
     GitCommit,
     Identifier,
@@ -85,6 +86,7 @@ from .model_primitives import (
     NetName,
     NonEmptyText,
     NonNegativeCount,
+    NonNegativeMeasure,  # noqa: F401  # pyright: ignore[reportUnusedImport]
     PositiveCount,
     PositiveMeasure,
     Reference,
