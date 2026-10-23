@@ -83,6 +83,49 @@ def source_path_netlist(
     )
 
 
+def bootstrap_input_netlist(
+    *, pin_function: str = "BST", bootstrap_capacitor_to_switch: bool = True
+) -> NetlistContract:
+    """Model a switch-node bootstrap capacitor or a name-collision boundary."""
+    nets = {
+        "+5V": ("U1.1", "CIN.1"),
+        "GND": ("U1.2", "CIN.2"),
+        "SW_NODE": ("U1.3",),
+    }
+    boot_net = "BST_NET" if pin_function == "BST" else "BOOT_EN"
+    nets[boot_net] = ("U1.4", "CBOOT.1")
+    if bootstrap_capacitor_to_switch:
+        nets["SW_NODE"] = (*nets["SW_NODE"], "CBOOT.2")
+    else:
+        nets["GND"] = (*nets["GND"], "CBOOT.2")
+    return NetlistContract(
+        components={
+            "U1": ComponentContract(value="Synthetic buck controller", footprint="Synthetic:QFN"),
+            "CBOOT": ComponentContract(value="100nF", footprint="Synthetic:0603"),
+            "CIN": ComponentContract(value="100nF", footprint="Synthetic:0603"),
+        },
+        nets=nets,
+        component_symbols={
+            "U1": "Synthetic:BuckController",
+            "CBOOT": "Device:C",
+            "CIN": "Device:C",
+        },
+        pin_functions={
+            "U1.1": "VIN",
+            "U1.2": "GND",
+            "U1.3": "SW",
+            "U1.4": pin_function,
+        },
+        pin_electrical_types={
+            "U1.1": "power_in",
+            "U1.2": "power_in",
+            "U1.3": "output",
+            "U1.4": "power_in",
+        },
+        component_pin_numbers={"U1": ("1", "2", "3", "4"), "CBOOT": ("1", "2"), "CIN": ("1", "2")},
+    )
+
+
 def f_referenced_logic_ic_netlist() -> NetlistContract:
     """Keep an F-designated logic IC out of the exact fuse path class."""
     source = source_path_netlist(

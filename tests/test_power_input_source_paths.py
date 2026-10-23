@@ -8,6 +8,7 @@ from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.power_pin_paths import power_inputs_without_supported_source_paths
 from tests.design_lint_fixtures.power_input_paths import (
     RULE_ID,
+    bootstrap_input_netlist,
     f_referenced_logic_ic_netlist,
     lint_report,
     series_diode_netlist,
@@ -33,6 +34,23 @@ def test_wrong_rail_with_fitted_decoupling_is_reviewed_without_authored_map() ->
         "source_anchor_state": ("recognized",),
     }
     assert "does not prove that a connection is required" in findings[0].message
+
+
+def test_bootstrap_pin_capacitor_to_switch_node_is_a_valid_control() -> None:
+    netlist = bootstrap_input_netlist()
+
+    assert not power_inputs_without_supported_source_paths(netlist)
+    assert RULE_ID not in {item.rule_id for item in candidates(netlist)}
+
+
+def test_boot_named_power_input_with_return_capacitor_remains_reviewable() -> None:
+    netlist = bootstrap_input_netlist(pin_function="BOOT_EN", bootstrap_capacitor_to_switch=False)
+
+    gaps = power_inputs_without_supported_source_paths(netlist)
+    assert len(gaps) == 1
+    assert gaps[0].net == "BOOT_EN"
+    assert gaps[0].input_pins == ("U1.4",)
+    assert RULE_ID in {item.rule_id for item in candidates(netlist)}
 
 
 @pytest.mark.parametrize(

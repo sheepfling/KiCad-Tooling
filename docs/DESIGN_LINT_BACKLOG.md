@@ -10857,6 +10857,15 @@ is not a reason by itself to expand its scope or change its default policy.
   unsupported path, while the matching `F1`/`Device:Fuse` control clears it.
   This is source-informed first-party coverage, not a runtime trial of
   kicad-happy or a new native export; no cohort code or board source was copied.
+- **Bootstrap boundary (2026-10-23):** A source audit of the current
+  kicad-happy `PP-001` implementation at commit
+  [`4701c26eba7b9788874a0bf9b45c0a3e81db1628`](https://github.com/aklofas/kicad-happy/commit/4701c26eba7b9788874a0bf9b45c0a3e81db1628)
+  found a name-token exemption for bootstrap pins. A synthetic control confirms
+  LINT-056 stays quiet when a fitted capacitor connects `BST` to the switch
+  node; a paired `BOOT_EN` name collision with only a return capacitor remains
+  reviewable. Keep the existing topology-based evidence boundary and do not
+  add a second PP-001 check. This source audit and typed-netlist pair do not
+  measure candidate runtime behavior, reviewer value, or field precision.
 - **Predicate:** For a fitted internal native `power_in` pin on a net with a
   fitted, inventoried two-terminal capacitor to a recognized return, emit
   `REVIEW` when no recognized source anchor exists, or when an anchor exists

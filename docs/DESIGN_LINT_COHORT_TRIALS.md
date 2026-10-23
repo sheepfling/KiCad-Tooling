@@ -8,7 +8,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v23; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v24; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus a source-only audit of
@@ -1499,6 +1499,32 @@ for dispositions and timing; leave unmeasured values unstated.
   reference is `U1`. This is a source-informed local regression set, not a
   runtime comparison or a new native export. No candidate code or project
   source was copied.
+
+### PP-001 bootstrap exception source audit (2026-10-23)
+
+- **Pinned source and report:** The current kicad-happy `PP-001` change is at
+  commit
+  [`4701c26eba7b9788874a0bf9b45c0a3e81db1628`](https://github.com/aklofas/kicad-happy/commit/4701c26eba7b9788874a0bf9b45c0a3e81db1628).
+  Upstream [issue #55](https://github.com/aklofas/kicad-happy/issues/55)
+  describes a valid buck-controller bootstrap pin (`BST`) with a fitted
+  capacitor to its `SW` pin. The audited commit skips pin functions containing
+  `BST`, `BOOT`, `BOOTSTRAP`, or `CBST` tokens. Its MIT license is present at
+  the audited commit. This was a source audit; the candidate analyzer was not
+  run again.
+- **Local boundary result:** A tooling-owned synthetic `power_in` case with
+  `CBOOT` between `BST` and `SW` produces no LINT-056 source-path prompt
+  because the local rule requires capacitor-to-return evidence. A paired
+  `BOOT_EN` case with only a fitted capacitor to `GND` remains a REVIEW
+  candidate. The source token `BOOT` also matches `BOOT_EN`, so the local
+  predicate stays tied to topology instead of adding a pin-name-only
+  exemption. These are typed-netlist regressions, not a new native KiCad run
+  or a claim that the `BOOT_EN` case is defective.
+- **Incremental-value decision:** Do not add or adopt a second PP-001 rule.
+  The existing local rule stays quiet on the reported bootstrap topology; the
+  name-token exception has no demonstrated unique coverage and could suppress
+  unrelated `BOOT`-named inputs. Reviewer effort, runtime behavior of the new
+  candidate revision, and field false-positive rates are unmeasured. No
+  candidate code, board, or issue fixture was copied.
 
 ### Follow-up trial: kicad-happy decoupling-presence detector
 

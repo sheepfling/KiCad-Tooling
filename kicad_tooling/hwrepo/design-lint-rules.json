@@ -6783,6 +6783,7 @@
       ],
       "fault_fixtures": [
         "tests.test_power_input_source_paths.test_wrong_rail_with_fitted_decoupling_is_reviewed_without_authored_map",
+        "tests.test_power_input_source_paths.test_boot_named_power_input_with_return_capacitor_remains_reviewable",
         "tests.test_power_input_source_paths.test_only_recognized_fitted_paths_and_supported_metadata_count",
         "tests.test_power_input_source_paths.test_f_referenced_logic_ic_does_not_count_as_a_fuse_path",
         "tests.test_power_input_source_anchors.test_unrecognized_external_connector_source_becomes_a_coverage_review",
@@ -6796,6 +6797,7 @@
         "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault"
       ],
       "valid_control_fixtures": [
+        "tests.test_power_input_source_paths.test_bootstrap_pin_capacitor_to_switch_node_is_a_valid_control",
         "tests.test_power_input_source_paths.test_valid_ferrite_low_resistance_and_named_rail_paths_are_controls",
         "tests.test_power_input_source_paths.test_f_referenced_exact_fuse_symbol_remains_a_supported_path",
         "tests.test_power_input_source_paths.test_forward_series_diodes_with_exact_native_identity_and_pin_roles_are_controls",
