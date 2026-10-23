@@ -963,7 +963,8 @@ the explicit synthetic map, including the target rule's fault/control finding.
 The simplified control schematic may still receive unrelated advisory
 findings, so this gate does not require the aggregate design-lint report to be
 PASS. The fixtures do not validate an actual regulator, datasheet, or analog
-performance.
+performance. See the native fixture README and its case table:
+[README](../tests/fixtures/design_lint/regulator-feedback-native/README.md).
 
 ## Review a mapped first-order RC filter
 
