@@ -57,6 +57,7 @@ DesignLintRuleId = Literal[
     "component.two_pin_ferrite_same_net",
     "component.two_pin_switch_same_net",
     "component.mosfet_gate_without_peer",
+    "component.mosfet_gate_without_visible_source_bias",
     "connector.no_connected_return",
     "connector.unconnected_power_input",
     "connector.unconnected_power_output",

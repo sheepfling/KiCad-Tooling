@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 152 rules are implemented with synthetic regression coverage.
+The following 153 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 152 active rules.
+The catalog currently contains 153 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -480,6 +480,7 @@ skipped under prerelease policy.
 - `component.unconnected_supply_pin`
 - `component.unconnected_return_pin`
 - `component.mosfet_gate_without_peer`
+- `component.mosfet_gate_without_visible_source_bias`
 - `component.led_directly_across_supply_and_return`
 - `component.led_directly_driven_from_output`
 - `oscillator.output_load_path_mismatch`
@@ -602,7 +603,14 @@ and optional ecosystem adapters are `P3`.
   it does not infer a required driver or safe bias. Synthetic policy,
   applicability, ordering, and CLI/MCP parity cases are registered. Hashed
   native fault/control sources and an exact-version hosted lane are now wired
-  into package acceptance; hosted execution remains pending.
+  into package acceptance. The `v0.5.3rc26` hosted lint gate, installed-wheel
+  check, and three platform preview jobs passed (run `39888172919`).
+
+- **MOSFET gate/source bias prompt:** LINT-171 adds an opt-in REVIEW candidate
+  when an exact supported three-terminal MOSFET has a fitted peer on its gate
+  net but no visible fitted nonzero resistor directly between the gate and
+  source nets. A peer does not establish a driver or safe state; internal and
+  off-board bias remain outside the native schematic evidence.
 
 - **Pin-connectivity regression review (2026-10-13):** LINT-131 extends the
   source-bound reconciliation baseline with each native pin's net name and peer
@@ -2775,7 +2783,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 152 active rules; CI requires every new
+- **Status:** Baseline complete for all 153 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2784,7 +2792,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 152 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 153 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9198,7 +9206,7 @@ is not a reason by itself to expand its scope or change its default policy.
   gate voltage. Multi-gate devices, third-party symbol identities, incomplete
   inventories, and noncanonical gate names are unsupported. Digest-pinned
   native fault/control fixtures are registered for KiCad 10.0.0 and 10.0.5;
-  hosted exact-version execution is pending.
+  the `v0.5.3rc26` hosted acceptance gate passed for both versions.
 - **Evidence:** Tooling-owned synthetic cases cover open-gate and DNP-peer
   faults; driver, connector, and passive peer controls; unsupported and
   multi-gate symbol controls; all eleven exact native symbol identities and
@@ -9224,6 +9232,38 @@ is not a reason by itself to expand its scope or change its default policy.
   details.
 
   [mosfet-gate-native]: ../tests/fixtures/design_lint/mosfet-gate-native/README.md
+
+#### LINT-171 — Review MOSFET gate peers without visible source bias
+
+- **Status:** Implemented as the opt-in `component.mosfet_gate_without_visible_source_bias`
+  REVIEW candidate. It defaults to `off` because driver implementations can
+  establish their own disabled or unpowered state.
+- **Predicate:** For the exact supported three-terminal NMOS/PMOS symbol
+  allowlist, require a complete native three-pin inventory, exactly one G/Gate
+  pin and one S/Source pin, distinct unambiguous net assignments, and at least
+  one other fitted pin on the gate net. Prompt only when no fitted nonzero
+  two-terminal resistor recognized by the shared resistor-path service is
+  directly assigned across those exact schematic nets. An open gate with no
+  fitted peer stays with LINT-170.
+- **Boundary:** The rule does not prove that a source-bias resistor is
+  required, that a driver lacks an internal pull device, or that any resistor
+  value is adequate. It does not cover resistor arrays, custom reference
+  schemes, alternate resistor topologies, off-board bias, PCB continuity, or
+  physical safe state. Project policy can enable, block, disable, or exactly
+  ignore the review prompt.
+- **Fixtures:** Synthetic fault and controls cover a visible direct resistor,
+  wrong-net, DNP and zero-ohm resistors, unsupported symbols and roles,
+  incomplete pin assignments, DNP-only gate peers, project overrides, exact
+  ignore, deterministic ordering, and adding the declared resistor to clear
+  the candidate. The paired source-hashed native fixture uses the same fitted
+  gate driver with and without a gate-to-source resistor, exports netlist and
+  ERC twice on KiCad 10.0.0 and 10.0.5, and checks that the opt-in finding is
+  limited to the no-resistor case. Applicability remains unmeasured; the rule
+  stays off by default.
+- **Done:** The rule has a theme-owned predicate, catalog metadata, synthetic
+  fault/control/metamorphic coverage, exact-version native evidence, project
+  policy handling, and backlog documentation. No project or cohort fixture is
+  used.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

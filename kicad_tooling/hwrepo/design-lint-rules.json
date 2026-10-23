@@ -2985,6 +2985,50 @@
       ]
     },
     {
+      "rule_id": "component.mosfet_gate_without_visible_source_bias",
+      "title": "Supported MOSFET gate with a peer has no visible source-bias resistor",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted component with an exact supported Transistor_FET:Q_NMOS or Q_PMOS three-terminal symbol, complete inventory, exactly one native G/Gate and one S/Source pin, distinct unambiguous gate/source net assignments, and at least one other fitted pin on the gate net, emit an opt-in REVIEW candidate when no fitted nonzero two-terminal resistor recognized by resistor_paths.direct_resistors directly spans the gate and source nets.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 pinned native XML export lanes; exact project version is checked before export"
+      ],
+      "limitations": [
+        "Only the exact three-terminal symbol allowlist, complete three-pin inventory, and native G/Gate and S/Source functions are in scope; other libraries, multi-gate parts, missing roles, and ambiguous assignments are unsupported.",
+        "An open gate with no fitted peer is left to component.mosfet_gate_without_peer. A peer assignment does not prove that the peer is a driver or that the gate needs an external bias.",
+        "Only a fitted, nonzero, two-terminal resistor recognized by the shared resistor-path parser and directly assigned across the exact gate/source schematic nets clears the prompt; resistor arrays, custom references, internal bias, and alternate resistor topologies may be missed.",
+        "The check does not evaluate a resistor's adequacy, driver reset behavior, off-board bias, PCB connectivity, or physical safe state. It is opt-in and defaults to off pending project applicability review."
+      ],
+      "fault_fixtures": [
+        "tests.test_mosfet_gate_source_bias.test_gate_peer_without_visible_source_resistor_is_opt_in_review",
+        "tests.test_mosfet_gate_source_bias.test_unrelated_unfitted_or_zero_ohm_resistors_do_not_clear_review",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_mosfet_gate_source_bias.test_fitted_nonzero_resistor_directly_between_gate_and_source_is_control",
+        "tests.test_mosfet_gate_source_bias.test_dnp_gate_peer_leaves_open_gate_to_the_existing_gate_review",
+        "tests.test_mosfet_gate_source_bias.test_unsupported_identity_or_incomplete_native_roles_are_controls",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_mosfet_gate_source_bias.test_adding_source_bias_and_reordering_net_inventory_clear_stably",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "control.unconnected_control_input",
       "title": "Likely reset, enable, or boot input has no net assignment",
       "status": "active",

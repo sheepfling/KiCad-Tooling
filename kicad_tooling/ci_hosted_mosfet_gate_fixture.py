@@ -15,8 +15,8 @@ from .hwrepo.contracts import KiCadErcReport, read_kicad_erc_report, write_model
 from .hwrepo.design_lint import evaluate
 from .hwrepo.design_lint_report_models import DesignLintReport
 from .hwrepo.evidence import digest
-from .hwrepo.models import ContractCoachReport, DesignLintPolicy
-from .hwrepo.mosfet_gate_connectivity import RULE_ID
+from .hwrepo.models import ContractCoachReport, DesignLintPolicy, DesignLintRuleOverride
+from .hwrepo.mosfet_gate_connectivity import RULE_ID, SOURCE_BIAS_RULE_ID
 from .validate import read_netlist
 
 if TYPE_CHECKING:
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 MOSFET_GATE_FIXTURE_CASES = {
     "fault": "mosfet-gate-native/fault.kicad_sch",
     "control": "mosfet-gate-native/control.kicad_sch",
+    "source-bias-control": "mosfet-gate-native/source-bias-control.kicad_sch",
 }
 ErcDetailRow = tuple[str | None, int | float | None, int | float | None]
 ErcViolationRow = tuple[str, str, str | None, tuple[ErcDetailRow, ...]]
@@ -69,7 +70,7 @@ def mosfet_gate_fixture_lane(
     image: str,
     log: HostedLog,
 ) -> None:
-    """Export and evaluate the isolated native gate fault/control pair twice."""
+    """Export and evaluate native MOSFET gate and source-bias fixtures twice."""
     from .hwrepo.electrical import selected_config
 
     root = root.resolve()
@@ -186,27 +187,49 @@ def mosfet_gate_fixture_lane(
                     observed=observed,
                     netlist_sha256=digest(netlist_path),
                 ),
-                DesignLintPolicy(),
+                DesignLintPolicy(
+                    rules=(
+                        DesignLintRuleOverride(
+                            rule_id=SOURCE_BIAS_RULE_ID,
+                            mode="review",
+                            reason="Native synthetic source-bias fixture",
+                        ),
+                    )
+                ),
             )
             reports[run] = report
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native MOSFET gate {case} netlist differs after normalization")
         if erc_hashes[(case, "first")] != erc_hashes[(case, "repeat")]:
             raise ValueError(f"Native MOSFET gate {case} ERC differs after normalization")
-        findings_by_run = {
-            run: tuple(
-                item.model_dump(mode="json") for item in report.findings if item.rule_id == RULE_ID
-            )
-            for run, report in reports.items()
+        findings_by_rule_and_run = {
+            rule_id: {
+                run: tuple(
+                    item.model_dump(mode="json")
+                    for item in report.findings
+                    if item.rule_id == rule_id
+                )
+                for run, report in reports.items()
+            }
+            for rule_id in (RULE_ID, SOURCE_BIAS_RULE_ID)
         }
-        if findings_by_run["first"] != findings_by_run["repeat"]:
+        if any(by_run["first"] != by_run["repeat"] for by_run in findings_by_rule_and_run.values()):
             raise ValueError(f"Native MOSFET gate {case} candidates differ between repeats")
-        findings = tuple(item for item in reports["first"].findings if item.rule_id == RULE_ID)
-        expected_count = 1 if case == "fault" else 0
-        if len(findings) != expected_count:
+        gate_findings = tuple(item for item in reports["first"].findings if item.rule_id == RULE_ID)
+        bias_findings = tuple(
+            item for item in reports["first"].findings if item.rule_id == SOURCE_BIAS_RULE_ID
+        )
+        expected_gate_count = 1 if case == "fault" else 0
+        expected_bias_count = 1 if case == "control" else 0
+        if len(gate_findings) != expected_gate_count:
             raise ValueError(
-                f"Native MOSFET gate {case} expected {expected_count} finding(s), "
-                f"observed {len(findings)}"
+                f"Native MOSFET gate {case} expected {expected_gate_count} finding(s), "
+                f"observed {len(gate_findings)}"
+            )
+        if len(bias_findings) != expected_bias_count:
+            raise ValueError(
+                f"Native MOSFET source-bias {case} expected {expected_bias_count} finding(s), "
+                f"observed {len(bias_findings)}"
             )
         log.event(
             f"mosfet-gate-fixture/{case}",
@@ -220,7 +243,8 @@ def mosfet_gate_fixture_lane(
             normalized_erc_sha256=erc_hashes[(case, "first")],
             repeat_normalized_erc_sha256=erc_hashes[(case, "repeat")],
             lint_status=reports["first"].status,
-            rule_findings=";".join(item.subject for item in findings) or "none",
+            rule_findings=";".join(item.subject for item in gate_findings) or "none",
+            source_bias_rule_findings=";".join(item.subject for item in bias_findings) or "none",
             erc_warning_count=erc_warning_counts[(case, "first")],
             erc_errors="none",
             repeatable="true",

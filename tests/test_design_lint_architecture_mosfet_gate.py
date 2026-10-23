@@ -10,15 +10,25 @@ from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, li
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.architecture]
 
 RULE_ID = "component.mosfet_gate_without_peer"
-OWNER = "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer"
+RULE_OWNERS = {
+    "component.mosfet_gate_without_peer": (
+        "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer"
+    ),
+    "component.mosfet_gate_without_visible_source_bias": (
+        "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_visible_source_bias"
+    ),
+}
 
 
 def test_mosfet_gate_predicate_has_a_small_theme_owned_module() -> None:
     source = HWREPO / "mosfet_gate_connectivity.py"
-    rule = next(item for item in rule_catalog().rules if item.rule_id == RULE_ID)
+    rules = {item.rule_id: item for item in rule_catalog().rules}
 
     assert source.is_file()
     assert line_count(source) < IMPLEMENTATION_MAX_LINES
-    assert rule.theme == "components"
-    assert rule.implementation_owner == OWNER
-    assert OWNER in rule.implementation_refs
+    assert RULE_ID in RULE_OWNERS
+    for rule_id, owner in RULE_OWNERS.items():
+        rule = rules[rule_id]
+        assert rule.theme == "components"
+        assert rule.implementation_owner == owner
+        assert owner in rule.implementation_refs

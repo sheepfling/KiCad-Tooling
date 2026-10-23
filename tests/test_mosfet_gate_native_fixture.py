@@ -12,6 +12,7 @@ import pytest
 from kicad_tooling.ci_hosted_mosfet_gate_fixture import MOSFET_GATE_FIXTURE_CASES
 from kicad_tooling.ci_hosted_support import HostedLog
 from kicad_tooling.hwrepo.models import DesignLintPolicy
+from kicad_tooling.hwrepo.mosfet_gate_connectivity import SOURCE_BIAS_RULE_ID
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.synthetic_design_lint_project import (
     PINNED_NATIVE_KICAD_IMAGES,
@@ -27,6 +28,7 @@ RULE_ID = "component.mosfet_gate_without_peer"
 EXPECTED_SOURCE_HASHES = {
     "fault": "5cd4983eb3ac3abc6370f8d5626fae3fbe8b1e38ce26b32d31e0cb3c7d9a8c6c",
     "control": "e95ed1a5673723dc690e1fad27d534f3f834c371a489957c0c7050f642d18a75",
+    "source-bias-control": "d7529a3ce8d7815669fa764cd1c0a868ea37dd94aae072fe66e05a3e34c48e78",
 }
 
 
@@ -41,6 +43,7 @@ def test_native_mosfet_gate_fixture_scope_contains_only_fault_and_control() -> N
     assert actual == {
         "fault": "mosfet-gate-native/fault.kicad_sch",
         "control": "mosfet-gate-native/control.kicad_sch",
+        "source-bias-control": "mosfet-gate-native/source-bias-control.kicad_sch",
     }
     assert EXPECTED_SOURCE_HASHES.keys() == actual.keys()
     for case, relative in actual.items():
@@ -51,6 +54,7 @@ def test_native_mosfet_gate_fixture_scope_contains_only_fault_and_control() -> N
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=SOURCE_BIAS_RULE_ID)
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.skipif(
@@ -86,6 +90,7 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
         "mosfet-gate-fixture/native-export",
         "mosfet-gate-fixture/fault",
         "mosfet-gate-fixture/control",
+        "mosfet-gate-fixture/source-bias-control",
     }
     native = results["mosfet-gate-fixture/native-export"]
     assert native["status"] == "PASS"
@@ -98,9 +103,20 @@ def test_native_mosfet_gate_fault_and_control_are_repeatable(
 
     fault = results["mosfet-gate-fixture/fault"]
     control = results["mosfet-gate-fixture/control"]
+    source_bias_control = results["mosfet-gate-fixture/source-bias-control"]
     assert fault["rule_findings"] == "Q1.2: MOSFET gate has no other fitted pin on its net"
     assert control["rule_findings"] == "none"
-    for case, result in (("fault", fault), ("control", control)):
+    assert fault["source_bias_rule_findings"] == "none"
+    assert control["source_bias_rule_findings"] == (
+        "Q1.2: MOSFET gate has no visible source-bias resistor"
+    )
+    assert source_bias_control["rule_findings"] == "none"
+    assert source_bias_control["source_bias_rule_findings"] == "none"
+    for case, result in (
+        ("fault", fault),
+        ("control", control),
+        ("source-bias-control", source_bias_control),
+    ):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
         assert result["source_sha256"] == EXPECTED_SOURCE_HASHES[case]

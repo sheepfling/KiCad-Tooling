@@ -18,6 +18,7 @@ import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
+import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.pcb_reference_planes as _pcb_reference_plane_fixtures
 import tests.design_lint_fixtures.pcb_switching_loop as _pcb_switching_loop_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
@@ -32,6 +33,7 @@ import tests.spi_peer_reference_support as _spi_peer_reference_support
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
 import tests.test_crystal_networks as _tests_test_crystal_networks
 import tests.test_led_output_heuristics as _tests_test_led_output_heuristics
+import tests.test_mosfet_gate_connectivity as _tests_test_mosfet_gate_connectivity
 import tests.test_open_drain_heuristics as _tests_test_open_drain_heuristics
 import tests.test_pcb_drc_coverage as _tests_test_pcb_drc_coverage
 import tests.test_pcb_keepouts as _tests_test_pcb_keepouts
@@ -185,6 +187,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.complementary_usb_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
+    emitted.update(item.rule_id for item in candidates(_mosfet_gate_source_bias_fixtures.netlist()))
+    emitted.update(
+        item.rule_id for item in candidates(_tests_test_mosfet_gate_connectivity.mosfet_netlist())
+    )
     emitted.update(
         item.rule_id
         for item in candidates(
