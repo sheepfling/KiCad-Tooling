@@ -4359,6 +4359,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_interfaces_usb_data_polarity.py#usb_data_polarity_label_candidates"
     },
     {
+      "rule_id": "bus.usb_peer_data_pair_crossed",
+      "title": "USB connector and PHY data pair is crossed",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted connector candidate and fitted U/IC endpoint with complete native pin inventories and one exact USB 2.0 D+/D- pair each with matching port-group identities, report when the connector D+ net is the PHY D- net and the connector D- net is the PHY D+ net. Require an exact direct two-line connection, allowing only bounded D-designated passive protection branches to endpoint reference nets. Skip pairs already covered by an authored USB data-path map and pairs whose net names explicitly identify USB D+/D- polarity.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Native pin functions and connector/IC identity generate a review candidate; they do not establish the authoritative pinout, device mode, physical routing, or component behavior.",
+        "Only direct USB 2.0 data paths with complete endpoint inventories and matching port-group identities are recognized. Series resistors, inline components, SuperSpeed paths, incomplete or ambiguous assignments, mismatched or partly indexed port groups, DNP endpoints, and unrelated signal-net branches are outside scope.",
+        "Explicitly USB-polarized net names remain with bus.usb_data_polarity_label_mismatch, and exact authored endpoint maps remain with bus.usb_data_path_mismatch."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_peer_data_pair_crossing.test_neutral_usb_data_nets_with_crossed_endpoint_functions_are_reviewed",
+        "tests.test_usb_peer_data_pair_crossing.test_bounded_tvs_shunt_is_allowed_but_unrelated_route_branch_is_not",
+        "tests.test_usb_data_polarity_native_fixture_lane.test_native_usb_data_polarity_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_peer_data_pair_crossing.test_correct_data_pair_and_explicit_polarity_labels_are_left_to_other_checks",
+        "tests.test_usb_peer_data_pair_crossing.test_incomplete_or_ambiguous_usb_endpoint_evidence_is_not_classified",
+        "tests.test_usb_peer_data_pair_crossing.test_bounded_tvs_shunt_is_allowed_but_unrelated_route_branch_is_not",
+        "tests.test_usb_data_polarity_native_fixture_lane.test_native_usb_data_polarity_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_peer_data_pair_crossing.test_policy_override_ignore_ordering_and_repair_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_peer_data_crossing.py#usb_peer_data_pair_crossing_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
+        "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_endpoint",
+        "kicad_tooling/hwrepo/usb_peer_path_analysis.py#d_designated_shunt_branches",
+        "kicad_tooling/hwrepo/design_lint_peer_candidates.py#peer_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_peer_data_crossing.py#usb_peer_data_pair_crossing_candidates"
+    },
+    {
       "rule_id": "bus.can_unconnected_line",
       "title": "Recognized CAN line pin is unassigned",
       "status": "active",

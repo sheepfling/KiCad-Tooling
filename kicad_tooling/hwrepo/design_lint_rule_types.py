@@ -143,6 +143,7 @@ DesignLintRuleId = Literal[
     "bus.rs485_data_input_output_same_net",
     "bus.complementary_pair_assignment",
     "bus.usb_data_polarity_label_mismatch",
+    "bus.usb_peer_data_pair_crossed",
     "mcu.stm32_cubemx_pin_map",
     "signal.named_pair_without_reviewed_requirement",
     "protection.unreviewed_interface_pin",

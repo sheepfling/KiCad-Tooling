@@ -23,6 +23,7 @@ from .serial_peer_reference_types import SerialPeerReferenceScan
 from .spi_participants import SpiRosterContext
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_data_path_models import UsbDataPathMap
+from .usb_peer_data_crossing import usb_peer_data_pair_crossing_candidates
 from .usb_peer_reference_scan import scan_usb_peer_reference_reviews
 from .usb_peer_reference_types import UsbPeerReferenceScan
 
@@ -65,6 +66,11 @@ def peer_candidates(
     return (
         *serial_unmapped_peer_candidates(observed, serial_scope),
         *serial_reference_candidates(serial_reference_scan, serial_scope),
+        *usb_peer_data_pair_crossing_candidates(
+            observed,
+            usb_data_path_map,
+            reviewed_connector_references,
+        ),
         *usb_peer_reference_candidates(usb_scan, usb_data_path_map, usb_data_map_sha256),
         *spi_participant_candidates(observed, spi_scope),
         *digital_peer_voltage_candidates(peer_voltage_scope, peer_voltage_scan),

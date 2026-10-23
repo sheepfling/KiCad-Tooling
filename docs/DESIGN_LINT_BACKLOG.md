@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 188 rules are implemented with synthetic regression coverage.
+The following 189 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 188 active rules.
+The catalog currently contains 189 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -548,6 +548,7 @@ skipped under prerelease policy.
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
+- `bus.usb_peer_data_pair_crossed`
 - `bus.can_unconnected_line`
 - `bus.can_missing_termination`
 - `bus.can_peer_assignment_divergence`
@@ -3007,7 +3008,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 188 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 189 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11070,6 +11071,51 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   python -I -m pytest tests/test_connector_mapped_interface_power_contact_unassigned.py \
     -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_interface_power_contact_unassigned")'
+  ```
+
+#### LINT-207 — Review crossed USB 2.0 connector-to-PHY data pairs
+
+- **Status:** Implemented as the default-review heuristic
+  `bus.usb_peer_data_pair_crossed`.
+- **Gap:** The USB peer-reference scan requires D+ to reach D+ and D− to reach
+  D−, but treats a directly crossed pair as unsupported topology. The existing
+  USB label-polarity lint needs explicitly polarized net names, and the exact
+  USB path contract needs a project-authored endpoint map. A neutral-named
+  direct crossing can therefore remain without a focused review finding.
+- **Predicate:** Recognize a fitted connector candidate and fitted U/IC endpoint
+  with complete native pin inventories, unique USB 2.0 D+/D− roles, matching
+  indexed port groups, and one unique assignment for each role. Emit one
+  finding when connector D+ shares a native net with PHY D− and connector D−
+  shares a different native net with PHY D+. Require the exact direct two-line
+  path; allow only bounded D-designated protection branches to endpoint
+  reference nets. Keep explicitly USB-polarized net labels with LINT-186 and
+  exact authored paths with LINT-049.
+- **Policy boundary:** This is a configurable review prompt. Native pin-function
+  names and connector/IC identities do not establish the authoritative
+  endpoint pinout, device configuration, physical routing, or component
+  behavior. Series resistors, inline components, SuperSpeed, incomplete or
+  ambiguous inventories, mismatched or partly indexed port groups, DNP
+  endpoints, and unexplained data-net branches are outside this bounded check.
+- **Fixtures:** Synthetic fault/control pairs use neutral data-net names and a
+  common reference. Additional controls cover explicit USB polarity labels,
+  incomplete inventory, ambiguous assignment, DNP, mismatched and partly
+  indexed port groups, allowed D-designated TVS and rejected unexplained
+  branches, project policy, exact ignores, ordering, and repair.
+  Source-hashed native control/fault schematics
+  repeat exports on digest-pinned KiCad 10.0.0 and 10.0.5. The native lane also
+  retains existing USB label-polarity coverage. All sources are tooling-owned;
+  no project board or cohort implementation is imported. Fixture roles,
+  source hashes, and provenance boundaries are recorded in the
+  [USB data-pair crossing fixture note](../tests/fixtures/design_lint/usb-data-pair-crossing-native/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_peer_data_pair_crossing.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_peer_data_pair_crossed")'
+
+  KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_usb_data_polarity_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_peer_data_pair_crossed")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

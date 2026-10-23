@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 188 active rules.
+The catalog currently contains 189 active rules.
 
 ### Distinct mapped connector supply domains sharing a net
 
@@ -342,6 +342,26 @@ python -I -m pytest tests/test_usb_data_polarity.py \
 KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES=1 python -I -m pytest \
   tests/test_usb_data_polarity_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_data_polarity_label_mismatch")'
+```
+
+### USB connector-to-PHY data-pair crossing review
+
+`bus.usb_peer_data_pair_crossed` compares complete native USB 2.0 D+/D−
+endpoint assignments between a fitted connector and fitted U/IC PHY. It reports
+a configurable `review` finding when neutral-named connector D+ and PHY D−
+share one direct net, and connector D− and PHY D+ share the other. It requires
+unique role assignments and matching port-group identities, and only permits
+bounded D-designated protection branches. Explicit USB-polarity labels remain
+with the label-polarity rule; authored endpoint maps remain with the exact USB
+path-contract check. This heuristic does not establish authoritative pinout,
+physical routing, or device
+behavior. Incomplete or ambiguous inventories, mismatched or partly indexed
+port groups, DNP endpoints, series resistors, inline parts, and SuperSpeed
+pairs remain outside its scope. Its focused checks are selectable with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_peer_data_pair_crossing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_peer_data_pair_crossed")'
 ```
 
 ### CAN line pin/name polarity review

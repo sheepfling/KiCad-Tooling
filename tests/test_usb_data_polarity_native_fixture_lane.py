@@ -28,6 +28,7 @@ pytestmark = [
     ("project", "version"), (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5"))
 )
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id="bus.usb_peer_data_pair_crossed")
 def test_native_usb_data_polarity_fault_and_control_repeat(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
@@ -50,18 +51,26 @@ def test_native_usb_data_polarity_fault_and_control_repeat(
     results = {
         item["stage"]: item
         for item in (json.loads(line) for line in log.events.read_text().splitlines())
-        if item.get("stage", "").startswith("usb-data-polarity-fixture/")
+        if item.get("stage", "").startswith(
+            ("usb-data-polarity-fixture/", "usb-data-pair-crossing-fixture/")
+        )
     }
 
     assert set(results) == {
         "usb-data-polarity-fixture/native-export",
         "usb-data-polarity-fixture/control",
         "usb-data-polarity-fixture/fault",
+        "usb-data-pair-crossing-fixture/pair-control",
+        "usb-data-pair-crossing-fixture/pair-fault",
     }
     fault = results["usb-data-polarity-fixture/fault"]
     control = results["usb-data-polarity-fixture/control"]
     assert fault["polarity_findings"] == "J1.1: D+ on USB_D-;J1.2: D- on USB_D+"
     assert control["polarity_findings"] == "none"
+    pair_fault = results["usb-data-pair-crossing-fixture/pair-fault"]
+    pair_control = results["usb-data-pair-crossing-fixture/pair-control"]
+    assert pair_fault["crossing_findings"] == "J1 / U1: USB 2.0 data pair is crossed"
+    assert pair_control["crossing_findings"] == "none"
     for result in (fault, control):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version

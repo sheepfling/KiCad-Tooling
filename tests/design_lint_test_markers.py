@@ -267,6 +267,7 @@ _LINT_AREA_MODULES = {
             "tests/test_usb_data_paths.py",
             "tests/test_usb_inline_component_paths.py",
             "tests/test_usb_data_polarity.py",
+            "tests/test_usb_peer_data_pair_crossing.py",
             "tests/test_usb_data_polarity_native_fixture_lane.py",
             "tests/test_usb_data_path_native_fixture_lane.py",
             "tests/test_usb_superspeed_peer_reference_native_fixture_lane.py",

@@ -40,10 +40,16 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
         / "tests/fixtures/design_lint/usb-data-path-native/integrated-phy-direct.kicad_sch",
         "fault": repository
         / "tests/fixtures/design_lint/usb-data-polarity-native/reversed-connector-pair.kicad_sch",
+        "pair-control": repository
+        / "tests/fixtures/design_lint/usb-data-pair-crossing-native/control.kicad_sch",
+        "pair-fault": repository
+        / "tests/fixtures/design_lint/usb-data-pair-crossing-native/fault.kicad_sch",
     }
     expected_source_hashes = {
         "control": "e93371b78de2ba8c473ccde0579e551d0da0b44b5d9ed417473ab1dd63781d27",
         "fault": "c3586926cfb20926b90160f7b9823fcb9e5c955a17c35babd450aca183c08c7e",
+        "pair-control": "e0cf5d7a0f585b025ad4dc28861a19d37e1af78b79da518ff6032fd32e97c239",
+        "pair-fault": "29b47ef57440ff01c634efa31192fbe89b2af06bfc8ae95c563a28b847a30bdb",
     }
     source_hashes = {case: digest(path) for case, path in sources.items()}
     if source_hashes != expected_source_hashes:
@@ -69,7 +75,7 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in control fault; do\n"
+        "for case in control fault pair-control pair-fault; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -168,14 +174,12 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
     ):
         raise ValueError("Native USB polarity exports differ after netlist normalization")
 
+    polarity_rule_id = "bus.usb_data_polarity_label_mismatch"
+    crossing_rule_id = "bus.usb_peer_data_pair_crossed"
     expected_subjects = ("J1.1: D+ on USB_D-", "J1.2: D- on USB_D+")
     for case in ("control", "fault"):
         report = reports[(case, "first")]
-        findings = tuple(
-            item
-            for item in report.findings
-            if item.rule_id == "bus.usb_data_polarity_label_mismatch"
-        )
+        findings = tuple(item for item in report.findings if item.rule_id == polarity_rule_id)
         subjects = tuple(item.subject for item in findings)
         expected = expected_subjects if case == "fault" else ()
         if subjects != expected:
@@ -198,6 +202,38 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
             repeatable="true",
             lint_status=report.status,
             polarity_findings=";".join(subjects) if subjects else "none",
+        )
+
+    expected_crossing = {
+        "pair-control": (),
+        "pair-fault": ("J1 / U1: USB 2.0 data pair is crossed",),
+    }
+    for case, expected in expected_crossing.items():
+        report = reports[(case, "first")]
+        crossing_findings = tuple(
+            item for item in report.findings if item.rule_id == crossing_rule_id
+        )
+        subjects = tuple(item.subject for item in crossing_findings)
+        if subjects != expected:
+            raise ValueError(
+                f"Native USB pair crossing {case} produced {subjects!r}; expected {expected!r}"
+            )
+        if any(item.rule_id == polarity_rule_id for item in report.findings):
+            raise ValueError(
+                "Neutral USB data route names must not duplicate label-polarity review"
+            )
+        log.event(
+            f"usb-data-pair-crossing-fixture/{case}",
+            "PASS",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            source_sha256=source_hashes[case],
+            normalized_netlist_sha256=normalized_hashes[(case, "first")],
+            repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
+            repeatable="true",
+            lint_status=report.status,
+            crossing_findings=";".join(subjects) if subjects else "none",
         )
 
     log.finish()

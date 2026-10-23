@@ -40,6 +40,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),
         (
+            "bus.usb_peer_data_pair_crossed",
+            "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
+        ),
+        (
             "bus.can_line_polarity_label_mismatch",
             "KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES",
         ),
@@ -184,5 +188,7 @@ def test_lint_tag_selects_rule_and_all_its_configured_native_fixtures(
 
     assert scope.area is None
     assert scope.rule_id == rule_id
-    assert scope.pytest_markexpr == f'design_lint and design_lint_rule(rule_id="{rule_id}")'
+    assert scope.pytest_markexpr == (
+        f'design_lint and (design_lint_rule(rule_id="{rule_id}") or rule_gate_integrity)'
+    )
     assert scope.native_fixtures == required_fixtures
