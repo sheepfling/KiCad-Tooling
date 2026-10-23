@@ -35,6 +35,9 @@ from kicad_tooling.hwrepo.models import (
     InterfaceRecord,
     NetlistContract,
 )
+from tests.design_lint_fixtures.connector_mapped_interface_signal import (
+    mapped_interface_signal_netlist as _netlist,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint, pytest.mark.interface_lint]
 
@@ -87,27 +90,6 @@ def _interface(*, target_role: ConnectorPinRole = "signal") -> InterfaceRecord:
                 mechanical_clearance="synthetic",
             ),
         ),
-    )
-
-
-def _netlist(
-    *,
-    target_net: str | None = None,
-    target_function: str = "Pin_2",
-    target_type: str = "input",
-    dnp: tuple[str, ...] = (),
-) -> NetlistContract:
-    nets = {"UART_TX": ("J1.1",), "SIGNAL_RETURN": ("J1.3",)}
-    if target_net is not None:
-        nets[target_net] = ("J1.2",)
-    return NetlistContract(
-        components={},
-        nets=nets,
-        dnp_components=dnp,
-        component_symbols={"J1": "Synthetic:GenericUartPort"},
-        component_pin_numbers={"J1": ("1", "2", "3")},
-        pin_functions={"J1.1": "Pin_1", "J1.2": target_function, "J1.3": "Pin_3"},
-        pin_electrical_types={"J1.1": "output", "J1.2": target_type, "J1.3": "passive"},
     )
 
 
