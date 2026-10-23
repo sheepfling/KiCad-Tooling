@@ -49,6 +49,13 @@ _PROTOCOL_NATIVE_CASES = (
         "test_native_spi_clock_control_same_net_fault_and_control_repeat",
         id="spi-clock-chip-select-same-net",
     ),
+    pytest.param(
+        "bus.can_tx_rx_same_net",
+        "KICAD_RUN_NATIVE_CAN_TX_RX_SAME_NET_FIXTURES",
+        "tests.test_can_tx_rx_same_net_native_fixture_lane."
+        "test_native_can_tx_rx_same_net_fault_and_control_repeat",
+        id="can-tx-rx-same-net",
+    ),
 )
 
 

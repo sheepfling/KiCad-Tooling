@@ -272,6 +272,13 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             ),
         ),
         (
+            "bus.can_tx_rx_same_net",
+            (
+                "tests/test_can_tx_rx_same_net.py::"
+                "test_explicit_same_channel_can_tx_rx_pins_on_one_net_are_reviewed"
+            ),
+        ),
+        (
             "bus.serial_peer_voltage_review",
             "tests/test_design_lint_serial_peer_voltage.py::test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
         ),

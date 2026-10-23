@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 179 rules are implemented with synthetic regression coverage.
+The following 180 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 179 active rules.
+The catalog currently contains 180 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -547,6 +547,7 @@ skipped under prerelease policy.
 - `bus.can_peer_assignment_divergence`
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
+- `bus.can_tx_rx_same_net`
 - `bus.complementary_pair_assignment`
 - `signal.named_pair_without_reviewed_requirement`
 - `net.numbered_returns`
@@ -664,6 +665,16 @@ and optional ecosystem adapters are `P3`.
   connector exclusion, ERC output conflicts, policy, exact ignores, stable
   fingerprints, and repair. Source-hashed native fault/control schematics
   export clean ERC results repeatedly on KiCad 10.0.0 and 10.0.5.
+
+- **CAN TX/RX same-net review:** LINT-198 reports a fitted IC whose explicit
+  CAN/FDCAN transmit and receive function pins share one exact net on the same
+  optional channel. It defaults off because loopback and project-specific
+  arrangements can be intentional. Synthetic checks cover protocol-bounded
+  aliases, separate nets, channel mismatches, DNP, ambiguous/open/multiply
+  assigned pins, component inventory, connector exclusion, ERC output
+  deferral, project policy, exact ignores, stable fingerprints, and repair.
+  Source-hashed native fault/control schematics export repeatably without ERC
+  errors on KiCad 10.0.0 and 10.0.5.
 
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
@@ -2964,7 +2975,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 179 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 180 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10565,6 +10576,45 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_spi_clock_control_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_chip_select_same_net")'
+  ```
+
+#### LINT-198 — Review CAN controller TX and RX pins sharing one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.can_tx_rx_same_net` review prompt.
+- **Gap:** CANH/CANL polarity and complementary-pair checks cover the
+  differential bus pins. The UART TX/RX same-net rule recognizes only its
+  bounded UART/USART aliases. Neither reports a fitted CAN controller whose
+  explicit CAN/FDCAN transmit and receive pins share one schematic net.
+- **Predicate:** On fitted U/IC references, recognize exactly one TX/TXD and
+  one RX/RXD function with an explicit CAN/FDCAN prefix or suffix and the same
+  optional numeric channel. Require both pins in the native component pin
+  inventory and each on exactly one native net; report only when the exact net
+  names match. Skip duplicate roles, DNP, connectors, open or multiply
+  assigned pins, cross-channel pairs, and incomplete inventory. Defer pairs of
+  two explicit output types to ERC and retain absent types as `unknown`.
+- **Boundary:** Generic UART `TXD`/`RXD` names and unrecognized aliases remain
+  outside the predicate. The rule does not prove CAN participation, device
+  configuration, loopback intent, required topology, firmware behavior, PCB
+  copper, or off-board wiring. It defaults off and supports project policy and
+  exact finding ignores.
+- **Fixtures:** Tooling-owned synthetic fault and separate-lines control use
+  one fitted CAN controller with `CAN1_TX` and `CAN1_RX` functions. Both
+  source-hashed cases export repeated netlists and ERC reports on the pinned
+  KiCad 10.0.0 and 10.0.5 images; the fault yields one rule finding and no ERC
+  errors, while the control stays quiet. Synthetic tests cover aliases,
+  channels, DNP, assignment/inventory boundaries, duplicate roles, connector
+  exclusion, ERC deferral, policy, exact ignore, ordering, and repair. No
+  project or cohort source is included.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_can_tx_rx_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_tx_rx_same_net")'
+
+  KICAD_RUN_NATIVE_CAN_TX_RX_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_can_tx_rx_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_rx_same_net")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

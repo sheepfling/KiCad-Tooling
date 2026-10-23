@@ -4414,6 +4414,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_line_polarity.py#can_line_polarity_label_candidates"
     },
     {
+      "rule_id": "bus.can_tx_rx_same_net",
+      "title": "CAN controller TX and RX pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded CAN/FDCAN pin functions, exact net assignments, electrical types, fitted state, and component pin inventory",
+      "predicate": "For one fitted U/IC reference and one bounded CAN or FDCAN channel, recognize exactly one TX/TXD function and one RX/RXD function with explicit CAN/FDCAN prefix or suffix. Require both pins in the native component inventory and exactly one native net assignment each. Emit a review candidate when both pins resolve to the same exact native net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Recognition is bounded to CAN/FDCAN TX/TXD and RX/RXD names with an optional numeric channel adjacent to the protocol prefix or suffix. Generic TX/TXD and RX/RXD, vendor-specific aliases, connector references, and differently encoded channel names remain unclassified.",
+        "Function names do not prove the controller's configured mode, actual CAN participation, or required topology. Loopback and project-specific arrangements may be intentional, so the rule defaults to off and asks for review.",
+        "DNP parts, duplicate roles, open or multiply assigned pins, cross-channel pairs, missing component pin inventory, and inventory-inconsistent pins are skipped. Two explicit native output types defer to ERC; absent electrical types remain unknown evidence.",
+        "The finding concerns native schematic net assignments only. It does not prove PCB copper continuity, transceiver behavior, off-board wiring, or firmware configuration."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_tx_rx_same_net.test_explicit_same_channel_can_tx_rx_pins_on_one_net_are_reviewed",
+        "tests.test_can_tx_rx_same_net_native_fixture_lane.test_native_can_tx_rx_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_tx_rx_same_net.test_separate_assignments_and_other_protocols_remain_quiet",
+        "tests.test_can_tx_rx_same_net_native_fixture_lane.test_native_can_tx_rx_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_can_tx_rx_same_net.test_fingerprints_are_stable_and_repair_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_TX_RX_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates",
+        "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates"
+    },
+    {
       "rule_id": "bus.spi_data_polarity_label_mismatch",
       "title": "SPI data-pin function conflicts with its net name",
       "status": "active",

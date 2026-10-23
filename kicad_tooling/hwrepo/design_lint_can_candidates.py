@@ -9,6 +9,7 @@ from .can_peer_reference_scan import (
     scan_can_peer_references,
 )
 from .can_termination_heuristics import can_buses_without_local_termination
+from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
@@ -38,6 +39,7 @@ def can_candidates(
             )
         )
     found.extend(can_line_polarity_label_candidates(observed))
+    found.extend(can_tx_rx_same_net_candidates(observed))
     for divergence in can_peer_assignment_divergences(observed):
         found.append(
             Candidate(

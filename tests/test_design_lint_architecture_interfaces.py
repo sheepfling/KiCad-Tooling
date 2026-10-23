@@ -64,6 +64,7 @@ BUS_ANALYSIS_MODULES = (
     "bus_signal_roles.py",
     "bus_signal_pairs.py",
     "can_line_polarity.py",
+    "can_tx_rx_same_net.py",
     "design_lint_interfaces_usb_data_polarity.py",
     "i2c_signal_label.py",
     "i2c_same_net.py",
@@ -226,6 +227,17 @@ def test_bus_protocol_implementation_modules_stay_below_review_limit() -> None:
         "Split bus-protocol modules at the 500-line review threshold; "
         f"oversized modules: {oversized}"
     )
+
+
+def test_can_tx_rx_same_net_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(item for item in rule_catalog().rules if item.rule_id == "bus.can_tx_rx_same_net")
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
 
 
 def test_spi_data_same_net_rule_uses_a_focused_predicate_owner() -> None:

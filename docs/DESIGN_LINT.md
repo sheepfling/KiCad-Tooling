@@ -278,7 +278,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 179 active rules.
+The catalog currently contains 180 active rules.
 
 ### USB data pin/name polarity review
 
@@ -317,6 +317,31 @@ python -I -m pytest tests/test_can_line_polarity.py \
 KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES=1 python -I -m pytest \
   tests/test_can_line_polarity_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_line_polarity_label_mismatch")'
+```
+
+### CAN controller TX/RX same-net review
+
+`bus.can_tx_rx_same_net` reviews one fitted IC when its explicit CAN/FDCAN
+transmit and receive function pins share the same exact net on the same
+optional channel. It requires both pins in the native inventory with one
+unambiguous assignment each. The rule skips generic UART `TXD`/`RXD` names,
+connectors, DNP parts, duplicate roles, incomplete inventory, and open or
+multiply assigned pins; two explicit native outputs remain with ERC, and
+missing type data stays `unknown`. It defaults to `off` because loopback and
+project-specific topologies can be intentional. The source-hashed synthetic
+fault and separate-net control pass native ERC on KiCad 10.0.0 and 10.0.5.
+See the [synthetic fixture record](../tests/fixtures/design_lint/can-tx-rx-same-net/README.md)
+for source hashes and the fixture's limits.
+
+Select the CAN TX/RX check with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_tx_rx_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_tx_rx_same_net")'
+
+KICAD_RUN_NATIVE_CAN_TX_RX_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_can_tx_rx_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_rx_same_net")'
 ```
 
 ### SPI data pin/name role review
