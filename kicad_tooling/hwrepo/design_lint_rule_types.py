@@ -87,6 +87,7 @@ DesignLintRuleId = Literal[
     "connector.mapped_interface_supply_on_return_net",
     "connector.mapped_interface_signal_on_named_rail",
     "connector.mapped_signals_share_net",
+    "connector.mapped_signals_split_nets",
     "connector.mapped_interface_shield_on_return_net",
     "connector.mapped_interface_shield_on_supply_rail",
     "connector.return_pin_on_positive_rail",

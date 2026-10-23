@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 198 rules are implemented with synthetic regression coverage.
+The following 199 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 198 active rules.
+The catalog currently contains 199 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -481,6 +481,7 @@ skipped under prerelease policy.
 - `connector.mapped_interface_supply_on_return_net`
 - `connector.mapped_interface_signal_on_named_rail`
 - `connector.mapped_signals_share_net`
+- `connector.mapped_signals_split_nets`
 - `connector.mapped_interface_shield_on_return_net`
 - `connector.mapped_interface_shield_on_supply_rail`
 - `connector.mapped_interface_power_contact_unassigned`
@@ -3048,7 +3049,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 198 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 199 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11584,6 +11585,49 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_connector_mapped_signals_share_net_native_fixture_lane.py \
     -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_signals_share_net")'
+  ```
+
+#### LINT-217 — Review repeated mapped signal contacts split across nets
+
+- **Status:** Implemented as the default-review rule
+  `connector.mapped_signals_split_nets`.
+- **Gap:** LINT-216 reviews different mapped signal names assigned to one
+  schematic net. Generic connector pins mapped to the same signal name can
+  still land on different nets, even though native pin placeholders do not
+  identify the duplicate logical signal.
+- **Predicate:** For a fitted connector with complete, current, source-matched
+  interface coverage, compare generic native contacts whose authored role is
+  `signal` and whose interface signal names match case-insensitively. Emit one
+  REVIEW candidate when two or more such contacts are assigned to at least two
+  native nets. Contacts with reasoned opens, multiply assigned nets, or DNP
+  status are excluded.
+- **Boundary:** A repeated map name is a review clue, not a requirement that
+  contacts be directly commoned. An intentional circuit split, inline
+  component, alias, or incorrect map can explain the difference. Named native
+  functions, return and supply roles, stale or incomplete maps, and digestless
+  evidence remain with other checks or unsupported cases. The finding says
+  nothing about PCB copper continuity.
+- **Fixtures:** A tooling-owned two-contact schematic assigns the contacts to
+  separate nets. Mapping both to the same signal creates the fault; mapping
+  them to distinct signals is the control using the identical native export.
+  Synthetic controls cover a common net, same-name case folding, non-signal
+  roles, named pins, DNP, reasoned opens, multiply assigned pins, stale and
+  incomplete evidence, policy overrides, exact ignores, mapping-order changes,
+  and neutral net renaming. See the
+  [fixture record](../tests/fixtures/design_lint/mapped-repeated-signal-split-nets/README.md).
+- **Native evidence:** The exact source and normalized netlist are repeated
+  with digest-pinned KiCad 10.0.0 and 10.0.5 images. Only the source-matched
+  interface map changes between the same-signal fault and distinct-signal
+  control.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_connector_mapped_signals_split_nets.py \
+    -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.mapped_signals_split_nets")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_connector_mapped_signals_split_nets_native_fixture_lane.py \
+    -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_signals_split_nets")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

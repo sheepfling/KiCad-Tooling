@@ -3046,6 +3046,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_signal_sharing.py#mapped_distinct_signal_contacts_sharing_net"
     },
     {
+      "rule_id": "connector.mapped_signals_split_nets",
+      "title": "Repeated mapped connector signals span separate native nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-matched connector interface roles and KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted connector with complete, source-matched interface coverage and a current catalog digest, emit a REVIEW candidate when at least two generic native contacts with role=signal share the same case-insensitive interface signal name but are assigned to two or more native nets.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A repeated interface signal name across separate schematic nets is a review clue; intentional circuit separation, inline components, aliases, or a map error may explain it, and the map does not require direct commoning.",
+        "Only generic native pin functions are considered. Named native functions, DNP connectors, reasoned opens, stale or incomplete interface evidence, digestless coverage, multiply assigned contacts, and non-signal roles are excluded.",
+        "The finding does not infer signal direction, voltage, electrical defect, or PCB copper continuity. Return and supply role comparisons remain with connector.repeated_pin_function and related mapped-role rules."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_mapped_signals_split_nets.test_repeated_mapped_generic_signal_contacts_on_separate_nets_request_review",
+        "tests.test_connector_mapped_signals_split_nets_native_fixture_lane.test_native_split_nets_are_reviewed_only_for_repeated_mapped_signal"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_mapped_signals_split_nets.test_common_repeated_signal_and_distinct_signal_controls_are_quiet",
+        "tests.test_connector_mapped_signals_split_nets.test_non_signal_roles_named_functions_dnp_and_ambiguous_pins_are_controls",
+        "tests.test_connector_mapped_signals_split_nets.test_incomplete_stale_and_digestless_coverage_are_controls",
+        "tests.test_connector_mapped_signals_split_nets.test_review_policy_and_exact_ignore_apply",
+        "tests.test_connector_mapped_signals_split_nets_native_fixture_lane.test_native_split_nets_are_reviewed_only_for_repeated_mapped_signal"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_mapped_signals_split_nets.test_candidate_is_stable_under_netlist_mapping_order_and_neutral_rename"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_mapped_signal_split_nets.py#mapped_repeated_signal_contacts_split_nets",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_signal_split_nets.py#mapped_repeated_signal_contacts_split_nets"
+    },
+    {
       "rule_id": "connector.mapped_interface_shield_on_return_net",
       "title": "Mapped shield contact is assigned to a return-labeled net",
       "status": "active",

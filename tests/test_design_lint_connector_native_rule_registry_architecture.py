@@ -100,6 +100,12 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.mapped_interface_other_unassigned": {
             "tests.test_connector_mapped_interface_other_unassigned.test_native_other_contact_fault_and_control_are_repeatable",
         },
+        "connector.mapped_signals_share_net": {
+            "tests.test_connector_mapped_signals_share_net_native_fixture_lane.test_native_shared_net_is_reviewed_only_for_distinct_mapped_signals",
+        },
+        "connector.mapped_signals_split_nets": {
+            "tests.test_connector_mapped_signals_split_nets_native_fixture_lane.test_native_split_nets_are_reviewed_only_for_repeated_mapped_signal",
+        },
         "connector.mapped_interface_other_named_rail": {
             "tests.test_connector_mapped_interface_other_named_rail_native_fixture_lane.test_native_single_other_pin_on_ret_is_reviewed_and_role_control_is_clean",
         },
