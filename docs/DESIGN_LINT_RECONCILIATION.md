@@ -110,12 +110,15 @@ The first rules are:
   10.0.5. See the [pair](../tests/fixtures/design_lint/cohort-mapped-connector-supplies/README.md).
   A complete connector review can also assign a `peer_assignment_group` and
   `peer_assignment_basis`. When every participating connector has current
-  group evidence, generic and signal-function comparisons run only
-  within matching groups. Return and supply comparisons remain cross-group so
-  separately classified UART or USB ports can still surface split returns or
-  same-domain supply assignments. Missing or stale group evidence restores
-  the broad comparison. Group membership scopes review candidates; it does not
-  mean matching nets are required.
+  group evidence, generic and signal-function comparisons run only within
+  matching groups. Return and supply comparisons remain cross-group by default
+  so separately classified UART or USB ports can still surface split returns
+  or same-domain supply assignments. Complete source-matched
+  `return_comparison_group` and `supply_comparison_group` entries can separately
+  partition those roles when the project has reviewed independent scopes.
+  Missing or stale group evidence restores the broad comparison. Group
+  membership scopes review candidates; it does not mean matching nets are
+  required.
 - `connector.peer_pin_assignment_outlier` compares the same pin number across
   fitted instances of an exact shared library symbol when at least one peer
   has no meaningful native pin-function metadata because the role is absent

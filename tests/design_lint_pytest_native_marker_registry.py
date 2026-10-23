@@ -2,6 +2,7 @@
 
 PYTEST_NATIVE_LINT_SUITES = {
     "test_design_lint_mcp_parity_mosfet_gate.py": {"component_lint", "parity_lint", "slow"},
+    "test_connector_supply_scope.py": {"connector_lint"},
     "test_design_lint_complementary_pairs.py": {"interface_lint"},
     "test_can_line_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
     "test_i2c_signal_label_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},

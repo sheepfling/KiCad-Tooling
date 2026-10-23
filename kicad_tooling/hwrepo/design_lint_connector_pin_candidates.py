@@ -6,6 +6,7 @@ from .connector_coverage import (
     source_matched_connector_peer_assignment_groups,
     source_matched_connector_pin_evidence,
     source_matched_connector_return_comparison_groups,
+    source_matched_connector_supply_comparison_groups,
 )
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_identity import similar_connector_pin_groups
@@ -61,6 +62,9 @@ def connector_pin_candidates(
         connector_coverage,
     )
     reviewed_connector_return_comparison_groups = source_matched_connector_return_comparison_groups(
+        observed, connector_coverage
+    )
+    reviewed_connector_supply_comparison_groups = source_matched_connector_supply_comparison_groups(
         observed, connector_coverage
     )
 
@@ -146,6 +150,7 @@ def connector_pin_candidates(
         reviewed_connector_pins,
         reviewed_connector_peer_assignment_groups,
         return_comparison_groups=reviewed_connector_return_comparison_groups,
+        supply_comparison_groups=reviewed_connector_supply_comparison_groups,
     )
 
     for group in repeated_connector_pin_groups:

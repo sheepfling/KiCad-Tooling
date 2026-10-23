@@ -9,7 +9,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Pins with matching meaningful normalized functions on repeated connector symbols, or within one symbol, use different or missing net assignments. A complete source-matched project interface map can supply a return role when native function text is absent, generic Pin_N, or numeric-only; this can compare returns across different connector symbols. The same map can compare generic or numeric-only supply contacts across symbols only when their exact authored voltage_domain values match. Numeric function text can identify a comparable contact within an exact repeated symbol by itself, but does not establish an electrical role. Generic KiCad Pin_N labels remain unknown unless the source-matched map supplies a supported role. When every participating connector has a current source-matched peer_assignment_group, non-return and non-supply comparisons are partitioned by that group. Return comparisons are partitioned only when every mapped return participant has complete source-matched return_comparison_group evidence; otherwise the broad comparison is retained. Supply role comparisons remain cross-group.",
+      "predicate": "Pins with matching meaningful normalized functions on repeated connector symbols, or within one symbol, use different or missing net assignments. A complete source-matched project interface map can supply a return role when native function text is absent, generic Pin_N, or numeric-only; this can compare returns across different connector symbols. The same map can compare generic or numeric-only supply contacts across symbols only when their exact authored voltage_domain values match. Numeric function text can identify a comparable contact within an exact repeated symbol by itself, but does not establish an electrical role. Generic KiCad Pin_N labels remain unknown unless the source-matched map supplies a supported role. When every participating connector has a current source-matched peer_assignment_group, non-return and non-supply comparisons are partitioned by that group. Return comparisons are partitioned only when every mapped return participant has complete source-matched return_comparison_group evidence; otherwise the broad comparison is retained. Supply role comparisons are partitioned by supply_comparison_group only when every participating mapped supply contact has complete source-matched supply_comparison_group evidence; otherwise the broad comparison is retained.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -22,7 +22,8 @@
         "A return_comparison_group separately scopes return-pin prompts. Each mapped return participant must have a complete source-matched group and review basis; missing, stale, incomplete, or misapplied scope retains the broad comparison. A declared group on an interface without a mapped return pin makes connector coverage incomplete. Group membership scopes heuristic comparison only and does not assert electrical continuity, bonding, or isolation.",
         "Without a source-matched interface role, absent functions and generic Pin_N placeholders do not establish matching roles; exact-symbol peer assignment rules handle those contacts at lower confidence.",
         "Automatic candidates are numeric J/P/X/CN references and symbols in standard Connector libraries except Connector:TestPoint; an exact project-reviewed interface reference can additionally classify a custom symbol. Other aliases and library families can evade candidate discovery.",
-        "References listed as DNP by the native netlist are excluded from population-dependent comparisons."
+        "References listed as DNP by the native netlist are excluded from population-dependent comparisons.",
+        "A supply_comparison_group partitions same-voltage-domain mapped supply prompts only when every participating connector has a complete current source-matched group and review basis. Missing, stale, or incomplete scope restores the broad comparison; a group without a mapped voltage-domain supply role makes connector coverage incomplete. Group membership narrows heuristic comparisons only and does not require common power nets or assert that other domains are isolated."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
@@ -45,7 +46,9 @@
         "tests.test_connector_return_scope.test_missing_or_stale_group_evidence_restores_global_comparison",
         "tests.test_connector_return_scope.test_return_group_without_mapped_return_role_makes_coverage_incomplete",
         "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
-        "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control"
+        "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control",
+        "tests.test_connector_supply_scope.test_split_supply_in_one_reviewed_group_prompts_and_separate_group_is_scoped",
+        "tests.test_connector_supply_scope.test_missing_or_stale_scope_restores_broad_supply_comparison"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
@@ -67,7 +70,10 @@
         "tests.test_connector_return_scope.test_distinct_reviewed_return_groups_suppress_only_cross_group_prompt",
         "tests.test_connector_return_scope.test_split_returns_in_one_reviewed_group_still_need_review",
         "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
-        "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control"
+        "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control",
+        "tests.test_connector_supply_scope.test_distinct_supply_groups_and_common_supply_are_quiet",
+        "tests.test_connector_supply_scope.test_supply_scope_without_mapped_voltage_domain_role_makes_coverage_incomplete",
+        "tests.test_connector_supply_scope.test_supply_scope_group_requires_a_review_basis"
       ],
       "metamorphic_fixtures": [
         "tests.test_design_lint_connector_returns.test_cross_connector_return_order_preserves_finding_and_commoning_clears_it",
@@ -80,7 +86,8 @@
         "tests.test_connector_return_scope.test_split_returns_in_one_reviewed_group_still_need_review",
         "tests.test_connector_return_scope.test_missing_or_stale_group_evidence_restores_global_comparison",
         "tests.test_design_lint_determinism_connector_peers.test_connector_peer_reports_remain_deterministic",
-        "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic"
+        "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic",
+        "tests.test_connector_supply_scope.test_supply_group_fingerprint_is_order_stable_and_repair_clears_the_candidate"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES",
@@ -88,7 +95,9 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_supply_comparison_groups",
+        "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups"

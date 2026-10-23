@@ -80,13 +80,25 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             pin_map={"1": "1"},
         ),
     )
-    for case, serial_voltage_domain in (
-        ("mapped-supply-fault", "external-5v"),
-        ("mapped-supply-control", "external-5v"),
-        ("mapped-supply-fault", "isolated-5v"),
+    for case, serial_voltage_domain, supply_groups in (
+        ("mapped-supply-fault", "external-5v", None),
+        ("mapped-supply-control", "external-5v", None),
+        ("mapped-supply-fault", "isolated-5v", None),
+        (
+            "mapped-supply-fault",
+            "external-5v",
+            {"J1": "usb-supply", "J2": "serial-supply"},
+        ),
     ):
         domain_control = serial_voltage_domain == "isolated-5v"
-        report_key = "mapped-supply-domain-control" if domain_control else case
+        scope_control = supply_groups is not None
+        report_key = (
+            "mapped-supply-scope-control"
+            if scope_control
+            else "mapped-supply-domain-control"
+            if domain_control
+            else case
+        )
         observed = ctx.observed_contracts[case, "first"]
         interfaces = mapped_supply_catalog(serial_voltage_domain)
         catalog_path = ctx.scratch / f"{report_key}-interface-catalog.json"
@@ -102,10 +114,26 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             encoding="utf-8",
         )
         catalog_sha256 = digest(catalog_path)
+        reviews = tuple(
+            review.model_copy(
+                update={
+                    "supply_comparison_group": (
+                        None if supply_groups is None else supply_groups.get(review.reference)
+                    ),
+                    "supply_comparison_basis": (
+                        None
+                        if supply_groups is None or review.reference not in supply_groups
+                        else f"Reviewed {review.reference} in supply group "
+                        f"{supply_groups[review.reference]}"
+                    ),
+                }
+            )
+            for review in mapped_supply_reviews
+        )
         connector_coverage = evaluate_connector_coverage(
             observed,
             tuple(interfaces),
-            mapped_supply_reviews,
+            reviews,
             interfaces=interfaces,
             interface_catalog_path=catalog_path.relative_to(ctx.root).as_posix(),
             interface_catalog_sha256=catalog_sha256,
@@ -131,7 +159,7 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
         )
         expected_finding_ids: set[str] = (
             {"connector.repeated_pin_function"}
-            if case == "mapped-supply-fault" and (not domain_control)
+            if case == "mapped-supply-fault" and not domain_control and not scope_control
             else set()
         )
         if (
@@ -159,7 +187,9 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             if dict(repeated.evidence) != expected_evidence:
                 raise ValueError("Mapped supply fault lost exact pin, domain, or role evidence")
         event_name = (
-            "domain-control"
+            "scope-control"
+            if scope_control
+            else "domain-control"
             if domain_control
             else "fault"
             if case == "mapped-supply-fault"
@@ -180,6 +210,11 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             findings=",".join(item.rule_id for item in mapped_report.findings) or "none",
             subjects=";".join(item.subject for item in mapped_report.findings) or "none",
             source_role_classification=f"role=supply; USB domain=external-5v; serial domain={serial_voltage_domain}; native supply functions are generic Pin_1 and Pin_9",
+            comparison_scope=(
+                "distinct reviewed supply groups"
+                if scope_control
+                else "global same-voltage-domain comparison"
+            ),
             repeatable="true"
             if ctx.normalized_netlist_hashes[case, "first"]
             == ctx.normalized_netlist_hashes[case, "repeat"]

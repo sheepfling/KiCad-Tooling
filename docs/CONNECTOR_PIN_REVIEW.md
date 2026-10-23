@@ -147,10 +147,9 @@ heuristics should compare. Each group needs a `peer_assignment_basis`:
 ```
 
 Peer groups scope comparisons of generic pin numbers and non-return/supply pin
-functions. Supply comparisons remain cross-group. Return pins use a separate
-optional `return_comparison_group` and `return_comparison_basis`, because
-interfaces that share data-peer heuristics may have different return review
-scopes:
+functions. Return pins and mapped supply contacts have separate optional
+comparison groups because they can have different electrical review scopes
+from the connector's data interface:
 
 ```json
 {
@@ -172,6 +171,30 @@ makes connector coverage incomplete. Group membership controls which pins the
 heuristic compares; it does not assert electrical continuity, bonding, or
 isolation. As with other review prompts, the project owner must decide the
 actual electrical relationship.
+
+For generic or numeric-only supply contacts, use
+`supply_comparison_group` and `supply_comparison_basis` when connectors with the
+same exact catalogued `voltage_domain` belong to separate power comparison
+scopes. A split within one group still prompts review; separate groups suppress
+only cross-group comparisons. Every participating supply map must be complete,
+current, and source-matched before the scope applies. Missing or stale scope
+restores the broad comparison, and a declared supply group without a mapped
+voltage-domain supply role makes connector coverage incomplete. This field
+does not say that pins in one group must be electrically connected, or that
+different groups are isolated. Use an independently reviewed
+`pin_connectivity` or `grounding` requirement to assert a required connection.
+
+```json
+{
+  "reference": "J1",
+  "disposition": "interface",
+  "basis": "Reviewed connector pinout revision A",
+  "interface_id": "usb-interface",
+  "pin_map": {"1": "1", "2": "2", "3": "3"},
+  "supply_comparison_group": "always-on-5v",
+  "supply_comparison_basis": "Compare only connectors on the reviewed always-on 5 V domain"
+}
+```
 
 The interface catalog can give each pin an optional heuristic role: `signal`,
 `return`, `supply`, `shield`, or `other`. A complete source-matched map can

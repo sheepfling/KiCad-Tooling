@@ -120,6 +120,7 @@ EXPECTED_CONNECTOR_RETURN_STAGES = {
     "connector-return-fixture/reviewed-supply-fault",
     "connector-return-fixture/reviewed-supply-control",
     "connector-return-fixture/reviewed-supply-domain-control",
+    "connector-return-fixture/reviewed-supply-scope-control",
     "connector-return-fixture/component-peer-assignment-outlier-fault",
     "connector-return-fixture/component-peer-assignment-outlier-control",
     "connector-return-fixture/connector-named-power-input-open-fault",

@@ -78,6 +78,12 @@ def evaluate(
                     return_comparison_basis=(
                         None if review is None else review.return_comparison_basis
                     ),
+                    supply_comparison_group=(
+                        None if review is None else review.supply_comparison_group
+                    ),
+                    supply_comparison_basis=(
+                        None if review is None else review.supply_comparison_basis
+                    ),
                     issues=("Reviewed reference is not present in the exported symbol inventory",),
                 )
             )
@@ -100,6 +106,12 @@ def evaluate(
                     ),
                     return_comparison_basis=(
                         None if review is None else review.return_comparison_basis
+                    ),
+                    supply_comparison_group=(
+                        None if review is None else review.supply_comparison_group
+                    ),
+                    supply_comparison_basis=(
+                        None if review is None else review.supply_comparison_basis
                     ),
                     issues=("Exported component has no symbol definition for pin inventory",),
                 )
@@ -197,6 +209,13 @@ def evaluate(
             issues.append(
                 "Return-comparison group is declared but the interface map has no return-role pin"
             )
+        if review.supply_comparison_group is not None and not any(
+            pin.role == "supply" and pin.voltage_domain is not None for pin in mapped_pins
+        ):
+            issues.append(
+                "Supply-comparison group is declared but the interface map has no "
+                "voltage-domain supply-role pin"
+            )
 
         entry_status: Literal["COVERED", "INCOMPLETE"] = "INCOMPLETE" if issues else "COVERED"
         entries.append(
@@ -209,6 +228,8 @@ def evaluate(
                 peer_assignment_basis=review.peer_assignment_basis,
                 return_comparison_group=review.return_comparison_group,
                 return_comparison_basis=review.return_comparison_basis,
+                supply_comparison_group=review.supply_comparison_group,
+                supply_comparison_basis=review.supply_comparison_basis,
                 interface_pin_map=dict(sorted(review.pin_map.items())),
                 unlisted_pin_reasons=dict(sorted(review.unlisted_pin_reasons.items())),
                 mapped_pins=mapped_pins,
@@ -354,4 +375,34 @@ def source_matched_connector_return_comparison_groups(
                 entry.return_comparison_group,
                 entry.return_comparison_basis,
             )
+    return result
+
+
+def source_matched_connector_supply_comparison_groups(
+    observed: NetlistContract,
+    coverage: ConnectorCoverageReport | None,
+) -> dict[str, tuple[str, str]]:
+    """Return supply scopes only for complete maps that still match this netlist."""
+    if coverage is None:
+        return {}
+    pin_evidence = source_matched_connector_pin_evidence(observed, coverage)
+    result: dict[str, tuple[str, str]] = {}
+    for entry in coverage.entries:
+        if entry.supply_comparison_group is None:
+            continue
+        if (
+            entry.status != "COVERED"
+            or entry.interface_id is None
+            or entry.supply_comparison_basis is None
+            or not any(
+                pin.role == "supply" and pin.voltage_domain is not None for pin in entry.mapped_pins
+            )
+            or not all(pin_evidence.get(pin.component_pin) == pin for pin in entry.mapped_pins)
+        ):
+            # A stale explicit scope must never partition the remaining current peers.
+            return {}
+        result[entry.reference] = (
+            entry.supply_comparison_group,
+            entry.supply_comparison_basis,
+        )
     return result

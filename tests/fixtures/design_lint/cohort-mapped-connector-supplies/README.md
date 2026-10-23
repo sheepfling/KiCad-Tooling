@@ -24,6 +24,15 @@ project-authored `pin_connectivity` requirement remains the authority for a
 required relationship. The fixtures and catalog contain no customer or
 proprietary source data.
 
+The digest-pinned connector acceptance lane also evaluates the split-supply
+fault with two complete, source-matched `supply_comparison_group` assignments
+that intentionally place the USB and serial contacts in separate review
+scopes. That case remains `PASS` because the heuristic does not compare across
+those explicitly separate groups. When scope evidence is missing or stale, the
+comparison remains broad over the current source-matched mapped contacts. The
+same-group split is covered by `tests/test_connector_supply_scope.py` and still
+produces a review candidate.
+
 Pinned native regression runs export each schematic twice on KiCad 10.0.0 and
 10.0.5, compare normalized netlist contracts, and check source and export
 evidence. The accepted mapped-return and mapped-supply results also require

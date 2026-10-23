@@ -18,6 +18,12 @@ def connector_group_message(group: SimilarConnectorPinGroup) -> str:
             f"{group.return_comparison_group}; grouping scopes comparisons only and does not "
             "establish continuity, bonding, or electrical isolation."
         )
+    elif group.supply_comparison_group is not None:
+        scope = (
+            " This comparison is scoped to source-reviewed supply-comparison group "
+            f"{group.supply_comparison_group}; grouping scopes comparisons only and does not "
+            "require common power nets or assert that other domains are isolated."
+        )
     elif group.peer_assignment_group is not None:
         scope = (
             " This comparison is scoped to source-reviewed peer-assignment group "
@@ -69,6 +75,13 @@ def connector_group_evidence(
             {
                 "return_comparison_group": (group.return_comparison_group,),
                 "return_comparison_basis": group.return_comparison_basis,
+            }
+        )
+    if group.supply_comparison_group is not None:
+        evidence.update(
+            {
+                "supply_comparison_group": (group.supply_comparison_group,),
+                "supply_comparison_basis": group.supply_comparison_basis,
             }
         )
     evidence.update(_connector_group_role_source_evidence(group, observed, reviewed_connector_pins))

@@ -192,6 +192,7 @@ def similar_connector_pin_groups(
     reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence] | None = None,
     peer_assignment_groups: Mapping[str, tuple[str, str]] | None = None,
     return_comparison_groups: Mapping[str, tuple[str, str]] | None = None,
+    supply_comparison_groups: Mapping[str, tuple[str, str]] | None = None,
     *,
     include_consistent: bool = False,
 ) -> tuple[SimilarConnectorPinGroup, ...]:
@@ -247,9 +248,12 @@ def similar_connector_pin_groups(
         }
         assignments = {pin: nets for pin, _, _, nets in entries}
         is_return_group = key[0] == "<connector-return>"
+        mapped_supply = key[0] == "<connector-mapped-supply>"
         comparison_groups = (
             return_comparison_groups
             if is_return_group
+            else supply_comparison_groups
+            if mapped_supply
             else None
             if is_role_group
             else peer_assignment_groups
@@ -269,7 +273,6 @@ def similar_connector_pin_groups(
                 continue
             scoped_entries.sort()
             symbols = {symbol.casefold() for _, symbol, _, _ in scoped_entries}
-            mapped_supply = key[0] == "<connector-mapped-supply>"
             result.append(
                 SimilarConnectorPinGroup(
                     symbol=(
@@ -285,10 +288,12 @@ def similar_connector_pin_groups(
                     pins={pin: nets for pin, _, _, nets in scoped_entries},
                     reviewed_role="supply" if mapped_supply else None,
                     reviewed_voltage_domain=key[1] if mapped_supply else None,
-                    peer_assignment_group=None if is_return_group else peer_group,
-                    peer_assignment_basis=() if is_return_group else peer_review,
+                    peer_assignment_group=peer_group if not is_role_group else None,
+                    peer_assignment_basis=peer_review if not is_role_group else (),
                     return_comparison_group=peer_group if is_return_group else None,
                     return_comparison_basis=peer_review if is_return_group else (),
+                    supply_comparison_group=peer_group if mapped_supply else None,
+                    supply_comparison_basis=peer_review if mapped_supply else (),
                 )
             )
     return tuple(result)
