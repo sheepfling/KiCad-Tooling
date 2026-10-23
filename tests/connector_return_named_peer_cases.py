@@ -212,15 +212,9 @@ def named_connector_peer_fixture_contracts() -> dict[str, NetlistContract]:
             electrical_type="passive",
             value="Synthetic named passive divergence peer",
         ),
-        "footprint-alias-peer-metadata-fault": _metadata_peer(
-            ("UART_RX_NET", "UART_TX_NET")
-        ),
-        "footprint-alias-peer-metadata-control": _metadata_peer(
-            ("SHARED_PORT", "SHARED_PORT")
-        ),
-        "footprint-alias-peer-metadata-open-fault": _metadata_peer(
-            ("UART_RX_NET", None)
-        ),
+        "footprint-alias-peer-metadata-fault": _metadata_peer(("UART_RX_NET", "UART_TX_NET")),
+        "footprint-alias-peer-metadata-control": _metadata_peer(("SHARED_PORT", "SHARED_PORT")),
+        "footprint-alias-peer-metadata-open-fault": _metadata_peer(("UART_RX_NET", None)),
         "footprint-alias-peer-metadata-open-control": _metadata_peer(
             ("UART_RX_NET", None), anchor_assignments=("REFERENCE_A", "REFERENCE_B")
         ),
