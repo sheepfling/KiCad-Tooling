@@ -215,6 +215,31 @@ select coordination. Its synthetic fault and one-device control pass native
 ERC without errors on the digest-pinned KiCad 10.0.0 and 10.0.5 lanes; see the
 [fixture note](../tests/fixtures/design_lint/spi-shared-data-outputs/README.md).
 
+`bus.spi_clock_control_data_same_net` adds an opt-in review when a fitted
+device's bounded SCK/SCLK or chip-select function pin shares one exact native
+net with a MOSI/SDI/COPI or MISO/SDO/CIPO data pin on the same indexed SPI
+channel. It requires each pin in the native component inventory with one
+unambiguous net assignment. The rule skips DNP, connector, duplicate-role,
+open, cross-channel, and inventory-inconsistent cases. Two explicit native
+output types are left to ERC; missing type evidence stays `unknown`. A device
+can intentionally multiplex these signals, so the rule defaults to `off` and
+does not infer its configured mode or required topology. It covers clock or
+select to data combinations; MOSI/MISO shorts remain with the more specific
+`bus.spi_data_input_output_same_net` rule. The synthetic fault and separate-net
+control pass native ERC without errors on KiCad 10.0.0 and 10.0.5; see the
+[fixture note](../tests/fixtures/design_lint/spi-clock-control-same-net/README.md).
+
+Select this rule's fast and exact-native checks with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_spi_clock_control_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_clock_control_data_same_net")'
+
+KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_spi_clock_control_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_control_data_same_net")'
+```
+
 ## Explore the rule catalog
 
 List all packaged rules, their implementation theme and source owner, default
@@ -230,7 +255,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 176 active rules.
+The catalog currently contains 178 active rules.
 
 ### USB data pin/name polarity review
 

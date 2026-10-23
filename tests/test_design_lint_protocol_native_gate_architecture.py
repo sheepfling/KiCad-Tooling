@@ -35,6 +35,13 @@ _PROTOCOL_NATIVE_CASES = (
         "tests.test_can_native_fixture_lanes.test_native_can_peer_assignment_fault_and_control",
         id="can-peer-assignment",
     ),
+    pytest.param(
+        "bus.spi_clock_control_data_same_net",
+        "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES",
+        "tests.test_spi_clock_control_same_net_native_fixture_lane."
+        "test_native_spi_clock_control_same_net_fault_and_control_repeat",
+        id="spi-clock-control-same-net",
+    ),
 )
 
 

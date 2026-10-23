@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 177 rules are implemented with synthetic regression coverage.
+The following 178 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 177 active rules.
+The catalog currently contains 178 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -533,6 +533,8 @@ skipped under prerelease policy.
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_active_low_chip_select_without_pullup`
 - `bus.spi_data_polarity_label_mismatch`
+- `bus.spi_data_input_output_same_net`
+- `bus.spi_clock_control_data_same_net`
 - `bus.spi_chip_select_inputs_share_net`
 - `bus.spi_data_outputs_share_net`
 - `bus.usb_c_unconnected_cc_pin`
@@ -637,6 +639,20 @@ and optional ecosystem adapters are `P3`.
   recognized SDA and SCL function pin are both assigned to the same native
   net. It is default-off because function names do not prove standard I2C
   intent; source-hashed native fault/control schematics have clean ERC results.
+
+- **SPI data-role same-net review:** LINT-195 reviews one fitted IC's
+  controller-to-peripheral and peripheral-to-controller pins on one exact
+  native net. It defaults off because single-wire and loopback modes can be
+  intentional, with synthetic and pinned native fault/control cases.
+
+- **SPI clock/control-to-data same-net review:** LINT-196 reports a fitted IC
+  whose bounded SCK/SCLK or chip-select pin and a MOSI/SDI/COPI or
+  MISO/SDO/CIPO pin share one exact net on the same optional SPI channel. It
+  defaults off because native function names do not prove configured mode and
+  some parts multiplex signals. The data-input/output short remains owned by
+  LINT-195. Synthetic tests cover channel aliases, DNP, open and multiply
+  assigned pins, duplicate roles, missing inventory, ERC output conflicts,
+  policy, exact ignores, stable ordering, and repair.
 
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
@@ -2937,7 +2953,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 177 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 178 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10456,6 +10472,51 @@ is not a reason by itself to expand its scope or change its default policy.
   ```
 
 [spi-same-net]: ../tests/fixtures/design_lint/spi-data-input-output-same-net/README.md
+
+#### LINT-196 — Review SPI clock/control pins sharing a net with data
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.spi_clock_control_data_same_net` review prompt.
+- **Gap:** Existing SPI same-net checks cover a device's data-input/output
+  pair, multiple devices' data outputs, and multiple devices' chip-select
+  inputs. They do not review a fitted IC whose clock or select pin and one of
+  its data pins resolve to the same native net.
+- **Predicate:** Recognize bounded SCK/SCLK, chip-select, MOSI/SDI/COPI, and
+  MISO/SDO/CIPO aliases while retaining an optional numeric SPI channel
+  prefix. On fitted U/IC references, pair exactly one clock or chip-select role
+  with exactly one data role on the same channel. Require each role pin in the
+  native pin inventory with exactly one net assignment. Emit a candidate only
+  when the exact native net names match. Defer pairs of two explicit native
+  output types to ERC and retain candidates with absent electrical-type data as
+  `unknown`. Data-input/output same-net pairs remain with LINT-195.
+- **Boundary:** A device may intentionally multiplex pins or expose function
+  names that do not match its configured mode. The rule defaults off and asks
+  for review; it does not prove protocol participation, required topology,
+  device behavior, PCB copper continuity, or off-board wiring. DNP, duplicate
+  roles, open or multiply assigned pins, cross-channel assignments, connector
+  references, and missing pin inventory are not classified.
+- **Fixtures:** Tooling-owned four-pin synthetic fault and separate-net control
+  schematics retain COPI, CIPO, SCK, and NSS function names. Their generic
+  passive interface pins keep ERC clear of missing-driver noise in this
+  isolated connectivity fixture. The fault connects SCK and COPI to one net;
+  the control separates them. Exact KiCad 10.0.0 and 10.0.5 exports repeat with stable normalized
+  hashes, one fault finding, a quiet control, and no native ERC errors.
+  Synthetic tests cover aliases, channels, DNP, open and multiply assigned
+  pins, duplicate roles, missing inventory, output conflicts, connector
+  exclusion, policy, exact ignore, ordering, repair, and no duplication of the
+  data-input/output rule. No project or cohort source is stored.
+- **Fixture note:**
+  [Synthetic fixtures](../tests/fixtures/design_lint/spi-clock-control-same-net/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_clock_control_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_clock_control_data_same_net")'
+
+  KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_spi_clock_control_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_control_data_same_net")'
+  ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

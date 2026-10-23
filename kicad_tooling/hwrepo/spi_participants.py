@@ -81,6 +81,21 @@ def spi_data_function_role_and_channel(value: str) -> tuple[str, str] | None:
     return None
 
 
+def spi_signal_role_and_channel(value: str) -> tuple[str, str] | None:
+    """Recognize bounded SPI clock, data, and chip-select roles with channel identity."""
+    data_role = spi_data_function_role_and_channel(value)
+    if data_role is not None:
+        direction, channel = data_role
+        return f"data_{direction}", channel
+
+    function, channel = _canonical_function_and_channel(value)
+    if function in _SPI_CLOCK_FUNCTIONS:
+        return "clock", channel
+    if function in _SPI_SELECT_FUNCTIONS:
+        return "chip_select", channel
+    return None
+
+
 def is_spi_ic_reference(reference: str) -> bool:
     """Return whether a reference follows the bounded fitted IC convention."""
     return _SPI_DEVICE_REFERENCE.fullmatch(reference) is not None

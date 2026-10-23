@@ -258,6 +258,13 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_spi_shared_data_outputs.py::test_multiple_fitted_spi_data_outputs_on_one_net_are_reviewed",
         ),
         (
+            "bus.spi_clock_control_data_same_net",
+            (
+                "tests/test_spi_clock_control_same_net.py::"
+                "test_bounded_spi_clock_control_and_data_aliases_keep_channel_identity"
+            ),
+        ),
+        (
             "bus.serial_peer_voltage_review",
             "tests/test_design_lint_serial_peer_voltage.py::test_serial_peer_voltage_prompt_requires_matching_role_and_unambiguous_native_evidence",
         ),
