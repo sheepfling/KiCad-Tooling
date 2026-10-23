@@ -99,6 +99,17 @@ drift fixtures export repeatably on pinned KiCad 10.0.0 and 10.0.5. These
 native regression lanes do not run ERC or DRC. See the
 [native fixture record](../tests/fixtures/design_lint/stm32-pin-map-native/README.md).
 
+## Review direct MOSFET gate drive
+
+`component.mosfet_gate_direct_drive` can flag a supported fitted MOSFET whose
+gate shares one native net with another fitted output-capable pin. It defaults
+to `off`: an external gate resistor is not always needed, and this schematic
+pattern cannot show driver impedance, switching performance, or PCB continuity.
+Enable `review` in the project's `design_lint.rules` only when the prompt is
+useful for that project. The
+[native fixture note](../tests/fixtures/design_lint/mosfet-gate-native/README.md)
+documents the tooling-owned direct-drive and series-resistor cases.
+
 ## Explore the rule catalog
 
 List all packaged rules, their implementation theme and source owner, default
@@ -114,7 +125,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 158 active rules.
+The catalog currently contains 159 active rules.
 
 ## Run the lint lane
 

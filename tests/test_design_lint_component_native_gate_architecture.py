@@ -72,3 +72,18 @@ def test_mosfet_terminal_order_rule_selects_its_exact_native_fault_control_lane(
     assert native_switch in rule.required_native_fixtures
     assert native_test in rule.fault_fixtures
     assert native_test in rule.valid_control_fixtures
+
+
+def test_mosfet_direct_gate_drive_rule_selects_its_exact_native_fault_control_lane() -> None:
+    rule_id = "component.mosfet_gate_direct_drive"
+    native_switch = "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+    native_test = (
+        "tests.test_mosfet_gate_native_fixture."
+        "test_native_mosfet_gate_fault_and_control_are_repeatable"
+    )
+    rule = next(entry for entry in rule_catalog().rules if entry.rule_id == rule_id)
+
+    assert set(rule.supported_kicad_versions) == {"10.0.0", "10.0.5"}
+    assert native_switch in rule.required_native_fixtures
+    assert native_test in rule.fault_fixtures
+    assert native_test in rule.valid_control_fixtures

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .component_pin_types import is_output_capable_pin_type
+from .component_pin_types import fitted_output_pins_on_net
 from .design_lint_types import Candidate
 from .models import NetlistContract
 
@@ -42,11 +42,6 @@ def bjts_with_direct_output_base_drive(
         for pin, function in observed.pin_functions.items()
         if function.strip()
     }
-    electrical_types = {
-        pin.casefold(): kind.strip().casefold()
-        for pin, kind in observed.pin_electrical_types.items()
-        if kind.strip()
-    }
     nets_by_pin: dict[str, list[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
@@ -84,24 +79,14 @@ def bjts_with_direct_output_base_drive(
         if len(base_assignments) != 1:
             continue
         base_net = base_assignments[0]
-        output_pins = tuple(
-            sorted(
-                (
-                    pin
-                    for pin in observed.nets.get(base_net, ())
-                    if pin.casefold() != base_pin.casefold()
-                    and pin.rsplit(".", 1)[0].casefold() in fitted
-                    and pin.rsplit(".", 1)[0].casefold() not in dnp
-                    and len(nets_by_pin.get(pin.casefold(), ())) == 1
-                    and is_output_capable_pin_type(electrical_types.get(pin.casefold(), ""))
-                ),
-                key=lambda pin: (pin.casefold(), pin),
-            )
+        output_peers = fitted_output_pins_on_net(
+            observed, base_net, excluded_references=(reference,)
         )
-        if not output_pins:
+        if not output_peers:
             continue
 
-        output_pin_types = tuple(f"{pin}={electrical_types[pin.casefold()]}" for pin in output_pins)
+        output_pins = tuple(pin for pin, _ in output_peers)
+        output_pin_types = tuple(f"{pin}={pin_type}" for pin, pin_type in output_peers)
         findings.append(
             Candidate(
                 rule_id=RULE_ID,

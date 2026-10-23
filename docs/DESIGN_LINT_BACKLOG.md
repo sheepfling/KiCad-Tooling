@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 158 rules are implemented with synthetic regression coverage.
+The following 159 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 158 active rules.
+The catalog currently contains 159 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -481,6 +481,7 @@ skipped under prerelease policy.
 - `component.unconnected_return_pin`
 - `component.mosfet_gate_without_peer`
 - `component.mosfet_gate_without_visible_source_bias`
+- `component.mosfet_gate_direct_drive`
 - `component.mosfet_terminal_order_on_named_rails`
 - `component.bjt_terminal_order_on_named_rails`
 - `component.bjt_base_direct_drive`
@@ -592,6 +593,17 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **Direct MOSFET gate-drive review:** LINT-177 adds an opt-in, default-off
+  review prompt when a supported fitted three-terminal MOSFET gate shares its
+  exact native net with another fitted output-capable pin. An external gate
+  resistor is not universally required; the prompt does not estimate driver
+  impedance or switching behavior. Synthetic cases cover direct drive, native
+  output pin types, a series-resistor control, unsupported identities, DNP,
+  incomplete inventories, project policy, exact ignores, and deterministic
+  fingerprints. The exact-version native lane includes direct-drive and
+  series-resistor schematics with repeatable KiCad 10 exports. This uses only
+  tooling-owned synthetic fixtures.
 
 - **BJT collector/emitter rail-order review:** LINT-175 adds a configurable,
   default-off prompt for exact basic NPN/PNP symbols when explicit rail evidence
@@ -2831,7 +2843,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 158 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 159 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9537,6 +9549,51 @@ is not a reason by itself to expand its scope or change its default policy.
     tests/test_bjt_base_drive_native_fixture.py \
     -m 'design_lint and design_lint_rule(rule_id="component.bjt_base_direct_drive")'
   ```
+
+#### LINT-177 — Review MOSFET gates directly connected to output-capable pins
+
+- **Status:** Implemented as `component.mosfet_gate_direct_drive`, an opt-in,
+  default-off review prompt. It shares the native output-pin classifier used
+  by LINT-176 and runs through the existing component candidate coordinator.
+- **Problem:** The catalog already flags an open MOSFET gate and a gate without
+  visible source bias. It did not prompt when a supported MOSFET gate directly
+  shared a net with an output-capable pin and no series element separated the
+  two assignments.
+- **Predicate:** Require a fitted device with one exact supported three-
+  terminal `Transistor_FET:Q_NMOS_*` or `Q_PMOS_*` symbol, complete unique
+  three-pin inventory, native D/Drain, G/Gate, and S/Source roles, and one
+  unambiguous gate net. Review only when another fitted pin on that exact net
+  has native `output`, `power_out`, `bidirectional`, `tri_state`,
+  `open_collector`, or `open_emitter` type. The exact shared net establishes
+  there is no visible series element between those pins.
+- **Boundary:** This is a review clue, not a resistor requirement. Gate
+  resistors can be omitted intentionally and driver-internal resistance may be
+  sufficient. The rule does not estimate impedance, current, switching speed,
+  ringing, firmware behavior, PCB continuity, or the physical assembly.
+  Custom symbols, multi-gate devices, DNP parts, incomplete or ambiguous pin
+  data, and unknown output types remain unclassified. Project policy may enable
+  `review`, promote to `block`, keep it `off`, or exactly ignore one finding.
+- **Fixtures:** Synthetic direct-output fault and series-resistor control;
+  output, power-output, tri-state, and open-collector pin types; passive/input
+  peers; DNP and unsupported devices; incomplete and ambiguous metadata;
+  policy and exact-ignore lifecycle; input-order stability. The native MOSFET
+  gate lane includes direct-drive and series-resistor source fixtures and
+  repeats netlist/ERC exports under the project-selected KiCad 10.0.0 and
+  10.0.5 images. The series-resistor schematic clears this rule while the
+  direct-drive case produces one target finding.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_mosfet_gate_direct_drive.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.mosfet_gate_direct_drive")'
+
+  KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES=1 python -I -m pytest \
+    tests/test_mosfet_gate_native_fixture.py \
+    -m 'design_lint and design_lint_rule(rule_id="component.mosfet_gate_direct_drive")'
+  ```
+
+  Source hashes and exact-version boundaries are recorded in the
+  [MOSFET gate fixture note](../tests/fixtures/design_lint/mosfet-gate-native/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

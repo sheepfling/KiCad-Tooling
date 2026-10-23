@@ -62,6 +62,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.generic_peer_pin_mixed_open",
             "component.generic_peer_pin_assignment_outlier",
             "component.mosfet_gate_without_visible_source_bias",
+            "component.mosfet_gate_direct_drive",
             "component.mosfet_terminal_order_on_named_rails",
             "component.bjt_terminal_order_on_named_rails",
         }
@@ -90,6 +91,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.generic_peer_pin_mixed_open",
             "component.generic_peer_pin_assignment_outlier",
             "component.mosfet_gate_without_visible_source_bias",
+            "component.mosfet_gate_direct_drive",
             "component.mosfet_terminal_order_on_named_rails",
             "component.bjt_terminal_order_on_named_rails",
         }

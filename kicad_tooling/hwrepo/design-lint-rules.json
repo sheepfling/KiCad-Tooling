@@ -3032,6 +3032,50 @@
       ]
     },
     {
+      "rule_id": "component.mosfet_gate_direct_drive",
+      "title": "Review MOSFET gates directly connected to output-capable pins",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted component using one of the exact supported three-terminal Transistor_FET:Q_NMOS_* or Q_PMOS_* symbols, a complete unique three-pin inventory with native D/Drain, G/Gate, and S/Source functions, and one unambiguous gate-net assignment, emit an opt-in REVIEW candidate when that exact net also contains another fitted pin with native output-capable electrical type.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Only the exact three-terminal MOSFET symbol allowlist, complete pin inventory, and unique native D/G/S roles participate; custom symbols, multi-gate devices, DNP parts, and incomplete role data are excluded.",
+        "A finding requires another fitted component pin with native output, power_out, bidirectional, tri_state, open_collector, or open_emitter type assigned only to the same exact gate net. Unknown or ambiguous pin assignments are excluded.",
+        "A directly shared net is a review clue, not proof that an external gate resistor is required. Driver output impedance, internal resistance, switching speed, ringing, PCB routing, and physical behavior are not evaluated; an intentional resistor in the fitted assembly may also be outside the schematic evidence."
+      ],
+      "fault_fixtures": [
+        "tests.test_mosfet_gate_direct_drive.test_output_capable_pin_directly_sharing_gate_net_is_reviewed",
+        "tests.test_mosfet_gate_direct_drive.test_other_native_output_capable_pin_types_are_evidence",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_mosfet_gate_direct_drive.test_series_resistor_separating_driver_and_gate_is_a_control",
+        "tests.test_mosfet_gate_direct_drive.test_unsupported_or_unfitted_topologies_remain_unclassified",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_mosfet_gate_direct_drive.test_input_order_does_not_change_fingerprint_or_evidence",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_mosfet_gate_drive.py#mosfets_with_direct_output_gate_drive",
+        "kicad_tooling/hwrepo/component_pin_types.py#fitted_output_pins_on_net",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_mosfet_gate_drive.py#mosfets_with_direct_output_gate_drive",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "component.mosfet_terminal_order_on_named_rails",
       "title": "Review MOSFET drain/source order against named rails",
       "status": "active",
@@ -3163,6 +3207,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_bjt_base_drive.py#bjts_with_direct_output_base_drive",
         "kicad_tooling/hwrepo/component_pin_types.py#is_output_capable_pin_type",
+        "kicad_tooling/hwrepo/component_pin_types.py#fitted_output_pins_on_net",
         "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

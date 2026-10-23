@@ -245,6 +245,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "schematic.coincident_text_anchors",
             "tests/test_design_lint_schematic_text.py::test_coincident_text_anchor_rule_is_configurable_and_review_only_by_default",
         ),
+        (
+            "component.mosfet_gate_direct_drive",
+            "tests/test_mosfet_gate_direct_drive.py::test_output_capable_pin_directly_sharing_gate_net_is_reviewed",
+        ),
     ),
 )
 def test_rule_marker_selects_catalogued_cases_without_external_checkout(

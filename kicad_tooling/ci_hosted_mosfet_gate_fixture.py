@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .hwrepo.component_mosfet_gate_drive import RULE_ID as DIRECT_DRIVE_RULE_ID
 from .hwrepo.component_mosfet_terminal_order import RULE_ID as TERMINAL_ORDER_RULE_ID
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contracts import KiCadErcReport, read_kicad_erc_report, write_model
@@ -27,6 +28,7 @@ MOSFET_GATE_FIXTURE_CASES = {
     "fault": "mosfet-gate-native/fault.kicad_sch",
     "control": "mosfet-gate-native/control.kicad_sch",
     "source-bias-control": "mosfet-gate-native/source-bias-control.kicad_sch",
+    "series-gate-control": "mosfet-gate-native/series-gate-control.kicad_sch",
 }
 MOSFET_TERMINAL_ORDER_FIXTURE_CASES = {
     "fault_nmos": "mosfet-terminal-order-native/fault_nmos.kicad_sch",
@@ -77,7 +79,7 @@ def mosfet_gate_fixture_lane(
     image: str,
     log: HostedLog,
 ) -> None:
-    """Export and evaluate native MOSFET gate and source-bias fixtures twice."""
+    """Export and evaluate native MOSFET gate connectivity heuristics twice."""
     from .hwrepo.electrical import selected_config
 
     root = root.resolve()
@@ -201,6 +203,11 @@ def mosfet_gate_fixture_lane(
                             mode="review",
                             reason="Native synthetic source-bias fixture",
                         ),
+                        DesignLintRuleOverride(
+                            rule_id=DIRECT_DRIVE_RULE_ID,
+                            mode="review",
+                            reason="Native synthetic series-gate fixture",
+                        ),
                     )
                 ),
             )
@@ -218,7 +225,7 @@ def mosfet_gate_fixture_lane(
                 )
                 for run, report in reports.items()
             }
-            for rule_id in (RULE_ID, SOURCE_BIAS_RULE_ID)
+            for rule_id in (RULE_ID, SOURCE_BIAS_RULE_ID, DIRECT_DRIVE_RULE_ID)
         }
         if any(by_run["first"] != by_run["repeat"] for by_run in findings_by_rule_and_run.values()):
             raise ValueError(f"Native MOSFET gate {case} candidates differ between repeats")
@@ -226,8 +233,12 @@ def mosfet_gate_fixture_lane(
         bias_findings = tuple(
             item for item in reports["first"].findings if item.rule_id == SOURCE_BIAS_RULE_ID
         )
+        direct_drive_findings = tuple(
+            item for item in reports["first"].findings if item.rule_id == DIRECT_DRIVE_RULE_ID
+        )
         expected_gate_count = 1 if case == "fault" else 0
         expected_bias_count = 1 if case == "control" else 0
+        expected_direct_drive_count = 1 if case in {"control", "source-bias-control"} else 0
         if len(gate_findings) != expected_gate_count:
             raise ValueError(
                 f"Native MOSFET gate {case} expected {expected_gate_count} finding(s), "
@@ -237,6 +248,11 @@ def mosfet_gate_fixture_lane(
             raise ValueError(
                 f"Native MOSFET source-bias {case} expected {expected_bias_count} finding(s), "
                 f"observed {len(bias_findings)}"
+            )
+        if len(direct_drive_findings) != expected_direct_drive_count:
+            raise ValueError(
+                f"Native MOSFET direct-drive {case} expected {expected_direct_drive_count} finding(s), "
+                f"observed {len(direct_drive_findings)}"
             )
         log.event(
             f"mosfet-gate-fixture/{case}",
@@ -252,6 +268,8 @@ def mosfet_gate_fixture_lane(
             lint_status=reports["first"].status,
             rule_findings=";".join(item.subject for item in gate_findings) or "none",
             source_bias_rule_findings=";".join(item.subject for item in bias_findings) or "none",
+            direct_drive_rule_findings=";".join(item.subject for item in direct_drive_findings)
+            or "none",
             erc_warning_count=erc_warning_counts[(case, "first")],
             erc_errors="none",
             repeatable="true",

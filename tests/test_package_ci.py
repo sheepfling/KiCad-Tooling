@@ -188,6 +188,10 @@ def test_lint_tag_selects_bjt_base_drive_and_its_native_fixture_switch() -> None
             "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES",
         ),
         (
+            "component.mosfet_gate_direct_drive",
+            "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES",
+        ),
+        (
             "component.bjt_terminal_order_on_named_rails",
             "KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES",
         ),

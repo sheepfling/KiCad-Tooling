@@ -96,6 +96,7 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_mosfet_stress.py": {"component_lint"},
     "test_mosfet_gate_connectivity.py": {"component_lint"},
     "test_mosfet_gate_source_bias.py": {"component_lint"},
+    "test_mosfet_gate_direct_drive.py": {"component_lint"},
     "test_mosfet_gate_native_fixture.py": {"component_lint", "native_kicad", "slow"},
     "test_polarized_capacitor_native_fixture.py": {
         "component_lint",
