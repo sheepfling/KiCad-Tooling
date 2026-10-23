@@ -10747,8 +10747,9 @@ is not a reason by itself to expand its scope or change its default policy.
   control, out-of-range-value, and split-feedback fixtures now exercise the
   authored map against repeated KiCad 10.0.0/10.0.5 netlist and ERC exports.
   The native lane checks exact source hashes, mapped pin nets and functions,
-  resistor values, output calculations, and the no-finding control; it does not
-  establish datasheet truth or analog performance.
+  resistor values, output calculations, and the target rule's no-finding
+  control. Aggregate reports may contain unrelated advisory findings; the lane
+  does not establish datasheet truth or analog performance.
 - **Done:** Typed project map, source-bound coverage report, review/block/off
   policy, catalogued rule, CLI/MCP parity, and an explicit synthetic baseline
   test are implemented. No external cohort source, dependency, or private

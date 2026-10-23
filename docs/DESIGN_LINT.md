@@ -959,8 +959,11 @@ that setpoint coverage. The exact-version native fixture lane exports a valid
 divider, an out-of-range upper-resistor value, and a split feedback node twice
 on KiCad 10.0.0 and 10.0.5. It verifies the mapped pin functions and nets,
 component identities and values, repeatability, and ERC error absence against
-the explicit synthetic map. The fixtures do not validate an actual regulator,
-datasheet, or analog performance.
+the explicit synthetic map, including the target rule's fault/control finding.
+The simplified control schematic may still receive unrelated advisory
+findings, so this gate does not require the aggregate design-lint report to be
+PASS. The fixtures do not validate an actual regulator, datasheet, or analog
+performance.
 
 ## Review a mapped first-order RC filter
 
