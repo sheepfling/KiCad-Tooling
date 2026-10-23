@@ -13,6 +13,7 @@ from .i2c_pullup_models import (
     I2cPullupHeuristicEntry,
     I2cPullupLineRequirement,
 )
+from .i2c_pullup_voltage_coverage import i2c_pullup_voltage_coverage
 from .models import NetlistContract
 from .resistor_paths import (
     positive_power_net_families,
@@ -117,8 +118,17 @@ def i2c_pullup_heuristic_coverage(
     state: str,
     spec: I2cPullupAnalysis | None = None,
 ) -> I2cPullupHeuristicCoverage:
-    """Resolve only exact missing-line hints with passing authored pull-up checks."""
+    """Resolve missing-pull-up hints and collect input-limit coverage evidence."""
     gaps = i2c_buses_without_local_pullups(observed)
+    checks_by_id = (
+        {check.id: check for check in i2c_pullup_checks(spec, observed)} if spec is not None else {}
+    )
+    voltage_entries = i2c_pullup_voltage_coverage(
+        observed,
+        state=state,
+        spec=spec,
+        checks_by_id=checks_by_id,
+    )
     if spec is None:
         reason = {
             "pending": "Project I2C pull-up review is pending; no requirement can resolve this prompt.",
@@ -148,12 +158,12 @@ def i2c_pullup_heuristic_coverage(
             status=status,
             source_path=source_path,
             source_sha256=source_sha256,
-            netlist_sha256=netlist_sha256 if gaps else None,
+            netlist_sha256=netlist_sha256 if gaps or voltage_entries else None,
             entries=tuple(entries),
+            voltage_entries=voltage_entries,
             issue=(reason if state == "blocked" else None),
         )
 
-    checks_by_id = {check.id: check for check in i2c_pullup_checks(spec, observed)}
     entries: list[I2cPullupHeuristicEntry] = []
     for gap in gaps:
         matching = [
@@ -244,8 +254,9 @@ def i2c_pullup_heuristic_coverage(
         status=coverage_status,
         source_path=source_path,
         source_sha256=source_sha256,
-        netlist_sha256=netlist_sha256 if gaps else None,
+        netlist_sha256=netlist_sha256 if gaps or voltage_entries else None,
         entries=tuple(entries),
+        voltage_entries=voltage_entries,
     )
 
 

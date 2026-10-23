@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 199 rules are implemented with synthetic regression coverage.
+The following 200 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 199 active rules.
+The catalog currently contains 200 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -523,6 +523,7 @@ skipped under prerelease policy.
 - `signal.open_emitter_input_without_visible_bias`
 - `bus.i2c_unconnected_pin`
 - `bus.i2c_missing_pullup`
+- `bus.i2c_pullup_input_limit_coverage`
 - `bus.i2c_low_equivalent_resistance`
 - `bus.i2c_multiple_pullup_rail_families`
 - `bus.i2c_peer_reference_review`
@@ -3049,7 +3050,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 199 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 200 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -11628,6 +11629,38 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_connector_mapped_signals_split_nets_native_fixture_lane.py \
     -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_signals_split_nets")'
+  ```
+
+#### LINT-218 — Review local I2C pull-up input-limit coverage
+
+- **Status:** Implemented as the default-review rule
+  `bus.i2c_pullup_input_limit_coverage`.
+- **Gap:** I2C requirements can compare a pull-up rail ceiling with exact
+  per-pin input-voltage limits, but design lint did not prompt when a visible
+  local pull-up had no such mapped coverage.
+- **Predicate:** For recognized, fitted U/IC SDA/SCL endpoints on distinct
+  native nets, inspect each line with a visible fitted direct or unbranched
+  discrete resistor path to a named positive rail. Emit REVIEW if the exact
+  ordered bus requirement is absent, omits voltage compatibility, or does not
+  map every recognized fitted endpoint pin on that line.
+- **Boundary:** This is a completeness prompt. It does not infer rail voltage,
+  input tolerance, or electrical safety from net or pin names. The separate
+  electrical contract check evaluates authored limits. Connector/off-board
+  endpoints, DNP or ambiguous pins, arrays, active pull-ups, and external
+  pull-ups are outside this rule. A complete map still does not validate its
+  cited datasheet or prove PCB connectivity. Project policy can choose
+  `review`, `block`, `off`, or an exact fingerprint ignore.
+- **Fixtures:** Synthetic direct/series resistor paths cover missing voltage
+  maps, partial two-device scope, exact complete scope, DNP exclusions, no
+  visible local pull-up, policy, exact ignore, and ordering stability. The new
+  rule is catalogued under the `interfaces` theme and its owner is a focused
+  I2C coverage module. It uses the existing shared typed lint evaluation path;
+  no surface-specific adapter is added.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_i2c_pullup_voltage_coverage.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_pullup_input_limit_coverage")'
   ```
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage

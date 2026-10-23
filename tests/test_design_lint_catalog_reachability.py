@@ -53,6 +53,7 @@ import tests.usb_peer_reference_support as _usb_peer_reference_support
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, rule_catalog
 from kicad_tooling.hwrepo.external_protection import evaluate as evaluate_external_protection
 from kicad_tooling.hwrepo.i2c_addressing import scan_i2c_address_map
+from kicad_tooling.hwrepo.i2c_pullup_heuristics import i2c_pullup_heuristic_coverage
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
@@ -67,6 +68,12 @@ from tests.design_lint_fixtures.catalog_reachability import (
     protocol_peer_candidate_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
+from tests.design_lint_fixtures.connector_mapped_signal_sharing import (
+    signal_sharing_coverage,
+    signal_sharing_netlist,
+    signal_sharing_report,
+)
+from tests.electrical_i2c_support import i2c_series_pullup_netlist
 from tests.power_sequence_support import (
     power_sequence_map as synthetic_power_sequence_map,
 )
@@ -238,6 +245,31 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     )
     emitted.update(
         item.rule_id for item in candidates(stm32_netlist, stm32_pin_map_coverage=stm32_coverage)
+    )
+    for source, signal_names in (
+        (signal_sharing_netlist(), ("CONTROL_A", "CONTROL_B")),
+        (
+            signal_sharing_netlist(first_net="CONTACT_NET_A", second_net="CONTACT_NET_B"),
+            ("CONTROL_A", "control_a"),
+        ),
+    ):
+        mapped_coverage = signal_sharing_coverage(source, signal_names=signal_names)
+        mapped_report, _ = signal_sharing_report(source, coverage=mapped_coverage)
+        emitted.update(item.rule_id for item in mapped_report.findings)
+    i2c_pullup_source = i2c_series_pullup_netlist()
+    i2c_pullup_coverage = i2c_pullup_heuristic_coverage(
+        i2c_pullup_source,
+        netlist_sha256="a" * 64,
+        source_path="projects/synthetic/electrical.json",
+        source_sha256="b" * 64,
+        state="not_configured",
+    )
+    emitted.update(
+        item.rule_id
+        for item in candidates(
+            i2c_pullup_source,
+            i2c_pullup_heuristic_coverage=i2c_pullup_coverage,
+        )
     )
     emitted.update(pcb_rule_ids())
     mapped_power_report, _ = _tests_test_mapped_power_contact._report(

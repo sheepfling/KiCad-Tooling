@@ -109,6 +109,24 @@ def contract_coverage_report_lines(report: DesignLintReport) -> list[str]:
         for issue in entry.issues:
             lines.append(f"    Coverage issue: {issue}")
 
+    covered_i2c_voltage = sum(
+        entry.status == "COVERED" for entry in i2c_pullup_coverage.voltage_entries
+    )
+    lines.append(
+        "I2C pull-up input-limit coverage: "
+        f"{covered_i2c_voltage}/{len(i2c_pullup_coverage.voltage_entries)} line reviews covered"
+    )
+    for entry in i2c_pullup_coverage.voltage_entries:
+        lines.append(
+            f"  {entry.status} {entry.line} {entry.signal_net} pulled up to "
+            f"{', '.join(entry.pullup_rails)}; fitted endpoint pins: "
+            f"{', '.join(entry.endpoint_pins)}"
+        )
+        if entry.bus_id is not None:
+            lines.append(f"    Requirement: {entry.bus_id}")
+        for issue in entry.issues:
+            lines.append(f"    Coverage issue: {issue}")
+
     if i2c_pullup_coverage.issue is not None:
         lines.append(f"  Coverage issue: {i2c_pullup_coverage.issue}")
 

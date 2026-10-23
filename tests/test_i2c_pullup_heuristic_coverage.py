@@ -19,7 +19,9 @@ from tests.design_lint_fixtures.i2c_arrays import (
     array_requirement,
     array_requirement_with_capacitance_scope,
 )
-from tests.electrical_i2c_support import i2c_pullup_window_requirement
+from tests.electrical_i2c_support import (
+    i2c_pullup_window_requirement,
+)
 
 pytestmark = [
     pytest.mark.design_lint,

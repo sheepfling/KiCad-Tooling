@@ -136,6 +136,34 @@ def i2c_pullup_candidates(
                 },
             )
         )
+    if i2c_pullup_heuristic_coverage is not None:
+        for entry in i2c_pullup_heuristic_coverage.voltage_entries:
+            if entry.status != "OPEN":
+                continue
+            found.append(
+                Candidate(
+                    rule_id="bus.i2c_pullup_input_limit_coverage",
+                    subject=f"{entry.line} {entry.signal_net}: input-voltage coverage",
+                    message=(
+                        "A visible local pull-up reaches "
+                        f"{', '.join(entry.pullup_rails)}, but the exact project voltage review "
+                        "is absent, incomplete, or failed its source-bound pull-up/voltage checks. "
+                        "Review the maximum pull-up rail voltage against each device's approved "
+                        "input limit; this prompt does not infer voltage compatibility."
+                    ),
+                    evidence={
+                        "SDA": (entry.sda_net,),
+                        "SCL": (entry.scl_net,),
+                        "line": (entry.line,),
+                        "signal_net": (entry.signal_net,),
+                        "pullup_rails": entry.pullup_rails,
+                        "endpoint_pins": entry.endpoint_pins,
+                        "covered_input_pins": entry.covered_input_pins,
+                        "missing_input_pins": entry.missing_input_pins,
+                        "issues": entry.issues,
+                    },
+                )
+            )
     return tuple(found)
 
 

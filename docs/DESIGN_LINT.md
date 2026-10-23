@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 199 active rules.
+The catalog currently contains 200 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -3363,6 +3363,23 @@ contents support the authored bounds. Configured sink-current and rise-time
 window checks must also pass before an authored requirement resolves the
 heuristic prompt. The window values and source notes remain project inputs;
 this is not a waveform simulation.
+
+### Review I2C pull-up input-limit coverage
+
+When a fitted discrete pull-up path reaches a named positive rail, lint reviews
+whether the project has recorded the rail ceiling and maximum bus voltage for
+every recognized fitted U/IC SDA or SCL pin on that line. Add a
+`voltage_compatibility` object to the corresponding `sda` or `scl` requirement;
+it records an independently reviewed scope, rail basis, and exact pin limits.
+The electrical contract checks the authored maximum rail voltage against those
+pin limits. The lint rule only checks that the map covers recognized fitted
+peers; it does not infer voltage values or compatibility from names.
+
+The rule defaults to `review` and supports project `block`, `off`, and exact
+fingerprint ignores. It recognizes only conventional fitted resistor paths
+from 1 kΩ through 100 kΩ. Resistor arrays, active and internal pull-ups,
+connectors, and off-board endpoints are outside this coverage prompt. A passing
+coverage result does not validate cited datasheets or establish PCB continuity.
 
 An optional `capacitance_scope` inventories fitted C-prefixed components and
 components with recognized capacitor-symbol identities whose native pin

@@ -4402,6 +4402,45 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_with_multiple_pullup_rail_families"
     },
     {
+      "rule_id": "bus.i2c_pullup_input_limit_coverage",
+      "title": "Local I2C pull-up lacks input-voltage limit coverage",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with recognized, uniquely assigned native SDA/SCL pin functions on a distinct net pair, inspect each line with a recognized fitted direct or unbranched 1 kΩ–100 kΩ resistor path to a named positive rail. Emit a REVIEW candidate when no unique exact ordered bus requirement supplies an I2cPullupVoltageCompatibilityRequirement covering every recognized fitted U/IC endpoint pin on that line, or when its source-bound pull-up or voltage-compatibility check does not pass.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "This is a contract-coverage prompt, not a voltage calculation or safety verdict. It does not infer rail voltage, input tolerance, level shifting, pin direction, or electrical compatibility from names.",
+        "Only fitted U/IC endpoints with recognized SDA/SCL native function aliases and uniquely assigned nets are included. Connectors and off-board peers are not endpoint evidence; DNP, incomplete, ambiguous, and unsupported multi-segment endpoints are skipped.",
+        "Visible pull-ups are limited to recognized R-designated resistors or exact Device:R symbols in direct or unbranched paths from 1 kΩ through 100 kΩ. Resistor arrays, active pull-ups, internal pull-ups, and off-board pull-ups are not discovered by this rule.",
+        "A complete input-limit map establishes only authored coverage. The separate electrical contract check evaluates its mapped maximum limits; neither check validates the cited datasheet or proves PCB connectivity."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2c_pullup_voltage_coverage.test_visible_pullups_without_exact_input_limits_request_review",
+        "tests.test_i2c_pullup_voltage_coverage.test_partial_input_limit_map_names_the_uncovered_peer_and_dnp_is_excluded",
+        "tests.test_i2c_pullup_voltage_coverage.test_failing_authored_voltage_limit_keeps_the_review_candidate_open"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2c_pullup_voltage_coverage.test_exact_input_limits_cover_all_recognized_endpoint_pins",
+        "tests.test_i2c_pullup_voltage_coverage.test_partial_input_limit_map_names_the_uncovered_peer_and_dnp_is_excluded",
+        "tests.test_i2c_pullup_voltage_coverage.test_no_visible_local_pullup_is_outside_this_coverage_prompt",
+        "tests.test_i2c_pullup_voltage_coverage.test_ambiguous_multiport_endpoint_is_not_classified"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_i2c_pullup_voltage_coverage.test_input_limit_coverage_policy_ignore_and_order_are_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2c_pullup_voltage_coverage.py#i2c_pullup_voltage_coverage",
+        "kicad_tooling/hwrepo/design_lint_i2c_candidates.py#i2c_pullup_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_voltage_coverage.py#i2c_pullup_voltage_coverage"
+    },
+    {
       "rule_id": "bus.i2c_peer_reference_review",
       "title": "I2C peers on one bus use different explicit reference nets",
       "status": "active",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from pathlib import Path
 
 import pytest
 
@@ -12,6 +13,7 @@ from kicad_tooling.hwrepo import (
     connector_peer_pin_models,
     digital_peer_voltage_models,
     i2c_peer_reference_models,
+    i2c_pullup_voltage_models,
     serial_peer_reference_models,
     usb_peer_reference_models,
     usb_peer_unsupported_models,
@@ -87,6 +89,7 @@ BUS_ANALYSIS_MODULES = (
     "i2c_pullup_contract_paths.py",
     "i2c_pullup_contract.py",
     "i2c_pullup_capacitance.py",
+    "i2c_pullup_voltage_coverage.py",
     "i2c_pullup_heuristics.py",
     "can_termination_contract.py",
     "can_termination_heuristics.py",
@@ -192,6 +195,34 @@ def test_i2c_peer_reference_coverage_models_stay_in_their_theme_owner() -> None:
     assert all(not hasattr(shared_models, name) for name in I2C_PEER_REFERENCE_MODELS)
     assert i2c_peer_reference_models.I2cPeerReferenceCoverageReport.__module__.endswith(
         "i2c_peer_reference_models"
+    )
+
+
+def test_i2c_pullup_voltage_coverage_model_stays_in_its_theme_owner() -> None:
+    owner = HWREPO / "i2c_pullup_voltage_models.py"
+    model_service = HWREPO / "i2c_pullup_models.py"
+    coverage_service = HWREPO / "i2c_pullup_voltage_coverage.py"
+    owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    owner_definitions = {node.name for node in owner_tree.body if isinstance(node, ast.ClassDef)}
+    expected_import = "I2cPullupVoltageCoverageEntry"
+
+    def imports_from_owner(path: Path) -> bool:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+        return any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "i2c_pullup_voltage_models"
+            and any(alias.name == expected_import for alias in node.names)
+            for node in tree.body
+        )
+
+    assert "I2cPullupVoltageCoverageEntry" in owner_definitions
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert not hasattr(shared_models, "I2cPullupVoltageCoverageEntry")
+    assert imports_from_owner(model_service)
+    assert imports_from_owner(coverage_service)
+    assert _line_count(coverage_service) < IMPLEMENTATION_MAX_LINES
+    assert i2c_pullup_voltage_models.I2cPullupVoltageCoverageEntry.__module__.endswith(
+        "i2c_pullup_voltage_models"
     )
 
 

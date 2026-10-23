@@ -109,6 +109,7 @@ DesignLintRuleId = Literal[
     "signal.open_emitter_input_without_visible_bias",
     "bus.i2c_unconnected_pin",
     "bus.i2c_missing_pullup",
+    "bus.i2c_pullup_input_limit_coverage",
     "bus.i2c_low_equivalent_resistance",
     "bus.i2c_multiple_pullup_rail_families",
     "bus.i2c_peer_reference_review",

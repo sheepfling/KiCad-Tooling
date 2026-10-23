@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from .i2c_pullup_voltage_models import I2cPullupVoltageCoverageEntry
 from .model_primitives import (
     CapacitancePf,
     Digest,
@@ -57,7 +58,7 @@ class I2cPullupHeuristicEntry(StrictModel):
 
 
 class I2cPullupHeuristicCoverage(StrictModel):
-    """Source-bound accounting for I2C pull-up hints resolved by authored requirements."""
+    """Source-bound accounting for I2C pull-up and input-voltage hint coverage."""
 
     status: Literal[
         "NOT_CONFIGURED", "PENDING", "NOT_APPLICABLE", "COMPLETE", "OPEN", "BLOCKED"
@@ -66,17 +67,24 @@ class I2cPullupHeuristicCoverage(StrictModel):
     source_sha256: Digest | None = None
     netlist_sha256: Digest | None = None
     entries: tuple[I2cPullupHeuristicEntry, ...] = ()
+    voltage_entries: tuple[I2cPullupVoltageCoverageEntry, ...] = ()
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def source_bound_coverage(self) -> I2cPullupHeuristicCoverage:
         if (self.source_path is None) != (self.source_sha256 is None):
             raise ValueError("I2C pull-up contract path and hash must be recorded together")
-        if self.entries and self.netlist_sha256 is None:
+        if (self.entries or self.voltage_entries) and self.netlist_sha256 is None:
             raise ValueError("I2C pull-up candidate coverage needs its native netlist hash")
         pairs = [(item.sda_net.casefold(), item.scl_net.casefold()) for item in self.entries]
         if len(pairs) != len(set(pairs)):
             raise ValueError("I2C pull-up coverage entries need unique ordered net pairs")
+        voltage_keys = [
+            (item.sda_net.casefold(), item.scl_net.casefold(), item.line)
+            for item in self.voltage_entries
+        ]
+        if len(voltage_keys) != len(set(voltage_keys)):
+            raise ValueError("I2C voltage coverage entries need unique ordered pair and line")
         if self.status == "COMPLETE" and any(item.status != "COVERED" for item in self.entries):
             raise ValueError("Complete I2C pull-up coverage cannot contain open candidates")
         if self.status == "OPEN" and not any(item.status == "OPEN" for item in self.entries):
