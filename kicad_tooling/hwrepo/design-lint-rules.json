@@ -4912,13 +4912,53 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_direction_label_candidates",
-        "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_pin_role",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role",
         "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_direction_label_candidates"
+    },
+    {
+      "rule_id": "bus.rs485_data_input_output_same_net",
+      "title": "RS-485 transceiver driver input and receiver output share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with exactly one recognized RS-485 driver-data input function (D, DI, DRIVERINPUT, or DRIVERDATAIN) and one receiver-data output function (R, RO, RECEIVEROUTPUT, or RECEIVERDATAOUT), require a supported RS-485 identity in the native symbol library ID or component value, complete native component pin inventory membership, and one exact native net assignment per pin. Emit a REVIEW candidate when both roles share one exact net, except when both native pin electrical types are outputs.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Identity matching is deliberately bounded to explicit RS-485/RS485 text and MAX48xx, SP3485, ADM48xx, SN65HVD485, and THVD family markers in the native symbol library ID or component value. The SN65HVD485 marker excludes the SN65HVD23x CAN family. Other vendor naming conventions need a reviewed extension before they are recognized.",
+        "The review may identify intentional echo or single-wire operation. Pin function names and net assignments do not establish project intent, configured transceiver mode, firmware behavior, PCB copper continuity, or off-board wiring; projects may override or ignore the finding after review.",
+        "Only fitted U/IC references with exactly one pin for each recognized data role, complete native pin inventory membership, and unique assignments are considered. DNP, open, multiply assigned, duplicate-role, generic D/R component identity, connector, and incomplete-inventory cases remain outside the predicate. Two native output pin types are left to ERC."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_data_input_output_same_net.test_explicit_rs485_driver_input_and_receiver_output_on_one_net_are_reviewed",
+        "tests.test_rs485_data_input_output_same_net_native_fixture_lane.test_native_rs485_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_data_input_output_same_net.test_separate_data_nets_and_generic_d_r_functions_are_valid_controls",
+        "tests.test_rs485_data_input_output_same_net_native_fixture_lane.test_native_rs485_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_rs485_data_input_output_same_net.test_reordering_preserves_findings_and_splitting_the_net_clears_them"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_DATA_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_same_net.py#rs485_data_input_output_same_net_candidates",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_same_net.py#rs485_data_input_output_same_net_candidates"
     },
     {
       "rule_id": "bus.complementary_pair_assignment",

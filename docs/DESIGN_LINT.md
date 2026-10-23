@@ -4115,6 +4115,16 @@ design-lint policy.
 See the [synthetic fault/control fixture record][rs485-data-fixture] for
 source hashes and reproduction details.
 
+The configurable `bus.rs485_data_input_output_same_net` heuristic separately
+reviews a fitted RS-485 transceiver whose native D/DI driver input and R/RO
+receiver output are assigned to one exact schematic net. It requires an
+explicitly RS-485-specific component identity, complete pin inventory, and
+unique assignments, so generic D/R functions on unrelated ICs are outside its
+scope. A shared net may be intentional for echo or single-wire operation; the
+default is `review`, and the rule does not infer the required transceiver mode
+or PCB continuity. See the
+[fixture README](../tests/fixtures/design_lint/rs485-data-same-net/README.md).
+
 When the reviewed bus design identifies the duplex arrangement and local
 electrical strategy, record each differential pair, endpoint pin map,
 termination, and bias decision in the project's `tests/electrical.json`

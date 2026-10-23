@@ -23,6 +23,12 @@ PYTEST_NATIVE_LINT_SUITES = {
         "slow",
     },
     "test_rs485_data_direction_label_mismatch.py": {"interface_lint"},
+    "test_rs485_data_input_output_same_net.py": {"interface_lint"},
+    "test_rs485_data_input_output_same_net_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_serial_tx_output_sharing.py": {"interface_lint"},
     "test_serial_tx_output_sharing_native_fixture_lane.py": {
         "interface_lint",

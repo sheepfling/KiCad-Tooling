@@ -2,32 +2,14 @@
 
 from __future__ import annotations
 
-import re
-from typing import Literal
-
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .rs485_data_functions import rs485_data_pin_role
 from .serial_participants import serial_function_role_and_channel
 
 RULE_ID = "bus.rs485_data_direction_label_mismatch"
-_DATA_PIN_ROLES: dict[str, Literal["tx", "rx"]] = {
-    "d": "tx",
-    "di": "tx",
-    "driverdatain": "tx",
-    "driverinput": "tx",
-    "r": "rx",
-    "ro": "rx",
-    "receiverdataout": "rx",
-    "receiveroutput": "rx",
-}
-
-
-def rs485_data_pin_role(function: str) -> Literal["tx", "rx"] | None:
-    """Recognize a narrow RS-485 driver-input or receiver-output function."""
-    compact = re.sub(r"[^a-z0-9]", "", function.casefold())
-    return _DATA_PIN_ROLES.get(compact)
 
 
 def rs485_data_direction_label_candidates(

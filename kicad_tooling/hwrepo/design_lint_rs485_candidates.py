@@ -1,4 +1,4 @@
-"""Build review candidates from mapped RS-485 peer-reference evidence."""
+"""Translate RS-485 data-role and mapped peer-reference review evidence."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from .design_lint_types import Candidate
 from .models import NetlistContract
 from .rs485_data_label_mismatch import rs485_data_direction_label_candidates
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
+from .rs485_same_net import rs485_data_input_output_same_net_candidates
 
 
 def rs485_candidates(
@@ -17,7 +18,11 @@ def rs485_candidates(
     reference_candidates = (
         rs485_peer_reference_candidates(scan, component_peer_findings) if scan is not None else ()
     )
-    return (*reference_candidates, *rs485_data_direction_label_candidates(observed))
+    return (
+        *reference_candidates,
+        *rs485_data_direction_label_candidates(observed),
+        *rs485_data_input_output_same_net_candidates(observed),
+    )
 
 
 def rs485_peer_reference_candidates(

@@ -91,6 +91,13 @@ _PROTOCOL_NATIVE_CASES = (
         "test_native_rs485_data_direction_fault_and_control_repeat",
         id="rs485-data-direction-label-mismatch",
     ),
+    pytest.param(
+        "bus.rs485_data_input_output_same_net",
+        "KICAD_RUN_NATIVE_RS485_DATA_SAME_NET_FIXTURES",
+        "tests.test_rs485_data_input_output_same_net_native_fixture_lane."
+        "test_native_rs485_same_net_fault_and_control_repeat",
+        id="rs485-data-same-net",
+    ),
 )
 
 

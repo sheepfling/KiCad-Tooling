@@ -66,6 +66,8 @@ BUS_ANALYSIS_MODULES = (
     "can_tx_rx_label_mismatch.py",
     "can_tx_rx_same_net.py",
     "design_lint_rs485_candidates.py",
+    "rs485_data_functions.py",
+    "rs485_same_net.py",
     "design_lint_interfaces_usb_data_polarity.py",
     "i2c_signal_label.py",
     "i2c_same_net.py",
@@ -241,6 +243,25 @@ def test_can_tx_rx_same_net_rule_uses_a_focused_predicate_owner() -> None:
         "kicad_tooling/hwrepo/can_tx_rx_same_net.py#can_tx_rx_same_net_candidates"
     )
     assert rule.implementation_owner in rule.implementation_refs
+
+
+def test_rs485_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.rs485_data_input_output_same_net"
+    )
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/rs485_same_net.py#rs485_data_input_output_same_net_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role"
+        in rule.implementation_refs
+    )
 
 
 def test_spi_data_same_net_rule_uses_a_focused_predicate_owner() -> None:

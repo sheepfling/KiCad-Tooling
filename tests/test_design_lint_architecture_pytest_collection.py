@@ -215,6 +215,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_rs485_data_direction_label_mismatch.py::test_crossed_driver_and_receiver_labels_are_reviewed",
         ),
         (
+            "bus.rs485_data_input_output_same_net",
+            "tests/test_rs485_data_input_output_same_net.py::test_explicit_rs485_driver_input_and_receiver_output_on_one_net_are_reviewed",
+        ),
+        (
             "bus.serial_tx_outputs_share_net",
             "tests/test_serial_tx_output_sharing.py::test_multiple_fitted_transmit_functions_on_one_net_are_reviewed",
         ),

@@ -10825,6 +10825,43 @@ is not a reason by itself to expand its scope or change its default policy.
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_data_direction_label_mismatch")'
   ```
 
+#### LINT-204 — Review RS-485 transceiver data input and output sharing one net
+
+- **Status:** Implemented as the configurable, default-review
+  `bus.rs485_data_input_output_same_net` heuristic.
+- **Gap:** The UART-label check above only compares separate explicit TX and RX
+  nets. A transceiver D/DI driver input and R/RO receiver output assigned to
+  one native net can be suspicious while remaining valid for intentional echo
+  or single-wire operation; this deserves a separate review prompt.
+- **Predicate:** Require one fitted U/IC with exactly one bounded driver-data
+  input function and one receiver-data output function, an explicit RS-485
+  identity marker in its native symbol library ID or component value, complete
+  native pin-inventory membership, and one exact net assignment per pin.
+  Review when both functions share the same native net. Defer when both native
+  electrical types are outputs so ERC remains the relevant signal.
+- **Boundary:** The rule does not assert that the shared net is a defect or
+  infer the configured transceiver mode, firmware echo behavior, copper
+  continuity, or external wiring. It skips generic D/R functions without
+  transceiver identity, DNP parts, connectors, open or multiply assigned
+  pins, duplicate role functions, incomplete inventories, and two-output
+  pairs. Current identity markers are deliberately bounded; other vendor
+  families need a reviewed extension.
+- **Fixtures:** Synthetic cases cover D/R, DI/RO, long-form function aliases,
+  explicit identity via symbol ID and value, separate-net controls, generic
+  D/R controls including a non-RS-485 SN65HVD23x identity, DNP, open and
+  multiply assigned pins, duplicate roles,
+  incomplete inventory, two output types, project policy, exact ignores,
+  ordering, and repair. Tooling-owned native fault/control schematics repeat
+  netlist and ERC exports on KiCad 10.0.0 and 10.0.5.
+- **Fixture note:** [Synthetic RS-485 data same-net sources and hashes]
+  (../tests/fixtures/design_lint/rs485-data-same-net/README.md).
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_rs485_data_input_output_same_net.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_data_input_output_same_net")'
+  KICAD_RUN_NATIVE_RS485_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_rs485_data_input_output_same_net_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_data_input_output_same_net")'
+  ```
+
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 
 - **Status:** Implemented as the opt-in `pcb.signal_path_rule_coverage` audit.
