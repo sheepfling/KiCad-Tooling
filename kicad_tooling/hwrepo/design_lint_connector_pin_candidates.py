@@ -2,27 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from .connector_coverage import (
     source_matched_connector_peer_assignment_groups,
     source_matched_connector_pin_evidence,
+    source_matched_connector_return_comparison_groups,
 )
-from .connector_coverage_models import (
-    ConnectorCoverageReport,
-    ConnectorMappedPinEvidence,
-)
-from .connector_identity import power_function_key, similar_connector_pin_groups
+from .connector_coverage_models import ConnectorCoverageReport
+from .connector_identity import similar_connector_pin_groups
 from .connector_mapped_interface_pins import (
     unassigned_mapped_interface_shield_pins,
     unassigned_mapped_interface_signal_pins,
+)
+from .connector_peer_candidate_evidence import (
+    connector_group_evidence,
+    connector_group_message,
 )
 from .connector_peer_pin_all_open import all_open_generic_connector_peer_pin_candidates
 from .connector_peer_pin_findings import (
     connector_peer_pin_assignment_divergences,
     connector_peer_pin_assignment_outliers,
 )
-from .connector_peer_pin_models import SimilarConnectorPinGroup
 from .connector_peer_power_input import (
     connector_named_power_input_all_open,
     connector_named_power_input_assignment_divergence,
@@ -43,77 +42,6 @@ from .design_lint_types import Candidate
 from .models import NetlistContract
 
 
-def _connector_group_message(group: SimilarConnectorPinGroup) -> str:
-    scope = (
-        f" This comparison is scoped to source-reviewed peer-assignment group "
-        f"{group.peer_assignment_group}."
-        if group.peer_assignment_group is not None
-        else ""
-    )
-    if group.reviewed_role == "supply" and group.reviewed_voltage_domain is not None:
-        return (
-            "Connector supply contacts with the same source-reviewed voltage domain "
-            f"({group.reviewed_voltage_domain}) use different or missing nets. Review whether "
-            "they share a rail, are intentionally switched or isolated, or have independent "
-            "sources; this role and domain classification does not require commonality." + scope
-        )
-    function = group.function
-    if function == "ground/return":
-        return (
-            "Connector return pins identified by symbol functions or the source-matched project "
-            "interface map use different or missing nets. Review whether the domains should be "
-            "common, bonded, or intentionally isolated; role classification alone does not "
-            "require commonality." + scope
-        )
-    if power_function_key(function) is not None:
-        return (
-            "Matching connector supply pins use different or missing nets. Review whether they "
-            "share a rail, are intentionally separate, or have independent supplies." + scope
-        )
-    return (
-        "Matching connector pin functions use different or missing nets. Review the intended "
-        "pinout and signal relationship." + scope
-    )
-
-
-def _connector_group_role_source_evidence(
-    group: SimilarConnectorPinGroup,
-    observed: NetlistContract,
-    reviewed_connector_pins: Mapping[str, ConnectorMappedPinEvidence],
-) -> dict[str, tuple[str, ...]]:
-    if group.reviewed_role == "supply" and group.reviewed_voltage_domain is not None:
-        domain = str(group.reviewed_voltage_domain)
-        sources = [
-            f"{pin}: project interface catalog role=supply; "
-            f"voltage_domain={domain}; "
-            f"native symbol function={observed.pin_functions.get(pin) or '<unnamed>'}"
-            for pin in sorted(group.pins)
-        ]
-        return {
-            "role_classification_sources": tuple(sources),
-            "reviewed_voltage_domain": (domain,),
-        }
-    if group.function != "ground/return":
-        return {}
-
-    sources: list[str] = []
-    has_catalog_role = False
-    for pin in sorted(group.pins):
-        native_function = observed.pin_functions.get(pin) or "<unnamed>"
-        mapped = reviewed_connector_pins.get(pin)
-        if mapped is not None and mapped.role == "return":
-            has_catalog_role = True
-            sources.append(
-                f"{pin}: project interface catalog role=return; "
-                f"native symbol function={native_function}"
-            )
-        else:
-            sources.append(f"{pin}: native symbol function={native_function}")
-    if not has_catalog_role:
-        return {}
-    return {"role_classification_sources": tuple(sources)}
-
-
 def connector_pin_candidates(
     observed: NetlistContract,
     *,
@@ -131,6 +59,9 @@ def connector_pin_candidates(
     reviewed_connector_peer_assignment_groups = source_matched_connector_peer_assignment_groups(
         observed,
         connector_coverage,
+    )
+    reviewed_connector_return_comparison_groups = source_matched_connector_return_comparison_groups(
+        observed, connector_coverage
     )
 
     unconnected_named_pins = unconnected_named_connector_pins(
@@ -214,6 +145,7 @@ def connector_pin_candidates(
         reviewed_connector_references,
         reviewed_connector_pins,
         reviewed_connector_peer_assignment_groups,
+        return_comparison_groups=reviewed_connector_return_comparison_groups,
     )
 
     for group in repeated_connector_pin_groups:
@@ -232,21 +164,13 @@ def connector_pin_candidates(
             Candidate(
                 rule_id="connector.repeated_pin_function",
                 subject=f"{group.symbol}: {group.function}",
-                message=_connector_group_message(group),
+                message=connector_group_message(group),
                 evidence={
                     **dict(group.pins),
-                    **_connector_group_role_source_evidence(
+                    **connector_group_evidence(
                         group,
                         observed,
                         reviewed_connector_pins,
-                    ),
-                    **(
-                        {}
-                        if group.peer_assignment_group is None
-                        else {
-                            "peer_assignment_group": (group.peer_assignment_group,),
-                            "peer_assignment_basis": group.peer_assignment_basis,
-                        }
                     ),
                 },
             )

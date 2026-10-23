@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 185 rules are implemented with synthetic regression coverage.
+The following 186 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 185 active rules.
+The catalog currently contains 186 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -531,6 +531,7 @@ skipped under prerelease policy.
 - `bus.serial_peer_reference_review`
 - `bus.rs485_peer_reference_review`
 - `bus.rs485_data_direction_label_mismatch`
+- `bus.rs485_data_input_output_same_net`
 - `bus.usb_peer_reference_review`
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_active_low_chip_select_without_pullup`
@@ -619,6 +620,13 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **Configurable connector return comparison scopes:** Extend LINT-083 so
+  projects can group reviewed return pins independently of signal-peer groups.
+  Only complete source-matched maps may narrow comparisons; stale or missing
+  scope keeps the global review. A same-group split remains a lint prompt, and
+  different groups make no claim about electrical isolation. The focused
+  synthetic and exact-native gates cover both behaviors.
 
 - **Serial TX/RX same-net review:** LINT-190 detects a fitted component whose
   unique native UART/USART transmit and receive pins in one channel share a
@@ -2980,7 +2988,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 185 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 186 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4073,35 +4081,48 @@ is not a reason by itself to expand its scope or change its default policy.
   parity/native fixture and public four-channel common-reference screen without
   copying public project source.
 
-#### LINT-083 — Reviewed peer-comparison scopes for connector heuristics
+#### LINT-083 — Reviewed peer and return-comparison scopes for connector heuristics
 
 - **Status:** Implemented as optional `peer_assignment_group` and
   `peer_assignment_basis` fields on project-owned connector interface reviews.
+  A focused extension adds `return_comparison_group` and
+  `return_comparison_basis` for independently scoped return-pin comparisons.
   This refines `connector.repeated_pin_function`,
   `connector.peer_pin_assignment_outlier`, and
   `connector.peer_pin_assignment_divergence`; it adds no electrical rule or
   default blocker. Synthetic source-matching tests and CLI/MCP parity coverage
   are in place.
-- **Priority:** Precision control for repeated connector symbols used by
-  separate interfaces. It reduces cross-interface signal comparisons while
-  retaining the higher-value cross-group return and same-domain supply
-  prompts. Any next change should address a measured miss or reviewer-cost
-  result rather than broaden the predicate.
+- **Priority:** Configurable comparison boundaries for repeated connector
+  symbols used by separate interfaces. The return scope reduces cross-group
+  prompts when the project explicitly reviews separate comparison domains,
+  while preserving same-group split detection and same-domain supply prompts.
 - **Predicate:** Use group scopes only when every connector participating in a
   comparison has a `COVERED` interface review whose catalog digest, complete
   component-pin inventory, native pin functions, and net assignments still
   match the current normalized native netlist. Partition generic and other
-  non-return/supply pin comparisons by the reviewed group. Keep return and
-  supply role comparisons cross-group. If any participating scope is absent,
-  incomplete, or source-stale, retain the unscoped comparison.
+  non-return/supply pin comparisons by `peer_assignment_group`. Partition
+  return pins by `return_comparison_group` only when every participating
+  mapped return pin has a complete current interface map and explicit group
+  basis. If any participating scope is absent, incomplete, or source-stale,
+  retain the unscoped comparison. A return group declared without a mapped
+  return-role pin makes connector coverage incomplete.
 - **Boundary:** A group states which connector instances the generic
   heuristics compare. It does not require common nets or declare nets
   independent. Group review can hide a generic signal mismatch across groups;
   use it only with a reviewed interface inventory and an explicit basis.
-  Return and supply review remains active across groups, while explicit
+  Return groups scope heuristic comparisons but do not prove continuity,
+  bonding, or isolation. Supply review remains cross-group, while explicit
   `pin_connectivity` and `grounding` requirements remain the way to state
   required electrical relationships. The report carries group and basis
   evidence for review.
+- **Focused extension fixtures:** `tests/test_connector_return_scope.py`
+  covers a split inside one group, a split across distinct groups, a common
+  return control, missing or stale evidence fallback, and a group with no
+  mapped return role. The mixed USB/serial exact-native lane repeats the
+  same-group fault and common-net control, then applies a second reviewed map
+  to the same native fault and confirms that explicitly distinct comparison
+  scopes suppress only the cross-group prompt. This scope control says
+  nothing about physical isolation.
 - **Fixtures:** `test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global`
   checks that separate groups suppress generic signal comparisons, a shared
   group retains them, split returns remain visible across groups, and partial

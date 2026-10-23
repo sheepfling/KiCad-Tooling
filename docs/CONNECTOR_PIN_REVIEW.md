@@ -146,12 +146,32 @@ heuristics should compare. Each group needs a `peer_assignment_basis`:
 }
 ```
 
-Groups scope comparisons of generic pin numbers and non-return/supply pin
-functions. Return and supply comparisons remain cross-group, so a split ground
-or mismatched same-domain supply still receives a review prompt. Group
-membership does not declare nets common or separate. Every participating
-connector needs a current, complete group review before scoping takes effect;
-an unreviewed, incomplete, or stale peer restores the broad comparison.
+Peer groups scope comparisons of generic pin numbers and non-return/supply pin
+functions. Supply comparisons remain cross-group. Return pins use a separate
+optional `return_comparison_group` and `return_comparison_basis`, because
+interfaces that share data-peer heuristics may have different return review
+scopes:
+
+```json
+{
+  "reference": "J1",
+  "disposition": "interface",
+  "basis": "Reviewed connector pinout revision A",
+  "interface_id": "usb-interface",
+  "pin_map": {"1": "1", "2": "2", "3": "3"},
+  "return_comparison_group": "host-side-returns",
+  "return_comparison_basis": "Compare this return with the shared host reference"
+}
+```
+
+Every mapped return participant must have a complete, current source-matched
+group before return comparisons are partitioned. A split among members of one
+group still prompts review. Missing or stale scope restores the broad return
+comparison. A declared return group on an interface with no mapped return role
+makes connector coverage incomplete. Group membership controls which pins the
+heuristic compares; it does not assert electrical continuity, bonding, or
+isolation. As with other review prompts, the project owner must decide the
+actual electrical relationship.
 
 The interface catalog can give each pin an optional heuristic role: `signal`,
 `return`, `supply`, `shield`, or `other`. A complete source-matched map can

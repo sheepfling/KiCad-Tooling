@@ -9,7 +9,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Pins with matching meaningful normalized functions on repeated connector symbols, or within one symbol, use different or missing net assignments. A complete source-matched project interface map can supply a return role when native function text is absent, generic Pin_N, or numeric-only; this can compare returns across different connector symbols. The same map can compare generic or numeric-only supply contacts across symbols only when their exact authored voltage_domain values match. Numeric function text can identify a comparable contact within an exact repeated symbol by itself, but does not establish an electrical role. Generic KiCad Pin_N labels remain unknown unless the source-matched map supplies a supported role. When every participating connector has a current source-matched peer_assignment_group, non-return and non-supply comparisons are partitioned by that group; return and supply role comparisons remain cross-group. Incomplete or stale group coverage retains the unscoped comparison.",
+      "predicate": "Pins with matching meaningful normalized functions on repeated connector symbols, or within one symbol, use different or missing net assignments. A complete source-matched project interface map can supply a return role when native function text is absent, generic Pin_N, or numeric-only; this can compare returns across different connector symbols. The same map can compare generic or numeric-only supply contacts across symbols only when their exact authored voltage_domain values match. Numeric function text can identify a comparable contact within an exact repeated symbol by itself, but does not establish an electrical role. Generic KiCad Pin_N labels remain unknown unless the source-matched map supplies a supported role. When every participating connector has a current source-matched peer_assignment_group, non-return and non-supply comparisons are partitioned by that group. Return comparisons are partitioned only when every mapped return participant has complete source-matched return_comparison_group evidence; otherwise the broad comparison is retained. Supply role comparisons remain cross-group.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -19,6 +19,7 @@
         "Project-mapped supply roles are compared across symbols only when a complete source-matched interface map supplies the same exact voltage_domain text for both contacts. A matching role and domain prompt review; they do not prove that nets must be common or that independent, switched, ORed, or isolated sources are invalid.",
         "A numeric function such as 7 is compared only as matching native function text within an exact repeated symbol; it does not mean ground, supply, or a required common connection.",
         "A peer_assignment_group scopes which connector instances are compared; group membership does not require their nets to match, and distinct groups do not assert that their nets must remain separate. A review basis is required, and incomplete or stale group evidence does not suppress the broad comparison.",
+        "A return_comparison_group separately scopes return-pin prompts. Each mapped return participant must have a complete source-matched group and review basis; missing, stale, incomplete, or misapplied scope retains the broad comparison. A declared group on an interface without a mapped return pin makes connector coverage incomplete. Group membership scopes heuristic comparison only and does not assert electrical continuity, bonding, or isolation.",
         "Without a source-matched interface role, absent functions and generic Pin_N placeholders do not establish matching roles; exact-symbol peer assignment rules handle those contacts at lower confidence.",
         "Automatic candidates are numeric J/P/X/CN references and symbols in standard Connector libraries except Connector:TestPoint; an exact project-reviewed interface reference can additionally classify a custom symbol. Other aliases and library families can evade candidate discovery.",
         "References listed as DNP by the native netlist are excluded from population-dependent comparisons."
@@ -40,6 +41,9 @@
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_connector_return_scope.test_split_returns_in_one_reviewed_group_still_need_review",
+        "tests.test_connector_return_scope.test_missing_or_stale_group_evidence_restores_global_comparison",
+        "tests.test_connector_return_scope.test_return_group_without_mapped_return_role_makes_coverage_incomplete",
         "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
         "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control"
       ],
@@ -59,6 +63,9 @@
         "tests.test_connector_supply_peer_coverage.test_reviewed_supply_domains_compare_generic_contacts_across_symbols",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_groups_scope_generic_pins_but_keep_return_review_global",
+        "tests.test_connector_return_scope.test_common_returns_in_one_reviewed_group_are_quiet",
+        "tests.test_connector_return_scope.test_distinct_reviewed_return_groups_suppress_only_cross_group_prompt",
+        "tests.test_connector_return_scope.test_split_returns_in_one_reviewed_group_still_need_review",
         "tests.test_native_db9_return_contracts.test_native_db9_return_contracts_are_source_bound_and_repeatable",
         "tests.test_native_db9_return_contracts.test_db9_return_lane_exports_only_fault_and_control"
       ],
@@ -70,6 +77,8 @@
         "tests.test_connector_mixed_interface_return_native_lane.test_native_mixed_interface_returns_are_source_bound_and_repeatable",
         "tests.test_connector_peer_scope.test_peer_groups_scope_generic_pins_while_mapped_returns_remain_global",
         "tests.test_connector_peer_scope.test_peer_assignment_scope_report_is_stable_under_input_reordering",
+        "tests.test_connector_return_scope.test_split_returns_in_one_reviewed_group_still_need_review",
+        "tests.test_connector_return_scope.test_missing_or_stale_group_evidence_restores_global_comparison",
         "tests.test_design_lint_determinism_connector_peers.test_connector_peer_reports_remain_deterministic",
         "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic"
       ],

@@ -33,6 +33,9 @@ def connector_peer_report_lines(report: DesignLintReport) -> list[str]:
             if entry.peer_assignment_group is not None:
                 lines.append(f"    Peer-assignment group: {entry.peer_assignment_group}")
                 lines.append(f"    Peer-assignment basis: {entry.peer_assignment_basis}")
+            if entry.return_comparison_group is not None:
+                lines.append(f"    Return-comparison group: {entry.return_comparison_group}")
+                lines.append(f"    Return-comparison basis: {entry.return_comparison_basis}")
             for pin in entry.mapped_pins:
                 function = pin.symbol_function or "<unnamed>"
                 nets = ", ".join(pin.nets) or "<unconnected>"

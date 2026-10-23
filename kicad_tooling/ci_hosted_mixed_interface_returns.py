@@ -25,6 +25,7 @@ from .hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,
     InterfacesCatalog,
+    NetlistContract,
 )
 
 if TYPE_CHECKING:
@@ -38,7 +39,8 @@ _SOURCE_HASHES = {
     "control": "b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45",
 }
 _INTERFACE_SHA256 = "e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99"
-_CONNECTOR_REVIEWS_SHA256 = "57cd1b4cdf7663f41e0223ff48f83742b7ba3f592abd7664175c17c1c2c0c373"
+_CONNECTOR_REVIEWS_SHA256 = "a1ec6317ef6207572c89605a5c0ef1448fe7e5a62b2ec5383edea598dda2d0bc"
+_SEPARATE_RETURN_REVIEWS_SHA256 = "fcbebe5c7c83a15d82daf1ae43c25f461bcd3809b4e9c02f4eaca1a0c8ae3329"
 
 
 def _connector_reviews(
@@ -84,15 +86,26 @@ def mixed_interface_return_fixture_lane(
         raise ValueError("Mixed-interface return sources differ from the reviewed hashes")
     interfaces_path = fixture_root / "interfaces.json"
     reviews_path = fixture_root / "connector-reviews.json"
+    separate_return_reviews_path = fixture_root / "connector-reviews-separate-return-groups.json"
     interface_sha256 = digest(interfaces_path)
     reviews_sha256 = digest(reviews_path)
-    if interface_sha256 != _INTERFACE_SHA256 or reviews_sha256 != _CONNECTOR_REVIEWS_SHA256:
+    separate_return_reviews_sha256 = digest(separate_return_reviews_path)
+    if (
+        interface_sha256 != _INTERFACE_SHA256
+        or reviews_sha256 != _CONNECTOR_REVIEWS_SHA256
+        or separate_return_reviews_sha256 != _SEPARATE_RETURN_REVIEWS_SHA256
+    ):
         raise ValueError("Mixed-interface connector maps differ from the reviewed hashes")
     interfaces_model = InterfacesCatalog.model_validate_json(
         interfaces_path.read_text(encoding="utf-8")
     )
     interfaces = {item.id: item for item in interfaces_model.interfaces}
     project_interfaces, connector_reviews, inventory_review = _connector_reviews(reviews_path)
+    scoped_interfaces, scoped_reviews, scoped_inventory_review = _connector_reviews(
+        separate_return_reviews_path
+    )
+    if scoped_interfaces != project_interfaces or scoped_inventory_review != inventory_review:
+        raise ValueError("Separate return scopes changed the reviewed interface inventory")
 
     scratch = Path(
         tempfile.mkdtemp(prefix=f"mixed-interface-returns-{version}-", dir=log.directory.resolve())
@@ -189,6 +202,7 @@ def mixed_interface_return_fixture_lane(
     erc_hashes: dict[tuple[str, str], str] = {}
     reports: dict[tuple[str, str], DesignLintReport] = {}
     coverage_statuses: dict[str, str] = {}
+    observations: dict[str, NetlistContract] = {}
     for case in sources:
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -196,6 +210,7 @@ def mixed_interface_return_fixture_lane(
             if not netlist_path.is_file() or not erc_path.is_file():
                 raise ValueError(f"Native KiCad omitted mixed-interface {case} evidence")
             observed = read_netlist(netlist_path)
+            observations[case] = observed
             if observed.component_pin_numbers.get("J1") != ("1", "2", "3"):
                 raise ValueError("Native USB1 connector pin inventory changed")
             if observed.component_pin_numbers.get("J2") != ("1", "2", "3"):
@@ -266,6 +281,11 @@ def mixed_interface_return_fixture_lane(
                 for pin, nets in expected_return_assignments.items()
             ):
                 raise ValueError("Mixed-interface return review lost exact native pin evidence")
+            if (
+                target_findings[0].evidence.get("return_comparison_group") != ("external-returns",)
+                or len(target_findings[0].evidence.get("return_comparison_basis", ())) != 3
+            ):
+                raise ValueError("Mixed-interface return review lost reviewed scope evidence")
         elif target_findings:
             raise ValueError("Common mixed-interface return control retained a review finding")
         log.event(
@@ -286,6 +306,47 @@ def mixed_interface_return_fixture_lane(
             erc_errors="none",
             repeatable="true",
         )
+    scoped_coverage = evaluate_connector_coverage(
+        observations["fault"],
+        scoped_interfaces,
+        scoped_reviews,
+        interfaces=interfaces,
+        interface_catalog_path=interfaces_path.relative_to(root).as_posix(),
+        interface_catalog_sha256=interface_sha256,
+        inventory_review=scoped_inventory_review,
+    )
+    if scoped_coverage.status != "COMPLETE" or any(
+        item.status != "COVERED" for item in scoped_coverage.entries
+    ):
+        raise ValueError("Separate return comparison coverage is incomplete")
+    scoped_report = evaluate(
+        "synthetic-mixed-interface-separate-return-scopes",
+        ContractCoachReport(
+            status="READY_FOR_REVIEW",
+            project_id="synthetic-mixed-interface-separate-return-scopes",
+            observed=observations["fault"],
+            netlist_sha256=normalized_hashes["fault", "first"],
+        ),
+        DesignLintPolicy(),
+        connector_coverage=scoped_coverage,
+    )
+    scoped_findings = tuple(item for item in scoped_report.findings if item.rule_id == _RULE_ID)
+    if scoped_findings:
+        raise ValueError("Separate source-reviewed return scopes retained a cross-group prompt")
+    log.event(
+        "mixed-interface-return-fixture/separate-scope-control",
+        "PASS",
+        project=f"kicad-{version}",
+        kicad_version=version,
+        image=pinned,
+        interface_catalog_sha256=interface_sha256,
+        connector_reviews_sha256=separate_return_reviews_sha256,
+        native_source_case="fault",
+        native_source_sha256=_SOURCE_HASHES["fault"],
+        normalized_netlist_sha256=normalized_hashes["fault", "first"],
+        connector_coverage=scoped_coverage.status,
+        findings="none",
+    )
     log.event(
         "mixed-interface-return-fixture/native-export",
         "PASS",

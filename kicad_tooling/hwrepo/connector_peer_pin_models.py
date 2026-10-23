@@ -31,6 +31,8 @@ class SimilarConnectorPinGroup(StrictModel):
     reviewed_voltage_domain: NonEmptyText | None = None
     peer_assignment_group: Identifier | None = None
     peer_assignment_basis: tuple[NonEmptyText, ...] = ()
+    return_comparison_group: Identifier | None = None
+    return_comparison_basis: tuple[NonEmptyText, ...] = ()
 
     @model_validator(mode="after")
     def mapped_supply_has_domain(self) -> SimilarConnectorPinGroup:
@@ -40,6 +42,10 @@ class SimilarConnectorPinGroup(StrictModel):
             raise ValueError("Only mapped supply connector groups carry a voltage domain")
         if (self.peer_assignment_group is None) != (not self.peer_assignment_basis):
             raise ValueError("Scoped connector comparisons need their reviewed group basis")
+        if (self.return_comparison_group is None) != (not self.return_comparison_basis):
+            raise ValueError("Scoped return comparisons need their reviewed group basis")
+        if self.return_comparison_group is not None and self.function != "ground/return":
+            raise ValueError("Only return-pin comparisons carry a return comparison group")
         return self
 
 

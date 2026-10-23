@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from kicad_tooling.hwrepo.connector_coverage import evaluate
 from kicad_tooling.hwrepo.models import (
     ConnectorCoverageReport,
@@ -15,7 +17,7 @@ from tests.design_lint_fixtures.connector_coverage import (
 
 
 def two_usb_one_serial_return_case(
-    *, common_return: bool
+    *, common_return: bool, return_comparison_groups: Mapping[str, str] | None = None
 ) -> tuple[NetlistContract, ConnectorCoverageReport]:
     """Build two mapped USB peers and one serial peer with a split/common return."""
     nets: dict[str, tuple[str, ...]] = {
@@ -78,6 +80,13 @@ def two_usb_one_serial_return_case(
             pin_map=pin_map,
             peer_assignment_group=group,
             peer_assignment_basis=f"Reviewed {reference} in group {group}",
+            return_comparison_group=(return_comparison_groups or {}).get(reference),
+            return_comparison_basis=(
+                f"Reviewed {reference} in return-comparison group "
+                f"{return_comparison_groups[reference]}"
+                if return_comparison_groups is not None and reference in return_comparison_groups
+                else None
+            ),
         )
         for reference, interface_id, pin_map, group in peer_specs
     )

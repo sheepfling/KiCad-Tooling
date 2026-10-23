@@ -42,6 +42,8 @@ class ConnectorInterfaceReview(StrictModel):
     unconnected_pin_reasons: Mapping[NonEmptyText, NonEmptyText] = Field(default_factory=dict)
     peer_assignment_group: Identifier | None = None
     peer_assignment_basis: NonEmptyText | None = None
+    return_comparison_group: Identifier | None = None
+    return_comparison_basis: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def complete_disposition(self) -> ConnectorInterfaceReview:
@@ -62,10 +64,16 @@ class ConnectorInterfaceReview(StrictModel):
             or self.unconnected_pin_reasons
             or self.peer_assignment_group is not None
             or self.peer_assignment_basis is not None
+            or self.return_comparison_group is not None
+            or self.return_comparison_basis is not None
         ):
-            raise ValueError("Not-applicable review cannot contain interface or peer-group data")
+            raise ValueError(
+                "Not-applicable review cannot contain interface or comparison-scope data"
+            )
         if (self.peer_assignment_group is None) != (self.peer_assignment_basis is None):
             raise ValueError("Connector peer-assignment groups need a review basis")
+        if (self.return_comparison_group is None) != (self.return_comparison_basis is None):
+            raise ValueError("Connector return-comparison groups need a review basis")
         return self
 
 
@@ -82,6 +90,8 @@ class ConnectorCoverageEntry(StrictModel):
     basis: NonEmptyText | None = None
     peer_assignment_group: Identifier | None = None
     peer_assignment_basis: NonEmptyText | None = None
+    return_comparison_group: Identifier | None = None
+    return_comparison_basis: NonEmptyText | None = None
     interface_pin_map: Mapping[NonEmptyText, NonEmptyText] = Field(default_factory=dict)
     unlisted_pin_reasons: Mapping[NonEmptyText, NonEmptyText] = Field(default_factory=dict)
     mapped_pins: tuple[ConnectorMappedPinEvidence, ...] = ()
@@ -92,11 +102,15 @@ class ConnectorCoverageEntry(StrictModel):
     issues: tuple[NonEmptyText, ...] = ()
 
     @model_validator(mode="after")
-    def complete_peer_assignment_group(self) -> ConnectorCoverageEntry:
+    def complete_comparison_groups(self) -> ConnectorCoverageEntry:
         if (self.peer_assignment_group is None) != (self.peer_assignment_basis is None):
             raise ValueError("Connector peer-assignment groups need a review basis")
-        if self.status == "NOT_APPLICABLE" and self.peer_assignment_group is not None:
-            raise ValueError("Not-applicable connectors cannot join a peer-assignment group")
+        if (self.return_comparison_group is None) != (self.return_comparison_basis is None):
+            raise ValueError("Connector return-comparison groups need a review basis")
+        if self.status == "NOT_APPLICABLE" and (
+            self.peer_assignment_group is not None or self.return_comparison_group is not None
+        ):
+            raise ValueError("Not-applicable connectors cannot join comparison groups")
         return self
 
 

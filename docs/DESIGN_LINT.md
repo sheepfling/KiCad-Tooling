@@ -301,7 +301,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 185 active rules.
+The catalog currently contains 186 active rules.
 
 ### USB data pin/name polarity review
 

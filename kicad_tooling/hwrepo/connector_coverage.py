@@ -72,6 +72,12 @@ def evaluate(
                     peer_assignment_basis=(
                         None if review is None else review.peer_assignment_basis
                     ),
+                    return_comparison_group=(
+                        None if review is None else review.return_comparison_group
+                    ),
+                    return_comparison_basis=(
+                        None if review is None else review.return_comparison_basis
+                    ),
                     issues=("Reviewed reference is not present in the exported symbol inventory",),
                 )
             )
@@ -88,6 +94,12 @@ def evaluate(
                     ),
                     peer_assignment_basis=(
                         None if review is None else review.peer_assignment_basis
+                    ),
+                    return_comparison_group=(
+                        None if review is None else review.return_comparison_group
+                    ),
+                    return_comparison_basis=(
+                        None if review is None else review.return_comparison_basis
                     ),
                     issues=("Exported component has no symbol definition for pin inventory",),
                 )
@@ -179,6 +191,12 @@ def evaluate(
                 "Pins with intentional no-connect reasons have net assignments: "
                 f"{reasoned_open_assignments}"
             )
+        if review.return_comparison_group is not None and not any(
+            pin.role == "return" for pin in mapped_pins
+        ):
+            issues.append(
+                "Return-comparison group is declared but the interface map has no return-role pin"
+            )
 
         entry_status: Literal["COVERED", "INCOMPLETE"] = "INCOMPLETE" if issues else "COVERED"
         entries.append(
@@ -189,6 +207,8 @@ def evaluate(
                 basis=review.basis,
                 peer_assignment_group=review.peer_assignment_group,
                 peer_assignment_basis=review.peer_assignment_basis,
+                return_comparison_group=review.return_comparison_group,
+                return_comparison_basis=review.return_comparison_basis,
                 interface_pin_map=dict(sorted(review.pin_map.items())),
                 unlisted_pin_reasons=dict(sorted(review.unlisted_pin_reasons.items())),
                 mapped_pins=mapped_pins,
@@ -307,5 +327,31 @@ def source_matched_connector_peer_assignment_groups(
             result[entry.reference] = (
                 entry.peer_assignment_group,
                 entry.peer_assignment_basis,
+            )
+    return result
+
+
+def source_matched_connector_return_comparison_groups(
+    observed: NetlistContract,
+    coverage: ConnectorCoverageReport | None,
+) -> dict[str, tuple[str, str]]:
+    """Return return-pin scopes only for complete maps that still match this netlist."""
+    if coverage is None:
+        return {}
+    pin_evidence = source_matched_connector_pin_evidence(observed, coverage)
+    result: dict[str, tuple[str, str]] = {}
+    for entry in coverage.entries:
+        if (
+            entry.status != "COVERED"
+            or entry.interface_id is None
+            or entry.return_comparison_group is None
+            or entry.return_comparison_basis is None
+            or not any(pin.role == "return" for pin in entry.mapped_pins)
+        ):
+            continue
+        if all(pin_evidence.get(pin.component_pin) == pin for pin in entry.mapped_pins):
+            result[entry.reference] = (
+                entry.return_comparison_group,
+                entry.return_comparison_basis,
             )
     return result

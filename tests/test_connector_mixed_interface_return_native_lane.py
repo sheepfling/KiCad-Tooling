@@ -45,6 +45,7 @@ def test_native_mixed_interface_returns_are_source_bound_and_repeatable(
         f"{prefix}native-export",
         f"{prefix}fault",
         f"{prefix}control",
+        f"{prefix}separate-scope-control",
     }
     assert expected_stages <= set(stages)
     results = {stage: stages[stage] for stage in expected_stages}
@@ -69,3 +70,7 @@ def test_native_mixed_interface_returns_are_source_bound_and_repeatable(
     assert control["findings"] == "none"
     assert control["erc_errors"] == "none"
     assert control["repeatable"] == "true"
+    separate_scope = results[f"{prefix}separate-scope-control"]
+    assert separate_scope["kicad_version"] == version
+    assert separate_scope["connector_coverage"] == "COMPLETE"
+    assert separate_scope["findings"] == "none"

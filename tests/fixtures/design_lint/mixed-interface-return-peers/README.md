@@ -5,10 +5,15 @@ or production project source and are marked not for manufacture.
 
 The fault schematic has two USB connectors and one serial connector. The
 source-matched interface catalog identifies each connector's return pin, and
-the connector review assigns each data interface to its own peer group. The
-first USB return and serial return share `COMMON_RETURN`; the second USB return
-is assigned to `USB2_RETURN`. The lint should raise one review finding for the
-split return pins while keeping unrelated data pins scoped to their peer groups.
+the connector review assigns each data interface to its own peer group. All
+three returns share one return-comparison group for the fault and common-net
+control. The first USB return and serial return share `COMMON_RETURN`; the second
+USB return is assigned to `USB2_RETURN`. The lint should raise one review finding
+for the split return pins while keeping unrelated data pins scoped to their peer
+groups. The fault is also evaluated with
+`connector-reviews-separate-return-groups.json`: J1/J2 share one comparison
+scope while J3 has another, so the cross-group return prompt is suppressed. This
+review-scope control does not claim electrical isolation or continuity.
 
 The control schematic puts all three mapped return pins on `COMMON_RETURN`.
 It should produce no finding for `connector.repeated_pin_function`. This
@@ -17,7 +22,7 @@ does not establish that every real USB or serial design must common its
 returns. A review finding prompts a project engineer to decide whether the
 separation is intended and supported by the interface requirements.
 
-`interfaces.json` and `connector-reviews.json` are part of the source-bound
+`interfaces.json` and both connector-review maps are part of the source-bound
 test input. The hosted lane verifies the exact source hashes, connector-map
 coverage, KiCad net assignments, no native ERC errors, and repeatability of
 netlist and ERC exports. It runs with the pinned KiCad 10.0.0 and 10.0.5
@@ -25,12 +30,13 @@ toolchains declared by `kicad_tooling/ci_hosted_kicad10_images.py`.
 
 Reviewed input SHA-256 values:
 
-| Input                    | SHA-256                                                            |
-| ------------------------ | ------------------------------------------------------------------ |
-| `fault.kicad_sch`        | `53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83` |
-| `control.kicad_sch`      | `b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45` |
-| `interfaces.json`        | `e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99` |
-| `connector-reviews.json` | `57cd1b4cdf7663f41e0223ff48f83742b7ba3f592abd7664175c17c1c2c0c373` |
+| Input                                           | SHA-256                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------ |
+| `fault.kicad_sch`                               | `53af59844b37ac7181a99e22a5bc14cd868ef33083361590cd627e8907e3fb83` |
+| `control.kicad_sch`                             | `b0731cac3cba8b946e905a41f2f9251c459573f699d2c2990b2574c4ba7f5c45` |
+| `interfaces.json`                               | `e1216ee351d3fcdddd720f2bc6f0e2068bbc9d85e777aa4914c4af8102cb8b99` |
+| `connector-reviews.json`                        | `a1ec6317ef6207572c89605a5c0ef1448fe7e5a62b2ec5383edea598dda2d0bc` |
+| `connector-reviews-separate-return-groups.json` | `fcbebe5c7c83a15d82daf1ae43c25f461bcd3809b4e9c02f4eaca1a0c8ae3329` |
 
 Run the exact-native gate in its CI lane with:
 

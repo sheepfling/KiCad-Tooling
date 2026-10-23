@@ -11,7 +11,9 @@
       "interface_id": "usb-interface",
       "pin_map": {"1": "1", "2": "2", "3": "3"},
       "peer_assignment_group": "usb-port-1",
-      "peer_assignment_basis": "USB port 1 is a distinct external data interface"
+      "peer_assignment_basis": "USB port 1 is a distinct external data interface",
+      "return_comparison_group": "external-returns",
+      "return_comparison_basis": "Compare reviewed USB1 return against other external return pins"
     },
     {
       "reference": "J2",
@@ -20,7 +22,9 @@
       "interface_id": "serial-interface",
       "pin_map": {"1": "1", "2": "2", "3": "3"},
       "peer_assignment_group": "serial-port",
-      "peer_assignment_basis": "Serial port is a distinct external data interface"
+      "peer_assignment_basis": "Serial port is a distinct external data interface",
+      "return_comparison_group": "external-returns",
+      "return_comparison_basis": "Compare reviewed serial return against other external return pins"
     },
     {
       "reference": "J3",
@@ -29,7 +33,9 @@
       "interface_id": "usb-interface",
       "pin_map": {"1": "1", "2": "2", "3": "3"},
       "peer_assignment_group": "usb-port-2",
-      "peer_assignment_basis": "USB port 2 is a distinct external data interface"
+      "peer_assignment_basis": "USB port 2 is a distinct external data interface",
+      "return_comparison_group": "external-returns",
+      "return_comparison_basis": "Compare reviewed USB2 return against other external return pins"
     }
   ]
 }
