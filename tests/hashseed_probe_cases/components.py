@@ -7,6 +7,7 @@ import hashlib
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
+    NetlistContract,
 )
 from kicad_tooling.hwrepo.mosfet_stress import mosfet_stress_checks
 from kicad_tooling.hwrepo.mosfet_stress_models import MosfetVoltageInterval
@@ -16,6 +17,7 @@ from tests.design_lint_fixtures import (
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.test_led_output_heuristics import observed_report as led_output_observed_report
 from tests.test_led_output_heuristics import output_led_netlist as led_output_netlist
+from tests.test_mosfet_gate_connectivity import mosfet_netlist as mosfet_gate_netlist
 from tests.test_mosfet_stress import multi_device_netlist, multi_device_requirement
 from tests.test_two_pin_crystals import crystal_netlist
 from tests.test_two_pin_diodes import diode_netlist
@@ -45,16 +47,29 @@ def mosfet_stress_check_result(*, q2_over_limit: bool) -> dict[str, object]:
     }
 
 
+def source_bound_component_report(
+    project_id: str,
+    observed: NetlistContract,
+) -> dict[str, object]:
+    """Serialize component lint against a hash of its normalized netlist."""
+    digest = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
+    return evaluate(
+        project_id,
+        coach(observed, netlist_sha256=digest),
+        DesignLintPolicy(),
+    ).model_dump(mode="json")
+
+
 def diode_rail_orientation_report(*, anode_net: str, cathode_net: str) -> dict[str, object]:
     """Serialize a diode rail review with a digest of its normalized netlist."""
     observed = diode_rail_netlist(anode_net=anode_net, cathode_net=cathode_net)
-    digest = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
-    report = evaluate(
-        "synthetic-diode-rail-return",
-        coach(observed, netlist_sha256=digest),
-        DesignLintPolicy(),
-    )
-    return report.model_dump(mode="json")
+    return source_bound_component_report("synthetic-diode-rail-return", observed)
+
+
+def mosfet_gate_peer_report(*, has_driver: bool) -> dict[str, object]:
+    """Serialize a supported MOSFET gate with and without a fitted net peer."""
+    observed = mosfet_gate_netlist(gate_net_members=("U1.1",) if has_driver else None)
+    return source_bound_component_report("synthetic-mosfet-gate-hashseed", observed)
 
 
 def report_cases() -> dict[str, object]:
@@ -65,6 +80,8 @@ def report_cases() -> dict[str, object]:
         "diode_rail_named_return_control": diode_rail_orientation_report(
             anode_net="+3V3", cathode_net="GND"
         ),
+        "mosfet_gate_no_peer_fault": mosfet_gate_peer_report(has_driver=False),
+        "mosfet_gate_driver_control": mosfet_gate_peer_report(has_driver=True),
         "diode_fault": evaluate(
             "synthetic-two-pin-diode-hash-seed-fault", coach(diode_netlist()), DesignLintPolicy()
         ).model_dump(mode="json"),

@@ -87,6 +87,8 @@ REPORT_ORDER = (
     "unconnected_pin_inventory",
     "diode_rail_named_return_fault",
     "diode_rail_named_return_control",
+    "mosfet_gate_no_peer_fault",
+    "mosfet_gate_driver_control",
     "diode_fault",
     "diode_control",
     "crystal_fault",

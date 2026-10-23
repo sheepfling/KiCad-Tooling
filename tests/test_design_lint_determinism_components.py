@@ -87,3 +87,19 @@ def test_named_return_diode_fault_and_control_are_stable_across_hash_seeds() -> 
     assert fault_findings[0]["evidence"]["cathode_net"] == ["+3V3"]
     assert control["status"] == "PASS"
     assert control["findings"] == []
+
+
+@pytest.mark.design_lint_rule(rule_id="component.mosfet_gate_without_peer")
+def test_mosfet_gate_fault_and_driver_control_are_stable_across_hash_seeds() -> None:
+    reports = hashseed_probe_reports(families=("components",))
+    fault = reports["mosfet_gate_no_peer_fault"]
+    control = reports["mosfet_gate_driver_control"]
+    rule_id = "component.mosfet_gate_without_peer"
+
+    fault_findings = [finding for finding in fault["findings"] if finding["rule_id"] == rule_id]
+    assert fault["status"] == "REVIEW"
+    assert len(fault_findings) == 1
+    assert fault_findings[0]["evidence"]["gate_pin"] == ["Q1.2"]
+    assert fault_findings[0]["evidence"]["other_fitted_net_members"] == []
+    assert control["status"] == "PASS"
+    assert all(finding["rule_id"] != rule_id for finding in control["findings"])

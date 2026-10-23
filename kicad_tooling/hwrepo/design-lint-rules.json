@@ -2972,7 +2972,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_mosfet_gate_connectivity.test_peer_membership_order_does_not_change_the_finding_or_its_fingerprint",
-        "tests.test_mosfet_gate_connectivity.test_any_fitted_peer_on_the_gate_net_is_a_control"
+        "tests.test_mosfet_gate_connectivity.test_any_fitted_peer_on_the_gate_net_is_a_control",
+        "tests.test_design_lint_determinism_components.test_mosfet_gate_fault_and_driver_control_are_stable_across_hash_seeds"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer",
