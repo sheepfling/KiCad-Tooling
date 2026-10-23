@@ -598,7 +598,9 @@ and optional ecosystem adapters are `P3`.
   biased clamp and isolation circuits are valid, so this remains a configurable
   `REVIEW` prompt rather than an inferred defect. Synthetic native fixtures now
   cover both `+3V3`/`+5V` and `GND`/`+3V3` ordering on the exact KiCad
-  10.0.0/10.0.5 lanes. No project or cohort board/source is used.
+  10.0.0/10.0.5 lanes. A hashed synthetic return fault and forward control
+  also run through LINT-080's three-process hash-seed stability gate. No
+  project or cohort board/source is used.
 
 - **Connector native-fixture registry completeness (2026-10-22):** The
   architecture gate now requires every active rule declaring
@@ -2981,8 +2983,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v78. The cross-process probe supports themed report
-  selectors and retains the complete 203-report inventory gate. Fault/control
+- **Status:** Implemented v79. The cross-process probe supports themed report
+  selectors and retains the complete 205-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3043,7 +3045,12 @@ is not a reason by itself to expand its scope or change its default policy.
   visible in both reports. The distinction is stable across the same three
   isolated Python processes. The v78 extension adds an exact project-authored
   ignore for only that return finding; the independent pair review remains
-  open across the same process matrix.
+  open across the same process matrix. The v79 extension adds LINT-173's
+  input-hashed synthetic `GND`/`+3V3` reverse-polarity fault and `+3V3`/`GND`
+  forward control to the component report family, checks the expected finding
+  and quiet control, and compares complete reports across three randomized
+  processes. This tests typed-report serialization, separate from the
+  digest-pinned native schematic lane.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized

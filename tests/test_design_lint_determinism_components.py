@@ -71,3 +71,19 @@ def test_two_pin_component_reports_remain_deterministic() -> None:
     led_series_rule_ids = {finding["rule_id"] for finding in led_series["findings"]}
     assert "component.led_directly_driven_from_output" not in led_series_rule_ids
     assert led_series_rule_ids == {"net.return_labels_without_pin_roles"}
+
+
+@pytest.mark.design_lint_rule(rule_id="component.diode_anode_below_cathode_on_named_rails")
+def test_named_return_diode_fault_and_control_are_stable_across_hash_seeds() -> None:
+    reports = hashseed_probe_reports(families=("components",))
+    fault = reports["diode_rail_named_return_fault"]
+    control = reports["diode_rail_named_return_control"]
+    rule_id = "component.diode_anode_below_cathode_on_named_rails"
+
+    fault_findings = [finding for finding in fault["findings"] if finding["rule_id"] == rule_id]
+    assert fault["status"] == "REVIEW"
+    assert len(fault_findings) == 1
+    assert fault_findings[0]["evidence"]["anode_net"] == ["GND"]
+    assert fault_findings[0]["evidence"]["cathode_net"] == ["+3V3"]
+    assert control["status"] == "PASS"
+    assert control["findings"] == []

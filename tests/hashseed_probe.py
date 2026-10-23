@@ -85,6 +85,8 @@ REPORT_ORDER = (
     "db9_common_against_common_requirement",
     "db9_common_against_isolated_requirement",
     "unconnected_pin_inventory",
+    "diode_rail_named_return_fault",
+    "diode_rail_named_return_control",
     "diode_fault",
     "diode_control",
     "crystal_fault",

@@ -3111,7 +3111,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_diode_rail_orientation.test_rail_correction_and_input_reordering_are_deterministic",
-        "tests.test_diode_rail_orientation_native_fixture.test_native_diode_rail_fault_and_control_are_deterministic"
+        "tests.test_diode_rail_orientation_native_fixture.test_native_diode_rail_fault_and_control_are_deterministic",
+        "tests.test_design_lint_determinism_components.test_named_return_diode_fault_and_control_are_stable_across_hash_seeds"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/component_diode_rail_orientation.py#diodes_with_anode_below_cathode_on_named_rails",
