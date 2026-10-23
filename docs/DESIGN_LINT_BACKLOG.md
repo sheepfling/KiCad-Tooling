@@ -4489,7 +4489,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-010 — I2C pull-up topology and rail review
 
-- **Status:** Partial v9. The direct discrete-resistor heuristic and authored
+- **Status:** Partial v10. The direct discrete-resistor heuristic and authored
   electrical requirement support exact signal nets, rails, and inclusive
   nominal resistance ranges. The authored requirement supports explicitly
   ordered, unbranched resistor chains with exact component identity, per-leg
@@ -4519,7 +4519,13 @@ is not a reason by itself to expand its scope or change its default policy.
   percentage is applied conservatively to the line's full nominal range, and
   missing or stale entries fail the electrical-window gate. Heuristic coverage
   now requires every configured voltage and electrical-window check to pass
-  before it resolves the missing-pull-up prompt.
+  before it resolves the missing-pull-up prompt. An optional capacitance
+  scope inventories every fitted C-prefixed component directly attached to a
+  bus line, checks its exact symbol, footprint, optional `PART_ID`, two-pin
+  inventory, signal/return pin nets, and nominal capacitance range, then sums
+  reviewed maximum effective capacitance with a residual loading bound. The
+  total must fit within the authored bus capacitance maximum; missing, stale,
+  DNP, or mismatched contributors keep the heuristic prompt open.
 - **Problem:** The review heuristic recognizes direct conventional resistors
   and unbranched resistor chains but cannot resolve resistor arrays, branched
   networks, or rail-voltage compatibility on its own. Only a matching passing
@@ -4563,10 +4569,14 @@ is not a reason by itself to expand its scope or change its default policy.
   or datasheet limits are correct. Its `operating` or `absolute_maximum` limit
   kind is recorded but not independently validated. The optional resistor
   window uses project-supplied maximum bus capacitance and rise time and
-  minimum sink current; it does not extract capacitance, model nonlinear or
-  active pull-ups, verify the authored resistor-tolerance source, model device
-  dynamics, or predict measured waveforms. Netlist topology does not establish transient
-  compatibility or off-board behavior.
+  minimum sink current; it does not model nonlinear or active pull-ups, verify
+  the authored resistor-tolerance source, model device dynamics, or predict
+  measured waveforms. The optional capacitance scope only inventories
+  C-prefixed fitted components attached directly to the signal net and checks
+  authored values. Its residual must cover endpoint loading, board parasitics,
+  and off-board loading; the tool does not measure or independently derive
+  those bounds. Netlist topology does not establish transient compatibility
+  or off-board behavior.
 - **Fixtures:** Exact mapped-array `PART_ID` control and wrong/missing identity
   faults, plus an opt-out control; two direct 4.7 kΩ resistors passing at
   2.35 kΩ equivalent;
@@ -4589,8 +4599,11 @@ is not a reason by itself to expand its scope or change its default policy.
   percentages; exact scoped coverage for series-resistor and mapped-array
   elements, stale/missing element faults, and a valid tolerance control;
   electrical-window failures and incomplete tolerance scopes keep the
-  `bus.i2c_missing_pullup` review prompt open. Existing CLI/MCP parity covers
-  passing and excessive-capacitance controls.
+  `bus.i2c_missing_pullup` review prompt open; local-capacitor identity, pin/net,
+  DNP, value-range, inventory, and over-budget faults also keep it open. Exact
+  mapped-capacitor and residual-bound controls pass, and the check remains
+  stable when native maps are reordered. Existing CLI/MCP parity covers
+  passing and excessive-bus-capacitance controls.
   Release verification replays authored voltage and resistor-window checks
   against the source-hashed netlist and rejects omission of any result.
 - **Native fixture evidence (2026-10-03):** The synthetic mapped-array
@@ -4627,12 +4640,14 @@ is not a reason by itself to expand its scope or change its default policy.
   resistor behavior.
 - **Remaining:** Rail ceiling, pin-voltage limits, tolerance values, and cited
   source documents remain reviewed inputs. Exact scoped tolerance coverage is
-  checked, but source authenticity and correctness are not. The authored bus
-  capacitance maximum is not yet reconciled against an explicit inventory of
-  local capacitors, endpoint loading, board parasitics, or off-board loading;
-  measured transient behavior remains outside this schematic check. Internal
-  and off-board pull-ups remain an explicit not-applicable decision for this
-  local-netlist contract.
+  checked, but source authenticity and correctness are not. The optional
+  capacitance inventory and residual bound are also authored inputs and are
+  not independently verified; only directly attached C-prefixed schematic
+  devices are inventoried. Endpoint loading, board parasitics, and off-board
+  loading must be represented by the residual, while measured transient
+  behavior remains outside this schematic check. Internal and off-board
+  pull-ups remain an explicit not-applicable decision for this local-netlist
+  contract.
 
 #### LINT-011 — CAN termination topology and bus-end declarations
 

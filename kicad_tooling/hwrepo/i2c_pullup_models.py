@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from .component_references import is_capacitor_reference
 from .model_primitives import (
     CapacitancePf,
     Digest,
@@ -14,6 +15,7 @@ from .model_primitives import (
     Identifier,
     NetName,
     NonEmptyText,
+    NonNegativeCapacitancePf,
     NonNegativeMeasure,
     Reference,
     RepositoryPath,
@@ -177,6 +179,58 @@ class I2cPullupResistorToleranceRequirement(StrictModel):
     basis: NonEmptyText
 
 
+class I2cPullupCapacitanceContributorRequirement(StrictModel):
+    """Exact local capacitor mapping and reviewed effective-capacitance bound."""
+
+    reference: Identifier
+    expected_symbol: NonEmptyText
+    expected_footprint: NonEmptyText
+    expected_part_id: Identifier | None = None
+    signal_pin: Reference
+    return_pin: Reference
+    return_net: NetName
+    minimum_nominal_capacitance_pf: CapacitancePf
+    maximum_nominal_capacitance_pf: CapacitancePf
+    nominal_capacitance_basis: NonEmptyText
+    maximum_effective_capacitance_pf: CapacitancePf
+    effective_capacitance_basis: NonEmptyText
+
+    @field_validator("reference")
+    @classmethod
+    def reference_is_capacitor(cls, value: str) -> str:
+        if not is_capacitor_reference(value):
+            raise ValueError("I2C capacitance contributor reference must be C-prefixed")
+        return value
+
+    @model_validator(mode="after")
+    def valid_component_mapping(self) -> I2cPullupCapacitanceContributorRequirement:
+        prefix = f"{self.reference}."
+        pins = (self.signal_pin, self.return_pin)
+        if any(not pin.casefold().startswith(prefix.casefold()) for pin in pins):
+            raise ValueError("I2C capacitance contributor pins must belong to its component")
+        if self.signal_pin.casefold() == self.return_pin.casefold():
+            raise ValueError("I2C capacitance contributor pins must be distinct")
+        if self.minimum_nominal_capacitance_pf > self.maximum_nominal_capacitance_pf:
+            raise ValueError("I2C capacitor nominal maximum is below its minimum")
+        return self
+
+
+class I2cPullupCapacitanceScope(StrictModel):
+    """Reviewed inventory of local capacitors and residual bus capacitance."""
+
+    inventory_basis: NonEmptyText
+    maximum_residual_capacitance_pf: NonNegativeCapacitancePf
+    residual_capacitance_basis: NonEmptyText
+    contributors: tuple[I2cPullupCapacitanceContributorRequirement, ...] = ()
+
+    @model_validator(mode="after")
+    def contributors_are_unique(self) -> I2cPullupCapacitanceScope:
+        references = [item.reference.casefold() for item in self.contributors]
+        if len(references) != len(set(references)):
+            raise ValueError("I2C capacitance contributor references must be unique")
+        return self
+
+
 class I2cPullupElectricalWindow(StrictModel):
     """Reviewed I2C pull-up limits for sink current and RC rise time."""
 
@@ -195,6 +249,7 @@ class I2cPullupElectricalWindow(StrictModel):
     ) = None
     resistor_tolerance_basis: NonEmptyText | None = None
     resistor_tolerances: tuple[I2cPullupResistorToleranceRequirement, ...] = ()
+    capacitance_scope: I2cPullupCapacitanceScope | None = None
 
     @model_validator(mode="after")
     def valid_pullup_voltage_window(self) -> I2cPullupElectricalWindow:

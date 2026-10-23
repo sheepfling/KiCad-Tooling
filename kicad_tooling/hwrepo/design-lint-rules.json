@@ -3826,7 +3826,7 @@
       "limitations": [
         "Internal device pull-ups and off-board pull-ups are invisible in this netlist and can produce valid review findings.",
         "Branched or otherwise ambiguous resistor junctions are not followed. The heuristic itself checks nominal topology only; it does not analyze resistor placement, tolerance, bus capacitance, voltage compatibility, or timing.",
-        "A missing-path hint is resolved only by an exact project-authored I2C requirement whose SDA and SCL checks and every configured voltage or electrical-window check pass against this native netlist. When per-element tolerance entries are supplied, their resistor references or array-channel IDs must exactly cover the mapped elements on each line. Missing, pending, not-applicable, mismatched, or failing requirements leave the review open. Tolerance and capacitance source bases remain reviewed inputs; the checker does not verify cited documents or extract board, endpoint, or off-board capacitance."
+        "A missing-path hint is resolved only by an exact project-authored I2C requirement whose SDA and SCL checks and every configured voltage or electrical-window check pass against this native netlist. When per-element tolerance entries are supplied, their resistor references or array-channel IDs must exactly cover the mapped elements on each line. A configured capacitance scope must map every fitted C-prefixed component directly attached to each line and pass exact identity, pin/net, and nominal-value checks plus the authored effective-capacitance budget. Missing, pending, not-applicable, mismatched, or failing requirements leave the review open. Tolerance and capacitance source bases remain reviewed inputs; the checker does not verify cited documents or extract board, endpoint, or off-board capacitance."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
@@ -3836,6 +3836,15 @@
         "tests.test_i2c_pullup_heuristic_coverage.test_changed_array_part_identity_keeps_missing_pullup_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_wrong_array_channel_tolerance_scope_keeps_the_i2c_prompt_open",
         "tests.test_i2c_pullup_heuristic_coverage.test_failing_electrical_window_keeps_the_i2c_prompt_open",
+        "tests.test_i2c_pullup_heuristic_coverage.test_unmapped_array_capacitor_keeps_the_i2c_prompt_open",
+        "tests.test_i2c_pullup_heuristic_coverage.test_overbudget_array_capacitance_keeps_the_i2c_prompt_open",
+        "tests.test_i2c_pullup_capacitance.test_unmapped_capacitor_on_the_bus_line_fails_scope",
+        "tests.test_i2c_pullup_capacitance.test_changed_part_identity_fails_mapped_capacitor",
+        "tests.test_i2c_pullup_capacitance.test_changed_symbol_footprint_or_pin_inventory_fails_exact_mapping",
+        "tests.test_i2c_pullup_capacitance.test_nominal_value_outside_reviewed_range_fails_mapped_capacitor",
+        "tests.test_i2c_pullup_capacitance.test_wrong_return_net_fails_exact_pin_mapping",
+        "tests.test_i2c_pullup_capacitance.test_accounted_effective_capacitance_cannot_exceed_bus_maximum",
+        "tests.test_i2c_pullup_capacitance.test_dnp_mapped_capacitor_cannot_satisfy_a_required_contributor",
         "tests.test_i2c_pullup_heuristic_coverage.test_requirement_for_a_different_ordered_bus_does_not_resolve_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_stale_native_netlist_hash_blocks_coverage_instead_of_suppressing",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
@@ -3848,6 +3857,8 @@
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
         "tests.test_i2c_pullup_heuristic_coverage.test_valid_mapped_array_resolves_only_its_exact_missing_path_hint",
         "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_channel_tolerance_scope_resolves_the_i2c_prompt",
+        "tests.test_i2c_pullup_heuristic_coverage.test_exact_array_capacitance_scope_resolves_the_i2c_prompt",
+        "tests.test_i2c_pullup_capacitance.test_exact_fitted_capacitor_and_residual_bound_pass",
         "tests.test_i2c_pullup_heuristic_coverage.test_symmetric_array_pin_orientation_is_a_valid_control",
         "tests.test_design_lint_i2c_parity.DesignLintI2cParityTests.test_mapped_array_control_and_missing_array_fault_match_cli_and_mcp",
         "tests.test_i2c_pullup_fixture_lane.test_native_array_lane_checks_contract_resolution_against_typed_exports",
@@ -3855,12 +3866,14 @@
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
+        "tests.test_i2c_pullup_capacitance.test_capacitance_check_is_stable_when_native_maps_are_reordered",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path",
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups",
         "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_pullup_heuristic_coverage",
+        "kicad_tooling/hwrepo/i2c_pullup_capacitance.py#i2c_pullup_capacitance_check",
         "kicad_tooling/hwrepo/design_lint_project_contexts.py#i2c_pullup_coverage_from_project",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],

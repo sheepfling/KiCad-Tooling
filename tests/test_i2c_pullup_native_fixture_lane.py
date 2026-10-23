@@ -84,10 +84,18 @@ def test_native_array_channel_fault_and_control_on_supported_images(tmp_path: Pa
             "PASS",
             "PASS",
         )
+        assert (
+            control["sda_capacitance_scope"],
+            control["scl_capacitance_scope"],
+        ) == ("PASS", "PASS")
         assert fault["baseline_missing_pullup"] == "OPEN"
         assert fault["heuristic_coverage"] == "OPEN"
         assert fault["heuristic_findings"] == "bus.i2c_missing_pullup"
         assert (fault["sda_tolerance_scope"], fault["scl_tolerance_scope"]) == (
+            "PASS",
+            "PASS",
+        )
+        assert (fault["sda_capacitance_scope"], fault["scl_capacitance_scope"]) == (
             "PASS",
             "PASS",
         )

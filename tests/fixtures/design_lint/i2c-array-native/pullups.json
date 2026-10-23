@@ -27,7 +27,13 @@
               "maximum_tolerance_percent": 5.0,
               "basis": "Synthetic array channel tolerance source"
             }
-          ]
+          ],
+          "capacitance_scope": {
+            "inventory_basis": "Synthetic inventory of capacitors attached to SDA",
+            "maximum_residual_capacitance_pf": 50.0,
+            "residual_capacitance_basis": "Synthetic pin, route, and endpoint residual bound",
+            "contributors": []
+          }
         }
       },
       "scl": {
@@ -52,7 +58,13 @@
               "maximum_tolerance_percent": 5.0,
               "basis": "Synthetic array channel tolerance source"
             }
-          ]
+          ],
+          "capacitance_scope": {
+            "inventory_basis": "Synthetic inventory of capacitors attached to SCL",
+            "maximum_residual_capacitance_pf": 50.0,
+            "residual_capacitance_basis": "Synthetic pin, route, and endpoint residual bound",
+            "contributors": []
+          }
         }
       }
     }

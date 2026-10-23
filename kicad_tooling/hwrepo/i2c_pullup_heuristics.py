@@ -211,6 +211,8 @@ def i2c_pullup_heuristic_coverage(
                 ]
                 if line.electrical_window.resistor_tolerances:
                     window_suffixes.append("tolerance-scope")
+                if line.electrical_window.capacitance_scope is not None:
+                    window_suffixes.append("capacitance-scope")
                 for suffix in window_suffixes:
                     window_id = f"{check_id}/electrical-window/{suffix}"
                     required_check_ids.append(window_id)

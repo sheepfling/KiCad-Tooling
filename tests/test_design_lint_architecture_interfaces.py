@@ -86,6 +86,7 @@ BUS_ANALYSIS_MODULES = (
     "peer_reference_assignments.py",
     "i2c_pullup_contract_paths.py",
     "i2c_pullup_contract.py",
+    "i2c_pullup_capacitance.py",
     "i2c_pullup_heuristics.py",
     "can_termination_contract.py",
     "can_termination_heuristics.py",

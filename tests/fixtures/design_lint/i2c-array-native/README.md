@@ -5,7 +5,7 @@ after KiCad exports a native XML netlist. They contain only synthetic symbols,
 part identities, pin maps, and values.
 
 The synthetic project requirement is stored separately in `pullups.json`
-(SHA-256 `36e27e3e50cff133ebdbe9100b572d2bb7944350796c6891da7d0a527cb459ce`).
+(SHA-256 `5a1c08085141504a567329d74abb0383cf981cbb9c7004efc03fffdd27385cbb`).
 The native lane copies it into a temporary project-relative path, validates it
 through the shared contract reader, and binds its digest and path to lint
 coverage.
@@ -21,10 +21,11 @@ value, expected project `PART_ID`, all four pins, and exact net assignments.
 Each source is exported twice and compared after parsing to the normalized
 typed-netlist contract; raw XML hashes are retained because KiCad may vary
 metadata between exports.
-The authored contract also binds a synthetic maximum resistor tolerance to
-each exact array channel and supplies the reviewed bus capacitance and
-rise-time bounds. Both exports must retain and pass the native-derived channel
-tolerance-scope checks. The same native-derived contracts exercise
+The authored contract binds a synthetic maximum resistor tolerance to each
+exact array channel, inventories any fitted capacitors on each bus line, and
+supplies the reviewed residual capacitance and rise-time bounds. Both exports
+must retain and pass the native-derived channel tolerance and capacitance
+scope checks. The same native-derived contracts exercise
 `bus.i2c_missing_pullup`: without the authored requirement, both fixtures
 remain review candidates. The control's passing SDA/SCL topology and electrical
 window checks resolve that hint; the wrong-SDA fault keeps it open even though

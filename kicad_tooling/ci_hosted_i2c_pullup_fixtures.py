@@ -56,7 +56,7 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         raise ValueError("I2C pull-up fixture sources differ from the reviewed hashes")
 
     contract_fixture = fixture_root / "pullups.json"
-    expected_contract_sha256 = "36e27e3e50cff133ebdbe9100b572d2bb7944350796c6891da7d0a527cb459ce"
+    expected_contract_sha256 = "5a1c08085141504a567329d74abb0383cf981cbb9c7004efc03fffdd27385cbb"
     if digest(contract_fixture) != expected_contract_sha256:
         raise ValueError("I2C pull-up requirement fixture differs from the reviewed hash")
     project_contract = root / "projects/synthetic-i2c-array/electrical.json"
@@ -202,6 +202,12 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         for line in ("sda", "scl")
     ):
         raise ValueError("Native mapped I2C tolerance scope did not cover every array channel")
+    if any(
+        control_checks[f"i2c-pullup/array-bus/{line}/electrical-window/capacitance-scope"].status
+        != "PASS"
+        for line in ("sda", "scl")
+    ):
+        raise ValueError("Native mapped I2C capacitance scope did not pass")
 
     fault = observations[("fault", "first")]
     fault_checks = {item.id: item for item in reports[("fault", "first")]}
@@ -219,6 +225,12 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
         for line in ("sda", "scl")
     ):
         raise ValueError("Native pin/net fault unexpectedly changed authored tolerance coverage")
+    if any(
+        fault_checks[f"i2c-pullup/array-bus/{line}/electrical-window/capacitance-scope"].status
+        != "PASS"
+        for line in ("sda", "scl")
+    ):
+        raise ValueError("Native pin/net fault unexpectedly changed authored capacitance coverage")
 
     for case in fixtures:
         first_hash = normalized_hashes[(case, "first")]
@@ -294,6 +306,12 @@ def i2c_pullup_native_fixture_lane(root: Path, *, project: str, image: str, log:
             ].status,
             scl_tolerance_scope=checks[
                 "i2c-pullup/array-bus/scl/electrical-window/tolerance-scope"
+            ].status,
+            sda_capacitance_scope=checks[
+                "i2c-pullup/array-bus/sda/electrical-window/capacitance-scope"
+            ].status,
+            scl_capacitance_scope=checks[
+                "i2c-pullup/array-bus/scl/electrical-window/capacitance-scope"
             ].status,
             repeatable="true",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),

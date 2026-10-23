@@ -15,7 +15,9 @@ from kicad_tooling.hwrepo.models import (
 )
 from tests.design_lint_fixtures.i2c_arrays import (
     array_netlist,
+    array_netlist_with_capacitor,
     array_requirement,
+    array_requirement_with_capacitance_scope,
 )
 from tests.electrical_i2c_support import i2c_pullup_window_requirement
 
@@ -157,6 +159,46 @@ def test_failing_electrical_window_keeps_the_i2c_prompt_open() -> None:
 
     assert result.status == "OPEN"
     assert any("maximum-rise-resistance" in issue for issue in result.entries[0].issues)
+    assert "bus.i2c_missing_pullup" in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
+def test_exact_array_capacitance_scope_resolves_the_i2c_prompt() -> None:
+    netlist = array_netlist_with_capacitor()
+    result = coverage(netlist, array_requirement_with_capacitance_scope())
+
+    assert result.status == "COMPLETE", result.entries[0].issues
+    assert "i2c-pullup/main/sda/electrical-window/capacitance-scope" in (
+        result.entries[0].check_ids
+    )
+    assert "bus.i2c_missing_pullup" not in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
+def test_unmapped_array_capacitor_keeps_the_i2c_prompt_open() -> None:
+    netlist = array_netlist_with_capacitor(extra_capacitor=True)
+    result = coverage(netlist, array_requirement_with_capacitance_scope())
+
+    assert result.status == "OPEN"
+    assert any(
+        "unmapped fitted capacitors on I2C_SDA: C2" in issue for issue in result.entries[0].issues
+    )
+    assert "bus.i2c_missing_pullup" in {
+        item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
+    }
+
+
+def test_overbudget_array_capacitance_keeps_the_i2c_prompt_open() -> None:
+    netlist = array_netlist_with_capacitor()
+    result = coverage(
+        netlist,
+        array_requirement_with_capacitance_scope(maximum_effective_capacitance_pf=30.0),
+    )
+
+    assert result.status == "OPEN"
+    assert any("55.0pF" in issue for issue in result.entries[0].issues)
     assert "bus.i2c_missing_pullup" in {
         item.rule_id for item in candidates(netlist, i2c_pullup_heuristic_coverage=result)
     }

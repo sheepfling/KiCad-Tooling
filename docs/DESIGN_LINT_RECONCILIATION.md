@@ -945,7 +945,11 @@ have been connected.
   pin disposition, channel nets, and required resistance range pass. Any
   associated authored voltage-compatibility and electrical-window checks must
   also pass. Optional scoped tolerance entries must exactly cover every mapped
-  resistor and array channel on their line. The report
+  resistor and array channel on their line. When a line configures a
+  capacitance scope, it must also map every fitted C-prefixed component
+  attached directly to that line to its exact identity, pin/net assignments,
+  and nominal range; its effective-capacitance bounds plus residual must fit
+  inside the authored bus maximum. The report
   records the electrical-contract digest, native-netlist digest, requirement
   ID, and check IDs used; absent, pending, not-applicable, mismatched, and
   failing requirements leave the heuristic prompt open. This resolves a

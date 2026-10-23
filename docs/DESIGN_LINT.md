@@ -3013,11 +3013,52 @@ nominal-only check. Neither mode verifies the cited datasheets or that their
 contents support the authored bounds. Configured sink-current and rise-time
 window checks must also pass before an authored requirement resolves the
 heuristic prompt. The window values and source notes remain project inputs;
-this is not a capacitance extraction or waveform simulation.
-The authored `maximum_low_level_voltage_v` and `minimum_sink_current_ma` must
-describe the same guaranteed operating point for the weakest applicable bus
-device, and the capacitance scope must include all local and remote endpoints
-covered by the requirement.
+this is not a waveform simulation.
+
+An optional `capacitance_scope` inventories fitted C-prefixed components whose
+native pin assignments connect directly to the bus line. Each listed
+contributor binds the exact symbol, footprint, optional `PART_ID`, two-pin
+inventory, signal and return pins/nets, and nominal capacitance range. It also
+records a reviewed maximum effective capacitance for that component, which
+can include tolerance and DC-bias derating. A separate residual bound covers
+bus loading not represented by those local schematic capacitors. The sum of
+contributor maxima and residual must not exceed
+`maximum_bus_capacitance_pf`:
+
+```json
+"capacitance_scope": {
+  "inventory_basis": "Synthetic inventory of fitted capacitors on SDA",
+  "maximum_residual_capacitance_pf": 25.0,
+  "residual_capacitance_basis": "Synthetic pin, route, and endpoint load bound",
+  "contributors": [
+    {
+      "reference": "C10",
+      "expected_symbol": "Device:C",
+      "expected_footprint": "Synthetic:0603",
+      "expected_part_id": "SYNTHETIC-C10",
+      "signal_pin": "C10.1",
+      "return_pin": "C10.2",
+      "return_net": "GND",
+      "minimum_nominal_capacitance_pf": 8.0,
+      "maximum_nominal_capacitance_pf": 12.0,
+      "nominal_capacitance_basis": "Synthetic component value review",
+      "maximum_effective_capacitance_pf": 10.0,
+      "effective_capacitance_basis": "Synthetic tolerance and DC-bias bound"
+    }
+  ]
+}
+```
+
+Every fitted C-prefixed device attached to the line must be mapped; stale,
+missing, DNP, identity, pin, net, or nominal-range mismatches fail the scope.
+The residual must account for endpoint pin loads, board parasitics, and any
+off-board loading included in the requirement. Configured sink-current,
+rise-time, tolerance, and capacitance checks must all pass before an authored
+requirement resolves the heuristic prompt. These maps and source notes remain
+project inputs: the tool does not validate cited documents, derive
+capacitance from PCB copper, or simulate a waveform. The authored
+`maximum_low_level_voltage_v` and `minimum_sink_current_ma` must describe the
+same guaranteed operating point for the weakest applicable bus device.
 The model does not verify resistor tolerance sources, nonlinear/active
 pull-ups, buffers, off-board loading beyond the authored capacitance, or
 device-to-device dynamic behavior. The optional tolerance bound does not

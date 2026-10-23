@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import math
-import re
 from decimal import Decimal, DecimalException, localcontext
 
 from .capacitance_values import parse_capacitance_pf
 from .casefold_mapping_lookup import lookup_unique_casefold as _lookup
+from .component_references import is_capacitor_reference
 from .models import (
     ComponentContract,
     NetlistContract,
@@ -24,7 +24,6 @@ from .resistor_paths import (
 )
 
 _TAU = Decimal("6.2831853071795864769252867665590057683943387987502")
-_CAPACITOR_REFERENCE = re.compile(r"^C[A-Z]*[0-9]+$", re.IGNORECASE)
 
 
 def _pin_nets(observed: NetlistContract, pin: str) -> tuple[str, ...]:
@@ -103,7 +102,7 @@ def _unlisted_parallel_components(
         if (
             reference.casefold() in mapped
             or reference.casefold() in dnp
-            or _CAPACITOR_REFERENCE.fullmatch(reference) is None
+            or not is_capacitor_reference(reference)
             or parse_capacitance_pf(component.value) is None
         ):
             continue

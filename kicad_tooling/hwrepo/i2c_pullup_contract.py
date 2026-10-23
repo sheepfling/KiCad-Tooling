@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 
 from .connector_identity import power_function_key
+from .i2c_pullup_capacitance import i2c_pullup_capacitance_check
 from .i2c_pullup_contract_paths import (
     i2c_array_channel_issue,
     i2c_array_component_issues,
@@ -197,6 +198,16 @@ def i2c_pullup_checks(
                     bus.id, name, line, tuple(tolerance_elements.values())
                 )
             )
+            if line.electrical_window is not None:
+                capacitance_check = i2c_pullup_capacitance_check(
+                    bus.id,
+                    name,
+                    line.net,
+                    line.electrical_window,
+                    observed,
+                )
+                if capacitance_check is not None:
+                    results.append(capacitance_check)
             if line.voltage_compatibility is not None:
                 results.append(
                     _i2c_pullup_voltage_compatibility_check(
@@ -245,7 +256,7 @@ def _i2c_pullup_electrical_window_checks(
             f"{item.element_id}: {item.maximum_tolerance_percent:g}% ({item.basis})"
             for item in window.resistor_tolerances
         )
-        scope_issues = []
+        scope_issues: list[str] = []
         if missing:
             scope_issues.append(
                 "missing tolerance entries for " + ", ".join(expected[item] for item in missing)
