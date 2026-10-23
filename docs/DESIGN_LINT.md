@@ -165,6 +165,24 @@ copper continuity, or first-article continuity. The
 [synthetic fault/control fixtures](../tests/fixtures/design_lint/stateful-connector-contacts/README.md)
 show the bounded topology check.
 
+## Review serial TX/RX pins on one net
+
+`bus.serial_tx_rx_same_net` can find a fitted component whose uniquely assigned
+native TX and RX pins for one recognized UART/USART channel share one
+schematic net. The rule defaults to `off` because single-wire, half-duplex,
+loopback, and other project-specific serial topologies can be intentional.
+Enable `review` only when the prompt helps your project; an exact finding can
+also be ignored with a reason.
+
+The check skips DNP components, open or multiply assigned pins, ambiguous
+multiple TX/RX functions, and differently indexed channels. It uses native
+exported pin functions and net assignments. It cannot establish the intended
+serial topology, physical continuity, external wiring, transceiver behavior,
+or firmware configuration. Tooling-owned fault and full-duplex control
+schematics are exported repeatedly on digest-pinned KiCad 10.0.0 and 10.0.5
+images; see the
+[fixture note](../tests/fixtures/design_lint/serial-tx-rx-same-net/README.md).
+
 ## Explore the rule catalog
 
 List all packaged rules, their implementation theme and source owner, default
@@ -180,7 +198,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 171 active rules.
+The catalog currently contains 172 active rules.
 
 ### USB data pin/name polarity review
 

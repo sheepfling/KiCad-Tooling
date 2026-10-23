@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
+from tests.design_lint_pytest_native_marker_registry import PYTEST_NATIVE_LINT_SUITES
 from tests.design_lint_return_path_test_markers import RETURN_PATH_LINT_TEST_MODULES
 from tests.design_lint_test_markers import (
     design_lint_markers_for_path,
@@ -69,226 +70,6 @@ _DIGITAL_PEER_SUITES = {
         "interface_lint",
         "power_lint",
     },
-}
-
-_PYTEST_NATIVE_LINT_SUITES = {
-    "test_design_lint_mcp_parity_mosfet_gate.py": {"component_lint", "parity_lint", "slow"},
-    "test_design_lint_complementary_pairs.py": {"interface_lint"},
-    "test_can_line_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
-    "test_i2c_signal_label_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
-    "test_spi_data_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
-    "test_usb_data_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
-    "test_design_lint_decoupling.py": {"component_lint", "power_lint"},
-    "test_design_lint_dc_reference.py": {"power_lint"},
-    "test_design_lint_determinism_power_connectivity.py": {"power_lint"},
-    "test_usb_peer_reference_superspeed.py": {"interface_lint"},
-    "test_usb_superspeed_peer_reference_native_fixture_lane.py": {"interface_lint"},
-    "test_design_lint_policy.py": {"connector_lint", "return_path_lint"},
-    "test_electrical_can_termination.py": {"interface_lint"},
-    "test_electrical_power_connectivity.py": {"power_lint"},
-    "test_regulator_feedback.py": {"power_lint"},
-    "test_regulator_feedback_native_fixture.py": {"power_lint", "native_kicad", "slow"},
-    "test_power_sequences.py": {"power_lint"},
-    "test_power_paths.py": {"power_lint"},
-    "test_power_sequence_fixture_lane.py": {"power_lint"},
-    "test_power_sequence_native_fixture_lane.py": {"power_lint"},
-    "test_electrical_component_evidence.py": {"component_lint", "evidence_lint"},
-    "test_mosfet_stress.py": {"component_lint"},
-    "test_mosfet_gate_connectivity.py": {"component_lint"},
-    "test_mosfet_gate_source_bias.py": {"component_lint"},
-    "test_mosfet_gate_direct_drive.py": {"component_lint"},
-    "test_mosfet_gate_native_fixture.py": {"component_lint", "native_kicad", "slow"},
-    "test_polarized_capacitor_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_diode_rail_orientation_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_mosfet_terminal_order_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_mosfet_drain_source_same_net.py": {"component_lint"},
-    "test_mosfet_gate_source_same_net.py": {"component_lint"},
-    "test_mosfet_gate_drain_same_net.py": {"component_lint"},
-    "test_mosfet_drain_source_same_net_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_design_lint_determinism_mosfet_drain_source.py": {"component_lint", "slow"},
-    "test_bjt_terminal_order_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_bjt_base_emitter_same_net.py": {"component_lint"},
-    "test_bjt_base_collector_same_net.py": {"component_lint"},
-    "test_bjt_base_collector_same_net_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_bjt_base_drive_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_bjt_base_drive.py": {"component_lint"},
-    "test_bjt_base_bias.py": {"component_lint"},
-    "test_design_lint_determinism_bjt_base_bias.py": {"component_lint", "slow"},
-    "test_bjt_base_bias_native_fixture.py": {
-        "component_lint",
-        "native_kicad",
-        "slow",
-    },
-    "test_electrical_connector_evidence.py": {"connector_lint", "evidence_lint"},
-    "test_electrical_connector_return_parity.py": {
-        "connector_lint",
-        "return_path_lint",
-        "parity_lint",
-    },
-    "test_pin_connectivity_acceptance.py": {"connector_lint"},
-    "test_electrical_pcb_return_evidence.py": {"return_path_lint", "evidence_lint"},
-    "test_electrical_test_access_evidence.py": {"pcb_lint", "evidence_lint"},
-    "test_design_lint_i2c_missing_pullups.py": {"interface_lint"},
-    "test_design_lint_i2c_equivalent_resistance.py": {"interface_lint"},
-    "test_design_lint_i2c_pullup_rail_families.py": {"interface_lint"},
-    "test_ci_hosted_control_inputs.py": {"interface_lint"},
-    "test_electrical_rs485_contract.py": {"interface_lint"},
-    "test_design_lint_led_topology.py": {"component_lint", "power_lint"},
-    "test_design_lint_peer_voltage.py": {"interface_lint"},
-    "test_design_lint_serial_peer_voltage.py": {"interface_lint"},
-    "test_design_lint_schematic_connectivity.py": {"schematic_lint"},
-    "test_design_lint_schematic_text.py": {"schematic_lint"},
-    "test_schematic_geometry_symbol_arc_body.py": {"schematic_lint"},
-    "test_connector_peer_pin_all_open.py": {"connector_lint"},
-    "test_connector_footprint_peer_metadata.py": {
-        "connector_lint",
-        "interface_lint",
-        "parity_lint",
-    },
-    "test_connector_footprint_peer_metadata_open.py": {
-        "connector_lint",
-        "interface_lint",
-        "parity_lint",
-    },
-    "test_connector_footprint_peer_metadata_native_fixture_lane.py": {
-        "connector_lint",
-        "interface_lint",
-    },
-    "test_connector_footprint_peer_metadata_open_native_fixture_lane.py": {
-        "connector_lint",
-        "interface_lint",
-    },
-    "test_connector_footprint_peer_missing_metadata.py": {
-        "connector_lint",
-        "interface_lint",
-        "parity_lint",
-    },
-    "test_connector_footprint_peer_missing_metadata_native_fixture_lane.py": {
-        "connector_lint",
-        "interface_lint",
-    },
-    "test_connector_footprint_peer_missing_metadata_open.py": {
-        "connector_lint",
-        "interface_lint",
-    },
-    "test_connector_footprint_peer_missing_metadata_open_native_fixture_lane.py": {
-        "connector_lint",
-        "interface_lint",
-    },
-    "test_design_lint_determinism_connector_all_open.py": {"connector_lint"},
-    "test_design_lint_connector_power_pins.py": {"connector_lint", "power_lint"},
-    "test_connector_stateful_contacts.py": {"connector_lint", "interface_lint"},
-    "test_connector_stateful_contact_architecture.py": {"connector_lint", "interface_lint"},
-    "test_design_lint_connector_named_power_input_peers.py": {
-        "connector_lint",
-        "power_lint",
-    },
-    "test_design_lint_connector_named_power_input_divergence.py": {
-        "connector_lint",
-        "power_lint",
-    },
-    "test_design_lint_connector_named_power_output_peers.py": {
-        "connector_lint",
-        "power_lint",
-    },
-    "test_design_lint_connector_named_power_output_divergence.py": {
-        "connector_lint",
-        "power_lint",
-    },
-    "test_design_lint_mcp_parity_connector_named_power_peers.py": {
-        "connector_lint",
-        "power_lint",
-        "parity_lint",
-    },
-    "test_connector_named_power_input_native_fixture_lane.py": {
-        "connector_lint",
-        "power_lint",
-    },
-    "test_connector_named_power_output_native_fixture_lane.py": {
-        "connector_lint",
-        "power_lint",
-    },
-    "test_native_db9_return_contracts.py": {"connector_lint", "return_path_lint"},
-    "test_connector_signal_peer_pin_all_open.py": {"connector_lint", "interface_lint"},
-    "test_component_peer_pin_all_open.py": {"component_lint"},
-    "test_component_peer_pin_mixed_open.py": {"component_lint"},
-    "test_component_peer_pin_assignment_outlier.py": {"component_lint"},
-    "test_component_peer_pin_assignment_native_fixture_lane.py": {"component_lint"},
-    "test_component_named_peer_power_input_all_open.py": {"component_lint", "power_lint"},
-    "test_component_named_peer_power_input_all_open_native.py": {
-        "component_lint",
-        "power_lint",
-    },
-    "test_design_lint_determinism_component_peers.py": {
-        "component_lint",
-        "connector_lint",
-        "power_lint",
-    },
-    "test_design_lint_determinism_components.py": {
-        "component_lint",
-        "power_lint",
-        "return_path_lint",
-    },
-    "test_design_lint_determinism_connector_peers.py": {
-        "connector_lint",
-        "interface_lint",
-        "power_lint",
-        "return_path_lint",
-    },
-    "test_design_lint_determinism_interfaces.py": {
-        "interface_lint",
-        "connector_lint",
-        "component_lint",
-        "power_lint",
-        "return_path_lint",
-    },
-    "test_design_lint_determinism_control_inputs.py": {"power_lint", "interface_lint"},
-    "test_design_lint_control_input_bias_paths.py": {"interface_lint", "power_lint"},
-    "test_design_lint_mcp_parity_peer_pin_assignment_outlier.py": {
-        "component_lint",
-        "parity_lint",
-    },
-    "test_pcb_reference_plane_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
-    "test_pcb_switching_loop_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
-    "test_pcb_return_path_native_fixture_lane.py": {"pcb_lint", "return_path_lint"},
-    "test_pcb_access_fixture_lane.py": {"pcb_lint"},
-    "test_pcb_touch_pad_clearance.py": {"pcb_lint"},
-    "test_design_lint_determinism_pcb_touch_pad_clearance.py": {"pcb_lint"},
-    "test_design_lint_determinism_pcb_required_fitted_reference.py": {"pcb_lint"},
-    "test_design_lint_determinism_pcb_board_only.py": {"pcb_lint"},
-    "test_design_lint_determinism_pcb_dnp.py": {"pcb_lint"},
-    "test_design_lint_determinism_pcb_value.py": {"pcb_lint"},
-    "test_design_lint_determinism_pcb_pad_net.py": {"pcb_lint"},
-    "test_pcb_touch_pad_clearance_native.py": {"pcb_lint"},
-    "test_ci_hosted_pcb_fixture_schedule.py": {"pcb_lint", "return_path_lint"},
 }
 
 _RETURN_PATH_PEER_REFERENCE_SUITES = {
@@ -356,9 +137,13 @@ def test_return_path_registry_entries_exist_and_receive_both_lint_markers() -> N
         assert {"design_lint", "return_path_lint"} <= markers
 
 
-def test_return_path_marker_owner_stays_below_review_threshold() -> None:
-    owner = Path(__file__).with_name("design_lint_return_path_test_markers.py")
-    assert len(owner.read_text(encoding="utf-8").splitlines()) < 500
+def test_marker_registry_owners_stay_below_review_threshold() -> None:
+    for name in (
+        "design_lint_return_path_test_markers.py",
+        "design_lint_pytest_native_marker_registry.py",
+    ):
+        owner = Path(__file__).with_name(name)
+        assert len(owner.read_text(encoding="utf-8").splitlines()) < 500
 
 
 def test_cross_theme_architecture_suites_do_not_claim_area_markers() -> None:
@@ -478,7 +263,7 @@ def test_native_digital_peer_suites_are_pytest_native_and_theme_scoped() -> None
 
 
 def test_focus_lint_suites_are_pytest_native_and_theme_scoped() -> None:
-    for filename, area_markers in _PYTEST_NATIVE_LINT_SUITES.items():
+    for filename, area_markers in PYTEST_NATIVE_LINT_SUITES.items():
         source_path = Path(__file__).with_name(filename)
         source = source_path.read_text(encoding="utf-8")
         tree = ast.parse(source)

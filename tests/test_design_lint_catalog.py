@@ -72,6 +72,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.bjt_base_emitter_same_net",
             "component.bjt_base_collector_same_net",
             "component.bjt_base_without_visible_emitter_bias",
+            "bus.serial_tx_rx_same_net",
         }
     )
     assert all(
@@ -108,6 +109,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.bjt_base_emitter_same_net",
             "component.bjt_base_collector_same_net",
             "component.bjt_base_without_visible_emitter_bias",
+            "bus.serial_tx_rx_same_net",
         }
     )
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)

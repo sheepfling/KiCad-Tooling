@@ -66,6 +66,16 @@ def serial_netlist(*, dnp: tuple[str, ...] = ()) -> NetlistContract:
     )
 
 
+def same_net_serial_netlist() -> NetlistContract:
+    """Tie one synthetic USART's TX/RX pair while retaining the remaining roster."""
+    source = serial_netlist()
+    nets = dict(source.nets)
+    del nets["UART1_TX"]
+    del nets["UART1_RX"]
+    nets["UART1_DATA"] = ("U1.1", "U1.2")
+    return source.model_copy(update={"nets": nets})
+
+
 def alternate_function_serial_netlist(*, dnp: tuple[str, ...] = ()) -> NetlistContract:
     """Use explicit UART net labels with MCU package-pin functions and generic connector pins."""
     components = {

@@ -105,6 +105,7 @@ DesignLintRuleId = Literal[
     "bus.i2c_address_mismatch",
     "bus.i2c_address_collision",
     "bus.i2c_unmapped_responder",
+    "bus.serial_tx_rx_same_net",
     "bus.spi_unmapped_participant",
     "bus.serial_unmapped_peer",
     "bus.spi_peer_reference_review",

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 171 rules are implemented with synthetic regression coverage.
+The following 172 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 171 active rules.
+The catalog currently contains 172 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -521,6 +521,7 @@ skipped under prerelease policy.
 - `bus.i2c_signal_label_role_mismatch`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
+- `bus.serial_tx_rx_same_net`
 - `bus.spi_peer_reference_review`
 - `bus.spi_peer_voltage_review`
 - `bus.serial_peer_voltage_review`
@@ -605,6 +606,11 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **Serial TX/RX same-net review:** LINT-190 detects a fitted component whose
+  unique native UART/USART transmit and receive pins in one channel share a
+  net. It defaults off because single-wire and loopback topologies can be
+  intentional; enabling it produces a configurable review prompt.
 
 - **CAN line pin/name polarity review:** LINT-187 compares bounded CANH/CANL
   pin functions with explicit CANH/CANL net names. A contradiction is a
@@ -2896,7 +2902,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 171 active rules; CI requires every new
+- **Status:** Baseline complete for all 172 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2905,7 +2911,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 171 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 172 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -10179,6 +10185,43 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Source note:** Both schematics contain only a synthetic I2C controller
   symbol and labels. No product or proprietary design source is included.
+
+#### LINT-190 — Review serial TX/RX pins assigned to one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `bus.serial_tx_rx_same_net` review prompt.
+- **Gap:** Serial peer discovery requires distinct TX and RX nets, so a
+  same-component pair tied to one net is skipped. A short, loopback, or
+  intentional single-wire topology therefore has no focused serial review
+  finding.
+- **Predicate:** Use the existing bounded TX/TXD and RX/RXD function parser.
+  For one fitted component and channel, require exactly one uniquely assigned
+  transmit pin and one uniquely assigned receive pin. Emit a candidate only
+  when both resolve to the same native net. DNP, open, multiply assigned,
+  duplicate-role, and differently indexed pairs are unclassified.
+- **Boundary:** This is a prompt to review an unusual same-net topology, not a
+  defect verdict or requirement for separate pins. Single-wire, half-duplex,
+  loopback, and project-specific arrangements can be valid. It does not prove
+  board copper continuity, external wiring, transceiver behavior, or firmware
+  configuration. The rule defaults off and supports project policy and exact
+  finding ignores.
+- **Fixtures:** Synthetic same-net fault and full-duplex control; DNP, open,
+  multiply assigned, multiple-role, and different-channel controls; policy,
+  exact-ignore, ordering, and repair checks. A source-hashed native schematic
+  pair exports twice on digest-pinned KiCad 10.0.0 and 10.0.5 images.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_serial_tx_rx_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_tx_rx_same_net")'
+
+  KICAD_RUN_NATIVE_SERIAL_TX_RX_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_serial_tx_rx_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_tx_rx_same_net")'
+  ```
+
+- **Source note:** Both schematics use a tooling-owned synthetic UART symbol.
+  No project or cohort design source is included.
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

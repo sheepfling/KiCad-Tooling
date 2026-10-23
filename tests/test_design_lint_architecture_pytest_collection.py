@@ -202,6 +202,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_i2c_signal_label_roles.py::test_crossed_i2c_line_labels_are_reviewed_while_both_pins_stay_assigned",
         ),
         (
+            "bus.serial_tx_rx_same_net",
+            "tests/test_serial_tx_rx_same_net.py::test_same_net_uart_tx_rx_pair_is_reviewed_and_full_duplex_control_is_quiet",
+        ),
+        (
             "component.led_directly_across_supply_and_return",
             "tests/test_design_lint_led_topology.py::test_led_non_matching_topologies_remain_valid_controls[series-resistor]",
         ),

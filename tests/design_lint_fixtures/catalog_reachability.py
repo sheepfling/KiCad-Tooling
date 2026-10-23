@@ -30,6 +30,7 @@ from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfe
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
 from tests.design_lint_fixtures.spi_data_label import spi_data_label_netlist
+from tests.serial_participant_support import same_net_serial_netlist
 from tests.test_connector_mapped_interface_signal_unassigned import _coverage, _netlist
 from tests.test_connector_stateful_contacts import _map as _stateful_contact_map
 from tests.test_connector_stateful_contacts import _observed as _stateful_contact_netlist
@@ -211,6 +212,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         i2c_netlist_with_parallel_sda(),
         i2c_netlist_with_pullup_rails(("+3V3", "+5V"), ("+3V3",)),
         i2c_signal_label_netlist(reversed_labels=True),
+        same_net_serial_netlist(),
         i2c_peer_netlist(),
         spi_peer_netlist(),
         spi_active_low_select_netlist(),
