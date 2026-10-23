@@ -625,12 +625,9 @@ and optional ecosystem adapters are `P3`.
 
 - **LINT-010 source-evidence gap:** The optional capacitance scope now checks
   exact fitted contributors on native bus nets against reviewed effective-
-  capacitance maxima and a residual-loading bound. Its focused `v0.5.3rc87`
-  gate passed. The next increment accepts explicitly mapped contributors with
-  non-C references; `v0.5.3rc90` passed. The next increment also auto-discovers
-  recognized capacitor-symbol IDs regardless of reference prefix, while
-  keeping C-prefixed discovery for opaque symbols. The synthetic fault/control
-  and exact native gate for this increment are pending.
+  capacitance maxima and a residual-loading bound. Explicit non-C contributor
+  maps passed tagged acceptance as `v0.5.3rc90`; symbol-based discovery for
+  non-C references passed as `v0.5.3rc91` (GitHub Actions run `40003767573`).
 - **LINT-206 mapped power-contact assignment:** The focused REVIEW heuristic
   is implemented for complete, source-matched interface maps assigning a
   generic connector contact the role `supply` or `return` when the native
@@ -4548,10 +4545,14 @@ is not a reason by itself to expand its scope or change its default policy.
   normalized results. The installed-wheel playtest passed against a separate
   project checkout; Ubuntu, macOS, and Windows preview jobs passed. The
   package-release job was skipped under prerelease policy.
-- **Remaining increment:** Auto-discovery of recognized capacitor-symbol IDs
-  independent of reference prefix is implemented locally with a native
-  `Device:C` `X2` fault and an off-line control. Tagged exact-version
-  acceptance is pending.
+- **Tagged acceptance (2026-10-23):** `v0.5.3rc91` (GitHub Actions run
+  `40003767573`) passed the focused `bus.i2c_missing_pullup` selection with
+  `KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES=1`. The native fault reports unmapped
+  non-C `Device:C` reference `X2`, while the exact-mapped `X1` control passes;
+  the normalized exports match on digest-pinned KiCad 10.0.0 and 10.0.5. The
+  installed-wheel playtest passed against a separate project checkout, and
+  Ubuntu, macOS, and Windows preview jobs passed. The package-release job was
+  skipped under prerelease policy.
 - **Problem:** The review heuristic recognizes direct conventional resistors
   and unbranched resistor chains but cannot resolve resistor arrays, branched
   networks, or rail-voltage compatibility on its own. Only a matching passing
