@@ -70,3 +70,33 @@ def test_base_emitter_rule_owner_reuses_shared_bjt_roles_and_stays_small() -> No
     )
     assert rule.required_native_fixtures == ("KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES",)
     assert all(size < IMPLEMENTATION_MAX_LINES for size in sizes.values()), sizes
+
+
+def test_base_collector_rule_owner_reuses_shared_bjt_roles_and_stays_small() -> None:
+    rule_id = "component.bjt_base_collector_same_net"
+    owner = (
+        "kicad_tooling/hwrepo/design_lint_component_bjt_terminals.py"
+        "#bjts_with_base_collector_on_same_net"
+    )
+    rule = next(item for item in rule_catalog().rules if item.rule_id == rule_id)
+    modules = (
+        "kicad_tooling/hwrepo/design_lint_component_bjt_terminals.py",
+        "kicad_tooling/hwrepo/component_bjt_symbols.py",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py",
+        "tests/design_lint_fixtures/bjt_collector_emitter_same_net.py",
+        "tests/test_bjt_base_collector_same_net.py",
+        "tests/test_bjt_base_collector_same_net_native_fixture.py",
+        "tests/test_design_lint_architecture_bjt_collector_emitter_same_net.py",
+    )
+    sizes = {path: line_count(REPO_ROOT / path) for path in modules}
+
+    assert rule.theme == "components"
+    assert rule.default_mode == "off"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/component_bjt_symbols.py#basic_bjt_role_numbers"
+        in rule.implementation_refs
+    )
+    assert rule.required_native_fixtures == ("KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES",)
+    assert all(size < IMPLEMENTATION_MAX_LINES for size in sizes.values()), sizes

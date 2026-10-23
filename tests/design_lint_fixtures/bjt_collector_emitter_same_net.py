@@ -119,3 +119,32 @@ def bjt_base_emitter_netlist(
         open_roles=open_roles,
         extra_base_net=extra_base_net,
     )
+
+
+def bjt_base_collector_netlist(
+    *,
+    family: str = "npn",
+    same_net: bool = True,
+    symbol: str | None = None,
+    pin_numbers: Mapping[str, str] | None = None,
+    inventory: tuple[str, ...] = ("1", "2", "3"),
+    dnp: tuple[str, ...] = (),
+    function_overrides: Mapping[str, str] | None = None,
+    open_roles: tuple[str, ...] = (),
+    extra_base_net: str | None = None,
+    extra_collector_net: str | None = None,
+) -> NetlistContract:
+    """Build a native-role B/C same-net fault or distinct-net control."""
+    return _bjt_terminal_pair_netlist(
+        family=family,
+        shared_roles=("base", "collector") if same_net else None,
+        shared_net="BC_SHARED",
+        symbol=symbol,
+        pin_numbers=pin_numbers,
+        inventory=inventory,
+        dnp=dnp,
+        function_overrides=function_overrides,
+        open_roles=open_roles,
+        extra_base_net=extra_base_net,
+        extra_collector_net=extra_collector_net,
+    )

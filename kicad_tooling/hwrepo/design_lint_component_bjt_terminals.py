@@ -1,4 +1,4 @@
-"""Review supported BJTs whose collector and emitter share one schematic net."""
+"""Review supported BJT terminal pairs assigned to one schematic net."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from .models import NetlistContract
 
 COLLECTOR_EMITTER_RULE_ID = "component.bjt_collector_emitter_same_net"
 BASE_EMITTER_RULE_ID = "component.bjt_base_emitter_same_net"
+BASE_COLLECTOR_RULE_ID = "component.bjt_base_collector_same_net"
 
 
 def _fitted_bjt_role_mappings(
@@ -123,6 +124,47 @@ def bjts_with_base_emitter_on_same_net(
                     "base_net": (base_net,),
                     "emitter_pin": (emitter_pin,),
                     "emitter_net": (emitter_net,),
+                },
+            )
+        )
+    return tuple(findings)
+
+
+def bjts_with_base_collector_on_same_net(
+    observed: NetlistContract,
+) -> tuple[Candidate, ...]:
+    """Review fitted, supported basic BJTs with base and collector on one net."""
+    findings: list[Candidate] = []
+    for reference, symbol, roles, nets_by_pin in _fitted_bjt_role_mappings(observed):
+        base_pin = f"{reference}.{roles['base']}"
+        collector_pin = f"{reference}.{roles['collector']}"
+        base_nets = nets_by_pin.get(base_pin.casefold(), ())
+        collector_nets = nets_by_pin.get(collector_pin.casefold(), ())
+        if len(base_nets) != 1 or len(collector_nets) != 1:
+            continue
+        base_net, collector_net = base_nets[0], collector_nets[0]
+        if base_net.casefold() != collector_net.casefold():
+            continue
+
+        family = symbol.casefold().rsplit(":", 1)[-1].removeprefix("q_").split("_", 1)[0]
+        findings.append(
+            Candidate(
+                rule_id=BASE_COLLECTOR_RULE_ID,
+                subject=f"{reference}: BJT base and collector share one schematic net",
+                message=(
+                    "The native schematic assigns this supported BJT's base and collector to "
+                    "the same net. This can be an intentional diode-connected configuration; "
+                    "review whether it matches the intended design. The prompt does not prove "
+                    "a defect or establish PCB copper continuity or physical behavior."
+                ),
+                evidence={
+                    "component": (reference,),
+                    "symbol": (symbol,),
+                    "transistor_family": (family,),
+                    "base_pin": (base_pin,),
+                    "base_net": (base_net,),
+                    "collector_pin": (collector_pin,),
+                    "collector_net": (collector_net,),
                 },
             )
         )

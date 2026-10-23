@@ -14,6 +14,7 @@ from .component_return_pins import unconnected_component_return_pins
 from .component_role_models import ComponentRoleMap
 from .component_roles import component_role_binding_evidence
 from .design_lint_component_bjt_terminals import (
+    bjts_with_base_collector_on_same_net,
     bjts_with_base_emitter_on_same_net,
     bjts_with_collector_emitter_on_same_net,
 )
@@ -70,6 +71,7 @@ def component_candidates(
     found.extend(bjts_with_unusual_collector_emitter_rail_order(observed))
     found.extend(bjts_with_collector_emitter_on_same_net(observed))
     found.extend(bjts_with_base_emitter_on_same_net(observed))
+    found.extend(bjts_with_base_collector_on_same_net(observed))
     found.extend(bjts_with_direct_output_base_drive(observed))
     found.extend(bjts_without_visible_emitter_bias(observed))
     found.extend(polarized_capacitors_on_reversed_named_rails(observed))

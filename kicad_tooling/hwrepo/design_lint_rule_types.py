@@ -65,6 +65,7 @@ DesignLintRuleId = Literal[
     "component.bjt_terminal_order_on_named_rails",
     "component.bjt_collector_emitter_same_net",
     "component.bjt_base_emitter_same_net",
+    "component.bjt_base_collector_same_net",
     "component.bjt_base_direct_drive",
     "component.bjt_base_without_visible_emitter_bias",
     "component.polarized_capacitor_reversed_on_named_rails",

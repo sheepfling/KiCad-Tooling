@@ -180,7 +180,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 164 active rules.
+The catalog currently contains 165 active rules.
 
 ## Run the lint lane
 
@@ -3755,6 +3755,27 @@ Tooling-owned NPN and PNP fault fixtures and a distinct-net control repeat
 native netlist and ERC exports on digest-pinned KiCad 10.0.0 and 10.0.5. Source
 hashes are recorded in the
 [fixture README](../tests/fixtures/design_lint/bjt-be-same-net-native/README.md).
+
+## Review BJT base and collector assigned to one net
+
+The opt-in catalog rule `component.bjt_base_collector_same_net` defaults to
+`off`. It prompts when an exact supported basic NPN or PNP symbol has complete
+native B/C/E pin roles and its base and collector pins have one unambiguous
+assignment to the same schematic net. Pin functions determine terminal roles;
+pin numbers are not assumed.
+
+A base/collector tie can be an intentional diode-connected transistor, such as
+a current-reference element. This prompt asks for review; it does not label the
+topology defective or infer intended behavior. It skips DNP, custom or
+compound devices, incomplete pin evidence, duplicate role metadata, open pins,
+and ambiguous assignments. It does not establish PCB continuity, footprint pin
+mapping, external circuitry, or physical behavior. Project policy can enable
+review, promote it to block, leave it off, or ignore an exact finding.
+
+Tooling-owned NPN and PNP fault fixtures and a distinct-net control repeat
+native netlist and ERC exports on digest-pinned KiCad 10.0.0 and 10.0.5. Source
+hashes are recorded in the
+[fixture README](../tests/fixtures/design_lint/bjt-bc-same-net-native/README.md).
 
 ## Require an authored RS-485 topology
 

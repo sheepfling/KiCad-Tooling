@@ -101,6 +101,8 @@ REPORT_ORDER = (
     "bjt_collector_emitter_same_net_control",
     "bjt_base_emitter_same_net_fault",
     "bjt_base_emitter_same_net_control",
+    "bjt_base_collector_same_net_fault",
+    "bjt_base_collector_same_net_control",
     "bjt_base_direct_drive_fault",
     "bjt_base_series_resistor_control",
     "bjt_base_bias_fault",

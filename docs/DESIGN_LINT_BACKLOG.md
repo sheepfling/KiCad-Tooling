@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 164 rules are implemented with synthetic regression coverage.
+The following 165 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 164 active rules.
+The catalog currently contains 165 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -488,6 +488,7 @@ skipped under prerelease policy.
 - `component.bjt_terminal_order_on_named_rails`
 - `component.bjt_collector_emitter_same_net`
 - `component.bjt_base_emitter_same_net`
+- `component.bjt_base_collector_same_net`
 - `component.bjt_base_direct_drive`
 - `component.bjt_base_without_visible_emitter_bias`
 - `component.polarized_capacitor_reversed_on_named_rails`
@@ -598,6 +599,12 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 and optional ecosystem adapters are `P3`.
 
 ### Current execution focus
+
+- **BJT base/collector same-net review:** LINT-183 adds an opt-in, default-off
+  prompt for exact supported basic three-terminal BJT symbols whose native
+  base and collector pins share a schematic net. A base/collector tie can be
+  an intentional diode-connected transistor, so the rule asks for review and
+  does not infer a defect, required behavior, or PCB continuity.
 
 - **BJT base/emitter same-net review:** LINT-182 adds an opt-in, default-off
   prompt for exact supported basic three-terminal BJT symbols whose native
@@ -2862,7 +2869,7 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-054 — Metamorphic stability coverage for deterministic rules
 
-- **Status:** Baseline complete for all 164 active rules; CI requires every new
+- **Status:** Baseline complete for all 165 active rules; CI requires every new
   active rule to add metamorphic fixtures or a reasoned not-applicable basis.
   The package catalog tracks `metamorphic_status`
   (`unreviewed`, `covered`, or `not_applicable`), registered
@@ -2871,7 +2878,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 164 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 165 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -9847,6 +9854,53 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Source note:** The fault source hash and shared-control boundary are
   recorded in
   [`bjt-be-same-net-native`](../tests/fixtures/design_lint/bjt-be-same-net-native/README.md).
+
+#### LINT-183 — Review supported BJT base and collector on one net
+
+- **Status:** Implemented as the opt-in, default-off
+  `component.bjt_base_collector_same_net` review prompt. Its scoped prerelease
+  tag selects the exact KiCad 10.0.0 and 10.0.5 native BJT fixture lane.
+- **Gap:** LINT-181 and LINT-182 cover collector/emitter and base/emitter
+  assignments. They leave a base/collector tie unclassified even though an
+  accidental tie can alter the transistor topology.
+- **Predicate:** Recognize the exact twelve basic NPN/PNP symbol identities
+  supported by the shared B/C/E role mapper. Require a fitted component, a
+  complete unique three-pin inventory, unique native B/C/E functions, and one
+  unambiguous assignment for both base and collector. Review only when those
+  assignments name the same net. Native functions determine roles; pin numbers
+  are not assumed.
+- **Boundary:** A base/collector tie is commonly used as a diode-connected
+  transistor, so a finding is only a review prompt and never a claim of defect.
+  The rule does not infer required behavior or suitability, or establish
+  symbol-to-footprint mapping, external circuitry, PCB copper, population, or
+  physical behavior. DNP, custom, compound, Darlington, incomplete,
+  duplicate-role, open, and multiply assigned cases remain unclassified.
+  Project policy may enable review, promote it to block, leave it off, or
+  exactly ignore a finding.
+- **Fixtures:** Synthetic NPN/PNP same-net cases and a distinct-net control;
+  reordered terminal numbers; unsupported, DNP, incomplete, duplicate-role,
+  open, and ambiguous boundaries; explicit ignore for an intentional
+  diode-connected circuit; repaired topology; netlist ordering and three
+  process hash-seed stability. A tooling-owned native source contains both
+  transistor families and shares the control from the existing synthetic BJT
+  lane. The cases run as repeated digest-pinned KiCad 10.0.0 and 10.0.5
+  exports with zero ERC errors and normalized report comparisons.
+- **Focused selection:**
+
+  ```sh
+  python -I -m pytest tests/test_bjt_base_collector_same_net.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_collector_same_net")'
+
+  python -I -m pytest tests/test_design_lint_determinism_components.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.bjt_base_collector_same_net")'
+
+  KICAD_RUN_NATIVE_COMPONENT_TERMINAL_ORDER_FIXTURES=1 python -I -m pytest \
+    tests/test_bjt_base_collector_same_net_native_fixture.py \
+    -m 'design_lint and native_kicad and design_lint_rule(rule_id="component.bjt_base_collector_same_net")'
+  ```
+
+- **Source note:** Tooling-owned fault and shared-control hashes are recorded
+  in [`bjt-bc-same-net-native`](../tests/fixtures/design_lint/bjt-bc-same-net-native/README.md).
 
 #### LINT-095 — Mapped PCB signal-path length and bundle-skew rule coverage
 

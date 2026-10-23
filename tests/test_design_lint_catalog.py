@@ -68,6 +68,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.bjt_terminal_order_on_named_rails",
             "component.bjt_collector_emitter_same_net",
             "component.bjt_base_emitter_same_net",
+            "component.bjt_base_collector_same_net",
             "component.bjt_base_without_visible_emitter_bias",
         }
     )
@@ -101,6 +102,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "component.bjt_terminal_order_on_named_rails",
             "component.bjt_collector_emitter_same_net",
             "component.bjt_base_emitter_same_net",
+            "component.bjt_base_collector_same_net",
             "component.bjt_base_without_visible_emitter_bias",
         }
     )
