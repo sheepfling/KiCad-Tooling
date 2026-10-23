@@ -13,6 +13,7 @@ from .led_heuristics import (
     leds_directly_driven_without_visible_series_resistor,
 )
 from .models import NetlistContract
+from .mosfet_gate_connectivity import mosfet_gates_without_peer
 from .oscillator_output_path_candidates import oscillator_output_path_candidates
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
@@ -46,6 +47,7 @@ def component_candidates(
 ) -> tuple[Candidate, ...]:
     """Build review prompts for component polarity, role, and same-net patterns."""
     found: list[Candidate] = []
+    found.extend(mosfet_gates_without_peer(observed))
     for bridge in leds_directly_between_positive_and_return_nets(observed):
         found.append(
             Candidate(

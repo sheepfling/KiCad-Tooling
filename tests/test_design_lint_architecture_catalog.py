@@ -241,6 +241,10 @@ def test_active_rule_fixture_modules_have_design_lint_and_theme_markers() -> Non
             {"design_lint", "connector_lint", "return_path_lint"},
         ),
         (
+            "test_mosfet_gate_connectivity.py",
+            {"design_lint", "component_lint"},
+        ),
+        (
             "test_design_lint_power_pin_patterns.py",
             {"design_lint", "connector_lint", "power_lint"},
         ),

@@ -2937,6 +2937,54 @@
       ]
     },
     {
+      "rule_id": "component.mosfet_gate_without_peer",
+      "title": "Supported MOSFET gate has no visible peer connection",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted component with exact native symbol Transistor_FET:Q_NMOS_{DGS,DSG,GDS,GSD,SGD} or Q_PMOS_{DGS,DSG,GDS,GSD,SDG,SGD}, a complete three-pin inventory, and exactly one native G/Gate pin function, emit a REVIEW candidate when the gate is unassigned or its one assigned net contains no other fitted component pin.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 pinned native XML export lanes; exact project version is checked before export"
+      ],
+      "limitations": [
+        "The supported native symbol identities are a narrow allowlist; other libraries, multi-gate devices, incomplete inventories, and noncanonical gate functions are outside the check.",
+        "Any other fitted pin on the same net clears this prompt, even if that peer is passive or does not drive the gate.",
+        "A no-peer result does not prove a gate should be connected, identify a required driver or bias, establish a safe default state, or prove PCB, off-board, or physical connectivity."
+      ],
+      "fault_fixtures": [
+        "tests.test_mosfet_gate_connectivity.test_unconnected_supported_mosfet_gate_requests_review",
+        "tests.test_mosfet_gate_connectivity.test_supported_symbol_variants_request_review",
+        "tests.test_mosfet_gate_connectivity.test_supported_gate_function_aliases_request_review",
+        "tests.test_mosfet_gate_connectivity.test_single_pin_assigned_gate_net_requests_review",
+        "tests.test_mosfet_gate_connectivity.test_dnp_peer_does_not_clear_gate_review",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_mosfet_gate.test_mosfet_gate_connectivity_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_mosfet_gate_connectivity.test_any_fitted_peer_on_the_gate_net_is_a_control",
+        "tests.test_mosfet_gate_connectivity.test_unsupported_or_unfitted_devices_are_controls",
+        "tests.test_mosfet_gate_connectivity.test_unlisted_native_symbol_is_not_assumed_supported",
+        "tests.test_mosfet_gate_native_fixture.test_native_mosfet_gate_fault_and_control_are_repeatable",
+        "tests.test_design_lint_mcp_parity_mosfet_gate.test_mosfet_gate_connectivity_cli_mcp_parity"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_mosfet_gate_connectivity.test_peer_membership_order_does_not_change_the_finding_or_its_fingerprint",
+        "tests.test_mosfet_gate_connectivity.test_any_fitted_peer_on_the_gate_net_is_a_control"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/mosfet_gate_connectivity.py#mosfet_gates_without_peer",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_RATING_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "control.unconnected_control_input",
       "title": "Likely reset, enable, or boot input has no net assignment",
       "status": "active",

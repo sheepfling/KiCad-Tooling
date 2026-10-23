@@ -43,6 +43,7 @@ from .ci_hosted_ic_rail_capacitors import (
     ic_rail_capacitor_fixture_lane as _run_ic_rail_capacitor_fixture_lane,
 )
 from .ci_hosted_led_rail import led_rail_fixture_lane
+from .ci_hosted_mosfet_gate_fixture import mosfet_gate_fixture_lane
 from .ci_hosted_net_dc_reference import net_dc_reference_fixture_lane
 from .ci_hosted_open_drain_bias import (
     open_drain_bias_fixture_lane as _run_open_drain_bias_fixture_lane,
@@ -127,6 +128,7 @@ __all__ = (
     "main",
     "markdown_checks",
     "matrix_lane",
+    "mosfet_gate_fixture_lane",
     "native_control_input_demo_lane",
     "native_lane",
     "net_dc_reference_fixture_lane",
@@ -407,6 +409,7 @@ def native_lane(
         component_peer_generic_all_open_fixture_lane(root, project=project, image=image, log=log)
         component_peer_generic_mixed_open_fixture_lane(root, project=project, image=image, log=log)
         component_rating_fixtures_lane(root, project=project, image=image, log=log)
+        mosfet_gate_fixture_lane(root, project=project, image=image, log=log)
         power_sequence_fixture_lane(root, project=project, image=image, log=log)
         ic_rail_capacitor_fixture_lane(root, project=project, image=image, log=log)
         power_pin_net_role_fixture_lane(root, project=project, image=image, log=log)

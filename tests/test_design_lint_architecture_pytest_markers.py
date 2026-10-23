@@ -72,6 +72,11 @@ _DIGITAL_PEER_SUITES = {
 }
 
 _PYTEST_NATIVE_LINT_SUITES = {
+    "test_design_lint_mcp_parity_mosfet_gate.py": {
+        "component_lint",
+        "parity_lint",
+        "slow",
+    },
     "test_design_lint_complementary_pairs.py": {"interface_lint"},
     "test_design_lint_decoupling.py": {"component_lint", "power_lint"},
     "test_design_lint_dc_reference.py": {"power_lint"},
@@ -88,6 +93,8 @@ _PYTEST_NATIVE_LINT_SUITES = {
     "test_power_sequence_native_fixture_lane.py": {"power_lint"},
     "test_electrical_component_evidence.py": {"component_lint", "evidence_lint"},
     "test_mosfet_stress.py": {"component_lint"},
+    "test_mosfet_gate_connectivity.py": {"component_lint"},
+    "test_mosfet_gate_native_fixture.py": {"component_lint", "native_kicad", "slow"},
     "test_electrical_connector_evidence.py": {"connector_lint", "evidence_lint"},
     "test_electrical_connector_return_parity.py": {
         "connector_lint",

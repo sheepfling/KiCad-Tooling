@@ -86,6 +86,7 @@ THEME_OWNER_PREFIXES = {
         "component_",
         "crystal_",
         "led_",
+        "mosfet_",
         "oscillator_",
         "rc_",
         "stm32_",
