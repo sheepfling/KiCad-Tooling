@@ -367,6 +367,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "component.mosfet_gate_direct_drive",
             "tests/test_mosfet_gate_direct_drive.py::test_output_capable_pin_directly_sharing_gate_net_is_reviewed",
         ),
+        (
+            "pcb.mechanical_edge_clearance_rule_coverage",
+            "tests/test_design_lint_determinism_pcb_mechanical_edge.py::test_mechanical_edge_fault_and_control_reports_are_source_bound_and_deterministic",
+        ),
     ),
 )
 def test_rule_marker_selects_catalogued_cases_without_external_checkout(

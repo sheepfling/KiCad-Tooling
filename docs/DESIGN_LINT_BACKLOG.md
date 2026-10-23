@@ -3187,8 +3187,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v82. The cross-process probe supports themed report
-  selectors and retains the complete 209-report inventory gate. Fault/control
+- **Status:** Implemented v83. The cross-process probe supports themed report
+  selectors and retains the complete 231-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3265,6 +3265,15 @@ is not a reason by itself to expand its scope or change its default policy.
   checks the NMOS finding and control, then compares their complete source-bound
   reports across three randomized processes. This adds deterministic regression
   evidence only; the heuristic remains default-off.
+  The v83 extension adds LINT-209's source-bound weak-rule fault and exact-rule
+  control reports. The authored requirement, project, board, native DRC receipt,
+  and netlist remain fixed; only the `.kicad_dru` source changes. The complete
+  reports are compared across three independently randomized Python processes,
+  and the catalog links this case to LINT-209. This guards report stability; the
+  synthetic receipt is not native execution evidence. The full inventory run
+  also exposed that the former 209-report assertion lagged the existing probe by
+  20 reports; the documented and enforced count is now 231 including these two
+  new cases.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -11189,6 +11198,10 @@ is not a reason by itself to expand its scope or change its default policy.
   `KICAD_RUN_NATIVE_PCB_FIXTURES`. The boards contain no project source; see
   the
   [synthetic fixture note](../tests/fixtures/design_lint/pcb-mechanical-edge-clearance/README.md).
+- **Determinism:** LINT-080 compares complete source-bound reports for the
+  weak-rule fault and exact-rule control across three independent Python
+  processes. The map, project, board, DRC receipt, and netlist match; the native
+  rule source digest differs, and only the fault emits this rule's review.
 - **Focused selection:**
 
   ```sh
