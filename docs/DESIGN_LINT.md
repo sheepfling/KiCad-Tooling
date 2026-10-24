@@ -5,6 +5,24 @@ cannot infer whether matching connector pins should share a net. The project
 repository owns the pinout, electrical requirements, and decisions about each
 finding. Tooling owns the rules and report format.
 
+## Review unassigned USB 2.0 data pins
+
+`bus.usb_unconnected_data_pin` recognizes a bounded set of native USB 2.0
+D+/D− pin-function aliases with no exported net assignment. It defaults to
+`off`, since a USB-capable part or connector may intentionally leave a data pin
+unused. A project can enable `review`, promote the candidate to `block`, or
+disable or exactly ignore it. The finding asks whether the pin is intentionally
+unused or its connection is missing; it does not infer bus membership, pair
+endpoints, require a connection, or establish PCB routing. Vendor-specific
+aliases and USB SuperSpeed pins are outside this rule. See the
+[source-hashed native fixture note](../tests/fixtures/design_lint/usb-unconnected-data-native/README.md)
+for its explicit no-connect fault and connected control.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_unconnected_usb_data.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_unconnected_data_pin")'
+```
+
 ## Reconcile findings against a source-bound baseline
 
 Use the [source-bound finding reconciliation guide](DESIGN_LINT_RECONCILIATION.md)

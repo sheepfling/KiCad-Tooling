@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 213 rules are implemented with synthetic regression coverage.
+The following 214 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 213 active rules.
+The catalog currently contains 214 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -557,6 +557,7 @@ skipped under prerelease policy.
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
 - `bus.usb_peer_reference_review`
+- `bus.usb_unconnected_data_pin`
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_active_low_chip_select_without_pullup`
 - `bus.spi_data_polarity_label_mismatch`
@@ -4634,6 +4635,39 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_UNASSIGNED_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_component_repeated_signal_pin_unassigned.py \
       -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_unassigned")'
+  ```
+
+#### LINT-231 — Review an unassigned USB 2.0 data pin
+
+- **Status:** Implemented as opt-in `bus.usb_unconnected_data_pin`, owned by
+  `usb_unconnected_data.py#unconnected_usb_data_pins`.
+- **Gap:** USB pair and peer checks need assigned data nets to compare their
+  endpoint topology. A connector or PHY data pin marked no-connect can be
+  absent from those comparisons, and native ERC may stay quiet when the open
+  pin has an explicit no-connect marker.
+- **Predicate:** Find fitted pins with no exported electrical-net assignment
+  whose exact native function matches the bounded USB 2.0 D+/D− alias parser.
+  Retain the recognized side and optional port index in finding evidence;
+  skip DNP references, vendor-specific aliases, and USB SuperSpeed functions.
+- **Boundary:** The pin function alone does not establish that this interface
+  is used, identify its peer, or require a net connection. The rule defaults
+  to `off`; projects can select `review`, `block`, `off`, or an exact ignore.
+  It does not prove PCB routing, endpoint pinout, off-board behavior, or
+  continuity. An exact project-authored USB path map remains the stronger
+  source of interface intent.
+- **Fixtures and quality gate:** Synthetic cases cover D+ and D− aliases,
+  indexed functions, DNP, connected and unsupported controls, policy modes,
+  exact-ignore behavior, stable mapping order, and assignment repair. A
+  source-hashed native no-connect fault and connected control repeat on
+  digest-pinned KiCad 10.0.0 and 10.0.5 as part of the focused USB native lane.
+  The active catalog owner, `interface_lint` marker, per-rule selector,
+  active-rule reachability, exact native fixture reference, and module size
+  are guarded. No project design or cohort fixture is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_unconnected_usb_data.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_unconnected_data_pin")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

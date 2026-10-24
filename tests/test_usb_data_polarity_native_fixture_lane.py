@@ -29,6 +29,7 @@ pytestmark = [
 )
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.design_lint_rule(rule_id="bus.usb_peer_data_pair_crossed")
+@pytest.mark.design_lint_rule(rule_id="bus.usb_unconnected_data_pin")
 def test_native_usb_data_polarity_fault_and_control_repeat(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
@@ -52,7 +53,11 @@ def test_native_usb_data_polarity_fault_and_control_repeat(
         item["stage"]: item
         for item in (json.loads(line) for line in log.events.read_text().splitlines())
         if item.get("stage", "").startswith(
-            ("usb-data-polarity-fixture/", "usb-data-pair-crossing-fixture/")
+            (
+                "usb-data-polarity-fixture/",
+                "usb-data-pair-crossing-fixture/",
+                "usb-unconnected-data-fixture/",
+            )
         )
     }
 
@@ -62,6 +67,8 @@ def test_native_usb_data_polarity_fault_and_control_repeat(
         "usb-data-polarity-fixture/fault",
         "usb-data-pair-crossing-fixture/pair-control",
         "usb-data-pair-crossing-fixture/pair-fault",
+        "usb-unconnected-data-fixture/control",
+        "usb-unconnected-data-fixture/unconnected-fault",
     }
     fault = results["usb-data-polarity-fixture/fault"]
     control = results["usb-data-polarity-fixture/control"]

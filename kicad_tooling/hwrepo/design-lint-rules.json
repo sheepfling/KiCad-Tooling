@@ -5223,6 +5223,45 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_ports.py#unmapped_usb_c_ports"
     },
     {
+      "rule_id": "bus.usb_unconnected_data_pin",
+      "title": "Recognized USB 2.0 data pin is unassigned",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "A fitted pin with a bounded USB 2.0 D+/D- native function alias is absent from every exported electrical net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only the bounded USB 2.0 D+/D- aliases accepted by usb_data_function_identity are recognized; vendor-specific functions and USB SuperSpeed pairs are outside this rule.",
+        "This rule defaults to off because a USB-capable device or connector may intentionally leave one or both data pins unused. Enabling it produces a review prompt, not a required connection.",
+        "Pin functions do not establish USB bus membership, endpoint pairing, the intended data path, PCB routing, external wiring, or physical continuity. Exact path intent belongs in a project-authored map."
+      ],
+      "fault_fixtures": [
+        "tests.test_unconnected_usb_data.test_open_usb_data_pin_emits_exact_review_evidence_when_enabled",
+        "tests.test_usb_data_polarity_native_fixture_lane.test_native_usb_data_polarity_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_unconnected_usb_data.test_valid_or_unsupported_shapes_do_not_emit",
+        "tests.test_usb_data_polarity_native_fixture_lane.test_native_usb_data_polarity_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_unconnected_usb_data.test_mapping_order_is_stable_and_assigning_open_pin_clears_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_unconnected_data.py#unconnected_usb_data_pins",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
+        "kicad_tooling/hwrepo/design_lint_unconnected_interface_candidates.py#unconnected_interface_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_unconnected_data.py#unconnected_usb_data_pins"
+    },
+    {
       "rule_id": "bus.usb_data_path_mismatch",
       "title": "Project-mapped USB data path differs from PHY-specific topology",
       "status": "active",

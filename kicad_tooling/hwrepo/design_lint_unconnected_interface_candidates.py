@@ -6,6 +6,7 @@ from .bus_signal_roles import unconnected_interface_pins
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .usb_unconnected_data import unconnected_usb_data_pins
 
 
 def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
@@ -33,6 +34,30 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
                     "intentionally unused or a connection is missing."
                 ),
                 evidence={pin.pin: (), "function": (pin.function,)},
+            )
+        )
+    for pin in unconnected_usb_data_pins(observed):
+        side = "D+" if pin.side == "positive" else "D−"
+        port = f" port {pin.port_index}" if pin.port_index is not None else ""
+        found.append(
+            Candidate(
+                rule_id="bus.usb_unconnected_data_pin",
+                subject=f"{pin.pin}: {pin.function}",
+                message=(
+                    f"This native USB 2.0 {side}{port} data pin has no net assignment. Review "
+                    "whether the interface is intentionally unused or a connection is missing. "
+                    "The pin function alone does not establish bus membership or PCB routing."
+                ),
+                evidence={
+                    pin.pin: (),
+                    "function": (pin.function,),
+                    "USB_data_side": (side,),
+                    **(
+                        {"USB_data_port_index": (pin.port_index,)}
+                        if pin.port_index is not None
+                        else {}
+                    ),
+                },
             )
         )
     return tuple(found)

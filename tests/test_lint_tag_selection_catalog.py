@@ -88,6 +88,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),
         (
+            "bus.usb_unconnected_data_pin",
+            "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
+        ),
+        (
             "bus.can_line_polarity_label_mismatch",
             "KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES",
         ),

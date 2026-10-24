@@ -44,12 +44,15 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
         / "tests/fixtures/design_lint/usb-data-pair-crossing-native/control.kicad_sch",
         "pair-fault": repository
         / "tests/fixtures/design_lint/usb-data-pair-crossing-native/fault.kicad_sch",
+        "unconnected-fault": repository
+        / "tests/fixtures/design_lint/usb-unconnected-data-native/open-dp.kicad_sch",
     }
     expected_source_hashes = {
         "control": "e93371b78de2ba8c473ccde0579e551d0da0b44b5d9ed417473ab1dd63781d27",
         "fault": "c3586926cfb20926b90160f7b9823fcb9e5c955a17c35babd450aca183c08c7e",
         "pair-control": "e0cf5d7a0f585b025ad4dc28861a19d37e1af78b79da518ff6032fd32e97c239",
         "pair-fault": "29b47ef57440ff01c634efa31192fbe89b2af06bfc8ae95c563a28b847a30bdb",
+        "unconnected-fault": "86fcb43db0d885ee874ea8bc8d68387d808a1338248cacddded2591ec475079f",
     }
     source_hashes = {case: digest(path) for case, path in sources.items()}
     if source_hashes != expected_source_hashes:
@@ -75,7 +78,7 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in control fault pair-control pair-fault; do\n"
+        "for case in control fault pair-control pair-fault unconnected-fault; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -234,6 +237,35 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
             repeatable="true",
             lint_status=report.status,
             crossing_findings=";".join(subjects) if subjects else "none",
+        )
+
+    unconnected_rule_id = "bus.usb_unconnected_data_pin"
+    for case, expected in {
+        "control": (),
+        "unconnected-fault": ("J1.1: D+",),
+    }.items():
+        report = reports[(case, "first")]
+        findings = tuple(item for item in report.findings if item.rule_id == unconnected_rule_id)
+        subjects = tuple(item.subject for item in findings)
+        if subjects != expected:
+            raise ValueError(
+                f"Native USB unconnected-data {case} produced {subjects!r}; expected {expected!r}"
+            )
+        if case == "unconnected-fault" and any(item.disposition != "RULE_OFF" for item in findings):
+            raise ValueError("USB unconnected-data review must remain opt-in by default")
+        stage = "control" if case == "control" else case
+        log.event(
+            f"usb-unconnected-data-fixture/{stage}",
+            "PASS",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            source_sha256=source_hashes[case],
+            normalized_netlist_sha256=normalized_hashes[(case, "first")],
+            repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
+            repeatable="true",
+            lint_status=report.status,
+            unconnected_data_findings=";".join(subjects) if subjects else "none",
         )
 
     log.finish()
