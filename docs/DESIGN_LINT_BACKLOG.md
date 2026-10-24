@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 214 rules are implemented with synthetic regression coverage.
+The following 215 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 214 active rules.
+The catalog currently contains 215 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -546,6 +546,7 @@ skipped under prerelease policy.
 - `bus.i2c_sda_scl_same_net`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
+- `bus.serial_unconnected_pin`
 - `bus.serial_tx_rx_label_mismatch`
 - `bus.serial_tx_rx_same_net`
 - `bus.serial_tx_outputs_share_net`
@@ -3086,7 +3087,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 213 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 215 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4668,6 +4669,39 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_unconnected_usb_data.py \
     -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_unconnected_data_pin")'
+  ```
+
+#### LINT-232 — Review an open UART/USART function pin on a partially connected channel
+
+- **Status:** Implemented as opt-in `bus.serial_unconnected_pin`, owned by
+  `serial_unconnected_pins.py#unconnected_serial_function_pins`.
+- **Gap:** Existing serial checks compare assigned TX/RX nets and authored peer
+  maps. They can miss a native UART/USART function pin that is explicitly left
+  open while another pin on the same component and channel is connected.
+- **Predicate:** Reuse the bounded serial-function parser. For fitted
+  components, report only an unassigned TX/RX function when another pin on the
+  same component and parsed UART/USART channel has exactly one net assignment.
+  Entirely open channels, DNP components, unsupported functions, and ambiguous
+  multi-net assignments are excluded.
+- **Boundary:** Pin-function names do not establish that a channel is used or
+  that its open pin must connect. The rule defaults to `off`, with project
+  policy controls for `review`, `block`, `off`, and exact fingerprint ignores.
+  It does not infer endpoint intent, firmware configuration, PCB routing, or
+  physical continuity.
+- **Fixtures and quality gate:** Synthetic cases cover TX/RX aliases, channel
+  separation, fitted/DNP state, connected and entirely-open controls, exact
+  policy behavior, stable ordering, and assignment repair. A source-hashed
+  explicit no-connect fault and connected control export twice on the exact
+  KiCad 10.0.0 and 10.0.5 pins. The native gate checks the exact changed pin
+  assignment, default-off behavior, opt-in review evidence, and repeatable
+  typed netlists. Rule reachability, focused test selection, native fixture
+  registration, and implementation module size are guarded. No project or
+  cohort design data is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_serial_unconnected_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_unconnected_pin")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

@@ -8,7 +8,9 @@ JSON files are independent authored requirements: `peer-map-partial.json`
 maps only J1/J2, while `peer-map-complete.json` also maps J3/J4. The
 digest-pinned native fixture lane exports the schematic twice with KiCad 10.0.0
 and 10.0.5, verifies the complete pin-function and net-assignment maps, and
-compares unrostered, partial-map, and complete-map lint reports.
+compares unrostered, partial-map, and complete-map lint reports. A synthetic
+no-connect variant also exercises the opt-in `bus.serial_unconnected_pin`
+heuristic.
 
 Run this lane from the tooling checkout after installing its development
 environment and setting `KICAD_TEMPLATE_ROOT` to a public template checkout:
@@ -19,18 +21,40 @@ KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
   tests/test_serial_peer_native_fixture_lane.py
 ```
 
+Run just the open-pin native gate with its dedicated selector:
+
+```sh
+KICAD_RUN_NATIVE_SERIAL_UNCONNECTED_PIN_FIXTURES=1 python -I -B -m pytest -q \
+  tests/test_serial_unconnected_pins_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_unconnected_pin")'
+```
+
 Pinned fixture digests:
 
 - `endpoints.kicad_sch`: `7f3e44ba24ba70b382939fa6504ff635b6bb56292b5bcbc36dee307166378060`
+- `unconnected-tx.kicad_sch`: `c9b769a5fd0bd2c315d76e4b66c25c9de3311146c797a727e25c7ed2cf3f7130`
 - `peer-map-partial.json`: `a0ed823e11c1612aaa12c8baeca75b1f6b1211ae925970fa2c018c6b8c2a24f4`
 - `peer-map-complete.json`: `abed02ee20a713a60a7a0715133d8e02acf170fbc904faa170649dcb9d98c673`
 - normalized native `NetlistContract` on both toolchain pins:
   `b1c218d4e398b4ae9d311732a2a8227887e3e8cce1b9759fbd2aa2f0be4320fd`
+- normalized `unconnected-tx.kicad_sch` native `NetlistContract` on both
+  toolchain pins: `ce14fd077113df11185147c8023ee5bd5972678afa429e269b0791342a0a9314`
 
 The lane retains command receipts and normalized native results under ignored
 `build/ci-hosted/` directories. A passing result verifies that the native
 netlist export and review prompt are repeatable; it does not establish PCB
 copper continuity, external wiring, or engineering approval.
+
+## Partially connected UART function control and fault
+
+`unconnected-tx.kicad_sch` is derived from the tooling-owned `endpoints.kicad_sch`
+fixture by removing the `SERIAL_B_TX` wire and label at J3.1 and marking that
+pin explicitly no-connect. J3.2 remains assigned to `SERIAL_B_RX`, so the
+fixture tests a partially connected UART channel. The native lane verifies
+that the exported pin inventory is unchanged and only J3.1 leaves
+`SERIAL_B_TX`. It requires the default-off candidate to identify `J3.1: TX`,
+then enables review and checks the same evidence. The original connected
+schematic is the control and must produce no finding for this rule.
 
 ## Off-board singleton control
 

@@ -6,6 +6,7 @@ from .bus_signal_roles import unconnected_interface_pins
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .serial_unconnected_pins import unconnected_serial_function_pins
 from .usb_unconnected_data import unconnected_usb_data_pins
 
 
@@ -57,6 +58,26 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
                         if pin.port_index is not None
                         else {}
                     ),
+                },
+            )
+        )
+    for pin in unconnected_serial_function_pins(observed):
+        role = pin.role.upper()
+        found.append(
+            Candidate(
+                rule_id="bus.serial_unconnected_pin",
+                subject=f"{pin.pin}: {pin.function}",
+                message=(
+                    f"This UART/USART {role} function pin has no net assignment while another "
+                    "pin in the same component/channel is assigned. Review whether the channel "
+                    "is intentionally one-way or a connection is missing. This evidence does "
+                    "not establish UART use or PCB routing."
+                ),
+                evidence={
+                    pin.pin: (),
+                    "function": (pin.function,),
+                    "serial_role": (role,),
+                    "serial_channel": (pin.channel,),
                 },
             )
         )

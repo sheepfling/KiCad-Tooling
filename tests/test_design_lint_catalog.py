@@ -85,6 +85,8 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.can_tx_rx_same_net",
             "bus.can_tx_rx_label_mismatch",
             "bus.can_tx_outputs_share_net",
+            "bus.usb_unconnected_data_pin",
+            "bus.serial_unconnected_pin",
         }
     )
     assert all(
@@ -134,6 +136,8 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.can_tx_rx_same_net",
             "bus.can_tx_rx_label_mismatch",
             "bus.can_tx_outputs_share_net",
+            "bus.usb_unconnected_data_pin",
+            "bus.serial_unconnected_pin",
         }
     )
     assert all(item.maturity == "synthetic_validated" for item in catalog.rules)

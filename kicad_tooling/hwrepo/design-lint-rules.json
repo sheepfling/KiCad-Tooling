@@ -7186,6 +7186,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_same_net.py#i2c_sda_scl_same_net_candidates"
     },
     {
+      "rule_id": "bus.serial_unconnected_pin",
+      "title": "Recognized UART/USART pin is open on a partially connected channel",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted component and bounded UART/USART TX/RX function channel, report an unassigned member only when another pin in that same component and parsed channel has exactly one native net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only aliases accepted by serial_function_role_and_channel are recognized; generic net labels, vendor-specific function names, and other serial protocols are outside this rule.",
+        "UART/USART channels are often intentionally one-way or unused. The rule defaults to off and asks for review; even when enabled it does not require the open pin to connect.",
+        "A completely unassigned component/channel is excluded because the native pin function alone does not establish that the channel is used. Multi-net assignments do not count as connected evidence.",
+        "The netlist does not establish firmware configuration, endpoint intent, internal component behavior, PCB copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_serial_unconnected_pins.test_open_serial_pin_emits_exact_review_evidence_when_enabled",
+        "tests.test_serial_unconnected_pins_native_fixture_lane.test_native_open_serial_pin_fault_and_connected_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_serial_unconnected_pins.test_connected_unused_or_unsupported_shapes_do_not_emit",
+        "tests.test_serial_unconnected_pins_native_fixture_lane.test_native_open_serial_pin_fault_and_connected_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_serial_unconnected_pins.test_ordering_is_stable_and_assigning_open_pin_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SERIAL_UNCONNECTED_PIN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/serial_unconnected_pins.py#unconnected_serial_function_pins",
+        "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_unconnected_interface_candidates.py#unconnected_interface_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/serial_unconnected_pins.py#unconnected_serial_function_pins"
+    },
+    {
       "rule_id": "bus.serial_unmapped_peer",
       "title": "Likely UART endpoint is missing from the project peer map",
       "status": "active",

@@ -23,6 +23,22 @@ for its explicit no-connect fault and connected control.
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_unconnected_data_pin")'
 ```
 
+## Review open UART/USART function pins on partially connected channels
+
+`bus.serial_unconnected_pin` recognizes bounded UART/USART TX/RX pin functions when a pin has no
+exported net assignment and another pin on the same fitted component and parsed channel has exactly
+one assignment. A channel with no assigned member is skipped, since a function name alone does not
+show that the channel is used. The rule defaults to `off`; projects can enable `review`, promote it
+to `block`, disable it, or add an exact fingerprint ignore. An open pin may be intentional, so the
+finding asks for review and does not require a connection or establish firmware use, endpoint
+intent, PCB routing, or continuity. See the
+[source-hashed native fault and control](../tests/fixtures/design_lint/serial-peer-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_serial_unconnected_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_unconnected_pin")'
+```
+
 ## Reconcile findings against a source-bound baseline
 
 Use the [source-bound finding reconciliation guide](DESIGN_LINT_RECONCILIATION.md)
@@ -573,7 +589,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 213 active rules.
+The catalog currently contains 215 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
