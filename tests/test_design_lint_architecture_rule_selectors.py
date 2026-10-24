@@ -119,6 +119,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_usb_c_cc_named_rail.py::test_neutral_labels_and_non_cc_functions_are_quiet",
         ),
         (
+            "bus.usb_c_cc_same_net",
+            "tests/test_usb_c_cc_same_net.py::test_dnp_open_ambiguous_duplicate_and_incomplete_evidence_is_skipped",
+        ),
+        (
             "bus.usb_c_sbu_signal_on_named_rail",
             "tests/test_usb_c_sbu_named_rail.py::test_neutral_labels_and_unrecognized_functions_are_quiet",
         ),

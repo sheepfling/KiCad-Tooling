@@ -5560,6 +5560,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_cc_named_rail.py#usb_c_cc_signal_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.usb_c_cc_same_net",
+      "title": "USB-C connector CC1 and CC2 pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, including connector identity, complete pin inventory, fitted state, native CC1/CC2 functions, and exact assignments",
+      "predicate": "For a fitted connector candidate with exactly one recognized CC1 and one CC2 function, report REVIEW only when both pins are in the complete native pin inventory and each has exactly one assignment to the same exact net.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "CC1/CC2 names and same-net assignments are review clues only. They do not establish connector type, USB-C role, compliance, exact device behavior, PCB copper, or physical continuity; some designs may intentionally share these pins.",
+        "Automatic connector candidates are numeric J/P/X/CN references or standard Connector library symbols. Project-reviewed references can include custom connectors. DNP parts, duplicate or incomplete CC pairs, missing native pin inventory, open pins, multiply assigned pins, and different exact nets are skipped.",
+        "The check uses direct schematic net assignments. It does not trace through passive components or infer off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_cc_same_net.test_unique_connector_cc1_cc2_pins_on_one_net_request_review",
+        "tests.test_usb_c_cc_same_net.test_aliases_need_reviewed_connector_identity_when_reference_is_custom",
+        "tests.test_usb_c_cc_same_net_native_fixture_lane.test_native_usb_c_cc_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_cc_same_net.test_distinct_cc_nets_and_unreviewed_non_connector_are_controls",
+        "tests.test_usb_c_cc_same_net.test_dnp_open_ambiguous_duplicate_and_incomplete_evidence_is_skipped",
+        "tests.test_usb_c_cc_same_net_native_fixture_lane.test_native_usb_c_cc_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_cc_same_net.test_finding_order_is_stable_and_separating_cc_nets_clears_it",
+        "tests.test_design_lint_determinism_usb_c_cc_same_net.test_usb_c_cc_same_net_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_CC_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_cc_same_net.py#usb_c_cc_same_net_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_cc_role",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_cc_same_net.py#usb_c_cc_same_net_candidates"
+    },
+    {
       "rule_id": "bus.usb_c_sbu_signal_on_named_rail",
       "title": "USB-C SBU pin is assigned directly to a named rail",
       "status": "active",

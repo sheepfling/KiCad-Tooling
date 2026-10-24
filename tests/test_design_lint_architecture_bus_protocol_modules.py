@@ -69,6 +69,7 @@ BUS_ANALYSIS_MODULES = (
     "can_termination_heuristics.py",
     "can_peer_heuristics.py",
     "usb_c_vbus.py",
+    "usb_c_cc_same_net.py",
     "usb_c_contract.py",
     "spi_bias_heuristics.py",
     "spi_contract.py",

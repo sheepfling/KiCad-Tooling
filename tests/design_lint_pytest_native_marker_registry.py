@@ -70,6 +70,13 @@ PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_usb_c_cc_same_net.py": {"interface_lint"},
+    "test_design_lint_determinism_usb_c_cc_same_net.py": {"interface_lint", "slow"},
+    "test_usb_c_cc_same_net_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_usb_c_sbu_named_rail.py": {"interface_lint"},
     "test_usb_c_sbu_named_rail_native_fixture_lane.py": {
         "interface_lint",

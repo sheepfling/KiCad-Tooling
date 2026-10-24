@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 236 rules are implemented with synthetic regression coverage.
+The following 237 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 236 active rules.
+The catalog currently contains 237 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -580,6 +580,7 @@ skipped under prerelease policy.
 - `bus.spi_data_outputs_share_net`
 - `bus.usb_c_unconnected_cc_pin`
 - `bus.usb_c_cc_signal_on_named_rail`
+- `bus.usb_c_cc_same_net`
 - `bus.usb_c_sbu_signal_on_named_rail`
 - `bus.usb_c_unreviewed_port`
 - `bus.usb_data_path_mismatch`
@@ -860,6 +861,18 @@ and optional ecosystem adapters are `P3`.
   Function and identity text do not prove the exact part pinout or project
   intent; the schematic check does not establish routed copper or physical
   continuity.
+- **LINT-255 USB-C connector CC1/CC2 pins assigned to the same net:** The
+  default-review heuristic requires a fitted connector candidate, exactly one
+  recognized CC1 and CC2 function, a complete native pin inventory, and one
+  unambiguous assignment per pin to the same exact net. Numeric J/P/X/CN
+  references and standard Connector symbols are recognized automatically;
+  projects can identify a custom connector by reviewed reference. DNP,
+  duplicate/incomplete roles, open or multiply assigned pins, and incomplete
+  inventories are skipped. A shared CC net can be intentional, and symbol
+  names do not establish USB-C compliance or connector behavior. Synthetic
+  fault/control, custom identity, policy, boundary, ordering, repair,
+  three-process hash-seed, catalog, selector, source-hash, and digest-pinned
+  KiCad 10.0.0/10.0.5 native netlist/ERC coverage are registered.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3256,7 +3269,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 236 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 237 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3434,7 +3447,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 281-report inventory gate. Fault/control
+  selectors and retains the complete 291-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3527,7 +3540,8 @@ is not a reason by itself to expand its scope or change its default policy.
   with no net and an assigned-contact control. Both reports keep the interface
   catalog fixed and change only the source-matched connector assignment; only
   the open contact emits LINT-210. The full reports are compared across three
-  independently randomized processes. The enforced total is 281 reports.
+  independently randomized processes. The enforced total at that checkpoint
+  was 281 reports.
   The v86 extension adds LINT-211's generic role=other contact assigned to a
   recognized supply or return-like net label, with an unrelated-net control.
   It confirms the localized review while the existing multiple-return-label
@@ -3535,7 +3549,7 @@ is not a reason by itself to expand its scope or change its default policy.
   randomized processes. Its native fault and mapped-return control reuse the
   same source-hashed tooling-owned DB9 schematic; the exported netlist is
   unchanged while only the synthetic interface map changes. The complete
-  inventory now contains 237 reports.
+  inventory now contains 291 reports.
   This tests typed-report serialization, separate from the digest-pinned
   native schematic lane.
   The test
@@ -5679,6 +5693,44 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_USB_DP_DM_SAME_NET_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_usb_data_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_dp_dm_same_net")'
+  ```
+
+#### LINT-255 — Review USB-C connector CC1/CC2 pins assigned to the same net
+
+- **Status:** Implemented as the default-review heuristic
+  `bus.usb_c_cc_same_net`. Project policy can promote it to `block`, turn it
+  off, or ignore one exact finding fingerprint.
+- **Gap:** USB-C checks covered unconnected CC pins and CC functions assigned
+  to named rails, but did not independently prompt when one connector's two
+  orientation-detect contacts shared the same otherwise-neutral schematic
+  net. A contract must not be the only way to surface this suspicious pattern.
+- **Predicate:** Require one fitted connector candidate with exactly one
+  recognized CC1 and CC2 function, both included in its complete native pin
+  inventory, and exactly one direct assignment per pin to the same exact
+  net. Numeric J/P/X/CN references and standard Connector library symbols
+  are automatic candidates; a project-reviewed reference admits a custom
+  connector. DNP, duplicate or incomplete roles, open or ambiguous
+  assignments, and incomplete inventory are skipped.
+- **Boundary:** A shared assignment may be intentional. CC function names
+  identify candidates for review; they do not establish connector behavior,
+  USB-C role or compliance, electrical operation, routed copper, or physical
+  continuity. The rule does not trace through passive components.
+- **Fixtures and quality gate:** Synthetic shared-net fault and distinct-net
+  control; custom reviewed identity and bounded function aliases; DNP, open,
+  ambiguous, duplicate, and incomplete-evidence controls; review/block/off/
+  exact-ignore policy; stable ordering and repair; three-process hash-seed
+  stability; catalog reachability; focused selectors; and source-hashed
+  repeated native netlist/ERC exports on digest-pinned KiCad 10.0.0 and
+  10.0.5.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_c_cc_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_cc_same_net")'
+
+  KICAD_RUN_NATIVE_USB_C_CC_SAME_NET_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_usb_c_cc_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

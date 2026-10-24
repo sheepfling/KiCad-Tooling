@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 236 active rules.
+The catalog currently contains 237 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1268,6 +1268,32 @@ ordering, repair, and hash-seed cases are paired with digest-pinned KiCad
 KICAD_RUN_NATIVE_USB_C_CC_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_c_cc_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_signal_on_named_rail")'
+```
+
+### USB-C connector CC1/CC2 pins assigned to one net
+
+`bus.usb_c_cc_same_net` requests review when a fitted connector candidate has
+one recognized CC1 and one CC2 pin in its complete native inventory and both
+pins have exactly one assignment to the same exact net. It uses connector
+reference/symbol identity, so a USB-C controller with similarly named pins is
+not treated as a receptacle. Standard numeric J/P/X/CN references and standard
+Connector symbols are recognized automatically; a project-reviewed connector
+reference may extend recognition to a custom symbol. DNP parts, duplicate or
+incomplete CC pairs, open or ambiguous assignments, and incomplete inventories
+are skipped. The default is `review`; a shared CC net may be intentional and
+the finding does not establish USB-C compliance, exact connector behavior,
+PCB copper, or physical continuity. Synthetic policy, boundary, ordering,
+repair, and hash-seed cases accompany digest-pinned KiCad 10.0.0 and 10.0.5
+fault/control exports. See the
+[fixture notes](../tests/fixtures/design_lint/usb-c-cc-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_cc_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_cc_same_net")'
+
+KICAD_RUN_NATIVE_USB_C_CC_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_cc_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_same_net")'
 ```
 
 ### USB-C SBU pins assigned directly to named rails

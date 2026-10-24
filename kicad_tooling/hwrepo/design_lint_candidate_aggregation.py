@@ -227,6 +227,7 @@ def candidates(
             rs485_peer_reference_scan=rs485_peer_reference_scan,
             component_peer_findings=component_peer_findings,
             pcb_differential_pair_rule_map=pcb_differential_pair_rule_map,
+            reviewed_connector_references=reviewed_connector_references,
         )
     )
     if schematic_geometry is not None:
