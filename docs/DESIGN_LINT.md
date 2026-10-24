@@ -904,6 +904,26 @@ KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES=1 .venv/bin/python -I -m pyt
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
 ```
 
+### Ethernet PHY pins assigned directly to named rails
+
+`bus.ethernet_signal_on_named_rail` reviews a fitted PHY IC's bounded Ethernet
+TX/RX data-pair functions when a pin has one assignment to a supply-like or
+return-like net label. This defaults to `review`: a direct rail connection can
+be an intentional strap or mode selection. Pin functions and labels do not
+establish electrical potential, signal integrity, endpoint topology, routed
+copper, or physical continuity. The digest-pinned fault and control schematics
+are Tooling-authored; their source hashes and native-lane limits are in the
+[fixture record](../tests/fixtures/design_lint/ethernet-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_signal_on_named_rail")'
+```
+
 ### CAN TX/RX pin and net-label direction review
 
 `bus.can_tx_rx_label_mismatch` compares explicit CAN/FDCAN TX/TXD and RX/RXD
