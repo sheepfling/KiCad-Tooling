@@ -77,6 +77,7 @@ from .ci_hosted_serial_peer_reference_bonds import (
 from .ci_hosted_spi_peer_reference_fixtures import spi_peer_reference_native_fixture_lane
 from .ci_hosted_stm32_pin_map import stm32_pin_map_fixture_lane
 from .ci_hosted_support import HostedCommandError, HostedLog
+from .ci_hosted_transformer_windings import transformer_winding_fixture_lane
 from .ci_hosted_two_pin_components import (
     TWO_PIN_COMPONENT_FIXTURE_CASES,
     two_pin_component_fixture_lane,
@@ -163,6 +164,7 @@ __all__ = (
     "serial_peer_reference_bond_fixture_lane",
     "spi_peer_reference_native_fixture_lane",
     "stm32_pin_map_fixture_lane",
+    "transformer_winding_fixture_lane",
     "two_pin_component_fixture_lane",
     "usb_c_port_fixture_lane",
     "usb_data_path_fixture_lane",
@@ -406,6 +408,7 @@ def native_lane(
         stm32_pin_map_fixture_lane(root, project=project, image=image, log=log)
         led_rail_fixture_lane(root, project=project, image=image, log=log)
         two_pin_component_fixture_lane(root, project=project, image=image, log=log)
+        transformer_winding_fixture_lane(root, project=project, image=image, log=log)
         component_peer_power_output_fixture_lane(root, project=project, image=image, log=log)
         component_peer_power_assignment_fixture_lane(root, project=project, image=image, log=log)
         component_peer_power_input_fixture_lane(root, project=project, image=image, log=log)

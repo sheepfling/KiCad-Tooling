@@ -239,6 +239,28 @@ for source hashes and the pinned native fixture boundary.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_thermocouple_same_net")'
 ```
 
+## Review a transformer winding whose terminals share one net
+
+`component.transformer_winding_same_net` reviews the exact
+`Transformer:TRANSF1` symbol when either winding group, pins 1/2 or pins 3/4,
+shares one native schematic net. It does not assign functional roles to the
+windings.
+The pin groups are bounded to the official
+[KiCad 10.0.5 symbol definition](https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Transformer.kicad_symdir/TRANSF1.kicad_sym).
+The prompt defaults to `review` and supports project `block`, `off`, and
+exact-fingerprint ignore decisions. Other transformer identities, incomplete
+or ambiguous pin inventories, open pins, and DNP parts are not classified.
+The finding does not establish transformer operation, isolation rating,
+winding polarity, physical connectivity, PCB copper continuity, or assembly
+state. See the
+[synthetic fixture record](../tests/fixtures/design_lint/transformer-windings/README.md)
+for source hashes and exact-version native checks.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_transformer_winding_same_net.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.transformer_winding_same_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -430,7 +452,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 208 active rules.
+The catalog currently contains 209 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

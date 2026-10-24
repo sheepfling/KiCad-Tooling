@@ -2706,6 +2706,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_thermocouples.py#two_pin_thermocouple_same_net_candidates"
     },
     {
+      "rule_id": "component.transformer_winding_same_net",
+      "title": "Supported transformer winding terminals share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted exact Transformer:TRANSF1 symbol with the complete native pin inventory 1 through 4 and one unambiguous assigned schematic net per pin, report when either verified winding pair (1/2 or 3/4) shares one net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A winding terminal tie may be intentional in a test or bypass configuration; the configurable REVIEW prompt does not declare the topology defective.",
+        "Only the exact Transformer:TRANSF1 identity and its verified 1/2 and 3/4 winding pin groups are recognized. Other transformer identities, custom symbols, DNP parts, incomplete inventories, open pins, and ambiguous assignments are outside the predicate.",
+        "The schematic netlist does not establish transformer operation, isolation rating, winding polarity, component suitability, physical connectivity, PCB copper continuity, or assembly state."
+      ],
+      "fault_fixtures": [
+        "tests.test_transformer_winding_same_net.test_same_net_supported_transformer_winding_is_reviewed",
+        "tests.test_transformer_winding_native_fixture_lane.test_transformer_winding_native_fixture_scope_is_source_hashed_and_complete",
+        "tests.test_transformer_winding_native_fixture_lane.test_native_transformer_winding_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_transformer_winding_same_net.test_distinct_winding_terminal_nets_are_the_no_finding_control",
+        "tests.test_transformer_winding_same_net.test_skips_dnp_incomplete_ambiguous_open_extra_pin_and_unconfirmed_symbols",
+        "tests.test_transformer_winding_same_net.test_policy_and_exact_fingerprint_ignore_are_project_configurable",
+        "tests.test_transformer_winding_native_fixture_lane.test_transformer_winding_native_fixture_scope_is_source_hashed_and_complete",
+        "tests.test_transformer_winding_native_fixture_lane.test_native_transformer_winding_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_transformer_winding_same_net.test_order_is_stable_and_splitting_one_winding_clears_only_its_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TRANSFORMER_WINDING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/design_lint_component_transformers.py#transformer_winding_same_net_candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_component_transformers.py#transformer_winding_same_net_candidates"
+    },
+    {
       "rule_id": "component.two_pin_crystal_same_net",
       "title": "Supported two-pin crystal terminals share one net",
       "status": "active",

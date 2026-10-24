@@ -133,6 +133,8 @@ REPORT_ORDER = (
     "solar_cell_control",
     "thermocouple_fault",
     "thermocouple_control",
+    "transformer_winding_fault",
+    "transformer_winding_control",
     "peer_pin_fault",
     "connector_part_id_alias_open_fault",
     "connector_part_id_alias_split_fault",

@@ -30,6 +30,7 @@ from tests.test_led_output_heuristics import observed_report as led_output_obser
 from tests.test_led_output_heuristics import output_led_netlist as led_output_netlist
 from tests.test_mosfet_gate_connectivity import mosfet_netlist as mosfet_gate_netlist
 from tests.test_mosfet_stress import multi_device_netlist, multi_device_requirement
+from tests.test_transformer_winding_same_net import transformer_netlist
 from tests.test_two_pin_crystals import crystal_netlist
 from tests.test_two_pin_diodes import diode_netlist
 from tests.test_two_pin_ferrites import ferrite_netlist
@@ -343,6 +344,13 @@ def report_cases() -> dict[str, object]:
         "thermocouple_control": source_bound_component_report(
             "synthetic-two-pin-thermocouple-hash-seed-control",
             thermocouple_netlist(same_net=False),
+        ),
+        "transformer_winding_fault": source_bound_component_report(
+            "synthetic-transformer-winding-hash-seed-fault", transformer_netlist()
+        ),
+        "transformer_winding_control": source_bound_component_report(
+            "synthetic-transformer-winding-hash-seed-control",
+            transformer_netlist(first_winding_same_net=False),
         ),
         "mosfet_stress_q2_over_limit": mosfet_stress_check_result(q2_over_limit=True),
         "mosfet_stress_multi_device_control": mosfet_stress_check_result(q2_over_limit=False),

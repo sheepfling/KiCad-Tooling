@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from tests import component_peer_pin_support as peer_pin
+from tests import test_transformer_winding_same_net as transformer_windings
 from tests import test_two_pin_batteries as batteries
 from tests import test_two_pin_buzzers as buzzers
 from tests import test_two_pin_crystals as crystals
@@ -30,6 +31,7 @@ def reachable_component_rule_ids() -> set[str]:
         motors.lint_report(motors.motor_netlist()),
         solar_cells.lint_report(solar_cells.solar_cell_netlist()),
         thermocouples.lint_report(thermocouples.thermocouple_netlist()),
+        transformer_windings.lint_report(transformer_windings.transformer_netlist()),
         crystals.lint_report(crystals.crystal_netlist()),
         fuses.lint_report(fuses.fuse_netlist()),
         peer_pin.lint_report(peer_pin.peer_power_output_netlist()),

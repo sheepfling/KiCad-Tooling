@@ -281,6 +281,22 @@ def test_two_pin_thermocouple_rule_has_a_focused_component_owner() -> None:
     assert _line_count(HWREPO / "two_pin_thermocouples.py") < IMPLEMENTATION_MAX_LINES
 
 
+def test_transformer_winding_rule_has_a_focused_component_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "component.transformer_winding_same_net"
+    )
+    owner = "kicad_tooling/hwrepo/design_lint_component_transformers.py#transformer_winding_same_net_candidates"
+    assert rule.theme == "components"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert (HWREPO / "design_lint_component_transformers.py").is_file()
+    assert _line_count(HWREPO / "design_lint_component_transformers.py") < IMPLEMENTATION_MAX_LINES
+
+
 def test_active_catalog_implementation_modules_stay_below_review_limit() -> None:
     catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
     implementation_paths = {

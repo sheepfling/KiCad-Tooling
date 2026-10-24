@@ -53,6 +53,7 @@ def test_native_lane_cannot_pass_when_declared_electrical_fails(tmp_path: Path) 
         "stm32_pin_map_fixture_lane",
         "led_rail_fixture_lane",
         "two_pin_component_fixture_lane",
+        "transformer_winding_fixture_lane",
         "component_peer_power_output_fixture_lane",
         "component_peer_generic_all_open_fixture_lane",
         "component_peer_generic_mixed_open_fixture_lane",
