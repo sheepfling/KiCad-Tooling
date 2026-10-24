@@ -5995,6 +5995,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_tx_rx_label_mismatch.py#can_tx_rx_label_mismatch_candidates"
     },
     {
+      "rule_id": "bus.can_line_on_named_rail",
+      "title": "CAN transceiver bus-line pin is assigned directly to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded CANH/CANL function roles, complete component pin inventories, fitted state, and exact net assignments",
+      "predicate": "For each fitted U/IC with exactly one native CANH/CAN_HIGH and CANL/CAN_LOW function pair, require both line pins in the component pin inventory and exactly one net assignment for the examined pin. Emit REVIEW when the assigned net label matches the bounded supply-like or return-like vocabulary.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project version is checked before export"
+      ],
+      "limitations": [
+        "The bounded native function pair and rail-like net label are review clues, not proof of electrical potential, an electrical defect, or required CAN connectivity. A direct assignment may be intentional for a particular design.",
+        "Recognition is limited to fitted U/IC references, exactly one CANH/CAN_HIGH and one CANL/CAN_LOW function per reference, complete pin-number inventories, and one unambiguous assignment for the examined pin. Connector-only, generic H/L, duplicate line roles, DNP, open or multiply assigned examined pins, and incomplete inventories are skipped.",
+        "The schematic netlist does not establish CAN participation, transceiver behavior, bus topology, termination adequacy, PCB copper continuity, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_line_named_rail.test_can_bus_line_pin_assigned_to_named_rail_requests_review",
+        "tests.test_can_line_named_rail.test_compacted_can_high_low_aliases_are_recognized",
+        "tests.test_can_line_named_rail_native_fixture_lane.test_native_can_line_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_line_named_rail.test_neutral_rail_labels_and_non_line_functions_are_quiet",
+        "tests.test_can_line_named_rail.test_dnp_open_ambiguous_duplicate_connector_and_incomplete_pairs_are_skipped",
+        "tests.test_can_line_named_rail_native_fixture_lane.test_native_can_line_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_can_line_named_rail.test_mapping_order_is_stable_and_corrected_line_assignments_clear_review",
+        "tests.test_design_lint_determinism_can_line_named_rail.test_can_line_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_LINE_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_line_named_rail.py#can_line_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#can_function_role",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_line_named_rail.py#can_line_on_named_rail_candidates"
+    },
+    {
       "rule_id": "bus.can_signal_on_named_rail",
       "title": "CAN/FDCAN controller signal pin is assigned directly to a named rail",
       "status": "active",

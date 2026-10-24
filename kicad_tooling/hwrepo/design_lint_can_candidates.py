@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .can_line_named_rail import can_line_on_named_rail_candidates
 from .can_line_polarity import can_line_polarity_label_candidates
 from .can_peer_heuristics import can_peer_assignment_divergences
 from .can_peer_reference_scan import (
@@ -67,6 +68,7 @@ def can_candidates(
             )
         )
     found.extend(can_line_polarity_label_candidates(observed))
+    found.extend(can_line_on_named_rail_candidates(observed))
     found.extend(can_signal_on_named_rail_candidates(observed))
     found.extend(can_tx_rx_same_net_candidates(observed))
     found.extend(can_tx_rx_label_mismatch_candidates(observed))

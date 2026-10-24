@@ -262,6 +262,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_can_signal_named_rail.py::test_neutral_labels_and_unsupported_functions_are_quiet",
         ),
         (
+            "bus.can_line_on_named_rail",
+            "tests/test_can_line_named_rail.py::test_neutral_rail_labels_and_non_line_functions_are_quiet",
+        ),
+        (
             "bus.ethernet_signal_on_named_rail",
             "tests/test_ethernet_signal_named_rail.py::test_neutral_labels_and_unsupported_functions_are_quiet",
         ),

@@ -11,6 +11,7 @@ import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.component_peer_power_input_support as _component_peer_power_input_support
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
+import tests.design_lint_fixtures.can_line_named_rail as _can_line_named_rail_fixtures
 import tests.design_lint_fixtures.can_unconnected_direction_pins as _can_unconnected_direction_fixtures
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
 import tests.design_lint_fixtures.component_return_domains as _component_return_domains
@@ -449,6 +450,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id
         for item in candidates(_rs485_line_named_rail_fixtures.rs485_line_named_rail_netlist())
+    )
+    emitted.update(
+        item.rule_id
+        for item in candidates(_can_line_named_rail_fixtures.can_line_named_rail_netlist())
     )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

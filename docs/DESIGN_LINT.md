@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 229 active rules.
+The catalog currently contains 230 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1082,6 +1082,31 @@ exports repeat with clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5; see the
 KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_can_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_signal_on_named_rail")'
+```
+
+### CAN transceiver bus-line pins assigned directly to named rails
+
+`bus.can_line_on_named_rail` reviews fitted U/IC pins when the native function
+inventory contains exactly one `CANH`/`CAN_HIGH` and one `CANL`/`CAN_LOW` role,
+both line pins appear in the component pin inventory, and the examined pin has
+one assignment to a supply-like or return-like label. A unique pair helps
+separate transceiver bus pins from controller TX/RX signals. The default is
+`review`; project policy may promote the clue to `block`, turn it `off`, or
+ignore an exact finding. Net labels and pin functions do not prove electrical
+potential, required CAN topology, a defect, PCB copper, or off-board
+continuity. DNP, connector-only, generic H/L, duplicate line roles, open or
+ambiguous examined pins, and incomplete inventory cases are skipped. The
+synthetic fault/control exports repeat with clean ERC on digest-pinned KiCad
+10.0.0 and 10.0.5; see the
+[fixture record](../tests/fixtures/design_lint/can-line-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_line_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_line_on_named_rail")'
+
+KICAD_RUN_NATIVE_CAN_LINE_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_can_line_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_line_on_named_rail")'
 ```
 
 ### SPI data pin/name role review

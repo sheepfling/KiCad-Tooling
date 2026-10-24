@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 229 rules are implemented with synthetic regression coverage.
+The following 230 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 229 active rules.
+The catalog currently contains 230 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -589,6 +589,7 @@ skipped under prerelease policy.
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
 - `bus.can_signal_on_named_rail`
+- `bus.can_line_on_named_rail`
 - `bus.ethernet_data_label_mismatch`
 - `bus.ethernet_management_label_mismatch`
 - `bus.ethernet_management_signal_on_named_rail`
@@ -793,6 +794,12 @@ and optional ecosystem adapters are `P3`.
   complete native pin inventory, and one direct assignment to a named supply
   or return label. Generic A/B pins, non-unique line pairs, and CAN identities
   remain out of scope.
+- **LINT-248 CANH/CANL bus line assigned to a named rail:** The default-review
+  heuristic requires exactly one native CANH/CAN_HIGH and CANL/CAN_LOW function
+  pair on a fitted U/IC, both pins in the native inventory, and one direct
+  assignment for the examined pin to a supply-like or return-like label.
+  Generic H/L pins, connector-only endpoints, duplicate line roles, and
+  incomplete evidence remain out of scope.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3189,7 +3196,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 229 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 230 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3367,7 +3374,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 275-report inventory gate. Fault/control
+  selectors and retains the complete 277-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -5396,6 +5403,43 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_RS485_LINE_NAMED_RAIL_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_rs485_line_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_line_on_named_rail")'
+  ```
+
+#### LINT-248 — Review CANH/CANL bus-line pins assigned to named rails
+
+- **Status:** Implemented as default-review `bus.can_line_on_named_rail`.
+  Project policy may promote it to `block`, turn it `off`, or ignore an exact
+  finding.
+- **Gap:** Existing CAN named-rail review covers controller TX/RX pins and
+  deliberately skips CANH/CANL; separate polarity and peer rules do not flag a
+  bus-line pin directly assigned to a supply-like or return-like net label.
+- **Predicate:** Require a fitted U/IC, exactly one native function for each
+  bounded `CANH`/`CAN_HIGH` and `CANL`/`CAN_LOW` role on that reference, both
+  pins in the component's native inventory, and exactly one assignment for the
+  examined pin. Emit REVIEW when that assignment's label matches the shared
+  bounded supply-like or return-like vocabulary.
+- **Boundary:** The function pair and net label are review clues. A direct
+  connection can be intentional; this rule does not establish pin voltage,
+  required bus topology, transceiver behavior, termination adequacy, a defect,
+  PCB copper, or off-board wiring. Generic H/L, duplicate functions,
+  connector-only endpoints, DNP, open or multiply assigned examined pins, and
+  incomplete inventories are skipped.
+- **Fixtures and quality gate:** CANH-to-GND and CANL-to-`+3V3` fault cases;
+  neutral labels, CAN_HIGH/CAN_LOW aliases, generic function, DNP, open,
+  multiply assigned, duplicate-role, connector, and incomplete-inventory
+  controls; project block/off/exact-ignore policy; repair and mapping-order
+  stability; hash-seed report determinism; catalog reachability; focused rule
+  selection; and source-hashed repeated native netlist/ERC fault/control
+  exports on digest-pinned KiCad 10.0.0 and 10.0.5.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_can_line_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_line_on_named_rail")'
+
+  KICAD_RUN_NATIVE_CAN_LINE_NAMED_RAIL_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_can_line_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_line_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

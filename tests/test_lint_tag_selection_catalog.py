@@ -196,6 +196,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES",
         ),
         (
+            "bus.can_line_on_named_rail",
+            "KICAD_RUN_NATIVE_CAN_LINE_NAMED_RAIL_FIXTURES",
+        ),
+        (
             "bus.spi_chip_select_inputs_share_net",
             "KICAD_RUN_NATIVE_SPI_SHARED_CHIP_SELECT_FIXTURES",
         ),
