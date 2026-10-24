@@ -45,6 +45,7 @@ import tests.test_two_pin_crystals as _tests_test_two_pin_crystals
 import tests.test_two_pin_diodes as _tests_test_two_pin_diodes
 import tests.test_two_pin_ferrites as _tests_test_two_pin_ferrites
 import tests.test_two_pin_fuses as _tests_test_two_pin_fuses
+import tests.test_two_pin_leds as _tests_test_two_pin_leds
 import tests.test_two_pin_passives as _tests_test_two_pin_passives
 import tests.test_two_pin_switches as _tests_test_two_pin_switches
 import tests.test_usb_c_ports as _tests_test_usb_c_ports
@@ -377,6 +378,8 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_two_pin_diodes.diode_netlist()
     )
     emitted.update(item.rule_id for item in diode_result.findings)
+    led_result = _tests_test_two_pin_leds.lint_report(_tests_test_two_pin_leds.led_netlist())
+    emitted.update(item.rule_id for item in led_result.findings)
     crystal_result = _tests_test_two_pin_crystals.lint_report(
         _tests_test_two_pin_crystals.crystal_netlist()
     )

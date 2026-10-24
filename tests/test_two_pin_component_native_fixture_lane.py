@@ -43,6 +43,8 @@ _EXPECTED_SOURCE_HASHES = {
     "cohort-power-pin-dc/custom-capacitor-role-control.kicad_sch": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
     "two-pin-components/same-net-diode.kicad_sch": "c7b34973f881f5c8d8e8ac26b07c03dec70b061f66b8338d61fb085583c2aa8b",
     "two-pin-components/distinct-nets-diode.kicad_sch": "74d19829e8dd9379a26cb6da9dd3cf10a48abce9d724661338f73ce0086bb928",
+    "two-pin-leds/same-net-led.kicad_sch": "a5ff10fb374138ee4409dfd1e40d7652798497b35c41ed2b5f4c3be7744d3fc7",
+    "two-pin-leds/distinct-nets-led.kicad_sch": "95cfa1e927bcfea5b251538b742164704541e9e139825bf6faee5a1909efae74",
     "two-pin-crystals/same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
     "two-pin-crystals/distinct-nets-crystal.kicad_sch": "4c4fa54184ba74eb8194016a166e068c1a41646b4e59686d187395d981c4bc13",
     "two-pin-fuses/same-net-fuse.kicad_sch": "b69792902442ef89c103f5a4b783b73633b88d9519ab01c5b77df9b654df62ca",
@@ -60,7 +62,7 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     case_sources = {filename for filename, _, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
     assert case_sources == set(_EXPECTED_SOURCE_HASHES)
-    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 28
+    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 30
     for filename, expected_digest in _EXPECTED_SOURCE_HASHES.items():
         source = (fixture_root / filename).resolve()
         assert source.is_relative_to(fixture_root.resolve())
@@ -122,6 +124,14 @@ def test_diode_native_fixture_scope_contains_only_diode_fault_and_control() -> N
     selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_diode_same_net",))
     assert set(selected) == {"same-net-diode", "distinct-nets-diode"}
     assert {rule_id for _, rule_id, _ in selected.values()} == {"component.two_pin_diode_same_net"}
+    assert any(subjects for _, _, subjects in selected.values())
+    assert any(not subjects for _, _, subjects in selected.values())
+
+
+def test_led_native_fixture_scope_contains_only_led_fault_and_control() -> None:
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_led_same_net",))
+    assert set(selected) == {"same-net-led", "distinct-nets-led"}
+    assert {rule_id for _, rule_id, _ in selected.values()} == {"component.two_pin_led_same_net"}
     assert any(subjects for _, _, subjects in selected.values())
     assert any(not subjects for _, _, subjects in selected.values())
 
@@ -274,6 +284,22 @@ def test_native_two_pin_diode_same_net_fault_and_control(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_diode_same_net",
+    )
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_led_same_net")
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
+    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
+def test_native_two_pin_led_same_net_fault_and_control(tmp_path: Path, kicad_version: str) -> None:
+    _run_native_rule_fixture(
+        tmp_path,
+        kicad_version=kicad_version,
+        rule_id="component.two_pin_led_same_net",
     )
 
 

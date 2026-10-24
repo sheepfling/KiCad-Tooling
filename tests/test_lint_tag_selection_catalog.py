@@ -18,6 +18,10 @@ from scripts.lint_gate_scope import (
     ("rule_id", "native_fixture"),
     (
         ("power.mapped_sequence_dependency_mismatch", "KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES"),
+        (
+            "component.two_pin_led_same_net",
+            "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES",
+        ),
         ("component.generic_peer_pin_mixed_open", "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"),
         ("component.peer_signal_input_unconnected", "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"),
         (

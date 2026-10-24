@@ -38,6 +38,7 @@ from .oscillator_output_path_candidates import oscillator_output_path_candidates
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
 from .two_pin_components import two_pin_components_on_same_net
+from .two_pin_leds import two_pin_led_same_net_candidates
 
 
 def _unconnected_named_pin_candidate(
@@ -133,7 +134,11 @@ def component_candidates(
             )
         )
 
-    for component in two_pin_components_on_same_net(observed, component_role_map):
+    two_pin_components = two_pin_components_on_same_net(observed, component_role_map)
+    found.extend(two_pin_led_same_net_candidates(two_pin_components))
+    for component in two_pin_components:
+        if component.kind == "led":
+            continue
         pin_assignments = tuple(
             f"{component.reference}.{number} -> {component.net}" for number in component.pin_numbers
         )

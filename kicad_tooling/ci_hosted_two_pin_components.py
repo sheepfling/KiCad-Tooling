@@ -105,6 +105,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_diode_same_net",
         set(),
     ),
+    "same-net-led": (
+        "two-pin-leds/same-net-led.kicad_sch",
+        "component.two_pin_led_same_net",
+        {"D1: both LED terminals share LED_TIED"},
+    ),
+    "distinct-nets-led": (
+        "two-pin-leds/distinct-nets-led.kicad_sch",
+        "component.two_pin_led_same_net",
+        set(),
+    ),
     "same-net-crystal": (
         "two-pin-crystals/same-net-crystal.kicad_sch",
         "component.two_pin_crystal_same_net",
@@ -344,6 +354,7 @@ def two_pin_component_fixture_lane(
                     "thermistor",
                 },
                 "component.two_pin_diode_same_net": {"diode"},
+                "component.two_pin_led_same_net": {"led"},
                 "component.two_pin_crystal_same_net": {"crystal"},
                 "component.two_pin_fuse_same_net": {"fuse", "polyfuse"},
                 "component.two_pin_ferrite_same_net": {"ferrite_bead"},

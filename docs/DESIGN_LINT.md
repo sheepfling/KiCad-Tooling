@@ -110,6 +110,25 @@ useful for that project. The
 [native fixture note](../tests/fixtures/design_lint/mosfet-gate-native/README.md)
 documents the tooling-owned direct-drive and series-resistor cases.
 
+## Review a two-pin LED whose terminals share one net
+
+`component.two_pin_led_same_net` reviews an exact fitted `Device:LED` when its
+two native pins are both assigned to the same schematic net. That assignment
+provides no voltage difference across the LED in the netlist, but the prompt
+does not establish component behavior, current, footprint mapping, PCB
+connectivity, or physical population. The rule defaults to `review` and
+supports project `block`, `off`, and exact-fingerprint ignore decisions. DNP,
+open, ambiguous, incomplete, multi-pin, and other LED identities remain
+unclassified. The
+[synthetic fixture record](../tests/fixtures/design_lint/two-pin-leds/README.md)
+contains the same-net fault and separate-net control, with source hashes and
+the exact KiCad 10 native lane.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_two_pin_leds.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_led_same_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -301,7 +320,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 200 active rules.
+The catalog currently contains 201 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

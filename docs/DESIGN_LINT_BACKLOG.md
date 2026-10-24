@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 200 rules are implemented with synthetic regression coverage.
+The following 201 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 200 active rules.
+The catalog currently contains 201 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -466,6 +466,7 @@ skipped under prerelease policy.
 - `component.peer_signal_output_unconnected`
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
+- `component.two_pin_led_same_net`
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
@@ -3058,7 +3059,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 200 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 201 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4093,6 +4094,47 @@ is not a reason by itself to expand its scope or change its default policy.
   review. No candidate package or source was installed or copied. The local
   implementation is first-party and uses only the existing typed netlist
   service.
+
+#### LINT-219 — Same-net two-pin LED review
+
+- **Status:** Implemented as the default-review rule
+  `component.two_pin_led_same_net` for the exact stock `Device:LED` identity.
+- **Gap:** LINT-081 deliberately excludes `Device:LED`, while the existing LED
+  checks look for a recognized positive/return span or a driven output path.
+  An LED whose two terminals share one neutral or otherwise unclassified net
+  therefore had no focused same-net finding.
+- **Predicate:** Require a fitted exact `Device:LED`, exactly two distinct
+  native pin numbers, and one unambiguous assigned native net per pin. Report
+  only when both pins resolve to the same net. DNP, open, multiply assigned,
+  incomplete, multi-pin, custom, and alternate LED symbols are unclassified.
+- **Boundary:** This is a configurable review prompt, not a defect verdict. It
+  does not infer LED behavior, current, supply role, footprint pin mapping,
+  physical population, or PCB connectivity. An intentionally bypassed or
+  disabled indicator can be valid.
+- **Fixtures:** Synthetic same-net fault and separate-net control; DNP,
+  incomplete, ambiguous, multi-pin, custom, and alternate-symbol controls;
+  policy and exact-ignore lifecycle; ordering and net-split metamorphic check;
+  and source-hashed KiCad 10.0.0/10.0.5 native exports through the existing
+  two-pin component lane. No product or cohort schematic is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_two_pin_leds.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_led_same_net")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_two_pin_component_native_fixture_lane.py \
+    -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.two_pin_led_same_net")'
+  ```
+
+- **Incremental-value claim:** The new rule detects one exact supported two-pin
+  topology not covered by the diode same-net rule or the existing rail/output
+  LED prompts. Synthetic tests demonstrate predicate behavior only; public
+  applicability and reviewer-value measurements remain unmeasured.
 - **Verification state:** Unit, catalog, determinism, CLI/MCP, and fixture-lane
   wiring checks pass locally. The
   `test_native_two_pin_passive_same_net_fault_and_control` fixture
