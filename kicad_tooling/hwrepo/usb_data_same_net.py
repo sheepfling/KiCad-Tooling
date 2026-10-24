@@ -5,6 +5,7 @@ from __future__ import annotations
 from .bus_signal_pairs import usb_data_function_identity
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .netlist_pin_assignments import netlist_pin_net_index
 from .usb_peer_endpoint_analysis import IC_REFERENCE
 
 RULE_ID = "bus.usb_dp_dm_same_net"
@@ -27,10 +28,7 @@ def usb_data_same_net_candidates(observed: NetlistContract) -> tuple[Candidate, 
         reference.casefold(): {number.casefold() for number in numbers}
         for reference, numbers in observed.component_pin_numbers.items()
     }
-    nets_by_pin: dict[str, set[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            nets_by_pin.setdefault(pin.casefold(), set()).add(net)
+    nets_by_pin = netlist_pin_net_index(observed)
     pin_types = {
         pin.casefold(): value.strip().casefold()
         for pin, value in observed.pin_electrical_types.items()

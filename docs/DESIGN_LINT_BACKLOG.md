@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 235 rules are implemented with synthetic regression coverage.
+The following 236 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 235 active rules.
+The catalog currently contains 236 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -561,6 +561,7 @@ skipped under prerelease policy.
 - `bus.rs485_peer_reference_review`
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
+- `bus.rs485_ab_same_net`
 - `bus.rs485_line_on_named_rail`
 - `bus.rs485_signal_on_named_rail`
 - `bus.rs485_unconnected_data_pin`
@@ -846,6 +847,19 @@ and optional ecosystem adapters are `P3`.
   metadata remain quiet. Project policy, exact-ignore, hash-seed, catalog,
   selector, source-hash, and digest-pinned KiCad 10.0.0/10.0.5 gates are
   registered. Function names do not establish USB use or intended topology.
+- **LINT-254 RS-485 A/B bus pins assigned to the same net:** The default-review
+  heuristic recognizes one exact A and B function on a fitted U/IC whose
+  native symbol ID or value explicitly identifies RS-485. It requires both
+  pins in the native component inventory and one exact net assignment per
+  pin; a shared net prompts review. Generic A/B pins, connectors, DNP parts,
+  duplicate roles, open or ambiguous assignments, incomplete inventory, and
+  two-output pairs are skipped. Synthetic fault/control schematics, policy
+  and exact-ignore behavior, deterministic ordering, three-process hash-seed
+  stability, catalog reachability, selector coverage, and repeated native
+  netlist/ERC exports on digest-pinned KiCad 10.0.0 and 10.0.5 are registered.
+  Function and identity text do not prove the exact part pinout or project
+  intent; the schematic check does not establish routed copper or physical
+  continuity.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3242,7 +3256,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 235 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 236 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3420,7 +3434,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 279-report inventory gate. Fault/control
+  selectors and retains the complete 281-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -3513,7 +3527,7 @@ is not a reason by itself to expand its scope or change its default policy.
   with no net and an assigned-contact control. Both reports keep the interface
   catalog fixed and change only the source-matched connector assignment; only
   the open contact emits LINT-210. The full reports are compared across three
-  independently randomized processes. The enforced total is 235 reports.
+  independently randomized processes. The enforced total is 281 reports.
   The v86 extension adds LINT-211's generic role=other contact assigned to a
   recognized supply or return-like net label, with an unrelated-net control.
   It confirms the localized review while the existing multiple-return-label

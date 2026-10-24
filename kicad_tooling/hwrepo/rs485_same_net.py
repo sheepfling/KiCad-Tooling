@@ -6,6 +6,7 @@ from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
 from .design_lint_types import Candidate
 from .models import NetlistContract
+from .netlist_pin_assignments import netlist_pin_net_index
 from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_data_pin_role
 
 RULE_ID = "bus.rs485_data_input_output_same_net"
@@ -23,10 +24,7 @@ def rs485_data_input_output_same_net_candidates(
     """
     references = {reference.casefold(): reference for reference in observed.components}
     dnp = {reference.casefold() for reference in observed.dnp_components}
-    nets_by_pin: dict[str, set[str]] = {}
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            nets_by_pin.setdefault(pin.casefold(), set()).add(net)
+    nets_by_pin = netlist_pin_net_index(observed)
 
     roles_by_reference: dict[str, dict[str, list[tuple[str, str]]]] = {}
     for pin, function in observed.pin_functions.items():

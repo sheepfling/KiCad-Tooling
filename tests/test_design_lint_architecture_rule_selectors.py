@@ -143,6 +143,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_rs485_data_input_output_same_net.py::test_explicit_rs485_driver_input_and_receiver_output_on_one_net_are_reviewed",
         ),
         (
+            "bus.rs485_ab_same_net",
+            "tests/test_rs485_ab_same_net.py::test_explicit_rs485_a_b_pins_on_one_net_request_review",
+        ),
+        (
             "bus.rs485_signal_on_named_rail",
             "tests/test_rs485_signal_named_rail.py::test_explicit_rs485_data_pins_on_named_rails_request_review[U1.1-GND-D-tx]",
         ),

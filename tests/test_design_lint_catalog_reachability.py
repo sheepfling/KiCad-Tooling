@@ -30,6 +30,7 @@ import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_s
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
+import tests.design_lint_fixtures.rs485_ab_same_net as _rs485_ab_same_net_fixtures
 import tests.design_lint_fixtures.rs485_line_named_rail as _rs485_line_named_rail_fixtures
 import tests.design_lint_fixtures.rs485_unconnected_data_pins as _rs485_unconnected_data_fixtures
 import tests.design_lint_fixtures.serial_unconnected_pins as _serial_unconnected_pin_fixtures
@@ -197,6 +198,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _serial_unconnected_pin_fixtures.serial_unconnected_netlist(),
         _i2c_unconnected_pin_fixtures.i2c_unconnected_netlist(),
         _usb_data_same_net_fixtures.usb_data_same_net_netlist(),
+        _rs485_ab_same_net_fixtures.rs485_ab_same_net_netlist(),
         _spi_unconnected_data_fixtures.spi_unconnected_data_netlist(),
         _rs485_unconnected_data_fixtures.rs485_unconnected_data_netlist(),
     )

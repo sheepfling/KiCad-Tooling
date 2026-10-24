@@ -108,6 +108,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_DP_DM_SAME_NET_FIXTURES",
         ),
         (
+            "bus.rs485_ab_same_net",
+            "KICAD_RUN_NATIVE_RS485_AB_SAME_NET_FIXTURES",
+        ),
+        (
             "bus.usb_peer_data_pair_crossed",
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),

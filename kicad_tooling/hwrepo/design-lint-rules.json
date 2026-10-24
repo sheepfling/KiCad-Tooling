@@ -6716,6 +6716,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/rs485_data_label_mismatch.py#rs485_data_direction_label_candidates"
     },
     {
+      "rule_id": "bus.rs485_ab_same_net",
+      "title": "RS-485 transceiver A and B bus pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with exactly one exact A and one exact B pin function, require explicit RS-485 identity in the native symbol library ID or component value, membership of both pins in the complete native pin inventory, and exactly one exact net assignment per pin. Emit a REVIEW candidate when both pins share the same exact net, except when both native electrical types are outputs.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Identity matching is bounded to the explicit RS-485/RS485, MAX48xx, SP3485, ADM48xx, SN65HVD485, and THVD markers already recognized by the shared RS-485 identity service. The SN65HVD23x CAN family is excluded.",
+        "Exact A/B function and identity text are recognition clues, not proof of the exact part pinout or project intent. The default is review; project policy can block, disable, or exact-ignore the finding.",
+        "Only fitted U/IC references with one A pin, one B pin, inventory membership, and unique assignments are considered. Generic A/B functions, connectors, DNP parts, open or multiply assigned pins, duplicate roles, and incomplete inventories are skipped. Two native output pin types are left to ERC. This schematic check does not establish PCB copper connectivity or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_rs485_ab_same_net.test_explicit_rs485_a_b_pins_on_one_net_request_review",
+        "tests.test_rs485_ab_same_net_native_fixture_lane.test_native_rs485_ab_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_rs485_ab_same_net.test_distinct_lines_and_unrelated_a_b_functions_are_valid_controls",
+        "tests.test_rs485_ab_same_net.test_dnp_open_duplicate_ambiguous_and_incomplete_evidence_is_skipped",
+        "tests.test_rs485_ab_same_net.test_connectors_and_two_output_pairs_are_left_outside_the_heuristic",
+        "tests.test_rs485_ab_same_net_native_fixture_lane.test_native_rs485_ab_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_rs485_ab_same_net.test_policy_can_block_disable_or_exactly_ignore_a_shared_pair",
+        "tests.test_rs485_ab_same_net.test_reordering_is_stable_and_splitting_the_pair_clears_review",
+        "tests.test_design_lint_determinism_rs485_ab_same_net.test_rs485_ab_same_net_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_RS485_AB_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/rs485_ab_same_net.py#rs485_ab_same_net_candidates",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_role",
+        "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
+        "kicad_tooling/hwrepo/design_lint_rs485_candidates.py#rs485_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/rs485_ab_same_net.py#rs485_ab_same_net_candidates"
+    },
+    {
       "rule_id": "bus.rs485_data_input_output_same_net",
       "title": "RS-485 transceiver driver input and receiver output share one net",
       "status": "active",

@@ -166,7 +166,7 @@ def bus_signal_pair_same_net_fixture_lane(
             erc_errors[(case, run)] = tuple(
                 sorted(item.type for item in erc.violations if item.severity == "error")
             )
-            project_id = f"synthetic-{protocol}-sda-scl-same-net-{case}"
+            project_id = f"synthetic-{protocol}-{pair_name}-same-net-{case}"
             report = evaluate(
                 project_id,
                 ContractCoachReport(

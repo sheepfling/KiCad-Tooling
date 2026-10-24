@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 235 active rules.
+The catalog currently contains 236 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1008,6 +1008,29 @@ mode or record a reasoned ignore. Source hashes and scope are in the
 KICAD_RUN_NATIVE_RS485_LINE_NAMED_RAIL_FIXTURES=1 \
   .venv/bin/python -I -m pytest tests/test_rs485_line_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_line_on_named_rail")'
+```
+
+### RS-485 A and B bus pins assigned to one net
+
+`bus.rs485_ab_same_net` reviews a fitted U/IC only when its native symbol ID
+or value explicitly identifies RS-485, its complete native pin inventory
+contains one exact A and one exact B function, and each pin has one assignment
+to the same exact net. Generic A/B pins, connectors, DNP parts, duplicate
+roles, open or ambiguous assignments, and incomplete inventories are skipped;
+two output pins remain with ERC. The default is `review`, and project policy
+can block, turn off, or exact-ignore the finding. Identity and function names
+do not establish the exact part pinout or project intent. The source-bound
+schematic check does not establish PCB copper connectivity or physical
+continuity. Fault/control schematics and source hashes are recorded in the
+[synthetic fixture notes](../tests/fixtures/design_lint/rs485-ab-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_rs485_ab_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.rs485_ab_same_net")'
+
+KICAD_RUN_NATIVE_RS485_AB_SAME_NET_FIXTURES=1 \
+  .venv/bin/python -I -m pytest tests/test_rs485_ab_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_ab_same_net")'
 ```
 
 ### CAN TX/RX pin and net-label direction review

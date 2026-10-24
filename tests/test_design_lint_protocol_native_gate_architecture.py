@@ -133,6 +133,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="usb-dp-dm-same-net",
     ),
     pytest.param(
+        "bus.rs485_ab_same_net",
+        "KICAD_RUN_NATIVE_RS485_AB_SAME_NET_FIXTURES",
+        "tests.test_rs485_ab_same_net_native_fixture_lane."
+        "test_native_rs485_ab_same_net_fault_and_control_repeat",
+        id="rs485-ab-same-net",
+    ),
+    pytest.param(
         "bus.spi_unconnected_data_pin",
         "KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES",
         "tests.test_spi_unconnected_data_pins_native_fixture_lane."
