@@ -338,7 +338,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 202 active rules.
+The catalog currently contains 203 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -3705,6 +3705,17 @@ The separate `bus.can_missing_termination` lint heuristic still asks for
 review when no direct resistor is visible. For an approved split or external
 topology, record a reasoned project lint decision; the electrical contract
 provides the source-bound regression comparison.
+
+`bus.can_excess_termination` adds a complementary review prompt when more than
+two fitted, direct 108 Ω–132 Ω resistors span one recognized CANH/CANL net
+pair. Many CAN buses terminate only at their two physical ends, but the
+schematic alone does not identify those ends. The rule therefore defaults to
+`review`, supports project `block`, `off`, and exact-ignore policy, and does not
+require exactly two local resistors. It counts only conventional resistor
+references with unique native net assignments; arrays, switchable options,
+split networks, off-board termination, tolerance, placement, and PCB copper
+remain outside the check. Synthetic controls cover two fitted resistors, a DNP
+third resistor, and out-of-window values.
 
 ## Require a USB-C port role and pin map
 

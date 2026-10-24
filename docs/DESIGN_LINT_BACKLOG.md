@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 202 rules are implemented with synthetic regression coverage.
+The following 203 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 202 active rules.
+The catalog currently contains 203 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -467,6 +467,7 @@ skipped under prerelease policy.
 - `component.two_pin_passive_same_net`
 - `component.two_pin_diode_same_net`
 - `component.two_pin_led_same_net`
+- `component.two_pin_buzzer_same_net`
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
@@ -562,6 +563,7 @@ skipped under prerelease policy.
 - `bus.usb_peer_data_pair_crossed`
 - `bus.can_unconnected_line`
 - `bus.can_missing_termination`
+- `bus.can_excess_termination`
 - `bus.can_peer_assignment_divergence`
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
@@ -3059,7 +3061,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 201 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 203 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4873,11 +4875,14 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-011 — CAN termination topology and bus-end declarations
 
-- **Status:** Partial v3. The project-authored electrical contract checks
+- **Status:** Partial v4. The project-authored electrical contract checks
   required CANH/CANL pin assignments, exact direct and split local resistor
   paths, endpoint references, inclusive nominal ranges, extra direct paths,
   explicitly external/DNP options, an optional exact split midpoint capacitor
-  mapping, and explicitly mapped multi-channel resistor arrays.
+  mapping, and explicitly mapped multi-channel resistor arrays. The separate
+  `bus.can_excess_termination` heuristic prompts when a recognized CANH/CANL
+  pair has more than two fitted direct 108 Ω–132 Ω resistors. This is a review
+  signal, not a requirement for every bus to have exactly two local resistors.
 - **Problem:** A direct 120-ohm resistor check does not model two bus ends,
   split termination, switchable termination, or the project's actual topology.
 - **Evidence and check:** `can_termination` names the bus nets, logical
@@ -4922,6 +4927,12 @@ is not a reason by itself to expand its scope or change its default policy.
   option; CLI/MCP parity; retained-evidence replay.
 - **Remaining:** Extend beyond exact direct/split/DNP topology only when an
   independently reviewed project requirement demonstrates the need.
+- **Over-termination boundary:** The heuristic counts only conventional
+  fitted resistor references with unique native pin-to-net assignments and
+  nominal values in the stated interval. It does not locate physical bus ends
+  or account for external, switchable, split, array, tolerance, or PCB copper
+  evidence. Its synthetic fault/control and ordering regressions live in
+  `tests/test_can_excess_termination.py`.
 
 #### LINT-012 — USB-C role-aware CC and VBUS checks
 

@@ -1120,6 +1120,12 @@ have been connected.
 - `bus.can_missing_termination` flags a named CANH/CANL pair without a visible
   108 Ω–132 Ω resistor connected directly across the two nets. It asks the
   reviewer to check external termination, split termination, and bus topology.
+- `bus.can_excess_termination` prompts when a recognized CANH/CANL net pair has
+  more than two fitted direct resistors in the 108 Ω–132 Ω interval. It asks
+  the reviewer to check intended endpoints and switchable or external options;
+  it does not determine where the physical bus ends are. Only conventional
+  resistor references and unique native net assignments are counted, and the
+  finding is configurable review policy.
 - `bus.can_peer_assignment_divergence` prompts when fitted components with
   exactly one uniquely assigned CANH and CANL pin function share one exact net
   on one side but use multiple exact nets on the other. Evidence lists every

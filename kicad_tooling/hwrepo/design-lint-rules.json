@@ -5014,6 +5014,44 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_without_local_termination"
     },
     {
+      "rule_id": "bus.can_excess_termination",
+      "title": "Named CAN pair may have excessive direct termination",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted component exposing uniquely assigned CANH and CANL pins on distinct native nets, emit a review candidate when more than two fitted direct two-terminal resistors from 108 Ω through 132 Ω span that exact net pair.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The count is a review heuristic, not a universal requirement for exactly two local resistors. External, switchable, split, multi-drop, and specialized topologies need project review.",
+        "Only conventional fitted resistor references with two unique native net assignments and nominal values in the stated interval are counted; resistor arrays, non-R references, off-board terminations, tolerance, placement, and PCB copper are not evaluated.",
+        "The rule identifies a named schematic net pair but does not determine which nodes are physical bus ends or whether the resistors are actually connected in the assembled product."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_excess_termination.test_three_fitted_direct_terminators_prompt_for_bus_topology_review"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_excess_termination.test_two_terminators_and_nonlocal_or_unfitted_parts_are_valid_controls"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_can_excess_termination.test_overtermination_evidence_is_order_stable_and_repair_clears_it"
+      ],
+      "required_native_fixtures": [],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_with_excessive_local_termination",
+        "kicad_tooling/hwrepo/can_termination_heuristics.py#recognized_can_signal_pairs",
+        "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#can_function_role",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_with_excessive_local_termination"
+    },
+    {
       "rule_id": "bus.can_peer_assignment_divergence",
       "title": "CAN peers sharing one line use different complementary nets",
       "status": "active",

@@ -8,7 +8,10 @@ from .can_peer_reference_scan import (
     CanPeerReferenceScan,
     scan_can_peer_references,
 )
-from .can_termination_heuristics import can_buses_without_local_termination
+from .can_termination_heuristics import (
+    can_buses_with_excessive_local_termination,
+    can_buses_without_local_termination,
+)
 from .can_tx_output_sharing import can_tx_output_sharing_candidates
 from .can_tx_rx_label_mismatch import can_tx_rx_label_mismatch_candidates
 from .can_tx_rx_same_net import can_tx_rx_same_net_candidates
@@ -37,6 +40,28 @@ def can_candidates(
                     "CANL": (bus.low_net,),
                     "pins": (*bus.high_pins, *bus.low_pins),
                     "termination": (),
+                },
+            )
+        )
+    for bus in can_buses_with_excessive_local_termination(observed):
+        terminations = tuple(
+            f"{item.reference}={item.resistance_ohms:g} Ω" for item in bus.terminations
+        )
+        found.append(
+            Candidate(
+                rule_id="bus.can_excess_termination",
+                subject=f"CANH {bus.high_net} / CANL {bus.low_net}",
+                message=(
+                    f"{len(terminations)} fitted direct 108 Ω–132 Ω resistors span this "
+                    "recognized CANH/CANL pair. Review the intended bus endpoints and any "
+                    "switchable, split, or external termination; the schematic does not show "
+                    "which nodes are physical bus ends."
+                ),
+                evidence={
+                    "CANH": (bus.high_net,),
+                    "CANL": (bus.low_net,),
+                    "pins": (*bus.high_pins, *bus.low_pins),
+                    "terminations": terminations,
                 },
             )
         )

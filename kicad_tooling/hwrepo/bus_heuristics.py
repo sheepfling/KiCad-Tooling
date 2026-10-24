@@ -4,6 +4,7 @@ from __future__ import annotations
 
 __all__ = (
     "CanPeerAssignmentDivergence",
+    "CanTerminationExcess",
     "CanTerminationGap",
     "ComplementaryLineGap",
     "ComplementaryPinFunctionAliasResolution",
@@ -14,6 +15,7 @@ __all__ = (
     "SpiChipSelectBiasGap",
     "UnconnectedInterfacePin",
     "VisiblePullupPath",
+    "can_buses_with_excessive_local_termination",
     "can_buses_without_local_termination",
     "can_peer_assignment_divergences",
     "can_termination_checks",
@@ -59,7 +61,9 @@ from .can_termination_contract import (
     can_termination_checks,
 )
 from .can_termination_heuristics import (
+    CanTerminationExcess,
     CanTerminationGap,
+    can_buses_with_excessive_local_termination,
     can_buses_without_local_termination,
 )
 from .i2c_pullup_contract import (

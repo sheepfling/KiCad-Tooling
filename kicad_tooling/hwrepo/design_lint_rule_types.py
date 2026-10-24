@@ -144,6 +144,7 @@ DesignLintRuleId = Literal[
     "bus.usb_data_path_mismatch",
     "bus.can_unconnected_line",
     "bus.can_missing_termination",
+    "bus.can_excess_termination",
     "bus.can_peer_assignment_divergence",
     "bus.can_peer_reference_review",
     "bus.can_line_polarity_label_mismatch",
