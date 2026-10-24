@@ -185,9 +185,9 @@ def test_policy_and_exact_fingerprint_ignore_are_configurable() -> None:
             )
         ),
     )
-    assert next(item for item in ignored.findings if item.fingerprint == finding.fingerprint).disposition == (
-        "IGNORED"
-    )
+    assert next(
+        item for item in ignored.findings if item.fingerprint == finding.fingerprint
+    ).disposition == ("IGNORED")
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

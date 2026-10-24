@@ -109,7 +109,8 @@ def test_same_net_supported_led_is_reviewed_without_claiming_drive() -> None:
     assert not {
         item.rule_id
         for item in report.findings
-        if item.rule_id in {
+        if item.rule_id
+        in {
             "component.led_directly_across_supply_and_return",
             "component.led_directly_driven_from_output",
         }
@@ -193,9 +194,9 @@ def test_policy_and_exact_fingerprint_ignore_are_configurable() -> None:
             )
         ),
     )
-    assert next(item for item in ignored.findings if item.fingerprint == finding.fingerprint).disposition == (
-        "IGNORED"
-    )
+    assert next(
+        item for item in ignored.findings if item.fingerprint == finding.fingerprint
+    ).disposition == ("IGNORED")
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

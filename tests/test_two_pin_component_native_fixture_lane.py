@@ -151,13 +151,9 @@ def test_led_native_fixture_scope_contains_only_led_fault_and_control() -> None:
 
 
 def test_buzzer_native_fixture_scope_contains_only_buzzer_fault_and_control() -> None:
-    selected = two_pin_component_fixture_cases_for_rules(
-        ("component.two_pin_buzzer_same_net",)
-    )
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_buzzer_same_net",))
     assert set(selected) == {"same-net-buzzer", "distinct-nets-buzzer"}
-    assert {rule_id for _, rule_id, _ in selected.values()} == {
-        "component.two_pin_buzzer_same_net"
-    }
+    assert {rule_id for _, rule_id, _ in selected.values()} == {"component.two_pin_buzzer_same_net"}
     assert any(subjects for _, _, subjects in selected.values())
     assert any(not subjects for _, _, subjects in selected.values())
 
