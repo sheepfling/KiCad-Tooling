@@ -11,8 +11,8 @@ the native fixtures do not depend on an external symbol library revision.
 | ------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------- |
 | `same-net-led.kicad_sch`             | `a5ff10fb374138ee4409dfd1e40d7652798497b35c41ed2b5f4c3be7744d3fc7` | One `component.two_pin_led_same_net` review finding |
 | `distinct-nets-led.kicad_sch`        | `95cfa1e927bcfea5b251538b742164704541e9e139825bf6faee5a1909efae74` | No same-net LED finding                             |
-| `mapped-same-net-led.kicad_sch`      | `548a1426b304a117c9dc27744b6d7474c358cf31207b802d221615bb40fde1e3` | One finding with exact custom-role evidence         |
-| `mapped-distinct-nets-led.kicad_sch` | `8e500540cc28455a3fb5c350a4a8b08b0a3864949e35bfecbf999a963b92802a` | No same-net LED finding                             |
+| `mapped-same-net-led.kicad_sch`      | `46a4a1a375f4c43cd26665eecc213077cc667c9ba860680ff8d68dae4d0c9326` | One finding with exact custom-role evidence         |
+| `mapped-distinct-nets-led.kicad_sch` | `d5090afdf19fa8b95acefb34ee024b0200ba984bfbe4f34cf2adc37ef0290b85` | No same-net LED finding                             |
 
 The authored source fixtures are exported twice through the digest-pinned
 KiCad 10.0.0 and 10.0.5 native lane. Custom fixtures also verify exact

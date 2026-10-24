@@ -11,10 +11,10 @@
       (property "Value" "LED" (at 0 7.62 0) (effects (font (size 1.27 1.27))))
       (property "Footprint" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
       (property "Datasheet" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
-      (symbol "LED_0_1"
+      (symbol "LED_5mm_0_1"
         (polyline (pts (xy -2.54 -2.54) (xy 2.54 0) (xy -2.54 2.54) (xy -2.54 -2.54))
           (stroke (width 0.254) (type default)) (fill (type none))))
-      (symbol "LED_1_1"
+      (symbol "LED_5mm_1_1"
         (pin passive line (at -5.08 0 0) (length 2.54)
           (name "A" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
