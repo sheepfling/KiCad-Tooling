@@ -34,6 +34,7 @@ BUS_ANALYSIS_MODULES = (
     "i2c_same_net.py",
     "serial_same_net.py",
     "serial_tx_rx_label_mismatch.py",
+    "serial_signal_named_rail.py",
     "serial_tx_output_sharing.py",
     "spi_data_label.py",
     "spi_clock_select_label_mismatch.py",

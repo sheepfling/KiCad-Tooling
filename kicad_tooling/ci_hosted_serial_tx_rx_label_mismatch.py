@@ -19,16 +19,18 @@ if TYPE_CHECKING:
 
 SERIAL_TX_RX_LABEL_TOOLCHAINS = SERIAL_TX_RX_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.serial_tx_rx_label_mismatch"
+_NAMED_RAIL_RULE_ID = "bus.serial_signal_on_named_rail"
 _SOURCE_HASHES = {
     "fault": "f48b576254795b7343c145478bf7e44380a7f1555def2c652d40570fa3c181f9",
     "control": "912e346b5e745d60595eaae0715ccf9bc380bac34dd1ed047631ec4ea03b29d0",
+    "rail_fault": "425102fe01e6cf6ab102f5d52bffdec315a124612d1256c429995b057cf68626",
 }
 
 
 def serial_tx_rx_label_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
-    """Repeat exact native netlist/ERC exports for crossed and matching labels."""
+    """Repeat native exports for crossed labels, a named-rail fault, and control."""
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
     from .hwrepo.evidence import digest
@@ -48,6 +50,7 @@ def serial_tx_rx_label_fixture_lane(
     sources = {
         "fault": fixture_root / "crossed-labels.kicad_sch",
         "control": fixture_root / "matching-labels-control.kicad_sch",
+        "rail_fault": fixture_root / "tx-on-ground.kicad_sch",
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     if source_hashes != _SOURCE_HASHES:
@@ -70,7 +73,7 @@ def serial_tx_rx_label_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{version}"\n'
-        "for case in fault control; do\n"
+        "for case in fault control rail_fault; do\n"
         "  for run in first repeat; do\n"
         '    kicad-cli sch export netlist --format kicadxml --output "/output/$case.$run.netlist.xml" '
         '"/fixtures/$case.kicad_sch"\n'
@@ -121,7 +124,9 @@ def serial_tx_rx_label_fixture_lane(
         )
 
     normalized_hashes: dict[tuple[str, str], str] = {}
-    subjects: dict[tuple[str, str], tuple[str, ...]] = {}
+    label_subjects: dict[tuple[str, str], tuple[str, ...]] = {}
+    rail_subjects: dict[tuple[str, str], tuple[str, ...]] = {}
+    lint_statuses: dict[tuple[str, str], str] = {}
     for case, source in sources.items():
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -131,11 +136,11 @@ def serial_tx_rx_label_fixture_lane(
             observed = read_netlist(netlist_path)
             if observed.component_pin_numbers.get("U1") != ("1", "2"):
                 raise ValueError(f"Native serial TX/RX label {case} lost pin inventory")
-            expected_nets = (
-                {"USART1_TX": ("U1.2",), "USART1_RX": ("U1.1",)}
-                if case == "fault"
-                else {"USART1_RX": ("U1.2",), "USART1_TX": ("U1.1",)}
-            )
+            expected_nets = {
+                "fault": {"USART1_TX": ("U1.2",), "USART1_RX": ("U1.1",)},
+                "control": {"USART1_RX": ("U1.2",), "USART1_TX": ("U1.1",)},
+                "rail_fault": {"GND": ("U1.1",), "USART1_RX": ("U1.2",)},
+            }[case]
             if any(observed.nets.get(net) != pins for net, pins in expected_nets.items()):
                 actual_nets = {net: observed.nets.get(net) for net in expected_nets}
                 raise ValueError(
@@ -165,20 +170,32 @@ def serial_tx_rx_label_fixture_lane(
                 ),
                 DesignLintPolicy(),
             )
-            subjects[(case, run)] = tuple(
+            label_subjects[(case, run)] = tuple(
                 item.subject for item in report.findings if item.rule_id == _RULE_ID
             )
+            rail_subjects[(case, run)] = tuple(
+                item.subject for item in report.findings if item.rule_id == _NAMED_RAIL_RULE_ID
+            )
+            lint_statuses[(case, run)] = report.status
 
-    expected_subjects = {
+    expected_label_subjects = {
         "fault": ("U1.1: USART1_TX on USART1_RX", "U1.2: USART1_RX on USART1_TX"),
         "control": (),
+        "rail_fault": (),
+    }
+    expected_rail_subjects = {
+        "fault": (),
+        "control": (),
+        "rail_fault": ("U1.1: USART1_TX on return-like net GND",),
     }
     for case in sources:
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native serial TX/RX label {case} exports are not repeatable")
         if (
-            subjects[(case, "first")] != expected_subjects[case]
-            or subjects[(case, "repeat")] != subjects[(case, "first")]
+            label_subjects[(case, "first")] != expected_label_subjects[case]
+            or label_subjects[(case, "repeat")] != label_subjects[(case, "first")]
+            or rail_subjects[(case, "first")] != expected_rail_subjects[case]
+            or rail_subjects[(case, "repeat")] != rail_subjects[(case, "first")]
         ):
             raise ValueError(f"Native serial TX/RX label {case} findings do not match the fixture")
         log.event(
@@ -192,7 +209,9 @@ def serial_tx_rx_label_fixture_lane(
             repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
             erc_errors="none",
             repeatable="true",
-            subjects=";".join(subjects[(case, "first")]) or "none",
+            subjects=";".join(label_subjects[(case, "first")]) or "none",
+            rail_subjects=";".join(rail_subjects[(case, "first")]) or "none",
+            lint_status=lint_statuses[(case, "first")],
         )
     log.event(
         "serial-tx-rx-label-fixture/native-export",

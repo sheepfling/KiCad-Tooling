@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 221 rules are implemented with synthetic regression coverage.
+The following 222 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 221 active rules.
+The catalog currently contains 222 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -549,6 +549,7 @@ skipped under prerelease policy.
 - `bus.serial_unmapped_peer`
 - `bus.serial_unconnected_pin`
 - `bus.serial_tx_rx_label_mismatch`
+- `bus.serial_signal_on_named_rail`
 - `bus.serial_tx_rx_same_net`
 - `bus.serial_tx_outputs_share_net`
 - `bus.spi_peer_reference_review`
@@ -739,6 +740,11 @@ and optional ecosystem adapters are `P3`.
   supply-like or return-like label. It prompts review of intentional rail
   straps as well as possible assignment mistakes; it does not infer that the
   pin must connect to an I2C bus or that the label proves voltage.
+- **LINT-240 serial signal pin assigned to a named rail:** The default-review
+  heuristic localizes fitted UART/USART TX/RX pins assigned directly to a
+  named supply or return rail. Synthetic fault/control and exact-version KiCad
+  export coverage are in place; function and label remain evidence clues, not
+  a connection requirement. Tagged acceptance is pending.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3135,7 +3141,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 221 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 222 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5057,6 +5063,39 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_i2c_signal_label_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_on_named_rail")'
+  ```
+
+#### LINT-240 — Review fitted serial signal pins assigned to named rails
+
+- **Status:** Implemented as the default-`review` `bus.serial_signal_on_named_rail`
+  heuristic, with project overrides for `review`, `block`, `off`, and exact
+  finding ignores.
+- **Gap:** ERC can accept a fitted IC UART/USART signal pin assigned directly
+  to a named supply or return net. Existing peer coverage can identify an
+  unmapped connection without localizing this pin-to-rail clue.
+- **Predicate:** For each fitted U/IC pin with one bounded UART/USART TX/TXD or
+  RX/RXD function, require the pin number in the complete native inventory and
+  exactly one native net assignment. Emit REVIEW when that net label matches
+  the bounded supply-like or return-like vocabulary.
+- **Boundary:** Function and label are review clues, not proof of voltage,
+  electrical fault, intended endpoint, or a required connection. Connectors,
+  DNP parts, open or ambiguous assignments, incomplete inventories, indexed
+  aliases, and vendor-specific names remain outside the predicate. The
+  schematic netlist does not establish routed copper or physical continuity.
+- **Fixtures and quality gate:** Synthetic GND, +3V3, and 0V PWM faults;
+  neutral-label, connector, DNP, open, ambiguous, and incomplete-inventory
+  controls; configurable mode and exact-ignore cases; stable ordering and
+  assignment repair; and an independent clue alongside existing serial peer
+  coverage. A source-hashed schematic fault and control export twice with clean
+  ERC under digest-pinned KiCad 10.0.0 and 10.0.5. Rule selection, fixture
+  reachability, theme markers, hash-seed determinism, native-tag selection,
+  and focused module-size checks are registered. Fixtures contain only
+  tooling-authored synthetic data.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_serial_signal_named_rail.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_signal_on_named_rail")'
+  KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_serial_tx_rx_label_mismatch_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

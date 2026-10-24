@@ -43,6 +43,9 @@ from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_ord
 from tests.design_lint_fixtures.polarized_capacitor import netlist as polarized_capacitor_netlist
 from tests.design_lint_fixtures.rs485_data_label_mismatch import rs485_data_label_netlist
 from tests.design_lint_fixtures.rs485_data_same_net import rs485_data_same_net_netlist
+from tests.design_lint_fixtures.serial_signal_named_rail import (
+    serial_signal_on_named_rail_netlist,
+)
 from tests.design_lint_fixtures.serial_tx_rx_label_mismatch import serial_tx_rx_label_netlist
 from tests.design_lint_fixtures.spi_clock_control_same_net import (
     spi_clock_chip_select_same_net_netlist,
@@ -289,6 +292,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         i2c_signal_on_named_rail_netlist(),
         same_net_serial_netlist(),
         serial_tx_rx_label_netlist(),
+        serial_signal_on_named_rail_netlist(),
         rs485_data_label_netlist(),
         rs485_data_same_net_netlist(),
         serial_tx_output_netlist(),

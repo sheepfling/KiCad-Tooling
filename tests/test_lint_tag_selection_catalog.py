@@ -136,6 +136,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SERIAL_TX_RX_SAME_NET_FIXTURES",
         ),
         (
+            "bus.serial_signal_on_named_rail",
+            "KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES",
+        ),
+        (
             "bus.serial_tx_rx_label_mismatch",
             "KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES",
         ),

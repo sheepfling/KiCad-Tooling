@@ -15,6 +15,7 @@ from kicad_tooling.ci_hosted_serial_tx_rx_label_mismatch import (
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.serial_tx_rx_label_mismatch"
+NAMED_RAIL_RULE_ID = "bus.serial_signal_on_named_rail"
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -35,6 +36,7 @@ PROJECT_TOOLCHAINS = tuple(
 )
 @pytest.mark.parametrize(("version", "image"), PROJECT_TOOLCHAINS)
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=NAMED_RAIL_RULE_ID)
 def test_native_serial_tx_rx_label_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:
@@ -58,14 +60,19 @@ def test_native_serial_tx_rx_label_fault_and_control_repeat(
         "serial-tx-rx-label-fixture/native-export",
         "serial-tx-rx-label-fixture/control",
         "serial-tx-rx-label-fixture/fault",
+        "serial-tx-rx-label-fixture/rail_fault",
     }
     fault = results["serial-tx-rx-label-fixture/fault"]
     control = results["serial-tx-rx-label-fixture/control"]
+    rail_fault = results["serial-tx-rx-label-fixture/rail_fault"]
     assert fault["subjects"] == "U1.1: USART1_TX on USART1_RX;U1.2: USART1_RX on USART1_TX"
     assert control["subjects"] == "none"
+    assert rail_fault["subjects"] == "none"
+    assert rail_fault["rail_subjects"] == "U1.1: USART1_TX on return-like net GND"
+    assert rail_fault["lint_status"] == "REVIEW"
     native_export = results["serial-tx-rx-label-fixture/native-export"]
     assert_native_fixture_mounts(root, native_export["command_receipt"])
-    for result in (fault, control):
+    for result in (fault, control, rail_fault):
         assert result["status"] == "PASS"
         assert result["kicad_version"] == version
         assert result["image"] == image

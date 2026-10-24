@@ -1,0 +1,37 @@
+"""Keep named-rail protocol heuristics in focused interface modules."""
+
+from __future__ import annotations
+
+import pytest
+
+from kicad_tooling.hwrepo.design_lint import rule_catalog
+from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.architecture,
+]
+
+
+def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
+    owner_functions = {
+        "bus.i2c_signal_on_named_rail": (
+            "i2c_signal_named_rail.py",
+            "kicad_tooling/hwrepo/i2c_signal_named_rail.py#i2c_signal_on_named_rail_candidates",
+        ),
+        "bus.serial_signal_on_named_rail": (
+            "serial_signal_named_rail.py",
+            "kicad_tooling/hwrepo/serial_signal_named_rail.py#serial_signal_on_named_rail_candidates",
+        ),
+    }
+    catalog = {item.rule_id: item for item in rule_catalog().rules}
+    shared_roles = HWREPO / "named_rail_roles.py"
+    assert line_count(shared_roles) < IMPLEMENTATION_MAX_LINES
+
+    for rule_id, (filename, owner_reference) in owner_functions.items():
+        rule = catalog[rule_id]
+        assert line_count(HWREPO / filename) < IMPLEMENTATION_MAX_LINES
+        assert rule.theme == "interfaces"
+        assert rule.implementation_owner == owner_reference
+        assert owner_reference in rule.implementation_refs

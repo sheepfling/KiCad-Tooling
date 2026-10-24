@@ -132,6 +132,7 @@ DesignLintRuleId = Literal[
     "bus.i2c_address_collision",
     "bus.i2c_unmapped_responder",
     "bus.serial_tx_rx_label_mismatch",
+    "bus.serial_signal_on_named_rail",
     "bus.serial_tx_rx_same_net",
     "bus.serial_unconnected_pin",
     "bus.serial_tx_outputs_share_net",

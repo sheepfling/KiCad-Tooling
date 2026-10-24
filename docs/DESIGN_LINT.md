@@ -599,6 +599,22 @@ KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m p
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_tx_rx_label_mismatch")'
 ```
 
+### Serial signal pins assigned directly to named rails
+
+`bus.serial_signal_on_named_rail` reviews a fitted U/IC UART/USART TX/TXD or
+RX/RXD pin when its single native net assignment has a recognized supply-like
+or return-like label. It requires a unique bounded function, complete native
+pin inventory, fitted state, and one assignment. The default is `review`;
+intentional rail straps can be ignored exactly or configured per project.
+
+Pin function and net label are clues, not an authored connection requirement
+or proof of an electrical defect or potential. The check skips connectors,
+DNP parts, open and ambiguous assignments, incomplete inventories, indexed or
+vendor-specific function names, and does not assess PCB copper or physical
+continuity. A synthetic GND fault and matching-label control export twice with
+clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
+[fixture note](../tests/fixtures/design_lint/serial-tx-rx-label-mismatch/README.md).
+
 `bus.serial_tx_outputs_share_net` adds a separate opt-in review when TX/TXD
 functions on two fitted ICs share one net but native pin types do not already
 show two output drivers for ERC to report. It skips incomplete or ambiguous
@@ -694,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 221 active rules.
+The catalog currently contains 222 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

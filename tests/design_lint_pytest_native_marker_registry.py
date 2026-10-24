@@ -33,6 +33,8 @@ PYTEST_NATIVE_LINT_SUITES = {
     },
     "test_serial_tx_rx_same_net.py": {"interface_lint"},
     "test_serial_tx_rx_label_mismatch.py": {"interface_lint"},
+    "test_serial_signal_named_rail.py": {"interface_lint"},
+    "test_design_lint_determinism_serial_signal_named_rail.py": {"interface_lint", "slow"},
     "test_rs485_data_direction_label_mismatch_native_fixture_lane.py": {
         "interface_lint",
         "native_kicad",

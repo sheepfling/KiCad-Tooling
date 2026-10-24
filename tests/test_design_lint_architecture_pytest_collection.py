@@ -250,6 +250,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_serial_tx_rx_same_net.py::test_same_net_uart_tx_rx_pair_is_reviewed_and_full_duplex_control_is_quiet",
         ),
         (
+            "bus.serial_signal_on_named_rail",
+            "tests/test_serial_signal_named_rail.py::test_project_policy_and_exact_ignore_control_the_review",
+        ),
+        (
             "bus.serial_tx_rx_label_mismatch",
             "tests/test_serial_tx_rx_label_mismatch.py::test_opposite_uart_labels_are_reviewed_while_pins_remain_separate",
         ),

@@ -32,6 +32,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_measurements",
     "interfaces",
     "i2c_signal_named_rail",
+    "serial_signal_named_rail",
     "analog",
     "schematic_geometry",
 )
