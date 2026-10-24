@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 204 rules are implemented with synthetic regression coverage.
+The following 205 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 204 active rules.
+The catalog currently contains 205 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -469,6 +469,7 @@ skipped under prerelease policy.
 - `component.two_pin_led_same_net`
 - `component.two_pin_buzzer_same_net`
 - `component.two_pin_speaker_same_net`
+- `component.two_pin_battery_same_net`
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
@@ -3062,7 +3063,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 204 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 205 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4227,6 +4228,37 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_two_pin_speakers.py \
     -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_speaker_same_net")'
+  ```
+
+#### LINT-222 — Same-net two-pin battery review
+
+- **Status:** Implemented as the default-review rule
+  `component.two_pin_battery_same_net` for the exact stock `Device:Battery`
+  identity.
+- **Gap:** The same-net inventory covered passive parts, protection parts,
+  indicators, sounders, speakers, crystals, and a two-pin switch, but not the
+  exact stock two-pin battery symbol. ERC can accept passive battery pins on
+  one schematic net, leaving the source terminals with no netlist voltage
+  difference and no focused component review.
+- **Predicate:** Require an exact fitted `Device:Battery`, exactly two
+  distinct native pin numbers, and one unambiguous assigned net per pin.
+  Report only when both pins resolve to the same net. DNP, open, multiply
+  assigned, incomplete, multi-pin, custom, and alternate symbol identities
+  remain unclassified.
+- **Boundary:** This is a configurable review prompt. A source can be
+  intentionally bypassed or represented without an active physical battery.
+  The rule does not infer battery polarity, voltage, chemistry, source
+  behavior, footprint mapping, physical connectivity, or assembly state.
+- **Fixtures:** Synthetic same-net fault and separate-net control; DNP,
+  incomplete, ambiguous, open, multi-pin, custom, and alternate-symbol
+  controls; project policy, exact ignore, deterministic ordering, and a
+  net-split metamorphic check; source-hashed native fixtures on KiCad 10.0.0
+  and 10.0.5. No project or cohort source is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_two_pin_batteries.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_battery_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

@@ -52,6 +52,8 @@ _EXPECTED_SOURCE_HASHES = {
     "two-pin-buzzers/distinct-nets-buzzer.kicad_sch": "120688dc3c6600bb729aecf7ca8ef0c43368bacc50d73c4b708a6286c324ef62",
     "two-pin-speakers/same-net-speaker.kicad_sch": "8d82fc391cf146a8f9c92c71ae37f6757422ca8599b0e13a69a0de378ecc7a1d",
     "two-pin-speakers/distinct-nets-speaker.kicad_sch": "e12366fd7846a7585e4bf0cba9dc3203c1669b348ee76581285edd79c3d54287",
+    "two-pin-batteries/same-net-battery.kicad_sch": "33d76cb6ac784e7be9b801a938b43a5a98f5d6c2bc55be8bdbb485dfc657673e",
+    "two-pin-batteries/distinct-nets-battery.kicad_sch": "b72525841fa7cbae6cc050db065370ab83990b1728d414f87423c29aa2472711",
     "two-pin-crystals/same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
     "two-pin-crystals/distinct-nets-crystal.kicad_sch": "4c4fa54184ba74eb8194016a166e068c1a41646b4e59686d187395d981c4bc13",
     "two-pin-fuses/same-net-fuse.kicad_sch": "b69792902442ef89c103f5a4b783b73633b88d9519ab01c5b77df9b654df62ca",
@@ -69,7 +71,7 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     case_sources = {filename for filename, _, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
     assert case_sources == set(_EXPECTED_SOURCE_HASHES)
-    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 34
+    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 36
     for filename, expected_digest in _EXPECTED_SOURCE_HASHES.items():
         source = (fixture_root / filename).resolve()
         assert source.is_relative_to(fixture_root.resolve())
@@ -169,6 +171,20 @@ def test_speaker_native_fixture_scope_contains_only_speaker_fault_and_control() 
     assert {rule_id for _, rule_id, _ in selected.values()} == {
         "component.two_pin_speaker_same_net"
     }
+    assert any(subjects for _, _, subjects in selected.values())
+    assert any(not subjects for _, _, subjects in selected.values())
+
+
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_battery_same_net")
+def test_battery_native_fixture_scope_contains_only_battery_fault_and_control() -> None:
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_battery_same_net",))
+    assert set(selected) == {"same-net-battery", "distinct-nets-battery"}
+    assert {rule_id for _, rule_id, _ in selected.values()} == {
+        "component.two_pin_battery_same_net"
+    }
+    assert TWO_PIN_COMPONENT_CANDIDATE_KINDS["component.two_pin_battery_same_net"] == frozenset(
+        {"battery"}
+    )
     assert any(subjects for _, _, subjects in selected.values())
     assert any(not subjects for _, _, subjects in selected.values())
 
@@ -373,6 +389,24 @@ def test_native_two_pin_speaker_same_net_fault_and_control(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_speaker_same_net",
+    )
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_battery_same_net")
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
+    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
+def test_native_two_pin_battery_same_net_fault_and_control(
+    tmp_path: Path, kicad_version: str
+) -> None:
+    _run_native_rule_fixture(
+        tmp_path,
+        kicad_version=kicad_version,
+        rule_id="component.two_pin_battery_same_net",
     )
 
 

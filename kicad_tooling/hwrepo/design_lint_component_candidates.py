@@ -37,6 +37,7 @@ from .mosfet_gate_connectivity import (
 from .oscillator_output_path_candidates import oscillator_output_path_candidates
 from .oscillator_output_path_models import OscillatorOutputPathMap
 from .power_path_models import PowerPathMap
+from .two_pin_batteries import two_pin_battery_same_net_candidates
 from .two_pin_buzzers import two_pin_buzzer_same_net_candidates
 from .two_pin_components import two_pin_components_on_same_net
 from .two_pin_leds import two_pin_led_same_net_candidates
@@ -140,8 +141,9 @@ def component_candidates(
     found.extend(two_pin_led_same_net_candidates(two_pin_components))
     found.extend(two_pin_buzzer_same_net_candidates(two_pin_components))
     found.extend(two_pin_speaker_same_net_candidates(two_pin_components))
+    found.extend(two_pin_battery_same_net_candidates(two_pin_components))
     for component in two_pin_components:
-        if component.kind in {"led", "buzzer", "speaker"}:
+        if component.kind in {"led", "buzzer", "speaker", "battery"}:
             continue
         pin_assignments = tuple(
             f"{component.reference}.{number} -> {component.net}" for number in component.pin_numbers
