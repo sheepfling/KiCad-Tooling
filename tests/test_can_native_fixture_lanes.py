@@ -161,9 +161,9 @@ def test_native_can_excess_termination_fault_and_control(
     }
     assert results["can-excess-termination-fixture/native-export"]["status"] == "PASS"
     assert results["can-excess-termination-fixture/control"]["status"] == "PASS"
-    assert results["can-excess-termination-fixture/control"]["findings"] == "0"
+    assert results["can-excess-termination-fixture/control"]["findings"] == 0
     assert results["can-excess-termination-fixture/fault"]["status"] == "PASS"
-    assert results["can-excess-termination-fixture/fault"]["findings"] == "1"
+    assert results["can-excess-termination-fixture/fault"]["findings"] == 1
     assert results["can-excess-termination-fixture/fault"]["evidence"]
     for case, expected_source_hash in (
         ("control", "3baa84f1494dc7cdd8b4bef63aa1df792adccfbc8b429895b6d8fc1c45ed7"),
