@@ -352,6 +352,17 @@ def report_cases() -> dict[str, object]:
             "synthetic-transformer-winding-hash-seed-control",
             transformer_netlist(first_winding_same_net=False),
         ),
+        "transformer_winding_groups_fault": source_bound_component_report(
+            "synthetic-transformer-winding-groups-hash-seed-fault",
+            transformer_netlist(
+                first_winding_same_net=False,
+                shared_winding_groups=True,
+            ),
+        ),
+        "transformer_winding_groups_control": source_bound_component_report(
+            "synthetic-transformer-winding-groups-hash-seed-control",
+            transformer_netlist(first_winding_same_net=False),
+        ),
         "mosfet_stress_q2_over_limit": mosfet_stress_check_result(q2_over_limit=True),
         "mosfet_stress_multi_device_control": mosfet_stress_check_result(q2_over_limit=False),
         "led_output_direct_fault": led_output_lint_report(topology="direct"),

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 209 rules are implemented with synthetic regression coverage.
+The following 210 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 209 active rules.
+The catalog currently contains 210 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -474,6 +474,7 @@ skipped under prerelease policy.
 - `component.two_pin_solar_cell_same_net`
 - `component.two_pin_thermocouple_same_net`
 - `component.transformer_winding_same_net`
+- `component.transformer_winding_groups_share_net`
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
@@ -3067,7 +3068,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 209 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 210 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4453,6 +4454,50 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_TRANSFORMER_WINDING_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_transformer_winding_native_fixture_lane.py \
     -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.transformer_winding_same_net")'
+  ```
+
+#### LINT-227 — Transformer winding groups share a native net
+
+- **Status:** Implemented as the configurable default-review rule
+  `component.transformer_winding_groups_share_net`, owned by
+  `design_lint_component_transformers.py#transformer_winding_groups_share_net_candidates`.
+- **Gap:** LINT-226 catches a winding whose two terminals collapse onto one
+  net. It does not report a different condition: a net that touches a pin from
+  each of the two independently defined `Transformer:TRANSF1` winding groups.
+  KiCad ERC accepts this shared-net topology, while the exported netlist shows
+  that the two sides are no longer separate schematic domains.
+- **Predicate:** For the exact fitted TRANSF1 symbol, require the complete
+  native pin inventory 1–4 and one unambiguous net per pin. Report each native
+  net shared by verified winding groups 1/2 and 3/4, including the exact pin
+  members on both sides. The rule does not guess primary/secondary roles.
+- **Boundary:** A common connection can be intentional. The finding asks for
+  review; the default is not a block. Other symbols, DNP parts, open pins,
+  incomplete inventories, and ambiguous assignments are skipped. This does
+  not determine whether the design requires isolation or prove physical
+  isolation, transformer suitability, PCB continuity, or assembly state.
+- **Fixtures and quality gate:** Tooling-owned synthetic schematic fault and
+  control run through the exact KiCad 10.0.0/10.0.5 native lane with repeated
+  netlist/ERC evidence. Pure tests cover exact pin evidence, skip cases,
+  project-configurable review/block/off/ignore, ordering, and a split-net
+  repair. Active catalog ownership, test selection markers, size architecture,
+  reachability, and cross-process hash-seed determinism are guarded.
+- **Incremental-value claim:** This adds the cross-winding bridge case, distinct
+  from LINT-226's within-winding terminal short. It is a schematic clue, not a
+  requirement that all transformers preserve isolation. No product source or
+  proprietary fixture is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_transformer_winding_same_net.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.transformer_winding_groups_share_net")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_TRANSFORMER_WINDING_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_transformer_winding_native_fixture_lane.py \
+    -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.transformer_winding_groups_share_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

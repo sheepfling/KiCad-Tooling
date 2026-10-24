@@ -50,6 +50,10 @@ from scripts.lint_gate_scope import (
             "component.transformer_winding_same_net",
             "KICAD_RUN_NATIVE_TRANSFORMER_WINDING_FIXTURES",
         ),
+        (
+            "component.transformer_winding_groups_share_net",
+            "KICAD_RUN_NATIVE_TRANSFORMER_WINDING_FIXTURES",
+        ),
         ("component.generic_peer_pin_mixed_open", "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"),
         ("component.peer_signal_input_unconnected", "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"),
         (

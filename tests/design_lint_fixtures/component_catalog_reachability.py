@@ -32,6 +32,12 @@ def reachable_component_rule_ids() -> set[str]:
         solar_cells.lint_report(solar_cells.solar_cell_netlist()),
         thermocouples.lint_report(thermocouples.thermocouple_netlist()),
         transformer_windings.lint_report(transformer_windings.transformer_netlist()),
+        transformer_windings.lint_report(
+            transformer_windings.transformer_netlist(
+                first_winding_same_net=False,
+                shared_winding_groups=True,
+            )
+        ),
         crystals.lint_report(crystals.crystal_netlist()),
         fuses.lint_report(fuses.fuse_netlist()),
         peer_pin.lint_report(peer_pin.peer_power_output_netlist()),

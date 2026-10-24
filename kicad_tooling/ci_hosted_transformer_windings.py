@@ -22,12 +22,20 @@ if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog
 
 RULE_ID = "component.transformer_winding_same_net"
+GROUP_BRIDGE_RULE_ID = "component.transformer_winding_groups_share_net"
 FIXTURE_CASES = {
     "fault": "transformer-windings/same-net-winding-1.kicad_sch",
+    "cross_winding_fault": "transformer-windings/shared-winding-groups-net.kicad_sch",
     "control": "transformer-windings/distinct-winding-terminal-nets.kicad_sch",
 }
 EXPECTED_FINDINGS = {
     "fault": ("T1: winding 1 pins 1/2 share WINDING_1_TIED",),
+    "cross_winding_fault": (),
+    "control": (),
+}
+EXPECTED_GROUP_BRIDGE_FINDINGS = {
+    "fault": (),
+    "cross_winding_fault": ("T1: winding groups share WINDING_GROUPS_SHARED",),
     "control": (),
 }
 
@@ -130,6 +138,7 @@ def transformer_winding_fixture_lane(
         netlist_hashes: list[str] = []
         erc_hashes: list[str] = []
         finding_subjects: list[tuple[str, ...]] = []
+        group_bridge_subjects: list[tuple[str, ...]] = []
         lint_statuses: list[str] = []
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -165,14 +174,23 @@ def transformer_winding_fixture_lane(
             finding_subjects.append(
                 tuple(item.subject for item in report.findings if item.rule_id == RULE_ID)
             )
+            group_bridge_subjects.append(
+                tuple(
+                    item.subject for item in report.findings if item.rule_id == GROUP_BRIDGE_RULE_ID
+                )
+            )
             lint_statuses.append(report.status)
 
         expected = EXPECTED_FINDINGS[case]
+        expected_group_bridge = EXPECTED_GROUP_BRIDGE_FINDINGS[case]
         if netlist_hashes[0] != netlist_hashes[1] or erc_hashes[0] != erc_hashes[1]:
             raise ValueError(f"Native transformer winding {case} evidence is not repeatable")
-        if finding_subjects != [expected, expected]:
+        if finding_subjects != [expected, expected] or group_bridge_subjects != [
+            expected_group_bridge,
+            expected_group_bridge,
+        ]:
             raise ValueError(f"Native transformer winding {case} findings differ from expectation")
-        expected_status = "REVIEW" if expected else "PASS"
+        expected_status = "REVIEW" if expected or expected_group_bridge else "PASS"
         if lint_statuses != [expected_status, expected_status]:
             raise ValueError(f"Native transformer winding {case} has unexpected lint status")
         log.event(
@@ -188,6 +206,7 @@ def transformer_winding_fixture_lane(
             repeat_normalized_erc_sha256=erc_hashes[1],
             lint_status=lint_statuses[0],
             rule_findings=";".join(finding_subjects[0]) or "none",
+            group_bridge_rule_findings=";".join(group_bridge_subjects[0]) or "none",
             erc_errors="none",
             repeatable="true",
         )

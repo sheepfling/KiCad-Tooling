@@ -19,6 +19,7 @@ pytestmark = [
 @pytest.mark.design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")
 @pytest.mark.design_lint_rule(rule_id="component.two_pin_thermocouple_same_net")
 @pytest.mark.design_lint_rule(rule_id="component.transformer_winding_same_net")
+@pytest.mark.design_lint_rule(rule_id="component.transformer_winding_groups_share_net")
 def test_two_pin_component_reports_remain_deterministic() -> None:
     reports = hashseed_probe_reports(families=("components",))
     diode_fault = reports["diode_fault"]
@@ -92,6 +93,13 @@ def test_two_pin_component_reports_remain_deterministic() -> None:
     }
     assert reports["transformer_winding_control"]["status"] == "PASS"
     assert reports["transformer_winding_control"]["findings"] == []
+    winding_groups_fault = reports["transformer_winding_groups_fault"]
+    assert winding_groups_fault["status"] == "REVIEW"
+    assert {finding["rule_id"] for finding in winding_groups_fault["findings"]} == {
+        "component.transformer_winding_groups_share_net"
+    }
+    assert reports["transformer_winding_groups_control"]["status"] == "PASS"
+    assert reports["transformer_winding_groups_control"]["findings"] == []
     for report_name in ("led_output_direct_fault", "led_output_parallel_resistor_fault"):
         led_fault = reports[report_name]
         assert led_fault["status"] == "REVIEW"

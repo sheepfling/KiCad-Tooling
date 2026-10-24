@@ -63,6 +63,7 @@ DesignLintRuleId = Literal[
     "component.two_pin_solar_cell_same_net",
     "component.two_pin_thermocouple_same_net",
     "component.transformer_winding_same_net",
+    "component.transformer_winding_groups_share_net",
     "component.two_pin_crystal_same_net",
     "component.two_pin_fuse_same_net",
     "component.two_pin_ferrite_same_net",

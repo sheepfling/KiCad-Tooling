@@ -135,6 +135,8 @@ REPORT_ORDER = (
     "thermocouple_control",
     "transformer_winding_fault",
     "transformer_winding_control",
+    "transformer_winding_groups_fault",
+    "transformer_winding_groups_control",
     "peer_pin_fault",
     "connector_part_id_alias_open_fault",
     "connector_part_id_alias_split_fault",

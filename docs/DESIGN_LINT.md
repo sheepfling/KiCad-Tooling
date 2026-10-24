@@ -261,6 +261,27 @@ for source hashes and exact-version native checks.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.transformer_winding_same_net")'
 ```
 
+## Review a net shared by both supported transformer winding groups
+
+`component.transformer_winding_groups_share_net` emits a REVIEW finding when
+the exact `Transformer:TRANSF1` symbol's verified 1/2 and 3/4 winding groups
+both touch one native schematic net. The finding shows the shared net and the
+specific pins from each winding. It does not infer whether galvanic isolation
+is required or approved; an intentional common connection can be handled by
+the project's lint policy or a fingerprint-specific ignore.
+
+Only a fitted four-pin `Transformer:TRANSF1` with complete, unambiguous native
+net assignments is included. Other transformer symbols, open pins, extra pins,
+and DNP parts are outside this check. The schematic result does not establish
+physical isolation or PCB continuity. See the
+[synthetic transformer fixture record](../tests/fixtures/design_lint/transformer-windings/README.md)
+for the fault and valid control.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_transformer_winding_same_net.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.transformer_winding_groups_share_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -452,7 +473,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 209 active rules.
+The catalog currently contains 210 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

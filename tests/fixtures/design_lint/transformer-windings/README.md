@@ -13,6 +13,14 @@ keeping pins 3 and 4 separate. `distinct-winding-terminal-nets.kicad_sch`
 assigns all four terminals to separate nets. Embedded symbols are minimal
 tooling-owned pin maps; no upstream library drawing or product design is copied.
 
+`shared-winding-groups-net.kicad_sch` adds a separate fault for
+`component.transformer_winding_groups_share_net`: pin 1 from the first winding
+and pin 3 from the second share one net, while pins 2 and 4 remain distinct.
+The distinct-net control above is also its no-finding control. This is a
+schematic review prompt; an intentional shared reference remains a project
+decision and can be dispositioned with the normal rule policy or an exact
+finding ignore.
+
 The native lane exports each source twice with the project's exact pinned
 KiCad 10.0.0 and 10.0.5 images, checks stable normalized netlists, and confirms
 the fault/control lint result. This verifies source-to-netlist behavior; it

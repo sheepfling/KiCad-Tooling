@@ -23,7 +23,10 @@ from .design_lint_component_mosfet_terminals import (
     mosfets_with_gate_drain_on_same_net,
     mosfets_with_gate_source_on_same_net,
 )
-from .design_lint_component_transformers import transformer_winding_same_net_candidates
+from .design_lint_component_transformers import (
+    transformer_winding_groups_share_net_candidates,
+    transformer_winding_same_net_candidates,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .led_heuristics import (
@@ -150,6 +153,7 @@ def component_candidates(
     found.extend(two_pin_solar_cell_same_net_candidates(two_pin_components))
     found.extend(two_pin_thermocouple_same_net_candidates(two_pin_components))
     found.extend(transformer_winding_same_net_candidates(observed))
+    found.extend(transformer_winding_groups_share_net_candidates(observed))
     for component in two_pin_components:
         if component.kind in {
             "led",
