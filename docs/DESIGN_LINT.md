@@ -309,14 +309,15 @@ the exact KiCad 10 native lane.
 
 ## Review a two-pin battery whose terminals share one net
 
-`component.two_pin_battery_same_net` reviews an exact fitted `Device:Battery`
-when its two native pins resolve to the same schematic net. The netlist shows
-no voltage difference across the source. The prompt asks whether the battery
-is intentionally bypassed or a power connection is missing; it does not
-establish source behavior, polarity, footprint mapping, PCB connectivity, or
-assembly state. It defaults to `review` and supports project `block`, `off`,
-and exact-fingerprint ignore decisions. DNP, open, ambiguous, incomplete,
-multi-pin, and other battery identities remain unclassified. The
+`component.two_pin_battery_same_net` reviews an exact fitted `Device:Battery` or a custom battery
+matched by the project's exact `component_role_map` when its two native pins resolve to the same
+schematic net. A custom binding must match PART_ID, symbol, footprint, and the complete native pin
+number, function, and electrical-type inventory. The netlist shows no voltage difference across the
+source. The prompt asks whether the battery is intentionally bypassed or a power connection is
+missing; it does not establish source behavior, polarity, footprint mapping, PCB connectivity, or
+assembly state. It defaults to `review` and supports project `block`, `off`, and exact-fingerprint
+ignore decisions. DNP, open, ambiguous, incomplete, multi-pin, and unmapped or stale custom battery
+identities remain unclassified. The
 [synthetic fixture record](../tests/fixtures/design_lint/two-pin-batteries/README.md)
 contains the same-net fault and separate-net control, with source hashes and
 the exact KiCad 10 native lane.

@@ -28,3 +28,24 @@ def custom_led_role_map(
             ),
         )
     )
+
+
+def custom_battery_role_map(
+    basis: str = "Synthetic reviewed battery symbol declaration",
+) -> ComponentRoleMap:
+    """Map one synthetic two-pin battery using its complete native identity."""
+    return ComponentRoleMap(
+        entries=(
+            ComponentRoleBinding(
+                part_id="training-battery",
+                symbol="Training:Battery_2pin",
+                footprint="Training:Battery_Cell_2pin",
+                role="battery",
+                pins=(
+                    ComponentRolePin(number="1", function="+", electrical_type="passive"),
+                    ComponentRolePin(number="2", function="-", electrical_type="passive"),
+                ),
+                basis=basis,
+            ),
+        )
+    )

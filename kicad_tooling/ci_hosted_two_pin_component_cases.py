@@ -143,6 +143,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_battery_same_net",
         set(),
     ),
+    "same-net-mapped-battery": (
+        "two-pin-batteries/mapped-same-net-battery.kicad_sch",
+        "component.two_pin_battery_same_net",
+        {"BT1: both battery terminals share BATTERY_TIED"},
+    ),
+    "distinct-nets-mapped-battery": (
+        "two-pin-batteries/mapped-distinct-nets-battery.kicad_sch",
+        "component.two_pin_battery_same_net",
+        set(),
+    ),
     "same-net-motor": (
         "two-pin-motors/same-net-motor.kicad_sch",
         "component.two_pin_motor_same_net",

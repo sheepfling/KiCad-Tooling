@@ -75,8 +75,8 @@ def two_pin_components_on_same_net(
     distinct native pin numbers, one unambiguous net per pin, and a fitted
     component. Supported identities are the listed ``Device`` families and
     ``Switch:SW_SPST``, ``Motor:Motor_DC``, ``Device:Solar_Cell``, and the
-    three exact two-terminal ``Device:Thermocouple`` symbols. A
-    custom capacitors and LEDs are eligible only when an exact project-authored
+    three exact two-terminal ``Device:Thermocouple`` symbols. Custom
+    capacitors, LEDs, and batteries are eligible only when an exact project-authored
     role binding matches their PART_ID, symbol, footprint, and complete pin
     inventory. Other project-specific symbols and incomplete inventories are
     skipped.
@@ -135,7 +135,7 @@ def two_pin_components_on_same_net(
             role_binding = None
         else:
             role_binding = role_bindings.get(reference.casefold())
-            if role_binding is None or role_binding.role not in {"capacitor", "led"}:
+            if role_binding is None or role_binding.role not in {"capacitor", "led", "battery"}:
                 continue
             kind = role_binding.role
 

@@ -29,6 +29,8 @@ TWO_PIN_COMPONENT_SOURCE_HASHES = {
     "two-pin-speakers/distinct-nets-speaker.kicad_sch": "e12366fd7846a7585e4bf0cba9dc3203c1669b348ee76581285edd79c3d54287",
     "two-pin-batteries/same-net-battery.kicad_sch": "33d76cb6ac784e7be9b801a938b43a5a98f5d6c2bc55be8bdbb485dfc657673e",
     "two-pin-batteries/distinct-nets-battery.kicad_sch": "b72525841fa7cbae6cc050db065370ab83990b1728d414f87423c29aa2472711",
+    "two-pin-batteries/mapped-same-net-battery.kicad_sch": "9b3c3aa34bc967ef32e217e46f53d4bed1e910d810325b1eaa8c5f912e710edb",
+    "two-pin-batteries/mapped-distinct-nets-battery.kicad_sch": "2cfeb1ac0d450512915068b5c6636718ae23d2931a3867d99e66b9a0ad1dc191",
     "two-pin-motors/same-net-motor.kicad_sch": "a9d3b9dd3e403bdc1f6fc2403a4a030e57ffadc1cbe85ce585eda6d20e4d8f42",
     "two-pin-motors/distinct-nets-motor.kicad_sch": "6cfa5b1a856b1a04fabd3c274072b5b03f00f71ce7a218ea5542c344302e172e",
     "two-pin-solar-cells/same-net-solar-cell.kicad_sch": "9bfc6cbd16fe471fd9edc869c5ccab715f97a7067fdf15680e5123b765eb57e6",

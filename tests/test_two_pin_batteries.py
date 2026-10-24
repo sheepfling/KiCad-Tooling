@@ -6,6 +6,11 @@ import hashlib
 
 import pytest
 
+from kicad_tooling.hwrepo.component_role_models import (
+    ComponentRoleBinding,
+    ComponentRoleMap,
+    ComponentRolePin,
+)
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -16,10 +21,27 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from kicad_tooling.hwrepo.two_pin_components import two_pin_components_on_same_net
+from tests.design_lint_fixtures.component_roles import custom_battery_role_map
 
 pytestmark = [pytest.mark.component_lint, pytest.mark.design_lint]
 
 RULE_ID = "component.two_pin_battery_same_net"
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_custom_battery_role_requires_two_passive_native_pins() -> None:
+    with pytest.raises(ValueError, match="battery role requires two native passive pins"):
+        ComponentRoleBinding(
+            part_id="training-battery",
+            symbol="Training:Battery_2pin",
+            footprint="Training:Battery_Cell_2pin",
+            role="battery",
+            pins=(
+                ComponentRolePin(number="1", function="+", electrical_type="power_out"),
+                ComponentRolePin(number="2", function="-", electrical_type="passive"),
+            ),
+            basis="Synthetic invalid battery symbol declaration",
+        )
 
 
 def battery_netlist(
@@ -70,6 +92,23 @@ def battery_netlist(
     )
 
 
+def custom_battery_netlist(*, same_net: bool = True) -> NetlistContract:
+    observed = battery_netlist(same_net=same_net, symbols={"BT1": "Training:Battery_2pin"})
+    return observed.model_copy(
+        update={
+            "components": {
+                "BT1": ComponentContract(
+                    value="Synthetic rechargeable cell",
+                    footprint="Training:Battery_Cell_2pin",
+                    part_id="training-battery",
+                )
+            },
+            "pin_functions": {"BT1.1": "+", "BT1.2": "-"},
+            "pin_electrical_types": {"BT1.1": "passive", "BT1.2": "passive"},
+        }
+    )
+
+
 def lint_report(observed: NetlistContract, policy: DesignLintPolicy | None = None) -> object:
     serialized = observed.model_dump_json().encode("utf-8")
     coach = ContractCoachReport(
@@ -109,6 +148,83 @@ def test_separate_battery_terminal_nets_are_the_no_finding_control() -> None:
     report = lint_report(battery_netlist(same_net=False))
     assert RULE_ID not in {item.rule_id for item in report.findings}
     assert report.status == "PASS"
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_exact_mapped_custom_battery_same_net_is_reviewed_with_role_evidence() -> None:
+    observed = custom_battery_netlist()
+    role_map = custom_battery_role_map()
+
+    candidates = two_pin_components_on_same_net(observed, role_map)
+    assert [(item.reference, item.kind, item.net) for item in candidates] == [
+        ("BT1", "battery", "BATTERY_NODE_BT1")
+    ]
+    assert candidates[0].role_binding == role_map.entries[0]
+
+    unmapped = lint_report(observed)
+    assert RULE_ID not in {item.rule_id for item in unmapped.findings}
+    report = lint_report(observed, DesignLintPolicy(component_role_map=role_map))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+    assert report.status == "REVIEW"
+    assert finding.evidence["symbol"] == ("Training:Battery_2pin",)
+    assert finding.evidence["classified_role"] == ("battery",)
+    assert finding.evidence["role_part_id"] == ("training-battery",)
+    assert finding.evidence["role_symbol"] == ("Training:Battery_2pin",)
+    assert finding.evidence["role_footprint"] == ("Training:Battery_Cell_2pin",)
+    assert finding.evidence["role_pin_inventory"] == ("1=+/passive", "2=-/passive")
+    assert finding.evidence["role_basis"] == ("Synthetic reviewed battery symbol declaration",)
+    assert len(finding.evidence["role_binding_sha256"][0]) == 64
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_exact_mapped_custom_battery_on_separate_nets_is_the_valid_control() -> None:
+    report = lint_report(
+        custom_battery_netlist(same_net=False),
+        DesignLintPolicy(component_role_map=custom_battery_role_map()),
+    )
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.status == "PASS"
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_custom_battery_stale_pin_signature_blocks_classification() -> None:
+    observed = custom_battery_netlist().model_copy(
+        update={"pin_functions": {"BT1.1": "-", "BT1.2": "+"}}
+    )
+    report = lint_report(observed, DesignLintPolicy(component_role_map=custom_battery_role_map()))
+    assert report.status == "BLOCKED"
+    assert any(
+        "complete native pin number, function, and electrical-type inventory" in issue
+        for issue in report.issues
+    )
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_custom_battery_role_fingerprint_is_order_stable_and_basis_bound() -> None:
+    observed = custom_battery_netlist()
+    role_map = custom_battery_role_map()
+
+    def finding_for(selected_map: ComponentRoleMap):
+        report = lint_report(observed, DesignLintPolicy(component_role_map=selected_map))
+        return next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    original = finding_for(role_map)
+    reversed_pins = role_map.model_copy(
+        update={
+            "entries": (
+                role_map.entries[0].model_copy(
+                    update={"pins": tuple(reversed(role_map.entries[0].pins))}
+                ),
+            )
+        }
+    )
+    reordered = finding_for(reversed_pins)
+    revised_basis = finding_for(custom_battery_role_map("Updated reviewed battery identity basis"))
+
+    assert original.fingerprint == reordered.fingerprint
+    assert original.evidence == reordered.evidence
+    assert original.fingerprint != revised_basis.fingerprint
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -170,11 +170,28 @@ def two_pin_component_fixture_lane(
             ),
         )
     )
+    custom_battery_role_map = ComponentRoleMap(
+        entries=(
+            ComponentRoleBinding(
+                part_id="training-battery",
+                symbol="Training:Battery_2pin",
+                footprint="Training:Battery_Cell_2pin",
+                role="battery",
+                pins=(
+                    ComponentRolePin(number="1", function="+", electrical_type="passive"),
+                    ComponentRolePin(number="2", function="-", electrical_type="passive"),
+                ),
+                basis="Synthetic native fixture reviews this exact custom battery identity",
+            ),
+        )
+    )
     role_maps_by_case = {
         "same-net-mapped-capacitor": custom_capacitor_role_map,
         "distinct-nets-mapped-capacitor": custom_capacitor_role_map,
         "same-net-mapped-led": custom_led_role_map,
         "distinct-nets-mapped-led": custom_led_role_map,
+        "same-net-mapped-battery": custom_battery_role_map,
+        "distinct-nets-mapped-battery": custom_battery_role_map,
     }
     for case, (_, rule_id, case_expected_subjects) in cases.items():
         role_map = role_maps_by_case.get(case)

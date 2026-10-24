@@ -670,6 +670,11 @@ foundation for trustworthy expansion; protocol-specific schematic checks are
 `P1`; geometry-dependent checks and review aids are `P2`; curated knowledge
 and optional ecosystem adapters are `P3`.
 
+Feature work leads: prioritize new deterministic detection, coverage closure,
+reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
+parity as the acceptance gate when a change affects those operations; advance
+standalone parity work when it closes a demonstrated feature regression.
+
 ### Current execution focus
 
 - **LINT-010 source-evidence gap:** The optional capacitance scope now checks
@@ -4454,26 +4459,30 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Status:** Implemented as the default-review rule
   `component.two_pin_battery_same_net` for the exact stock `Device:Battery`
-  identity.
+  identity and exact project-mapped custom battery identities.
 - **Gap:** The same-net inventory covered passive parts, protection parts,
   indicators, sounders, speakers, crystals, and a two-pin switch, but not the
-  exact stock two-pin battery symbol. ERC can accept passive battery pins on
+  exact stock two-pin battery symbol. Custom library identities also lacked
+  an exact role-map path. ERC can accept passive battery pins on
   one schematic net, leaving the source terminals with no netlist voltage
   difference and no focused component review.
-- **Predicate:** Require an exact fitted `Device:Battery`, exactly two
-  distinct native pin numbers, and one unambiguous assigned net per pin.
+- **Predicate:** Require an exact fitted `Device:Battery` or a custom battery
+  whose project role map matches PART_ID, symbol, footprint, and complete
+  native pin number/function/electrical-type inventory. Require exactly two
+  distinct native pin numbers and one unambiguous assigned net per pin.
   Report only when both pins resolve to the same net. DNP, open, multiply
-  assigned, incomplete, multi-pin, custom, and alternate symbol identities
-  remain unclassified.
+  assigned, incomplete, multi-pin, unmapped or stale custom, and alternate
+  symbol identities remain unclassified.
 - **Boundary:** This is a configurable review prompt. A source can be
   intentionally bypassed or represented without an active physical battery.
   The rule does not infer battery polarity, voltage, chemistry, source
   behavior, footprint mapping, physical connectivity, or assembly state.
-- **Fixtures:** Synthetic same-net fault and separate-net control; DNP,
-  incomplete, ambiguous, open, multi-pin, custom, and alternate-symbol
-  controls; project policy, exact ignore, deterministic ordering, and a
-  net-split metamorphic check; source-hashed native fixtures on KiCad 10.0.0
-  and 10.0.5. No project or cohort source is used.
+- **Fixtures:** Synthetic stock and exact-mapped custom same-net faults and
+  separate-net controls; DNP, incomplete, ambiguous, open, multi-pin, unmapped
+  custom, stale-role, and alternate-symbol controls; project policy, exact
+  ignore, deterministic ordering, role-basis fingerprinting, and net-split
+  metamorphic checks; source-hashed native fixtures on KiCad 10.0.0 and 10.0.5.
+  No project or cohort source is used.
 - **Focused selection:**
 
   ```sh
