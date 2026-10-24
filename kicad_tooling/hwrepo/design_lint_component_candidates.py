@@ -10,6 +10,7 @@ from .component_mosfet_gate_drive import mosfets_with_direct_output_gate_drive
 from .component_mosfet_terminal_order import mosfets_with_unusual_drain_source_rail_order
 from .component_pin_patterns import UnconnectedNamedComponentPin, unconnected_named_component_pins
 from .component_polarized_capacitor_orientation import polarized_capacitors_on_reversed_named_rails
+from .component_repeated_signal_pins import component_signal_pin_net_divergences
 from .component_return_pins import unconnected_component_return_pins
 from .component_role_models import ComponentRoleMap
 from .component_roles import component_role_binding_evidence
@@ -93,6 +94,7 @@ def component_candidates(
     found.extend(bjts_without_visible_emitter_bias(observed))
     found.extend(polarized_capacitors_on_reversed_named_rails(observed))
     found.extend(diodes_with_anode_below_cathode_on_named_rails(observed))
+    found.extend(component_signal_pin_net_divergences(observed, reviewed_connector_references))
     for bridge in leds_directly_between_positive_and_return_nets(observed):
         found.append(
             Candidate(

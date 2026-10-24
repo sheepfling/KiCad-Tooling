@@ -40,6 +40,7 @@ DesignLintRuleId = Literal[
     "connector.generic_peer_pin_all_open",
     "component.repeated_supply_pin_function",
     "component.repeated_return_pin_function",
+    "component.repeated_signal_pin_assignment_divergence",
     "power.pin_function_net_role_conflict",
     "power.named_supply_pin_on_negative_rail",
     "component.peer_power_pin_assignment_divergence",

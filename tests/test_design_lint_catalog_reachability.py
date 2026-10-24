@@ -12,6 +12,7 @@ import tests.component_peer_power_input_support as _component_peer_power_input_s
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
+import tests.design_lint_fixtures.component_return_domains as _component_return_domains
 import tests.design_lint_fixtures.connector_mapped_supply_return_net as _mapped_supply_return_net
 import tests.design_lint_fixtures.connector_named_power_aliases as _connector_named_power_aliases
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
@@ -23,6 +24,7 @@ import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
+import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
 import tests.test_can_excess_termination as _tests_test_can_excess_termination
@@ -155,6 +157,8 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.led_rail_bridge_netlist(),
         _tests_test_led_output_heuristics.output_led_netlist(),
         _tests_design_lint_fixtures.repeated_component_supply_pins(),
+        _component_return_domains.component_return_pin_domains(),
+        _repeated_signal_pin_fixtures.repeated_signal_pin_component(),
         _tests_design_lint_fixtures.peer_component_power_pins(),
         _component_peer_power_input_support.generic_peer_power_input_netlist(),
         _component_peer_power_input_support.named_peer_power_input_netlist(),

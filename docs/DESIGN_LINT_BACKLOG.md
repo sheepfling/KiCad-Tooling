@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 211 rules are implemented with synthetic regression coverage.
+The following 212 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 211 active rules.
+The catalog currently contains 212 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -453,6 +453,7 @@ skipped under prerelease policy.
 - `connector.peer_power_input_named_assignment_divergence`
 - `component.repeated_supply_pin_function`
 - `component.repeated_return_pin_function`
+- `component.repeated_signal_pin_assignment_divergence`
 - `component.peer_power_pin_assignment_divergence`
 - `component.peer_power_input_assignment_divergence`
 - `component.peer_power_input_named_assignment_divergence`
@@ -692,6 +693,11 @@ and optional ecosystem adapters are `P3`.
   with at least two recognized ground/return pins assigned across distinct
   nets receives a configurable REVIEW prompt. Intentional analog, digital,
   chassis, and isolation domains remain valid project decisions.
+- **LINT-229 repeated signal-function pins:** A fitted non-connector
+  component with a complete native pin-function inventory receives an opt-in
+  review when multiple explicit signal pins with the same function and
+  electrical type use distinct assigned nets. It does not assert that the pins
+  must be tied; separate channels and modes remain valid.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3073,7 +3079,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 211 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 212 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4545,6 +4551,37 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_COMPONENT_NAMED_RETURN_PIN_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_component_named_return_pin_native_fixture_lane.py \
     -m 'design_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="component.repeated_return_pin_function")'
+  ```
+
+#### LINT-229 — Repeated signal-function pins on one component use different nets
+
+- **Status:** Implemented as opt-in `component.repeated_signal_pin_assignment_divergence`,
+  owned by `component_repeated_signal_pins.py#component_signal_pin_net_divergences`.
+- **Gap:** Existing repeated-pin checks covered connector peers, component
+  supply/return pins, and selected protocol roles. They did not compare
+  repeated explicit signal-function pins within one fitted IC.
+- **Predicate:** Require a complete native pin-function inventory for one
+  fitted non-connector. Group non-generic functions by exact normalized
+  function and recognized signal electrical type. If at least two group
+  members each have one assigned net and the assignments differ, emit one
+  REVIEW candidate for that group.
+- **Boundary:** Identical signal functions can be separate channels, alternate
+  modes, or intentionally isolated. The rule is off by default, asks for
+  review when explicitly enabled, and never says the pins must be tied. It
+  excludes supply, return, shield, connector, DNP, open, ambiguous, and
+  incomplete-pin cases. It cannot establish internal component behavior,
+  electrical correctness, PCB continuity, or off-board wiring.
+- **Fixtures and quality gate:** Typed synthetic split fault and common-net
+  control cover project policy, exact evidence, DNP and connector exclusions,
+  generic functions, incomplete metadata, different electrical types, open
+  assignments, and input-order stability. The catalog requires fault, valid
+  control, and metamorphic fixtures; the component marker registry enables a
+  focused pytest selection. No proprietary source or example is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_component_repeated_signal_pins.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

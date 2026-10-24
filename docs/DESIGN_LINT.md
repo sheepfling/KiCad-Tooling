@@ -301,6 +301,27 @@ PCB continuity, external bonding, or physical isolation. See the
   -m 'design_lint and return_path_lint and design_lint_rule(rule_id="component.repeated_return_pin_function")'
 ```
 
+## Review repeated signal pins on one component
+
+`component.repeated_signal_pin_assignment_divergence` is an opt-in REVIEW
+prompt for a fitted non-connector component with complete pin-function
+metadata. It groups explicit signal pins by exact normalized native function
+and electrical type, then reports groups whose uniquely assigned pins use
+different schematic nets. This can expose a split duplicate interface pin
+that is not covered by the repeated supply/return checks. Separate channels,
+alternate modes, and deliberate isolation can be valid, so the rule is off by
+default and never says the pins must be tied. It excludes connectors, DNP
+parts, generic or incomplete pin metadata, power/return/shield functions, and
+open or ambiguous assignments. The netlist does not establish PCB continuity
+or the component's internal behavior. Project policy can enable REVIEW, promote
+the finding to `block`, or ignore its exact fingerprint. See the
+[synthetic fixture record](../tests/fixtures/design_lint/repeated-signal-pin-functions/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_component_repeated_signal_pins.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -492,7 +513,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 211 active rules.
+The catalog currently contains 212 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
