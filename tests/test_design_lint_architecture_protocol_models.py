@@ -142,10 +142,21 @@ PROTOCOL_MODEL_TYPE_ALIASES = {
     "rs485_models.py": (rs485_models, ("Rs485BiasRequirement",)),
 }
 
+PROTOCOL_MODEL_OWNER_ONLY = {
+    "can_termination_models.py": (
+        can_termination_models,
+        (
+            "CanTerminationResistorArrayChannelRequirement",
+            "CanTerminationResistorArrayRequirement",
+        ),
+    ),
+}
+
 
 def test_protocol_models_live_in_theme_owners_and_services_import_them_directly() -> None:
     model_names = {name for _, names in PROTOCOL_MODEL_OWNERS.values() for name in names}
     model_names.update(name for _, names in PROTOCOL_MODEL_TYPE_ALIASES.values() for name in names)
+    model_names.update(name for _, names in PROTOCOL_MODEL_OWNER_ONLY.values() for name in names)
     registry = HWREPO / "models.py"
     registry_tree = ast.parse(registry.read_text(encoding="utf-8"), filename=registry.name)
     registry_definitions = {
@@ -169,6 +180,17 @@ def test_protocol_models_live_in_theme_owners_and_services_import_them_directly(
         assert _line_count(HWREPO / filename) < IMPLEMENTATION_MAX_LINES
         for name in names:
             assert getattr(shared_models, name) is getattr(owner_module, name)
+
+    for filename, (owner_module, names) in PROTOCOL_MODEL_OWNER_ONLY.items():
+        owner = HWREPO / filename
+        assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+        owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=filename)
+        owner_definitions = {
+            node.name for node in owner_tree.body if isinstance(node, ast.ClassDef)
+        }
+        assert set(names) <= owner_definitions
+        assert not (set(names) & registry_definitions)
+        assert all(not hasattr(shared_models, name) for name in names)
 
     for source in sorted(HWREPO.parent.rglob("*.py")):
         if source.name == "models.py":

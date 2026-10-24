@@ -3608,6 +3608,51 @@ identity, fitted state, and parsed nominal value. It does not infer that every
 split termination needs a capacitor, or establish capacitor placement,
 bias-voltage derating, impedance, or EMC performance.
 
+An endpoint may describe a multi-channel resistor package with
+`resistor_arrays`. Each array records its exact symbol, footprint, value text,
+optional `PART_ID`, review basis, and a complete inventory of mapped channels
+and explained unmapped pins. Every channel maps two exact component pins to two
+distinct nets; shared pins are allowed only when all channels assign that pin
+to the same net. Native evidence checks the package identity, fitted state,
+full pin inventory, and pin-to-net mapping. KiCad's schematic netlist does not
+measure an array channel's internal resistance, so the check reports no
+measured total for an endpoint containing an array. The project owner must
+review the component's internal resistance and part construction separately.
+For example, one split endpoint can map two resistor channels as follows:
+
+```json
+"resistor_arrays": [
+  {
+    "reference": "RN1",
+    "expected_symbol": "Vendor:RA4",
+    "expected_footprint": "Package:RA4",
+    "expected_value": "2x60R",
+    "expected_part_id": "APPROVED-PART-ID",
+    "basis": "Reviewed manufacturer pin map and part value",
+    "channels": [
+      {
+        "id": "high-leg",
+        "first_pin": "RN1.1",
+        "second_pin": "RN1.2",
+        "first_net": "CAN_H",
+        "second_net": "CAN_TERM_MID"
+      },
+      {
+        "id": "low-leg",
+        "first_pin": "RN1.3",
+        "second_pin": "RN1.4",
+        "first_net": "CAN_L",
+        "second_net": "CAN_TERM_MID"
+      }
+    ],
+    "unmapped_pin_reasons": {}
+  }
+]
+```
+
+`expected_value` and `expected_part_id` are compared exactly with the exported
+schematic properties; neither proves the internal resistor values.
+
 The electrical lane compares these requirements with the current
 source-bound native netlist and retained evidence replays the same checks.
 Missing, DNP, wrong-value, misassigned, or unlisted direct termination parts

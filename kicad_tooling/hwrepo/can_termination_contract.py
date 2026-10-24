@@ -8,6 +8,11 @@ from .can_termination_models import (
 )
 from .capacitance_values import parse_capacitance_pf
 from .models import ElectricalCheck, NetlistContract
+from .resistor_array_paths import (
+    ResistorArrayNetlistEvidence,
+    resistor_array_channel_issue,
+    resistor_array_component_issues,
+)
 from .resistor_paths import (
     RESISTOR_REFERENCE_PATTERN,
     direct_resistors,
@@ -20,6 +25,7 @@ def can_termination_checks(
 ) -> tuple[ElectricalCheck, ...]:
     """Compare exact authored CAN termination paths with a native netlist."""
     resistors = direct_resistors(observed)
+    array_evidence = ResistorArrayNetlistEvidence.from_netlist(observed)
     resistors_by_reference = {item.reference.casefold(): item for item in resistors}
     components = {
         reference.casefold(): (reference, item) for reference, item in observed.components.items()
@@ -70,10 +76,13 @@ def can_termination_checks(
             )
         )
         expected_direct = {
-            resistor.reference.casefold()
+            reference.casefold()
             for endpoint in bus.endpoints
             if endpoint.topology == "direct"
-            for resistor in endpoint.resistors
+            for reference in (
+                *(item.reference for item in endpoint.resistors),
+                *(item.reference for item in endpoint.resistor_arrays),
+            )
         }
         actual_direct = tuple(
             item
@@ -192,12 +201,49 @@ def can_termination_checks(
                     f"{resistor.reference}={resistor.resistance_ohms:g}Ω "
                     f"({requirement.first_net}/{requirement.second_net})"
                 )
+            for array in endpoint.resistor_arrays:
+                failures.extend(
+                    resistor_array_component_issues(
+                        array_evidence,
+                        reference=array.reference,
+                        expected_symbol=array.expected_symbol,
+                        expected_footprint=array.expected_footprint,
+                        expected_value=array.expected_value,
+                        expected_part_id=array.expected_part_id,
+                        channel_pins=tuple(
+                            (channel.first_pin, channel.second_pin) for channel in array.channels
+                        ),
+                        unmapped_pin_reasons=array.unmapped_pin_reasons,
+                        component_kind="mapped CAN termination channel",
+                    )
+                )
+                for channel in array.channels:
+                    channel_issue = resistor_array_channel_issue(
+                        array_evidence,
+                        reference=array.reference,
+                        channel_id=channel.id,
+                        pin_a=channel.first_pin,
+                        pin_b=channel.second_pin,
+                        net_a=channel.first_net,
+                        net_b=channel.second_net,
+                    )
+                    if channel_issue is not None:
+                        failures.append(channel_issue)
+                    path_details.append(
+                        f"{array.reference}.{channel.id} maps "
+                        f"{channel.first_net}/{channel.second_net}"
+                    )
+            array_limit = (
+                " Internal array-channel resistance is not measured by the native netlist."
+                if endpoint.resistor_arrays
+                else ""
+            )
             results.append(
                 ElectricalCheck(
                     id=base_id,
                     status="FAIL" if failures else "PASS",
                     observed=observed_total
-                    if len(path_details) == len(endpoint.resistors)
+                    if not endpoint.resistor_arrays and len(path_details) == len(endpoint.resistors)
                     else None,
                     unit="Ω",
                     detail=(
@@ -205,6 +251,7 @@ def can_termination_checks(
                         f"{bus.high_net}/{bus.low_net}: "
                         + ("; ".join(failures) if failures else ", ".join(path_details))
                         + "."
+                        + array_limit
                     ),
                 )
             )

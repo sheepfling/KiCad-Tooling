@@ -1,0 +1,69 @@
+{
+  "schema_version": "1",
+  "project_id": "synthetic-can-resistor-array",
+  "ngspice_version": "47",
+  "grounding": {
+    "mode": "not_applicable",
+    "reason": "This synthetic fixture covers only the CAN termination array map."
+  },
+  "can_termination": {
+    "mode": "required",
+    "basis": "Synthetic split termination reviewed against the array symbol and part pin map",
+    "buses": [
+      {
+        "id": "fieldbus",
+        "basis": "Synthetic CAN controller interface",
+        "high_net": "CAN_H",
+        "low_net": "CAN_L",
+        "high_pins": [
+          "U1.1"
+        ],
+        "low_pins": [
+          "U1.2"
+        ],
+        "endpoints": [
+          {
+            "id": "local",
+            "basis": "Synthetic split termination at the declared endpoint",
+            "topology": "split",
+            "midpoint_net": "CAN_TERM_MID",
+            "resistor_arrays": [
+              {
+                "reference": "RN1",
+                "expected_symbol": "Synthetic:ResistorArray",
+                "expected_footprint": "Synthetic:RA4",
+                "expected_value": "2x60R",
+                "expected_part_id": "SYNTHETIC-CAN-60R2",
+                "basis": "Synthetic reviewed symbol and package pin map",
+                "channels": [
+                  {
+                    "id": "high-leg",
+                    "first_pin": "RN1.1",
+                    "second_pin": "RN1.2",
+                    "first_net": "CAN_H",
+                    "second_net": "CAN_TERM_MID"
+                  },
+                  {
+                    "id": "low-leg",
+                    "first_pin": "RN1.3",
+                    "second_pin": "RN1.4",
+                    "first_net": "CAN_L",
+                    "second_net": "CAN_TERM_MID"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "power": {
+    "mode": "not_applicable",
+    "reason": "This synthetic fixture contains no power model."
+  },
+  "high_frequency": {
+    "mode": "not_applicable",
+    "reason": "This synthetic fixture contains no high-frequency model."
+  }
+}

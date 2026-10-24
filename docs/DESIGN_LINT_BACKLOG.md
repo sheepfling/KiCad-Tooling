@@ -4794,11 +4794,11 @@ is not a reason by itself to expand its scope or change its default policy.
 
 #### LINT-011 — CAN termination topology and bus-end declarations
 
-- **Status:** Partial v2. The project-authored electrical contract checks
+- **Status:** Partial v3. The project-authored electrical contract checks
   required CANH/CANL pin assignments, exact direct and split local resistor
   paths, endpoint references, inclusive nominal ranges, extra direct paths,
-  explicitly external/DNP options, and an optional exact split midpoint
-  capacitor mapping.
+  explicitly external/DNP options, an optional exact split midpoint capacitor
+  mapping, and explicitly mapped multi-channel resistor arrays.
 - **Problem:** A direct 120-ohm resistor check does not model two bus ends,
   split termination, switchable termination, or the project's actual topology.
 - **Evidence and check:** `can_termination` names the bus nets, logical
@@ -4812,6 +4812,14 @@ is not a reason by itself to expand its scope or change its default policy.
   native pins and validates both net assignments. External endpoints remain
   explicitly unverifiable from schematic evidence and are reported
   `NOT_APPLICABLE`.
+- **Array coverage:** `resistor_arrays` maps each authored channel's two native
+  pins to the exact split or direct nets and verifies symbol, footprint, value
+  text, optional `PART_ID`, fitted state, and complete native pin inventory.
+  Shared pins must keep one net assignment; otherwise the contract is rejected.
+  A schematic export does not measure an array channel's internal resistance,
+  so the contract reports no measured total when arrays are present. Synthetic
+  native control and single-pin-fault sources are recorded in
+  [`can-resistor-array-native`](../tests/fixtures/design_lint/can-resistor-array-native/README.md).
 - **Native source fixtures:** `tests.test_can_native_fixture_lanes`
   exports synthetic control and single-pin fault schematics twice with the
   digest-pinned KiCad 10.0.0 and 10.0.5 images. The typed netlist hashes match
