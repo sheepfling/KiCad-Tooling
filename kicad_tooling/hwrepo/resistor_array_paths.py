@@ -110,8 +110,8 @@ def resistor_array_channel_issue(
     """Require one native pin on each mapped net, allowing passive reversal."""
     assignments_a = evidence.pin_nets.get(pin_a.casefold(), frozenset())
     assignments_b = evidence.pin_nets.get(pin_b.casefold(), frozenset())
-    direct = assignments_a == {net_a} and assignments_b == {net_b}
-    reversed_ends = assignments_a == {net_b} and assignments_b == {net_a}
+    direct = assignments_a == frozenset((net_a,)) and assignments_b == frozenset((net_b,))
+    reversed_ends = assignments_a == frozenset((net_b,)) and assignments_b == frozenset((net_a,))
     if direct or reversed_ends:
         return None
     observed_a = ", ".join(sorted(assignments_a)) or "unconnected"
