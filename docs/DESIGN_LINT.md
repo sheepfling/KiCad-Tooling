@@ -219,6 +219,26 @@ hashes and exact-version native checks.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")'
 ```
 
+## Review a two-pin thermocouple whose leads share one net
+
+`component.two_pin_thermocouple_same_net` reviews exact fitted
+`Device:Thermocouple`, `Device:Thermocouple_Alt`, and
+`Device:Thermocouple_Block` symbols when both native pins are assigned to the
+same schematic net. The
+[official Device library](https://kicad.github.io/symbols/Device.html) lists
+these three identities as thermocouple symbols. This prompt defaults to
+`review` and supports project `block`, `off`, and exact-fingerprint ignore
+decisions. It does not establish temperature measurement, cold-junction
+compensation, sensor suitability, instrumentation grounding, polarity,
+footprint mapping, PCB connectivity, or assembly state. See the
+[synthetic fixture record](../tests/fixtures/design_lint/two-pin-thermocouples/README.md)
+for source hashes and the pinned native fixture boundary.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_two_pin_thermocouples.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_thermocouple_same_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -410,7 +430,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 207 active rules.
+The catalog currently contains 208 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 207 rules are implemented with synthetic regression coverage.
+The following 208 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 207 active rules.
+The catalog currently contains 208 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -471,6 +471,8 @@ skipped under prerelease policy.
 - `component.two_pin_speaker_same_net`
 - `component.two_pin_battery_same_net`
 - `component.two_pin_motor_same_net`
+- `component.two_pin_solar_cell_same_net`
+- `component.two_pin_thermocouple_same_net`
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
@@ -3064,7 +3066,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 206 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 208 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4342,6 +4344,61 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_two_pin_solar_cells.py \
     -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")'
+  ```
+
+#### LINT-225 — Same-net two-pin thermocouple review
+
+- **Status:** Implemented as the default-review rule
+  `component.two_pin_thermocouple_same_net` for the exact
+  `Device:Thermocouple`, `Device:Thermocouple_Alt`, and
+  `Device:Thermocouple_Block` identities listed by the official
+  [KiCad Device symbol library][kicad-device-library].
+- **Gap:** The existing same-net component rules did not classify the three
+  exact built-in thermocouple identities. If both leads are assigned to one
+  schematic net, the exported netlist shows no differential signal at the
+  thermocouple input, and a review prompt can expose a deliberate test short
+  or a missing lead connection.
+- **Predicate:** Require a fitted exact identity from the three-name allowlist,
+  exactly two distinct native pin numbers, and one unambiguous assigned net
+  per pin. Emit REVIEW when both assignments use the same schematic net.
+  Custom or unconfirmed identities, DNP parts, open or ambiguous pins, and
+  incomplete or multi-pin inventories remain outside the predicate.
+- **Boundary:** A same-net sensor can be intentionally disabled or used in a
+  test setup. The prompt does not establish temperature measurement,
+  cold-junction compensation, sensor suitability, instrumentation grounding,
+  polarity, footprint mapping, physical connectivity, or assembly state.
+- **Fixtures:** One tooling-owned fault schematic and one distinct-net control
+  include all three exact symbol identities. Typed regressions cover the same
+  fault/control, unsupported identities, DNP, incomplete, open, ambiguous, and
+  multi-pin exclusions, project override/ignore behavior, source ordering,
+  and per-instance net splitting. The source-hashed native lane repeats both
+  fixtures on pinned KiCad 10.0.0 and 10.0.5. Its embedded symbols are minimal
+  synthetic pin maps, not copies of upstream library drawings; the lane checks
+  source-to-netlist compatibility and lint behavior, not library geometry.
+- **Incremental-value claim:** This adds three exact stock thermocouple symbol
+  identities without broadening the generic two-pin detector. Synthetic
+  fixtures establish predicate behavior only; public applicability and
+  reviewer-value measurements remain unmeasured.
+- **Local verification:** The focused two-pin component selector passed
+  (122 passed, 26 environment-gated native skips). The source-hashed
+  thermocouple fault/control lane passed on digest-pinned KiCad 10.0.0 and
+  10.0.5 (2 passed). Cross-process hash-seed determinism, active-rule
+  reachability, catalog synchronization, tag selection, pytest marker
+  ownership, and architecture/size gates passed. No project or cohort source
+  was used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_two_pin_thermocouples.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_thermocouple_same_net")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_two_pin_thermocouples_native_fixture_lane.py \
+    -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.two_pin_thermocouple_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

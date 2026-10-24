@@ -37,6 +37,7 @@ from tests.test_two_pin_fuses import fuse_netlist
 from tests.test_two_pin_solar_cells import solar_cell_netlist
 from tests.test_two_pin_speakers import speaker_netlist
 from tests.test_two_pin_switches import switch_netlist
+from tests.test_two_pin_thermocouples import thermocouple_netlist
 
 
 def led_output_lint_report(*, topology: str) -> dict[str, object]:
@@ -335,6 +336,13 @@ def report_cases() -> dict[str, object]:
         "solar_cell_control": source_bound_component_report(
             "synthetic-two-pin-solar-cell-hash-seed-control",
             solar_cell_netlist(same_net=False),
+        ),
+        "thermocouple_fault": source_bound_component_report(
+            "synthetic-two-pin-thermocouple-hash-seed-fault", thermocouple_netlist()
+        ),
+        "thermocouple_control": source_bound_component_report(
+            "synthetic-two-pin-thermocouple-hash-seed-control",
+            thermocouple_netlist(same_net=False),
         ),
         "mosfet_stress_q2_over_limit": mosfet_stress_check_result(q2_over_limit=True),
         "mosfet_stress_multi_device_control": mosfet_stress_check_result(q2_over_limit=False),

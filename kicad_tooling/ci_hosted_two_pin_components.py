@@ -165,6 +165,20 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_solar_cell_same_net",
         set(),
     ),
+    "same-net-thermocouples": (
+        "two-pin-thermocouples/same-net-thermocouples.kicad_sch",
+        "component.two_pin_thermocouple_same_net",
+        {
+            "TC1: both thermocouple leads share TC1_TIED",
+            "TC2: both thermocouple leads share TC2_TIED",
+            "TC3: both thermocouple leads share TC3_TIED",
+        },
+    ),
+    "distinct-nets-thermocouples": (
+        "two-pin-thermocouples/distinct-nets-thermocouples.kicad_sch",
+        "component.two_pin_thermocouple_same_net",
+        set(),
+    ),
     "same-net-crystal": (
         "two-pin-crystals/same-net-crystal.kicad_sch",
         "component.two_pin_crystal_same_net",
@@ -228,6 +242,7 @@ TWO_PIN_COMPONENT_CANDIDATE_KINDS: dict[str, frozenset[str]] = {
     "component.two_pin_battery_same_net": frozenset({"battery"}),
     "component.two_pin_motor_same_net": frozenset({"motor"}),
     "component.two_pin_solar_cell_same_net": frozenset({"solar_cell"}),
+    "component.two_pin_thermocouple_same_net": frozenset({"thermocouple"}),
     "component.two_pin_crystal_same_net": frozenset({"crystal"}),
     "component.two_pin_fuse_same_net": frozenset({"fuse", "polyfuse"}),
     "component.two_pin_ferrite_same_net": frozenset({"ferrite_bead"}),

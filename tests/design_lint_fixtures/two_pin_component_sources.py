@@ -31,6 +31,8 @@ TWO_PIN_COMPONENT_SOURCE_HASHES = {
     "two-pin-motors/distinct-nets-motor.kicad_sch": "6cfa5b1a856b1a04fabd3c274072b5b03f00f71ce7a218ea5542c344302e172e",
     "two-pin-solar-cells/same-net-solar-cell.kicad_sch": "9bfc6cbd16fe471fd9edc869c5ccab715f97a7067fdf15680e5123b765eb57e6",
     "two-pin-solar-cells/distinct-nets-solar-cell.kicad_sch": "df1aac38d4e3f352fe4d1358e0a786ce144b921552eedae3e2d380aa165bdb9d",
+    "two-pin-thermocouples/same-net-thermocouples.kicad_sch": "a4710304e1d5148e74e4983ac3f2431cf0883051b1ad769fe525a6fcae1a2539",
+    "two-pin-thermocouples/distinct-nets-thermocouples.kicad_sch": "beb209b5cfa1184de5cbcbe5ae4f951d36c59fc83570512258d5b834ca4791d6",
     "two-pin-crystals/same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
     "two-pin-crystals/distinct-nets-crystal.kicad_sch": "4c4fa54184ba74eb8194016a166e068c1a41646b4e59686d187395d981c4bc13",
     "two-pin-fuses/same-net-fuse.kicad_sch": "b69792902442ef89c103f5a4b783b73633b88d9519ab01c5b77df9b654df62ca",

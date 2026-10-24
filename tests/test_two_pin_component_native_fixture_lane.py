@@ -3,29 +3,19 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted import (
-    TWO_PIN_COMPONENT_FIXTURE_CASES,
-    HostedLog,
-    two_pin_component_fixture_lane,
-)
+from kicad_tooling.ci_hosted import TWO_PIN_COMPONENT_FIXTURE_CASES
 from kicad_tooling.ci_hosted_two_pin_components import (
     TWO_PIN_COMPONENT_CANDIDATE_KINDS,
     two_pin_component_fixture_cases_for_rules,
 )
-from kicad_tooling.hwrepo.electrical import selected_config
-from kicad_tooling.hwrepo.models import DesignLintPolicy
+from tests.design_lint_fixtures.two_pin_component_native import run_native_two_pin_rule_fixture
 from tests.design_lint_fixtures.two_pin_component_sources import (
     TWO_PIN_COMPONENT_SOURCE_HASHES,
-)
-from tests.synthetic_design_lint_project import (
-    PINNED_NATIVE_KICAD_IMAGES,
-    synthetic_design_lint_project,
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
@@ -37,7 +27,7 @@ def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     case_sources = {filename for filename, _, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
     assert case_sources == set(_EXPECTED_SOURCE_HASHES)
-    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 40
+    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 42
     for filename, expected_digest in _EXPECTED_SOURCE_HASHES.items():
         source = (fixture_root / filename).resolve()
         assert source.is_relative_to(fixture_root.resolve())
@@ -205,73 +195,6 @@ def test_switch_native_fixture_scope_contains_only_switch_fault_and_control() ->
     assert any(not subjects for _, _, subjects in selected.values())
 
 
-def _run_native_rule_fixture(
-    tmp_path: Path,
-    *,
-    kicad_version: str,
-    rule_id: str,
-) -> dict[str, dict[str, str]]:
-    selected_cases = two_pin_component_fixture_cases_for_rules((rule_id,))
-    fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
-    for filename, _, _ in selected_cases.values():
-        source = fixture_root / filename
-        assert hashlib.sha256(source.read_bytes()).hexdigest() == _EXPECTED_SOURCE_HASHES[filename]
-
-    root, _ = synthetic_design_lint_project(
-        tmp_path,
-        DesignLintPolicy(),
-        kicad_version=kicad_version,
-        image=PINNED_NATIVE_KICAD_IMAGES[kicad_version],
-    )
-    config = selected_config(root, "controller")
-    assert config.kicad_version == kicad_version
-    assert config.image == PINNED_NATIVE_KICAD_IMAGES[kicad_version]
-
-    log = HostedLog(root, f"native-two-pin-component-{kicad_version}")
-    two_pin_component_fixture_lane(
-        root,
-        project="controller",
-        image=config.image,
-        log=log,
-        rule_ids=(rule_id,),
-    )
-    events = tuple(json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines())
-    results = {
-        item["stage"]: item
-        for item in events
-        if item.get("stage", "").startswith("two-pin-component-fixture/")
-    }
-    expected_cases = {
-        f"two-pin-component-fixture/{name}" for name in ("native-export", *selected_cases)
-    }
-    assert set(results) == expected_cases
-    native_export = results["two-pin-component-fixture/native-export"]
-    assert native_export["status"] == "PASS"
-    receipt = root / native_export["command_receipt"]
-    assert receipt.is_file()
-    argv = json.loads(receipt.read_text(encoding="utf-8"))["argv"]
-    assert config.image in argv
-    assert argv[argv.index("--network") + 1] == "none"
-    assert "--read-only" in argv
-    mounts = tuple(argv[index + 1] for index, argument in enumerate(argv[:-1]) if argument == "-v")
-    assert len(mounts) == 2
-    assert sum(mount.endswith(":/fixtures:ro") for mount in mounts) == 1
-    assert sum(mount.endswith(":/output:rw") for mount in mounts) == 1
-
-    for case, (filename, case_rule_id, expected_subjects) in selected_cases.items():
-        result = results[f"two-pin-component-fixture/{case}"]
-        assert result["status"] == "PASS"
-        assert result["component_rule"] == case_rule_id == rule_id
-        assert result["source_sha256"] == _EXPECTED_SOURCE_HASHES[filename]
-        expected_findings = ";".join(sorted(expected_subjects)) or "none"
-        assert result["component_findings"] == expected_findings
-        assert result["lint_status"] == ("REVIEW" if expected_subjects else "PASS")
-        assert result["repeatable"] == "true"
-        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
-
-    return results
-
-
 @pytest.mark.native_kicad
 @pytest.mark.slow
 @pytest.mark.skipif(
@@ -282,7 +205,7 @@ def _run_native_rule_fixture(
 def test_native_two_pin_passive_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_passive_same_net",
@@ -297,7 +220,7 @@ def test_native_two_pin_passive_same_net_fault_and_control(
 )
 @pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
 def test_native_two_pin_fuse_same_net_fault_and_control(tmp_path: Path, kicad_version: str) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_fuse_same_net",
@@ -314,7 +237,7 @@ def test_native_two_pin_fuse_same_net_fault_and_control(tmp_path: Path, kicad_ve
 def test_native_two_pin_ferrite_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_ferrite_same_net",
@@ -331,7 +254,7 @@ def test_native_two_pin_ferrite_same_net_fault_and_control(
 def test_native_two_pin_diode_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_diode_same_net",
@@ -347,7 +270,7 @@ def test_native_two_pin_diode_same_net_fault_and_control(
 )
 @pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
 def test_native_two_pin_led_same_net_fault_and_control(tmp_path: Path, kicad_version: str) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_led_same_net",
@@ -365,7 +288,7 @@ def test_native_two_pin_led_same_net_fault_and_control(tmp_path: Path, kicad_ver
 def test_native_two_pin_buzzer_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_buzzer_same_net",
@@ -383,7 +306,7 @@ def test_native_two_pin_buzzer_same_net_fault_and_control(
 def test_native_two_pin_speaker_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_speaker_same_net",
@@ -401,7 +324,7 @@ def test_native_two_pin_speaker_same_net_fault_and_control(
 def test_native_two_pin_battery_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_battery_same_net",
@@ -419,7 +342,7 @@ def test_native_two_pin_battery_same_net_fault_and_control(
 def test_native_two_pin_motor_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_motor_same_net",
@@ -437,7 +360,7 @@ def test_native_two_pin_motor_same_net_fault_and_control(
 def test_native_two_pin_solar_cell_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_solar_cell_same_net",
@@ -454,7 +377,7 @@ def test_native_two_pin_solar_cell_same_net_fault_and_control(
 def test_native_two_pin_crystal_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_crystal_same_net",
@@ -471,7 +394,7 @@ def test_native_two_pin_crystal_same_net_fault_and_control(
 def test_native_two_pin_switch_same_net_fault_and_control(
     tmp_path: Path, kicad_version: str
 ) -> None:
-    _run_native_rule_fixture(
+    run_native_two_pin_rule_fixture(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_switch_same_net",

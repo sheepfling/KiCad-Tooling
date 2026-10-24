@@ -42,18 +42,6 @@ import tests.test_power_paths as _tests_test_power_paths
 import tests.test_rc_filters as _tests_test_rc_filters
 import tests.test_regulator_feedback as _tests_test_regulator_feedback
 import tests.test_stm32_pin_map as _tests_test_stm32_pin_map
-import tests.test_two_pin_batteries as _tests_test_two_pin_batteries
-import tests.test_two_pin_buzzers as _tests_test_two_pin_buzzers
-import tests.test_two_pin_crystals as _tests_test_two_pin_crystals
-import tests.test_two_pin_diodes as _tests_test_two_pin_diodes
-import tests.test_two_pin_ferrites as _tests_test_two_pin_ferrites
-import tests.test_two_pin_fuses as _tests_test_two_pin_fuses
-import tests.test_two_pin_leds as _tests_test_two_pin_leds
-import tests.test_two_pin_motors as _tests_test_two_pin_motors
-import tests.test_two_pin_passives as _tests_test_two_pin_passives
-import tests.test_two_pin_solar_cells as _tests_test_two_pin_solar_cells
-import tests.test_two_pin_speakers as _tests_test_two_pin_speakers
-import tests.test_two_pin_switches as _tests_test_two_pin_switches
 import tests.test_usb_c_ports as _tests_test_usb_c_ports
 import tests.usb_data_path_support as _usb_data_path_support
 import tests.usb_peer_reference_support as _usb_peer_reference_support
@@ -75,6 +63,9 @@ from tests.design_lint_fixtures.catalog_reachability import (
     protocol_peer_candidate_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
+from tests.design_lint_fixtures.component_catalog_reachability import (
+    reachable_component_rule_ids,
+)
 from tests.design_lint_fixtures.connector_mapped_signal_sharing import (
     signal_sharing_coverage,
     signal_sharing_netlist,
@@ -379,42 +370,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         ),
     )
     emitted.update(item.rule_id for item in connector_distribution_result.findings)
-    passive_result = _tests_test_two_pin_passives.lint_report(
-        _tests_test_two_pin_passives.passive_netlist()
-    )
-    emitted.update(item.rule_id for item in passive_result.findings)
-    diode_result = _tests_test_two_pin_diodes.lint_report(
-        _tests_test_two_pin_diodes.diode_netlist()
-    )
-    emitted.update(item.rule_id for item in diode_result.findings)
-    led_result = _tests_test_two_pin_leds.lint_report(_tests_test_two_pin_leds.led_netlist())
-    emitted.update(item.rule_id for item in led_result.findings)
-    buzzer_result = _tests_test_two_pin_buzzers.lint_report(
-        _tests_test_two_pin_buzzers.buzzer_netlist()
-    )
-    emitted.update(item.rule_id for item in buzzer_result.findings)
-    speaker_result = _tests_test_two_pin_speakers.lint_report(
-        _tests_test_two_pin_speakers.speaker_netlist()
-    )
-    emitted.update(item.rule_id for item in speaker_result.findings)
-    battery_result = _tests_test_two_pin_batteries.lint_report(
-        _tests_test_two_pin_batteries.battery_netlist()
-    )
-    emitted.update(item.rule_id for item in battery_result.findings)
-    motor_result = _tests_test_two_pin_motors.lint_report(
-        _tests_test_two_pin_motors.motor_netlist()
-    )
-    emitted.update(item.rule_id for item in motor_result.findings)
-    solar_cell_result = _tests_test_two_pin_solar_cells.lint_report(
-        _tests_test_two_pin_solar_cells.solar_cell_netlist()
-    )
-    emitted.update(item.rule_id for item in solar_cell_result.findings)
-    crystal_result = _tests_test_two_pin_crystals.lint_report(
-        _tests_test_two_pin_crystals.crystal_netlist()
-    )
-    emitted.update(item.rule_id for item in crystal_result.findings)
-    fuse_result = _tests_test_two_pin_fuses.lint_report(_tests_test_two_pin_fuses.fuse_netlist())
-    emitted.update(item.rule_id for item in fuse_result.findings)
+    emitted.update(reachable_component_rule_ids())
     peer_power_output_result = _component_peer_pin_support.lint_report(
         _component_peer_pin_support.peer_power_output_netlist()
     )
@@ -433,13 +389,6 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _component_peer_pin_support.peer_bidirectional_netlist()
     )
     emitted.update(item.rule_id for item in peer_bidirectional_result.findings)
-    ferrite_result = _tests_test_two_pin_ferrites.lint_report(
-        _tests_test_two_pin_ferrites.ferrite_netlist()
-    )
-    emitted.update(item.rule_id for item in ferrite_result.findings)
-    emitted.update(
-        item.rule_id for item in candidates(_tests_test_two_pin_switches.switch_netlist())
-    )
     emitted.update(
         item.rule_id
         for item in candidates(_tests_design_lint_fixtures.generic_component_power_input_netlist())

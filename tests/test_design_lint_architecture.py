@@ -265,6 +265,22 @@ def test_two_pin_solar_cell_rule_has_a_focused_component_owner() -> None:
     assert _line_count(HWREPO / "two_pin_solar_cells.py") < IMPLEMENTATION_MAX_LINES
 
 
+def test_two_pin_thermocouple_rule_has_a_focused_component_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "component.two_pin_thermocouple_same_net"
+    )
+    owner = "kicad_tooling/hwrepo/two_pin_thermocouples.py#two_pin_thermocouple_same_net_candidates"
+    assert rule.theme == "components"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert (HWREPO / "two_pin_thermocouples.py").is_file()
+    assert _line_count(HWREPO / "two_pin_thermocouples.py") < IMPLEMENTATION_MAX_LINES
+
+
 def test_active_catalog_implementation_modules_stay_below_review_limit() -> None:
     catalog = json.loads((HWREPO / "design-lint-rules.json").read_text(encoding="utf-8"))
     implementation_paths = {
