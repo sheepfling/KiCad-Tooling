@@ -47,7 +47,14 @@ PYTEST_NATIVE_LINT_SUITES = {
     },
     "test_usb_c_cc_named_rail.py": {"interface_lint"},
     "test_design_lint_determinism_usb_c_cc_named_rail.py": {"interface_lint", "slow"},
+    "test_design_lint_determinism_usb_c_sbu_named_rail.py": {"interface_lint", "slow"},
     "test_usb_c_cc_named_rail_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
+    "test_usb_c_sbu_named_rail.py": {"interface_lint"},
+    "test_usb_c_sbu_named_rail_native_fixture_lane.py": {
         "interface_lint",
         "native_kicad",
         "slow",

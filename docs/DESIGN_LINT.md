@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 231 active rules.
+The catalog currently contains 232 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1221,6 +1221,30 @@ ordering, repair, and hash-seed cases are paired with digest-pinned KiCad
 KICAD_RUN_NATIVE_USB_C_CC_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_c_cc_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_signal_on_named_rail")'
+```
+
+### USB-C SBU pins assigned directly to named rails
+
+`bus.usb_c_sbu_signal_on_named_rail` reviews a fitted U/IC's unique SBU1/SBU2
+function pair when an assigned pair pin's net label is supply-like or
+return-like. It requires both pins in the complete native inventory and skips
+generic SBU names, connectors, duplicate roles, DNP parts, open or ambiguous
+assignments, and incomplete inventories. The default is `review`; direct rail
+assignments remain project decisions. A function and label do not establish
+controller identity, alternate-mode use, electrical potential, or a defect.
+The check does not trace passive paths or establish PCB or physical continuity.
+Synthetic fault/control, alias, policy, boundary, ordering, repair, and
+hash-seed tests are paired with digest-pinned KiCad 10.0.0 and 10.0.5 native
+fault/control exports. See the
+[fixture notes](../tests/fixtures/design_lint/usb-c-sbu-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_sbu_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_sbu_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_sbu_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_signal_on_named_rail")'
 ```
 
 ### I2C signal pin/name role review

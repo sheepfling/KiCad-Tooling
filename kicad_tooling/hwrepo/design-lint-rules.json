@@ -5517,6 +5517,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_c_cc_named_rail.py#usb_c_cc_signal_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.usb_c_sbu_signal_on_named_rail",
+      "title": "USB-C SBU pin is assigned directly to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded SBU1/SBU2 functions, complete component pin inventories, fitted state, and exact net assignments",
+      "predicate": "For each fitted U/IC with exactly one native SBU1 and one SBU2 function, require both pins in the component's complete native inventory. For each pair pin with exactly one native net assignment, emit REVIEW when that label matches the bounded supply-like or return-like vocabulary.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "An SBU1/SBU2 function and rail-like net label are review clues; they do not establish USB-C controller identity, alternate-mode use, electrical potential, required connectivity, or a defect. Direct assignments may be intentional for a particular part or project.",
+        "Recognition is bounded to exactly one SBU1 and one SBU2 function on a fitted U/IC reference, both pins in the complete native inventory, and one unambiguous assignment for the examined pin. Generic SBU, indexed forms such as SBU3, connector-only references, DNP parts, duplicate or incomplete pairs, open or multiply assigned examined pins, and incomplete inventories are skipped.",
+        "The schematic netlist does not trace through resistors or other passive components and does not establish alternate-mode behavior, analog characteristics, PCB copper continuity, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_c_sbu_named_rail.test_unique_usb_c_sbu_function_on_named_rail_requests_review",
+        "tests.test_usb_c_sbu_named_rail.test_sbu_aliases_are_bounded_and_share_one_parser",
+        "tests.test_usb_c_sbu_named_rail_native_fixture_lane.test_native_usb_c_sbu_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_c_sbu_named_rail.test_neutral_labels_and_unrecognized_functions_are_quiet",
+        "tests.test_usb_c_sbu_named_rail.test_dnp_open_ambiguous_duplicate_connector_and_incomplete_cases_are_skipped",
+        "tests.test_usb_c_sbu_named_rail_native_fixture_lane.test_native_usb_c_sbu_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_c_sbu_named_rail.test_mapping_order_is_stable_and_corrected_assignments_clear_review",
+        "tests.test_design_lint_determinism_usb_c_sbu_named_rail.test_usb_c_sbu_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_c_sbu_named_rail.py#usb_c_sbu_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#usb_c_sbu_role",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_c_sbu_named_rail.py#usb_c_sbu_signal_on_named_rail_candidates"
+    },
+    {
       "rule_id": "bus.can_unconnected_direction_pin",
       "title": "Recognized CAN/FDCAN direction pin is open on a partially connected channel",
       "status": "active",

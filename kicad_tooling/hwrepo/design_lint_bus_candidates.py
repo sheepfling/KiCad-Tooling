@@ -56,6 +56,7 @@ from .spi_shared_chip_select import spi_chip_select_inputs_share_net_candidates
 from .spi_shared_data_outputs import spi_data_outputs_share_net_candidates
 from .spi_signal_named_rail import spi_signal_on_named_rail_candidates
 from .usb_c_cc_named_rail import usb_c_cc_signal_on_named_rail_candidates
+from .usb_c_sbu_named_rail import usb_c_sbu_signal_on_named_rail_candidates
 
 
 def bus_candidates(
@@ -113,6 +114,7 @@ def bus_candidates(
         *usb_data_polarity_label_candidates(observed),
         *usb_signal_on_named_rail_candidates(observed),
         *usb_c_cc_signal_on_named_rail_candidates(observed),
+        *usb_c_sbu_signal_on_named_rail_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
         *i2c_address_candidates(i2c_address_coverage),
         *i2c_responder_coverage_candidates(observed, i2c_address_map),
