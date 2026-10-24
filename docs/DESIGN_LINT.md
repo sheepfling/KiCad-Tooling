@@ -23,6 +23,23 @@ for its explicit no-connect fault and connected control.
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_unconnected_data_pin")'
 ```
 
+## Review an open I2C pin beside its assigned pair member
+
+`bus.i2c_unconnected_pin` reports a recognized SDA or SCL pin only when the
+same fitted component has exactly one recognized pin for each role, and the
+other pin has exactly one net assignment. An entirely open pair is skipped.
+The rule defaults to `off` because function names do not prove that the bus is
+used or that both directions are required; projects can enable `review`,
+promote it to `block`, disable it, or add an exact fingerprint ignore. The
+check does not establish pull-up adequacy, endpoint intent, PCB routing, or
+external continuity. See the
+[source-hashed native fault and control](../tests/fixtures/design_lint/i2c-unconnected-pin-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i2c_unconnected_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_unconnected_pin")'
+```
+
 ## Review open UART/USART function pins on partially connected channels
 
 `bus.serial_unconnected_pin` recognizes bounded UART/USART TX/RX pin functions when a pin has no
