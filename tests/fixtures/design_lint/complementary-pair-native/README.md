@@ -16,14 +16,16 @@ separately.
   The USB signal pins, ground contact, and Ethernet TDP/TDN/RDP/RDN pins have
   unique assignments; the heuristic should be quiet.
 - `lane-fault.kicad_sch` has SHA-256
-  `03b826311ce60c87b6fbff6af58ea26345f688d0cca132b546455dd1e660dc76`.
+  `9e3b9f4f6d39956d6a803e8a8e9df8ad1006adedaefe6654cd7728367f2a48eb`.
   The USB-C `SSTX1+` and `SSTX1-` pins share one net; the three remaining
-  direction/lane pairs have distinct assignments. One localized review is
-  expected for the TX1 pair.
+  direction/lane pairs have distinct assignments. Its ninth contact is a
+  connected GND reference so unrelated return checks stay quiet. One localized
+  review is expected for the TX1 pair.
 - `lane-control.kicad_sch` has SHA-256
-  `395b30796caaae0ec8c708d1fdfab513b22c7ee6f570d7c4affe084f9bf322d7`.
+  `9e14b4a936dbfc2907ec031f10dccc4ed32a385134abd568144ea7104a66a853`.
   All four indexed TX/RX lane pairs use separate positive and negative nets;
-  the heuristic should be quiet.
+  its ninth contact is a connected GND reference, and neutral net names keep
+  unrelated named-pair review quiet.
 
 The digest-pinned native lane exports each schematic twice using exact KiCad
 10.0.0 and 10.0.5 images selected from the public reference template. It checks

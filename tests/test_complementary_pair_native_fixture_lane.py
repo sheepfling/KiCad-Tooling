@@ -79,6 +79,7 @@ def test_complementary_pair_fault_and_control_export_repeatably(
         assert "J1.2=StdA_SSTX1-" in lane_fault["pin_functions"]
         assert lane_control["lint_status"] == "PASS"
         assert lane_control["pair_findings"] == "none"
+        assert "J1.9=GND" in lane_control["pin_functions"]
         for result in (fault, control, lane_fault, lane_control):
             assert result["kicad_version"] == version
             assert result["repeatable"] == "true"

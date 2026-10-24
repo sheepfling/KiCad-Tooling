@@ -53,8 +53,8 @@ def complementary_pair_fixture_lane(
     expected_source_hashes = {
         "fault": "6147ed074f97e061213d048174c1820d76dc523e682c96e6c58bfb6231e4a49d",
         "control": "ce1c57f200b9f042fe4174f6b1b4b327b717c3e93623e50f262bf2352b8e6089",
-        "lane-fault": "03b826311ce60c87b6fbff6af58ea26345f688d0cca132b546455dd1e660dc76",
-        "lane-control": "395b30796caaae0ec8c708d1fdfab513b22c7ee6f570d7c4affe084f9bf322d7",
+        "lane-fault": "9e3b9f4f6d39956d6a803e8a8e9df8ad1006adedaefe6654cd7728367f2a48eb",
+        "lane-control": "9e14b4a936dbfc2907ec031f10dccc4ed32a385134abd568144ea7104a66a853",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Complementary-pair fixture sources differ from the reviewed hashes")
@@ -163,6 +163,7 @@ def complementary_pair_fixture_lane(
                     "StdA_SSRX1-",
                     "StdA_SSRX2+",
                     "StdA_SSRX2-",
+                    "GND",
                 ),
                 1,
             )
@@ -179,6 +180,7 @@ def complementary_pair_fixture_lane(
                     "StdA_SSRX1-",
                     "StdA_SSRX2+",
                     "StdA_SSRX2-",
+                    "GND",
                 ),
                 1,
             )
@@ -262,8 +264,8 @@ def complementary_pair_fixture_lane(
                 lane_finding.subject != "J1: USB SuperSpeed TX lane 1 pair"
                 or lane_finding.evidence["positive_pins"] != ("J1.1",)
                 or lane_finding.evidence["negative_pins"] != ("J1.2",)
-                or lane_finding.evidence["positive_nets"] != ("USB_TX1_SHARED",)
-                or lane_finding.evidence["negative_nets"] != ("USB_TX1_SHARED",)
+                or lane_finding.evidence["positive_nets"] != ("LANE_SHARED",)
+                or lane_finding.evidence["negative_nets"] != ("LANE_SHARED",)
             ):
                 raise ValueError("Native USB-C lane fault did not localize its collapsed pair")
         log.event(
