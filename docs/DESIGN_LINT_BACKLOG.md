@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 225 rules are implemented with synthetic regression coverage.
+The following 226 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 225 active rules.
+The catalog currently contains 226 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -578,6 +578,7 @@ skipped under prerelease policy.
 - `bus.usb_data_path_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
+- `bus.usb_signal_on_named_rail`
 - `bus.can_unconnected_direction_pin`
 - `bus.can_unconnected_line`
 - `bus.can_missing_termination`
@@ -769,6 +770,12 @@ and optional ecosystem adapters are `P3`.
   PHY IC pins assigned directly to a named supply or return. Synthetic
   fault/control, policy, ordering, hash-seed, catalog, selector, and
   digest-pinned KiCad export checks are registered.
+- **LINT-244 USB data pin assigned to a named rail:** The default-review
+  heuristic applies bounded USB 2.0 D+/D- and SuperSpeed TX/RX function
+  aliases to fitted IC pins with one assignment to a named supply or return.
+  Synthetic fault/control cases include numbered USB2 ports and SuperSpeed
+  sides; digest-pinned native fault/control exports exercise USB2 on KiCad
+  10.0.0 and 10.0.5.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3165,7 +3172,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 224 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 226 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3343,7 +3350,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 237-report inventory gate. Fault/control
+  selectors and retains the complete 239-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -5227,6 +5234,43 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_ethernet_signal_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_signal_on_named_rail")'
+  ```
+
+#### LINT-244 — Review USB data pins assigned to named rails
+
+- **Status:** Implemented as default-review `bus.usb_signal_on_named_rail`.
+  Project policy can promote it to `block`, turn it `off`, or ignore one exact
+  finding.
+- **Gap:** Existing USB polarity and path checks do not review a fitted USB2 or
+  SuperSpeed IC data pin assigned straight to a named supply or return net.
+- **Predicate:** Reuse the bounded `usb_data_function_identity` and
+  `usb_superspeed_function_identity` aliases and shared complete, unambiguous
+  named-rail pin evidence. Require a fitted U/IC reference, one native function
+  entry, a complete pin-number inventory, and exactly one assigned net whose
+  label has a recognized supply-like or return-like role.
+- **Boundary:** Function and label names are review clues. They do not prove
+  electrical potential, USB topology, device mode, signal integrity, required
+  connectivity, routed copper, or physical continuity. Intentional direct rail
+  assignments remain project decisions. DNP, connector, open, ambiguous,
+  duplicate-function, and incomplete-inventory pins are skipped. Native
+  fixtures exercise unnumbered USB2 D+/D-; numbered-port and SuperSpeed aliases
+  have synthetic controls.
+- **Fixtures and quality gate:** USB2 positive and negative sides, numbered
+  ports, SuperSpeed TX/RX and polarity aliases, neutral labels, unsupported
+  functions, DNP/open/ambiguous/duplicate/connector/incomplete evidence,
+  policy, stable ordering, repair, hash-seed determinism, catalog/selector
+  reachability, and source-hashed fault/control netlist and ERC exports on
+  digest-pinned KiCad 10.0.0 and 10.0.5. The owner has an independent
+  interface-theme module and architecture size check.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_signal_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_usb_signal_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

@@ -84,6 +84,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="ethernet-signal-named-rail",
     ),
     pytest.param(
+        "bus.usb_signal_on_named_rail",
+        "KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES",
+        "tests.test_usb_signal_named_rail_native_fixture_lane."
+        "test_native_usb_signal_named_rail_fault_and_control_repeat",
+        id="usb-signal-named-rail",
+    ),
+    pytest.param(
         "bus.spi_unconnected_data_pin",
         "KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES",
         "tests.test_spi_unconnected_data_pins_native_fixture_lane."

@@ -84,6 +84,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),
         (
+            "bus.usb_signal_on_named_rail",
+            "KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES",
+        ),
+        (
             "bus.usb_peer_data_pair_crossed",
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),

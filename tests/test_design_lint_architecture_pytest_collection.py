@@ -266,6 +266,10 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
             "tests/test_ethernet_signal_named_rail.py::test_neutral_labels_and_unsupported_functions_are_quiet",
         ),
         (
+            "bus.usb_signal_on_named_rail",
+            "tests/test_usb_signal_named_rail.py::test_neutral_net_labels_do_not_request_review",
+        ),
+        (
             "bus.serial_tx_rx_label_mismatch",
             "tests/test_serial_tx_rx_label_mismatch.py::test_opposite_uart_labels_are_reviewed_while_pins_remain_separate",
         ),

@@ -5429,6 +5429,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_data_crossing.py#usb_peer_data_pair_crossing_candidates"
     },
     {
+      "rule_id": "bus.usb_signal_on_named_rail",
+      "title": "USB data pins assigned to named rails",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted IC pin with a bounded USB 2.0 D+/D- or USB SuperSpeed TX/RX function and exactly one native net assignment, emit a REVIEW candidate when the net label is recognized as supply-like or return-like.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Recognition is limited to USB 2.0 and SuperSpeed pin aliases accepted by usb_data_function_identity and usb_superspeed_function_identity, plus bounded supply/return labels accepted by named_rail_role_clue. Other names remain unclassified.",
+        "Function and label names are review clues, not a required USB connection or defect verdict. Intentional direct rail assignments remain project decisions; names do not establish electrical potential, device mode, signal integrity, USB topology, routed copper, or physical continuity.",
+        "DNP, connector, open, multiply assigned, duplicate-function, and incomplete-inventory pins are skipped. The exact-native fault/control lane exercises unnumbered USB 2.0 D+/D- aliases; numbered-port and SuperSpeed aliases have synthetic controls."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_signal_named_rail.test_supported_usb_data_functions_on_named_rails_request_review",
+        "tests.test_usb_signal_named_rail_native_fixture_lane.test_native_usb_signal_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_signal_named_rail.test_power_control_and_unrecognized_functions_are_quiet",
+        "tests.test_usb_signal_named_rail.test_neutral_net_labels_do_not_request_review",
+        "tests.test_usb_signal_named_rail.test_dnp_open_ambiguous_duplicate_connector_and_incomplete_cases_are_skipped",
+        "tests.test_usb_signal_named_rail_native_fixture_lane.test_native_usb_signal_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_signal_named_rail.test_assignment_order_is_stable_and_neutral_repair_clears_review",
+        "tests.test_design_lint_determinism_usb_signal_named_rail.test_usb_signal_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/bus_usb_signal_named_rail.py#usb_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/bus_usb_signal_named_rail.py#_usb_signal_identity",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_superspeed_function_identity",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/bus_usb_signal_named_rail.py#usb_signal_on_named_rail_candidates"
+    },
+    {
       "rule_id": "bus.can_unconnected_direction_pin",
       "title": "Recognized CAN/FDCAN direction pin is open on a partially connected channel",
       "status": "active",

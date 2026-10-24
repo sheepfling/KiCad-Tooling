@@ -8,6 +8,7 @@ from .bus_ethernet_pair_labels import (
 )
 from .bus_ethernet_signal_named_rail import ethernet_signal_on_named_rail_candidates
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
+from .bus_usb_signal_named_rail import usb_signal_on_named_rail_candidates
 from .can_peer_reference_scan import CanPeerReferenceScan
 from .design_lint_can_candidates import can_candidates
 from .design_lint_i2c_candidates import (
@@ -105,6 +106,7 @@ def bus_candidates(
         *ethernet_signal_on_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),
+        *usb_signal_on_named_rail_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),
         *i2c_address_candidates(i2c_address_coverage),
         *i2c_responder_coverage_candidates(observed, i2c_address_map),

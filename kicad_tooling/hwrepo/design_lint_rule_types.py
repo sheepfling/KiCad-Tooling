@@ -179,6 +179,7 @@ DesignLintRuleId = Literal[
     "bus.complementary_pair_assignment",
     "bus.usb_data_polarity_label_mismatch",
     "bus.usb_peer_data_pair_crossed",
+    "bus.usb_signal_on_named_rail",
     "mcu.stm32_cubemx_pin_map",
     "signal.named_pair_without_reviewed_requirement",
     "protection.unreviewed_interface_pin",

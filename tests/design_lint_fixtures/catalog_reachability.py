@@ -64,6 +64,7 @@ from tests.design_lint_fixtures.spi_shared_chip_select import spi_shared_chip_se
 from tests.design_lint_fixtures.spi_shared_data_outputs import spi_shared_data_output_netlist
 from tests.design_lint_fixtures.spi_signal_named_rail import spi_signal_on_named_rail_netlist
 from tests.design_lint_fixtures.usb_data_pair_crossing import usb_data_pair_crossing_netlist
+from tests.design_lint_fixtures.usb_signal_named_rail import usb_signal_on_named_rail_netlist
 from tests.serial_participant_support import (
     same_net_serial_netlist,
     serial_tx_output_netlist,
@@ -317,6 +318,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         complementary_usb_netlist(negative_net=None),
         complementary_usb_netlist(),
         complementary_usb_netlist(positive_net="USB_DM", negative_net="USB_DP"),
+        usb_signal_on_named_rail_netlist(),
         usb_data_pair_crossing_netlist(),
     )
     return {item.rule_id for source in cases for item in candidates(source)}
