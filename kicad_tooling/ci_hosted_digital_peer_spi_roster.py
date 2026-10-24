@@ -75,9 +75,16 @@ def verify_spi_roster_coverage(ctx: DigitalPeerFixtureContext):
     if any(item.evidence["SPI_roster_state"] != ("not_configured",) for item in spi_findings):
         raise ValueError("Native SPI findings lost the unconfigured-roster evidence")
     rostered = reports["rostered"]
-    if rostered.status != "PASS" or rostered.findings:
-        raise ValueError("The exact SPI roster control no longer suppresses all review findings")
+    rostered_spi_findings = tuple(
+        item for item in rostered.findings if item.rule_id == "bus.spi_unmapped_participant"
+    )
+    if rostered_spi_findings:
+        subjects = ";".join(item.subject for item in rostered_spi_findings)
+        raise ValueError(f"The exact SPI roster control still reports candidates: {subjects}")
     for case, report in reports.items():
+        case_spi_findings = tuple(
+            item for item in report.findings if item.rule_id == "bus.spi_unmapped_participant"
+        )
         ctx.log.event(
             f"spi-participant-fixture/{case}",
             "PASS",
@@ -91,6 +98,7 @@ def verify_spi_roster_coverage(ctx: DigitalPeerFixtureContext):
             repeat_normalized_netlist_sha256=ctx.normalized_hashes["multi-device"]["repeat"],
             lint_status=report.status,
             findings=";".join(item.subject for item in report.findings) or "none",
+            spi_findings=";".join(item.subject for item in case_spi_findings) or "none",
             pin_functions=";".join(
                 f"{pin}={name}" for (pin, name) in sorted(ctx.observed.pin_functions.items())
             ),

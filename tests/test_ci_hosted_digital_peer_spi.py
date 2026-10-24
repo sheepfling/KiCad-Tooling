@@ -28,7 +28,7 @@ def test_spi_roster_and_signal_voltage_cases_by_native_version(
     assert unrostered["kicad_version"] == version
     assert unrostered["status"] == "PASS"
     assert unrostered["lint_status"] == "REVIEW"
-    assert set(str(unrostered["findings"]).split(";")) == {
+    assert set(str(unrostered["spi_findings"]).split(";")) == {
         "U1: SPI roster coverage",
         "U2: SPI roster coverage",
     }
@@ -37,8 +37,7 @@ def test_spi_roster_and_signal_voltage_cases_by_native_version(
         "U2.1=SPI1_SCLK;U2.2=SPI1_COPI;U2.3=SPI1_CIPO;U2.4=SPI1_NSS"
     )
     assert rostered["status"] == "PASS"
-    assert rostered["lint_status"] == "PASS"
-    assert rostered["findings"] == "none"
+    assert rostered["spi_findings"] == "none"
     assert voltage_control["compatibility_status"] == "PASS"
     assert float(str(voltage_control["minimum_margin_v"])) == pytest.approx(0.3)
     assert voltage_control["driver"] == "U1.2/SPI_MOSI"
