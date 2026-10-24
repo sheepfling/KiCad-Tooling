@@ -2242,6 +2242,14 @@ is not a reason by itself to expand its scope or change its default policy.
   10.0.5: the four split names and all eight pin memberships were retained on
   repeated exports, the fault produced `net.numbered_returns`, and the common
   control passed without findings.
+  The compact protocol-prefix allowlist now also groups `CAN1_GND`/
+  `CAN2_GND`, `I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`, alongside the
+  existing USB/UART forms. Synthetic controls cover one common net per family
+  and keep unknown prefixes such as `CPU1_GND`/`CPU2_GND` outside the
+  predicate. The source-hash-pinned `ret-numbered-fault.kicad_sch` fixture now
+  adds exact native pin evidence for the CAN, I2C, and SPI groups to the
+  existing RET cases; a common `GND` control remains in that fixture. This is
+  a review clue about similarly named domains, not a requirement to join them.
   Tagged hosted acceptance for `v0.5.0rc147` (commit `43dfe95`, GitHub Actions
   run `38243428425`) passed with the `net.numbered_returns` pytest scope and
   `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. At that point the rule's native test

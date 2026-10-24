@@ -15,9 +15,7 @@ _INDEX_BEFORE_RETURN = re.compile(
     re.IGNORECASE,
 )
 _RETURN_TOKEN = re.compile(rf"(?<![A-Z0-9])(?:{_RETURN_WORDS})(?![A-Z0-9])", re.IGNORECASE)
-_COMPACT_PROTOCOL_STEMS = frozenset(
-    {"USB", "UART", "SERIAL", "PORT", "COM", "CAN", "I2C", "SPI"}
-)
+_COMPACT_PROTOCOL_STEMS = frozenset({"USB", "UART", "SERIAL", "PORT", "COM", "CAN", "I2C", "SPI"})
 
 
 def is_return_like_net_name(name: str) -> bool:

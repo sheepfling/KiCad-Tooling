@@ -280,11 +280,7 @@ def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
                 },
                 "pin_functions": {
                     **neutral.pin_functions,
-                    **{
-                        f"J{reference}.{pin}": "GND"
-                        for reference in range(1, 5)
-                        for pin in (1, 2)
-                    },
+                    **{f"J{reference}.{pin}": "GND" for reference in range(1, 5) for pin in (1, 2)},
                 },
             }
         ),
