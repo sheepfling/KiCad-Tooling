@@ -5,11 +5,11 @@ These synthetic KiCad schematics exercise the
 spellings and Ethernet PHY pin-function aliases.
 
 - `fault.kicad_sch` has SHA-256
-  `ec0058d7bbb339b10c93970485e4c5645512f569db64d8982592d7ad34495d6a`.
+  `6147ed074f97e061213d048174c1820d76dc523e682c96e6c58bfb6231e4a49d`.
   The USB `StdA_SSRX-` and Ethernet `TDN` pins are open and should produce
   localized review findings. The other pair pins have distinct assignments.
 - `control.kicad_sch` has SHA-256
-  `2f327f534795b4d991c0b298c3401a627393d17a9744051d77b11b0a48b9b792`.
+  `ce1c57f200b9f042fe4174f6b1b4b327b717c3e93623e50f262bf2352b8e6089`.
   The USB signal pins, ground contact, and Ethernet TDP/TDN/RDP/RDN pins have
   unique assignments; the heuristic should be quiet.
 

@@ -46,8 +46,8 @@ def complementary_pair_fixture_lane(
     cases = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
     source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}
     expected_source_hashes = {
-        "fault": "ec0058d7bbb339b10c93970485e4c5645512f569db64d8982592d7ad34495d6a",
-        "control": "2f327f534795b4d991c0b298c3401a627393d17a9744051d77b11b0a48b9b792",
+        "fault": "6147ed074f97e061213d048174c1820d76dc523e682c96e6c58bfb6231e4a49d",
+        "control": "ce1c57f200b9f042fe4174f6b1b4b327b717c3e93623e50f262bf2352b8e6089",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Complementary-pair fixture sources differ from the reviewed hashes")
