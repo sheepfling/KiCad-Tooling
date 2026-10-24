@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 226 active rules.
+The catalog currently contains 227 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -922,6 +922,25 @@ are Tooling-authored; their source hashes and native-lane limits are in the
 KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_signal_on_named_rail")'
+```
+
+### Ethernet MDC/MDIO pins assigned directly to named rails
+
+`bus.ethernet_management_signal_on_named_rail` reviews fitted IC pins with
+exact MDC or MDIO functions when their sole assigned net has a recognized
+supply-like or return-like name. The default is `review`: an unused management
+pin or intentional strap may be valid. The heuristic does not establish pinout
+intent, electrical potential, routing, or physical continuity. Its synthetic
+fault/control schematics are listed in the
+[fixture record](../tests/fixtures/design_lint/ethernet-management-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_management_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_management_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_signal_on_named_rail")'
 ```
 
 ### CAN TX/RX pin and net-label direction review

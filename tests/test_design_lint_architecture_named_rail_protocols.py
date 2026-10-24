@@ -36,6 +36,10 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
             "bus_ethernet_signal_named_rail.py",
             "kicad_tooling/hwrepo/bus_ethernet_signal_named_rail.py#ethernet_signal_on_named_rail_candidates",
         ),
+        "bus.ethernet_management_signal_on_named_rail": (
+            "bus_ethernet_management_named_rail.py",
+            "kicad_tooling/hwrepo/bus_ethernet_management_named_rail.py#ethernet_management_signal_on_named_rail_candidates",
+        ),
         "bus.usb_signal_on_named_rail": (
             "bus_usb_signal_named_rail.py",
             "kicad_tooling/hwrepo/bus_usb_signal_named_rail.py#usb_signal_on_named_rail_candidates",

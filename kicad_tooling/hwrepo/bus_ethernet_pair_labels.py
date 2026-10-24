@@ -5,6 +5,7 @@ from __future__ import annotations
 from .bus_signal_pairs import (
     complementary_pin_function_key,
     ethernet_data_pair_function_role,
+    ethernet_management_function_role,
 )
 from .design_lint_types import Candidate
 from .models import NetlistContract
@@ -115,10 +116,6 @@ def ethernet_data_label_mismatch_candidates(
     return tuple(findings)
 
 
-def _ethernet_management_pin_role(function: str) -> str | None:
-    return {"mdc": "clock", "mdio": "data"}.get(complementary_pin_function_key(function))
-
-
 def _ethernet_management_net_label_role(net: str) -> str | None:
     key = _ethernet_net_label_key(net, _ETHERNET_MANAGEMENT_NET_LABEL_PREFIXES)
     return {"mdc": "clock", "mdio": "data"}.get(key)
@@ -138,7 +135,7 @@ def ethernet_management_label_mismatch_candidates(
     roles = {
         pin.casefold(): (pin, function, role)
         for pin, function in observed.pin_functions.items()
-        if (role := _ethernet_management_pin_role(function)) is not None
+        if (role := ethernet_management_function_role(function)) is not None
     }
     dnp_references = {reference.casefold() for reference in observed.dnp_components}
     findings: list[Candidate] = []

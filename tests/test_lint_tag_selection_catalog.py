@@ -128,6 +128,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES",
         ),
         (
+            "bus.ethernet_management_signal_on_named_rail",
+            "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES",
+        ),
+        (
             "bus.ethernet_management_label_mismatch",
             "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES",
         ),

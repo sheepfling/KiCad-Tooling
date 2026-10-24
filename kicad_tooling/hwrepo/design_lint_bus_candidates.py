@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from .bus_ethernet_management_named_rail import (
+    ethernet_management_signal_on_named_rail_candidates,
+)
 from .bus_ethernet_pair_labels import (
     ethernet_data_label_mismatch_candidates,
     ethernet_management_label_mismatch_candidates,
@@ -103,6 +106,7 @@ def bus_candidates(
         *rs485_candidates(observed, rs485_peer_reference_scan, component_peer_findings),
         *ethernet_data_label_mismatch_candidates(observed),
         *ethernet_management_label_mismatch_candidates(observed),
+        *ethernet_management_signal_on_named_rail_candidates(observed),
         *ethernet_signal_on_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),

@@ -5820,10 +5820,53 @@
         "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates",
         "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#_ethernet_management_net_label_role",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#complementary_pin_function_key",
-        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates"
+    },
+    {
+      "rule_id": "bus.ethernet_management_signal_on_named_rail",
+      "title": "Ethernet MDC/MDIO pins assigned to named rails",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted IC pin with an exact MDC or MDIO function and one unique assignment to a supply-like or return-like named net, emit one REVIEW candidate asking whether the direct rail assignment is intentional.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Recognition is limited to exact MDC/MDIO function names and the bounded supply/return labels recognized by named_rail_role_clue. Other management aliases, generic signal names, connector pins, and vendor-specific names remain unclassified.",
+        "This is a name-based review clue, not a project-authored pinout requirement or defect verdict. Unused management pins and intentional direct rail straps remain project-specific decisions.",
+        "DNP, open, multiply assigned, duplicate metadata, and inventory-incomplete pins are skipped. The rule does not establish electrical potential, endpoint configuration, signal integrity, routed copper, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_ethernet_management_signal_named_rail.test_management_pin_on_named_rail_requests_review",
+        "tests.test_ethernet_management_signal_named_rail_native_fixture_lane.test_native_ethernet_management_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ethernet_management_signal_named_rail.test_neutral_rail_names_and_unrecognized_functions_are_quiet",
+        "tests.test_ethernet_management_signal_named_rail.test_dnp_open_ambiguous_duplicate_and_connector_pins_are_skipped",
+        "tests.test_ethernet_management_signal_named_rail_native_fixture_lane.test_native_ethernet_management_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ethernet_management_signal_named_rail.test_mapping_order_is_stable_and_repaired_assignment_clears_review",
+        "tests.test_design_lint_determinism_ethernet_management_named_rail.test_ethernet_management_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/bus_ethernet_management_named_rail.py#ethernet_management_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_management_named_rail.py#ethernet_management_signal_on_named_rail_candidates"
     },
     {
       "rule_id": "bus.ethernet_signal_on_named_rail",

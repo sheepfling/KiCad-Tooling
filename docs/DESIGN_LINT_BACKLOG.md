@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 226 rules are implemented with synthetic regression coverage.
+The following 227 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 226 active rules.
+The catalog currently contains 227 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -589,6 +589,7 @@ skipped under prerelease policy.
 - `bus.can_signal_on_named_rail`
 - `bus.ethernet_data_label_mismatch`
 - `bus.ethernet_management_label_mismatch`
+- `bus.ethernet_management_signal_on_named_rail`
 - `bus.ethernet_signal_on_named_rail`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
@@ -776,6 +777,11 @@ and optional ecosystem adapters are `P3`.
   Synthetic fault/control cases include numbered USB2 ports and SuperSpeed
   sides; digest-pinned native fault/control exports exercise USB2 on KiCad
   10.0.0 and 10.0.5.
+- **LINT-245 Ethernet management pin assigned to a named rail:** The default-
+  review heuristic checks exact MDC/MDIO functions against direct assignments
+  to a supply-like or return-like net label. It uses the shared management-pin
+  recognizer and named-rail evidence; unused management pins and intentional
+  straps remain project decisions.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3172,7 +3178,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 226 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 227 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -3350,7 +3356,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v86. The cross-process probe supports themed report
-  selectors and retains the complete 239-report inventory gate. Fault/control
+  selectors and retains the complete 271-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -5271,6 +5277,41 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_usb_signal_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_signal_on_named_rail")'
+  ```
+
+#### LINT-245 — Review Ethernet MDC/MDIO pins assigned to named rails
+
+- **Status:** Implemented as default-review
+  `bus.ethernet_management_signal_on_named_rail`. Project policy can promote
+  it to `block`, turn it `off`, or ignore an exact finding.
+- **Gap:** Ethernet management label checks catch crossed MDC/MDIO names, but
+  do not flag an exact management pin assigned directly to a supply-like or
+  return-like net label.
+- **Predicate:** Require a fitted U/IC reference, exact MDC or MDIO pin
+  function, complete native pin inventory, one unique function record, and
+  exactly one assigned net with a recognized supply-like or return-like name.
+  Use a theme-owned predicate and the shared named-rail evidence collector.
+- **Boundary:** The function and label are review clues. Unused management
+  pins and intentional straps remain project decisions; the check does not
+  establish voltage, required connectivity, endpoint configuration, signal
+  integrity, routed copper, or physical continuity. Open, DNP, ambiguous,
+  duplicate-metadata, connector, and incomplete-inventory cases stay quiet.
+- **Fixtures and quality gate:** MDC and MDIO supply/return examples, neutral
+  labels, unsupported aliases, DNP/open/ambiguous/duplicate/connector/incomplete
+  controls, project policy, exact ignore, stable ordering, repair, hash-seed
+  reports, catalog/selector reachability, and source-hashed native fault/control
+  exports on digest-pinned KiCad 10.0.0 and 10.0.5. The feature reuses the
+  Ethernet native export lane with its own source fixtures and architecture
+  owner check.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_management_signal_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_ethernet_management_signal_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 RULE_ID = "bus.ethernet_data_label_mismatch"
 MANAGEMENT_RULE_ID = "bus.ethernet_management_label_mismatch"
+MANAGEMENT_NAMED_RAIL_RULE_ID = "bus.ethernet_management_signal_on_named_rail"
 ETHERNET_LABEL_NATIVE_TOOLCHAINS = (
     (
         "10.0.0",
@@ -93,6 +94,20 @@ _FIXTURES: dict[str, _EthernetLabelFixture] = {
             "fault": {"U1.5": ("MDC", "ETH_MDIO"), "U1.6": ("MDIO", "ETH_MDC")},
         },
     ),
+    "management_named_rail": _EthernetLabelFixture(
+        directory="ethernet-management-named-rail",
+        rule_id=MANAGEMENT_NAMED_RAIL_RULE_ID,
+        stage_prefix="ethernet-management-named-rail-fixture",
+        source_hashes={
+            "control": "3ddd8d2919eade8a6bb8f7a8c059dafbe9b348aacbb5a6bb8398b0c62944d31b",
+            "fault": "6ab770da2bd563b08152d89a12f10f1eb872550233815e3f1b398c4e290fc86a",
+        },
+        expected_subjects=("U1.5: MDC on return-like net GND",),
+        expected_pins={
+            "control": {"U1.5": ("MDC", "ETH_MDC"), "U1.6": ("MDIO", "ETH_MDIO")},
+            "fault": {"U1.5": ("MDC", "GND"), "U1.6": ("MDIO", "ETH_MDIO")},
+        },
+    ),
     "named_rail": _EthernetLabelFixture(
         directory="ethernet-signal-named-rail",
         rule_id="bus.ethernet_signal_on_named_rail",
@@ -127,7 +142,7 @@ def ethernet_label_fixture_lane(
     version: str | None = None,
     image: str,
     log: HostedLog,
-    feature: Literal["data", "management", "named_rail"] = "data",
+    feature: Literal["data", "management", "named_rail", "management_named_rail"] = "data",
 ) -> None:
     """Export source-hashed Ethernet label controls and evaluate one focused rule."""
     from .hwrepo.contract_coach import pinned_image, run_command

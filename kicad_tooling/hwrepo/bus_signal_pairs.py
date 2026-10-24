@@ -107,6 +107,11 @@ def ethernet_data_pair_function_role(function: str) -> tuple[str, str] | None:
     return role[0].removeprefix("Ethernet "), role[1]
 
 
+def ethernet_management_function_role(function: str) -> str | None:
+    """Return the role for exact Ethernet MDC/MDIO function names."""
+    return {"mdc": "clock", "mdio": "data"}.get(_complementary_function_key(function))
+
+
 def _complementary_alias_sha256(alias: ComplementaryPinFunctionAlias) -> str:
     payload = {
         "symbol": alias.symbol,
