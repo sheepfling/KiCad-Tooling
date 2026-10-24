@@ -41,6 +41,7 @@ BUS_ANALYSIS_MODULES = (
     "spi_clock_select_label_mismatch.py",
     "spi_signal_named_rail.py",
     "can_signal_named_rail.py",
+    "bus_ethernet_signal_named_rail.py",
     "spi_same_net.py",
     "spi_clock_data_same_net.py",
     "spi_control_same_net.py",

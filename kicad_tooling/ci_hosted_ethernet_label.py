@@ -19,6 +19,22 @@ if TYPE_CHECKING:
 
 RULE_ID = "bus.ethernet_data_label_mismatch"
 MANAGEMENT_RULE_ID = "bus.ethernet_management_label_mismatch"
+ETHERNET_LABEL_NATIVE_TOOLCHAINS = (
+    (
+        "10.0.0",
+        (
+            "ghcr.io/kicad/kicad:10.0.0@sha256:"
+            "9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3"
+        ),
+    ),
+    (
+        "10.0.5",
+        (
+            "ghcr.io/kicad/kicad:10.0.5@sha256:"
+            "fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c"
+        ),
+    ),
+)
 
 
 @dataclass(frozen=True)
@@ -77,16 +93,41 @@ _FIXTURES: dict[str, _EthernetLabelFixture] = {
             "fault": {"U1.5": ("MDC", "ETH_MDIO"), "U1.6": ("MDIO", "ETH_MDC")},
         },
     ),
+    "named_rail": _EthernetLabelFixture(
+        directory="ethernet-signal-named-rail",
+        rule_id="bus.ethernet_signal_on_named_rail",
+        stage_prefix="ethernet-signal-named-rail-fixture",
+        source_hashes={
+            "control": "b8460f781f7f3ef341b375656ae487ed926cd3a3824098180c5b7460fe61fecd",
+            "fault": "1db5c1e1efa99eaf09df7f9a853fe37f4c621afb56481ccc7f909fa0d96c3531",
+        },
+        expected_subjects=("U1.1: TDP on return-like net GND",),
+        expected_pins={
+            "control": {
+                "U1.1": ("TDP", "ETH_TX_P"),
+                "U1.2": ("TDN", "ETH_TX_N"),
+                "U1.3": ("RDP", "ETH_RX_P"),
+                "U1.4": ("RDN", "ETH_RX_N"),
+            },
+            "fault": {
+                "U1.1": ("TDP", "GND"),
+                "U1.2": ("TDN", "ETH_TX_N"),
+                "U1.3": ("RDP", "ETH_RX_P"),
+                "U1.4": ("RDN", "ETH_RX_N"),
+            },
+        },
+    ),
 }
 
 
 def ethernet_label_fixture_lane(
     root: Path,
     *,
-    project: str,
+    project: str | None = None,
+    version: str | None = None,
     image: str,
     log: HostedLog,
-    feature: Literal["data", "management"] = "data",
+    feature: Literal["data", "management", "named_rail"] = "data",
 ) -> None:
     """Export source-hashed Ethernet label controls and evaluate one focused rule."""
     from .hwrepo.contract_coach import pinned_image, run_command
@@ -99,12 +140,24 @@ def ethernet_label_fixture_lane(
 
     root = root.resolve()
     fixture = _FIXTURES[feature]
-    config = selected_config(root, project)
-    if config.image != image:
-        raise ValueError(f"{project}: native fixture image differs from its reviewed toolchain")
-    if config.kicad_version not in {"10.0.0", "10.0.5"}:
-        raise ValueError(f"Ethernet label fixtures do not cover KiCad {config.kicad_version}")
-    pinned = pinned_image(config.image)
+    if project is None:
+        if version is None or (version, image) not in ETHERNET_LABEL_NATIVE_TOOLCHAINS:
+            raise ValueError("Ethernet native fixture requires a configured KiCad 10 toolchain")
+        selected_version = version
+        project_label = f"kicad-{version}"
+    else:
+        config = selected_config(root, project)
+        if config.image != image:
+            raise ValueError(f"{project}: native fixture image differs from its reviewed toolchain")
+        if version is not None and config.kicad_version != version:
+            raise ValueError(
+                f"{project}: native fixture version differs from its reviewed toolchain"
+            )
+        if config.kicad_version not in {"10.0.0", "10.0.5"}:
+            raise ValueError(f"Ethernet label fixtures do not cover KiCad {config.kicad_version}")
+        selected_version = config.kicad_version
+        project_label = project
+    pinned = pinned_image(image)
     repository = Path(__file__).resolve().parents[1]
     sources = {
         case: repository / f"tests/fixtures/design_lint/{fixture.directory}/{case}.kicad_sch"
@@ -115,7 +168,9 @@ def ethernet_label_fixture_lane(
         raise ValueError("Ethernet label fixtures differ from their reviewed source hashes")
 
     scratch = Path(
-        tempfile.mkdtemp(prefix=f"ethernet-{feature}-label-{project}-", dir=log.directory.resolve())
+        tempfile.mkdtemp(
+            prefix=f"ethernet-{feature}-label-{project_label}-", dir=log.directory.resolve()
+        )
     )
     inputs = scratch / "input"
     inputs.mkdir()
@@ -133,7 +188,7 @@ def ethernet_label_fixture_lane(
         'mkdir -p "$HOME"\n'
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
-        f'test "$actual" = "{config.kicad_version}"\n'
+        f'test "$actual" = "{selected_version}"\n'
         "for case in control fault; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
@@ -171,8 +226,8 @@ def ethernet_label_fixture_lane(
     log.event(
         f"{fixture.stage_prefix}/native-export",
         "START",
-        project=project,
-        kicad_version=config.kicad_version,
+        project=project_label,
+        kicad_version=selected_version,
         image=pinned,
     )
     command = run_command(root, argv, timeout=600)
@@ -182,8 +237,8 @@ def ethernet_label_fixture_lane(
         log.event(
             f"{fixture.stage_prefix}/native-export",
             "FAIL",
-            project=project,
-            kicad_version=config.kicad_version,
+            project=project_label,
+            kicad_version=selected_version,
             image=pinned,
             command_receipt=receipt.relative_to(root).as_posix(),
             error=command.stderr or command.error or f"exit {command.returncode}",
@@ -192,8 +247,8 @@ def ethernet_label_fixture_lane(
     log.event(
         f"{fixture.stage_prefix}/native-export",
         "PASS",
-        project=project,
-        kicad_version=config.kicad_version,
+        project=project_label,
+        kicad_version=selected_version,
         image=pinned,
         source_hashes=",".join(f"{case}:{source_hashes[case]}" for case in sorted(sources)),
         command_receipt=receipt.relative_to(root).as_posix(),
@@ -268,8 +323,8 @@ def ethernet_label_fixture_lane(
         log.event(
             f"{fixture.stage_prefix}/{case}",
             "PASS",
-            project=project,
-            kicad_version=config.kicad_version,
+            project=project_label,
+            kicad_version=selected_version,
             image=pinned,
             source_sha256=source_hashes[case],
             normalized_netlist_sha256=normalized_hashes[(case, "first")],

@@ -35,6 +35,7 @@ HASHSEED_REPORT_FAMILIES = (
     "serial_signal_named_rail",
     "spi_signal_named_rail",
     "can_signal_named_rail",
+    "ethernet_signal_named_rail",
     "analog",
     "schematic_geometry",
 )

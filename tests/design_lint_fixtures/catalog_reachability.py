@@ -36,6 +36,9 @@ from tests.design_lint_fixtures.connector_coverage import (
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
 from tests.design_lint_fixtures.ethernet_data_labels import ethernet_data_label_netlist
 from tests.design_lint_fixtures.ethernet_management_labels import ethernet_management_netlist
+from tests.design_lint_fixtures.ethernet_signal_named_rail import (
+    ethernet_signal_on_named_rail_netlist,
+)
 from tests.design_lint_fixtures.i2c_signal_label import i2c_signal_label_netlist
 from tests.design_lint_fixtures.i2c_signal_named_rail import i2c_signal_on_named_rail_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
@@ -273,6 +276,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         serial_peer_voltage_netlist(),
         serial_reference_netlist(),
         can_netlist(),
+        ethernet_signal_on_named_rail_netlist(),
         can_tx_rx_same_net_netlist(),
         can_signal_on_named_rail_netlist(),
         can_tx_rx_same_net_netlist(shared=False).model_copy(

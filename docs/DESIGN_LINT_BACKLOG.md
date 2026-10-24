@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 224 rules are implemented with synthetic regression coverage.
+The following 225 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 224 active rules.
+The catalog currently contains 225 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -588,6 +588,7 @@ skipped under prerelease policy.
 - `bus.can_signal_on_named_rail`
 - `bus.ethernet_data_label_mismatch`
 - `bus.ethernet_management_label_mismatch`
+- `bus.ethernet_signal_on_named_rail`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
@@ -754,10 +755,18 @@ and optional ecosystem adapters are `P3`.
   the I2C and serial rules while keeping the SPI predicate in its own module.
   Fault/control, intentional chip-select strap, policy, ordering, hash-seed,
   catalog, selector, and digest-pinned KiCad export cases are registered.
+  Tagged acceptance passed as `v0.5.3rc170` (GitHub Actions run
+  `40096731471`) after an import-order fix to the failed `rc169` tag.
 - **LINT-242 CAN/FDCAN controller signal pin assigned to a named rail:** The
   default-review heuristic applies exact CAN/FDCAN TX/RX pin-function
   recognition to fitted IC pins with one assignment to a supply-like or
   return-like net label. Direct rail straps remain project decisions. Synthetic
+  fault/control, policy, ordering, hash-seed, catalog, selector, and
+  digest-pinned KiCad export checks are registered. Tagged acceptance passed
+  as `v0.5.3rc171` (GitHub Actions run `40097051247`).
+- **LINT-243 Ethernet data pin assigned to a named rail:** The default-review
+  heuristic applies the bounded Ethernet TX/RX pair-function parser to fitted
+  PHY IC pins assigned directly to a named supply or return. Synthetic
   fault/control, policy, ordering, hash-seed, catalog, selector, and
   digest-pinned KiCad export checks are registered.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
@@ -5153,7 +5162,8 @@ is not a reason by itself to expand its scope or change its default policy.
 
 - **Status:** Implemented as default-`review` `bus.can_signal_on_named_rail`.
   Project policy can promote it to `block`, turn it `off`, or ignore an exact
-  finding.
+  finding. Tagged acceptance passed as `v0.5.3rc171` (GitHub Actions run
+  `40097051247`).
 - **Gap:** The named-rail clue already reviewed fitted I2C, UART/USART, and SPI
   signal pins. The corresponding exact CAN/FDCAN controller TX/RX functions
   had no rule against direct supply-like or return-like assignments.
@@ -5183,6 +5193,40 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_can_signal_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_signal_on_named_rail")'
+  ```
+
+#### LINT-243 — Review Ethernet data pins assigned to named rails
+
+- **Status:** Implemented as default-`review`
+  `bus.ethernet_signal_on_named_rail`. Project policy can promote it to
+  `block`, turn it `off`, or ignore an exact finding.
+- **Gap:** Ethernet checks compared TX/RX pair labels but did not surface an
+  exact PHY data pin assigned straight to a supply-like or return-like net.
+- **Predicate:** Use the shared `ethernet_data_pair_function_role` parser and
+  shared named-rail pin evidence. Require a fitted IC reference, a complete
+  native pin inventory, one unique function record, and exactly one assigned
+  net with a recognized supply-like or return-like label.
+- **Boundary:** The function and label are review clues. PHY strap modes and
+  intentional rail assignments remain project decisions. This does not
+  establish voltage, signal integrity, endpoint topology, routed copper, or
+  physical continuity.
+- **Fixtures and quality gate:** Four TX/RX function and rail-label cases;
+  neutral names and unsupported functions; DNP, open, ambiguous, duplicate,
+  connector, and incomplete-inventory controls; project `block`, `off`, and
+  exact-ignore policy; stable ordering and repair; process hash-seed stability;
+  and source-hashed fault/control exports with repeatable normalized netlists
+  on digest-pinned KiCad 10.0.0 and 10.0.5. The feature uses the existing
+  Ethernet native export adapter, with its own source fixture, selector, marker,
+  catalog owner, native switch, and architecture limit.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_signal_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_ethernet_signal_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets
