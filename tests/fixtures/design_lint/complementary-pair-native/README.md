@@ -3,6 +3,9 @@
 These synthetic KiCad schematics exercise the
 `bus.complementary_pair_assignment` rule with USB-IF Standard-A pin-function
 spellings and Ethernet PHY pin-function aliases.
+The indexed USB-C lane pair also uses tooling-authored `SSTX1/2` and
+`SSRX1/2` functions to ensure each direction/lane combination is evaluated
+separately.
 
 - `fault.kicad_sch` has SHA-256
   `6147ed074f97e061213d048174c1820d76dc523e682c96e6c58bfb6231e4a49d`.
@@ -12,6 +15,15 @@ spellings and Ethernet PHY pin-function aliases.
   `ce1c57f200b9f042fe4174f6b1b4b327b717c3e93623e50f262bf2352b8e6089`.
   The USB signal pins, ground contact, and Ethernet TDP/TDN/RDP/RDN pins have
   unique assignments; the heuristic should be quiet.
+- `lane-fault.kicad_sch` has SHA-256
+  `03b826311ce60c87b6fbff6af58ea26345f688d0cca132b546455dd1e660dc76`.
+  The USB-C `SSTX1+` and `SSTX1-` pins share one net; the three remaining
+  direction/lane pairs have distinct assignments. One localized review is
+  expected for the TX1 pair.
+- `lane-control.kicad_sch` has SHA-256
+  `395b30796caaae0ec8c708d1fdfab513b22c7ee6f570d7c4affe084f9bf322d7`.
+  All four indexed TX/RX lane pairs use separate positive and negative nets;
+  the heuristic should be quiet.
 
 The digest-pinned native lane exports each schematic twice using exact KiCad
 10.0.0 and 10.0.5 images selected from the public reference template. It checks

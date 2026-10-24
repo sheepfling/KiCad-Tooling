@@ -9,7 +9,9 @@ finding. Tooling owns the rules and report format.
 
 `bus.complementary_pair_assignment` recognizes bounded pin-function pairs
 within one component instance, including Ethernet `TD+`/`TD-`, `TDP`/`TDN`, `RD+`/`RD-`,
-and `RDP`/`RDN` spellings. It reports a missing counterpart, an open or
+and `RDP`/`RDN` spellings. It also recognizes exact USB-C SuperSpeed
+`SSTX1/2+/-` and `SSRX1/2+/-` lane names, including `StdA_` and `StdB_`
+prefixes; each direction and lane is paired separately. It reports a missing counterpart, an open or
 ambiguous assignment, or both pair members assigned to the same schematic net.
 It defaults to `review`: Ethernet PHY variants, intentionally unused pairs,
 and project-specific naming still need review. The rule does not infer which
@@ -32,6 +34,9 @@ complete `TDP`/`TDN` control and a complete receive pair:
 The native export requires the public template checkout and its digest-pinned
 toolchain, as described in the
 [fixture README](../tests/fixtures/design_lint/complementary-pair-native/README.md).
+The same native gate also checks all four indexed USB-C SuperSpeed pairs, with
+a TX1 same-net fault and a distinct-net control. Generic `TX1+/TX1-` names and
+lane indices outside 1 and 2 remain unclassified.
 
 ## Review unassigned USB 2.0 data pins
 

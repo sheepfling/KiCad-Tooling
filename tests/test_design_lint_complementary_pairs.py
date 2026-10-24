@@ -234,7 +234,7 @@ def test_ethernet_media_pair_aliases_have_fault_and_control_coverage(
     assert findings[0].evidence["negative_nets"] == ()
 
 
-def test_usb_c_lane_indexed_pairs_remain_outside_single_pair_rule() -> None:
+def test_generic_lane_indexed_functions_remain_outside_usb_c_builtin_aliases() -> None:
     rule_id = "bus.complementary_pair_assignment"
     lane_indexed = NetlistContract(
         components={},

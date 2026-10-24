@@ -57,9 +57,13 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             "complementary-pair-fixture/native-export",
             "complementary-pair-fixture/fault",
             "complementary-pair-fixture/control",
+            "complementary-pair-fixture/lane-fault",
+            "complementary-pair-fixture/lane-control",
         }
         fault = results["complementary-pair-fixture/fault"]
         control = results["complementary-pair-fixture/control"]
+        lane_fault = results["complementary-pair-fixture/lane-fault"]
+        lane_control = results["complementary-pair-fixture/lane-control"]
         assert fault["lint_status"] == "REVIEW"
         assert fault["pair_findings"] == "J1: USB SuperSpeed RX pair;U1: Ethernet TX pair"
         assert "J1.4=StdA_SSRX-" in fault["pin_functions"]
@@ -69,7 +73,13 @@ def test_complementary_pair_fault_and_control_export_repeatably(
         assert "U1.4=RDN" in control["pin_functions"]
         assert control["lint_status"] == "PASS"
         assert control["pair_findings"] == "none"
-        for result in (fault, control):
+        assert lane_fault["lint_status"] == "REVIEW"
+        assert lane_fault["pair_findings"] == "J1: USB SuperSpeed TX lane 1 pair"
+        assert "J1.1=StdA_SSTX1+" in lane_fault["pin_functions"]
+        assert "J1.2=StdA_SSTX1-" in lane_fault["pin_functions"]
+        assert lane_control["lint_status"] == "PASS"
+        assert lane_control["pair_findings"] == "none"
+        for result in (fault, control, lane_fault, lane_control):
             assert result["kicad_version"] == version
             assert result["repeatable"] == "true"
             assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
@@ -77,7 +87,7 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             assert re.fullmatch("^[0-9a-f]{64}$", result["normalized_netlist_sha256"])
         normalized_hashes[version] = {
             case: results[f"complementary-pair-fixture/{case}"]["normalized_netlist_sha256"]
-            for case in ("fault", "control")
+            for case in ("fault", "control", "lane-fault", "lane-control")
         }
     assert set(normalized_hashes) == {"10.0.0", "10.0.5"}
     assert normalized_hashes["10.0.0"] == normalized_hashes["10.0.5"]

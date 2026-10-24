@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 def complementary_pair_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
 ) -> None:
-    """Verify USB SuperSpeed and Ethernet pair aliases with repeated native exports."""
+    """Verify Ethernet and USB SuperSpeed pair forms with repeated native exports."""
     import hashlib
     import os
 
@@ -43,11 +43,18 @@ def complementary_pair_fixture_lane(
     fixture_root = (
         Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/complementary-pair-native"
     )
-    cases = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
+    cases = {
+        "fault": "fault.kicad_sch",
+        "control": "control.kicad_sch",
+        "lane-fault": "lane-fault.kicad_sch",
+        "lane-control": "lane-control.kicad_sch",
+    }
     source_hashes = {case: digest(fixture_root / filename) for case, filename in cases.items()}
     expected_source_hashes = {
         "fault": "6147ed074f97e061213d048174c1820d76dc523e682c96e6c58bfb6231e4a49d",
         "control": "ce1c57f200b9f042fe4174f6b1b4b327b717c3e93623e50f262bf2352b8e6089",
+        "lane-fault": "03b826311ce60c87b6fbff6af58ea26345f688d0cca132b546455dd1e660dc76",
+        "lane-control": "395b30796caaae0ec8c708d1fdfab513b22c7ee6f570d7c4affe084f9bf322d7",
     }
     if source_hashes != expected_source_hashes:
         raise ValueError("Complementary-pair fixture sources differ from the reviewed hashes")
@@ -64,7 +71,7 @@ def complementary_pair_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in fault control; do\n"
+        "for case in fault control lane-fault lane-control; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml "
         '      --output "/output/${case}.${run}.netlist.xml" '
@@ -121,16 +128,61 @@ def complementary_pair_fixture_lane(
             f"Native complementary-pair fixture command failed: {command.stderr or command.error}"
         )
 
-    expected_functions = {
-        "J1.1": "StdA_SSTX+",
-        "J1.2": "StdA_SSTX-",
-        "J1.3": "StdA_SSRX+",
-        "J1.4": "StdA_SSRX-",
-        "J1.5": "GND",
-        "U1.1": "TDP",
-        "U1.2": "TDN",
-        "U1.3": "RDP",
-        "U1.4": "RDN",
+    expected_functions_by_case = {
+        "fault": {
+            "J1.1": "StdA_SSTX+",
+            "J1.2": "StdA_SSTX-",
+            "J1.3": "StdA_SSRX+",
+            "J1.4": "StdA_SSRX-",
+            "J1.5": "GND",
+            "U1.1": "TDP",
+            "U1.2": "TDN",
+            "U1.3": "RDP",
+            "U1.4": "RDN",
+        },
+        "control": {
+            "J1.1": "StdA_SSTX+",
+            "J1.2": "StdA_SSTX-",
+            "J1.3": "StdA_SSRX+",
+            "J1.4": "StdA_SSRX-",
+            "J1.5": "GND",
+            "U1.1": "TDP",
+            "U1.2": "TDN",
+            "U1.3": "RDP",
+            "U1.4": "RDN",
+        },
+        "lane-fault": {
+            f"J1.{index}": function
+            for index, function in enumerate(
+                (
+                    "StdA_SSTX1+",
+                    "StdA_SSTX1-",
+                    "StdA_SSTX2+",
+                    "StdA_SSTX2-",
+                    "StdA_SSRX1+",
+                    "StdA_SSRX1-",
+                    "StdA_SSRX2+",
+                    "StdA_SSRX2-",
+                ),
+                1,
+            )
+        },
+        "lane-control": {
+            f"J1.{index}": function
+            for index, function in enumerate(
+                (
+                    "StdA_SSTX1+",
+                    "StdA_SSTX1-",
+                    "StdA_SSTX2+",
+                    "StdA_SSTX2-",
+                    "StdA_SSRX1+",
+                    "StdA_SSRX1-",
+                    "StdA_SSRX2+",
+                    "StdA_SSRX2-",
+                ),
+                1,
+            )
+        },
     }
     normalized_hashes: dict[tuple[str, str], str] = {}
     raw_hashes: dict[tuple[str, str], str] = {}
@@ -143,7 +195,7 @@ def complementary_pair_fixture_lane(
                 raise ValueError(f"Native complementary-pair export omitted {netlist_path.name}")
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
-            if observed.pin_functions != expected_functions:
+            if observed.pin_functions != expected_functions_by_case[case]:
                 raise ValueError(
                     "KiCad native export did not preserve the expected pair pin functions: "
                     f"{observed.pin_functions}"
@@ -168,7 +220,12 @@ def complementary_pair_fixture_lane(
     for case in cases:
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
             raise ValueError(f"Native {case} exports differ after netlist normalization")
-    for case, expected_findings in (("fault", 2), ("control", 0)):
+    for case, expected_findings in (
+        ("fault", 2),
+        ("control", 0),
+        ("lane-fault", 1),
+        ("lane-control", 0),
+    ):
         report = reports[(case, "first")]
         findings = tuple(
             item for item in report.findings if item.rule_id == "bus.complementary_pair_assignment"
@@ -199,6 +256,16 @@ def complementary_pair_fixture_lane(
                 raise ValueError(
                     "Native open pair pins did not localize to their expected findings"
                 )
+        if case == "lane-fault":
+            lane_finding = findings[0]
+            if (
+                lane_finding.subject != "J1: USB SuperSpeed TX lane 1 pair"
+                or lane_finding.evidence["positive_pins"] != ("J1.1",)
+                or lane_finding.evidence["negative_pins"] != ("J1.2",)
+                or lane_finding.evidence["positive_nets"] != ("USB_TX1_SHARED",)
+                or lane_finding.evidence["negative_nets"] != ("USB_TX1_SHARED",)
+            ):
+                raise ValueError("Native USB-C lane fault did not localize its collapsed pair")
         log.event(
             f"complementary-pair-fixture/{case}",
             "PASS",

@@ -6,6 +6,7 @@ PYTEST_NATIVE_LINT_SUITES = {
     "test_ci_hosted_digital_peer_spi.py": {"interface_lint", "native_kicad", "slow"},
     "test_connector_supply_scope.py": {"connector_lint"},
     "test_design_lint_complementary_pairs.py": {"interface_lint"},
+    "test_usb_c_superspeed_lane_pairs.py": {"interface_lint"},
     "test_can_line_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
     "test_ethernet_data_label_native_fixture_lane.py": {
         "interface_lint",

@@ -2656,6 +2656,8 @@ is not a reason by itself to expand its scope or change its default policy.
   CANH/CANL, USB D+/D−, USB SuperSpeed SSTX/SSRX, TX+/TX−, and RX+/RX−
   aliases, Ethernet TD+/TD−, TDP/TDN, RD+/RD−, and RDP/RDN aliases, plus
   opt-in project aliases tied to an exact native symbol identity.
+  Lane-indexed USB-C `SSTX1/2+/-` and `SSRX1/2+/-` pairs are now recognized
+  independently by direction and lane, including `StdA_`/`StdB_` prefixes.
   Built-in alias matching uses native pin-function evidence without depending
   on a library symbol ID; project aliases still require exact identity.
   Stale or unavailable project symbol/function mappings block lint; fitted
@@ -2674,6 +2676,9 @@ is not a reason by itself to expand its scope or change its default policy.
   records the naming transition from SSTX/SSRX to TX/RX. These aliases are checked with synthetic
   fault and valid-control cases plus the
   [pinned native fixture lane](../tests/fixtures/design_lint/complementary-pair-native/README.md).
+  The KiCad 10.0.0/10.0.5 lane also repeats a lane-indexed USB-C TX1
+  same-net fault and four-lane distinct-net control; generic `TX1+/-` and
+  unsupported lane numbers remain quiet.
   The Ethernet forms are documented as `TD+`, `TD-`, `RD+`, and `RD-` in TI's
   [DP83826 PHY datasheet](https://www.ti.com/lit/ds/symlink/dp83826e.pdf) and
   as `TDP`, `TDN`, `RDP`, and `RDN` in Microchip's
@@ -2696,7 +2701,8 @@ is not a reason by itself to expand its scope or change its default policy.
   RD+/RD−, and RDP/RDN alias fault/control cases; both sides on one net; complete
   USB data pair on separate nets; intentionally unused pair with an exact
   project-owned ignore; Standard-A/Standard-B SuperSpeed aliases with open-line
-  faults and complete controls; lane-indexed USB-C anti-control; exact-symbol
+  faults and complete controls; lane-indexed USB-C TX/RX 1/2 fault/control and
+  a generic `TX1+/-` anti-control; exact-symbol
   project aliases with fault/control/stale-map checks. Repeated native exports
   on KiCad 10.0.0 and 10.0.5 verify the built-in pin-function text survives
   netlist normalization. A separate `bus.usb_data_polarity_label_mismatch`

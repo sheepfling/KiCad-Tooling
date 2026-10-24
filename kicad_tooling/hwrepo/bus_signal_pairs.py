@@ -71,6 +71,8 @@ _COMPLEMENTARY_FUNCTIONS: dict[str, tuple[str, str]] = {
     "stdbssrx-": ("USB SuperSpeed RX", "negative"),
 }
 
+_USB_C_SUPERSPEED_LANE_FUNCTION = re.compile(r"(?:(?:stda|stdb))?ss(tx|rx)([12])([+-])")
+
 
 @dataclass(frozen=True)
 class ComplementaryLineGap:
@@ -233,6 +235,21 @@ def usb_superspeed_function_identity(
     )
 
 
+def usb_c_superspeed_lane_function_role(function: str) -> tuple[str, str] | None:
+    """Return the exact USB-C SuperSpeed direction/lane and polarity.
+
+    Only explicit lane 1/2 forms are recognized. The optional Standard-A/B
+    prefix matches connector symbol function names; other indexed differential
+    names remain outside this USB-C-specific alias set.
+    """
+    match = _USB_C_SUPERSPEED_LANE_FUNCTION.fullmatch(_complementary_function_key(function))
+    if match is None:
+        return None
+    direction, lane, polarity = match.groups()
+    side = "positive" if polarity == "+" else "negative"
+    return f"USB SuperSpeed {direction.upper()} lane {lane}", side
+
+
 def complementary_signal_gaps(
     observed: NetlistContract,
     alias_resolution: ComplementaryPinFunctionAliasResolution | None = None,
@@ -253,7 +270,9 @@ def complementary_signal_gaps(
             continue
         symbol = observed.component_symbols.get(reference)
         compact = _complementary_function_key(function)
-        role = _COMPLEMENTARY_FUNCTIONS.get(compact)
+        role = usb_c_superspeed_lane_function_role(function) or _COMPLEMENTARY_FUNCTIONS.get(
+            compact
+        )
         alias_entry = None
         if role is None and symbol is not None:
             for candidate in alias_resolution.by_symbol.get(symbol, ()):

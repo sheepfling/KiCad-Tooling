@@ -98,7 +98,10 @@ COMPONENT_RATING_HOSTED_THEME_SUITES = ("test_component_rating_native_fixture_la
 COMPONENT_LED_THEME_SUITES = ("test_led_rail_native_fixture_lane.py",)
 COMPONENT_POWER_OUTPUT_THEME_SUITES = ("test_component_unconnected_power_output.py",)
 TWO_PIN_NATIVE_THEME_SUITES = ("test_two_pin_component_native_fixture_lane.py",)
-COMPLEMENTARY_PAIR_NATIVE_THEME_SUITES = ("test_complementary_pair_native_fixture_lane.py",)
+COMPLEMENTARY_PAIR_THEME_SUITES = (
+    "test_complementary_pair_native_fixture_lane.py",
+    "test_usb_c_superspeed_lane_pairs.py",
+)
 DC_REFERENCE_NATIVE_THEME_SUITES = ("test_net_dc_reference_native_fixture_lane.py",)
 PCB_THEME_SUITES = (
     "test_ci_hosted_pcb_fixture_schedule.py",
@@ -153,7 +156,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *COMPONENT_LED_THEME_SUITES,
                     *COMPONENT_POWER_OUTPUT_THEME_SUITES,
                     *TWO_PIN_NATIVE_THEME_SUITES,
-                    *COMPLEMENTARY_PAIR_NATIVE_THEME_SUITES,
+                    *COMPLEMENTARY_PAIR_THEME_SUITES,
                     *DC_REFERENCE_NATIVE_THEME_SUITES,
                 )
             ),
