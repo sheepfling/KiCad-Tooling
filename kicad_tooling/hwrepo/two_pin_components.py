@@ -16,6 +16,7 @@ _SUPPORTED_DEVICE_SYMBOL = re.compile(
 )
 _SUPPORTED_SWITCH_SYMBOL = re.compile(r"^Switch:SW_SPST$", re.IGNORECASE)
 _SUPPORTED_LED_SYMBOLS = frozenset({"Device:LED"})
+_SUPPORTED_BUZZER_SYMBOLS = frozenset({"Device:Buzzer"})
 _SUPPORTED_THERMISTOR_SYMBOLS = frozenset(
     {
         "Device:Thermistor",
@@ -100,6 +101,9 @@ def two_pin_components_on_same_net(
             role_binding = None
         elif symbol in _SUPPORTED_LED_SYMBOLS:
             kind = "led"
+            role_binding = None
+        elif symbol in _SUPPORTED_BUZZER_SYMBOLS:
+            kind = "buzzer"
             role_binding = None
         else:
             role_binding = role_bindings.get(reference.casefold())

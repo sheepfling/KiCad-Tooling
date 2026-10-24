@@ -56,6 +56,7 @@ DesignLintRuleId = Literal[
     "component.two_pin_passive_same_net",
     "component.two_pin_diode_same_net",
     "component.two_pin_led_same_net",
+    "component.two_pin_buzzer_same_net",
     "component.two_pin_crystal_same_net",
     "component.two_pin_fuse_same_net",
     "component.two_pin_ferrite_same_net",

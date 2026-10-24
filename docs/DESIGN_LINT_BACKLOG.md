@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 201 rules are implemented with synthetic regression coverage.
+The following 202 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 201 active rules.
+The catalog currently contains 202 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -4157,6 +4157,43 @@ is not a reason by itself to expand its scope or change its default policy.
   GitHub Actions run `38357427541`, including the scoped gate with installed-
   wheel acceptance against the separate template and all Linux, macOS, and
   Windows preview jobs.
+
+#### LINT-220 — Same-net two-pin buzzer review
+
+- **Status:** Implemented as the default-review rule
+  `component.two_pin_buzzer_same_net`.
+- **Gap:** Existing same-net component checks cover passives, diodes, LEDs,
+  crystals, fuses, ferrite beads, and SPST switches, but not the exact stock
+  `Device:Buzzer` symbol. A two-pin buzzer whose terminals resolve to one
+  schematic net had no component-specific candidate.
+- **Predicate:** Require the exact `Device:Buzzer` identity, fitted state,
+  exactly two distinct native pin numbers, and one unambiguous native net per
+  pin. Emit a review prompt only when both pins share one net. DNP, open,
+  ambiguous, incomplete, multi-pin, custom, and alternate symbol identities
+  are outside the predicate.
+- **Boundary:** The net assignment shows no voltage difference across the
+  buzzer terminals in the exported netlist, but the prompt does not establish
+  buzzer operation, current, physical connectivity, or assembly state. A
+  project may intentionally disable or bypass the buzzer. The rule defaults
+  to REVIEW and supports the existing project `block`, `off`, and exact-ignore
+  controls; it does not infer a required connection.
+- **Fixtures:** Tooling-owned same-net fault and separate-net control; DNP,
+  incomplete, ambiguous, open, multi-pin, custom, and alternate-symbol
+  exclusions; policy and exact-ignore lifecycle; ordering and net-split
+  metamorphic check; and source-hashed native exports using pinned KiCad
+  10.0.0 and 10.0.5 images. No product or cohort schematic is used. The
+  [fixture note](../tests/fixtures/design_lint/two-pin-buzzers/README.md)
+  records hashes and native boundaries.
+- **Incremental-value claim:** This adds the exact Buzzer symbol family to the
+  same-net review inventory without broadening passive or custom-symbol
+  guesses. Synthetic cases establish predicate behavior only; public
+  applicability and reviewer-value measurements remain unmeasured.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_two_pin_buzzers.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_buzzer_same_net")'
+  ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets
 

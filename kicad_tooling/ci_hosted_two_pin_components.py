@@ -115,6 +115,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_led_same_net",
         set(),
     ),
+    "same-net-buzzer": (
+        "two-pin-buzzers/same-net-buzzer.kicad_sch",
+        "component.two_pin_buzzer_same_net",
+        {"BZ1: both buzzer terminals share BUZZER_TIED"},
+    ),
+    "distinct-nets-buzzer": (
+        "two-pin-buzzers/distinct-nets-buzzer.kicad_sch",
+        "component.two_pin_buzzer_same_net",
+        set(),
+    ),
     "same-net-crystal": (
         "two-pin-crystals/same-net-crystal.kicad_sch",
         "component.two_pin_crystal_same_net",

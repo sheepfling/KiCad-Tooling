@@ -41,6 +41,7 @@ import tests.test_power_paths as _tests_test_power_paths
 import tests.test_rc_filters as _tests_test_rc_filters
 import tests.test_regulator_feedback as _tests_test_regulator_feedback
 import tests.test_stm32_pin_map as _tests_test_stm32_pin_map
+import tests.test_two_pin_buzzers as _tests_test_two_pin_buzzers
 import tests.test_two_pin_crystals as _tests_test_two_pin_crystals
 import tests.test_two_pin_diodes as _tests_test_two_pin_diodes
 import tests.test_two_pin_ferrites as _tests_test_two_pin_ferrites
@@ -380,6 +381,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(item.rule_id for item in diode_result.findings)
     led_result = _tests_test_two_pin_leds.lint_report(_tests_test_two_pin_leds.led_netlist())
     emitted.update(item.rule_id for item in led_result.findings)
+    buzzer_result = _tests_test_two_pin_buzzers.lint_report(
+        _tests_test_two_pin_buzzers.buzzer_netlist()
+    )
+    emitted.update(item.rule_id for item in buzzer_result.findings)
     crystal_result = _tests_test_two_pin_crystals.lint_report(
         _tests_test_two_pin_crystals.crystal_netlist()
     )

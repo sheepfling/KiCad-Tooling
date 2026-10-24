@@ -129,6 +129,24 @@ the exact KiCad 10 native lane.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_led_same_net")'
 ```
 
+## Review a two-pin buzzer whose terminals share one net
+
+`component.two_pin_buzzer_same_net` reviews an exact fitted `Device:Buzzer`
+whose two native pins resolve to the same schematic net. The assignment
+provides no voltage difference across the buzzer in the netlist. The prompt
+does not establish buzzer behavior, current, footprint mapping, physical
+connectivity, or assembly state. It defaults to `review` and supports project
+`block`, `off`, and exact-fingerprint ignore decisions. DNP, open, ambiguous,
+incomplete, multi-pin, and other buzzer identities remain unclassified. The
+[synthetic fixture record](../tests/fixtures/design_lint/two-pin-buzzers/README.md)
+contains a same-net fault and separate-net control, with source hashes and the
+exact KiCad 10 native lane.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_two_pin_buzzers.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_buzzer_same_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -320,7 +338,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 201 active rules.
+The catalog currently contains 202 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
