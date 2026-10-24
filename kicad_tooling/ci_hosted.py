@@ -13,6 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from .ci_hosted_can_excess_termination import can_excess_termination_native_fixture_lane
 from .ci_hosted_can_peer_assignment import can_peer_assignment_fixture_lane
 from .ci_hosted_can_termination_arrays import can_termination_array_native_fixture_lane
 from .ci_hosted_can_termination_fixtures import can_termination_native_fixture_lane
@@ -101,6 +102,7 @@ __all__ = (
     "TWO_PIN_COMPONENT_FIXTURE_CASES",
     "HostedCommandError",
     "HostedLog",
+    "can_excess_termination_native_fixture_lane",
     "can_peer_assignment_fixture_lane",
     "can_termination_array_native_fixture_lane",
     "can_termination_native_fixture_lane",

@@ -12,6 +12,7 @@ from .hwrepo.contracts import write_model
 
 if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog
+    from .hwrepo.models import NetlistContract
 
 
 def can_termination_native_fixture_lane(
@@ -35,7 +36,7 @@ def can_termination_native_fixture_lane(
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
-    from .hwrepo.models import ElectricalCheck, NetlistContract
+    from .hwrepo.models import ElectricalCheck
     from .validate import read_netlist
 
     root = root.resolve()

@@ -5022,7 +5022,7 @@
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
       "predicate": "For a fitted component exposing uniquely assigned CANH and CANL pins on distinct native nets, emit a review candidate when more than two fitted direct two-terminal resistors from 108 Ω through 132 Ω span that exact net pair.",
       "supported_kicad_versions": [
-        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+        "KiCad 10 CLI profile; native fixture acceptance is pinned to 10.0.0 and 10.0.5"
       ],
       "limitations": [
         "The count is a review heuristic, not a universal requirement for exactly two local resistors. External, switchable, split, multi-drop, and specialized topologies need project review.",
@@ -5030,16 +5030,20 @@
         "The rule identifies a named schematic net pair but does not determine which nodes are physical bus ends or whether the resistors are actually connected in the assembled product."
       ],
       "fault_fixtures": [
-        "tests.test_can_excess_termination.test_three_fitted_direct_terminators_prompt_for_bus_topology_review"
+        "tests.test_can_excess_termination.test_three_fitted_direct_terminators_prompt_for_bus_topology_review",
+        "tests.test_can_native_fixture_lanes.test_native_can_excess_termination_fault_and_control"
       ],
       "valid_control_fixtures": [
-        "tests.test_can_excess_termination.test_two_terminators_and_nonlocal_or_unfitted_parts_are_valid_controls"
+        "tests.test_can_excess_termination.test_two_terminators_and_nonlocal_or_unfitted_parts_are_valid_controls",
+        "tests.test_can_native_fixture_lanes.test_native_can_excess_termination_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_can_excess_termination.test_overtermination_evidence_is_order_stable_and_repair_clears_it"
       ],
-      "required_native_fixtures": [],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_with_excessive_local_termination",
         "kicad_tooling/hwrepo/can_termination_heuristics.py#recognized_can_signal_pairs",

@@ -3715,7 +3715,10 @@ require exactly two local resistors. It counts only conventional resistor
 references with unique native net assignments; arrays, switchable options,
 split networks, off-board termination, tolerance, placement, and PCB copper
 remain outside the check. Synthetic controls cover two fitted resistors, a DNP
-third resistor, and out-of-window values.
+third resistor, and out-of-window values. Dedicated tooling-owned native
+schematics add a two-resistor control and three-resistor fault, exported with
+the exact KiCad 10.0.0 and 10.0.5 toolchains. The rule remains
+`synthetic_validated` until those hosted native runs pass.
 
 ## Require a USB-C port role and pin map
 

@@ -12,6 +12,7 @@ import pytest
 
 from kicad_tooling.ci_hosted import (
     HostedLog,
+    can_excess_termination_native_fixture_lane,
     can_peer_assignment_fixture_lane,
     can_termination_native_fixture_lane,
 )
@@ -130,6 +131,49 @@ def test_native_can_split_termination_fault_and_control(
         assert result["source_sha256"] == source_hash
         assert result["normalized_netlist_sha256"] == netlist_hash
         assert result["repeat_normalized_netlist_sha256"] == netlist_hash
+        assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_netlist_sha256"])
+        assert_native_fixture_mounts(native_project_root, result["command_receipt"])
+
+
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES") != "1",
+    reason="native CAN termination fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.design_lint_rule(rule_id="bus.can_excess_termination")
+@pytest.mark.parametrize(("project", "version", "image"), PROJECT_TOOLCHAINS)
+def test_native_can_excess_termination_fault_and_control(
+    native_project_root: Path, project: str, version: str, image: str
+) -> None:
+    config = selected_config(native_project_root, project)
+    assert (config.kicad_version, config.image) == (version, image)
+    log = HostedLog(native_project_root, f"native-can-excess-termination-{project}")
+    can_excess_termination_native_fixture_lane(
+        native_project_root,
+        project=project,
+        image=config.image,
+        log=log,
+    )
+    results = _stage_results(log, "can-excess-termination-fixture/")
+    assert set(results) == {
+        "can-excess-termination-fixture/native-export",
+        "can-excess-termination-fixture/control",
+        "can-excess-termination-fixture/fault",
+    }
+    assert results["can-excess-termination-fixture/native-export"]["status"] == "PASS"
+    assert results["can-excess-termination-fixture/control"]["status"] == "PASS"
+    assert results["can-excess-termination-fixture/control"]["findings"] == "0"
+    assert results["can-excess-termination-fixture/fault"]["status"] == "PASS"
+    assert results["can-excess-termination-fixture/fault"]["findings"] == "1"
+    assert results["can-excess-termination-fixture/fault"]["evidence"]
+    for case, expected_source_hash in (
+        ("control", "3baa84f1494dc7cdd8b4bef63aa1df792adccfbc8b429895b6d8fc1c45ed7"),
+        ("fault", "97f8f0b2feaff11d2a8dd73e6ccb0f4e8f745b5a550813728b703a7216d28756"),
+    ):
+        result = results[f"can-excess-termination-fixture/{case}"]
+        assert result["kicad_version"] == version
+        assert result["repeatable"] == "true"
+        assert result["source_sha256"] == expected_source_hash
+        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
         assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_netlist_sha256"])
         assert_native_fixture_mounts(native_project_root, result["command_receipt"])
 

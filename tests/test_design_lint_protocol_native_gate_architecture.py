@@ -36,6 +36,12 @@ _PROTOCOL_NATIVE_CASES = (
         id="can-peer-assignment",
     ),
     pytest.param(
+        "bus.can_excess_termination",
+        "KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES",
+        "tests.test_can_native_fixture_lanes.test_native_can_excess_termination_fault_and_control",
+        id="can-excess-termination",
+    ),
+    pytest.param(
         "bus.spi_clock_control_data_same_net",
         "KICAD_RUN_NATIVE_SPI_CLOCK_CONTROL_SAME_NET_FIXTURES",
         "tests.test_spi_clock_control_same_net_native_fixture_lane."
