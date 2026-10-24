@@ -56,6 +56,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="i2c-unconnected-pin",
     ),
     pytest.param(
+        "bus.can_unconnected_direction_pin",
+        "KICAD_RUN_NATIVE_CAN_UNCONNECTED_DIRECTION_PIN_FIXTURES",
+        "tests.test_can_unconnected_direction_pins_native_fixture_lane."
+        "test_native_open_can_direction_pin_fault_and_connected_control",
+        id="can-unconnected-direction-pin",
+    ),
+    pytest.param(
         "bus.spi_unconnected_data_pin",
         "KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES",
         "tests.test_spi_unconnected_data_pins_native_fixture_lane."

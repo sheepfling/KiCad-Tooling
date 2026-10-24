@@ -155,6 +155,7 @@ DesignLintRuleId = Literal[
     "bus.usb_c_unreviewed_port",
     "bus.usb_unconnected_data_pin",
     "bus.usb_data_path_mismatch",
+    "bus.can_unconnected_direction_pin",
     "bus.can_unconnected_line",
     "bus.can_missing_termination",
     "bus.can_excess_termination",

@@ -63,6 +63,7 @@ I2C_PEER_REFERENCE_MODELS = {
 BUS_ANALYSIS_MODULES = (
     "bus_signal_roles.py",
     "i2c_unconnected_pins.py",
+    "can_unconnected_direction_pins.py",
     "bus_signal_pairs.py",
     "can_line_polarity.py",
     "rs485_data_label_mismatch.py",

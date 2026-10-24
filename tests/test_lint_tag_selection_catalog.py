@@ -100,6 +100,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SERIAL_UNCONNECTED_PIN_FIXTURES",
         ),
         (
+            "bus.can_unconnected_direction_pin",
+            "KICAD_RUN_NATIVE_CAN_UNCONNECTED_DIRECTION_PIN_FIXTURES",
+        ),
+        (
             "bus.spi_unconnected_data_pin",
             "KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES",
         ),

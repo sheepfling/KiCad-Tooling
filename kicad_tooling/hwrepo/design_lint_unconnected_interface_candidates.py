@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .bus_signal_roles import unconnected_interface_pins
+from .can_unconnected_direction_pins import unconnected_can_direction_pins
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .i2c_unconnected_pins import unconnected_i2c_signal_pins
@@ -30,6 +31,30 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
                     pin.pin: (),
                     "function": (pin.function,),
                     "i2c_role": (pin.role,),
+                    "paired_pin": (pin.paired_pin,),
+                    "paired_net": (pin.paired_net,),
+                },
+            )
+        )
+    for pin in unconnected_can_direction_pins(observed):
+        role = pin.role.upper()
+        paired_role = "RX" if role == "TX" else "TX"
+        found.append(
+            Candidate(
+                rule_id="bus.can_unconnected_direction_pin",
+                subject=f"{pin.pin}: {pin.function}",
+                message=(
+                    f"This CAN/FDCAN {role} function pin has no net assignment while its "
+                    f"paired {paired_role} pin {pin.paired_pin} is assigned to "
+                    f"{pin.paired_net}. Review whether this channel is intentionally "
+                    "one-way or a connection is missing. Pin functions do not establish "
+                    "channel use or PCB routing."
+                ),
+                evidence={
+                    pin.pin: (),
+                    "function": (pin.function,),
+                    "can_role": (role,),
+                    "can_channel": (pin.channel,),
                     "paired_pin": (pin.paired_pin,),
                     "paired_net": (pin.paired_net,),
                 },

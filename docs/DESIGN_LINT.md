@@ -40,6 +40,26 @@ external continuity. See the
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_unconnected_pin")'
 ```
 
+## Review an open CAN/FDCAN direction pin beside its paired function
+
+`bus.can_unconnected_direction_pin` recognizes bounded CAN/FDCAN TX/RX
+function names and reports one unassigned direction only when the same fitted
+component and parsed channel have exactly one TX and one RX function, the
+native function inventory matches its pin-number inventory, and the other pin
+has exactly one net assignment. It skips entirely open channels, DNP
+components, incomplete inventories, repeated role pins, and ambiguous
+multi-net assignments. The rule defaults to `off` because a
+receive-only or transmit-only channel can be intentional; projects can enable
+`review`, promote it to `block`, disable it, or add an exact fingerprint
+ignore. It does not establish firmware use, endpoint intent, PCB routing, or
+physical continuity. See the
+[source-hashed native fault and control](../tests/fixtures/design_lint/can-unconnected-direction-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_unconnected_direction_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_unconnected_direction_pin")'
+```
+
 ## Review open UART/USART function pins on partially connected channels
 
 `bus.serial_unconnected_pin` recognizes bounded UART/USART TX/RX pin functions when a pin has no
@@ -623,7 +643,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 216 active rules.
+The catalog currently contains 217 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

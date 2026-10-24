@@ -17,6 +17,7 @@ from .ci_hosted_can_excess_termination import can_excess_termination_native_fixt
 from .ci_hosted_can_peer_assignment import can_peer_assignment_fixture_lane
 from .ci_hosted_can_termination_arrays import can_termination_array_native_fixture_lane
 from .ci_hosted_can_termination_fixtures import can_termination_native_fixture_lane
+from .ci_hosted_can_unconnected_direction_pins import can_unconnected_direction_pin_fixture_lane
 from .ci_hosted_complementary_pairs import complementary_pair_fixture_lane
 from .ci_hosted_component_peer_pins import (
     component_peer_bidirectional_fixture_lane,
@@ -110,6 +111,7 @@ __all__ = (
     "can_peer_assignment_fixture_lane",
     "can_termination_array_native_fixture_lane",
     "can_termination_native_fixture_lane",
+    "can_unconnected_direction_pin_fixture_lane",
     "candidate_lane",
     "checked_source",
     "complementary_pair_fixture_lane",

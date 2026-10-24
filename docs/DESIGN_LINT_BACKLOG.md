@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 216 rules are implemented with synthetic regression coverage.
+The following 217 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 216 active rules.
+The catalog currently contains 217 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -574,6 +574,7 @@ skipped under prerelease policy.
 - `bus.usb_data_path_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
+- `bus.can_unconnected_direction_pin`
 - `bus.can_unconnected_line`
 - `bus.can_missing_termination`
 - `bus.can_excess_termination`
@@ -707,6 +708,13 @@ and optional ecosystem adapters are `P3`.
   one explicit repeated signal pin has no net assignment while another is
   assigned. It asks whether the open pin is intentional and does not infer a
   required connection or require repeated pins to share a net.
+- **LINT-235 partially connected CAN/FDCAN direction pair:** A default-off
+  review identifies a single recognized TX or RX function that is open while
+  its unique same-component/channel counterpart has one net assignment. The
+  check reuses the bounded CAN/FDCAN function parser and skips all-open,
+  one-role, DNP, incomplete function/pin-number inventory, repeated-role, and
+  ambiguous cases.
+  One-way channels remain valid; the prompt does not require a connection.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3088,7 +3096,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 216 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 217 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4791,6 +4799,48 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_i2c_unconnected_pins_native_fixture_lane.py \
       -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_unconnected_pin")'
+  ```
+
+#### LINT-235 — Review an open CAN/FDCAN direction pin beside its paired function
+
+- **Status:** Implemented as opt-in `bus.can_unconnected_direction_pin`, owned
+  by `can_unconnected_direction_pins.py#unconnected_can_direction_pins`.
+- **Gap:** Existing CAN checks cover unassigned CANH/CANL line functions and
+  compare TX/RX channels when the relevant pins are assigned. They do not
+  review one open TX/RX function beside its assigned counterpart.
+- **Predicate:** For a fitted component with a complete native pin-function
+  and pin-number inventory, require exactly one bounded recognized CAN/FDCAN
+  TX function and one RX function for the same parsed channel. Emit one REVIEW
+  candidate for an unassigned member only when the other has exactly one
+  native net assignment.
+  Reuse `can_signal_role_and_channel`; do not add a parallel alias parser.
+- **Boundary:** The rule defaults to `off` because receive-only and
+  transmit-only designs can intentionally leave one direction unused. DNP
+  parts, missing or inconsistent function/pin-number inventories, repeated
+  TX/RX functions, unmatched channels, entirely open pairs, and multi-net
+  assignments are excluded. A schematic netlist does not establish firmware use, endpoint
+  intent, internal component behavior, PCB routing, or physical continuity.
+- **Fixtures and quality gate:** Synthetic fault/control and alias tests cover
+  both open directions, indexed CAN/FDCAN names, one-way/all-open controls,
+  DNP state, missing inventory, duplicate roles, ambiguous assignment,
+  project policy, exact ignores, ordering, and repair. Source-hashed native
+  fault/control schematics export repeatably on digest-pinned KiCad 10.0.0 and
+  10.0.5. Catalog ownership, focused selectors, marker registries, native-tag
+  fixture selection, active-rule reachability, and module-size checks are
+  registered. No product or cohort design data is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_can_unconnected_direction_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_unconnected_direction_pin")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_CAN_UNCONNECTED_DIRECTION_PIN_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_can_unconnected_direction_pins_native_fixture_lane.py \
+      -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_unconnected_direction_pin")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

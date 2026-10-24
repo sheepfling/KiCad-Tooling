@@ -5427,6 +5427,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_data_crossing.py#usb_peer_data_pair_crossing_candidates"
     },
     {
+      "rule_id": "bus.can_unconnected_direction_pin",
+      "title": "Recognized CAN/FDCAN direction pin is open on a partially connected channel",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted component with a complete native pin-function and pin-number inventory containing exactly one bounded recognized CAN/FDCAN TX and RX function for one parsed channel, report an unassigned member only when the other has exactly one native net assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only aliases accepted by can_signal_role_and_channel are recognized; generic TX/RX names, unrelated serial protocols, and vendor-specific aliases are unsupported.",
+        "Receive-only and transmit-only channels can be intentional. The rule defaults to off and asks for project review; it does not require the open direction to connect.",
+        "DNP components, missing or inconsistent pin-function or pin-number inventories, repeated TX or RX functions in one channel, channels with no assigned member, and multi-net assignments are skipped as ambiguous.",
+        "The netlist does not establish firmware configuration, endpoint intent, internal component behavior, PCB copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_unconnected_direction_pins.test_open_can_direction_pin_emits_exact_pair_and_net_evidence_when_enabled",
+        "tests.test_can_unconnected_direction_pins_native_fixture_lane.test_native_open_can_direction_pin_fault_and_connected_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_unconnected_direction_pins.test_connected_unused_dnp_ambiguous_or_unsupported_shapes_are_quiet",
+        "tests.test_can_unconnected_direction_pins_native_fixture_lane.test_native_open_can_direction_pin_fault_and_connected_control"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_can_unconnected_direction_pins.test_ordering_is_stable_and_assigning_open_pin_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_UNCONNECTED_DIRECTION_PIN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_unconnected_direction_pins.py#unconnected_can_direction_pins",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_unconnected_interface_candidates.py#unconnected_interface_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_unconnected_direction_pins.py#unconnected_can_direction_pins"
+    },
+    {
       "rule_id": "bus.can_unconnected_line",
       "title": "Recognized CAN line pin is unassigned",
       "status": "active",
