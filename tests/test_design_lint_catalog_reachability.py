@@ -19,6 +19,7 @@ import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
+import tests.design_lint_fixtures.i2c_unconnected_pins as _i2c_unconnected_pin_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
@@ -184,6 +185,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _usb_peer_reference_support.usb_peer_netlist(),
         _usb_unconnected_data_fixtures.usb_unconnected_data_netlist(),
         _serial_unconnected_pin_fixtures.serial_unconnected_netlist(),
+        _i2c_unconnected_pin_fixtures.i2c_unconnected_netlist(),
         _spi_unconnected_data_fixtures.spi_unconnected_data_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}

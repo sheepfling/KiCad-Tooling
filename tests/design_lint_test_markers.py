@@ -136,6 +136,8 @@ _LINT_AREA_MODULES = {
             "tests/test_serial_tx_output_sharing.py",
             "tests/test_serial_tx_output_sharing_native_fixture_lane.py",
             "tests/test_serial_unconnected_pins.py",
+            "tests/test_i2c_unconnected_pins.py",
+            "tests/test_i2c_unconnected_pins_native_fixture_lane.py",
             "tests/test_spi_unconnected_data_pins.py",
             "tests/test_serial_peer_native_fixture_lane.py",
             "tests/test_serial_unconnected_pins_native_fixture_lane.py",

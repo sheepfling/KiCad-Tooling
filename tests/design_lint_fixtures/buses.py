@@ -277,7 +277,7 @@ def unconnected_protocol_pins() -> NetlistContract:
             "U1": ComponentContract(value="I2C target", footprint=""),
             "U2": ComponentContract(value="SPI peripheral", footprint=""),
         },
-        nets={},
+        nets={"I2C_CLOCK": ("U1.2",)},
         component_symbols={
             "U1": "Synthetic:I2cTarget",
             "U2": "Synthetic:SpiPeripheral",
@@ -290,6 +290,7 @@ def unconnected_protocol_pins() -> NetlistContract:
             "J1.1": "CC1",
             "J1.2": "CC2",
         },
+        component_pin_numbers={"U1": ("1", "2"), "U2": ("1",), "J1": ("1", "2")},
     )
 
 

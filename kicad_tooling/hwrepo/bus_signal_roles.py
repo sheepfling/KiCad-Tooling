@@ -31,7 +31,7 @@ _SPI_ACTIVE_LOW_CHIP_SELECT_FUNCTIONS = frozenset({"csn", "ncs", "nss", "ssn", "
 
 @dataclass(frozen=True)
 class UnconnectedInterfacePin:
-    protocol: Literal["i2c", "spi", "usb_c", "can"]
+    protocol: Literal["spi", "usb_c", "can"]
     pin: str
     function: str
 
@@ -56,10 +56,8 @@ def unconnected_interface_pins(
         if pin in connected:
             continue
         compact = re.sub(r"[^a-z0-9]", "", function.casefold())
-        if i2c_signal_role(function) is not None:
-            protocol: Literal["i2c", "spi", "usb_c", "can"] = "i2c"
-        elif compact in _SPI_CHIP_SELECT_FUNCTIONS:
-            protocol = "spi"
+        if compact in _SPI_CHIP_SELECT_FUNCTIONS:
+            protocol: Literal["spi", "usb_c", "can"] = "spi"
         elif compact in {"cc1", "cc2"}:
             protocol = "usb_c"
         elif can_function_role(function) is not None:

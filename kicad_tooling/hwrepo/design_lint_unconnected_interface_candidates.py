@@ -5,6 +5,7 @@ from __future__ import annotations
 from .bus_signal_roles import unconnected_interface_pins
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
+from .i2c_unconnected_pins import unconnected_i2c_signal_pins
 from .models import NetlistContract
 from .serial_unconnected_pins import unconnected_serial_function_pins
 from .spi_unconnected_data_pins import unconnected_spi_data_function_pins
@@ -14,12 +15,29 @@ from .usb_unconnected_data import unconnected_usb_data_pins
 def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
     """Build review prompts for unconnected protocol pins."""
     found: list[Candidate] = []
+    for pin in unconnected_i2c_signal_pins(observed):
+        found.append(
+            Candidate(
+                rule_id="bus.i2c_unconnected_pin",
+                subject=f"{pin.pin}: {pin.function}",
+                message=(
+                    f"This I2C {pin.role} function pin is unassigned while its paired SDA/SCL "
+                    f"pin {pin.paired_pin} is assigned to {pin.paired_net}. Review whether "
+                    "the interface is intentionally partial or a connection is missing. The "
+                    "function names do not establish bus intent or PCB routing."
+                ),
+                evidence={
+                    pin.pin: (),
+                    "function": (pin.function,),
+                    "i2c_role": (pin.role,),
+                    "paired_pin": (pin.paired_pin,),
+                    "paired_net": (pin.paired_net,),
+                },
+            )
+        )
     for pin in unconnected_interface_pins(observed):
-        if pin.protocol == "i2c":
-            rule_id: DesignLintRuleId = "bus.i2c_unconnected_pin"
-            description = "I²C signal"
-        elif pin.protocol == "spi":
-            rule_id = "bus.spi_unconnected_chip_select"
+        if pin.protocol == "spi":
+            rule_id: DesignLintRuleId = "bus.spi_unconnected_chip_select"
             description = "SPI chip-select"
         elif pin.protocol == "usb_c":
             rule_id = "bus.usb_c_unconnected_cc_pin"

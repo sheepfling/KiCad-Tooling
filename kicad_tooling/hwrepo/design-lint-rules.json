@@ -4736,35 +4736,43 @@
     },
     {
       "rule_id": "bus.i2c_unconnected_pin",
-      "title": "Recognized I2C signal pin is unassigned",
+      "title": "Recognized I2C pin is open on a partially connected pair",
       "status": "active",
       "maturity": "synthetic_validated",
-      "default_mode": "review",
+      "default_mode": "off",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A pin function normalizing to SDA, SCL, I2C_SDA, or I2C_SCL is absent from every exported net.",
+      "predicate": "For a fitted component with a native pin inventory containing exactly one recognized SDA and one recognized SCL function pin, report an unassigned member only when the other pin has exactly one native net assignment.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "Function-name matching is library-dependent and does not infer that a particular bus endpoint is required.",
-        "An unassigned pin may be intentionally unused or connected off-board."
+        "Only aliases accepted by i2c_signal_role are recognized; vendor-specific function names and indexed multi-channel names outside that alias set are unsupported.",
+        "An entirely open pair is excluded because native pin functions do not establish I2C use. A partially assigned pair may also be intentional, so the rule defaults off and asks for review when enabled.",
+        "Components with missing or inconsistent pin inventories, or multiple recognized SDA or SCL pins, are excluded because the native function names do not identify their channel pairing. Multi-net assignments do not count as connected evidence.",
+        "The netlist does not establish endpoint intent, pull-up adequacy, firmware configuration, PCB copper, external wiring, or physical continuity."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_i2c_unconnected_pins.test_open_i2c_pin_emits_pair_and_net_evidence_when_enabled",
+        "tests.test_i2c_unconnected_pins_native_fixture_lane.test_native_open_i2c_pin_fault_and_connected_control"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules"
+        "tests.test_i2c_unconnected_pins.test_complete_unused_dnp_ambiguous_or_unsupported_shapes_are_quiet",
+        "tests.test_i2c_unconnected_pins_native_fixture_lane.test_native_open_i2c_pin_fault_and_connected_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_design_lint_unconnected_interfaces.test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individually"
+        "tests.test_i2c_unconnected_pins.test_ordering_is_stable_and_assigning_open_pin_clears_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES"
       ],
       "implementation_refs": [
-        "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/i2c_unconnected_pins.py#unconnected_i2c_signal_pins",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/design_lint_unconnected_interface_candidates.py#unconnected_interface_candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/bus_signal_roles.py#unconnected_interface_pins"
+      "implementation_owner": "kicad_tooling/hwrepo/i2c_unconnected_pins.py#unconnected_i2c_signal_pins"
     },
     {
       "rule_id": "bus.i2c_missing_pullup",

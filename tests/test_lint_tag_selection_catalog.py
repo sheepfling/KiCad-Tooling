@@ -92,6 +92,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),
         (
+            "bus.i2c_unconnected_pin",
+            "KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES",
+        ),
+        (
             "bus.serial_unconnected_pin",
             "KICAD_RUN_NATIVE_SERIAL_UNCONNECTED_PIN_FIXTURES",
         ),

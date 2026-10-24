@@ -35,7 +35,6 @@ def test_unconnected_i2c_spi_and_usb_c_control_pins_are_distinct_review_rules() 
     }
     assert {item.subject for item in report.findings} == {
         "U1.1: SDA",
-        "U1.2: I2C_SCL",
         "U2.1: CS_N",
         "J1.1: CC1",
         "J1.2: CC2",
@@ -64,6 +63,7 @@ def test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individu
     source = base.model_copy(
         update={
             "nets": {
+                **base.nets,
                 "CONTROL_GPIO": ("U1.3",),
                 "SPI_DATA": ("U2.2",),
             },
@@ -99,7 +99,7 @@ def test_unconnected_protocol_pin_candidates_are_order_stable_and_clear_individu
         }
 
     original_findings = selected_findings(original)
-    assert len(original_findings) == 5
+    assert len(original_findings) == 4
     assert selected_findings(reordered) == original_findings
 
     for subject, original_finding in original_findings.items():

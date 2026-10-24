@@ -4747,6 +4747,52 @@ is not a reason by itself to expand its scope or change its default policy.
       -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_unconnected_data_pin")'
   ```
 
+#### LINT-234 — Review an open I2C pin beside its assigned pair member
+
+- **Status:** Refined the existing `bus.i2c_unconnected_pin` rule and moved its
+  pairing predicate to `i2c_unconnected_pins.py#unconnected_i2c_signal_pins`.
+- **Gap:** The previous check reported every open SDA/SCL function pin, including
+  components whose entire I2C pair was unused. It did not distinguish a lone
+  open pin beside an assigned partner from an entirely open pair.
+- **Predicate:** For a fitted component whose native pin inventory contains
+  exactly one bounded recognized SDA and one SCL function pin, report the
+  unassigned member only when its pair member has exactly one native net
+  assignment. Preserve the open pin, paired
+  pin, role, and assigned net in the finding evidence. The rule defaults off
+  and supports the normal project review, block, off, and exact-ignore policy.
+- **Boundary:** The bounded aliases are those accepted by
+  `i2c_signal_role`; indexed multi-channel names and vendor-specific names are
+  unsupported. Missing or inconsistent native pin inventories and components
+  with multiple recognized SDA or SCL function pins are skipped as ambiguous.
+  An entirely open pair is quiet because pin names do
+  not prove that the interface is used. Even a partial pair may be intentional;
+  this rule does not establish bus intent, pull-up adequacy, PCB routing, or
+  off-board continuity.
+- **Fixtures and quality gate:** Synthetic tests cover SDA and SCL faults,
+  aliases, complete and entirely open controls, DNP state, ambiguous duplicate
+  roles, unsupported indexed aliases, incomplete pin inventories, multi-net
+  assignments, policy overrides, exact ignores, deterministic order, and
+  assignment repair. Tooling-owned native no-connect fault and
+  connected control schematics export twice on digest-pinned KiCad 10.0.0 and
+  10.0.5 with normalized netlist and ERC checks. The rule owner, focused
+  selectors, marker registries, native-fixture tag selector, active-rule
+  reachability, and module-size architecture gate are registered. No product
+  source or cohort design is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_i2c_unconnected_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_unconnected_pin")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_i2c_unconnected_pins_native_fixture_lane.py \
+      -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_unconnected_pin")'
+  ```
+
 #### LINT-082 — UART-labeled IC pairs with separate reference nets
 
 - **Status:** Implemented P1 extension to `bus.serial_peer_reference_review`;
