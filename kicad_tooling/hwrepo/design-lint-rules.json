@@ -122,16 +122,21 @@
         "Native schematic net equality does not establish PCB copper geometry, current capacity, external wiring, physical continuity, or manufacturing correctness."
       ],
       "fault_fixtures": [
-        "tests.test_connector_supply_domain_net_sharing.test_distinct_mapped_supply_domains_on_one_net_prompt_review"
+        "tests.test_connector_supply_domain_net_sharing.test_distinct_mapped_supply_domains_on_one_net_prompt_review",
+        "tests.test_ci_hosted_connector_returns.test_mapped_supply_domains_shared_net_fault"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_supply_domain_net_sharing.test_intentional_same_domain_and_distinct_net_controls_are_quiet",
         "tests.test_connector_supply_domain_net_sharing.test_stale_or_missing_source_matched_maps_do_not_prompt",
         "tests.test_connector_supply_domain_net_sharing.test_multiply_assigned_and_dnp_supply_contacts_are_skipped",
-        "tests.test_connector_supply_domain_net_sharing.test_project_policy_can_block_disable_or_ignore_the_review"
+        "tests.test_connector_supply_domain_net_sharing.test_project_policy_can_block_disable_or_ignore_the_review",
+        "tests.test_ci_hosted_connector_returns.test_mapped_supply_domains_shared_net_valid_controls"
       ],
       "metamorphic_fixtures": [
         "tests.test_connector_supply_domain_net_sharing.test_finding_is_stable_under_netlist_and_review_ordering"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates",

@@ -24,6 +24,13 @@ project-authored `pin_connectivity` requirement remains the authority for a
 required relationship. The fixtures and catalog contain no customer or
 proprietary source data.
 
+The same common-supply native export also tests the opposite error class:
+when the USB and serial contacts are mapped to different reviewed voltage
+domains, `connector.mapped_supply_domains_share_net` returns `REVIEW` and
+identifies both pins on `COMMON_SUPPLY`. The same-domain common-net control
+remains quiet. This is a map-bound review prompt, not proof that the domains
+are electrically incompatible or must remain separate.
+
 The digest-pinned connector acceptance lane also evaluates the split-supply
 fault with two complete, source-matched `supply_comparison_group` assignments
 that intentionally place the USB and serial contacts in separate review

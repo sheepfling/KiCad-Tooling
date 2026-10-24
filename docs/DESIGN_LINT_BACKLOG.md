@@ -11202,14 +11202,21 @@ is not a reason by itself to expand its scope or change its default policy.
 - **Fixtures:** Synthetic tests cover the distinct-domain shared-net fault,
   intentional same-domain and separate-net controls, stale or missing maps,
   ambiguous and DNP pins, project block/off and exact-ignore decisions, and
-  stable ordering. This predicate consumes existing source-bound netlist and
-  connector-coverage records; native export is unchanged, so it adds no native
-  fixture of its own.
+  stable ordering. A source-hashed synthetic USB/serial fixture also reuses its
+  common-net schematic under a different source-matched domain map to exercise
+  the native-netlist predicate. A same-domain common-net map and a
+  distinct-domain split-net export are controls. Digest-pinned native exports
+  repeat on KiCad 10.0.0 and 10.0.5; the mapped review changes while the
+  normalized netlist remains unchanged.
 - **Focused selection:**
 
   ```sh
-  python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
+  .venv/bin/python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
     -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
+
+  KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_ci_hosted_connector_returns.py \
+    -m 'design_lint and connector_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
   ```
 
 #### LINT-206 — Review unassigned mapped connector supply and return contacts

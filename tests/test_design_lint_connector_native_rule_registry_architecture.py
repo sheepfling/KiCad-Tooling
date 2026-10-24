@@ -40,6 +40,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.unconnected_return_pin": {
             "tests.test_ci_hosted_connector_returns.test_native_unconnected_named_connector_return_pin_cases_repeat",
         },
+        "connector.mapped_supply_domains_share_net": {
+            "tests.test_ci_hosted_connector_returns.test_mapped_supply_domains_shared_net_fault",
+        },
         "connector.unconnected_power_output": {
             "tests.test_connector_unconnected_power_output.test_generic_connector_power_output_fault_and_control_on_pinned_native_versions",
         },
@@ -192,6 +195,11 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         },
     }
     rules = {rule.rule_id: rule for rule in rule_catalog().rules}
+    expected_control_cases_by_rule = {
+        "connector.mapped_supply_domains_share_net": {
+            "tests.test_ci_hosted_connector_returns.test_mapped_supply_domains_shared_net_valid_controls",
+        },
+    }
     connector_native_rules = {
         rule_id
         for rule_id, rule in rules.items()
@@ -236,4 +244,5 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         rule = rules[rule_id]
         assert native_fixture_by_rule[rule_id] in rule.required_native_fixtures
         assert expected_cases <= set(rule.fault_fixtures)
-        assert expected_cases <= set(rule.valid_control_fixtures)
+        expected_controls = expected_control_cases_by_rule.get(rule_id, expected_cases)
+        assert expected_controls <= set(rule.valid_control_fixtures)

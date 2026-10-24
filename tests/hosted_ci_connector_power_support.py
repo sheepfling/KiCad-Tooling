@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from tests.hosted_ci_connector_common_support import assert_connector_result_sources
 
 
@@ -103,4 +105,51 @@ def assert_connector_power_and_role_cases(results, version):
             "unconnected-generic-power-input-fault",
             "unconnected-generic-power-input-control",
         ),
+    )
+
+
+def assert_mapped_supply_domain_sharing_fault(results, version):
+    fault = results["connector-return-fixture/reviewed-supply-domain-sharing-fault"]
+    assert fault["status"] == "PASS"
+    assert fault["coverage_status"] == "COMPLETE"
+    assert fault["lint_status"] == "REVIEW"
+    assert fault["findings"] == "connector.mapped_supply_domains_share_net"
+    assert fault["subjects"] == (
+        "COMMON_SUPPLY: mapped connector supply domains share one native net"
+    )
+    assert fault["repeatable"] == "true"
+    evidence = json.loads(fault["evidence"])
+    assert evidence["native_shared_net"] == ["COMMON_SUPPLY"]
+    assert evidence["reviewed_voltage_domains"] == ["external-5v", "isolated-5v"]
+    assert evidence["mapped_supply_assignments"] == [
+        "J1.1=COMMON_SUPPLY; voltage_domain=external-5v",
+        "J2.9=COMMON_SUPPLY; voltage_domain=isolated-5v",
+    ]
+    assert evidence["J1.1"] == evidence["J2.9"] == ["COMMON_SUPPLY"]
+    assert evidence["interface_catalog_sha256"] == [fault["catalog_sha256"]]
+    assert fault["catalog_sha256"] != ""
+    assert fault["kicad_version"] == version
+    assert_connector_result_sources(
+        results,
+        version,
+        ("reviewed-supply-domain-sharing-fault",),
+    )
+
+
+def assert_mapped_supply_domain_sharing_controls(results, version):
+    same_domain_common_net = results["connector-return-fixture/reviewed-supply-control"]
+    distinct_domain_separate_nets = results[
+        "connector-return-fixture/reviewed-supply-domain-control"
+    ]
+    for result in (same_domain_common_net, distinct_domain_separate_nets):
+        assert result["status"] == "PASS"
+        assert result["coverage_status"] == "COMPLETE"
+        assert result["lint_status"] == "PASS"
+        assert result["findings"] == "none"
+        assert result["repeatable"] == "true"
+        assert result["kicad_version"] == version
+    assert_connector_result_sources(
+        results,
+        version,
+        ("reviewed-supply-control", "reviewed-supply-domain-control"),
     )

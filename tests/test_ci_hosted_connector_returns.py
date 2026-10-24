@@ -14,7 +14,11 @@ import pytest
 from tests.hosted_ci_component_power_support import assert_unconnected_component_power_input_cases
 from tests.hosted_ci_connector_common_support import normalized_connector_return_patterns
 from tests.hosted_ci_connector_peer_support import assert_connector_peer_pin_cases
-from tests.hosted_ci_connector_power_support import assert_connector_power_and_role_cases
+from tests.hosted_ci_connector_power_support import (
+    assert_connector_power_and_role_cases,
+    assert_mapped_supply_domain_sharing_controls,
+    assert_mapped_supply_domain_sharing_fault,
+)
 from tests.hosted_ci_connector_return_support import (
     assert_base_connector_return_cases,
     assert_grounding_contract_cases,
@@ -287,6 +291,26 @@ def test_footprint_alias_named_signal_divergence_is_validated_on_pinned_native_v
 @pytest.mark.power_lint
 def test_power_pin_and_reviewed_role_cases(connector_return_results_by_version, version):
     assert_connector_power_and_role_cases(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+@pytest.mark.power_lint
+@pytest.mark.design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")
+def test_mapped_supply_domains_shared_net_fault(connector_return_results_by_version, version):
+    assert_mapped_supply_domain_sharing_fault(connector_return_results_by_version[version], version)
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+@pytest.mark.connector_lint
+@pytest.mark.power_lint
+@pytest.mark.design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")
+def test_mapped_supply_domains_shared_net_valid_controls(
+    connector_return_results_by_version, version
+):
+    assert_mapped_supply_domain_sharing_controls(
+        connector_return_results_by_version[version], version
+    )
 
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))

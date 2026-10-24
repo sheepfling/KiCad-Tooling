@@ -84,17 +84,23 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
         ("mapped-supply-fault", "external-5v", None),
         ("mapped-supply-control", "external-5v", None),
         ("mapped-supply-fault", "isolated-5v", None),
+        ("mapped-supply-control", "isolated-5v", None),
         (
             "mapped-supply-fault",
             "external-5v",
             {"J1": "usb-supply", "J2": "serial-supply"},
         ),
     ):
-        domain_control = serial_voltage_domain == "isolated-5v"
+        domain_sharing_fault = (
+            case == "mapped-supply-control" and serial_voltage_domain == "isolated-5v"
+        )
+        domain_control = serial_voltage_domain == "isolated-5v" and not domain_sharing_fault
         scope_control = supply_groups is not None
         report_key = (
             "mapped-supply-scope-control"
             if scope_control
+            else "mapped-supply-domain-sharing-fault"
+            if domain_sharing_fault
             else "mapped-supply-domain-control"
             if domain_control
             else case
@@ -160,6 +166,8 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
         expected_finding_ids: set[str] = (
             {"connector.repeated_pin_function"}
             if case == "mapped-supply-fault" and not domain_control and not scope_control
+            else {"connector.mapped_supply_domains_share_net"}
+            if domain_sharing_fault
             else set()
         )
         if (
@@ -170,25 +178,51 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
                 f"Reviewed supply domains changed unexpected {report_key} result: {mapped_report.status} {tuple(item.rule_id for item in mapped_report.findings)}"
             )
         if expected_finding_ids:
-            repeated = next(
-                item
-                for item in mapped_report.findings
-                if item.rule_id == "connector.repeated_pin_function"
+            finding = next(
+                item for item in mapped_report.findings if item.rule_id in expected_finding_ids
             )
-            expected_evidence = {
-                "J1.1": ("SUPPLY_ALPHA",),
-                "J2.9": ("SUPPLY_BETA",),
-                "role_classification_sources": (
-                    "J1.1: project interface catalog role=supply; voltage_domain=external-5v; native symbol function=Pin_1",
-                    "J2.9: project interface catalog role=supply; voltage_domain=external-5v; native symbol function=Pin_9",
-                ),
-                "reviewed_voltage_domain": ("external-5v",),
-            }
-            if dict(repeated.evidence) != expected_evidence:
-                raise ValueError("Mapped supply fault lost exact pin, domain, or role evidence")
+            if domain_sharing_fault:
+                expected_evidence = {
+                    "native_shared_net": ("COMMON_SUPPLY",),
+                    "reviewed_voltage_domains": ("external-5v", "isolated-5v"),
+                    "mapped_supply_assignments": (
+                        "J1.1=COMMON_SUPPLY; voltage_domain=external-5v",
+                        "J2.9=COMMON_SUPPLY; voltage_domain=isolated-5v",
+                    ),
+                    "role_classification_sources": (
+                        "J1.1: source-matched project interface role=supply; voltage_domain=external-5v; signal=POWER; native function=Pin_1",
+                        "J2.9: source-matched project interface role=supply; voltage_domain=isolated-5v; signal=POWER; native function=Pin_9",
+                    ),
+                    "J1.1": ("COMMON_SUPPLY",),
+                    "J2.9": ("COMMON_SUPPLY",),
+                }
+                if any(
+                    finding.evidence.get(key) != value for key, value in expected_evidence.items()
+                ):
+                    raise ValueError(
+                        "Mapped supply-domain short lost its exact net or pin evidence"
+                    )
+                if finding.evidence.get("interface_catalog_sha256") != (catalog_sha256,):
+                    raise ValueError(
+                        "Mapped supply-domain short omitted its interface catalog digest"
+                    )
+            else:
+                expected_evidence = {
+                    "J1.1": ("SUPPLY_ALPHA",),
+                    "J2.9": ("SUPPLY_BETA",),
+                    "role_classification_sources": (
+                        "J1.1: project interface catalog role=supply; voltage_domain=external-5v; native symbol function=Pin_1",
+                        "J2.9: project interface catalog role=supply; voltage_domain=external-5v; native symbol function=Pin_9",
+                    ),
+                    "reviewed_voltage_domain": ("external-5v",),
+                }
+                if dict(finding.evidence) != expected_evidence:
+                    raise ValueError("Mapped supply fault lost exact pin, domain, or role evidence")
         event_name = (
             "scope-control"
             if scope_control
+            else "domain-sharing-fault"
+            if domain_sharing_fault
             else "domain-control"
             if domain_control
             else "fault"
@@ -209,6 +243,9 @@ def verify_mapped_supply_interfaces(ctx: ConnectorReturnFixtureContext):
             lint_status=mapped_report.status,
             findings=",".join(item.rule_id for item in mapped_report.findings) or "none",
             subjects=";".join(item.subject for item in mapped_report.findings) or "none",
+            evidence=json.dumps(dict(mapped_report.findings[0].evidence), sort_keys=True)
+            if mapped_report.findings
+            else "none",
             source_role_classification=f"role=supply; USB domain=external-5v; serial domain={serial_voltage_domain}; native supply functions are generic Pin_1 and Pin_9",
             comparison_scope=(
                 "distinct reviewed supply groups"

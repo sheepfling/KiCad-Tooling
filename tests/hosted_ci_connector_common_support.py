@@ -47,6 +47,7 @@ def normalized_connector_return_patterns(results):
         "reviewed-supply-fault",
         "reviewed-supply-control",
         "reviewed-supply-domain-control",
+        "reviewed-supply-domain-sharing-fault",
         "reviewed-supply-scope-control",
         "unconnected-generic-power-input-fault",
         "unconnected-generic-power-input-control",

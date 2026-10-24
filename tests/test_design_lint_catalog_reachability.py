@@ -25,6 +25,7 @@ import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
+import tests.test_can_excess_termination as _tests_test_can_excess_termination
 import tests.test_connector_mapped_interface_other_named_rail as _tests_test_mapped_other_rail
 import tests.test_connector_mapped_interface_other_unassigned as _tests_test_mapped_other_contact
 import tests.test_connector_mapped_interface_power_contact_unassigned as _tests_test_mapped_power_contact
@@ -173,6 +174,9 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         no_can_assignments,
         _i2c_signal_label_fixtures.i2c_signal_same_net_netlist(),
         _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),
+        _tests_test_can_excess_termination._can_netlist_with_direct_terminators(
+            ("108R", "120R", "132R")
+        ),
         _usb_peer_reference_support.usb_peer_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}

@@ -394,9 +394,19 @@ normal `design_lint` policy.
 Select the synthetic regression slice with:
 
 ```sh
-python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
+.venv/bin/python -I -m pytest tests/test_connector_supply_domain_net_sharing.py \
   -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
+
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ci_hosted_connector_returns.py \
+  -m 'design_lint and connector_lint and native_kicad and design_lint_rule(rule_id="connector.mapped_supply_domains_share_net")'
 ```
+
+The pinned native fault reuses the synthetic USB/serial schematic with one
+shared supply net and two deliberately distinct source-matched voltage-domain
+labels. Same-domain shared-net and distinct-domain split-net controls stay
+quiet. This validates the schematic review prompt, not electrical
+incompatibility or a requirement to keep the domains separate.
 
 ### Mapped connector return/supply scopes with isolated peers
 
