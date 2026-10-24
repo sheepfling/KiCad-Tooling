@@ -14,6 +14,8 @@ _I2C_FUNCTIONS = {
     "scl": "SCL",
     "i2cscl": "SCL",
 }
+_I3C_FUNCTION = re.compile(r"(?<![a-z0-9])i3c(?P<channel>\d*)[_\s-]*(?P<role>sda|scl)(?![a-z0-9])")
+_I3C_ROLES: dict[str, Literal["SDA", "SCL"]] = {"sda": "SDA", "scl": "SCL"}
 
 _CAN_FUNCTIONS = {
     "canh": "CANH",
@@ -39,9 +41,30 @@ class UnconnectedInterfacePin:
     function: str
 
 
+@dataclass(frozen=True)
+class I3cSignalIdentity:
+    """One unambiguous I3C SDA or SCL function and its optional channel."""
+
+    channel: str | None
+    role: Literal["SDA", "SCL"]
+
+
 def i2c_signal_role(function: str) -> str | None:
     compact = re.sub(r"[^a-z0-9]", "", function.casefold())
     return _I2C_FUNCTIONS.get(compact)
+
+
+def i3c_signal_identity(function: str) -> I3cSignalIdentity | None:
+    """Recognize one explicit, optionally channel-indexed I3C SDA/SCL token."""
+    matches = tuple(_I3C_FUNCTION.finditer(function.casefold()))
+    if len(matches) != 1:
+        return None
+    match = matches[0]
+    channel_text = match.group("channel")
+    return I3cSignalIdentity(
+        channel=channel_text or None,
+        role=_I3C_ROLES[match.group("role")],
+    )
 
 
 def can_function_role(function: str) -> str | None:

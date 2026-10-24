@@ -96,6 +96,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES",
         ),
         (
+            "bus.i3c_signal_on_named_rail",
+            "KICAD_RUN_NATIVE_I3C_SIGNAL_NAMED_RAIL_FIXTURES",
+        ),
+        (
             "bus.usb_peer_data_pair_crossed",
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),

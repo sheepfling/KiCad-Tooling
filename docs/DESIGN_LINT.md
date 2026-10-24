@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 232 active rules.
+The catalog currently contains 233 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1245,6 +1245,31 @@ fault/control exports. See the
 KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_c_sbu_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_sbu_signal_on_named_rail")'
+```
+
+### I3C SDA/SCL pins assigned directly to named rails
+
+`bus.i3c_signal_on_named_rail` reviews an assigned pin on a fitted U/IC only
+when its complete native inventory contains one explicitly named I3C SDA/SCL
+pair with the same optional channel. A supply-like or return-like net label
+prompts review of the assignment. Function text and the net name are clues;
+they do not prove I3C use, required bus membership, electrical potential, or a
+defect. Generic or I2C-only names, mismatched or repeated roles, connectors,
+DNP parts, open or ambiguous pins, and incomplete inventories are skipped.
+Projects can use the normal `review`, `block`, or `off` policy and exact
+fingerprint ignores. The check does not trace passive paths or establish PCB
+or physical continuity. Synthetic fault/control, policy, boundary, ordering,
+repair, and hash-seed tests accompany digest-pinned KiCad 10.0.0 and 10.0.5
+native exports. See the
+[fixture notes](../tests/fixtures/design_lint/i3c-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i3c_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i3c_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_I3C_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_i3c_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_signal_on_named_rail")'
 ```
 
 ### I2C signal pin/name role review

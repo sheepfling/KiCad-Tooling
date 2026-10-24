@@ -103,6 +103,12 @@ def test_connector_pin_analysis_facade_stays_small() -> None:
     assert _line_count(facade) < FACADE_MAX_LINES
 
 
+def test_i3c_named_rail_rule_stays_in_a_focused_protocol_module() -> None:
+    module = HWREPO / "i3c_signal_named_rail.py"
+
+    assert _line_count(module) < IMPLEMENTATION_MAX_LINES
+
+
 def test_interface_coverage_models_live_in_theme_owners() -> None:
     owners = {
         "component_peer_pin_models.py": component_peer_pin_models,

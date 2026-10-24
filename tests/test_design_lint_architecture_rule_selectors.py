@@ -123,6 +123,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_usb_c_sbu_named_rail.py::test_neutral_labels_and_unrecognized_functions_are_quiet",
         ),
         (
+            "bus.i3c_signal_on_named_rail",
+            "tests/test_i3c_signal_named_rail.py::test_neutral_labels_mismatched_channels_and_unsupported_functions_are_controls",
+        ),
+        (
             "bus.serial_tx_rx_label_mismatch",
             "tests/test_serial_tx_rx_label_mismatch.py::test_opposite_uart_labels_are_reviewed_while_pins_remain_separate",
         ),

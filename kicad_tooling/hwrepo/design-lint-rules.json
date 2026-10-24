@@ -7760,6 +7760,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2c_signal_named_rail.py#i2c_signal_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.i3c_signal_on_named_rail",
+      "title": "I3C signal pin is assigned directly to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with exactly one explicitly named I3C SDA and SCL function in the same optional channel, require both function pins to appear in the complete native pin inventory and require one direct native net assignment for the examined pin. Emit a REVIEW candidate when that pin's net label matches the bounded supply-like or return-like vocabulary.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "I3C function text and a rail-like label are review clues, not proof of I3C use, required bus membership, the net's electrical potential, or a defect. Intentional direct assignments remain project decisions.",
+        "Only fitted U/IC references, one bounded SDA/SCL pair with matching optional channel, complete native pin-number inventory, and one unambiguous assignment for the examined pin are considered. I2C-only names, connector-only endpoints, duplicate or mismatched roles, DNP, an open or multiply assigned examined pin, and incomplete inventory cases are skipped.",
+        "This schematic-netlist prompt does not establish endpoint intent, bus behavior, passive paths, PCB copper continuity, external wiring, or physical connectivity."
+      ],
+      "fault_fixtures": [
+        "tests.test_i3c_signal_named_rail.test_explicit_i3c_pin_on_named_rail_requests_review",
+        "tests.test_i3c_signal_named_rail.test_project_policy_can_block_disable_or_ignore_a_review",
+        "tests.test_i3c_signal_named_rail_native_fixture_lane.test_native_i3c_signal_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i3c_signal_named_rail.test_neutral_labels_mismatched_channels_and_unsupported_functions_are_controls",
+        "tests.test_i3c_signal_named_rail.test_project_policy_can_block_disable_or_ignore_a_review",
+        "tests.test_i3c_signal_named_rail_native_fixture_lane.test_native_i3c_signal_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i3c_signal_named_rail.test_mapping_order_is_stable_and_correcting_both_nets_clears_review",
+        "tests.test_design_lint_determinism_i3c_signal_named_rail.test_i3c_signal_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I3C_SIGNAL_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i3c_signal_named_rail.py#i3c_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i3c_signal_identity",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i3c_signal_named_rail.py#i3c_signal_on_named_rail_candidates"
+    },
+    {
       "rule_id": "bus.i2c_signal_label_role_mismatch",
       "title": "I2C signal-pin function conflicts with its net name",
       "status": "active",

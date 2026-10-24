@@ -56,6 +56,10 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
             "usb_c_sbu_named_rail.py",
             "kicad_tooling/hwrepo/usb_c_sbu_named_rail.py#usb_c_sbu_signal_on_named_rail_candidates",
         ),
+        "bus.i3c_signal_on_named_rail": (
+            "i3c_signal_named_rail.py",
+            "kicad_tooling/hwrepo/i3c_signal_named_rail.py#i3c_signal_on_named_rail_candidates",
+        ),
         "bus.rs485_signal_on_named_rail": (
             "rs485_signal_named_rail.py",
             "kicad_tooling/hwrepo/rs485_signal_named_rail.py#rs485_signal_on_named_rail_candidates",
