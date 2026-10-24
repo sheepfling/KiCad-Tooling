@@ -242,22 +242,50 @@ def pwm_return_case_contracts() -> dict[str, NetlistContract]:
 
 
 def ret_return_label_case_contracts() -> dict[str, NetlistContract]:
-    """Return synthetic numbered, unindexed, and common RET-label netlists."""
+    """Return synthetic numbered, unindexed, and common return-label netlists."""
     neutral = return_case_contracts()["four-db9-neutral-fault"]
     common = return_case_contracts()["four-db9-neutral-control"]
     signal_nets = {name: pins for name, pins in neutral.nets.items() if name.startswith("SIGNAL")}
+    numbered_signal_pin_exclusions = {
+        "J1.1",
+        "J2.1",
+        "J3.1",
+        "J4.1",
+        "J1.2",
+        "J2.2",
+    }
+    numbered_signal_nets = {
+        name: tuple(pin for pin in pins if pin not in numbered_signal_pin_exclusions)
+        for name, pins in signal_nets.items()
+        if any(pin not in numbered_signal_pin_exclusions for pin in pins)
+    }
     return {
         "ret-numbered-fault": neutral.model_copy(
             update={
                 "nets": {
-                    **signal_nets,
+                    **numbered_signal_nets,
+                    "CAN1_GND": ("J1.1",),
+                    "CAN2_GND": ("J2.1",),
+                    "I2C1_0V": ("J3.1",),
+                    "I2C2_0V": ("J4.1",),
+                    "SPI1_RET": ("J1.2",),
+                    "SPI2_RET": ("J2.2",),
+                    "GND": ("J3.2", "J4.2"),
                     **{
                         name: (f"J{reference}.7", f"J{reference}.9")
                         for reference, name in enumerate(
                             ("RET1", "RET2", "PORT3_RET", "PORT4_RET"), start=1
                         )
                     },
-                }
+                },
+                "pin_functions": {
+                    **neutral.pin_functions,
+                    **{
+                        f"J{reference}.{pin}": "GND"
+                        for reference in range(1, 5)
+                        for pin in (1, 2)
+                    },
+                },
             }
         ),
         "ret-unindexed-fault": neutral.model_copy(

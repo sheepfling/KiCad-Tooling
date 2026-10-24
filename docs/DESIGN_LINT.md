@@ -1453,10 +1453,13 @@ not establish completeness, which remains the job of the independently authored
 component/net contract.
 
 The `net.numbered_returns` review also groups numbered protocol return labels
-such as `USB1_GND`/`USB2_GND` and `UART1_GND`/`UART2_GND`. It asks whether the
+such as `USB1_GND`/`USB2_GND`, `UART1_GND`/`UART2_GND`, `CAN1_GND`/`CAN2_GND`,
+`I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`. It asks whether each family’s
 domains should be common, bonded, or intentionally isolated; it does not infer
-that every port must share ground. Synthetic tests cover two and three ports
-per protocol family and a common-net control.
+that every port must share ground. The compact-prefix list is explicit, so
+unrecognized forms such as `CPU1_GND`/`CPU2_GND` stay quiet. Synthetic tests
+cover separate protocol families, common-net controls, and the allowlist
+boundary.
 
 The `mapped_check_runs` records distinguish an absent optional map
 (`NOT_CONFIGURED`) from a map comparison that ran and found no mismatch

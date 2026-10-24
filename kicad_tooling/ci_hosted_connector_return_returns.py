@@ -53,6 +53,12 @@ def verify_ret_return_label_cases(ctx: ConnectorReturnFixtureContext) -> None:
         name: pins for finding in numbered_findings for name, pins in finding.evidence.items()
     }
     expected_numbered = {
+        "CAN1_GND": ("J1.1",),
+        "CAN2_GND": ("J2.1",),
+        "I2C1_0V": ("J3.1",),
+        "I2C2_0V": ("J4.1",),
+        "SPI1_RET": ("J1.2",),
+        "SPI2_RET": ("J2.2",),
         "RET1": ("J1.7", "J1.9"),
         "RET2": ("J2.7", "J2.9"),
         "PORT3_RET": ("J3.7", "J3.9"),

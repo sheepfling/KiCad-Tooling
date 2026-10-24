@@ -15,7 +15,9 @@ _INDEX_BEFORE_RETURN = re.compile(
     re.IGNORECASE,
 )
 _RETURN_TOKEN = re.compile(rf"(?<![A-Z0-9])(?:{_RETURN_WORDS})(?![A-Z0-9])", re.IGNORECASE)
-_COMPACT_PORT_STEMS = frozenset({"USB", "UART", "SERIAL", "PORT", "COM"})
+_COMPACT_PROTOCOL_STEMS = frozenset(
+    {"USB", "UART", "SERIAL", "PORT", "COM", "CAN", "I2C", "SPI"}
+)
 
 
 def is_return_like_net_name(name: str) -> bool:
@@ -33,7 +35,7 @@ def _indexed_return(name: str) -> tuple[str, int] | None:
     if match is None:
         return None
     stem = match.group("stem").rstrip(" _./-")
-    if not match.group("separator") and stem.upper() not in _COMPACT_PORT_STEMS:
+    if not match.group("separator") and stem.upper() not in _COMPACT_PROTOCOL_STEMS:
         return None
     return f"{stem}_{match.group('return')}", int(match.group("index"))
 

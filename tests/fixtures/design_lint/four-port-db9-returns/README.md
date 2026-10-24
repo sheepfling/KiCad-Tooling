@@ -16,7 +16,7 @@ warnings caused by unrelated unassigned synthetic pins.
 | `control.kicad_sch`             | All J1–J4 pins 7/9 use `COMMON_RETURN`                          | `PASS`                                                          |
 | `pwm-fault.kicad_sch`           | J1–J4 pins 7/9 use `0V PWM 1` through `0V PWM 4`                | `REVIEW` for numbered return nets                               |
 | `pwm-control.kicad_sch`         | All J1–J4 pins 7/9 use `0V PWM`                                 | `PASS`                                                          |
-| `ret-numbered-fault.kicad_sch`  | J1/J2 use `RET1`/`RET2`; J3/J4 use `PORT3_RET`/`PORT4_RET`      | `REVIEW` for numbered return-like labels                        |
+| `ret-numbered-fault.kicad_sch`  | J1/J2 use `RET1`/`RET2`; J3/J4 use `PORT3_RET`/`PORT4_RET`; CAN, I2C, and SPI return labels are split by port | `REVIEW` with exact numbered-return evidence |
 | `ret-unindexed-fault.kicad_sch` | J1/J2 use `RET_USB`/`RET_SERIAL`; J3/J4 use neutral labels      | `REVIEW` for unindexed return-like labels                       |
 | `ret-control.kicad_sch`         | All J1–J4 pins 7/9 use one `RET` net with numeric pin functions | No numbered or unindexed RET-label finding                      |
 
@@ -35,9 +35,10 @@ synthetic values.
 
 ## RET token native fault and control coverage
 
-The source-hash-pinned native lane also covers three synthetic RET cases. The
-numbered fault exercises both recognized forms (`RET1`/`RET2` and
-`PORT3_RET`/`PORT4_RET`) and must produce exact numbered-return evidence. The
+The source-hash-pinned native lane also covers three synthetic return-label
+cases. The numbered fault exercises `RET1`/`RET2`, `PORT3_RET`/`PORT4_RET`,
+`CAN1_GND`/`CAN2_GND`, `I2C1_0V`/`I2C2_0V`, and `SPI1_RET`/`SPI2_RET`; it must
+produce exact numbered-return evidence for each split family. The
 unindexed fault assigns `RET_USB` and `RET_SERIAL` to separate connector return
 pairs while leaving two neutral-label pairs as controls; it must produce the
 unindexed return-label review without a numbered-return finding. The common

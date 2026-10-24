@@ -59,6 +59,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_numbered_interface_returns.py::test_usb_and_serial_port_returns_are_grouped_by_protocol_stem",
         ),
         (
+            "net.numbered_returns",
+            "tests/test_protocol_return_name_groups.py::test_compact_can_i2c_and_spi_return_families_are_reviewed_separately",
+        ),
+        (
             "connector.unconnected_supply_pin",
             "tests/test_design_lint_power_pin_patterns.py::TestDesignLintPowerPinPatterns::test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
         ),
