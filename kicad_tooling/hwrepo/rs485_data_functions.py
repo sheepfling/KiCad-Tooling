@@ -42,9 +42,7 @@ def explicit_rs485_transceiver_identity(observed: NetlistContract, reference: st
     component = lookup_unique_casefold(observed.components, reference)
     if component is None:
         return None
-    identity = " ".join(
-        value for value in (symbol, component.value) if value
-    )
+    identity = " ".join(value for value in (symbol, component.value) if value)
     if not is_explicit_rs485_transceiver_identity(identity):
         return None
     return identity
