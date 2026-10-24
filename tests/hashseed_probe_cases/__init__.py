@@ -33,6 +33,7 @@ HASHSEED_REPORT_FAMILIES = (
     "interfaces",
     "i2c_signal_named_rail",
     "serial_signal_named_rail",
+    "spi_signal_named_rail",
     "analog",
     "schematic_geometry",
 )

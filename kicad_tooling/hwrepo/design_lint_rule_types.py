@@ -148,6 +148,7 @@ DesignLintRuleId = Literal[
     "bus.spi_active_low_chip_select_without_pullup",
     "bus.spi_data_polarity_label_mismatch",
     "bus.spi_clock_select_label_mismatch",
+    "bus.spi_signal_on_named_rail",
     "bus.spi_data_input_output_same_net",
     "bus.spi_clock_control_data_same_net",
     "bus.spi_clock_chip_select_same_net",

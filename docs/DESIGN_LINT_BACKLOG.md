@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 222 rules are implemented with synthetic regression coverage.
+The following 223 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 222 active rules.
+The catalog currently contains 223 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -567,6 +567,7 @@ skipped under prerelease policy.
 - `bus.spi_active_low_chip_select_without_pullup`
 - `bus.spi_data_polarity_label_mismatch`
 - `bus.spi_clock_select_label_mismatch`
+- `bus.spi_signal_on_named_rail`
 - `bus.spi_data_input_output_same_net`
 - `bus.spi_clock_control_data_same_net`
 - `bus.spi_clock_chip_select_same_net`
@@ -744,7 +745,14 @@ and optional ecosystem adapters are `P3`.
   heuristic localizes fitted UART/USART TX/RX pins assigned directly to a
   named supply or return rail. Synthetic fault/control and exact-version KiCad
   export coverage are in place; function and label remain evidence clues, not
-  a connection requirement. Tagged acceptance is pending.
+  a connection requirement. Tagged acceptance passed as `v0.5.3rc168` (GitHub
+  Actions run `40094712397`).
+- **LINT-241 SPI signal pin assigned to a named rail:** The default-review
+  heuristic applies the bounded rail-label clue to fitted SPI clock,
+  chip-select, and data-role pins. It shares source-evidence collection with
+  the I2C and serial rules while keeping the SPI predicate in its own module.
+  Fault/control, intentional chip-select strap, policy, ordering, hash-seed,
+  catalog, selector, and digest-pinned KiCad export cases are registered.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3141,7 +3149,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 222 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 223 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5096,6 +5104,42 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_serial_signal_named_rail.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_signal_on_named_rail")'
   KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_serial_tx_rx_label_mismatch_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_signal_on_named_rail")'
+  ```
+
+#### LINT-241 — Review fitted SPI signal pins assigned to named rails
+
+- **Status:** Implemented as the default-`review` `bus.spi_signal_on_named_rail`
+  heuristic. Project policy can promote it to `block`, set it to `off`, or
+  ignore an exact finding.
+- **Gap:** The named-rail clue already localized suspicious I2C and UART/USART
+  pin assignments. The same bounded clue was not applied to SPI clock,
+  chip-select, and data-role pins.
+- **Predicate:** For fitted U/IC pins, recognize exact clock, chip-select, or
+  data-role functions through `spi_signal_role_and_channel`. Require a complete
+  component pin inventory and exactly one native net assignment; prompt only
+  when the assigned net label matches the bounded supply-like or return-like
+  vocabulary.
+- **Boundary:** A pin-function name and rail-like net label are review clues,
+  not proof of voltage, required SPI membership, or an electrical fault.
+  Intentional rail straps remain valid, including inactive chip-select straps.
+  The schematic netlist does not prove PCB copper or physical continuity.
+- **Fixtures and quality gate:** Four protocol roles and both rail classes;
+  neutral-label, unsupported-function, generic connector, DNP, open,
+  multiply-assigned, incomplete-inventory, and non-SPI controls; exact ignore,
+  `off`, and `block`; stable order and repaired assignment; process-level
+  hash-seed comparison; and source-hashed fault/control exports with clean ERC
+  on digest-pinned KiCad 10.0.0 and 10.0.5. Catalog owner, rule selector,
+  marker registry, native-switch selector, and focused module-size checks are
+  registered. Fixtures contain only Tooling-authored synthetic data.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_signal_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_SPI_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_spi_signal_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

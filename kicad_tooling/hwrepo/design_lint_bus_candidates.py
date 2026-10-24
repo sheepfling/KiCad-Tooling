@@ -47,6 +47,7 @@ from .spi_data_label import spi_data_polarity_label_candidates
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
 from .spi_same_net import spi_data_input_output_same_net_candidates
+from .spi_signal_named_rail import spi_signal_on_named_rail_candidates
 from .spi_shared_chip_select import spi_chip_select_inputs_share_net_candidates
 from .spi_shared_data_outputs import spi_data_outputs_share_net_candidates
 
@@ -89,6 +90,7 @@ def bus_candidates(
         *spi_bias_candidates(observed, spi_roster),
         *spi_data_polarity_label_candidates(observed),
         *spi_clock_select_label_mismatch_candidates(observed),
+        *spi_signal_on_named_rail_candidates(observed),
         *spi_data_input_output_same_net_candidates(observed),
         *spi_clock_control_data_same_net_candidates(observed),
         *spi_clock_chip_select_same_net_candidates(observed),

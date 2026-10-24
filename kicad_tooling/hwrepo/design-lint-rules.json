@@ -5991,6 +5991,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/spi_clock_select_label_mismatch.py#spi_clock_select_label_mismatch_candidates"
     },
     {
+      "rule_id": "bus.spi_signal_on_named_rail",
+      "title": "SPI signal pin is assigned directly to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC pin with a bounded SPI clock, chip-select, or data-role function from spi_signal_role_and_channel, require the pin number in the complete native pin inventory and exactly one net assignment. Emit REVIEW when the assigned net label matches the bounded supply-like or return-like vocabulary.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project version is checked before export"
+      ],
+      "limitations": [
+        "The native SPI pin function and rail-like label are review clues, not proof of an electrical defect, required endpoint, or net potential. Intentional rail straps, including inactive chip-select straps, remain valid project decisions.",
+        "Only fitted U/IC references, exact function aliases accepted by spi_signal_role_and_channel, complete native pin-number inventories, and one unambiguous assignment are considered. Connector-only endpoints, vendor-specific aliases, DNP, open, multiply assigned, and incomplete-inventory cases are skipped.",
+        "This schematic-netlist prompt does not establish SPI topology, protocol use, PCB copper continuity, external wiring, or physical connectivity."
+      ],
+      "fault_fixtures": [
+        "tests.test_spi_signal_named_rail.test_spi_pin_assigned_to_named_rail_requests_review_with_exact_evidence",
+        "tests.test_spi_signal_named_rail_native_fixture_lane.test_native_spi_signal_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_spi_signal_named_rail.test_neutral_labels_and_unsupported_spi_functions_are_quiet",
+        "tests.test_spi_signal_named_rail.test_dnp_open_ambiguous_and_duplicate_pin_metadata_are_skipped",
+        "tests.test_spi_signal_named_rail.test_chip_select_rail_strap_can_be_disabled_or_ignored_exactly",
+        "tests.test_spi_signal_named_rail_native_fixture_lane.test_native_spi_signal_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_spi_signal_named_rail.test_mapping_order_is_stable_and_repaired_assignment_clears_review",
+        "tests.test_design_lint_determinism_spi_signal_named_rail.test_spi_signal_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SPI_SIGNAL_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/spi_signal_named_rail.py#spi_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/spi_participants.py#spi_signal_role_and_channel",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/spi_signal_named_rail.py#spi_signal_on_named_rail_candidates"
+    },
+    {
       "rule_id": "bus.spi_chip_select_inputs_share_net",
       "title": "Multiple SPI chip-select inputs share one net",
       "status": "active",

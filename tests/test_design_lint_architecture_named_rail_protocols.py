@@ -24,10 +24,14 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
             "serial_signal_named_rail.py",
             "kicad_tooling/hwrepo/serial_signal_named_rail.py#serial_signal_on_named_rail_candidates",
         ),
+        "bus.spi_signal_on_named_rail": (
+            "spi_signal_named_rail.py",
+            "kicad_tooling/hwrepo/spi_signal_named_rail.py#spi_signal_on_named_rail_candidates",
+        ),
     }
     catalog = {item.rule_id: item for item in rule_catalog().rules}
-    shared_roles = HWREPO / "named_rail_roles.py"
-    assert line_count(shared_roles) < IMPLEMENTATION_MAX_LINES
+    for shared_name in ("named_rail_roles.py", "named_rail_pin_evidence.py"):
+        assert line_count(HWREPO / shared_name) < IMPLEMENTATION_MAX_LINES
 
     for rule_id, (filename, owner_reference) in owner_functions.items():
         rule = catalog[rule_id]

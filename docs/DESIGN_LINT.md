@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 222 active rules.
+The catalog currently contains 223 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1020,6 +1020,30 @@ python -I -m pytest tests/test_spi_clock_select_label_mismatch.py \
 KICAD_RUN_NATIVE_SPI_CLOCK_SELECT_LABEL_FIXTURES=1 python -I -m pytest \
   tests/test_spi_clock_select_label_mismatch_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_clock_select_label_mismatch")'
+```
+
+### SPI signal pins assigned directly to named rails
+
+`bus.spi_signal_on_named_rail` reviews fitted U/IC pins with a bounded SPI
+clock, chip-select, or data-role function when the pin has one native assignment
+to a net whose label resembles a supply or return. It requires a complete pin
+inventory and skips DNP parts, connectors, open or ambiguous assignments, and
+unrecognized function aliases. Direct rail straps can be intentional, including
+a chip-select held inactive, so the rule defaults to `review` and supports
+project `block`, `off`, and exact-fingerprint ignore decisions. Pin functions
+and names are clues; this check does not establish required SPI connectivity,
+electrical potential, PCB copper, or physical continuity. The tooling-authored
+fault and control export twice with clean ERC on digest-pinned KiCad 10.0.0 and
+10.0.5 images; see the
+[fixture note](../tests/fixtures/design_lint/spi-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_spi_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_SPI_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_spi_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_signal_on_named_rail")'
 ```
 
 ### I2C signal pin/name role review
