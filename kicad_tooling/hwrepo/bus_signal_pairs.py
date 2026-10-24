@@ -94,6 +94,19 @@ def _complementary_function_key(function: str) -> str:
     return re.sub(r"[\s_./]", "", function.casefold()).replace("−", "-")
 
 
+def complementary_pin_function_key(function: str) -> str:
+    """Normalize a pin-function or net-label alias for bounded pair matching."""
+    return _complementary_function_key(function)
+
+
+def ethernet_data_pair_function_role(function: str) -> tuple[str, str] | None:
+    """Return the TX/RX direction and side for bounded Ethernet pin functions."""
+    role = _COMPLEMENTARY_FUNCTIONS.get(_complementary_function_key(function))
+    if role is None or role[0] not in {"Ethernet TX", "Ethernet RX"}:
+        return None
+    return role[0].removeprefix("Ethernet "), role[1]
+
+
 def _complementary_alias_sha256(alias: ComplementaryPinFunctionAlias) -> str:
     payload = {
         "symbol": alias.symbol,

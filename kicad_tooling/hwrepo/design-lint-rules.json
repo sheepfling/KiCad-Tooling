@@ -5698,6 +5698,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_line_polarity.py#can_line_polarity_label_candidates"
     },
     {
+      "rule_id": "bus.ethernet_data_label_mismatch",
+      "title": "Ethernet data-pair pin functions conflict with net labels",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted pin with a bounded native TD+/TD−, TDP/TDN, RD+/RD−, or RDP/RDN function and exactly one assigned net, compare its Ethernet TX/RX direction and polarity with a bounded TX/RX plus polarity net-name alias, optionally prefixed by Ethernet, ETH, or MDI. Emit one REVIEW candidate when the recognized roles conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Recognition is bounded to the listed native pin-function aliases and explicit TX/RX plus polarity net labels. Neutral, indexed, vendor-specific, and otherwise unrecognized labels remain unclassified.",
+        "This is a name-based review clue, not a project-authored pinout requirement or defect verdict. PHY TX/RX labels can be endpoint-relative; the check does not infer the intended perspective, PHY mode, routing, or physical connectivity.",
+        "DNP, open, and multiply assigned pins are skipped. Same-component opposite-side pair shorts remain owned by bus.complementary_pair_assignment."
+      ],
+      "fault_fixtures": [
+        "tests.test_ethernet_data_labels.test_crossed_ethernet_pair_labels_are_reviewed_with_exact_pin_evidence",
+        "tests.test_ethernet_data_label_native_fixture_lane.test_native_ethernet_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ethernet_data_labels.test_crossed_ethernet_pair_labels_are_reviewed_with_exact_pin_evidence",
+        "tests.test_ethernet_data_labels.test_neutral_indexed_dnp_and_ambiguous_net_labels_are_not_classified",
+        "tests.test_ethernet_data_label_native_fixture_lane.test_native_ethernet_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ethernet_data_labels.test_reordering_is_stable_and_corrected_labels_clear_findings"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_data_pair_function_role",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates"
+    },
+    {
       "rule_id": "bus.can_tx_rx_same_net",
       "title": "CAN controller TX and RX pins share one net",
       "status": "active",
@@ -7522,7 +7562,6 @@
         "tests.test_ci_hosted_digital_peer_spi.test_spi_composite_pin_alias_fault_and_roster_control_by_native_version"
       ],
       "valid_control_fixtures": [
-        "tests.test_spi_participants.test_rostered_spi_device_and_controller_are_suppressed",
         "tests.test_spi_participants.test_dnp_non_ic_and_incomplete_signal_patterns_are_excluded",
         "tests.test_spi_composite_pin_functions.test_combo_interface_spi_aliases_are_reviewed_but_i2c_only_names_are_not",
         "tests.test_ci_hosted_digital_peer_spi.test_spi_composite_pin_alias_fault_and_roster_control_by_native_version"

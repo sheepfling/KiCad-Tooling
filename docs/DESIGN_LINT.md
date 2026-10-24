@@ -694,7 +694,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 218 active rules.
+The catalog currently contains 219 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -843,6 +843,27 @@ python -I -m pytest tests/test_can_line_polarity.py \
 KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES=1 python -I -m pytest \
   tests/test_can_line_polarity_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_line_polarity_label_mismatch")'
+```
+
+### Ethernet data-pair pin/name direction review
+
+`bus.ethernet_data_label_mismatch` compares bounded native TD+/TD−, TDP/TDN, RD+/RD−, and RDP/RDN
+pin functions with recognized TX/RX net names, optionally qualified by Ethernet, ETH, or MDI. A
+direction or polarity contradiction produces a configurable `review` finding. Neutral, indexed, or
+unrecognized net labels and DNP, open, or ambiguous pins remain unclassified. The naming clue
+follows public PHY pin conventions such as those documented by
+[TI](https://www.ti.com/lit/ds/symlink/dp83826e.pdf) and
+[Microchip](https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/VMDS-10105.pdf);
+it does not establish a project pinout, PHY mode, PCB routing, or physical connectivity. See the
+[synthetic fixture record](../tests/fixtures/design_lint/ethernet-data-label-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_data_labels.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_data_label_mismatch")'
+
+KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_data_label_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_data_label_mismatch")'
 ```
 
 ### CAN TX/RX pin and net-label direction review

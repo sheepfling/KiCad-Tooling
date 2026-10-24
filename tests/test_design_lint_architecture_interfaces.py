@@ -235,6 +235,23 @@ def test_can_tx_rx_same_net_rule_uses_a_focused_predicate_owner() -> None:
     assert rule.implementation_owner in rule.implementation_refs
 
 
+def test_ethernet_label_mismatch_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.ethernet_data_label_mismatch"
+    )
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_data_pair_function_role"
+        in rule.implementation_refs
+    )
+
+
 def test_rs485_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
     from kicad_tooling.hwrepo.design_lint import rule_catalog
 

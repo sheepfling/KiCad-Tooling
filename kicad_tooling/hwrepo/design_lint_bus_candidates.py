@@ -20,6 +20,7 @@ from .design_lint_signal_pair_candidates import (
 from .design_lint_spi_candidates import spi_bias_candidates, spi_peer_reference_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
+from .ethernet_pair_labels import ethernet_data_label_mismatch_candidates
 from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,
@@ -89,6 +90,7 @@ def bus_candidates(
         *unconnected_interface_candidates(observed),
         *can_candidates(observed, can_peer_reference_scan, component_peer_findings),
         *rs485_candidates(observed, rs485_peer_reference_scan, component_peer_findings),
+        *ethernet_data_label_mismatch_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),

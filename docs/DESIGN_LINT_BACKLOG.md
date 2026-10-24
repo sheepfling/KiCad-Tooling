@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 218 rules are implemented with synthetic regression coverage.
+The following 219 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 218 active rules.
+The catalog currently contains 219 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -582,6 +582,7 @@ skipped under prerelease policy.
 - `bus.can_peer_assignment_divergence`
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
+- `bus.ethernet_data_label_mismatch`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
@@ -720,6 +721,12 @@ and optional ecosystem adapters are `P3`.
   identifies one open D/DI or R/RO pin beside its unique assigned counterpart
   on a fitted IC with complete native pin metadata and explicit RS-485 identity.
   One-way use remains valid; the check does not require a connection.
+- **LINT-237 Ethernet pin/name role mismatch:** A default-review heuristic
+  compares bounded PHY TD/RD pin functions with explicit Ethernet TX/RX net
+  labels. Neutral or indexed labels remain quiet, and the finding requests
+  inspection instead of asserting an authoritative pinout. Synthetic controls,
+  policy, determinism, and digest-pinned KiCad 10.0.0/10.0.5 export cases are
+  registered.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3116,7 +3123,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 218 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 219 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4913,6 +4920,49 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_RS485_UNCONNECTED_DATA_PIN_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_rs485_unconnected_data_pins_native_fixture_lane.py \
       -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.rs485_unconnected_data_pin")'
+  ```
+
+#### LINT-237 — Review Ethernet PHY pin functions that contradict net labels
+
+- **Status:** Implemented as `bus.ethernet_data_label_mismatch`, owned by
+  `ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates`.
+- **Gap:** The shared pair checker recognizes Ethernet TD/RD complementary
+  functions, but completeness checks do not identify a complete TX pair whose
+  explicit labels say RX (or a complete RX pair labeled TX).
+- **Predicate:** For each fitted, assigned pin with a bounded native
+  TD+/TD−, TDP/TDN, RD+/RD−, or RDP/RDN function and exactly one net, compare
+  its direction and polarity with recognized TX/RX net-name aliases, optionally
+  qualified by Ethernet, ETH, or MDI. Emit one review candidate per
+  contradictory pin.
+- **Boundary:** This is a naming heuristic. Neutral, indexed, and unknown
+  labels, DNP pins, open pins, and multiply assigned pins are not classified.
+  The check does not infer a required pinout from a project, establish endpoint
+  perspective or PHY mode, or inspect routed copper and physical continuity.
+  Public [TI DP83826](https://www.ti.com/lit/ds/symlink/dp83826e.pdf) and
+  [Microchip VSC8211](https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/VMDS-10105.pdf)
+  documentation supports the bounded pin-function vocabulary, not a board's
+  intended labels.
+- **Fixtures and quality gate:** Synthetic unit tests cover signed and P/N
+  aliases, correct and crossed labels, neutral and indexed controls, DNP and
+  ambiguous assignments, pair-short ownership, policy, exact ignore,
+  deterministic output, and correction. Source-hashed synthetic schematics
+  repeat native export and assert exact pin/function/net evidence using
+  digest-pinned KiCad 10.0.0 and 10.0.5 images. The rule has focused pytest
+  selectors, active catalog owner and fixture wiring, marker-registry, tag
+  native-fixture, and module-size checks. No external project designs are used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_data_labels.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_data_label_mismatch")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_ethernet_data_label_native_fixture_lane.py \
+      -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_data_label_mismatch")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

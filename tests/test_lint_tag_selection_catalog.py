@@ -116,6 +116,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES",
         ),
         (
+            "bus.ethernet_data_label_mismatch",
+            "KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES",
+        ),
+        (
             "bus.i2c_signal_label_role_mismatch",
             "KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES",
         ),
