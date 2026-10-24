@@ -3932,9 +3932,10 @@ KICAD_RUN_NATIVE_SPI_BIAS_ARRAY_FIXTURES=1 .venv/bin/python -I -m pytest \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_active_low_chip_select_without_pullup")'
 ```
 
-The source-hashed fixtures live in
-`tests/fixtures/design_lint/spi-bias-array-native/` and are run against the
-digest-pinned KiCad 10.0.0 and 10.0.5 images in package acceptance.
+The source-hashed fixtures and provenance are recorded in the
+[SPI array fixture README](../tests/fixtures/design_lint/spi-bias-array-native/README.md)
+and run against the digest-pinned KiCad 10.0.0 and 10.0.5 images in package
+acceptance.
 
 ## Review unmapped SPI peers across voltage-named rails
 

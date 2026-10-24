@@ -12,6 +12,12 @@ supported while we migrate the suite incrementally, prioritizing lint and
 verification coverage. Convert the touched regression tests to pytest functions
 when extending a legacy suite. `unittest.mock` remains useful with pytest.
 
+The exact SPI chip-select resistor-array fault/control topology and source
+hashes are recorded in the
+[SPI array fixture README](fixtures/design_lint/spi-bias-array-native/README.md).
+The reset/enable/boot input array has its own
+[control-input array fixture README](fixtures/design_lint/control-input-array-native/README.md).
+
 The schematic-to-PCB pad-net native fault and control are synthetic tooling
 fixtures; their source boundary and pinned hashes are recorded in the
 [fixture README](fixtures/design_lint/schematic-pcb-pad-net/README.md).
