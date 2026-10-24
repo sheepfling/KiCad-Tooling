@@ -72,6 +72,7 @@ BUS_ANALYSIS_MODULES = (
     "rs485_same_net.py",
     "design_lint_interfaces_usb_data_polarity.py",
     "usb_unconnected_data.py",
+    "spi_unconnected_data_pins.py",
     "serial_unconnected_pins.py",
     "i2c_signal_label.py",
     "i2c_same_net.py",

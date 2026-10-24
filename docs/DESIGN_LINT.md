@@ -39,6 +39,23 @@ intent, PCB routing, or continuity. See the
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_unconnected_pin")'
 ```
 
+## Review open SPI data pins on partially connected channels
+
+`bus.spi_unconnected_data_pin` recognizes bounded MOSI/MISO-family pin functions on fitted U/IC
+references. It reports an unassigned data pin only when another data pin on that same IC and parsed
+channel has exactly one net assignment. Entirely open channels, DNP parts, connector references,
+unsupported functions, and ambiguous assignments are skipped. The rule defaults to `off`; projects
+can enable `review`, promote it to `block`, disable it, or add an exact fingerprint ignore. A
+one-way SPI device may intentionally leave a data direction unused, so the finding asks for review
+and does not require a connection or establish firmware use, endpoint intent, PCB routing, or
+continuity. See the
+[source-hashed native fault and control](../tests/fixtures/design_lint/spi-unconnected-data-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_spi_unconnected_data_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_unconnected_data_pin")'
+```
+
 ## Reconcile findings against a source-bound baseline
 
 Use the [source-bound finding reconciliation guide](DESIGN_LINT_RECONCILIATION.md)
@@ -589,7 +606,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 215 active rules.
+The catalog currently contains 216 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

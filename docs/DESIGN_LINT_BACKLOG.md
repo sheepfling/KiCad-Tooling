@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 215 rules are implemented with synthetic regression coverage.
+The following 216 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 215 active rules.
+The catalog currently contains 216 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -560,6 +560,7 @@ skipped under prerelease policy.
 - `bus.usb_peer_reference_review`
 - `bus.usb_unconnected_data_pin`
 - `bus.spi_unconnected_chip_select`
+- `bus.spi_unconnected_data_pin`
 - `bus.spi_active_low_chip_select_without_pullup`
 - `bus.spi_data_polarity_label_mismatch`
 - `bus.spi_clock_select_label_mismatch`
@@ -3087,7 +3088,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 215 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 216 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4702,6 +4703,48 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_serial_unconnected_pins.py \
     -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_unconnected_pin")'
+  ```
+
+#### LINT-233 — Review an open SPI data pin on a partially connected channel
+
+- **Status:** Implemented as opt-in `bus.spi_unconnected_data_pin`, owned by
+  `spi_unconnected_data_pins.py#unconnected_spi_data_function_pins`.
+- **Gap:** SPI same-net, pin-role, and peer-map checks require assigned pins.
+  They can skip a MOSI/MISO-family function explicitly left open even when a
+  different data pin on that fitted IC and channel is connected.
+- **Predicate:** Reuse the bounded SPI data-function parser. For fitted U/IC
+  references, report an unassigned MOSI/MISO-family function only when another
+  pin on the same component and parsed channel has exactly one native net
+  assignment. Entirely open channels, DNP parts, connector references,
+  unsupported functions, and ambiguous multi-net assignments are excluded.
+- **Boundary:** Data pin names do not establish that a channel is used or that
+  an open direction must connect. A one-way, transmit-only, or receive-only
+  design may intentionally leave a function open. The rule defaults to `off`
+  and supports `review`, `block`, `off`, and exact fingerprint ignores. It does
+  not infer firmware configuration, endpoint intent, PCB routing, or physical
+  continuity.
+- **Fixtures and quality gate:** Synthetic cases cover all six MOSI/MISO-family
+  aliases, indexed channels, channel separation, fitted/DNP state, connector
+  exclusion, connected and entirely-open controls, exact policy behavior,
+  stable ordering, and assignment repair. A source-hashed explicit no-connect
+  fault and connected control export twice on digest-pinned KiCad 10.0.0 and
+  10.0.5. The native gate checks the exact changed pin assignment, default-off
+  behavior, opt-in review evidence, and repeatable typed netlists. Catalog
+  ownership, focused test selection, fixture registration, and module size are
+  guarded. No project or cohort design data is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_spi_unconnected_data_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_unconnected_data_pin")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_spi_unconnected_data_pins_native_fixture_lane.py \
+      -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_unconnected_data_pin")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

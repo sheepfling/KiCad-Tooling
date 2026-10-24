@@ -7,6 +7,7 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .models import NetlistContract
 from .serial_unconnected_pins import unconnected_serial_function_pins
+from .spi_unconnected_data_pins import unconnected_spi_data_function_pins
 from .usb_unconnected_data import unconnected_usb_data_pins
 
 
@@ -58,6 +59,26 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
                         if pin.port_index is not None
                         else {}
                     ),
+                },
+            )
+        )
+    for pin in unconnected_spi_data_function_pins(observed):
+        family = "MOSI-family" if pin.role == "input" else "MISO-family"
+        found.append(
+            Candidate(
+                rule_id="bus.spi_unconnected_data_pin",
+                subject=f"{pin.pin}: {pin.function}",
+                message=(
+                    "This native SPI data-function pin has no net assignment while another "
+                    "data pin on the same fitted IC and channel is assigned. Review whether "
+                    "the function is intentionally unused or a connection is missing. This "
+                    "evidence does not establish SPI use or PCB routing."
+                ),
+                evidence={
+                    pin.pin: (),
+                    "function": (pin.function,),
+                    "spi_data_family": (family,),
+                    "spi_channel": (pin.channel,),
                 },
             )
         )

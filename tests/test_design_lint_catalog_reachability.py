@@ -26,6 +26,7 @@ import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
 import tests.design_lint_fixtures.serial_unconnected_pins as _serial_unconnected_pin_fixtures
+import tests.design_lint_fixtures.spi_unconnected_data_pins as _spi_unconnected_data_fixtures
 import tests.design_lint_fixtures.usb_unconnected_data as _usb_unconnected_data_fixtures
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
@@ -183,6 +184,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _usb_peer_reference_support.usb_peer_netlist(),
         _usb_unconnected_data_fixtures.usb_unconnected_data_netlist(),
         _serial_unconnected_pin_fixtures.serial_unconnected_netlist(),
+        _spi_unconnected_data_fixtures.spi_unconnected_data_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
     mapped_supply_source = _mapped_supply_return_net.mapped_supply_return_net_netlist()

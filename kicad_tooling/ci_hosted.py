@@ -76,6 +76,7 @@ from .ci_hosted_serial_peer_reference_bonds import (
 )
 from .ci_hosted_serial_unconnected_pin_fixtures import serial_unconnected_pin_fixture_lane
 from .ci_hosted_spi_peer_reference_fixtures import spi_peer_reference_native_fixture_lane
+from .ci_hosted_spi_unconnected_data import spi_unconnected_data_fixture_lane
 from .ci_hosted_stm32_pin_map import stm32_pin_map_fixture_lane
 from .ci_hosted_support import HostedCommandError, HostedLog
 from .ci_hosted_transformer_windings import transformer_winding_fixture_lane
@@ -165,6 +166,7 @@ __all__ = (
     "serial_peer_reference_bond_fixture_lane",
     "serial_unconnected_pin_fixture_lane",
     "spi_peer_reference_native_fixture_lane",
+    "spi_unconnected_data_fixture_lane",
     "stm32_pin_map_fixture_lane",
     "transformer_winding_fixture_lane",
     "two_pin_component_fixture_lane",

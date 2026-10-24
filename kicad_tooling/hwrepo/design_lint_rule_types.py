@@ -142,6 +142,7 @@ DesignLintRuleId = Literal[
     "bus.serial_peer_reference_review",
     "bus.usb_peer_reference_review",
     "bus.spi_unconnected_chip_select",
+    "bus.spi_unconnected_data_pin",
     "bus.spi_active_low_chip_select_without_pullup",
     "bus.spi_data_polarity_label_mismatch",
     "bus.spi_clock_select_label_mismatch",

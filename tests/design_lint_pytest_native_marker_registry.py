@@ -38,6 +38,11 @@ PYTEST_NATIVE_LINT_SUITES = {
         "slow",
     },
     "test_spi_data_polarity_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
+    "test_spi_unconnected_data_pins_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_spi_clock_select_label_mismatch.py": {"interface_lint"},
     "test_spi_clock_select_label_mismatch_native_fixture_lane.py": {
         "interface_lint",

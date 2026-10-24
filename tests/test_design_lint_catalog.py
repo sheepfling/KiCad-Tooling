@@ -86,6 +86,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.can_tx_rx_label_mismatch",
             "bus.can_tx_outputs_share_net",
             "bus.usb_unconnected_data_pin",
+            "bus.spi_unconnected_data_pin",
             "bus.serial_unconnected_pin",
         }
     )
@@ -137,6 +138,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "bus.can_tx_rx_label_mismatch",
             "bus.can_tx_outputs_share_net",
             "bus.usb_unconnected_data_pin",
+            "bus.spi_unconnected_data_pin",
             "bus.serial_unconnected_pin",
         }
     )
