@@ -34,6 +34,10 @@ from scripts.lint_gate_scope import (
             "component.two_pin_battery_same_net",
             "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES",
         ),
+        (
+            "component.two_pin_motor_same_net",
+            "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES",
+        ),
         ("component.generic_peer_pin_mixed_open", "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"),
         ("component.peer_signal_input_unconnected", "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"),
         (

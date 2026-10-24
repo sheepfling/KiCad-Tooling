@@ -185,6 +185,24 @@ the exact KiCad 10 native lane.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_battery_same_net")'
 ```
 
+## Review a two-pin DC motor whose terminals share one net
+
+`component.two_pin_motor_same_net` reviews an exact fitted `Motor:Motor_DC`
+symbol when both native pins are assigned to one schematic net. The netlist
+shows no voltage difference across the motor. The prompt does not establish
+motor behavior, driver compatibility, footprint mapping, PCB connectivity, or
+assembly state. It defaults to `review` and supports project `block`, `off`,
+and exact-fingerprint ignore decisions. Alternate, custom, open, ambiguous,
+incomplete, multi-pin, and DNP symbols remain unclassified. The
+[synthetic fixture record](../tests/fixtures/design_lint/two-pin-motors/README.md)
+contains the same-net fault and separate-net control, with source hashes and
+the exact KiCad 10 native lane.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_two_pin_motors.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_motor_same_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -376,7 +394,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 205 active rules.
+The catalog currently contains 206 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

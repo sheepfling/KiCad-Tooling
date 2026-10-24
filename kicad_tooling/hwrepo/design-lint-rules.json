@@ -2577,6 +2577,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_batteries.py#two_pin_battery_same_net_candidates"
     },
     {
+      "rule_id": "component.two_pin_motor_same_net",
+      "title": "Supported two-pin DC motor terminals share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For an exact fitted Motor:Motor_DC symbol with exactly two distinct native pin numbers and one unambiguous schematic net assignment per pin, report when both pins use the same net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A same-net motor may be intentionally bypassed or represent a disabled drive; this is a configurable review prompt, not a defect verdict.",
+        "Only the exact Motor:Motor_DC identity with a complete two-pin inventory is recognized. Alternate, custom, multi-pin, incomplete, ambiguous, open, and DNP identities are outside the predicate.",
+        "The schematic netlist does not establish motor behavior, drive compatibility, footprint mapping, physical connectivity, or assembly state."
+      ],
+      "fault_fixtures": [
+        "tests.test_two_pin_motors.test_same_net_exact_dc_motor_is_reviewed_without_claiming_operation",
+        "tests.test_two_pin_component_native_fixture_lane.test_motor_native_fixture_scope_contains_only_motor_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_motor_same_net_fault_and_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_two_pin_motors.test_separate_motor_terminal_nets_are_the_no_finding_control",
+        "tests.test_two_pin_motors.test_skips_dnp_incomplete_ambiguous_open_multi_pin_and_other_symbols",
+        "tests.test_two_pin_motors.test_policy_and_exact_fingerprint_ignore_are_project_configurable",
+        "tests.test_two_pin_component_native_fixture_lane.test_motor_native_fixture_scope_contains_only_motor_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_motor_same_net_fault_and_control"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_two_pin_motors.test_order_is_stable_and_splitting_one_motor_clears_only_its_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/two_pin_motors.py#two_pin_motor_same_net_candidates",
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/two_pin_motors.py#two_pin_motor_same_net_candidates"
+    },
+    {
       "rule_id": "component.two_pin_crystal_same_net",
       "title": "Supported two-pin crystal terminals share one net",
       "status": "active",

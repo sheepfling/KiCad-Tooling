@@ -42,12 +42,14 @@ import tests.test_power_paths as _tests_test_power_paths
 import tests.test_rc_filters as _tests_test_rc_filters
 import tests.test_regulator_feedback as _tests_test_regulator_feedback
 import tests.test_stm32_pin_map as _tests_test_stm32_pin_map
+import tests.test_two_pin_batteries as _tests_test_two_pin_batteries
 import tests.test_two_pin_buzzers as _tests_test_two_pin_buzzers
 import tests.test_two_pin_crystals as _tests_test_two_pin_crystals
 import tests.test_two_pin_diodes as _tests_test_two_pin_diodes
 import tests.test_two_pin_ferrites as _tests_test_two_pin_ferrites
 import tests.test_two_pin_fuses as _tests_test_two_pin_fuses
 import tests.test_two_pin_leds as _tests_test_two_pin_leds
+import tests.test_two_pin_motors as _tests_test_two_pin_motors
 import tests.test_two_pin_passives as _tests_test_two_pin_passives
 import tests.test_two_pin_speakers as _tests_test_two_pin_speakers
 import tests.test_two_pin_switches as _tests_test_two_pin_switches
@@ -394,6 +396,14 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_two_pin_speakers.speaker_netlist()
     )
     emitted.update(item.rule_id for item in speaker_result.findings)
+    battery_result = _tests_test_two_pin_batteries.lint_report(
+        _tests_test_two_pin_batteries.battery_netlist()
+    )
+    emitted.update(item.rule_id for item in battery_result.findings)
+    motor_result = _tests_test_two_pin_motors.lint_report(
+        _tests_test_two_pin_motors.motor_netlist()
+    )
+    emitted.update(item.rule_id for item in motor_result.findings)
     crystal_result = _tests_test_two_pin_crystals.lint_report(
         _tests_test_two_pin_crystals.crystal_netlist()
     )

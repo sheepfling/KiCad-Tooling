@@ -19,6 +19,7 @@ _SUPPORTED_LED_SYMBOLS = frozenset({"Device:LED"})
 _SUPPORTED_BUZZER_SYMBOLS = frozenset({"Device:Buzzer"})
 _SUPPORTED_SPEAKER_SYMBOLS = frozenset({"Device:Speaker"})
 _SUPPORTED_BATTERY_SYMBOLS = frozenset({"Device:Battery"})
+_SUPPORTED_MOTOR_SYMBOLS = frozenset({"Motor:Motor_DC"})
 _SUPPORTED_THERMISTOR_SYMBOLS = frozenset(
     {
         "Device:Thermistor",
@@ -112,6 +113,9 @@ def two_pin_components_on_same_net(
             role_binding = None
         elif symbol in _SUPPORTED_BATTERY_SYMBOLS:
             kind = "battery"
+            role_binding = None
+        elif symbol in _SUPPORTED_MOTOR_SYMBOLS:
+            kind = "motor"
             role_binding = None
         else:
             role_binding = role_bindings.get(reference.casefold())

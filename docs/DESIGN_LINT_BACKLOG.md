@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 205 rules are implemented with synthetic regression coverage.
+The following 206 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 205 active rules.
+The catalog currently contains 206 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -470,6 +470,7 @@ skipped under prerelease policy.
 - `component.two_pin_buzzer_same_net`
 - `component.two_pin_speaker_same_net`
 - `component.two_pin_battery_same_net`
+- `component.two_pin_motor_same_net`
 - `component.two_pin_crystal_same_net`
 - `component.two_pin_fuse_same_net`
 - `component.two_pin_ferrite_same_net`
@@ -3063,7 +3064,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 205 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 206 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4259,6 +4260,47 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_two_pin_batteries.py \
     -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_battery_same_net")'
+  ```
+
+#### LINT-223 — Same-net two-pin DC motor review
+
+- **Status:** Implemented as the default-review rule
+  `component.two_pin_motor_same_net` for the exact `Motor:Motor_DC` symbol.
+- **Gap:** The same-net inventory had no component-specific review for the
+  stock two-terminal DC motor. A fitted motor whose two pins shared one native
+  net therefore had no focused prompt, even though the exported netlist shows
+  no voltage difference across its terminals.
+- **Predicate:** Require an exact fitted `Motor:Motor_DC`, exactly two
+  distinct native pin numbers, and one unambiguous assigned net per pin.
+  Report only when both pins use the same net. DNP, open, multiply assigned,
+  incomplete, multi-pin, custom, and alternate symbol identities remain
+  unclassified.
+- **Boundary:** A motor can be intentionally bypassed or disabled. The
+  configurable `REVIEW` prompt does not establish motor behavior, driver
+  compatibility, polarity, footprint mapping, physical connectivity, or
+  assembly state. It does not infer that motor terminals need to be powered
+  or make a blocking decision unless a project changes the rule policy.
+- **Fixtures:** Tooling-owned same-net fault and separate-net control;
+  DNP, incomplete, ambiguous, open, multi-pin, custom, and alternate-symbol
+  exclusions; policy and exact-ignore lifecycle; ordering and per-motor
+  net-split metamorphic check; and source-hashed native exports on the pinned
+  KiCad 10.0.0 and 10.0.5 images. No product or cohort schematic is used.
+  The [fixture note](../tests/fixtures/design_lint/two-pin-motors/README.md)
+  records source hashes and native boundaries.
+- **Incremental-value claim:** This adds one exact stock DC-motor identity to
+  the component-specific same-net review inventory. Synthetic cases establish
+  predicate behavior only; public applicability and reviewer-value
+  measurements remain open.
+- **Local verification:** The five focused synthetic tests, the two exact
+  native exports (KiCad 10.0.0 and 10.0.5), and the two-pin family suite
+  (110 passed, 22 environment-gated skips) passed. Catalog reachability,
+  native fixture selection, architecture, formatting, Ruff, configured host
+  and Windows Pyright, Markdown lint, and repository-doc checks passed.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_two_pin_motors.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_motor_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets
