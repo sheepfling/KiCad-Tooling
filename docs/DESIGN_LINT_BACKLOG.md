@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 238 rules are implemented with synthetic regression coverage.
+The following 239 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 238 active rules.
+The catalog currently contains 239 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -600,6 +600,7 @@ skipped under prerelease policy.
 - `bus.can_line_on_named_rail`
 - `bus.ethernet_data_label_mismatch`
 - `bus.ethernet_management_label_mismatch`
+- `bus.ethernet_management_unconnected_pin`
 - `bus.ethernet_management_signal_on_named_rail`
 - `bus.ethernet_signal_on_named_rail`
 - `bus.can_tx_rx_same_net`
@@ -5802,6 +5803,41 @@ is not a reason by itself to expand its scope or change its default policy.
   .venv/bin/python -I -m pytest tests/test_usb_c_superspeed_lane_labels.py -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
 
   KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 .venv/bin/python -I -m pytest tests/test_complementary_pair_native_fixture_lane.py -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_superspeed_lane_label_mismatch")'
+  ```
+
+#### LINT-257 — Review one-sided open Ethernet MDC/MDIO pairs
+
+- **Status:** Implemented as `bus.ethernet_management_unconnected_pin`, default
+  `off`; project policy can enable `review` or `block`, or ignore one exact
+  finding fingerprint.
+- **Gap:** Existing Ethernet lint checks label/function mismatch and direct
+  named-rail assignments, but do not prompt when a fully inventoried fitted PHY
+  exposes exactly one MDC and one MDIO function and only one of those pins is
+  assigned.
+- **Predicate:** Require a fitted U/IC reference, one unique exact MDC role,
+  one unique exact MDIO role, a complete native pin/function inventory, and
+  exactly one open pin beside a peer with one unique net assignment. Skip
+  connectors, DNP devices, duplicate roles, incomplete inventories, and
+  multiply assigned pins. Emit one localized candidate for the open member.
+- **Boundary:** Open management pins can be intentional, including explicit
+  no-connects. The opt-in heuristic asks for review; it does not infer that the
+  interface is required, declare a defect, or establish endpoint mapping,
+  routed copper, or physical continuity.
+- **Fixtures and quality gate:** Synthetic controls cover both-open and
+  assigned pairs, DNP, duplicate roles, incomplete inventory, ambiguous
+  assignments, policy modes, ignores, order stability, and repair. Hashed
+  synthetic schematic fault/control sources are checked through exact KiCad
+  10.0.0 and 10.0.5 native export lanes. Rule reachability, focused selector,
+  marker, architecture-owner, and scoped hosted gates are registered.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_management_unconnected_pins.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_unconnected_pin")'
+
+  KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_UNCONNECTED_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_ethernet_management_unconnected_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_unconnected_pin")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

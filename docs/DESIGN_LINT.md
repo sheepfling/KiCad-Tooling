@@ -747,7 +747,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 238 active rules.
+The catalog currently contains 239 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -963,6 +963,27 @@ The checked-in native inputs are synthetic and their reviewed hashes are recorde
 KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_management_label_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
+```
+
+### Ethernet management one-sided open pin review
+
+`bus.ethernet_management_unconnected_pin` identifies a fitted IC with exactly one native MDC
+and one MDIO pin when one is open and its unique partner has a single net assignment. The prompt
+defaults to `off`: unused management interfaces are valid, so enable `review` or `block` only
+after reviewing the project's interface expectations. DNP devices, connectors, duplicate roles,
+incomplete pin inventories, and ambiguous assignments are skipped. An explicit no-connect is
+still an open pin and may be intentional. The check does not infer that management is required,
+prove an endpoint relationship, or verify copper or external continuity. Its synthetic
+fault/control schematics are inventoried in the
+[fixture notes](../tests/fixtures/design_lint/ethernet-management-unconnected-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_management_unconnected_pins.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_unconnected_pin")'
+
+KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_management_unconnected_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_unconnected_pin")'
 ```
 
 ### Ethernet PHY pins assigned directly to named rails

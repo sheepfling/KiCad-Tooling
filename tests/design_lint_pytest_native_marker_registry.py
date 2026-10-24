@@ -20,6 +20,11 @@ PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_ethernet_management_unconnected_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_i2c_signal_label_native_fixture_lane.py": {"interface_lint", "native_kicad", "slow"},
     "test_i2c_signal_named_rail.py": {"interface_lint"},
     "test_i3c_signal_named_rail.py": {"interface_lint"},

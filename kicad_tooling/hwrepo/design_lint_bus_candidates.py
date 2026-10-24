@@ -10,6 +10,9 @@ from .bus_ethernet_pair_labels import (
     ethernet_management_label_mismatch_candidates,
 )
 from .bus_ethernet_signal_named_rail import ethernet_signal_on_named_rail_candidates
+from .bus_ethernet_unconnected_management import (
+    ethernet_management_unconnected_pin_candidates,
+)
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
 from .bus_usb_signal_named_rail import usb_signal_on_named_rail_candidates
 from .can_peer_reference_scan import CanPeerReferenceScan
@@ -88,6 +91,7 @@ def bus_candidates(
         *rs485_candidates(observed, rs485_peer_reference_scan, component_peer_findings),
         *ethernet_data_label_mismatch_candidates(observed),
         *ethernet_management_label_mismatch_candidates(observed),
+        *ethernet_management_unconnected_pin_candidates(observed),
         *ethernet_management_signal_on_named_rail_candidates(observed),
         *ethernet_signal_on_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),

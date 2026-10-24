@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 RULE_ID = "bus.ethernet_data_label_mismatch"
 MANAGEMENT_RULE_ID = "bus.ethernet_management_label_mismatch"
 MANAGEMENT_NAMED_RAIL_RULE_ID = "bus.ethernet_management_signal_on_named_rail"
+MANAGEMENT_UNCONNECTED_RULE_ID = "bus.ethernet_management_unconnected_pin"
 ETHERNET_LABEL_NATIVE_TOOLCHAINS = (
     (
         "10.0.0",
@@ -45,7 +46,7 @@ class _EthernetLabelFixture:
     stage_prefix: str
     source_hashes: dict[str, str]
     expected_subjects: tuple[str, ...]
-    expected_pins: dict[str, dict[str, tuple[str, str]]]
+    expected_pins: dict[str, dict[str, tuple[str, str | None]]]
     complete_data_pairs: bool = False
 
 
@@ -108,6 +109,26 @@ _FIXTURES: dict[str, _EthernetLabelFixture] = {
             "fault": {"U1.5": ("MDC", "GND"), "U1.6": ("MDIO", "ETH_MDIO")},
         },
     ),
+    "management_unconnected": _EthernetLabelFixture(
+        directory="ethernet-management-unconnected-native",
+        rule_id=MANAGEMENT_UNCONNECTED_RULE_ID,
+        stage_prefix="ethernet-management-unconnected-fixture",
+        source_hashes={
+            "control": "c3c259a0ce8d0b4be736be63bb106096657b4c596985557460351a88a0e326d6",
+            "fault": "d2324d82038d896ed81727d7934c80e0549e7605c369adabd5c5f2ca81604988",
+        },
+        expected_subjects=("U1.5: MDC is open while MDIO U1.6 is assigned to ETH_MDIO",),
+        expected_pins={
+            "control": {
+                "U1.5": ("MDC", "ETH_MDC"),
+                "U1.6": ("MDIO", "ETH_MDIO"),
+            },
+            "fault": {
+                "U1.5": ("MDC", None),
+                "U1.6": ("MDIO", "ETH_MDIO"),
+            },
+        },
+    ),
     "named_rail": _EthernetLabelFixture(
         directory="ethernet-signal-named-rail",
         rule_id="bus.ethernet_signal_on_named_rail",
@@ -142,7 +163,9 @@ def ethernet_label_fixture_lane(
     version: str | None = None,
     image: str,
     log: HostedLog,
-    feature: Literal["data", "management", "named_rail", "management_named_rail"] = "data",
+    feature: Literal[
+        "data", "management", "named_rail", "management_named_rail", "management_unconnected"
+    ] = "data",
 ) -> None:
     """Export source-hashed Ethernet label controls and evaluate one focused rule."""
     from .hwrepo.contract_coach import pinned_image, run_command
@@ -333,8 +356,19 @@ def ethernet_label_fixture_lane(
                     if any(member.casefold() == pin.casefold() for member in members)
                 )
             )
-            if observed.pin_functions.get(pin) != function or assigned_nets != (net,):
+            expected_nets = () if net is None else (net,)
+            if observed.pin_functions.get(pin) != function or assigned_nets != expected_nets:
                 raise ValueError(f"Native Ethernet {feature} {case} evidence changed for {pin}")
+            if net is None:
+                unconnected_pins = {
+                    pin.casefold()
+                    for members in observed.unconnected_nets.values()
+                    for pin in members
+                }
+                if pin.casefold() not in unconnected_pins:
+                    raise ValueError(
+                        f"Native Ethernet {feature} {case} omitted the open-pin evidence for {pin}"
+                    )
         log.event(
             f"{fixture.stage_prefix}/{case}",
             "PASS",

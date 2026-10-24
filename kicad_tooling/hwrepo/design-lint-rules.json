@@ -6054,6 +6054,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates"
     },
     {
+      "rule_id": "bus.ethernet_management_unconnected_pin",
+      "title": "Ethernet MDC/MDIO pair has one open pin",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For a fitted U/IC with a complete native pin/function inventory and exactly one exact MDC plus one exact MDIO pin, emit one configurable review candidate when one pin has no net assignment and its unique partner has exactly one assignment.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Recognition is limited to exact MDC and MDIO pin functions on fitted U/IC references with a complete native inventory. Connectors, DNP components, duplicate roles, unknown or incomplete inventories, and multiply assigned pins are unclassified.",
+        "An open management signal can be intentional, including when marked no-connect. The default is off because pin functions do not establish that either signal is required; a project may enable REVIEW or BLOCK after reviewing its interface.",
+        "The finding does not establish Ethernet use, a required controller-to-PHY connection, routed copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_ethernet_management_unconnected_pins.test_open_management_member_is_localized_beside_its_assigned_peer",
+        "tests.test_ethernet_management_unconnected_native_fixture_lane.test_native_ethernet_management_open_pin_fault_and_connected_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ethernet_management_unconnected_pins.test_both_open_and_fully_assigned_management_pairs_are_quiet",
+        "tests.test_ethernet_management_unconnected_pins.test_dnp_duplicate_roles_incomplete_inventory_and_ambiguous_pins_are_skipped",
+        "tests.test_ethernet_management_unconnected_pins.test_only_integrated_circuit_references_and_exact_management_functions_are_classified",
+        "tests.test_ethernet_management_unconnected_native_fixture_lane.test_native_ethernet_management_open_pin_fault_and_connected_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ethernet_management_unconnected_pins.test_mapping_order_is_stable_and_assigning_the_open_pin_clears_the_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_UNCONNECTED_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/bus_ethernet_unconnected_management.py#ethernet_management_unconnected_pin_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_unconnected_management.py#ethernet_management_unconnected_pin_candidates"
+    },
+    {
       "rule_id": "bus.ethernet_management_signal_on_named_rail",
       "title": "Ethernet MDC/MDIO pins assigned to named rails",
       "status": "active",

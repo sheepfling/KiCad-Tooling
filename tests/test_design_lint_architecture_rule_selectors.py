@@ -119,6 +119,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_ethernet_management_signal_named_rail.py::test_neutral_rail_names_and_unrecognized_functions_are_quiet",
         ),
         (
+            "bus.ethernet_management_unconnected_pin",
+            "tests/test_ethernet_management_unconnected_pins.py::test_open_management_member_is_localized_beside_its_assigned_peer",
+        ),
+        (
             "bus.usb_signal_on_named_rail",
             "tests/test_usb_signal_named_rail.py::test_neutral_net_labels_do_not_request_review",
         ),

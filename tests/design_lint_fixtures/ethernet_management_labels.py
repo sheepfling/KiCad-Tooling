@@ -9,12 +9,14 @@ def ethernet_management_netlist(
     *,
     functions: tuple[str, str] = ("MDC", "MDIO"),
     labels: tuple[str, str] = ("ETH_MDC", "ETH_MDIO"),
+    open_functions: tuple[str, ...] = (),
     dnp: bool = False,
 ) -> NetlistContract:
     pins = ("U1.5", "U1.6")
     nets: dict[str, list[str]] = {}
-    for label, pin in zip(labels, pins, strict=True):
-        nets.setdefault(label, []).append(pin)
+    for label, pin, function in zip(labels, pins, functions, strict=True):
+        if function not in open_functions:
+            nets.setdefault(label, []).append(pin)
     return NetlistContract(
         components={"U1": ComponentContract(value="Synthetic Ethernet PHY", footprint="")},
         nets={label: tuple(net_pins) for label, net_pins in nets.items()},
