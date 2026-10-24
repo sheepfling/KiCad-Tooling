@@ -38,6 +38,8 @@ lane, and polarity net names.
   `a4be145343d775dee661e5381eff65a8895feea6581adfd77cea5f07952bdf91`.
   All four indexed TX/RX pairs have explicit labels matching their connector
   pin functions; both the lane-label and pair-completeness rules stay quiet.
+  The overall report may still be `REVIEW` for an independent heuristic, so
+  this control asserts only the two rules exercised by this fixture.
 
 The digest-pinned native lane exports each schematic twice using exact KiCad
 10.0.0 and 10.0.5 images selected from the public reference template. It checks

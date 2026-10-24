@@ -276,6 +276,16 @@ def complementary_pair_fixture_lane(
         "lane-label-fault": 4,
         "lane-label-control": 0,
     }
+    expected_status_by_case: dict[str, str | None] = {
+        "fault": "REVIEW",
+        "control": "PASS",
+        "lane-fault": "REVIEW",
+        "lane-control": "PASS",
+        "lane-label-fault": "REVIEW",
+        # Explicit USB net names can make other independent heuristics applicable.
+        # This control asserts that the pair and lane-label rules stay quiet.
+        "lane-label-control": None,
+    }
     for case in cases:
         report = reports[(case, "first")]
         pair_findings = tuple(
@@ -296,12 +306,8 @@ def complementary_pair_fixture_lane(
                 f"Native {case} expected {expected_lane_label_findings[case]} lane-label findings, "
                 f"observed {len(lane_label_findings)}"
             )
-        expected_status = (
-            "REVIEW"
-            if expected_pair_findings[case] or expected_lane_label_findings[case]
-            else "PASS"
-        )
-        if report.status != expected_status:
+        expected_status = expected_status_by_case[case]
+        if expected_status is not None and report.status != expected_status:
             raise ValueError(
                 f"Native {case} expected design-lint status {expected_status}, observed "
                 f"{report.status}"

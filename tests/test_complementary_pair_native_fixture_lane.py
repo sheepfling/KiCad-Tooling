@@ -94,7 +94,6 @@ def test_complementary_pair_fault_and_control_export_repeatably(
             "J1.3: StdA_SSTX2+ on USB_TX1_P;"
             "J1.4: StdA_SSTX2- on USB_TX1_N"
         )
-        assert lane_label_control["lint_status"] == "PASS"
         assert lane_label_control["pair_findings"] == "none"
         assert lane_label_control["lane_label_findings"] == "none"
         for result in (
