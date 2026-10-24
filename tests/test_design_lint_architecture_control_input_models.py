@@ -21,6 +21,8 @@ CONTROL_INPUT_MODEL_NAMES = (
     "ControlInputBiasHeuristicCoverage",
     "ControlElectricalType",
     "ControlPinRequirement",
+    "ControlBiasArrayChannelRequirement",
+    "ControlBiasResistorArrayRequirement",
     "ControlBiasResistorRequirement",
     "ControlLocalBiasRequirement",
     "ControlInternalBiasRequirement",

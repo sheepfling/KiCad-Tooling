@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -147,15 +148,84 @@ class ControlBiasResistorRequirement(StrictModel):
         return self
 
 
+class ControlBiasArrayChannelRequirement(StrictModel):
+    """One reviewed control-bias channel within an exact resistor-array part."""
+
+    id: Identifier
+    signal_pin: Reference
+    bias_pin: Reference
+    bias_net: NetName
+    direction: Literal["pull_up", "pull_down"]
+    nominal_ohms: ElectricalPositive
+    minimum_ohms: ElectricalPositive
+    maximum_ohms: ElectricalPositive
+    basis: NonEmptyText
+
+    @model_validator(mode="after")
+    def valid_bias_channel(self) -> ControlBiasArrayChannelRequirement:
+        if self.signal_pin.casefold() == self.bias_pin.casefold():
+            raise ValueError("Control-bias array channel pins must differ")
+        if self.maximum_ohms < self.minimum_ohms:
+            raise ValueError("Control-bias array maximum resistance is below its minimum")
+        if not self.minimum_ohms <= self.nominal_ohms <= self.maximum_ohms:
+            raise ValueError("Control-bias array nominal resistance is outside its reviewed range")
+        return self
+
+
+class ControlBiasResistorArrayRequirement(StrictModel):
+    """Exact array identity and pin map for one or more local control-bias paths."""
+
+    reference: Identifier
+    expected_symbol: NonEmptyText
+    expected_footprint: NonEmptyText
+    expected_value: NonEmptyText
+    expected_part_id: Identifier | None = None
+    basis: NonEmptyText
+    channels: Annotated[tuple[ControlBiasArrayChannelRequirement, ...], Field(min_length=1)]
+    unmapped_pin_reasons: Mapping[Reference, NonEmptyText] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def complete_pin_map(self) -> ControlBiasResistorArrayRequirement:
+        prefix = f"{self.reference}."
+        signal_pins = [channel.signal_pin for channel in self.channels]
+        bias_pins = [channel.bias_pin for channel in self.channels]
+        unique_bias_pins = tuple({pin.casefold(): pin for pin in bias_pins}.values())
+        channel_pins = (*signal_pins, *unique_bias_pins)
+        all_pins = (*channel_pins, *self.unmapped_pin_reasons)
+        if any(not pin.casefold().startswith(prefix.casefold()) for pin in all_pins):
+            raise ValueError("Control-bias array pins must belong to their component")
+        if len({pin.casefold() for pin in signal_pins}) != len(signal_pins):
+            raise ValueError("Control-bias array signal pins must be unique")
+        if {pin.casefold() for pin in signal_pins} & {pin.casefold() for pin in bias_pins}:
+            raise ValueError("A control-bias array pin cannot be both a signal and bias endpoint")
+        if len({pin.casefold() for pin in all_pins}) != len(all_pins):
+            raise ValueError("Control-bias array channel and unmapped pins must be unique")
+        if len({channel.id.casefold() for channel in self.channels}) != len(self.channels):
+            raise ValueError("Control-bias array channel IDs must be unique")
+        shared_bias_map: dict[str, tuple[str, str]] = {}
+        for channel in self.channels:
+            pin = channel.bias_pin.casefold()
+            assignment = (channel.bias_net.casefold(), channel.direction)
+            prior = shared_bias_map.setdefault(pin, assignment)
+            if prior != assignment:
+                raise ValueError("A shared control-bias array pin needs one net and direction")
+        return self
+
+
 class ControlLocalBiasRequirement(StrictModel):
     mode: Literal["local"]
     basis: NonEmptyText
-    resistors: Annotated[tuple[ControlBiasResistorRequirement, ...], Field(min_length=1)]
+    resistors: tuple[ControlBiasResistorRequirement, ...] = ()
+    arrays: tuple[ControlBiasResistorArrayRequirement, ...] = ()
 
     @model_validator(mode="after")
-    def unique_resistors(self) -> ControlLocalBiasRequirement:
-        if len({item.reference.casefold() for item in self.resistors}) != len(self.resistors):
-            raise ValueError("Control-bias resistor references must be unique")
+    def valid_local_bias_paths(self) -> ControlLocalBiasRequirement:
+        if not self.resistors and not self.arrays:
+            raise ValueError("Local control bias needs at least one resistor or mapped array")
+        references = [item.reference.casefold() for item in self.resistors]
+        references.extend(item.reference.casefold() for item in self.arrays)
+        if len(set(references)) != len(references):
+            raise ValueError("Control-bias component references must be unique")
         return self
 
 
@@ -236,7 +306,7 @@ class ControlInputsAnalysis(StrictModel):
     signals: Annotated[tuple[ControlSignalRequirement, ...], Field(min_length=1)]
 
     @model_validator(mode="after")
-    def unique_signals_and_resistors(self) -> ControlInputsAnalysis:
+    def unique_signals_and_bias_components(self) -> ControlInputsAnalysis:
         if len({item.id.casefold() for item in self.signals}) != len(self.signals):
             raise ValueError("Control-signal IDs must be unique")
         if len({item.signal_net for item in self.signals}) != len(self.signals):
@@ -248,8 +318,8 @@ class ControlInputsAnalysis(StrictModel):
             resistor.reference.casefold()
             for signal in self.signals
             if isinstance(signal.bias, ControlLocalBiasRequirement)
-            for resistor in signal.bias.resistors
+            for resistor in (*signal.bias.resistors, *signal.bias.arrays)
         ]
         if len(set(resistor_refs)) != len(resistor_refs):
-            raise ValueError("Control-bias resistor references cannot be reused")
+            raise ValueError("Control-bias component references cannot be reused")
         return self

@@ -85,6 +85,7 @@ BUS_ANALYSIS_MODULES = (
     "spi_shared_chip_select.py",
     "spi_shared_data_outputs.py",
     "resistor_paths.py",
+    "resistor_array_paths.py",
     "peer_reference_assignments.py",
     "i2c_pullup_contract_paths.py",
     "i2c_pullup_contract.py",
@@ -257,6 +258,25 @@ def test_bus_protocol_implementation_modules_stay_below_review_limit() -> None:
         "Split bus-protocol modules at the 500-line review threshold; "
         f"oversized modules: {oversized}"
     )
+
+
+def test_resistor_array_evidence_is_shared_by_control_and_i2c_checks() -> None:
+    helper = HWREPO / "resistor_array_paths.py"
+    consumers = (
+        "control_input_checks.py",
+        "i2c_pullup_contract.py",
+        "i2c_pullup_voltage_coverage.py",
+    )
+
+    assert _line_count(helper) < IMPLEMENTATION_MAX_LINES
+    for name in consumers:
+        tree = ast.parse((HWREPO / name).read_text(encoding="utf-8"), filename=name)
+        assert any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "resistor_array_paths"
+            and any(alias.name == "ResistorArrayNetlistEvidence" for alias in node.names)
+            for node in tree.body
+        ), f"{name} must reuse the shared resistor-array evidence service"
 
 
 def test_can_tx_rx_same_net_rule_uses_a_focused_predicate_owner() -> None:

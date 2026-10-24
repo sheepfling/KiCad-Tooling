@@ -76,6 +76,18 @@ _EXPECTED_CASES = (
         0,
         "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
     ),
+    (
+        "array-bias-control-fixture",
+        "none",
+        1,
+        "ed33d422d49337d33df58e5b381f275e5248ab6716540295d8edf1ddfc93cecc",
+    ),
+    (
+        "array-bias-fault-fixture",
+        "none",
+        1,
+        "ed33d422d49337d33df58e5b381f275e5248ab6716540295d8edf1ddfc93cecc",
+    ),
 )
 
 
@@ -187,11 +199,28 @@ def test_native_public_demos_record_connected_bias_and_unconnected_controls(
             "513df62ef3085040a997dda72b9e0713a4f353ac4da0a1308a5ee51d8cd44b50",
             "173897d8682ffa2e48412469164c6329235ddeb6b6a197898e0c7349a891358b",
         ),
+        "array-bias-control-fixture": (
+            "d3c43f45f26a33bbadf39e7532fa8f4876255c9044d2122e93c121ce5d1a19d1",
+            "ae4973be1a4be68573799ba222cd794fc16bf8539d8cf96a260c163782e8e486",
+        ),
+        "array-bias-fault-fixture": (
+            "05a4ad290ccf3a05e4ad0bb467f0b4b44422244a2cf27a2bbc42b310e1d1ae58",
+            "ae4973be1a4be68573799ba222cd794fc16bf8539d8cf96a260c163782e8e486",
+        ),
     }
     if sample in expected_fixture_hashes:
         assert (result["source_sha256"], result["source_manifest_sha256"]) == (
             expected_fixture_hashes[sample]
         )
+    expected_array_statuses = {
+        "array-bias-control-fixture": ("PASS", "COVERED"),
+        "array-bias-fault-fixture": ("FAIL", "OPEN"),
+    }
+    if sample in expected_array_statuses:
+        assert (
+            result["array_bias_check_status"],
+            result["array_bias_coverage_status"],
+        ) == expected_array_statuses[sample]
     assert int(result["source_manifest_entries"]) > 0
     assert re.fullmatch(r"[0-9a-f]{64}", result["raw_netlist_sha256"])
     assert re.fullmatch(r"[0-9a-f]{64}", result["repeat_raw_netlist_sha256"])

@@ -1,0 +1,53 @@
+{
+  "mode": "required",
+  "basis": "Synthetic controller reset and resistor-array requirements",
+  "signals": [
+    {
+      "id": "main-reset",
+      "basis": "Synthetic reset pin and reviewed local bias network",
+      "signal_net": "RESET_N",
+      "driver_policy": "none",
+      "endpoints": [
+        {
+          "role": "controlled_input",
+          "reference": "U1",
+          "symbol": "Synthetic:ControlInputProbe",
+          "footprint": "Synthetic:SOIC",
+          "pin": "U1.1",
+          "electrical_type": "input"
+        }
+      ],
+      "bias": {
+        "mode": "local",
+        "basis": "Synthetic reviewed reset pull-up channel",
+        "arrays": [
+          {
+            "reference": "RN1",
+            "expected_symbol": "Synthetic:ResistorArray",
+            "expected_footprint": "Synthetic:RA4",
+            "expected_value": "4x10k",
+            "expected_part_id": "SYNTHETIC-ARRAY-10K",
+            "basis": "Synthetic channel pinout and resistor value source",
+            "channels": [
+              {
+                "id": "reset",
+                "signal_pin": "RN1.1",
+                "bias_pin": "RN1.2",
+                "bias_net": "+3V3",
+                "direction": "pull_up",
+                "nominal_ohms": 10000,
+                "minimum_ohms": 9000,
+                "maximum_ohms": 11000,
+                "basis": "Synthetic reviewed reset channel resistance range"
+              }
+            ],
+            "unmapped_pin_reasons": {
+              "RN1.3": "Unused resistor-array channel is not connected",
+              "RN1.4": "Unused resistor-array channel is not connected"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

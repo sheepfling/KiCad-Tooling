@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .control_input_inventory import OUTPUT_CAPABLE_TYPES
 from .control_input_models import (
+    ControlBiasResistorArrayRequirement,
     ControlBiasResistorRequirement,
     ControlInputsAnalysis,
     ControlLocalBiasRequirement,
@@ -12,6 +13,11 @@ from .control_input_models import (
 from .models import (
     ElectricalCheck,
     NetlistContract,
+)
+from .resistor_array_paths import (
+    ResistorArrayNetlistEvidence,
+    resistor_array_channel_issue,
+    resistor_array_component_issues,
 )
 from .resistor_paths import DirectResistor, direct_resistors
 
@@ -37,6 +43,7 @@ def control_input_checks(
         pin.casefold(): value.casefold() for pin, value in observed.pin_electrical_types.items()
     }
     resistors = {item.reference.casefold(): item for item in direct_resistors(observed)}
+    array_evidence = ResistorArrayNetlistEvidence.from_netlist(observed)
     known_pins = {
         f"{reference}.{number}".casefold()
         for reference, numbers in observed.component_pin_numbers.items()
@@ -126,6 +133,37 @@ def control_input_checks(
             )
         return issues
 
+    def bias_array_issues(
+        requirement: ControlBiasResistorArrayRequirement, signal_net: str
+    ) -> list[str]:
+        component_issues = resistor_array_component_issues(
+            array_evidence,
+            reference=requirement.reference,
+            expected_symbol=requirement.expected_symbol,
+            expected_footprint=requirement.expected_footprint,
+            expected_value=requirement.expected_value,
+            expected_part_id=requirement.expected_part_id,
+            channel_pins=tuple(
+                (channel.signal_pin, channel.bias_pin) for channel in requirement.channels
+            ),
+            unmapped_pin_reasons=requirement.unmapped_pin_reasons,
+            component_kind="mapped control-bias resistor array",
+        )
+        issues = [f"{requirement.reference}: {issue}" for issue in component_issues]
+        for channel in requirement.channels:
+            issue = resistor_array_channel_issue(
+                array_evidence,
+                reference=requirement.reference,
+                channel_id=channel.id,
+                pin_a=channel.signal_pin,
+                pin_b=channel.bias_pin,
+                net_a=signal_net,
+                net_b=channel.bias_net,
+            )
+            if issue is not None:
+                issues.append(issue)
+        return issues
+
     checks: list[ElectricalCheck] = []
     for signal in spec.signals:
         base = f"control-inputs/{signal.id}"
@@ -209,6 +247,11 @@ def control_input_checks(
                 for resistor in signal.bias.resistors
                 if (issues := bias_resistor_issues(resistor))
             ]
+            for array in signal.bias.arrays:
+                bias_failures.extend(bias_array_issues(array, signal.signal_net))
+            path_count = len(signal.bias.resistors) + sum(
+                len(array.channels) for array in signal.bias.arrays
+            )
             checks.append(
                 ElectricalCheck(
                     id=f"{base}/bias",
@@ -216,7 +259,7 @@ def control_input_checks(
                     detail=(
                         "; ".join(bias_failures)
                         if bias_failures
-                        else f"{len(signal.bias.resistors)} declared local bias resistor path(s) match the source netlist."
+                        else f"{path_count} declared local bias path(s) match the source netlist."
                     ),
                 )
             )

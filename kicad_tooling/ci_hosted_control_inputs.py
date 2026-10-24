@@ -27,10 +27,13 @@ def native_control_input_demo_lane(
     import hashlib
 
     from .hwrepo.contract_coach import pinned_image, run_command
+    from .hwrepo.control_input_bias import control_input_bias_heuristic_coverage
+    from .hwrepo.control_input_checks import control_input_checks
     from .hwrepo.control_input_inventory import (
         connected_control_inputs_without_visible_rail_resistor,
         unconnected_control_inputs,
     )
+    from .hwrepo.control_input_models import ControlInputsAnalysis
     from .hwrepo.electrical import selected_config
     from .hwrepo.evidence import digest
     from .validate import read_netlist
@@ -77,23 +80,33 @@ def native_control_input_demo_lane(
             ),
         ),
         "por-alias-fixture": (
-            "/synthetic",
+            "/synthetic/control-input-alias",
             "por-b.kicad_sch",
             (("U1.1", "POR_B", "reset", "input"),),
         ),
         "series-bias-fixture": (
-            "/synthetic",
+            "/synthetic/control-input-alias",
             "series-bias-control.kicad_sch",
             (),
         ),
         "bootstrap-capacitor-fixture": (
-            "/synthetic",
+            "/synthetic/control-input-alias",
             "bare-boot-bootstrap-capacitor.kicad_sch",
             (),
         ),
         "bootstrap-small-capacitor-fixture": (
-            "/synthetic",
+            "/synthetic/control-input-alias",
             "bare-boot-bootstrap-small-capacitor.kicad_sch",
+            (),
+        ),
+        "array-bias-control-fixture": (
+            "/synthetic/control-input-array-native",
+            "control.kicad_sch",
+            (),
+        ),
+        "array-bias-fault-fixture": (
+            "/synthetic/control-input-array-native",
+            "fault.kicad_sch",
             (),
         ),
     }
@@ -104,15 +117,18 @@ def native_control_input_demo_lane(
         samples = {name: sample for name, sample in samples.items() if name in sample_names}
         if not samples:
             raise ValueError("Native control-input demo selection must include at least one sample")
-    synthetic_fixture_root = (
-        Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint/control-input-alias"
-    )
-    if not (synthetic_fixture_root / "por-b.kicad_sch").is_file():
+    synthetic_fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
+    control_alias_fixture_root = synthetic_fixture_root / "control-input-alias"
+    control_array_fixture_root = synthetic_fixture_root / "control-input-array-native"
+    if not (control_alias_fixture_root / "por-b.kicad_sch").is_file():
         raise ValueError("Synthetic POR_B native control fixture is missing")
-    if not (synthetic_fixture_root / "bare-boot-bootstrap-capacitor.kicad_sch").is_file():
+    if not (control_alias_fixture_root / "bare-boot-bootstrap-capacitor.kicad_sch").is_file():
         raise ValueError("Synthetic bootstrap capacitor native control fixture is missing")
-    if not (synthetic_fixture_root / "bare-boot-bootstrap-small-capacitor.kicad_sch").is_file():
+    if not (control_alias_fixture_root / "bare-boot-bootstrap-small-capacitor.kicad_sch").is_file():
         raise ValueError("Synthetic small-capacitor native control fixture is missing")
+    control_array_contract_path = control_array_fixture_root / "control-inputs.json"
+    if not control_array_contract_path.is_file():
+        raise ValueError("Synthetic control-bias array contract is missing")
     scratch = Path(
         tempfile.mkdtemp(prefix=f"control-input-demo-{project}-", dir=log.directory.resolve())
     )
@@ -200,6 +216,8 @@ def native_control_input_demo_lane(
         ] = {}
         semantic_hashes: dict[str, str] = {}
         raw_hashes: dict[str, str] = {}
+        array_bias_check_statuses: dict[str, str] = {}
+        array_bias_coverage_statuses: dict[str, str] = {}
         for run in ("first", "repeat"):
             netlist_path = output / f"{sample}.{run}.netlist.xml"
             manifest_path = output / f"{sample}.source-manifest.sha256"
@@ -211,6 +229,41 @@ def native_control_input_demo_lane(
             ):
                 raise ValueError(f"Native {sample} demo omitted its source or netlist evidence")
             observed = read_netlist(netlist_path)
+            if sample in {"array-bias-control-fixture", "array-bias-fault-fixture"}:
+                spec = ControlInputsAnalysis.model_validate(
+                    json.loads(control_array_contract_path.read_text(encoding="utf-8"))
+                )
+                checks = {item.id: item for item in control_input_checks(spec, observed)}
+                bias_check = checks["control-inputs/main-reset/bias"]
+                expected_check = "PASS" if sample == "array-bias-control-fixture" else "FAIL"
+                if bias_check.status != expected_check:
+                    raise ValueError(
+                        f"Native {sample} array-bias contract is {bias_check.status}: "
+                        f"{bias_check.detail}"
+                    )
+                array_bias_check_statuses[run] = bias_check.status
+                coverage = control_input_bias_heuristic_coverage(
+                    observed,
+                    netlist_sha256=digest(netlist_path),
+                    source_path=(
+                        "tests/fixtures/design_lint/control-input-array-native/control-inputs.json"
+                    ),
+                    source_sha256=digest(control_array_contract_path),
+                    state="ready",
+                    spec=spec,
+                )
+                if len(coverage.entries) != 1:
+                    raise ValueError(f"Native {sample} did not produce one reset-bias prompt")
+                entry_status = coverage.entries[0].status
+                expected_entry_status = (
+                    "COVERED" if sample == "array-bias-control-fixture" else "OPEN"
+                )
+                if entry_status != expected_entry_status:
+                    raise ValueError(
+                        f"Native {sample} heuristic coverage is {entry_status}; "
+                        f"expected {expected_entry_status}"
+                    )
+                array_bias_coverage_statuses[run] = entry_status
             if sample == "por-alias-fixture":
                 if observed.pin_functions.get("U1.1") != "POR_B":
                     raise ValueError("Native POR_B fixture did not retain its exact pin function")
@@ -311,6 +364,10 @@ def native_control_input_demo_lane(
             )
         if semantic_hashes["first"] != semantic_hashes["repeat"]:
             raise ValueError(f"Native {sample} parsed netlist changed between repeated exports")
+        if len(set(array_bias_check_statuses.values())) > 1:
+            raise ValueError(f"Native {sample} array-bias check changed between exports")
+        if len(set(array_bias_coverage_statuses.values())) > 1:
+            raise ValueError(f"Native {sample} array-bias coverage changed between exports")
 
         manifest = output / f"{sample}.source-manifest.sha256"
         source_digest = output / f"{sample}.source.sha256"
@@ -355,6 +412,8 @@ def native_control_input_demo_lane(
             connected_bias_candidate_count=str(len(bias_candidate_records)),
             connected_bias_candidates_sha256=bias_candidate_sha256,
             connected_bias_candidates=bias_candidate_json,
+            array_bias_check_status=array_bias_check_statuses.get("first", "NOT_RUN"),
+            array_bias_coverage_status=array_bias_coverage_statuses.get("first", "NOT_RUN"),
             repeatable="true",
             repeatability_basis="normalized_netlist_contract",
             command_receipt=(scratch / "native.command.json").relative_to(root).as_posix(),

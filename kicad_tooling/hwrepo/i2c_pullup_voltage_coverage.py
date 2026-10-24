@@ -7,13 +7,14 @@ from collections.abc import Mapping
 from typing import Literal
 
 from .i2c_addressing import unmapped_i2c_responders
-from .i2c_pullup_contract_paths import (
-    i2c_array_channel_issue,
-    i2c_array_component_issues,
-)
 from .i2c_pullup_models import I2cPullupAnalysis
 from .i2c_pullup_voltage_models import I2cPullupVoltageCoverageEntry
 from .models import ElectricalCheck, NetlistContract
+from .resistor_array_paths import (
+    ResistorArrayNetlistEvidence,
+    resistor_array_channel_issue,
+    resistor_array_component_issues,
+)
 from .resistor_paths import (
     VISIBLE_PULLUP_MAX_OHMS,
     VISIBLE_PULLUP_MIN_OHMS,
@@ -203,27 +204,24 @@ def _source_bound_array_pullups(
     observed: NetlistContract, spec: I2cPullupAnalysis
 ) -> dict[str, tuple[str, set[str]]]:
     """Return only fitted, exact-mapped array channels inside the visible range."""
-    components = {
-        reference.casefold(): (reference, component)
-        for reference, component in observed.components.items()
-    }
-    symbols = {
-        reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
-    }
-    pin_numbers = {
-        reference.casefold(): {number.casefold() for number in numbers}
-        for reference, numbers in observed.component_pin_numbers.items()
-    }
-    dnp = {reference.casefold() for reference in observed.dnp_components}
-    pin_nets: dict[str, set[str]] = defaultdict(set)
-    for net, pins in observed.nets.items():
-        for pin in pins:
-            pin_nets[pin.casefold()].add(net)
+    array_evidence = ResistorArrayNetlistEvidence.from_netlist(observed)
 
     line_pairs = {(line.net, line.rail) for bus in spec.buses for line in (bus.sda, bus.scl)}
     pullups: dict[str, tuple[str, set[str]]] = {}
     for array in spec.arrays:
-        if i2c_array_component_issues(array, components, symbols, pin_numbers, dnp):
+        if resistor_array_component_issues(
+            array_evidence,
+            reference=array.reference,
+            expected_symbol=array.expected_symbol,
+            expected_footprint=array.expected_footprint,
+            expected_value=array.expected_value,
+            expected_part_id=array.expected_part_id,
+            channel_pins=tuple(
+                (channel.signal_pin, channel.rail_pin) for channel in array.channels
+            ),
+            unmapped_pin_reasons=array.unmapped_pin_reasons,
+            component_kind="mapped pull-up channel",
+        ):
             continue
         for channel in array.channels:
             if (channel.signal_net, channel.rail_net) not in line_pairs:
@@ -231,14 +229,14 @@ def _source_bound_array_pullups(
             if not VISIBLE_PULLUP_MIN_OHMS <= channel.resistance_ohms <= VISIBLE_PULLUP_MAX_OHMS:
                 continue
             if (
-                i2c_array_channel_issue(
-                    array.reference,
-                    channel.id,
-                    channel.signal_pin,
-                    channel.rail_pin,
-                    channel.signal_net,
-                    channel.rail_net,
-                    pin_nets,
+                resistor_array_channel_issue(
+                    array_evidence,
+                    reference=array.reference,
+                    channel_id=channel.id,
+                    pin_a=channel.signal_pin,
+                    pin_b=channel.rail_pin,
+                    net_a=channel.signal_net,
+                    net_b=channel.rail_net,
                 )
                 is not None
             ):

@@ -5030,7 +5030,10 @@ is not a reason by itself to expand its scope or change its default policy.
   return net. Direct resistors and unbranched series chains are recognized
   without a resistance window; each intermediate net must contain exactly the
   two resistor pins. DNP and zero-ohm resistors, branched or ambiguous chains,
-  resistor arrays, and jumpers do not satisfy the path. Native output-capable peers are
+  unmapped resistor arrays, and jumpers do not satisfy the path. An exact
+  project-authored array identity and complete channel map can resolve the
+  heuristic when native component and pin checks pass; channel nominal values
+  remain reviewed assumptions, not netlist measurements. Native output-capable peers are
   included in the evidence for review; they do not suppress the candidate
   because their runtime state is not known. A directly visible resistor in
   either polarity or a supported chain clears the prompt. The existing per-rule `review`, `block`,
@@ -5039,7 +5042,11 @@ is not a reason by itself to expand its scope or change its default policy.
   that net, its endpoint and driver checks pass, and its local-bias check passes
   or it explicitly records an internal, external, or not-required decision.
   The lint report records the contract path and digest plus each covered or open
-  candidate. A failed contract check leaves the heuristic prompt open.
+  candidate. A failed contract check leaves the heuristic prompt open. Exact
+  resistor-array bias maps now have synthetic fault/control tests and pinned
+  native KiCad 10.0.5 fault/control schematics under
+  `tests/fixtures/design_lint/control-input-array-native/`; the valid channel
+  clears the authored prompt and the wrong-net channel keeps it open.
   The bounded reset alias set includes the `POR` token because the official
   KiCad `MCU_Module:CHIP-PRO` symbol names an input `POR_B`; `PORN` remains a
   negative control rather than a substring match.

@@ -90,6 +90,7 @@ _LINT_AREA_MODULES = {
             "tests/test_connector_footprint_named_passive_divergence_native_fixture_lane.py",
             "tests/test_connector_footprint_peer_parity.py",
             "tests/test_control_inputs.py",
+            "tests/test_design_lint_control_input_arrays.py",
             "tests/test_design_lint_determinism_control_inputs.py",
             "tests/test_electrical_control_input_parity.py",
             "tests/test_external_protection_contract.py",
@@ -205,6 +206,7 @@ _LINT_AREA_MODULES = {
     ),
     "power_lint": frozenset(
         {
+            "tests/test_design_lint_control_input_arrays.py",
             "tests/test_connector_unconnected_power_output.py",
             "tests/test_design_lint_connector_power_pins.py",
             "tests/test_design_lint_connector_named_power_input_peers.py",

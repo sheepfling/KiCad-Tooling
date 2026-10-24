@@ -5135,6 +5135,53 @@ pin numbers, schematic nets, and KiCad library electrical pin types:
 }
 ```
 
+For a resistor network, replace or supplement `resistors` with an explicit
+`arrays` mapping. Each channel names its signal pin, bias pin and net,
+direction, reviewed nominal resistance and accepted range. The array map also
+binds the component symbol, footprint, value, optional part ID, and every
+otherwise-unmapped native symbol pin:
+
+```json
+{
+  "mode": "local",
+  "basis": "Reviewed reset bias network and resistor-array datasheet",
+  "arrays": [
+    {
+      "reference": "RN1",
+      "expected_symbol": "Synthetic:ResistorArray",
+      "expected_footprint": "Synthetic:RA4",
+      "expected_value": "4x10k",
+      "expected_part_id": "SYNTHETIC-ARRAY-10K",
+      "basis": "Reviewed channel pinout and nominal resistance",
+      "channels": [
+        {
+          "id": "reset",
+          "signal_pin": "RN1.1",
+          "bias_pin": "RN1.2",
+          "bias_net": "+3V3",
+          "direction": "pull_up",
+          "nominal_ohms": 10000,
+          "minimum_ohms": 9000,
+          "maximum_ohms": 11000,
+          "basis": "Synthetic reviewed reset channel range"
+        }
+      ],
+      "unmapped_pin_reasons": {
+        "RN1.3": "Unused channel is not connected on this board",
+        "RN1.4": "Unused channel is not connected on this board"
+      }
+    }
+  ]
+}
+```
+
+An array may share a bias pin across mapped channels only when those channels
+declare the same bias net and direction. Every native array pin must be mapped
+or have an explicit reason. Stale identity, DNP state, unaccounted pins, or a
+wrong/unconnected channel keeps the heuristic prompt open. The nominal channel
+resistance is a project-authored assumption tied to the selected part/value;
+the netlist cannot prove the array's internal construction or measured value.
+
 The example is synthetic. Replace all endpoints, pin types, nets, resistor
 ranges, and driver decisions with the reviewed device and system requirements.
 `driver_policy` is one of `none`, `single`, `shared_open_drain`, or
@@ -5145,7 +5192,10 @@ output-capable pin type on that net that is absent from the endpoint list.
 
 For `bias.mode: "local"`, each named conventional fitted two-terminal resistor
 must retain its exact symbol, footprint, signal/bias net pair, DNP state, and
-inclusive nominal resistance range. For `internal`, `external`, or
+inclusive nominal resistance range. A mapped array must retain its exact
+component identity, fitted state, complete pin inventory, and mapped channel
+net assignments; its nominal resistance range comes from the authored part
+review. For `internal`, `external`, or
 `not_required`, the contract records the reviewed decision and the bias check
 reports `NOT_APPLICABLE`; the native schematic cannot prove those behaviors.
 New electrical setup contracts leave `control_inputs` pending until each
