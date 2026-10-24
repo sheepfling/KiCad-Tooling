@@ -8,6 +8,7 @@ from .can_peer_reference_scan import (
     CanPeerReferenceScan,
     scan_can_peer_references,
 )
+from .can_signal_named_rail import can_signal_on_named_rail_candidates
 from .can_termination_heuristics import (
     can_buses_with_excessive_local_termination,
     can_buses_without_local_termination,
@@ -66,6 +67,7 @@ def can_candidates(
             )
         )
     found.extend(can_line_polarity_label_candidates(observed))
+    found.extend(can_signal_on_named_rail_candidates(observed))
     found.extend(can_tx_rx_same_net_candidates(observed))
     found.extend(can_tx_rx_label_mismatch_candidates(observed))
     found.extend(can_tx_output_sharing_candidates(observed))

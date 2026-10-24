@@ -165,6 +165,7 @@ DesignLintRuleId = Literal[
     "bus.can_peer_assignment_divergence",
     "bus.can_peer_reference_review",
     "bus.can_line_polarity_label_mismatch",
+    "bus.can_signal_on_named_rail",
     "bus.can_tx_rx_same_net",
     "bus.can_tx_rx_label_mismatch",
     "bus.can_tx_outputs_share_net",

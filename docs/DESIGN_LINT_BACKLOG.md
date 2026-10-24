@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 223 rules are implemented with synthetic regression coverage.
+The following 224 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 223 active rules.
+The catalog currently contains 224 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -585,6 +585,7 @@ skipped under prerelease policy.
 - `bus.can_peer_assignment_divergence`
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
+- `bus.can_signal_on_named_rail`
 - `bus.ethernet_data_label_mismatch`
 - `bus.ethernet_management_label_mismatch`
 - `bus.can_tx_rx_same_net`
@@ -753,6 +754,12 @@ and optional ecosystem adapters are `P3`.
   the I2C and serial rules while keeping the SPI predicate in its own module.
   Fault/control, intentional chip-select strap, policy, ordering, hash-seed,
   catalog, selector, and digest-pinned KiCad export cases are registered.
+- **LINT-242 CAN/FDCAN controller signal pin assigned to a named rail:** The
+  default-review heuristic applies exact CAN/FDCAN TX/RX pin-function
+  recognition to fitted IC pins with one assignment to a supply-like or
+  return-like net label. Direct rail straps remain project decisions. Synthetic
+  fault/control, policy, ordering, hash-seed, catalog, selector, and
+  digest-pinned KiCad export checks are registered.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3149,7 +3156,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 223 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 224 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5140,6 +5147,42 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_SPI_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_spi_signal_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_signal_on_named_rail")'
+  ```
+
+#### LINT-242 — Review CAN/FDCAN controller signal pins assigned to named rails
+
+- **Status:** Implemented as default-`review` `bus.can_signal_on_named_rail`.
+  Project policy can promote it to `block`, turn it `off`, or ignore an exact
+  finding.
+- **Gap:** The named-rail clue already reviewed fitted I2C, UART/USART, and SPI
+  signal pins. The corresponding exact CAN/FDCAN controller TX/RX functions
+  had no rule against direct supply-like or return-like assignments.
+- **Predicate:** Use `can_signal_role_and_channel` to recognize bounded
+  CAN/FDCAN TX/RX aliases. Require a fitted U/IC reference, complete native
+  pin inventory, one unique function entry, and one native net assignment.
+  Emit a candidate only when the assigned net label matches the bounded
+  supply-like or return-like vocabulary.
+- **Boundary:** Function and label names are clues, not evidence of pin
+  voltage, controller configuration, required topology, or defect. An
+  intentional strap remains valid. The schematic netlist does not prove
+  transceiver behavior, PCB copper, or off-board wiring.
+- **Fixtures and quality gate:** TX-to-return and RX-to-supply faults;
+  neutral and unsupported aliases, CANH/CANL, generic TXD, connector, DNP,
+  open, ambiguous, duplicate metadata, and incomplete-inventory controls;
+  project `block`, `off`, and exact-ignore policy; stable ordering and repair;
+  process-level hash-seed comparison; and source-hashed fault/control exports
+  with clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5. The active catalog,
+  selector, markers, native switch, owner module, and architecture size checks
+  are registered. Fixtures are Tooling-authored synthetic schematics.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_can_signal_named_rail.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_signal_on_named_rail")'
+
+  KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+    tests/test_can_signal_named_rail_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_signal_on_named_rail")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

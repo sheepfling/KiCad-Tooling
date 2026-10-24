@@ -28,6 +28,10 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
             "spi_signal_named_rail.py",
             "kicad_tooling/hwrepo/spi_signal_named_rail.py#spi_signal_on_named_rail_candidates",
         ),
+        "bus.can_signal_on_named_rail": (
+            "can_signal_named_rail.py",
+            "kicad_tooling/hwrepo/can_signal_named_rail.py#can_signal_on_named_rail_candidates",
+        ),
     }
     catalog = {item.rule_id: item for item in rule_catalog().rules}
     for shared_name in ("named_rail_roles.py", "named_rail_pin_evidence.py"):

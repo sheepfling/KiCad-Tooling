@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 223 active rules.
+The catalog currently contains 224 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -977,6 +977,29 @@ Select the CAN TX output-sharing check with:
 KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_can_tx_output_sharing_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
+```
+
+### CAN controller signal pins assigned directly to named rails
+
+`bus.can_signal_on_named_rail` reviews a fitted U/IC CAN/FDCAN TX or RX pin
+when its exact exported function alias has one native assignment to a label
+recognized as supply-like or return-like. It requires a complete native pin
+inventory and skips connectors, DNP parts, open or ambiguous assignments,
+generic TX/RX functions, and unsupported aliases. The default is `review`:
+the pin-function and net-label names are clues, and a direct strap can be an
+intentional transceiver or operating-mode choice. This check does not establish
+CAN participation, transceiver behavior, electrical potential, required
+topology, PCB copper, or off-board wiring. Tooling-authored fault/control
+exports repeat with clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5; see the
+[fixture record](../tests/fixtures/design_lint/can-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_can_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_signal_on_named_rail")'
 ```
 
 ### SPI data pin/name role review
