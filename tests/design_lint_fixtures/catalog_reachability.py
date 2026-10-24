@@ -24,7 +24,6 @@ from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
     bjt_collector_emitter_netlist,
 )
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
-from tests.design_lint_fixtures.ethernet_management_labels import ethernet_management_netlist
 from tests.design_lint_fixtures.can_tx_output_sharing import can_tx_output_netlist
 from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_netlist
 from tests.design_lint_fixtures.connector_coverage import (
@@ -34,6 +33,7 @@ from tests.design_lint_fixtures.connector_coverage import (
     inventory_review,
 )
 from tests.design_lint_fixtures.diode_rail_orientation import netlist as diode_rail_netlist
+from tests.design_lint_fixtures.ethernet_management_labels import ethernet_management_netlist
 from tests.design_lint_fixtures.i2c_signal_label import i2c_signal_label_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
 from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
