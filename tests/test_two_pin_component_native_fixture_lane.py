@@ -20,6 +20,9 @@ from kicad_tooling.ci_hosted_two_pin_components import (
 )
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
+from tests.design_lint_fixtures.two_pin_component_sources import (
+    TWO_PIN_COMPONENT_SOURCE_HASHES,
+)
 from tests.synthetic_design_lint_project import (
     PINNED_NATIVE_KICAD_IMAGES,
     synthetic_design_lint_project,
@@ -27,53 +30,14 @@ from tests.synthetic_design_lint_project import (
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint]
 
-_EXPECTED_SOURCE_HASHES = {
-    "two-pin-components/same-net.kicad_sch": "54de8ccfcffb2d7e44a84fb4b5892872046bc963c2294242498d9b653d526a2b",
-    "two-pin-components/distinct-nets.kicad_sch": "338deb4b9194e37a80813b3a3c447d21c14fa59fef78b0925898f595a27fbdea",
-    "two-pin-varistors/same-net-varistor.kicad_sch": "c8f563192569de181d597ae31528b4e64782445e69894b9c0c0d37acd7480abf",
-    "two-pin-varistors/distinct-nets-varistor.kicad_sch": "60369d9cac30ade461b045c99b599b73821fbefc646a7c06f2ce552d31e871a0",
-    "two-pin-thermistors/same-net-thermistor.kicad_sch": "be417443337f223c51b6caa7305038544df0e5342e90cae91d5fce6a797ac26f",
-    "two-pin-thermistors/distinct-nets-thermistor.kicad_sch": "7a6753de56bf6985d4fd218b96e1f9b951541fd103920baaea503b8999f02a06",
-    "two-pin-thermistors/same-net-thermistor-ptc.kicad_sch": "431ad6fa27575e7670331ff46f6221efe0ab6ccbe3978ba89c516e07b299bdb8",
-    "two-pin-thermistors/distinct-nets-thermistor-ptc.kicad_sch": "4ac3d3e6951e84a7d927bb0844f1568f4f195692de6aeb7e395012081312bb84",
-    "two-pin-thermistors/same-net-thermistor-us.kicad_sch": "7af1b5ff0666f70a8866266a5815de7d9f59308e9456bd2b10a456d84589980b",
-    "two-pin-thermistors/distinct-nets-thermistor-us.kicad_sch": "23c7a0a02eb48dfff8ce009b102247c896ebee3d4bf24d537c6a0ee7a3990237",
-    "two-pin-thermistors/same-net-thermistor-ntc-us.kicad_sch": "bb47a0526551c53dd9aee01b883462617c279a2bf083e0dd9a36462022177741",
-    "two-pin-thermistors/distinct-nets-thermistor-ntc-us.kicad_sch": "ce3eb6a2cf144649b5d896b7459b88f82fffa6b10373b939488a96474550e9f3",
-    "two-pin-thermistors/same-net-thermistor-ptc-us.kicad_sch": "c0be1a4de2ec6af321ac5cfbba968a510492bc2033dc4faf3a8781f1d6b664bd",
-    "two-pin-thermistors/distinct-nets-thermistor-ptc-us.kicad_sch": "b0948f3d294c3510c18ea7f0e9142278e2988241b993c0a8234c380160505ed7",
-    "two-pin-components/custom-capacitor-same-net.kicad_sch": "304c3eb9b979f807f99ee91fecec83e4688bb8d50207c298ff985688950e9fc2",
-    "cohort-power-pin-dc/custom-capacitor-role-control.kicad_sch": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
-    "two-pin-components/same-net-diode.kicad_sch": "c7b34973f881f5c8d8e8ac26b07c03dec70b061f66b8338d61fb085583c2aa8b",
-    "two-pin-components/distinct-nets-diode.kicad_sch": "74d19829e8dd9379a26cb6da9dd3cf10a48abce9d724661338f73ce0086bb928",
-    "two-pin-leds/same-net-led.kicad_sch": "a5ff10fb374138ee4409dfd1e40d7652798497b35c41ed2b5f4c3be7744d3fc7",
-    "two-pin-leds/distinct-nets-led.kicad_sch": "95cfa1e927bcfea5b251538b742164704541e9e139825bf6faee5a1909efae74",
-    "two-pin-buzzers/same-net-buzzer.kicad_sch": "6213cd36ed3321bc837d541a82617467524bd2b2454d95be034e2f9bd720f51f",
-    "two-pin-buzzers/distinct-nets-buzzer.kicad_sch": "120688dc3c6600bb729aecf7ca8ef0c43368bacc50d73c4b708a6286c324ef62",
-    "two-pin-speakers/same-net-speaker.kicad_sch": "8d82fc391cf146a8f9c92c71ae37f6757422ca8599b0e13a69a0de378ecc7a1d",
-    "two-pin-speakers/distinct-nets-speaker.kicad_sch": "e12366fd7846a7585e4bf0cba9dc3203c1669b348ee76581285edd79c3d54287",
-    "two-pin-batteries/same-net-battery.kicad_sch": "33d76cb6ac784e7be9b801a938b43a5a98f5d6c2bc55be8bdbb485dfc657673e",
-    "two-pin-batteries/distinct-nets-battery.kicad_sch": "b72525841fa7cbae6cc050db065370ab83990b1728d414f87423c29aa2472711",
-    "two-pin-motors/same-net-motor.kicad_sch": "a9d3b9dd3e403bdc1f6fc2403a4a030e57ffadc1cbe85ce585eda6d20e4d8f42",
-    "two-pin-motors/distinct-nets-motor.kicad_sch": "6cfa5b1a856b1a04fabd3c274072b5b03f00f71ce7a218ea5542c344302e172e",
-    "two-pin-crystals/same-net-crystal.kicad_sch": "0a55a739bcce60cacafaadf2c9995c0ff3ef07caf4284745b420a8e0f2de2b1a",
-    "two-pin-crystals/distinct-nets-crystal.kicad_sch": "4c4fa54184ba74eb8194016a166e068c1a41646b4e59686d187395d981c4bc13",
-    "two-pin-fuses/same-net-fuse.kicad_sch": "b69792902442ef89c103f5a4b783b73633b88d9519ab01c5b77df9b654df62ca",
-    "two-pin-fuses/distinct-nets-fuse.kicad_sch": "c9c6afa14db03137c1bbc78b82875d159f79b5ebabbb7ea21c6eac1e33fc6edb",
-    "two-pin-fuses/same-net-polyfuse.kicad_sch": "1537a762c427dbc77e3afb35fd2faecb494e69674b8ca3f7e04e7497fd96e3ad",
-    "two-pin-fuses/distinct-nets-polyfuse.kicad_sch": "f4d7ba7f0d27d295c725f2286dace93fa4163b3dbb04130d0c913f05660fc037",
-    "two-pin-ferrites/same-net-ferrite.kicad_sch": "8ede05ea1d9c8afb0cec2f1c8c9bddf527eab015ab779097f4ddc528866751f7",
-    "two-pin-ferrites/distinct-nets-ferrite.kicad_sch": "199c802ca290b1281622c623f4966b159144f0e95fd99ed0e21a14a0875734a7",
-    "two-pin-switches/same-net-spst.kicad_sch": "1ddb2e72f4759c3edddd0f1c7077090c911fa3cbd36d48ef5a0850d6146c25b4",
-    "two-pin-switches/distinct-nets-spst.kicad_sch": "2f9e43e716fe6bc89645734768ced5ff5491ba8b62330aa1c544db236d31e147",
-}
+_EXPECTED_SOURCE_HASHES = TWO_PIN_COMPONENT_SOURCE_HASHES
 
 
 def test_native_fixture_sources_are_hash_pinned_under_the_fixture_root() -> None:
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     case_sources = {filename for filename, _, _ in TWO_PIN_COMPONENT_FIXTURE_CASES.values()}
     assert case_sources == set(_EXPECTED_SOURCE_HASHES)
-    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 38
+    assert len(TWO_PIN_COMPONENT_FIXTURE_CASES) == 40
     for filename, expected_digest in _EXPECTED_SOURCE_HASHES.items():
         source = (fixture_root / filename).resolve()
         assert source.is_relative_to(fixture_root.resolve())
@@ -93,6 +57,9 @@ def test_native_candidate_kind_map_covers_every_fixture_rule() -> None:
     )
     assert TWO_PIN_COMPONENT_CANDIDATE_KINDS["component.two_pin_motor_same_net"] == frozenset(
         {"motor"}
+    )
+    assert TWO_PIN_COMPONENT_CANDIDATE_KINDS["component.two_pin_solar_cell_same_net"] == frozenset(
+        {"solar_cell"}
     )
 
 
@@ -201,6 +168,20 @@ def test_motor_native_fixture_scope_contains_only_motor_fault_and_control() -> N
     assert {rule_id for _, rule_id, _ in selected.values()} == {"component.two_pin_motor_same_net"}
     assert TWO_PIN_COMPONENT_CANDIDATE_KINDS["component.two_pin_motor_same_net"] == frozenset(
         {"motor"}
+    )
+    assert any(subjects for _, _, subjects in selected.values())
+    assert any(not subjects for _, _, subjects in selected.values())
+
+
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")
+def test_solar_cell_native_fixture_scope_contains_only_solar_cell_fault_and_control() -> None:
+    selected = two_pin_component_fixture_cases_for_rules(("component.two_pin_solar_cell_same_net",))
+    assert set(selected) == {"same-net-solar-cell", "distinct-nets-solar-cell"}
+    assert {rule_id for _, rule_id, _ in selected.values()} == {
+        "component.two_pin_solar_cell_same_net"
+    }
+    assert TWO_PIN_COMPONENT_CANDIDATE_KINDS["component.two_pin_solar_cell_same_net"] == frozenset(
+        {"solar_cell"}
     )
     assert any(subjects for _, _, subjects in selected.values())
     assert any(not subjects for _, _, subjects in selected.values())
@@ -442,6 +423,24 @@ def test_native_two_pin_motor_same_net_fault_and_control(
         tmp_path,
         kicad_version=kicad_version,
         rule_id="component.two_pin_motor_same_net",
+    )
+
+
+@pytest.mark.native_kicad
+@pytest.mark.slow
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")
+@pytest.mark.skipif(
+    os.environ.get("KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES") != "1",
+    reason="native two-pin component fixtures run in the digest-pinned package acceptance lane",
+)
+@pytest.mark.parametrize("kicad_version", ("10.0.0", "10.0.5"))
+def test_native_two_pin_solar_cell_same_net_fault_and_control(
+    tmp_path: Path, kicad_version: str
+) -> None:
+    _run_native_rule_fixture(
+        tmp_path,
+        kicad_version=kicad_version,
+        rule_id="component.two_pin_solar_cell_same_net",
     )
 
 

@@ -155,6 +155,16 @@ TWO_PIN_COMPONENT_FIXTURE_CASES: dict[str, tuple[str, str, set[str]]] = {
         "component.two_pin_motor_same_net",
         set(),
     ),
+    "same-net-solar-cell": (
+        "two-pin-solar-cells/same-net-solar-cell.kicad_sch",
+        "component.two_pin_solar_cell_same_net",
+        {"BT1: both solar-cell terminals share SOLAR_CELL_TIED"},
+    ),
+    "distinct-nets-solar-cell": (
+        "two-pin-solar-cells/distinct-nets-solar-cell.kicad_sch",
+        "component.two_pin_solar_cell_same_net",
+        set(),
+    ),
     "same-net-crystal": (
         "two-pin-crystals/same-net-crystal.kicad_sch",
         "component.two_pin_crystal_same_net",
@@ -217,6 +227,7 @@ TWO_PIN_COMPONENT_CANDIDATE_KINDS: dict[str, frozenset[str]] = {
     "component.two_pin_speaker_same_net": frozenset({"speaker"}),
     "component.two_pin_battery_same_net": frozenset({"battery"}),
     "component.two_pin_motor_same_net": frozenset({"motor"}),
+    "component.two_pin_solar_cell_same_net": frozenset({"solar_cell"}),
     "component.two_pin_crystal_same_net": frozenset({"crystal"}),
     "component.two_pin_fuse_same_net": frozenset({"fuse", "polyfuse"}),
     "component.two_pin_ferrite_same_net": frozenset({"ferrite_bead"}),

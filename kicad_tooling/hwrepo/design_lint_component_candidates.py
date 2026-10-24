@@ -42,6 +42,7 @@ from .two_pin_buzzers import two_pin_buzzer_same_net_candidates
 from .two_pin_components import two_pin_components_on_same_net
 from .two_pin_leds import two_pin_led_same_net_candidates
 from .two_pin_motors import two_pin_motor_same_net_candidates
+from .two_pin_solar_cells import two_pin_solar_cell_same_net_candidates
 from .two_pin_speakers import two_pin_speaker_same_net_candidates
 
 
@@ -144,8 +145,9 @@ def component_candidates(
     found.extend(two_pin_speaker_same_net_candidates(two_pin_components))
     found.extend(two_pin_battery_same_net_candidates(two_pin_components))
     found.extend(two_pin_motor_same_net_candidates(two_pin_components))
+    found.extend(two_pin_solar_cell_same_net_candidates(two_pin_components))
     for component in two_pin_components:
-        if component.kind in {"led", "buzzer", "speaker", "battery", "motor"}:
+        if component.kind in {"led", "buzzer", "speaker", "battery", "motor", "solar_cell"}:
             continue
         pin_assignments = tuple(
             f"{component.reference}.{number} -> {component.net}" for number in component.pin_numbers

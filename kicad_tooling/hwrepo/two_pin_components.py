@@ -20,6 +20,7 @@ _SUPPORTED_BUZZER_SYMBOLS = frozenset({"Device:Buzzer"})
 _SUPPORTED_SPEAKER_SYMBOLS = frozenset({"Device:Speaker"})
 _SUPPORTED_BATTERY_SYMBOLS = frozenset({"Device:Battery"})
 _SUPPORTED_MOTOR_SYMBOLS = frozenset({"Motor:Motor_DC"})
+_SUPPORTED_SOLAR_CELL_SYMBOLS = frozenset({"Device:Solar_Cell"})
 _SUPPORTED_THERMISTOR_SYMBOLS = frozenset(
     {
         "Device:Thermistor",
@@ -66,10 +67,11 @@ def two_pin_components_on_same_net(
     Recognition requires an exact supported symbol identity, exactly two
     distinct native pin numbers, one unambiguous net per pin, and a fitted
     component. Supported identities are the listed ``Device`` families and
-    ``Switch:SW_SPST``. A custom symbol is eligible only when an exact
-    project-authored capacitor role binding matches its PART_ID, symbol,
-    footprint, and complete pin inventory. Other project-specific symbols
-    and incomplete inventories are skipped.
+    ``Switch:SW_SPST``, ``Motor:Motor_DC``, and ``Device:Solar_Cell``. A
+    custom symbol is eligible only when an exact project-authored capacitor
+    role binding matches its PART_ID, symbol, footprint, and complete pin
+    inventory. Other project-specific symbols and incomplete inventories are
+    skipped.
     """
     role_bindings = resolve_component_role_map(observed, component_role_map).by_reference
     dnp = {reference.casefold() for reference in observed.dnp_components}
@@ -116,6 +118,9 @@ def two_pin_components_on_same_net(
             role_binding = None
         elif symbol in _SUPPORTED_MOTOR_SYMBOLS:
             kind = "motor"
+            role_binding = None
+        elif symbol in _SUPPORTED_SOLAR_CELL_SYMBOLS:
+            kind = "solar_cell"
             role_binding = None
         else:
             role_binding = role_bindings.get(reference.casefold())

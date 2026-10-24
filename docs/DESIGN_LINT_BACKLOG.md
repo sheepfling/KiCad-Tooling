@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 206 rules are implemented with synthetic regression coverage.
+The following 207 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 206 active rules.
+The catalog currently contains 207 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -4301,6 +4301,47 @@ is not a reason by itself to expand its scope or change its default policy.
   ```sh
   .venv/bin/python -I -m pytest tests/test_two_pin_motors.py \
     -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_motor_same_net")'
+  ```
+
+#### LINT-224 — Same-net two-pin solar-cell review
+
+- **Status:** Implemented as the default-review rule
+  `component.two_pin_solar_cell_same_net` for the exact `Device:Solar_Cell`
+  symbol identity.
+- **Gap:** The same-net inventory did not classify a fitted stock solar cell.
+  When both native pin assignments use one schematic net, the netlist shows
+  no voltage difference across the cell and a review prompt can expose a
+  possible missing connection or a deliberate test setup.
+- **Predicate:** Require an exact fitted `Device:Solar_Cell`, exactly two
+  distinct native pin numbers, and one unambiguous assigned net per pin.
+  Report only when both pins use the same net. DNP, open, multiply assigned,
+  incomplete, multi-pin, custom, and alternate identities remain unclassified.
+- **Boundary:** A same-net assignment can be intentional for testing or
+  measurement. The configurable `REVIEW` prompt does not declare a defect and
+  does not establish output, polarity, illumination, panel configuration,
+  footprint mapping, physical connectivity, or assembly state.
+- **Fixtures:** Tooling-owned same-net fault and separate-net control; DNP,
+  incomplete, ambiguous, open, multi-pin, custom, and alternate-symbol
+  exclusions; project override and exact-ignore lifecycle; deterministic
+  ordering and per-instance net-split metamorphic check; and source-hashed
+  native exports on the pinned KiCad 10.0.0 and 10.0.5 images. No product or
+  cohort schematic is used. See the
+  [fixture note](../tests/fixtures/design_lint/two-pin-solar-cells/README.md).
+- **Incremental-value claim:** This adds one exact symbol identity to the
+  component same-net review inventory. Synthetic tests establish predicate
+  behavior; public applicability and reviewer-value measurements remain
+  unmeasured.
+- **Local verification:** Five focused synthetic tests passed; the exact native
+  fault/control fixtures passed on KiCad 10.0.0 and 10.0.5; the two-pin
+  component selector passed (116 passed); the three-process hash-seed check
+  passed; catalog reachability, fixture markers, tag selection, architecture,
+  and size gates passed (111 passed). Ruff, focused Pyright, Markdown lint,
+  and repository link checks passed.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_two_pin_solar_cells.py \
+    -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

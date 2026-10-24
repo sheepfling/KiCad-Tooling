@@ -51,6 +51,7 @@ import tests.test_two_pin_fuses as _tests_test_two_pin_fuses
 import tests.test_two_pin_leds as _tests_test_two_pin_leds
 import tests.test_two_pin_motors as _tests_test_two_pin_motors
 import tests.test_two_pin_passives as _tests_test_two_pin_passives
+import tests.test_two_pin_solar_cells as _tests_test_two_pin_solar_cells
 import tests.test_two_pin_speakers as _tests_test_two_pin_speakers
 import tests.test_two_pin_switches as _tests_test_two_pin_switches
 import tests.test_usb_c_ports as _tests_test_usb_c_ports
@@ -404,6 +405,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_test_two_pin_motors.motor_netlist()
     )
     emitted.update(item.rule_id for item in motor_result.findings)
+    solar_cell_result = _tests_test_two_pin_solar_cells.lint_report(
+        _tests_test_two_pin_solar_cells.solar_cell_netlist()
+    )
+    emitted.update(item.rule_id for item in solar_cell_result.findings)
     crystal_result = _tests_test_two_pin_crystals.lint_report(
         _tests_test_two_pin_crystals.crystal_netlist()
     )

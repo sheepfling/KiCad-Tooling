@@ -34,6 +34,7 @@ from tests.test_two_pin_crystals import crystal_netlist
 from tests.test_two_pin_diodes import diode_netlist
 from tests.test_two_pin_ferrites import ferrite_netlist
 from tests.test_two_pin_fuses import fuse_netlist
+from tests.test_two_pin_solar_cells import solar_cell_netlist
 from tests.test_two_pin_speakers import speaker_netlist
 from tests.test_two_pin_switches import switch_netlist
 
@@ -328,6 +329,13 @@ def report_cases() -> dict[str, object]:
             coach(switch_netlist(same_net=False)),
             DesignLintPolicy(),
         ).model_dump(mode="json"),
+        "solar_cell_fault": source_bound_component_report(
+            "synthetic-two-pin-solar-cell-hash-seed-fault", solar_cell_netlist()
+        ),
+        "solar_cell_control": source_bound_component_report(
+            "synthetic-two-pin-solar-cell-hash-seed-control",
+            solar_cell_netlist(same_net=False),
+        ),
         "mosfet_stress_q2_over_limit": mosfet_stress_check_result(q2_over_limit=True),
         "mosfet_stress_multi_device_control": mosfet_stress_check_result(q2_over_limit=False),
         "led_output_direct_fault": led_output_lint_report(topology="direct"),

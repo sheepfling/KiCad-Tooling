@@ -2620,6 +2620,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/two_pin_motors.py#two_pin_motor_same_net_candidates"
     },
     {
+      "rule_id": "component.two_pin_solar_cell_same_net",
+      "title": "Supported two-pin solar-cell terminals share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For an exact fitted Device:Solar_Cell symbol with exactly two distinct native pin numbers and one unambiguous schematic net assignment per pin, report when both pins use the same net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "A same-net solar cell may be an intentional test short or measurement configuration; the configurable REVIEW prompt does not declare it defective.",
+        "Only the exact Device:Solar_Cell identity with a complete two-pin inventory is recognized. Alternate, custom, multi-pin, incomplete, ambiguous, open, and DNP identities are outside the predicate.",
+        "The schematic netlist does not establish cell output, polarity, illumination, panel configuration, footprint mapping, physical connectivity, or assembly state."
+      ],
+      "fault_fixtures": [
+        "tests.test_two_pin_solar_cells.test_same_net_exact_solar_cell_is_reviewed_without_claiming_cell_behavior",
+        "tests.test_two_pin_component_native_fixture_lane.test_solar_cell_native_fixture_scope_contains_only_solar_cell_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_solar_cell_same_net_fault_and_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_two_pin_solar_cells.test_separate_solar_cell_terminal_nets_are_the_no_finding_control",
+        "tests.test_two_pin_solar_cells.test_skips_dnp_incomplete_ambiguous_open_multi_pin_and_other_symbols",
+        "tests.test_two_pin_solar_cells.test_policy_and_exact_fingerprint_ignore_are_project_configurable",
+        "tests.test_two_pin_component_native_fixture_lane.test_solar_cell_native_fixture_scope_contains_only_solar_cell_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_solar_cell_same_net_fault_and_control"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_two_pin_solar_cells.test_order_is_stable_and_splitting_one_solar_cell_clears_only_its_finding",
+        "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/two_pin_solar_cells.py#two_pin_solar_cell_same_net_candidates",
+        "kicad_tooling/hwrepo/two_pin_components.py#two_pin_components_on_same_net"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/two_pin_solar_cells.py#two_pin_solar_cell_same_net_candidates"
+    },
+    {
       "rule_id": "component.two_pin_crystal_same_net",
       "title": "Supported two-pin crystal terminals share one net",
       "status": "active",

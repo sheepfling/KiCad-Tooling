@@ -203,6 +203,22 @@ the exact KiCad 10 native lane.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_motor_same_net")'
 ```
 
+## Review a two-pin solar cell whose terminals share one net
+
+`component.two_pin_solar_cell_same_net` reviews an exact fitted `Device:Solar_Cell` when its two
+native pins are assigned to one schematic net. The prompt defaults to `review`, because a test short
+or measurement setup may be intentional. It supports project `block`, `off`, and exact-fingerprint
+ignore decisions. Alternate, custom, open, ambiguous, incomplete, multi-pin, and DNP symbols remain
+unclassified. The schematic does not establish cell output, polarity, illumination, footprint
+mapping, PCB connectivity, or assembly state. See the
+[synthetic fixture record](../tests/fixtures/design_lint/two-pin-solar-cells/README.md) for source
+hashes and exact-version native checks.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_two_pin_solar_cells.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -394,7 +410,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 206 active rules.
+The catalog currently contains 207 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

@@ -16,6 +16,7 @@ pytestmark = [
 
 
 @pytest.mark.design_lint_rule(rule_id="component.two_pin_speaker_same_net")
+@pytest.mark.design_lint_rule(rule_id="component.two_pin_solar_cell_same_net")
 def test_two_pin_component_reports_remain_deterministic() -> None:
     reports = hashseed_probe_reports(families=("components",))
     diode_fault = reports["diode_fault"]
@@ -68,6 +69,13 @@ def test_two_pin_component_reports_remain_deterministic() -> None:
     }
     assert reports["switch_control"]["status"] == "PASS"
     assert reports["switch_control"]["findings"] == []
+    solar_cell_fault = reports["solar_cell_fault"]
+    assert solar_cell_fault["status"] == "REVIEW"
+    assert "component.two_pin_solar_cell_same_net" in {
+        finding["rule_id"] for finding in solar_cell_fault["findings"]
+    }
+    assert reports["solar_cell_control"]["status"] == "PASS"
+    assert reports["solar_cell_control"]["findings"] == []
     for report_name in ("led_output_direct_fault", "led_output_parallel_resistor_fault"):
         led_fault = reports[report_name]
         assert led_fault["status"] == "REVIEW"

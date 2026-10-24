@@ -129,6 +129,8 @@ REPORT_ORDER = (
     "ferrite_control",
     "switch_fault",
     "switch_control",
+    "solar_cell_fault",
+    "solar_cell_control",
     "peer_pin_fault",
     "connector_part_id_alias_open_fault",
     "connector_part_id_alias_split_fault",
