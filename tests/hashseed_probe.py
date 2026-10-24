@@ -34,6 +34,8 @@ REPORT_ORDER = (
     "common_control",
     "pwm_numbered_return_fault",
     "pwm_common_return_control",
+    "component_return_split_fault",
+    "component_return_common_control",
     "letter_suffixed_unindexed_return_fault",
     "letter_suffixed_numbered_return_fault",
     "letter_suffixed_return_roles_control",

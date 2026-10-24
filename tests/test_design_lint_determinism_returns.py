@@ -46,6 +46,14 @@ def test_return_and_ground_reports_remain_deterministic() -> None:
         f"0V PWM {reference}": [f"J{reference}.7", f"J{reference}.9"] for reference in range(1, 5)
     }
     assert pwm_control["findings"] == []
+    component_return_fault = reports["component_return_split_fault"]
+    component_return_control = reports["component_return_common_control"]
+    assert component_return_fault["status"] == "REVIEW"
+    assert "component.repeated_return_pin_function" in {
+        finding["rule_id"] for finding in component_return_fault["findings"]
+    }
+    assert component_return_control["status"] == "PASS"
+    assert component_return_control["findings"] == []
     suffix_fault = reports["letter_suffixed_unindexed_return_fault"]
     assert suffix_fault["status"] == "REVIEW"
     assert "net.return_labels_without_pin_roles" in {

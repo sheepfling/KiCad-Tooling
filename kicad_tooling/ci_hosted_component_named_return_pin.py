@@ -7,11 +7,13 @@ from .ci_hosted_connector_return_context import ConnectorReturnFixtureContext
 COMPONENT_NAMED_RETURN_PIN_CASES = (
     "unconnected-named-component-return-fault",
     "unconnected-named-component-power-control",
+    "split-named-component-return-fault",
+    "common-named-component-return-control",
 )
 
 
 def verify_component_named_return_pin_cases(ctx: ConnectorReturnFixtureContext) -> None:
-    """Check native U1 GND assignment evidence and its fully assigned control."""
+    """Check native named-return and split-return evidence with quiet controls."""
     if set(ctx.cases) != set(COMPONENT_NAMED_RETURN_PIN_CASES):
         raise ValueError("Named component return-pin fixture set is incomplete")
 
@@ -37,3 +39,30 @@ def verify_component_named_return_pin_cases(ctx: ConnectorReturnFixtureContext) 
         or observed_control.nets.get("GND") != ("U1.2",)
     ):
         raise ValueError("Named component return-pin control no longer passes")
+
+    split = ctx.reports["split-named-component-return-fault", "first"]
+    observed_split = ctx.observed_contracts["split-named-component-return-fault", "first"]
+    if (
+        split.status != "REVIEW"
+        or {(item.rule_id, item.subject) for item in split.findings}
+        != {
+            (
+                "component.repeated_return_pin_function",
+                "U1 (Lint:MultiReturnComponent): return pins use distinct nets",
+            )
+        }
+        or observed_split.component_symbols != {"U1": "Lint:MultiReturnComponent"}
+        or observed_split.pin_functions != {"U1.1": "GND", "U1.2": "AGND"}
+        or observed_split.nets != {"RETURN_A": ("U1.1",), "RETURN_B": ("U1.2",)}
+    ):
+        raise ValueError("Split component return-pin fault lost its native lint evidence")
+
+    common = ctx.reports["common-named-component-return-control", "first"]
+    observed_common = ctx.observed_contracts["common-named-component-return-control", "first"]
+    if (
+        common.status != "PASS"
+        or common.findings
+        or observed_common.nets.get("RETURN") != ("U1.1", "U1.2")
+        or observed_common.pin_functions != {"U1.1": "GND", "U1.2": "AGND"}
+    ):
+        raise ValueError("Common component return-pin control no longer passes")

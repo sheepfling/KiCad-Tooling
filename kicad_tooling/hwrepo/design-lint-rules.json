@@ -1718,6 +1718,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/component_pin_patterns.py#component_supply_pins_on_different_nets"
     },
     {
+      "rule_id": "component.repeated_return_pin_function",
+      "title": "Recognized component return pins use different nets",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Within one fitted non-connector component, collect native pin functions recognized as ground or return. If at least two such pins each have exactly one assigned native net and their net names differ, emit one REVIEW candidate for that component.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "Separate analog, digital, chassis, isolated-interface, or otherwise partitioned return pins may be intentional; the finding asks for review and never requires the nets to be joined.",
+        "Only fitted non-connector components with at least two recognized return-function pins and complete, unambiguous assignments are considered. DNP parts, open or ambiguous pins, unknown function aliases, and connectors remain outside this predicate.",
+        "The native schematic netlist does not establish PCB copper continuity, external bonds, off-board wiring, component behavior, or physical isolation."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_return_pin_domains.test_split_component_return_pins_request_review_with_exact_evidence",
+        "tests.test_component_return_pin_domains.test_intentional_split_can_be_disabled_or_promoted_by_project_policy",
+        "tests.test_component_named_return_pin_native_fixture_lane.test_native_named_component_return_pin_fault_and_control_are_focused_and_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_return_pin_domains.test_common_return_pins_are_a_quiet_control",
+        "tests.test_component_return_pin_domains.test_dnp_open_and_ambiguous_assignments_stay_outside_the_predicate",
+        "tests.test_component_return_pin_domains.test_connector_references_remain_with_connector_return_rules",
+        "tests.test_component_named_return_pin_native_fixture_lane.test_native_named_component_return_pin_fault_and_control_are_focused_and_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_return_pin_domains.test_mapping_order_is_stable_and_commoning_clears_the_finding",
+        "tests.test_component_named_return_pin_native_fixture_lane.test_native_named_component_return_pin_fault_and_control_are_focused_and_repeatable",
+        "tests.test_design_lint_determinism_returns.test_return_and_ground_reports_remain_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_NAMED_RETURN_PIN_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_return_pin_domains.py#component_return_pin_net_divergences",
+        "kicad_tooling/hwrepo/design_lint_return_domain_candidates.py#return_domain_candidates"
+      ],
+      "theme": "returns",
+      "implementation_owner": "kicad_tooling/hwrepo/component_return_pin_domains.py#component_return_pin_net_divergences"
+    },
+    {
       "rule_id": "component.peer_power_pin_assignment_divergence",
       "title": "Repeated component power pins use different nets",
       "status": "active",

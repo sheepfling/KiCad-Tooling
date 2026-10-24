@@ -51,6 +51,8 @@ def test_component_named_return_pin_lane_exports_only_its_fault_and_control(
 
 @pytest.mark.native_kicad
 @pytest.mark.slow
+@pytest.mark.design_lint_rule(rule_id="component.unconnected_return_pin")
+@pytest.mark.design_lint_rule(rule_id="component.repeated_return_pin_function")
 @pytest.mark.skipif(
     os.environ.get("KICAD_RUN_NATIVE_COMPONENT_NAMED_RETURN_PIN_FIXTURES") != "1",
     reason="native fixtures run in the digest-pinned package acceptance lane",
@@ -103,6 +105,12 @@ def test_native_named_component_return_pin_fault_and_control_are_focused_and_rep
             "component.unconnected_return_pin",
         ),
         ("unconnected-named-component-power-control", "PASS", "none"),
+        (
+            "split-named-component-return-fault",
+            "REVIEW",
+            "component.repeated_return_pin_function",
+        ),
+        ("common-named-component-return-control", "PASS", "none"),
     ):
         result = results[f"component-named-return-pin-fixture/{case}"]
         assert result["status"] == "PASS"

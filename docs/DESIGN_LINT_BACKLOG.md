@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 210 rules are implemented with synthetic regression coverage.
+The following 211 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 210 active rules.
+The catalog currently contains 211 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -452,6 +452,7 @@ skipped under prerelease policy.
 - `connector.peer_power_output_named_assignment_divergence`
 - `connector.peer_power_input_named_assignment_divergence`
 - `component.repeated_supply_pin_function`
+- `component.repeated_return_pin_function`
 - `component.peer_power_pin_assignment_divergence`
 - `component.peer_power_input_assignment_divergence`
 - `component.peer_power_input_named_assignment_divergence`
@@ -687,6 +688,10 @@ and optional ecosystem adapters are `P3`.
   REVIEW asks whether connecting the shield to a net with that return-like label
   is intentional;
   it does not infer that shields and signal returns must be isolated or bonded.
+- **LINT-228 component return-pin split:** A fitted non-connector component
+  with at least two recognized ground/return pins assigned across distinct
+  nets receives a configurable REVIEW prompt. Intentional analog, digital,
+  chassis, and isolation domains remain valid project decisions.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3068,7 +3073,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 210 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 211 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4498,6 +4503,48 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_TRANSFORMER_WINDING_FIXTURES=1 .venv/bin/python -I -m pytest \
     tests/test_transformer_winding_native_fixture_lane.py \
     -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.transformer_winding_groups_share_net")'
+  ```
+
+#### LINT-228 — Recognized component return pins use different nets
+
+- **Status:** Implemented as configurable default-review lint
+  `component.repeated_return_pin_function`, owned by
+  `component_return_pin_domains.py#component_return_pin_net_divergences`.
+- **Gap:** The existing repeated-pin check covered recognized supply pins on
+  one component. It did not compare multiple recognized ground/reference pins
+  on that same component when all were assigned but split across separate
+  schematic nets.
+- **Predicate:** For one fitted non-connector component, collect pins whose
+  native function is recognized as ground or return. When two or more each
+  have exactly one assigned native net and those nets differ, emit one REVIEW
+  finding with the symbol, pin functions, and exact assignments. Connectors
+  remain with connector-specific checks; DNP, open, ambiguous, and incomplete
+  evidence is skipped.
+- **Boundary:** Split analog/digital, chassis, isolated-interface, and other
+  return domains can be intentional. The finding asks for review and never
+  requires commoning or proves a physical bond, PCB continuity, external
+  wiring, or isolation. Project policy supports `review`, `block`, `off`, and
+  exact-fingerprint ignore.
+- **Fixtures and quality gate:** Tooling-authored typed split fault and
+  common-return control cover policy, DNP/open/ambiguous cases, connector
+  exclusion, input-order stability, and repair. Source-hashed schematic fault
+  and control repeat native netlist export and lint evaluation on digest-pinned
+  KiCad 10.0.0 and 10.0.5. Catalog ownership, return-path marker, focused rule
+  selection, active-rule reachability, tag selector, architecture size, and
+  hash-seed determinism are guarded. No product source is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_component_return_pin_domains.py \
+    -m 'design_lint and return_path_lint and design_lint_rule(rule_id="component.repeated_return_pin_function")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_COMPONENT_NAMED_RETURN_PIN_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_component_named_return_pin_native_fixture_lane.py \
+    -m 'design_lint and return_path_lint and native_kicad and design_lint_rule(rule_id="component.repeated_return_pin_function")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

@@ -11,6 +11,7 @@ RETURN_PATH_LINT_TEST_MODULES = frozenset(
         "tests/test_ci_hosted_pcb_reference_planes.py",
         "tests/test_ci_hosted_pcb_return_paths.py",
         "tests/test_component_named_return_pin_native_fixture_lane.py",
+        "tests/test_component_return_pin_domains.py",
         "tests/test_connector_named_power_pin_fixture_lane.py",
         "tests/test_connector_return_distribution.py",
         "tests/test_connector_return_role_coverage.py",

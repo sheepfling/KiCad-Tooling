@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_return_pin_domains import component_return_pin_net_divergences
 from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_return_pins import (
@@ -35,6 +36,9 @@ def return_domain_candidates(
         reviewed_connector_pins,
     )
     found: list[Candidate] = []
+    found.extend(
+        component_return_pin_net_divergences(observed, reviewed_connector_references)
+    )
     found.extend(
         return_pin_positive_rail_candidates(
             observed,

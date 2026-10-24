@@ -78,6 +78,7 @@ COMPONENT_LINT_TEST_MODULES = frozenset(
         "tests/test_two_pin_thermocouples_native_fixture_lane.py",
         "tests/test_transformer_winding_same_net.py",
         "tests/test_transformer_winding_native_fixture_lane.py",
+        "tests/test_component_return_pin_domains.py",
         "tests/test_design_lint_mcp_parity_two_pin_varistors.py",
         "tests/test_two_pin_switches.py",
         "tests/test_bjt_base_drive.py",

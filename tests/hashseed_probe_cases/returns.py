@@ -25,6 +25,7 @@ from tests.design_lint_fixtures import (
     coach,
     four_db9_return_domains,
 )
+from tests.design_lint_fixtures.component_return_domains import component_return_pin_domains
 from tests.design_lint_fixtures.connector_coverage import (
     connector_return_role_catalog,
     connector_return_role_netlist,
@@ -217,6 +218,17 @@ def numbered_pwm_return_report(*, common: bool) -> dict[str, object]:
     return report.model_dump(mode="json")
 
 
+def component_return_pin_report(*, split: bool) -> dict[str, object]:
+    """Serialize the split component return-pin fault or common control."""
+    observed = component_return_pin_domains(split=split)
+    report = evaluate(
+        "synthetic-component-return-split" if split else "synthetic-component-return-common",
+        coach(observed),
+        DesignLintPolicy(),
+    )
+    return report.model_dump(mode="json")
+
+
 def two_usb_one_serial_return_report(
     *, common_return: bool, ignore_return: bool = False
 ) -> dict[str, object]:
@@ -274,6 +286,8 @@ def report_cases() -> dict[str, object]:
         ).model_dump(mode="json"),
         "pwm_numbered_return_fault": numbered_pwm_return_report(common=False),
         "pwm_common_return_control": numbered_pwm_return_report(common=True),
+        "component_return_split_fault": component_return_pin_report(split=True),
+        "component_return_common_control": component_return_pin_report(split=False),
         "letter_suffixed_unindexed_return_fault": return_net_lint_report(
             ("GNDA", "GNDD")
         ).model_dump(mode="json"),

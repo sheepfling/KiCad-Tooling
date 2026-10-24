@@ -282,6 +282,25 @@ for the fault and valid control.
   -m 'design_lint and component_lint and design_lint_rule(rule_id="component.transformer_winding_groups_share_net")'
 ```
 
+## Review split return pins on one component
+
+`component.repeated_return_pin_function` emits a configurable REVIEW when at
+least two recognized ground or return pins on one fitted non-connector
+component each have one native net assignment and those nets differ. It can
+surface a possible split-return connection that is not apparent from neutral
+net names. Separate analog, digital, chassis, or isolated return domains may
+be intentional, so the finding never requires them to be joined. Open,
+ambiguous, DNP, unknown-function, and connector cases are excluded; connector
+return rules handle connectors. Project policy can set `block` or `off`, or
+ignore the exact fingerprint. The native schematic evidence does not establish
+PCB continuity, external bonding, or physical isolation. See the
+[synthetic fixture record](../tests/fixtures/design_lint/component-return-pin-domains/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_component_return_pin_domains.py \
+  -m 'design_lint and return_path_lint and design_lint_rule(rule_id="component.repeated_return_pin_function")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -473,7 +492,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 210 active rules.
+The catalog currently contains 211 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

@@ -178,6 +178,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "unconnected-named-component-pins/return-fault.kicad_sch",
         "unconnected-named-component-power-control": fixture_root
         / "unconnected-named-component-pins/control.kicad_sch",
+        "split-named-component-return-fault": fixture_root
+        / "component-return-pin-domains/fault.kicad_sch",
+        "common-named-component-return-control": fixture_root
+        / "component-return-pin-domains/control.kicad_sch",
         "unconnected-generic-component-power-input-fault": fixture_root
         / "generic-component-power-input/fault.kicad_sch",
         "unconnected-generic-component-power-input-control": fixture_root
@@ -333,6 +337,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "unconnected-named-component-supply-fault": "f1ab42010ec4d41b3ea971e797a7cdff6c020fdaf86e7aae9e2f94664731d18e",
     "unconnected-named-component-return-fault": "43a421486e1ac8f138269128715a45e47fc1998a266d631c8461ffaaf58f9357",
     "unconnected-named-component-power-control": "65e95e66fe3af0ce5136e5763f10f4b3aec71f658f790db929793a45c1895000",
+    "split-named-component-return-fault": "ed5cd5ae20571cf255af42b48f8a404f742312c058c0557c1035aaf4f2b17b1d",
+    "common-named-component-return-control": "b58ad80dc5aa0b1bf092c4ae832301e3654d95f0627af5e483ca5f38528e2f08",
     "unconnected-generic-component-power-input-fault": "40271ae0a6551c8c7209427b30e89d9a95267aa92765eaac1a5cdf65e1ffd1a1",
     "unconnected-generic-component-power-input-control": "67d6ad249e1caa2095b3a408457e6a1710fb9bb6ef7d8e5cb1fdcdd7710b43ec",
     "unconnected-generic-component-power-input-no-connect-fault": "664e619ceaba71c27bd7acfaa0bb4563ab3203b33a03c564b2a8f7c6bdf4c4bd",
