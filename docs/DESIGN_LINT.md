@@ -3719,7 +3719,9 @@ third resistor, and out-of-window values. Dedicated tooling-owned native
 schematics add a two-resistor control and three-resistor fault, exported with
 the exact KiCad 10.0.0 and 10.0.5 toolchains. Catalog maturity remains
 `synthetic_validated`; native export compatibility is recorded separately and
-does not establish field value.
+does not establish field value. See the [synthetic native fault/control fixture
+record](../tests/fixtures/design_lint/can-excess-termination-native/README.md)
+for source hashes and coverage boundaries.
 
 ## Require a USB-C port role and pin map
 
