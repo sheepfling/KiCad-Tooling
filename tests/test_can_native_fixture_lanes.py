@@ -18,6 +18,7 @@ from kicad_tooling.ci_hosted import (
 )
 from kicad_tooling.ci_hosted_can_peer_reference import can_peer_reference_native_fixture_lane
 from kicad_tooling.hwrepo.electrical import selected_config
+from tests.can_excess_termination_fixture_manifest import NATIVE_FIXTURE_SOURCE_HASHES
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.support import reference_root
 
@@ -165,10 +166,7 @@ def test_native_can_excess_termination_fault_and_control(
     assert results["can-excess-termination-fixture/fault"]["status"] == "PASS"
     assert results["can-excess-termination-fixture/fault"]["findings"] == 1
     assert results["can-excess-termination-fixture/fault"]["evidence"]
-    for case, expected_source_hash in (
-        ("control", "3baa84f1494dc7cdd8b4bef63aa1df792adccfbc8b429895b6d8fc1c45ed7"),
-        ("fault", "97f8f0b2feaff11d2a8dd73e6ccb0f4e8f745b5a550813728b703a7216d28756"),
-    ):
+    for case, expected_source_hash in NATIVE_FIXTURE_SOURCE_HASHES.items():
         result = results[f"can-excess-termination-fixture/{case}"]
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"

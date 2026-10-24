@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintFinding
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
+from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
     DesignLintIgnore,
@@ -14,6 +17,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
 )
+from tests.can_excess_termination_fixture_manifest import NATIVE_FIXTURE_SOURCE_HASHES
 from tests.design_lint_fixtures import can_netlist, coach
 
 RULE_ID = "bus.can_excess_termination"
@@ -23,6 +27,13 @@ pytestmark = [
     pytest.mark.interface_lint,
     pytest.mark.design_lint_rule(rule_id=RULE_ID),
 ]
+
+
+def test_native_fixture_sources_match_reviewed_hashes() -> None:
+    fixture_root = Path(__file__).parent / "fixtures/design_lint/can-excess-termination-native"
+    assert {
+        case: digest(fixture_root / f"{case}.kicad_sch") for case in NATIVE_FIXTURE_SOURCE_HASHES
+    } == NATIVE_FIXTURE_SOURCE_HASHES
 
 
 def _can_netlist_with_direct_terminators(
