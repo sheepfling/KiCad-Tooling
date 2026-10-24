@@ -4530,6 +4530,9 @@ is not a reason by itself to expand its scope or change its default policy.
   inventory, and diff checks passed. Local native exports were unavailable
   because KiCad CLI is absent and Docker access is denied; the focused tag
   enables exact native exports on KiCad 10.0.0 and 10.0.5.
+- **Hosted acceptance:** Scoped lint, exact native fixtures, and the installed
+  wheel check against a separate project checkout passed as `v0.5.3rc202`
+  (GitHub Actions run `40126899975`).
 - **Focused selection:**
 
   ```sh
