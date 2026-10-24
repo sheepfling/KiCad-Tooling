@@ -48,6 +48,7 @@ RETURN_PATH_LINT_TEST_MODULES = frozenset(
         "tests/test_native_connector_return_lint.py",
         "tests/test_native_db9_return_contracts.py",
         "tests/test_numbered_return_native_fixture_lane.py",
+        "tests/test_numbered_interface_returns.py",
         "tests/test_pcb_decoupling_native_fixture_lane.py",
         "tests/test_pcb_decoupling_return_vias.py",
         "tests/test_pcb_protection_path_native_fixture_lane.py",

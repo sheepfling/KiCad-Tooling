@@ -7095,7 +7095,7 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized ground stem may use a one-letter suffix such as GNDA before an optional numeric suffix. The bounded RET token is also recognized, including RET1/RET2 and PORT1_RET/PORT2_RET.",
+      "predicate": "At least two distinct net names have the same recognized return-like stem and different numeric suffixes. A recognized ground stem may use a one-letter suffix such as GNDA before an optional numeric suffix. The bounded RET token is also recognized, including RET1/RET2 and PORT1_RET/PORT2_RET; compact protocol prefixes such as USB1_GND/USB2_GND and UART1_GND/UART2_GND are grouped by protocol stem.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
@@ -7107,6 +7107,7 @@
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
         "tests.test_design_lint_numbered_returns.test_four_db9_separately_named_return_domains_are_reviewed",
         "tests.test_design_lint_numbered_returns.test_four_db9_numbered_pwm_return_names_are_reviewed",
+        "tests.test_numbered_interface_returns.test_usb_and_serial_port_returns_are_grouped_by_protocol_stem",
         "tests.test_design_lint_numbered_returns.test_project_can_block_numbered_return_review",
         "tests.test_return_net_lint.test_numbered_letter_suffixed_ground_nets_are_grouped_for_review",
         "tests.test_return_net_lint.test_numbered_ret_tokens_request_review",
@@ -7118,6 +7119,7 @@
         "tests.test_design_lint_connector_returns.test_common_return_across_symbols_keeps_shield_separate",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_return_control_clears_review_findings",
         "tests.test_design_lint_numbered_returns.test_four_db9_common_pwm_return_name_is_a_valid_control",
+        "tests.test_numbered_interface_returns.test_common_return_net_across_usb_and_serial_ports_is_a_valid_control",
         "tests.test_return_net_lint.test_explicit_return_pin_functions_suppress_letter_suffix_prompt",
         "tests.test_return_net_lint.test_common_ret_and_reset_labels_are_valid_controls",
         "tests.test_design_lint_mcp_parity_return_labels.test_ret_return_names_match_cli_and_mcp",

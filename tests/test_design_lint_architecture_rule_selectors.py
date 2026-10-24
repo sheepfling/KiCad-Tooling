@@ -55,6 +55,10 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             "tests/test_design_lint_dc_reference.py::test_connector_capacitor_only_net_requests_dc_reference_review",
         ),
         (
+            "net.numbered_returns",
+            "tests/test_numbered_interface_returns.py::test_usb_and_serial_port_returns_are_grouped_by_protocol_stem",
+        ),
+        (
             "connector.unconnected_supply_pin",
             "tests/test_design_lint_power_pin_patterns.py::TestDesignLintPowerPinPatterns::test_unconnected_supply_and_return_pins_without_a_peer_are_reported",
         ),

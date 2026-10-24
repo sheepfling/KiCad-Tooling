@@ -173,6 +173,7 @@ _LINT_AREA_MODULES = {
             "tests/test_usb_c_cc_same_net.py",
             "tests/test_design_lint_determinism_usb_c_cc_same_net.py",
             "tests/test_usb_c_cc_same_net_native_fixture_lane.py",
+            "tests/test_numbered_interface_returns.py",
             "tests/test_usb_c_sbu_named_rail.py",
             "tests/test_design_lint_determinism_usb_c_sbu_named_rail.py",
             "tests/test_usb_c_sbu_named_rail_native_fixture_lane.py",
