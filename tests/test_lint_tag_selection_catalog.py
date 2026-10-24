@@ -108,6 +108,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES",
         ),
         (
+            "bus.spi_unmapped_participant",
+            "KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES",
+        ),
+        (
             "bus.can_line_polarity_label_mismatch",
             "KICAD_RUN_NATIVE_CAN_LINE_POLARITY_FIXTURES",
         ),

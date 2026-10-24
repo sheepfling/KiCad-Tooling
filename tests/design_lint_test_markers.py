@@ -195,6 +195,7 @@ _LINT_AREA_MODULES = {
             "tests/test_serial_peer_reference_boundaries.py",
             "tests/test_serial_reference_bond_native_fixture_lane.py",
             "tests/test_spi_participants.py",
+            "tests/test_spi_composite_pin_functions.py",
             "tests/test_design_lint_cohort_stm32_candidate.py",
             "tests/test_complementary_pair_native_fixture_lane.py",
             "tests/test_stm32_pin_map.py",

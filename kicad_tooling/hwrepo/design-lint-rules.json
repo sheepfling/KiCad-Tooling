@@ -7500,35 +7500,43 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including exported symbol pin functions, net assignments, and the source-hashed project electrical contract",
-      "predicate": "For a non-DNP U- or IC-prefixed component, report a likely SPI participant when at least one uniquely assigned clock function (SCK/SCLK), one uniquely assigned data function (MOSI/SDI/COPI or MISO/SDO/CIPO), and one recognized chip-select function (CS/CSN/NCS/NSS/SS/SSEL/CE0/CE1) are present, and the reference is absent from the project-authored SPI controller/device/bridge roster or no required roster is configured.",
+      "predicate": "For a non-DNP U- or IC-prefixed component, report a likely SPI participant when at least one uniquely assigned clock function (SCK/SCLK/SPC), one uniquely assigned data function (MOSI/SDI/COPI or MISO/SDO/CIPO), and one recognized chip-select function (CS/CSN/NCS/NSS/SS/SSEL/CE0/CE1) are present, and the reference is absent from the project-authored SPI controller/device/bridge roster or no required roster is configured. Exact slash-separated aliases are tokenized, including SCL/SPC and SDA/SDI/SDO.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "The reference-prefix filter is limited to U and IC; other designator conventions are not discovered.",
-        "Only the listed exact pin-function aliases are recognized after punctuation normalization and an optional SPI prefix; missing or different library metadata can evade the prompt.",
+        "Only exact pin-function aliases are recognized after punctuation normalization, an optional SPI prefix, and slash-only tokenization of compound functions; missing or different library metadata can evade the prompt. Plain SCL and SDA do not count as SPI clock/data aliases.",
         "A controller, translator, multi-protocol device, or intentionally unused SPI-capable IC can match. The result is a coverage prompt and never asserts that the component must join an SPI bus.",
         "A reference in the authored roster is considered covered even if its signal pins are wrong; the SPI contract comparison reports those separate mismatches.",
         "This schematic-netlist check does not prove PCB copper continuity, internal transfer behavior, signal timing, or firmware configuration."
       ],
       "fault_fixtures": [
         "tests.test_spi_participants.test_unmapped_spi_ic_without_roster_is_review_candidate",
-        "tests.test_spi_participants.test_unlisted_spi_peer_is_found_when_roster_covers_another_device"
+        "tests.test_spi_participants.test_unlisted_spi_peer_is_found_when_roster_covers_another_device",
+        "tests.test_spi_composite_pin_functions.test_combo_interface_spi_aliases_are_reviewed_but_i2c_only_names_are_not",
+        "tests.test_ci_hosted_digital_peer_spi.test_spi_composite_pin_alias_fault_and_roster_control_by_native_version"
       ],
       "valid_control_fixtures": [
         "tests.test_spi_participants.test_rostered_spi_device_and_controller_are_suppressed",
-        "tests.test_spi_participants.test_dnp_non_ic_and_incomplete_signal_patterns_are_excluded"
+        "tests.test_spi_participants.test_dnp_non_ic_and_incomplete_signal_patterns_are_excluded",
+        "tests.test_spi_composite_pin_functions.test_combo_interface_spi_aliases_are_reviewed_but_i2c_only_names_are_not",
+        "tests.test_ci_hosted_digital_peer_spi.test_spi_composite_pin_alias_fault_and_roster_control_by_native_version"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_spi_participants.test_unlisted_participant_is_order_stable_and_roster_entry_clears_it"
+        "tests.test_spi_participants.test_unlisted_participant_is_order_stable_and_roster_entry_clears_it",
+        "tests.test_spi_composite_pin_functions.test_combo_interface_spi_alias_review_is_stable_and_roster_entry_clears_it"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/spi_participants.py#unmapped_spi_participants",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/spi_participants.py#unmapped_spi_participants"
+      "implementation_owner": "kicad_tooling/hwrepo/spi_participants.py#unmapped_spi_participants",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES"
+      ]
     },
     {
       "rule_id": "bus.spi_peer_voltage_review",

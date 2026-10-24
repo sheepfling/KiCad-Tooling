@@ -4338,6 +4338,39 @@ review, so the electrical lane cannot pass. Use
 applies. Older contracts without `spi` remain readable and make no SPI map
 claim.
 
+### Review likely SPI participants missing from the device map
+
+The default-`review` rule `bus.spi_unmapped_participant` compares fitted U/IC
+references with exported SPI-like pin functions and the authored `spi` roster.
+Along with exact aliases such as `SCK`, `SCLK`, `MOSI`, `SDI`, `COPI`, `MISO`,
+`SDO`, and `CIPO`, it tokenizes slash-separated functions such as `SCL/SPC`
+and `SDA/SDI/SDO`. Plain `SCL` and `SDA` alone are not SPI evidence. A device
+that matches but is absent from the roster gets a coverage prompt; an entry in
+the roster suppresses the prompt while the separate contract check validates
+its mapped pins.
+
+This is a candidate-generation clue. A combo-interface sensor may use I2C or
+SPI, and controllers, bridges, or unused alternate functions can also match.
+The lint does not select a mode, decide bus membership, or prove firmware
+configuration, PCB continuity, or signal behavior. Projects can use the usual
+`review`, `block`, or `off` policy and exact-fingerprint ignores.
+
+Focused coverage:
+
+```sh
+python -I -m pytest tests/test_spi_composite_pin_functions.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.spi_unmapped_participant")'
+
+KICAD_RUN_NATIVE_DIGITAL_PEER_FIXTURES=1 python -I -m pytest \
+  tests/test_ci_hosted_digital_peer_spi.py::test_spi_composite_pin_alias_fault_and_roster_control_by_native_version \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.spi_unmapped_participant")'
+```
+
+The [synthetic combo-interface
+fixture](../tests/fixtures/design_lint/spi-composite-participant-native/README.md) uses only
+pin-function spellings documented in the
+[ST LSM6DSOX datasheet](https://www.st.com/resource/en/datasheet/lsm6dsox.pdf).
+
 ### Map an SPI chip-select pull-up resistor array
 
 The `bus.spi_active_low_chip_select_without_pullup` review recognizes an

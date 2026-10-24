@@ -5258,9 +5258,12 @@ is not a reason by itself to expand its scope or change its default policy.
   declares, but a connected SPI-like IC omitted from that roster may otherwise
   be absent from the map's findings.
 - **Predicate:** For a fitted U/IC reference, require an assigned clock pin
-  function (`SCK`/`SCLK`), at least one assigned data function (`MOSI`/`SDI`/
-  `COPI` or `MISO`/`SDO`/`CIPO`), and a named select function (`CS`/`CSN`/
-  `NCS`/`NSS`/`SS`/`SSEL`/`CE0`/`CE1`). Emit a coverage prompt when no required
+  function (`SCK`/`SCLK`/`SPC`), at least one assigned data function (`MOSI`/
+  `SDI`/`COPI` or `MISO`/`SDO`/`CIPO`), and a named select function (`CS`/
+  `CSN`/`NCS`/`NSS`/`SS`/`SSEL`/`CE0`/`CE1`). Combo-interface functions are
+  split only on `/` and each token is matched exactly, so `SCL/SPC` and
+  `SDA/SDI/SDO` contribute SPI roles while plain `SCL` and `SDA` do not. Emit
+  a coverage prompt when no required
   SPI roster exists or the reference is absent from its controller/device/
   bridge list. Evidence binds the recognized pins, assigned nets, and electrical
   contract path and digest.
@@ -5269,7 +5272,9 @@ is not a reason by itself to expand its scope or change its default policy.
   Controllers, bridges, multi-protocol parts, and unused capabilities can
   match. A mapped reference is treated as covered by the prompt while the
   separate LINT-013 contract comparison reports its pin or identity mismatch.
-  Only U/IC prefixes and the listed exact function aliases are recognized.
+  Only U/IC prefixes and the listed exact function aliases (including slash-
+  separated tokens) are recognized. `SPC` alone can identify a clock candidate;
+  the surrounding data and select requirements must still match.
   This does not prove PCB continuity, internal transfer, or firmware setup.
 - **Cohort input:** Source inspection of kicad-happy at
   [`a6bba1a`](https://github.com/aklofas/kicad-happy/tree/a6bba1add1e18b89e3aa0824b9769ed1d9d79174)
@@ -5281,11 +5286,18 @@ is not a reason by itself to expand its scope or change its default policy.
   project source was copied.
 - **Fixtures:** Synthetic SPI controller and two-device source-bound netlist;
   absent roster; one mapped plus one unmapped device; complete roster control;
-  DNP, non-IC, and partial function controls; review/block/off/exact-ignore
-  behavior; source path/hash evidence; catalog reachability. Existing shared
-  CLI/MCP service parity remains the invocation path.
+  DNP, non-IC, and partial function controls; slash-separated combo-interface
+  aliases with plain `SCL`/`SDA` and exact-roster controls; review/block/off/
+  exact-ignore behavior; source path/hash evidence; catalog reachability.
+  Existing shared CLI/MCP service parity remains the invocation path.
 - **Validation state:** Six focused regressions distinguish uncovered
   participants from mapped, DNP, non-IC, and partial-function controls. The
+  combo-interface extension also checks exact slash-only tokenization, excludes
+  plain I2C `SCL`/`SDA`, clears a finding when the device is rostered, and keeps
+  findings stable under input reordering. A fast synthetic test checks hosted
+  fault/control reporting and source-hash evidence. Exact KiCad 10.0.0 and
+  10.0.5 exports of the new combo-interface schematic remain pending the
+  digest-pinned hosted native lane.
   cohort was reviewed by pinned source only; the SPI peer inventory itself was
   not benchmarked for reviewer-effort gain. No external analyzer dependency,
   cohort implementation, proprietary source, or project fixture was added.
@@ -5700,12 +5712,12 @@ is not a reason by itself to expand its scope or change its default policy.
   wrong-net CS; missing controller CS membership; unauthorized and explicitly
   shared select; write-only and unconnected MISO; buffered MISO; wrong bridge
   endpoint; setup pending state; CLI/MCP parity; retained-evidence replay.
-- **Remaining:** Candidate discovery is intentionally limited to exact exported
-  pin-function aliases and U/IC references. Broaden it only with synthetic
-  fault/control pairs for supported aliases. The pinned kicad-happy detector
-  review found no SPI-roster comparison; the local `bus.spi_unmapped_participant`
-  prompt now supplies that coverage clue without asserting the device belongs
-  on a bus.
+- **Remaining:** The separate `bus.spi_unmapped_participant` prompt provides
+  candidate discovery for exact exported pin-function aliases and U/IC
+  references, including slash-separated combo-interface aliases such as
+  `SCL/SPC` and `SDA/SDI/SDO`. Plain `SCL`/`SDA` stay outside SPI detection.
+  Broaden recognition only with synthetic fault/control pairs. This review
+  prompt does not assert a detected device belongs on a bus.
 
 #### LINT-014 — UART and serial peer mapping
 

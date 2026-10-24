@@ -50,6 +50,28 @@ def test_spi_roster_and_signal_voltage_cases_by_native_version(
 
 
 @pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
+@pytest.mark.design_lint_rule(rule_id="bus.spi_unmapped_participant")
+def test_spi_composite_pin_alias_fault_and_roster_control_by_native_version(
+    native_digital_peer_results, project: str, version: str
+) -> None:
+    results = native_digital_peer_results[project]
+    fault = results["spi-participant-fixture/composite-unrostered"]
+    control = results["spi-participant-fixture/composite-rostered"]
+
+    assert fault["kicad_version"] == version
+    assert fault["lint_status"] == "REVIEW"
+    assert fault["findings"] == "U1: SPI roster coverage"
+    assert fault["pin_functions"] == ("U1.1=SCL/SPC;U1.2=SDA/SDI/SDO;U1.3=SDO/SA0;U1.4=CS")
+    assert fault["source_sha256"] == (
+        "78fb20b4e2770c1e68b16727ebd4f1014bd76c4d4d512647b38960d41f02f7ff"
+    )
+    assert fault["normalized_netlist_sha256"] == fault["repeat_normalized_netlist_sha256"]
+    assert control["lint_status"] == "PASS"
+    assert control["findings"] == "none"
+    assert control["normalized_netlist_sha256"] == control["repeat_normalized_netlist_sha256"]
+
+
+@pytest.mark.parametrize(("project", "version"), NATIVE_DIGITAL_PEER_PROJECTS)
 def test_spi_peer_voltage_fault_and_controls_by_native_version(
     native_digital_peer_results, project: str, version: str
 ) -> None:

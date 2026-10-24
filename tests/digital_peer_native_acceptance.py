@@ -29,6 +29,8 @@ _EXPECTED_STAGES = frozenset(
         "spi-participant-fixture/native-export",
         "spi-participant-fixture/unrostered",
         "spi-participant-fixture/rostered",
+        "spi-participant-fixture/composite-unrostered",
+        "spi-participant-fixture/composite-rostered",
         "spi-participant-fixture/voltage-control",
         "spi-participant-fixture/voltage-fault",
         "spi-participant-fixture/peer-control",
@@ -48,6 +50,7 @@ _EXPECTED_STAGES = frozenset(
 )
 _REPEATABLE_STAGES = frozenset(_EXPECTED_STAGES - {"spi-participant-fixture/native-export"})
 _EXPECTED_SOURCE_HASH = "0c5d901b4dc70ccb3c3818bd8fdf002955a6322b814ac2e7f8bab086d47d5e06"
+_EXPECTED_COMBO_SPI_SOURCE_HASH = "78fb20b4e2770c1e68b16727ebd4f1014bd76c4d4d512647b38960d41f02f7ff"
 _EXPECTED_COMPONENT_SOURCE_HASHES = {
     "component-peer-power-fixture/control": "0198205216be6cd5be0c03ac14b7c2b9de52258aacd564159e16532fadb10446",
     "component-peer-power-fixture/fault": "92a2cfda8088c7eebe8305e5ecf786870ed44bc846acb031fe4bb1d567418ae3",
@@ -142,6 +145,11 @@ def native_digital_peer_results() -> dict[str, dict[str, dict[str, object]]]:
                 assert result["source_sha256"] == _EXPECTED_COMPONENT_SOURCE_HASHES[stage]
             elif stage in _EXPECTED_PEER_SOURCE_HASHES:
                 assert result["source_sha256"] == _EXPECTED_PEER_SOURCE_HASHES[stage]
+            elif stage in {
+                "spi-participant-fixture/composite-unrostered",
+                "spi-participant-fixture/composite-rostered",
+            }:
+                assert result["source_sha256"] == _EXPECTED_COMBO_SPI_SOURCE_HASH
             else:
                 assert result["source_sha256"] == _EXPECTED_SOURCE_HASH
 

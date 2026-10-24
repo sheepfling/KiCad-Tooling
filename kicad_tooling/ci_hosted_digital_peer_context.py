@@ -29,6 +29,7 @@ class DigitalPeerFixtureContext:
     scratch: Path
     fixture_root: Path
     source_hash: str
+    combo_spi_source_hash: str
     peer_fixtures: dict[str, Path]
     peer_source_hashes: dict[str, str]
     serial_peer_fixtures: dict[str, Path]
@@ -72,6 +73,8 @@ def prepare_digital_peer_fixture_context(
     fixture_root = Path(__file__).resolve().parents[1] / "tests/fixtures/design_lint"
     fixture = fixture_root / "spi-participant-native/multi-device.kicad_sch"
     source_hash = digest(fixture)
+    combo_spi_fixture = fixture_root / "spi-composite-participant-native/combo-device.kicad_sch"
+    combo_spi_source_hash = digest(combo_spi_fixture)
     scratch = Path(
         tempfile.mkdtemp(prefix=f"spi-participant-{project}-", dir=log.directory.resolve())
     )
@@ -81,6 +84,10 @@ def prepare_digital_peer_fixture_context(
     shutil.copyfile(fixture, source)
     if digest(source) != source_hash:
         raise ValueError("Synthetic SPI fixture changed while preparing native input")
+    combo_spi_source = inputs / "combo-device.kicad_sch"
+    shutil.copyfile(combo_spi_fixture, combo_spi_source)
+    if digest(combo_spi_source) != combo_spi_source_hash:
+        raise ValueError("Synthetic SPI combo-interface fixture changed while preparing input")
     peer_fixtures = {
         case: fixture_root / f"spi-peer-voltage-native/{case}.kicad_sch"
         for case in ("peer-control", "peer-fault", "peer-translator-control")
@@ -154,7 +161,7 @@ def prepare_digital_peer_fixture_context(
     user: tuple[str, ...] = ()
     if sys.platform != "win32":
         user = ("--user", f"{os.getuid()}:{os.getgid()}")
-    script = f'mkdir -p "$HOME"\nactual="$(kicad-cli version)"\nprintf "kicad_version=%s\\n" "$actual"\ntest "$actual" = "{config.kicad_version}"\nfor case in multi-device peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-optical-isolation-control serial-label-control serial-label-fault component-peer-control component-peer-fault; do\n  for run in first repeat; do\n    kicad-cli sch export netlist --format kicadxml       --output "/output/${{case}}.${{run}}.netlist.xml"       "/fixtures/${{case}}.kicad_sch"\n    case "$case" in component-peer-*)\n      kicad-cli sch erc --format json --severity-all         --output "/output/${{case}}.${{run}}.erc.json"         "/fixtures/${{case}}.kicad_sch" ;;\n    esac\n  done\ndone\n'
+    script = f'mkdir -p "$HOME"\nactual="$(kicad-cli version)"\nprintf "kicad_version=%s\\n" "$actual"\ntest "$actual" = "{config.kicad_version}"\nfor case in multi-device combo-device peer-control peer-fault peer-translator-control serial-control serial-fault serial-reference-fault serial-connector-control serial-connector-fault serial-optical-isolation-control serial-label-control serial-label-fault component-peer-control component-peer-fault; do\n  for run in first repeat; do\n    kicad-cli sch export netlist --format kicadxml       --output "/output/${{case}}.${{run}}.netlist.xml"       "/fixtures/${{case}}.kicad_sch"\n    case "$case" in component-peer-*)\n      kicad-cli sch erc --format json --severity-all         --output "/output/${{case}}.${{run}}.erc.json"         "/fixtures/${{case}}.kicad_sch" ;;\n    esac\n  done\ndone\n'
     argv = (
         "docker",
         "run",
@@ -208,6 +215,7 @@ def prepare_digital_peer_fixture_context(
         kicad_version=config.kicad_version,
         image=pinned,
         source_sha256=source_hash,
+        combo_spi_source_sha256=combo_spi_source_hash,
         peer_source_hashes=";".join(f"{case}:{peer_source_hashes[case]}" for case in peer_fixtures),
         serial_peer_source_hashes=";".join(
             f"{case}:{serial_peer_source_hashes[case]}" for case in serial_peer_fixtures
@@ -228,6 +236,8 @@ def prepare_digital_peer_fixture_context(
     if (
         digest(fixture) != source_hash
         or digest(source) != source_hash
+        or digest(combo_spi_fixture) != combo_spi_source_hash
+        or digest(combo_spi_source) != combo_spi_source_hash
         or any(
             digest(peer_fixtures[case]) != peer_source_hashes[case]
             or digest(inputs / f"{case}.kicad_sch") != peer_source_hashes[case]
@@ -267,6 +277,7 @@ def prepare_digital_peer_fixture_context(
     erc_error_types: dict[str, dict[str, tuple[str, ...]]] = {}
     fixture_cases = (
         "multi-device",
+        "combo-device",
         *peer_fixtures,
         *serial_peer_fixtures,
         *serial_connector_reference_fixtures,
@@ -349,6 +360,7 @@ def prepare_digital_peer_fixture_context(
         scratch=scratch,
         fixture_root=fixture_root,
         source_hash=source_hash,
+        combo_spi_source_hash=combo_spi_source_hash,
         peer_fixtures=peer_fixtures,
         peer_source_hashes=peer_source_hashes,
         serial_peer_fixtures=serial_peer_fixtures,
