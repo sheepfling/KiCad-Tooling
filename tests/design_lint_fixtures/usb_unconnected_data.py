@@ -12,12 +12,14 @@ def usb_unconnected_data_netlist(
     functions: dict[str, str] | None = None,
 ) -> NetlistContract:
     """Build a direct USB 2.0 pair with configurable open endpoint pins."""
-    pin_functions = functions or {
+    pin_functions = {
         "J1.1": "D+",
         "J1.2": "D-",
         "U1.1": "USB_DP",
         "U1.2": "USB_DM",
     }
+    if functions is not None:
+        pin_functions.update(functions)
     assignments = {
         "USB_D+": ("J1.1", "U1.1"),
         "USB_D-": ("J1.2", "U1.2"),

@@ -34,13 +34,15 @@ toolchain, as described in the
 ## Review unassigned USB 2.0 data pins
 
 `bus.usb_unconnected_data_pin` recognizes a bounded set of native USB 2.0
-D+/D− pin-function aliases with no exported net assignment. It defaults to
+D+/D− pin-function aliases when exactly one side of a uniquely identified pair
+is unassigned and the other has exactly one net assignment on the same fitted
+component. Entirely open pairs and ambiguous role, inventory, or net evidence
+are skipped. The finding includes the paired pin and its net. It defaults to
 `off`, since a USB-capable part or connector may intentionally leave a data pin
 unused. A project can enable `review`, promote the candidate to `block`, or
-disable or exactly ignore it. The finding asks whether the pin is intentionally
-unused or its connection is missing; it does not infer bus membership, pair
-endpoints, require a connection, or establish PCB routing. Vendor-specific
-aliases and USB SuperSpeed pins are outside this rule. See the
+disable or exactly ignore it. The check does not infer bus membership, pair
+endpoints across components, require a connection, or establish PCB routing.
+Vendor-specific aliases and USB SuperSpeed pins are outside this rule. See the
 [source-hashed native fixture note](../tests/fixtures/design_lint/usb-unconnected-data-native/README.md)
 for its explicit no-connect fault and connected control.
 

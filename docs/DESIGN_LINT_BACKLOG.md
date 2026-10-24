@@ -4660,27 +4660,37 @@ is not a reason by itself to expand its scope or change its default policy.
       -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_unassigned")'
   ```
 
-#### LINT-231 — Review an unassigned USB 2.0 data pin
+#### LINT-231 — Review an open USB 2.0 data pin beside its paired side
 
-- **Status:** Implemented as opt-in `bus.usb_unconnected_data_pin`, owned by
-  `usb_unconnected_data.py#unconnected_usb_data_pins`.
+- **Status:** Refined as opt-in `bus.usb_unconnected_data_pin`, owned by
+  `usb_unconnected_data.py#unconnected_usb_data_pins`. It now requires a
+  unique D+/D− pair on one fitted component and reports an open side only when
+  the other side has one net assignment.
 - **Gap:** USB pair and peer checks need assigned data nets to compare their
   endpoint topology. A connector or PHY data pin marked no-connect can be
   absent from those comparisons, and native ERC may stay quiet when the open
   pin has an explicit no-connect marker.
-- **Predicate:** Find fitted pins with no exported electrical-net assignment
-  whose exact native function matches the bounded USB 2.0 D+/D− alias parser.
-  Retain the recognized side and optional port index in finding evidence;
-  skip DNP references, vendor-specific aliases, and USB SuperSpeed functions.
-- **Boundary:** The pin function alone does not establish that this interface
-  is used, identify its peer, or require a net connection. The rule defaults
-  to `off`; projects can select `review`, `block`, `off`, or an exact ignore.
-  It does not prove PCB routing, endpoint pinout, off-board behavior, or
-  continuity. An exact project-authored USB path map remains the stronger
-  source of interface intent.
+- **Predicate:** Group bounded USB 2.0 D+/D− native function aliases by fitted
+  component and parsed port index. Require one pin per side and require both
+  recognized pin numbers to appear in the native component inventory. Emit a
+  candidate only when one side has no net assignment and its paired side has
+  exactly one. Retain the open pin,
+  paired pin/function/net, side, and optional port index in finding evidence.
+  Skip DNP references, vendor-specific aliases, duplicate roles, missing pair
+  members, missing pair pins in the component inventory, and USB SuperSpeed
+  functions.
+- **Boundary:** The pin functions do not establish that this interface is
+  used, identify a peer across components, or require a net connection. An
+  entirely open pair is quiet. The rule defaults to `off`; projects can select
+  `review`, `block`, `off`, or an exact ignore. It does not prove PCB routing,
+  endpoint pinout, off-board behavior, or continuity. An exact
+  project-authored USB path map remains the stronger source of interface
+  intent.
 - **Fixtures and quality gate:** Synthetic cases cover D+ and D− aliases,
-  indexed functions, DNP, connected and unsupported controls, policy modes,
-  exact-ignore behavior, stable mapping order, and assignment repair. A
+  indexed functions, either open side, an entirely open pair, duplicate roles,
+  incomplete and missing pair-pin inventory, ambiguous paired-net assignment,
+  DNP, connected and unsupported controls, policy modes, exact-ignore behavior, stable
+  mapping order, and assignment repair. A
   source-hashed native no-connect fault and connected control repeat on
   digest-pinned KiCad 10.0.0 and 10.0.5 as part of the focused USB native lane.
   The active catalog owner, `interface_lint` marker, per-rule selector,

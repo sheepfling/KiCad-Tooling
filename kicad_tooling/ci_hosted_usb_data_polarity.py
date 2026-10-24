@@ -253,6 +253,16 @@ def usb_data_polarity_fixture_lane(root: Path, *, project: str, image: str, log:
             )
         if case == "unconnected-fault" and any(item.disposition != "RULE_OFF" for item in findings):
             raise ValueError("USB unconnected-data review must remain opt-in by default")
+        if case == "unconnected-fault":
+            finding = findings[0]
+            if (
+                finding.evidence.get("paired_pin") != ("J1.2",)
+                or finding.evidence.get("paired_function") != ("D-",)
+                or len(finding.evidence.get("paired_net", ())) != 1
+            ):
+                raise ValueError(
+                    "Native USB unconnected-data finding must identify its assigned D- pair member"
+                )
         stage = "control" if case == "control" else case
         log.event(
             f"usb-unconnected-data-fixture/{stage}",

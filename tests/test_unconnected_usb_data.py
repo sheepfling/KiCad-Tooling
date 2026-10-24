@@ -52,8 +52,12 @@ def test_open_usb_data_pin_emits_exact_review_evidence_when_enabled() -> None:
         "J1.1": (),
         "USB_data_side": ("D+",),
         "function": ("D+",),
+        "paired_pin": ("J1.2",),
+        "paired_function": ("D-",),
+        "paired_net": ("USB_D-",),
     }
-    assert "does not establish bus membership or PCB routing" in finding.message
+    assert "paired D− pin J1.2 is assigned to USB_D-" in finding.message
+    assert "do not establish bus membership or PCB routing" in finding.message
 
 
 def test_rule_is_opt_in_and_supports_block_off_and_exact_ignore() -> None:
@@ -81,19 +85,19 @@ def test_rule_is_opt_in_and_supports_block_off_and_exact_ignore() -> None:
 
 
 @pytest.mark.parametrize(
-    ("function", "side", "port"),
+    ("function", "paired_function", "side", "port"),
     (
-        ("DP2", "D+", "2"),
-        ("USB1D−", "D−", "1"),
-        ("USBDM", "D−", None),
+        ("DP2", "DM2", "D+", "2"),
+        ("USB1D−", "USB1D+", "D−", "1"),
+        ("USBDM", "USBDP", "D−", None),
     ),
 )
 def test_supported_function_aliases_keep_data_side_and_port_evidence(
-    function: str, side: str, port: str | None
+    function: str, paired_function: str, side: str, port: str | None
 ) -> None:
     source = usb_unconnected_data_netlist(
         open_pins=("J1.1",),
-        functions={"J1.1": function},
+        functions={"J1.1": function, "J1.2": paired_function},
     )
     finding = next(
         item for item in _report(source, mode="review").findings if item.rule_id == RULE_ID
@@ -109,6 +113,10 @@ def test_supported_function_aliases_keep_data_side_and_port_evidence(
     "source",
     (
         pytest.param(usb_unconnected_data_netlist(open_pins=()), id="connected-control"),
+        pytest.param(
+            usb_unconnected_data_netlist(open_pins=("J1.1", "J1.2")),
+            id="entire-pair-open",
+        ),
         pytest.param(usb_unconnected_data_netlist(dnp_components=("J1",)), id="dnp-endpoint"),
         pytest.param(
             usb_unconnected_data_netlist(
@@ -121,6 +129,39 @@ def test_supported_function_aliases_keep_data_side_and_port_evidence(
                 functions={"J1.1": "DATA_P", "J1.2": "DATA_N", "U1.1": "USB_DP", "U1.2": "USB_DM"}
             ),
             id="unknown-vendor-alias",
+        ),
+        pytest.param(
+            usb_unconnected_data_netlist(
+                functions={"J1.2": "CLK"},
+            ),
+            id="missing-recognized-pair-member",
+        ),
+        pytest.param(
+            usb_unconnected_data_netlist().model_copy(update={"component_pin_numbers": {}}),
+            id="incomplete-component-pin-inventory",
+        ),
+        pytest.param(
+            usb_unconnected_data_netlist().model_copy(
+                update={"component_pin_numbers": {"J1": ("1",), "U1": ("1", "2")}}
+            ),
+            id="pair-pin-missing-from-component-inventory",
+        ),
+        pytest.param(
+            usb_unconnected_data_netlist(functions={"J1.3": "D+", "J1.4": "D-"}).model_copy(
+                update={"component_pin_numbers": {"J1": ("1", "2", "3", "4"), "U1": ("1", "2")}}
+            ),
+            id="ambiguous-duplicate-pair-roles",
+        ),
+        pytest.param(
+            usb_unconnected_data_netlist().model_copy(
+                update={
+                    "nets": {
+                        **usb_unconnected_data_netlist().nets,
+                        "USB_D-_ALIAS": ("J1.2",),
+                    }
+                }
+            ),
+            id="paired-pin-has-multiple-net-assignments",
         ),
     ),
 )
@@ -148,3 +189,17 @@ def test_mapping_order_is_stable_and_assigning_open_pin_clears_finding() -> None
 
     assert (repeat.fingerprint, repeat.evidence) == (original.fingerprint, original.evidence)
     assert not any(item.rule_id == RULE_ID for item in _report(repaired, mode="review").findings)
+
+
+@pytest.mark.parametrize("open_pin", ("J1.1", "J1.2", "U1.1", "U1.2"))
+def test_either_open_side_is_reviewed_only_when_its_pair_member_is_assigned(
+    open_pin: str,
+) -> None:
+    source = usb_unconnected_data_netlist(open_pins=(open_pin,))
+    finding = next(
+        item for item in _report(source, mode="review").findings if item.rule_id == RULE_ID
+    )
+
+    assert finding.subject == f"{open_pin}: {source.pin_functions[open_pin]}"
+    paired_pins = {"J1.1": "J1.2", "J1.2": "J1.1", "U1.1": "U1.2", "U1.2": "U1.1"}
+    assert finding.evidence["paired_pin"] == (paired_pins[open_pin],)

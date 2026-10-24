@@ -83,20 +83,25 @@ def unconnected_interface_candidates(observed: NetlistContract) -> tuple[Candida
         )
     for pin in unconnected_usb_data_pins(observed):
         side = "D+" if pin.side == "positive" else "D−"
+        paired_side = "D−" if pin.side == "positive" else "D+"
         port = f" port {pin.port_index}" if pin.port_index is not None else ""
         found.append(
             Candidate(
                 rule_id="bus.usb_unconnected_data_pin",
                 subject=f"{pin.pin}: {pin.function}",
                 message=(
-                    f"This native USB 2.0 {side}{port} data pin has no net assignment. Review "
-                    "whether the interface is intentionally unused or a connection is missing. "
-                    "The pin function alone does not establish bus membership or PCB routing."
+                    f"This native USB 2.0 {side}{port} data pin has no net assignment while its "
+                    f"paired {paired_side} pin {pin.paired_pin} is assigned to {pin.paired_net}. "
+                    "Review whether the interface is intentionally partial or a connection is "
+                    "missing. The pin functions do not establish bus membership or PCB routing."
                 ),
                 evidence={
                     pin.pin: (),
                     "function": (pin.function,),
                     "USB_data_side": (side,),
+                    "paired_pin": (pin.paired_pin,),
+                    "paired_function": (pin.paired_function,),
+                    "paired_net": (pin.paired_net,),
                     **(
                         {"USB_data_port_index": (pin.port_index,)}
                         if pin.port_index is not None

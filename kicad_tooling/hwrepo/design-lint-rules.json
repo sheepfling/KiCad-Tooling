@@ -5232,23 +5232,24 @@
     },
     {
       "rule_id": "bus.usb_unconnected_data_pin",
-      "title": "Recognized USB 2.0 data pin is unassigned",
+      "title": "Recognized USB 2.0 data pin is unassigned beside its pair member",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "off",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "A fitted pin with a bounded USB 2.0 D+/D- native function alias is absent from every exported electrical net assignment.",
+      "predicate": "A fitted component has exactly one bounded USB 2.0 D+ and D- function for the same parsed port group, both recognized pins appear in its native pin-number inventory, and one side has no exported electrical-net assignment while the other has exactly one.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Only the bounded USB 2.0 D+/D- aliases accepted by usb_data_function_identity are recognized; vendor-specific functions and USB SuperSpeed pairs are outside this rule.",
-        "This rule defaults to off because a USB-capable device or connector may intentionally leave one or both data pins unused. Enabling it produces a review prompt, not a required connection.",
+        "This rule defaults to off because a USB-capable device or connector may intentionally leave one data pin unused. Entirely open pairs, duplicate pair roles, missing recognized pair pins from native pin inventory, and ambiguous or multiply assigned pair pins are skipped.",
         "Pin functions do not establish USB bus membership, endpoint pairing, the intended data path, PCB routing, external wiring, or physical continuity. Exact path intent belongs in a project-authored map."
       ],
       "fault_fixtures": [
         "tests.test_unconnected_usb_data.test_open_usb_data_pin_emits_exact_review_evidence_when_enabled",
+        "tests.test_unconnected_usb_data.test_either_open_side_is_reviewed_only_when_its_pair_member_is_assigned",
         "tests.test_usb_data_polarity_native_fixture_lane.test_native_usb_data_polarity_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [

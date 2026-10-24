@@ -11,6 +11,7 @@ import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.component_peer_power_input_support as _component_peer_power_input_support
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
+import tests.design_lint_fixtures.can_unconnected_direction_pins as _can_unconnected_direction_fixtures
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
 import tests.design_lint_fixtures.component_return_domains as _component_return_domains
 import tests.design_lint_fixtures.connector_mapped_supply_return_net as _mapped_supply_return_net
@@ -26,6 +27,7 @@ import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_s
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
+import tests.design_lint_fixtures.rs485_unconnected_data_pins as _rs485_unconnected_data_fixtures
 import tests.design_lint_fixtures.serial_unconnected_pins as _serial_unconnected_pin_fixtures
 import tests.design_lint_fixtures.spi_unconnected_data_pins as _spi_unconnected_data_fixtures
 import tests.design_lint_fixtures.usb_unconnected_data as _usb_unconnected_data_fixtures
@@ -184,9 +186,11 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         ),
         _usb_peer_reference_support.usb_peer_netlist(),
         _usb_unconnected_data_fixtures.usb_unconnected_data_netlist(),
+        _can_unconnected_direction_fixtures.can_unconnected_direction_netlist(),
         _serial_unconnected_pin_fixtures.serial_unconnected_netlist(),
         _i2c_unconnected_pin_fixtures.i2c_unconnected_netlist(),
         _spi_unconnected_data_fixtures.spi_unconnected_data_netlist(),
+        _rs485_unconnected_data_fixtures.rs485_unconnected_data_netlist(),
     )
     emitted = {item.rule_id for source in cases for item in candidates(source)}
     mapped_supply_source = _mapped_supply_return_net.mapped_supply_return_net_netlist()
