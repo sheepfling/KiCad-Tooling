@@ -243,7 +243,7 @@ def test_ethernet_label_mismatch_rule_uses_a_focused_predicate_owner() -> None:
     )
     assert rule.theme == "interfaces"
     assert rule.implementation_owner == (
-        "kicad_tooling/hwrepo/ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates"
+        "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates"
     )
     assert rule.implementation_owner in rule.implementation_refs
     assert (

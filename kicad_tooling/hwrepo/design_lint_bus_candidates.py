@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .bus_ethernet_pair_labels import ethernet_data_label_mismatch_candidates
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
 from .can_peer_reference_scan import CanPeerReferenceScan
 from .design_lint_can_candidates import can_candidates
@@ -20,7 +21,6 @@ from .design_lint_signal_pair_candidates import (
 from .design_lint_spi_candidates import spi_bias_candidates, spi_peer_reference_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
-from .ethernet_pair_labels import ethernet_data_label_mismatch_candidates
 from .i2c_address_models import (
     I2cAddressCoverageReport,
     I2cAddressMap,

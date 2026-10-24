@@ -4925,7 +4925,7 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-237 — Review Ethernet PHY pin functions that contradict net labels
 
 - **Status:** Implemented as `bus.ethernet_data_label_mismatch`, owned by
-  `ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates`.
+  `bus_ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates`.
 - **Gap:** The shared pair checker recognizes Ethernet TD/RD complementary
   functions, but completeness checks do not identify a complete TX pair whose
   explicit labels say RX (or a complete RX pair labeled TX).

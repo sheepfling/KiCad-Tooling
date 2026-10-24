@@ -5730,12 +5730,12 @@
         "KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES"
       ],
       "implementation_refs": [
-        "kicad_tooling/hwrepo/ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_data_pair_function_role",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
-      "implementation_owner": "kicad_tooling/hwrepo/ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates"
+      "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates"
     },
     {
       "rule_id": "bus.can_tx_rx_same_net",
