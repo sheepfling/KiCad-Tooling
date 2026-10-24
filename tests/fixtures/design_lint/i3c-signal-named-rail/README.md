@@ -12,9 +12,9 @@ native pin functions.
 
 Reviewed source hashes:
 
-| Fixture | SHA-256 |
-| --- | --- |
-| `fault.kicad_sch` | `56764b6a7ba59ad5700876bb2a91959c7f7894fea0afdd778689d75beeba0bb4` |
+| Fixture             | SHA-256                                                            |
+| ------------------- | ------------------------------------------------------------------ |
+| `fault.kicad_sch`   | `56764b6a7ba59ad5700876bb2a91959c7f7894fea0afdd778689d75beeba0bb4` |
 | `control.kicad_sch` | `aa22ae02257335f0bbe756cfaf3b03ed35e86ad9f9b2659d8b54e15fb2b4fca9` |
 
 The native lane exports each schematic twice with digest-pinned KiCad 10.0.0
