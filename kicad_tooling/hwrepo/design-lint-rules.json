@@ -2535,30 +2535,34 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For an exact fitted Device:LED symbol with exactly two distinct native pin numbers and one unambiguous schematic net assignment per pin, report when both pins use the same net.",
+      "predicate": "For an exact fitted stock Device:LED symbol or a custom LED matched by the project component_role_map using exact PART_ID, symbol, footprint, and complete native pin number/function/electrical-type inventory, require exactly two distinct native pins and one unambiguous assigned net per pin; report when both pins use the same net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "A same-net LED may be intentional or disabled by project configuration; this is a review prompt and does not assert that the topology is wrong.",
-        "Only the exact stock identity Device:LED with a complete two-pin inventory is recognized. Other LED variants, custom, multi-pin, incomplete, ambiguous, open, and DNP components are outside the predicate.",
+        "Custom LEDs are recognized only through an exact project-authored role binding; an unmapped, stale, or mismatched custom identity is not classified. Other LED variants, multi-pin, incomplete, ambiguous, open, and DNP components remain outside the predicate.",
         "The schematic netlist does not prove component behavior, current, footprint pin mapping, copper connectivity, or physical population."
       ],
       "fault_fixtures": [
         "tests.test_two_pin_leds.test_same_net_supported_led_is_reviewed_without_claiming_drive",
-        "tests.test_two_pin_component_native_fixture_lane.test_led_native_fixture_scope_contains_only_led_fault_and_control",
+        "tests.test_two_pin_leds.test_exact_mapped_custom_led_same_net_is_reviewed_with_role_evidence",
+        "tests.test_two_pin_component_native_fixture_lane.test_led_native_fixture_scope_contains_stock_and_mapped_faults_and_controls",
         "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_led_same_net_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_two_pin_leds.test_separate_led_terminal_nets_are_the_no_finding_control",
+        "tests.test_two_pin_leds.test_exact_mapped_custom_led_on_separate_nets_is_the_valid_control",
         "tests.test_two_pin_leds.test_skips_dnp_incomplete_ambiguous_multi_pin_and_unconfirmed_symbols",
+        "tests.test_two_pin_leds.test_custom_led_with_stale_pin_signature_is_not_classified",
         "tests.test_two_pin_leds.test_policy_and_exact_fingerprint_ignore_are_configurable",
-        "tests.test_two_pin_component_native_fixture_lane.test_led_native_fixture_scope_contains_only_led_fault_and_control",
+        "tests.test_two_pin_component_native_fixture_lane.test_led_native_fixture_scope_contains_stock_and_mapped_faults_and_controls",
         "tests.test_two_pin_component_native_fixture_lane.test_native_two_pin_led_same_net_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
-        "tests.test_two_pin_leds.test_order_is_stable_and_splitting_the_led_clears_its_finding"
+        "tests.test_two_pin_leds.test_order_is_stable_and_splitting_the_led_clears_its_finding",
+        "tests.test_two_pin_leds.test_custom_led_role_fingerprint_is_order_stable_and_basis_bound"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_TWO_PIN_COMPONENT_FIXTURES"

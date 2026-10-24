@@ -7,7 +7,9 @@ import json
 from pathlib import Path
 
 from kicad_tooling.ci_hosted import HostedLog, two_pin_component_fixture_lane
-from kicad_tooling.ci_hosted_two_pin_components import two_pin_component_fixture_cases_for_rules
+from kicad_tooling.ci_hosted_two_pin_component_cases import (
+    two_pin_component_fixture_cases_for_rules,
+)
 from kicad_tooling.hwrepo.electrical import selected_config
 from kicad_tooling.hwrepo.models import DesignLintPolicy
 from tests.design_lint_fixtures.two_pin_component_sources import TWO_PIN_COMPONENT_SOURCE_HASHES

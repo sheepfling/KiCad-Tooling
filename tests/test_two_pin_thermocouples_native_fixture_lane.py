@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.ci_hosted_two_pin_components import (
+from kicad_tooling.ci_hosted_two_pin_component_cases import (
     TWO_PIN_COMPONENT_CANDIDATE_KINDS,
     two_pin_component_fixture_cases_for_rules,
 )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .component_roles import component_role_binding_evidence
 from .design_lint_types import Candidate
 from .two_pin_components import TwoPinComponentOnSameNet
 
@@ -9,27 +10,33 @@ from .two_pin_components import TwoPinComponentOnSameNet
 def two_pin_led_same_net_candidates(
     observations: tuple[TwoPinComponentOnSameNet, ...],
 ) -> tuple[Candidate, ...]:
-    """Build REVIEW candidates for exact supported LEDs assigned to one net."""
-    return tuple(
-        Candidate(
-            rule_id="component.two_pin_led_same_net",
-            subject=f"{item.reference}: both LED terminals share {item.net}",
-            message=(
-                "Both terminals of this supported fitted two-pin LED are assigned to the same "
-                "native schematic net, so this net assignment provides no voltage difference "
-                "across the LED. Review whether the short is intentional or a connection is "
-                "missing. This prompt does not establish LED behavior, current, physical board "
-                "connectivity, or assembly state."
+    """Build REVIEW candidates for exact mapped or stock LEDs assigned to one net."""
+    candidates: list[Candidate] = []
+    for item in observations:
+        if item.kind != "led":
+            continue
+        evidence = {
+            "symbol": (item.symbol,),
+            "value": (item.value,),
+            "net": (item.net,),
+            "pin_assignments": tuple(
+                f"{item.reference}.{number} -> {item.net}" for number in item.pin_numbers
             ),
-            evidence={
-                "symbol": (item.symbol,),
-                "value": (item.value,),
-                "net": (item.net,),
-                "pin_assignments": tuple(
-                    f"{item.reference}.{number} -> {item.net}" for number in item.pin_numbers
+        }
+        if item.role_binding is not None:
+            evidence.update(component_role_binding_evidence(item.role_binding))
+        candidates.append(
+            Candidate(
+                rule_id="component.two_pin_led_same_net",
+                subject=f"{item.reference}: both LED terminals share {item.net}",
+                message=(
+                    "Both terminals of this supported fitted two-pin LED are assigned to the same "
+                    "native schematic net, so this net assignment provides no voltage difference "
+                    "across the LED. Review whether the short is intentional or a connection is "
+                    "missing. This prompt does not establish LED behavior, current, physical board "
+                    "connectivity, or assembly state."
                 ),
-            },
+                evidence=evidence,
+            )
         )
-        for item in observations
-        if item.kind == "led"
-    )
+    return tuple(candidates)

@@ -6,6 +6,7 @@ import hashlib
 
 import pytest
 
+from kicad_tooling.hwrepo.component_role_models import ComponentRoleMap
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.models import (
     ComponentContract,
@@ -17,6 +18,7 @@ from kicad_tooling.hwrepo.models import (
 )
 from kicad_tooling.hwrepo.two_pin_components import two_pin_components_on_same_net
 from kicad_tooling.hwrepo.two_pin_leds import two_pin_led_same_net_candidates
+from tests.design_lint_fixtures.component_roles import custom_led_role_map
 
 pytestmark = [pytest.mark.component_lint, pytest.mark.design_lint]
 
@@ -71,6 +73,24 @@ def led_netlist(
     )
 
 
+def custom_led_netlist(*, same_net: bool = True) -> NetlistContract:
+    """Return one custom LED with the exact signature declared in its role map."""
+    observed = led_netlist(same_net=same_net, symbols={"LED1": "Training:LED_5mm"})
+    return observed.model_copy(
+        update={
+            "components": {
+                "LED1": ComponentContract(
+                    value="Training status LED",
+                    footprint="Training:LED_0603",
+                    part_id="training-led",
+                )
+            },
+            "pin_functions": {"LED1.1": "A", "LED1.2": "K"},
+            "pin_electrical_types": {"LED1.1": "passive", "LED1.2": "passive"},
+        }
+    )
+
+
 def lint_report(
     observed: NetlistContract,
     policy: DesignLintPolicy | None = None,
@@ -122,6 +142,77 @@ def test_separate_led_terminal_nets_are_the_no_finding_control() -> None:
     report = lint_report(led_netlist(same_net=False))
     assert RULE_ID not in {item.rule_id for item in report.findings}
     assert report.status == "PASS"
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_exact_mapped_custom_led_same_net_is_reviewed_with_role_evidence() -> None:
+    observed = custom_led_netlist()
+    role_map = custom_led_role_map()
+
+    candidates = two_pin_components_on_same_net(observed, role_map)
+    assert [(item.reference, item.kind, item.net) for item in candidates] == [
+        ("LED1", "led", "LED_NODE_LED1")
+    ]
+    assert candidates[0].role_binding == role_map.entries[0]
+
+    report = lint_report(observed, DesignLintPolicy(component_role_map=role_map))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+    assert report.status == "REVIEW"
+    assert finding.evidence["symbol"] == ("Training:LED_5mm",)
+    assert finding.evidence["classified_role"] == ("led",)
+    assert finding.evidence["role_part_id"] == ("training-led",)
+    assert finding.evidence["role_footprint"] == ("Training:LED_0603",)
+    assert finding.evidence["role_pin_inventory"] == ("1=A/passive", "2=K/passive")
+    assert finding.evidence["role_basis"] == ("Synthetic reviewed library symbol declaration",)
+    assert len(finding.evidence["role_binding_sha256"][0]) == 64
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_exact_mapped_custom_led_on_separate_nets_is_the_valid_control() -> None:
+    report = lint_report(
+        custom_led_netlist(same_net=False),
+        DesignLintPolicy(component_role_map=custom_led_role_map()),
+    )
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+    assert report.status == "PASS"
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_custom_led_with_stale_pin_signature_is_not_classified() -> None:
+    observed = custom_led_netlist().model_copy(
+        update={"pin_functions": {"LED1.1": "K", "LED1.2": "A"}}
+    )
+    report = lint_report(observed, DesignLintPolicy(component_role_map=custom_led_role_map()))
+    assert report.status == "BLOCKED"
+    assert any(
+        "pin number, function, and electrical-type inventory" in issue for issue in report.issues
+    )
+    assert RULE_ID not in {item.rule_id for item in report.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_custom_led_role_fingerprint_is_order_stable_and_basis_bound() -> None:
+    observed = custom_led_netlist()
+    role_map = custom_led_role_map()
+
+    def finding_for(selected_map: ComponentRoleMap):
+        report = lint_report(observed, DesignLintPolicy(component_role_map=selected_map))
+        return next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    original = finding_for(role_map)
+    reversed_pins = ComponentRoleMap(
+        entries=(
+            role_map.entries[0].model_copy(
+                update={"pins": tuple(reversed(role_map.entries[0].pins))}
+            ),
+        )
+    )
+    reordered = finding_for(reversed_pins)
+    revised_basis = finding_for(custom_led_role_map("Updated reviewed LED identity basis"))
+
+    assert original.fingerprint == reordered.fingerprint
+    assert original.evidence == reordered.evidence
+    assert original.fingerprint != revised_basis.fingerprint
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

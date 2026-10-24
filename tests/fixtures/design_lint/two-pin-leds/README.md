@@ -1,21 +1,24 @@
 # Two-pin LED same-net fixtures
 
 These tooling-owned synthetic schematics exercise
-`component.two_pin_led_same_net` with the exact stock `Device:LED` identity.
-The fault assigns both LED terminals to `LED_TIED`; the control assigns the
-anode and cathode to separate schematic nets. The symbols are embedded in the
-schematics so the native fixture does not depend on an external symbol library
-revision.
+`component.two_pin_led_same_net` with both the exact stock `Device:LED`
+identity and a custom LED recognized by an exact project role map. The faults
+assign both LED terminals to `LED_TIED`; the controls assign the anode and
+cathode to separate schematic nets. Symbols are embedded in the schematics so
+the native fixtures do not depend on an external symbol library revision.
 
-| Source                        | SHA-256                                                            | Expected result                                     |
-| ----------------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
-| `same-net-led.kicad_sch`      | `a5ff10fb374138ee4409dfd1e40d7652798497b35c41ed2b5f4c3be7744d3fc7` | One `component.two_pin_led_same_net` review finding |
-| `distinct-nets-led.kicad_sch` | `95cfa1e927bcfea5b251538b742164704541e9e139825bf6faee5a1909efae74` | No same-net LED finding                             |
+| Source                               | SHA-256                                                            | Expected result                                     |
+| ------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------- |
+| `same-net-led.kicad_sch`             | `a5ff10fb374138ee4409dfd1e40d7652798497b35c41ed2b5f4c3be7744d3fc7` | One `component.two_pin_led_same_net` review finding |
+| `distinct-nets-led.kicad_sch`        | `95cfa1e927bcfea5b251538b742164704541e9e139825bf6faee5a1909efae74` | No same-net LED finding                             |
+| `mapped-same-net-led.kicad_sch`      | `548a1426b304a117c9dc27744b6d7474c358cf31207b802d221615bb40fde1e3` | One finding with exact custom-role evidence         |
+| `mapped-distinct-nets-led.kicad_sch` | `8e500540cc28455a3fb5c350a4a8b08b0a3864949e35bfecbf999a963b92802a` | No same-net LED finding                             |
 
 The authored source fixtures are exported twice through the digest-pinned
-KiCad 10.0.0 and 10.0.5 native lane. This verifies native symbol inventory,
-pin-net assignments, normalized netlist repeatability, and the lint result; it
-does not establish LED behavior, current, footprint mapping, board continuity,
+KiCad 10.0.0 and 10.0.5 native lane. Custom fixtures also verify exact
+PART_ID, symbol, footprint, and pin-signature role-map matching. The lane checks
+native symbol inventory, pin-net assignments, repeatability, and lint results;
+it does not establish LED behavior, current, footprint mapping, board continuity,
 or physical population.
 
 Run the focused synthetic rule tests with:

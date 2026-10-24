@@ -4317,21 +4317,26 @@ is not a reason by itself to expand its scope or change its default policy.
 #### LINT-219 — Same-net two-pin LED review
 
 - **Status:** Implemented as the default-review rule
-  `component.two_pin_led_same_net` for the exact stock `Device:LED` identity.
+  `component.two_pin_led_same_net` for the exact stock `Device:LED` identity
+  and exact project-mapped custom LED identities.
 - **Gap:** LINT-081 deliberately excludes `Device:LED`, while the existing LED
   checks look for a recognized positive/return span or a driven output path.
   An LED whose two terminals share one neutral or otherwise unclassified net
   therefore had no focused same-net finding.
-- **Predicate:** Require a fitted exact `Device:LED`, exactly two distinct
-  native pin numbers, and one unambiguous assigned native net per pin. Report
-  only when both pins resolve to the same net. DNP, open, multiply assigned,
-  incomplete, multi-pin, custom, and alternate LED symbols are unclassified.
+- **Predicate:** Require a fitted exact `Device:LED` or a custom LED whose
+  project `component_role_map` matches PART_ID, symbol, footprint, and the
+  complete native pin number/function/electrical-type inventory. Require
+  exactly two distinct native pin numbers and one unambiguous assigned net per
+  pin. Report only when both pins resolve to the same net. Unmapped or stale
+  custom identities, DNP, open, multiply assigned, incomplete, multi-pin, and
+  alternate LED symbols are unclassified.
 - **Boundary:** This is a configurable review prompt, not a defect verdict. It
   does not infer LED behavior, current, supply role, footprint pin mapping,
   physical population, or PCB connectivity. An intentionally bypassed or
   disabled indicator can be valid.
-- **Fixtures:** Synthetic same-net fault and separate-net control; DNP,
-  incomplete, ambiguous, multi-pin, custom, and alternate-symbol controls;
+- **Fixtures:** Synthetic stock and exact-mapped-custom same-net faults and
+  separate-net controls; DNP, incomplete, ambiguous, multi-pin, unmapped custom,
+  stale-role, and alternate-symbol controls;
   policy and exact-ignore lifecycle; ordering and net-split metamorphic check;
   and source-hashed KiCad 10.0.0/10.0.5 native exports through the existing
   two-pin component lane. No product or cohort schematic is used.

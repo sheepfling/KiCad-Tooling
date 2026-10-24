@@ -19,6 +19,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
 )
+from tests.design_lint_fixtures.component_roles import custom_led_role_map
 
 pytestmark = [
     pytest.mark.component_lint,
@@ -86,26 +87,6 @@ def output_led_netlist(
         pin_functions={"D1.1": "A", "D1.2": "K"},
         pin_electrical_types={**pin_types, "D1.1": "passive", "D1.2": "passive"},
         component_pin_numbers=pin_numbers,
-    )
-
-
-def custom_led_role_map(
-    basis: str = "Synthetic reviewed library symbol declaration",
-) -> ComponentRoleMap:
-    return ComponentRoleMap(
-        entries=(
-            ComponentRoleBinding(
-                part_id="training-led",
-                symbol="Training:LED_5mm",
-                footprint="Training:LED_0603",
-                role="led",
-                pins=(
-                    ComponentRolePin(number="1", function="A", electrical_type="passive"),
-                    ComponentRolePin(number="2", function="K", electrical_type="passive"),
-                ),
-                basis=basis,
-            ),
-        )
     )
 
 

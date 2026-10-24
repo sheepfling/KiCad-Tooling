@@ -251,17 +251,19 @@ documents the tooling-owned direct-drive and series-resistor cases.
 
 ## Review a two-pin LED whose terminals share one net
 
-`component.two_pin_led_same_net` reviews an exact fitted `Device:LED` when its
-two native pins are both assigned to the same schematic net. That assignment
-provides no voltage difference across the LED in the netlist, but the prompt
-does not establish component behavior, current, footprint mapping, PCB
-connectivity, or physical population. The rule defaults to `review` and
-supports project `block`, `off`, and exact-fingerprint ignore decisions. DNP,
-open, ambiguous, incomplete, multi-pin, and other LED identities remain
-unclassified. The
+`component.two_pin_led_same_net` reviews an exact fitted `Device:LED`, or a
+custom LED matched by the project's exact `component_role_map`, when both native
+pins are assigned to the same schematic net. A custom binding must match
+PART_ID, symbol, footprint, and the complete native pin number, function, and
+electrical-type inventory. That assignment provides no voltage difference
+across the LED in the netlist, but the prompt does not establish component
+behavior, current, footprint mapping, PCB connectivity, or physical population.
+The rule defaults to `review` and supports project `block`, `off`, and
+exact-fingerprint ignore decisions. Unmapped or stale custom identities, DNP,
+open, ambiguous, incomplete, and multi-pin LEDs remain unclassified. The
 [synthetic fixture record](../tests/fixtures/design_lint/two-pin-leds/README.md)
-contains the same-net fault and separate-net control, with source hashes and
-the exact KiCad 10 native lane.
+contains stock and exactly mapped custom same-net faults and separate-net
+controls, with source hashes and the exact KiCad 10 native lane.
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_two_pin_leds.py \

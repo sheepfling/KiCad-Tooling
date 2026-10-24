@@ -83,10 +83,8 @@ from .ci_hosted_spi_unconnected_data import spi_unconnected_data_fixture_lane
 from .ci_hosted_stm32_pin_map import stm32_pin_map_fixture_lane
 from .ci_hosted_support import HostedCommandError, HostedLog
 from .ci_hosted_transformer_windings import transformer_winding_fixture_lane
-from .ci_hosted_two_pin_components import (
-    TWO_PIN_COMPONENT_FIXTURE_CASES,
-    two_pin_component_fixture_lane,
-)
+from .ci_hosted_two_pin_component_cases import TWO_PIN_COMPONENT_FIXTURE_CASES
+from .ci_hosted_two_pin_components import two_pin_component_fixture_lane
 from .ci_hosted_usb_c_ports import usb_c_port_fixture_lane as _run_usb_c_port_fixture_lane
 from .ci_hosted_usb_data_paths import usb_data_path_fixture_lane
 from .ci_matrix import build_matrix

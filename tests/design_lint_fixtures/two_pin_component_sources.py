@@ -21,6 +21,8 @@ TWO_PIN_COMPONENT_SOURCE_HASHES = {
     "two-pin-components/distinct-nets-diode.kicad_sch": "74d19829e8dd9379a26cb6da9dd3cf10a48abce9d724661338f73ce0086bb928",
     "two-pin-leds/same-net-led.kicad_sch": "a5ff10fb374138ee4409dfd1e40d7652798497b35c41ed2b5f4c3be7744d3fc7",
     "two-pin-leds/distinct-nets-led.kicad_sch": "95cfa1e927bcfea5b251538b742164704541e9e139825bf6faee5a1909efae74",
+    "two-pin-leds/mapped-same-net-led.kicad_sch": "548a1426b304a117c9dc27744b6d7474c358cf31207b802d221615bb40fde1e3",
+    "two-pin-leds/mapped-distinct-nets-led.kicad_sch": "8e500540cc28455a3fb5c350a4a8b08b0a3864949e35bfecbf999a963b92802a",
     "two-pin-buzzers/same-net-buzzer.kicad_sch": "6213cd36ed3321bc837d541a82617467524bd2b2454d95be034e2f9bd720f51f",
     "two-pin-buzzers/distinct-nets-buzzer.kicad_sch": "120688dc3c6600bb729aecf7ca8ef0c43368bacc50d73c4b708a6286c324ef62",
     "two-pin-speakers/same-net-speaker.kicad_sch": "8d82fc391cf146a8f9c92c71ae37f6757422ca8599b0e13a69a0de378ecc7a1d",
