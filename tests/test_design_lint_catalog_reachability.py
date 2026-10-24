@@ -36,6 +36,7 @@ import tests.design_lint_fixtures.serial_unconnected_pins as _serial_unconnected
 import tests.design_lint_fixtures.spi_unconnected_data_pins as _spi_unconnected_data_fixtures
 import tests.design_lint_fixtures.usb_c_cc_named_rail as _usb_c_cc_named_rail_fixtures
 import tests.design_lint_fixtures.usb_c_sbu_named_rail as _usb_c_sbu_named_rail_fixtures
+import tests.design_lint_fixtures.usb_data_same_net as _usb_data_same_net_fixtures
 import tests.design_lint_fixtures.usb_unconnected_data as _usb_unconnected_data_fixtures
 import tests.external_protection_support as _external_protection_support
 import tests.rs485_peer_reference_support as _rs485_peer_reference_support
@@ -195,6 +196,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _can_unconnected_direction_fixtures.can_unconnected_direction_netlist(),
         _serial_unconnected_pin_fixtures.serial_unconnected_netlist(),
         _i2c_unconnected_pin_fixtures.i2c_unconnected_netlist(),
+        _usb_data_same_net_fixtures.usb_data_same_net_netlist(),
         _spi_unconnected_data_fixtures.spi_unconnected_data_netlist(),
         _rs485_unconnected_data_fixtures.rs485_unconnected_data_netlist(),
     )

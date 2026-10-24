@@ -26,6 +26,11 @@ PYTEST_NATIVE_LINT_SUITES = {
         "native_kicad",
         "slow",
     },
+    "test_usb_data_same_net_native_fixture_lane.py": {
+        "interface_lint",
+        "native_kicad",
+        "slow",
+    },
     "test_design_lint_determinism_i2c_signal_named_rail.py": {"interface_lint", "slow"},
     "test_i2c_pullup_voltage_coverage.py": {"interface_lint"},
     "test_serial_tx_rx_same_net_native_fixture_lane.py": {

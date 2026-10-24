@@ -126,6 +126,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="i3c-sda-scl-same-net",
     ),
     pytest.param(
+        "bus.usb_dp_dm_same_net",
+        "KICAD_RUN_NATIVE_USB_DP_DM_SAME_NET_FIXTURES",
+        "tests.test_usb_data_same_net_native_fixture_lane."
+        "test_native_usb_dp_dm_same_net_fault_and_control_repeat",
+        id="usb-dp-dm-same-net",
+    ),
+    pytest.param(
         "bus.spi_unconnected_data_pin",
         "KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES",
         "tests.test_spi_unconnected_data_pins_native_fixture_lane."

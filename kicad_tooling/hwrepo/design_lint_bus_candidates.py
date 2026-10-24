@@ -45,6 +45,7 @@ from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
 from .usb_c_cc_named_rail import usb_c_cc_signal_on_named_rail_candidates
 from .usb_c_sbu_named_rail import usb_c_sbu_signal_on_named_rail_candidates
+from .usb_data_same_net import usb_data_same_net_candidates
 
 
 def bus_candidates(
@@ -88,6 +89,7 @@ def bus_candidates(
         *ethernet_signal_on_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),
+        *usb_data_same_net_candidates(observed),
         *usb_signal_on_named_rail_candidates(observed),
         *usb_c_cc_signal_on_named_rail_candidates(observed),
         *usb_c_sbu_signal_on_named_rail_candidates(observed),

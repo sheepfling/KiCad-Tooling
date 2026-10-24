@@ -36,6 +36,8 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/ci_hosted_spi_clock_control_same_net.py",
         "kicad_tooling/hwrepo/can_tx_rx_same_net.py",
         "kicad_tooling/ci_hosted_can_tx_rx_same_net.py",
+        "kicad_tooling/hwrepo/usb_data_same_net.py",
+        "kicad_tooling/ci_hosted_usb_data_same_net.py",
         "kicad_tooling/ci_hosted_kicad10_images.py",
         "kicad_tooling/hwrepo/can_signal_functions.py",
         "kicad_tooling/hwrepo/can_tx_output_sharing.py",

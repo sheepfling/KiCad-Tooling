@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 234 rules are implemented with synthetic regression coverage.
+The following 235 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 234 active rules.
+The catalog currently contains 235 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -584,6 +584,7 @@ skipped under prerelease policy.
 - `bus.usb_data_path_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
+- `bus.usb_dp_dm_same_net`
 - `bus.usb_signal_on_named_rail`
 - `bus.can_unconnected_direction_pin`
 - `bus.can_unconnected_line`
@@ -836,6 +837,15 @@ and optional ecosystem adapters are `P3`.
   the finding. Synthetic controls cover two independent channels, mapping
   order, repair, policy, and three-process hash-seed stability. Repeated native
   netlist/ERC fault/control fixtures are pinned to KiCad 10.0.0 and 10.0.5.
+- **LINT-253 USB 2.0 D+/D- assigned to the same net:** A default-review
+  heuristic recognizes one bounded USB data pair on a fitted U/IC with a
+  complete native pin inventory and one exact assignment per pin. The
+  bidirectional native fault joins both pins on one net without an ERC
+  conflict; the control assigns them to separate nets. Duplicate or mismatched
+  port roles, open or ambiguous assignments, DNP parts, and incomplete
+  metadata remain quiet. Project policy, exact-ignore, hash-seed, catalog,
+  selector, source-hash, and digest-pinned KiCad 10.0.0/10.0.5 gates are
+  registered. Function names do not establish USB use or intended topology.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3232,7 +3242,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 234 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 235 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5621,6 +5631,40 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_I3C_SDA_SCL_SAME_NET_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_i3c_same_net_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_sda_scl_same_net")'
+  ```
+
+#### LINT-253 — Review USB 2.0 D+/D- pins assigned to the same net
+
+- **Status:** Implemented as the default-review heuristic
+  `bus.usb_dp_dm_same_net`. Project policy can promote it to `block`, turn it
+  off, or ignore one exact finding fingerprint.
+- **Gap:** USB data checks covered open pins, endpoint crossing, explicit
+  polarity labels, and data pins on named rails, but not one fitted PHY's
+  explicit D+ and D- pins assigned to the same neutral net. Bidirectional pin
+  types can leave this condition without an ERC diagnostic.
+- **Predicate:** For each fitted U/IC, group exactly one bounded USB 2.0 D+
+  and D- pin by its optional port identity. Require a complete native pin
+  inventory and exactly one assignment per pin. Review when both assignments
+  name the same exact native net; leave two explicit output pins to ERC.
+- **Boundary:** Function text does not prove USB use or establish device
+  configuration, required topology, physical routing, or electrical approval.
+  Connectors, SuperSpeed, DNP, duplicate/mismatched role groups, open or
+  ambiguous assignments, and incomplete inventory are outside the predicate.
+- **Fixtures and quality gate:** Synthetic bidirectional same-net fault and
+  distinct-net control demonstrate that the fault has no ERC conflict;
+  numbered ports, alias boundaries, DNP, open, ambiguous, duplicate, and
+  incomplete cases; review/block/off/exact-ignore policy; three-process
+  hash-seed stability; catalog reachability; focused selectors; and
+  source-hashed repeated KiCad 10.0.0/10.0.5 native netlist/ERC exports.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_data_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_dp_dm_same_net")'
+
+  KICAD_RUN_NATIVE_USB_DP_DM_SAME_NET_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_usb_data_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_dp_dm_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

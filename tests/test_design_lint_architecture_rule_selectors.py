@@ -214,6 +214,13 @@ def _collect_rule_nodes(rule_id: str) -> subprocess.CompletedProcess[str]:
             ),
         ),
         (
+            "bus.usb_dp_dm_same_net",
+            (
+                "tests/test_usb_data_same_net.py::"
+                "test_usb_data_pins_on_same_net_are_reviewed_and_separate_lines_are_control"
+            ),
+        ),
+        (
             "bus.spi_clock_chip_select_same_net",
             (
                 "tests/test_spi_clock_chip_select_same_net.py::"

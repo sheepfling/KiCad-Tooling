@@ -26,6 +26,7 @@ def bus_signal_pair_same_net_fixture_lane(
     image: str,
     log: HostedLog,
     protocol: str,
+    pair_name: str = "sda-scl",
     rule_id: str,
     fixture_directory: str,
     source_hashes: Mapping[str, str],
@@ -57,7 +58,7 @@ def bus_signal_pair_same_net_fixture_lane(
 
     scratch = Path(
         tempfile.mkdtemp(
-            prefix=f"{protocol}-sda-scl-same-net-{version}-",
+            prefix=f"{protocol}-{pair_name}-same-net-{version}-",
             dir=log.directory.resolve(),
         )
     )
@@ -99,7 +100,7 @@ def bus_signal_pair_same_net_fixture_lane(
         "/tmp:rw,nosuid,nodev,size=64m",
         *user,
         "-e",
-        f"HOME=/tmp/kicad-{protocol}-sda-scl-same-net",
+        f"HOME=/tmp/kicad-{protocol}-{pair_name}-same-net",
         "-v",
         f"{inputs}:/fixtures:ro",
         "-v",
@@ -112,7 +113,7 @@ def bus_signal_pair_same_net_fixture_lane(
         "-ec",
         script,
     )
-    stage_prefix = f"{protocol}-sda-scl-same-net-fixture"
+    stage_prefix = f"{protocol}-{pair_name}-same-net-fixture"
     log.event(
         f"{stage_prefix}/native-export",
         "START",

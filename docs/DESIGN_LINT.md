@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 234 active rules.
+The catalog currently contains 235 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -840,6 +840,30 @@ pairs remain outside its scope. Its focused checks are selectable with:
 ```sh
 .venv/bin/python -I -m pytest tests/test_usb_peer_data_pair_crossing.py \
   -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_peer_data_pair_crossed")'
+```
+
+### USB 2.0 D+/D- same-net review
+
+`bus.usb_dp_dm_same_net` reviews a fitted U/IC with exactly one bounded USB
+2.0 D+ and D- function in a matching optional port group when both pins have
+one exact native net assignment and share that net. The rule skips open,
+ambiguous, duplicate, DNP, mismatched-group, and incomplete-inventory cases;
+two output pins remain with ERC. Its synthetic fault uses bidirectional pins,
+so ERC reports no conflict while the lint produces a localized review finding.
+This provides an independent check for the tied pair while leaving USB use and
+intent to the project. The default is `review`, with project overrides and
+exact ignores available. Native fault/control exports are source-hashed and
+repeat on digest-pinned KiCad 10.0.0 and 10.0.5 images.
+The [fixture record](../tests/fixtures/design_lint/usb-dp-dm-same-net/README.md)
+lists the native input hashes and the ERC-clean fault/control details.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_data_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_dp_dm_same_net")'
+
+KICAD_RUN_NATIVE_USB_DP_DM_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_data_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_dp_dm_same_net")'
 ```
 
 ### CAN line pin/name polarity review

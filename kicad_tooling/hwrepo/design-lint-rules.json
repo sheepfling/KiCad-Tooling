@@ -5429,6 +5429,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_data_crossing.py#usb_peer_data_pair_crossing_candidates"
     },
     {
+      "rule_id": "bus.usb_dp_dm_same_net",
+      "title": "USB 2.0 D+ and D- pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with a complete native pin inventory, group exactly one bounded USB 2.0 D+ and D- function by its optional matching port number, and emit a REVIEW candidate when each pin has one unambiguous assignment to the same exact native net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only bounded USB 2.0 D+/D- aliases on fitted U/IC references are considered. Connectors, SuperSpeed pairs, duplicate or mismatched port roles, open or multiply assigned pins, DNP components, and incomplete or inconsistent pin inventories are skipped.",
+        "Function names are recognition clues and do not prove USB use or intended topology. The default is review; project policy can block, turn off, or exact-ignore a finding.",
+        "This schematic-net review does not establish USB device configuration, physical routing, external wiring, PCB copper connectivity, or electrical approval."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_data_same_net.test_usb_data_pins_on_same_net_are_reviewed_and_separate_lines_are_control",
+        "tests.test_usb_data_same_net_native_fixture_lane.test_native_usb_dp_dm_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_data_same_net.test_usb_data_pins_on_same_net_are_reviewed_and_separate_lines_are_control",
+        "tests.test_usb_data_same_net.test_dnp_open_duplicate_ambiguous_and_incomplete_evidence_are_skipped",
+        "tests.test_usb_data_same_net.test_two_output_pins_are_left_to_native_erc",
+        "tests.test_usb_data_same_net_native_fixture_lane.test_native_usb_dp_dm_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_data_same_net.test_numbered_ports_are_independent_and_function_aliases_are_bounded",
+        "tests.test_usb_data_same_net.test_policy_override_and_exact_ignore_control_review",
+        "tests.test_design_lint_determinism_usb_dp_dm_same_net.test_usb_dp_dm_same_net_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DP_DM_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_data_same_net.py#usb_data_same_net_candidates",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_data_same_net.py#usb_data_same_net_candidates"
+    },
+    {
       "rule_id": "bus.usb_signal_on_named_rail",
       "title": "USB data pins assigned to named rails",
       "status": "active",
