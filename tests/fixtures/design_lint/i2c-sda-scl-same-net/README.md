@@ -3,7 +3,8 @@
 These tooling-owned schematics contain one synthetic I2C controller with
 native SDA and SCL pin functions. The fault attaches both pins to
 `I2C_SHARED`; the control assigns them to distinct `I2C_SDA` and `I2C_SCL`
-nets. Exact-version native exports preserve the assignments and produce no
+nets, with U1.1 (SDA) on `I2C_SDA` and U1.2 (SCL) on `I2C_SCL`. Exact-version
+native exports preserve the assignments and produce no
 ERC errors on KiCad 10.0.0 and 10.0.5. The lint remains default-off because
 pin-function names do not prove that a part implements standard I2C or that
 the two pins must remain separate.
@@ -11,7 +12,7 @@ the two pins must remain separate.
 | Case    | Source              | SHA-256                                                            |
 | ------- | ------------------- | ------------------------------------------------------------------ |
 | Fault   | `fault.kicad_sch`   | `e45583f123b62fe0769d19e5ffd08200510b9abb44afb97d6a8fc269ed3e84b6` |
-| Control | `control.kicad_sch` | `a6ef0cf9ed06fe027c53a4d57624b0a72d244de75e1266b8df0ded924e378681` |
+| Control | `control.kicad_sch` | `1fd6caf4f272e3e492b012c01dc645f1b8077ecf127e2dd6569c45b147aaf523` |
 
 Reproduce the focused checks from the tooling checkout:
 

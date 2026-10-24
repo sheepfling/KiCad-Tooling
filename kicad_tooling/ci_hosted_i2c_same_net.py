@@ -28,7 +28,7 @@ def i2c_sda_scl_same_net_fixture_lane(
         fixture_directory="i2c-sda-scl-same-net",
         source_hashes={
             "fault": "e45583f123b62fe0769d19e5ffd08200510b9abb44afb97d6a8fc269ed3e84b6",
-            "control": "a6ef0cf9ed06fe027c53a4d57624b0a72d244de75e1266b8df0ded924e378681",
+            "control": "1fd6caf4f272e3e492b012c01dc645f1b8077ecf127e2dd6569c45b147aaf523",
         },
         expected_pin_functions={"U1.1": "SDA", "U1.2": "SCL"},
         expected_nets={

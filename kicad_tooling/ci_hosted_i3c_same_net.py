@@ -28,8 +28,8 @@ def i3c_sda_scl_same_net_fixture_lane(
         rule_id="bus.i3c_sda_scl_same_net",
         fixture_directory="i3c-sda-scl-same-net",
         source_hashes={
-            "fault": "48a20d238dec4af201c15867d2c1d0064d5fa82e6f9ebcdf4cbbf452f657767b",
-            "control": "60781c2942046cc85c0bc33e4317a5d2f411567c27d5e3e1407f8bc127c6ba6e",
+            "fault": "9c65be1911ef729b3ae066a63807ff021d6f6d70ce29a33ac4c9f6fef74028bb",
+            "control": "05bf8adab0a4f0d54d1667008ed72f2e45a9b4ed5a8593a8e988612b8a9287ec",
         },
         expected_pin_functions={"U1.1": "I3C1_SDA", "U1.2": "I3C1_SCL"},
         expected_nets={

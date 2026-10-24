@@ -31,7 +31,7 @@
     (property "Datasheet" "" (at 63.50 63.50 0) (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "8d000000-0000-4000-8000-000000000011"))
     (pin "2" (uuid "8d000000-0000-4000-8000-000000000012"))
-    (instances (project "synthetic-i2c-sda-scl-same-net" (path "/8d000000-0000-4000-8000-000000000001" (reference "U1") (unit 1)))))
+    (instances (project "synthetic-i3c-sda-scl-same-net" (path "/8d000000-0000-4000-8000-000000000001" (reference "U1") (unit 1)))))
   (wire (pts (xy 58.42 60.96) (xy 50.80 60.96))
     (stroke (width 0) (type default)) (uuid "8d000000-0000-4000-8000-000000000020"))
   (label "I3C_SHARED" (at 50.80 60.96 0)
