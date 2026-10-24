@@ -74,6 +74,7 @@ THEME_OWNER_PREFIXES = {
         "differential_pair_",
         "digital_peer_",
         "external_protection",
+        "i3c_",
         "i2c_",
         "open_drain_",
         "rs485_",
