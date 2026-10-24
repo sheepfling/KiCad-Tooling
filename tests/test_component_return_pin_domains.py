@@ -63,7 +63,10 @@ def test_common_return_pins_are_a_quiet_control() -> None:
     "source",
     [
         pytest.param(component_return_pin_domains(dnp=True), id="dnp"),
-        pytest.param(component_return_pin_domains().model_copy(update={"nets": {"RETURN_A": ("U1.1",)}}), id="open-pin"),
+        pytest.param(
+            component_return_pin_domains().model_copy(update={"nets": {"RETURN_A": ("U1.1",)}}),
+            id="open-pin",
+        ),
         pytest.param(
             component_return_pin_domains().model_copy(
                 update={"nets": {"RETURN_A": ("U1.1", "U1.2"), "RETURN_B": ("U1.1",)}}
@@ -104,7 +107,9 @@ def test_intentional_split_can_be_disabled_or_promoted_by_project_policy() -> No
         source,
         DesignLintPolicy(
             rules=(
-                DesignLintRuleOverride(rule_id=RULE_ID, mode="off", reason="intentional domain split"),
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID, mode="off", reason="intentional domain split"
+                ),
             )
         ),
     )
@@ -112,7 +117,9 @@ def test_intentional_split_can_be_disabled_or_promoted_by_project_policy() -> No
         source,
         DesignLintPolicy(
             rules=(
-                DesignLintRuleOverride(rule_id=RULE_ID, mode="block", reason="reviewed ground contract"),
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID, mode="block", reason="reviewed ground contract"
+                ),
             )
         ),
     )

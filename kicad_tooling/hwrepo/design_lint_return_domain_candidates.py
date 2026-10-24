@@ -36,9 +36,7 @@ def return_domain_candidates(
         reviewed_connector_pins,
     )
     found: list[Candidate] = []
-    found.extend(
-        component_return_pin_net_divergences(observed, reviewed_connector_references)
-    )
+    found.extend(component_return_pin_net_divergences(observed, reviewed_connector_references))
     found.extend(
         return_pin_positive_rail_candidates(
             observed,

@@ -7,11 +7,7 @@ from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 def component_return_pin_domains(*, split: bool = True, dnp: bool = False) -> NetlistContract:
     """Build a fitted two-return component with split or common assignments."""
-    nets = (
-        {"RETURN_A": ("U1.1",), "RETURN_B": ("U1.2",)}
-        if split
-        else {"RETURN": ("U1.1", "U1.2")}
-    )
+    nets = {"RETURN_A": ("U1.1",), "RETURN_B": ("U1.2",)} if split else {"RETURN": ("U1.1", "U1.2")}
     return NetlistContract(
         components={
             "U1": ComponentContract(

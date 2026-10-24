@@ -56,9 +56,7 @@ def component_return_pin_net_divergences(
         symbol = symbols[reference.casefold()]
         evidence = {pin: assignments for pin, _, assignments in entries}
         evidence["component_symbol"] = (symbol,)
-        evidence["pin_functions"] = tuple(
-            f"{pin}={function}" for pin, function, _ in entries
-        )
+        evidence["pin_functions"] = tuple(f"{pin}={function}" for pin, function, _ in entries)
         candidates.append(
             Candidate(
                 rule_id=RULE_ID,
