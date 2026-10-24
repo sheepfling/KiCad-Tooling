@@ -121,6 +121,8 @@ _LINT_AREA_MODULES = {
             "tests/test_can_line_polarity_native_fixture_lane.py",
             "tests/test_ethernet_data_labels.py",
             "tests/test_ethernet_data_label_native_fixture_lane.py",
+            "tests/test_ethernet_management_labels.py",
+            "tests/test_ethernet_management_label_native_fixture_lane.py",
             "tests/test_can_tx_rx_same_net.py",
             "tests/test_can_tx_rx_same_net_native_fixture_lane.py",
             "tests/test_can_tx_output_sharing.py",

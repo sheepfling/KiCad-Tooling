@@ -694,7 +694,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 219 active rules.
+The catalog currently contains 220 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -864,6 +864,28 @@ it does not establish a project pinout, PHY mode, PCB routing, or physical conne
 KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_data_label_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_data_label_mismatch")'
+```
+
+### Ethernet management pin/name role review
+
+`bus.ethernet_management_label_mismatch` compares exact native MDC/MDIO pin functions with explicit
+MDC/MDIO net labels, optionally prefixed by Ethernet, ETH, or SMI. Crossed names produce a
+configurable `review` finding. Neutral, indexed, unknown, open, ambiguous, DNP, and same-net cases
+remain unclassified. This asks a reviewer to inspect the management pin map; it does not establish
+the intended endpoint mapping, signal integrity, PCB routing, or physical connectivity. The bounded
+pin-role vocabulary follows the
+[TI DP83826E/DP83826I datasheet](https://www.ti.com/lit/gpn/DP83826I), which identifies MDC as
+management clock and MDIO as management input/output data.
+The checked-in native inputs are synthetic and their reviewed hashes are recorded in the
+[fixture notes](../tests/fixtures/design_lint/ethernet-management-label-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_management_labels.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
+
+KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_management_label_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
 ```
 
 ### CAN TX/RX pin and net-label direction review

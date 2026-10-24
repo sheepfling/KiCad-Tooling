@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from .bus_ethernet_pair_labels import ethernet_data_label_mismatch_candidates
+from .bus_ethernet_pair_labels import (
+    ethernet_data_label_mismatch_candidates,
+    ethernet_management_label_mismatch_candidates,
+)
 from .bus_signal_pairs import ComplementaryPinFunctionAliasResolution
 from .can_peer_reference_scan import CanPeerReferenceScan
 from .design_lint_can_candidates import can_candidates
@@ -91,6 +94,7 @@ def bus_candidates(
         *can_candidates(observed, can_peer_reference_scan, component_peer_findings),
         *rs485_candidates(observed, rs485_peer_reference_scan, component_peer_findings),
         *ethernet_data_label_mismatch_candidates(observed),
+        *ethernet_management_label_mismatch_candidates(observed),
         *complementary_signal_candidates(observed, complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),
         *named_differential_pair_candidates(observed, pcb_differential_pair_rule_map),

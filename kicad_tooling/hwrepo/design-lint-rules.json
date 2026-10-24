@@ -5738,6 +5738,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_data_label_mismatch_candidates"
     },
     {
+      "rule_id": "bus.ethernet_management_label_mismatch",
+      "title": "Ethernet MDC/MDIO pin functions conflict with net labels",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each assigned pin with an exact native MDC or MDIO function and one unique net, compare the management clock/data role with an exact MDC or MDIO net-label alias, optionally prefixed by Ethernet, ETH, or SMI. Emit a REVIEW candidate when the recognized roles conflict.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
+      ],
+      "limitations": [
+        "Recognition is limited to exact MDC/MDIO pin functions and exact MDC/MDIO net labels, optionally qualified by Ethernet, ETH, or SMI. Neutral, indexed, vendor-specific, and otherwise unrecognized names remain unclassified.",
+        "This is a name-based review clue, not a project-authored pinout requirement or defect verdict. The rule does not establish which management controller or PHY endpoint is intended, inspect signal integrity, or verify routed copper and physical connectivity.",
+        "DNP, open, and multiply assigned pins are skipped. If the same component assigns its MDC and MDIO pins to one net, the label-only rule skips that short topology."
+      ],
+      "fault_fixtures": [
+        "tests.test_ethernet_management_labels.test_crossed_management_labels_are_reviewed_with_exact_pin_evidence",
+        "tests.test_ethernet_management_label_native_fixture_lane.test_native_ethernet_management_label_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ethernet_management_labels.test_crossed_management_labels_are_reviewed_with_exact_pin_evidence",
+        "tests.test_ethernet_management_labels.test_supported_management_label_aliases_match_native_roles",
+        "tests.test_ethernet_management_labels.test_neutral_indexed_dnp_ambiguous_and_short_cases_are_not_classified",
+        "tests.test_ethernet_management_label_native_fixture_lane.test_native_ethernet_management_label_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ethernet_management_labels.test_mapping_order_is_stable_and_correct_labels_clear_findings"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates",
+        "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#_ethernet_management_net_label_role",
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#complementary_pin_function_key",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates"
+    },
+    {
       "rule_id": "bus.can_tx_rx_same_net",
       "title": "CAN controller TX and RX pins share one net",
       "status": "active",
@@ -9355,7 +9397,7 @@
       "limitations": [
         "Custom symbols participate only through an opt-in project role map bound to exact PART_ID, native symbol, footprint, and the complete two-pin number/function/electrical-type inventory. Missing or stale identities block lint and do not receive the role. Unmapped symbols, missing pin-type metadata, DNP parts, ambiguous rails, and other resistor-separated rail paths are outside the predicate. A visible fitted positive-value resistor from an intermediate return-like LED net to a distinct recognized return suppresses this direct-path prompt.",
         "A finding is a review prompt, not proof that current limiting is absent or required. An output may be internally current-limited, an LED may have other assembly-level protection, and off-board paths are not modeled.",
-      "Current-controlled-sink suppression is explicit project metadata, not an inference. The mapped path must match the native PART_ID, output pin function and electrical type, exact LED reference, A/K pin polarity, and source/net topology. This match does not establish current regulation, current limits, brightness, or electrical adequacy.",
+        "Current-controlled-sink suppression is explicit project metadata, not an inference. The mapped path must match the native PART_ID, output pin function and electrical type, exact LED reference, A/K pin polarity, and source/net topology. This match does not establish current regulation, current limits, brightness, or electrical adequacy.",
         "The rule does not infer LED polarity, output voltage/current limits, resistor value or adequacy, PCB copper connectivity, physical population, or runtime behavior. A parallel resistor across the LED and rail does not count as a series element and does not suppress the candidate."
       ],
       "fault_fixtures": [
@@ -9363,20 +9405,20 @@
         "tests.test_led_output_heuristics.test_output_capable_pin_type_is_reviewed",
         "tests.test_led_output_heuristics.test_parallel_resistor_does_not_clear_led_output_review",
         "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
-      "tests.test_led_output_heuristics.test_custom_led_role_map_is_exact_and_stale_identity_blocks_lint",
-      "tests.test_led_current_sink_path.test_stale_or_incomplete_sink_path_keeps_led_review_visible",
-      "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
-      "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity",
-      "tests.test_led_rail_native_fixture_lane.test_direct_rail_and_output_driven_led_faults_with_series_controls"
+        "tests.test_led_output_heuristics.test_custom_led_role_map_is_exact_and_stale_identity_blocks_lint",
+        "tests.test_led_current_sink_path.test_stale_or_incomplete_sink_path_keeps_led_review_visible",
+        "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
+        "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity",
+        "tests.test_led_rail_native_fixture_lane.test_direct_rail_and_output_driven_led_faults_with_series_controls"
       ],
       "valid_control_fixtures": [
         "tests.test_led_output_heuristics.test_visible_series_resistor_and_unrecognized_output_are_controls",
         "tests.test_led_output_heuristics.test_custom_led_needs_exact_project_role_map_and_reports_review_basis",
-      "tests.test_led_output_heuristics.test_custom_led_with_output_side_series_resistor_is_control",
-      "tests.test_led_current_sink_path.test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt",
-      "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
-      "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity",
-      "tests.test_led_rail_native_fixture_lane.test_direct_rail_and_output_driven_led_faults_with_series_controls"
+        "tests.test_led_output_heuristics.test_custom_led_with_output_side_series_resistor_is_control",
+        "tests.test_led_current_sink_path.test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt",
+        "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
+        "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity",
+        "tests.test_led_rail_native_fixture_lane.test_direct_rail_and_output_driven_led_faults_with_series_controls"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -9384,13 +9426,13 @@
         "tests.test_led_output_heuristics.test_custom_led_role_fingerprint_is_order_stable_and_basis_bound",
         "tests.test_design_lint_determinism_components.test_two_pin_component_reports_remain_deterministic"
       ],
-    "required_native_fixtures": [
-      "KICAD_RUN_NATIVE_LED_RAIL_FIXTURES"
-    ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_LED_RAIL_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/led_heuristics.py#leds_directly_driven_without_visible_series_resistor",
         "kicad_tooling/hwrepo/component_roles.py#resolve_component_role_map",
-      "kicad_tooling/hwrepo/power_paths.py#power_path_mismatches",
+        "kicad_tooling/hwrepo/power_paths.py#power_path_mismatches",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "components",
@@ -9590,7 +9632,7 @@
       ],
       "limitations": [
         "The map covers only its explicitly listed endpoints, two-terminal elements, and ordered net chain; it does not discover expected paths or detect unlisted parallel paths.",
-      "A current_controlled_sink endpoint is an owner-authored role label. Its exact PART_ID and native pin signature validate identity and connectivity only; they do not prove that the component regulates current or is suitable for an LED load.",
+        "A current_controlled_sink endpoint is an owner-authored role label. Its exact PART_ID and native pin signature validate identity and connectivity only; they do not prove that the component regulates current or is suitable for an LED load.",
         "A passing schematic comparison does not establish component conduction or suitability, datasheet pinout truth, PCB copper continuity, external wiring, current capacity, or physical population.",
         "The map is not a current-direction or power-source inference. Switching devices, multi-pin protection networks, alternate assembly states, and direct same-net paths need separate explicit requirements."
       ],
@@ -9600,18 +9642,18 @@
         "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability",
         "tests.test_power_paths.test_map_rejects_discontinuous_ordered_net_chain",
         "tests.test_power_paths.test_map_rejects_reused_component_reference",
-      "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault",
-      "tests.test_led_current_sink_path.test_stale_or_incomplete_sink_path_keeps_led_review_visible",
-      "tests.test_led_current_sink_path.test_current_sink_role_requires_complete_source_bound_pin_identity"
+        "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault",
+        "tests.test_led_current_sink_path.test_stale_or_incomplete_sink_path_keeps_led_review_visible",
+        "tests.test_led_current_sink_path.test_current_sink_role_requires_complete_source_bound_pin_identity"
       ],
       "valid_control_fixtures": [
         "tests.test_power_paths.test_reviewed_ferrite_and_multistage_paths_pass",
         "tests.test_power_paths.test_rule_uses_review_block_off_and_exact_ignore_lifecycle",
         "tests.test_power_path_fixture_lane.test_synthetic_lane_checks_read_only_export_fault_control_and_repeatability",
-      "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault",
-      "tests.test_led_current_sink_path.test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt",
-      "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
-      "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity"
+        "tests.test_power_path_native_fixture_lane.test_mapped_ferrite_path_control_and_wrong_rail_fault",
+        "tests.test_led_current_sink_path.test_exact_current_sink_path_suppresses_only_the_mapped_led_prompt",
+        "tests.test_led_current_sink_path.test_multichannel_map_only_suppresses_its_exact_led_paths",
+        "tests.test_design_lint_mcp_parity_current_sink.test_multichannel_current_sink_path_parity"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

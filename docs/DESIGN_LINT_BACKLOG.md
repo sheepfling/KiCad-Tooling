@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 219 rules are implemented with synthetic regression coverage.
+The following 220 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 219 active rules.
+The catalog currently contains 220 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -583,6 +583,7 @@ skipped under prerelease policy.
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
 - `bus.ethernet_data_label_mismatch`
+- `bus.ethernet_management_label_mismatch`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
@@ -727,6 +728,10 @@ and optional ecosystem adapters are `P3`.
   inspection instead of asserting an authoritative pinout. Synthetic controls,
   policy, determinism, and digest-pinned KiCad 10.0.0/10.0.5 export cases are
   registered.
+- **LINT-238 Ethernet management pin/name role mismatch:** A default-review
+  heuristic compares exact native MDC/MDIO pin functions with explicit MDC/MDIO
+  net labels, including `ETH`, `ETHERNET`, and `SMI` prefixes. Neutral,
+  indexed, DNP, ambiguous, open, and same-net cases stay unclassified.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3123,7 +3128,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 219 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 220 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -4963,6 +4968,50 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_ETHERNET_DATA_LABEL_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_ethernet_data_label_native_fixture_lane.py \
       -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_data_label_mismatch")'
+  ```
+
+#### LINT-238 — Review Ethernet MDC/MDIO pin functions that contradict net labels
+
+- **Status:** Implemented as `bus.ethernet_management_label_mismatch`, owned by
+  `bus_ethernet_pair_labels.py#ethernet_management_label_mismatch_candidates`.
+- **Gap:** The data-pair label check covers PHY TD/RD roles but not crossed
+  management clock/data labels. ERC does not compare a pin's native function
+  with the explicit name assigned to its net.
+- **Predicate:** Recognize exact native `MDC` and `MDIO` pin functions, case
+  insensitive after the shared punctuation/space normalization. Compare each
+  pin with an exact `MDC` or `MDIO` net-label role, optionally qualified by
+  `ETH`, `ETHERNET`, or `SMI`. Emit a default REVIEW candidate for each
+  uniquely assigned pin whose roles conflict.
+- **Boundary:** Names are a review clue, not an authored pinout or defect
+  verdict. Neutral, indexed, suffixed, vendor-specific, and unknown labels are
+  not classified. DNP, open, or multiply assigned pins are skipped. A same-net
+  MDC/MDIO short is left outside this label-only predicate. The rule does not
+  establish which controller or PHY endpoint is intended, inspect signal
+  integrity, or prove routed copper or physical continuity. The public
+  [TI DP83826E/DP83826I datasheet](https://www.ti.com/lit/gpn/DP83826I) names
+  MDC as management clock and MDIO as management data; it does not establish a
+  particular board's intended mapping.
+- **Fixtures and quality gate:** Synthetic crossed-label fault, correct-label
+  control, neutral/indexed/DNP/ambiguous/same-net exclusions, configurable
+  `review`/`block`/`off`/exact-ignore policy, stable ordering, correction, and
+  source-hashed native fault/control schematics. Exact native exports run twice
+  under digest-pinned KiCad 10.0.0 and 10.0.5 images. Catalog ownership,
+  focused pytest selectors, marker registries, tagged native-fixture selection,
+  fixture reachability, and module-size checks are registered. No product or
+  cohort project data is used.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_ethernet_management_labels.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
+  ```
+
+- **Native acceptance:**
+
+  ```sh
+  KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_ethernet_management_label_native_fixture_lane.py \
+      -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

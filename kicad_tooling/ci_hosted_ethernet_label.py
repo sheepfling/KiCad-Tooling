@@ -8,8 +8,9 @@ import os
 import shutil
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from .hwrepo.contracts import write_model
 
@@ -17,6 +18,66 @@ if TYPE_CHECKING:
     from .ci_hosted_support import HostedLog
 
 RULE_ID = "bus.ethernet_data_label_mismatch"
+MANAGEMENT_RULE_ID = "bus.ethernet_management_label_mismatch"
+
+
+@dataclass(frozen=True)
+class _EthernetLabelFixture:
+    directory: str
+    rule_id: str
+    stage_prefix: str
+    source_hashes: dict[str, str]
+    expected_subjects: tuple[str, ...]
+    expected_pins: dict[str, dict[str, tuple[str, str]]]
+    complete_data_pairs: bool = False
+
+
+_FIXTURES: dict[str, _EthernetLabelFixture] = {
+    "data": _EthernetLabelFixture(
+        directory="ethernet-data-label-native",
+        rule_id=RULE_ID,
+        stage_prefix="ethernet-label-fixture",
+        source_hashes={
+            "control": "9fae1afdb0395354f6e61eae17623f5d940b2f90bf82d452ff8339bfed1e421e",
+            "fault": "8b42bc11362cedc71519b7ffb2477da399c52374efcf44bcb69d35149f9a1b92",
+        },
+        expected_subjects=(
+            "U1.1: TDP on ETH_RX_P",
+            "U1.2: TDN on ETH_RX_N",
+            "U1.3: RDP on ETH_TX_P",
+            "U1.4: RDN on ETH_TX_N",
+        ),
+        expected_pins={
+            "control": {
+                "U1.1": ("TDP", "ETH_TX_P"),
+                "U1.2": ("TDN", "ETH_TX_N"),
+                "U1.3": ("RDP", "ETH_RX_P"),
+                "U1.4": ("RDN", "ETH_RX_N"),
+            },
+            "fault": {
+                "U1.1": ("TDP", "ETH_RX_P"),
+                "U1.2": ("TDN", "ETH_RX_N"),
+                "U1.3": ("RDP", "ETH_TX_P"),
+                "U1.4": ("RDN", "ETH_TX_N"),
+            },
+        },
+        complete_data_pairs=True,
+    ),
+    "management": _EthernetLabelFixture(
+        directory="ethernet-management-label-native",
+        rule_id=MANAGEMENT_RULE_ID,
+        stage_prefix="ethernet-management-label-fixture",
+        source_hashes={
+            "control": "3ddd8d2919eade8a6bb8f7a8c059dafbe9b348aacbb5a6bb8398b0c62944d31b",
+            "fault": "f63b39e17d68c36202e323534f2ea58b63247a2e55b0188bc048056d26cf1495",
+        },
+        expected_subjects=("U1.5: MDC on ETH_MDIO", "U1.6: MDIO on ETH_MDC"),
+        expected_pins={
+            "control": {"U1.5": ("MDC", "ETH_MDC"), "U1.6": ("MDIO", "ETH_MDIO")},
+            "fault": {"U1.5": ("MDC", "ETH_MDIO"), "U1.6": ("MDIO", "ETH_MDC")},
+        },
+    ),
+}
 
 
 def ethernet_label_fixture_lane(
@@ -25,8 +86,9 @@ def ethernet_label_fixture_lane(
     project: str,
     image: str,
     log: HostedLog,
+    feature: Literal["data", "management"] = "data",
 ) -> None:
-    """Export synthetic Ethernet label controls twice and evaluate the active rule."""
+    """Export source-hashed Ethernet label controls and evaluate one focused rule."""
     from .hwrepo.contract_coach import pinned_image, run_command
     from .hwrepo.design_lint import evaluate
     from .hwrepo.design_lint_report_models import DesignLintReport
@@ -36,6 +98,7 @@ def ethernet_label_fixture_lane(
     from .validate import read_netlist
 
     root = root.resolve()
+    fixture = _FIXTURES[feature]
     config = selected_config(root, project)
     if config.image != image:
         raise ValueError(f"{project}: native fixture image differs from its reviewed toolchain")
@@ -44,19 +107,15 @@ def ethernet_label_fixture_lane(
     pinned = pinned_image(config.image)
     repository = Path(__file__).resolve().parents[1]
     sources = {
-        case: repository / f"tests/fixtures/design_lint/ethernet-data-label-native/{case}.kicad_sch"
+        case: repository / f"tests/fixtures/design_lint/{fixture.directory}/{case}.kicad_sch"
         for case in ("control", "fault")
     }
-    expected_source_hashes = {
-        "control": "9fae1afdb0395354f6e61eae17623f5d940b2f90bf82d452ff8339bfed1e421e",
-        "fault": "8b42bc11362cedc71519b7ffb2477da399c52374efcf44bcb69d35149f9a1b92",
-    }
     source_hashes = {case: digest(path) for case, path in sources.items()}
-    if source_hashes != expected_source_hashes:
-        raise ValueError("Ethernet pair-label fixtures differ from their reviewed source hashes")
+    if source_hashes != fixture.source_hashes:
+        raise ValueError("Ethernet label fixtures differ from their reviewed source hashes")
 
     scratch = Path(
-        tempfile.mkdtemp(prefix=f"ethernet-label-{project}-", dir=log.directory.resolve())
+        tempfile.mkdtemp(prefix=f"ethernet-{feature}-label-{project}-", dir=log.directory.resolve())
     )
     inputs = scratch / "input"
     inputs.mkdir()
@@ -110,7 +169,7 @@ def ethernet_label_fixture_lane(
         script,
     )
     log.event(
-        "ethernet-label-fixture/native-export",
+        f"{fixture.stage_prefix}/native-export",
         "START",
         project=project,
         kicad_version=config.kicad_version,
@@ -121,7 +180,7 @@ def ethernet_label_fixture_lane(
     write_model(receipt, command)
     if command.returncode != 0 or command.error is not None:
         log.event(
-            "ethernet-label-fixture/native-export",
+            f"{fixture.stage_prefix}/native-export",
             "FAIL",
             project=project,
             kicad_version=config.kicad_version,
@@ -131,7 +190,7 @@ def ethernet_label_fixture_lane(
         )
         raise ValueError(f"Native Ethernet label export failed: {command.stderr or command.error}")
     log.event(
-        "ethernet-label-fixture/native-export",
+        f"{fixture.stage_prefix}/native-export",
         "PASS",
         project=project,
         kicad_version=config.kicad_version,
@@ -159,7 +218,7 @@ def ethernet_label_fixture_lane(
                 ensure_ascii=False,
             ).encode("utf-8")
             normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
-            project_id = f"synthetic-ethernet-label-{case}"
+            project_id = f"synthetic-ethernet-{feature}-label-{case}"
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
                 project_id=project_id,
@@ -176,22 +235,19 @@ def ethernet_label_fixture_lane(
 
     control = reports[("control", "first")]
     fault = reports[("fault", "first")]
-    control_findings = tuple(item for item in control.findings if item.rule_id == RULE_ID)
-    fault_findings = tuple(item for item in fault.findings if item.rule_id == RULE_ID)
-    expected_subjects = (
-        "U1.1: TDP on ETH_RX_P",
-        "U1.2: TDN on ETH_RX_N",
-        "U1.3: RDP on ETH_TX_P",
-        "U1.4: RDN on ETH_TX_N",
-    )
+    control_findings = tuple(item for item in control.findings if item.rule_id == fixture.rule_id)
+    fault_findings = tuple(item for item in fault.findings if item.rule_id == fixture.rule_id)
     if control_findings:
         raise ValueError("Native Ethernet label control produced an unexpected finding")
-    if tuple(item.subject for item in fault_findings) != expected_subjects:
+    if tuple(item.subject for item in fault_findings) != fixture.expected_subjects:
         raise ValueError(
             f"Native Ethernet label fault produced "
-            f"{tuple(item.subject for item in fault_findings)!r}; expected {expected_subjects!r}"
+            f"{tuple(item.subject for item in fault_findings)!r}; "
+            f"expected {fixture.expected_subjects!r}"
         )
-    if any(item.rule_id == "bus.complementary_pair_assignment" for item in fault.findings):
+    if fixture.complete_data_pairs and any(
+        item.rule_id == "bus.complementary_pair_assignment" for item in fault.findings
+    ):
         raise ValueError("Complete Ethernet pairs should remain outside pair-completeness findings")
 
     for case, report, findings in (
@@ -199,13 +255,7 @@ def ethernet_label_fixture_lane(
         ("fault", fault, fault_findings),
     ):
         observed = observations[(case, "first")]
-        expected_pins = {
-            "U1.1": ("TDP", "ETH_TX_P" if case == "control" else "ETH_RX_P"),
-            "U1.2": ("TDN", "ETH_TX_N" if case == "control" else "ETH_RX_N"),
-            "U1.3": ("RDP", "ETH_RX_P" if case == "control" else "ETH_TX_P"),
-            "U1.4": ("RDN", "ETH_RX_N" if case == "control" else "ETH_TX_N"),
-        }
-        for pin, (function, net) in expected_pins.items():
+        for pin, (function, net) in fixture.expected_pins[case].items():
             assigned_nets = tuple(
                 sorted(
                     name
@@ -214,9 +264,9 @@ def ethernet_label_fixture_lane(
                 )
             )
             if observed.pin_functions.get(pin) != function or assigned_nets != (net,):
-                raise ValueError(f"Native Ethernet {case} evidence changed for {pin}")
+                raise ValueError(f"Native Ethernet {feature} {case} evidence changed for {pin}")
         log.event(
-            f"ethernet-label-fixture/{case}",
+            f"{fixture.stage_prefix}/{case}",
             "PASS",
             project=project,
             kicad_version=config.kicad_version,

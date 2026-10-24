@@ -24,6 +24,7 @@ from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
     bjt_collector_emitter_netlist,
 )
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
+from tests.design_lint_fixtures.ethernet_management_labels import ethernet_management_netlist
 from tests.design_lint_fixtures.can_tx_output_sharing import can_tx_output_netlist
 from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_netlist
 from tests.design_lint_fixtures.connector_coverage import (
@@ -218,6 +219,11 @@ def catalog_reachability_rule_ids() -> set[str]:
             mapped_power_source,
             connector_coverage=_coverage(mapped_power_source, target_role="return"),
         )
+    )
+    result.update(item.rule_id for item in candidates(ethernet_management_netlist()))
+    result.update(
+        item.rule_id
+        for item in candidates(ethernet_management_netlist(labels=("ETH_MDIO", "ETH_MDC")))
     )
     return result
 
