@@ -88,6 +88,10 @@ from scripts.lint_gate_scope import (
             "KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES",
         ),
         (
+            "bus.usb_c_cc_signal_on_named_rail",
+            "KICAD_RUN_NATIVE_USB_C_CC_NAMED_RAIL_FIXTURES",
+        ),
+        (
             "bus.usb_peer_data_pair_crossed",
             "KICAD_RUN_NATIVE_USB_DATA_POLARITY_FIXTURES",
         ),
@@ -198,6 +202,10 @@ from scripts.lint_gate_scope import (
         (
             "bus.can_line_on_named_rail",
             "KICAD_RUN_NATIVE_CAN_LINE_NAMED_RAIL_FIXTURES",
+        ),
+        (
+            "bus.usb_c_cc_signal_on_named_rail",
+            "KICAD_RUN_NATIVE_USB_C_CC_NAMED_RAIL_FIXTURES",
         ),
         (
             "bus.spi_chip_select_inputs_share_net",

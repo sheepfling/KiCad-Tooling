@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 230 active rules.
+The catalog currently contains 231 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1198,6 +1198,29 @@ The synthetic source hashes and fixture limits are recorded in the
 KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_signal_on_named_rail")'
+```
+
+### USB-C CC pins assigned directly to named rails
+
+`bus.usb_c_cc_signal_on_named_rail` reviews a fitted U/IC pin whose exact
+function pair is CC1 and CC2 when an assigned pair pin's net label is
+supply-like or return-like. It requires both pins in the complete native
+inventory and skips generic CC names, connectors, duplicate roles, DNP parts,
+open or ambiguous assignments, and incomplete inventories. The default is `review`; source/sink
+role, Rp/Rd behavior, and direct straps remain project decisions. The finding
+does not trace passive paths or prove electrical potential, PCB copper, or
+physical continuity. Synthetic fault/control, alias, policy, boundary,
+ordering, repair, and hash-seed cases are paired with digest-pinned KiCad
+10.0.0 and 10.0.5 fault/control exports. See the
+[fixture notes](../tests/fixtures/design_lint/usb-c-cc-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_c_cc_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_c_cc_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_USB_C_CC_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_c_cc_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_c_cc_signal_on_named_rail")'
 ```
 
 ### I2C signal pin/name role review

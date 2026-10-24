@@ -22,6 +22,8 @@ _CAN_FUNCTIONS = {
     "canlow": "CANL",
 }
 
+_USB_C_CC_FUNCTIONS = {"cc1": "CC1", "cc2": "CC2"}
+
 _SPI_CHIP_SELECT_FUNCTIONS = frozenset(
     {"cs", "csn", "ncs", "nss", "ss", "ssn", "chipselect", "chipselectn"}
 )
@@ -46,6 +48,12 @@ def can_function_role(function: str) -> str | None:
     return _CAN_FUNCTIONS.get(compact)
 
 
+def usb_c_cc_role(function: str) -> str | None:
+    """Return the bounded USB-C CC1/CC2 function role, if recognized."""
+    compact = re.sub(r"[^a-z0-9]", "", function.casefold())
+    return _USB_C_CC_FUNCTIONS.get(compact)
+
+
 def unconnected_interface_pins(
     observed: NetlistContract,
 ) -> tuple[UnconnectedInterfacePin, ...]:
@@ -58,7 +66,7 @@ def unconnected_interface_pins(
         compact = re.sub(r"[^a-z0-9]", "", function.casefold())
         if compact in _SPI_CHIP_SELECT_FUNCTIONS:
             protocol: Literal["spi", "usb_c", "can"] = "spi"
-        elif compact in {"cc1", "cc2"}:
+        elif usb_c_cc_role(function) is not None:
             protocol = "usb_c"
         elif can_function_role(function) is not None:
             protocol = "can"

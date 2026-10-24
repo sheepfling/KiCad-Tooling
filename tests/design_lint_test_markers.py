@@ -27,6 +27,7 @@ _LINT_AREA_MODULES = {
             "tests/test_design_lint_native_fixture_inventory_architecture.py",
             "tests/test_design_lint_architecture_pytest_markers.py",
             "tests/test_design_lint_architecture_pytest_collection.py",
+            "tests/test_design_lint_architecture_rule_selectors.py",
             "tests/test_design_lint_architecture_named_rail_protocols.py",
         }
     ),
@@ -157,6 +158,9 @@ _LINT_AREA_MODULES = {
             "tests/test_usb_signal_named_rail.py",
             "tests/test_design_lint_determinism_usb_signal_named_rail.py",
             "tests/test_usb_signal_named_rail_native_fixture_lane.py",
+            "tests/test_usb_c_cc_named_rail.py",
+            "tests/test_design_lint_determinism_usb_c_cc_named_rail.py",
+            "tests/test_usb_c_cc_named_rail_native_fixture_lane.py",
             "tests/test_serial_tx_rx_same_net.py",
             "tests/test_serial_tx_rx_same_net_native_fixture_lane.py",
             "tests/test_serial_tx_rx_label_mismatch.py",

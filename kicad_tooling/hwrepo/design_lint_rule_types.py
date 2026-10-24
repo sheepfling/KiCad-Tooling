@@ -155,6 +155,7 @@ DesignLintRuleId = Literal[
     "bus.spi_chip_select_inputs_share_net",
     "bus.spi_data_outputs_share_net",
     "bus.usb_c_unconnected_cc_pin",
+    "bus.usb_c_cc_signal_on_named_rail",
     "bus.usb_c_unreviewed_port",
     "bus.usb_unconnected_data_pin",
     "bus.usb_data_path_mismatch",
