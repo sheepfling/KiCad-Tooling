@@ -7804,6 +7804,48 @@
       "implementation_owner": "kicad_tooling/hwrepo/i3c_signal_named_rail.py#i3c_signal_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.i3c_sda_scl_same_net",
+      "title": "I3C SDA and SCL pins share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with a complete native pin inventory, group exactly one explicitly named I3C SDA and SCL pin by their optional matching channel, and emit a REVIEW candidate when both pins have one unambiguous assignment to the same exact native net, except when both native electrical types are output because ERC can report that conflict.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only one bounded I3C SDA/SCL pair for the same optional channel is considered at a time. I2C-only names, connector-only pins, duplicate roles within a channel, mismatched channels, open or multiply assigned pins, DNP components, and incomplete or inconsistent pin inventories are skipped.",
+        "Native function names are clues and do not prove that a component implements I3C or establish intended topology. The default is off; project policy can enable review, promote the finding to block, or disable it, and an exact fingerprint ignore records a reviewed exception.",
+        "This schematic-net check does not prove PCB copper continuity, external wiring, firmware configuration, device behavior, or electrical approval."
+      ],
+      "fault_fixtures": [
+        "tests.test_i3c_signal_same_net.test_same_net_i3c_pair_prompts_while_distinct_lines_are_control",
+        "tests.test_i3c_same_net_native_fixture_lane.test_native_i3c_sda_scl_same_net_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i3c_signal_same_net.test_same_net_i3c_pair_prompts_while_distinct_lines_are_control",
+        "tests.test_i3c_signal_same_net.test_dnp_open_duplicate_mismatched_channel_and_incomplete_inventory_are_skipped",
+        "tests.test_i3c_signal_same_net.test_two_native_output_pins_are_left_to_the_erc_conflict_check",
+        "tests.test_i3c_same_net_native_fixture_lane.test_native_i3c_sda_scl_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i3c_signal_same_net.test_mapping_order_is_stable_and_separating_lines_clears_candidate",
+        "tests.test_design_lint_determinism_i3c_same_net.test_i3c_same_net_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I3C_SDA_SCL_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i3c_same_net.py#i3c_sda_scl_same_net_candidates",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#i3c_signal_identity",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i3c_same_net.py#i3c_sda_scl_same_net_candidates"
+    },
+    {
       "rule_id": "bus.i2c_signal_label_role_mismatch",
       "title": "I2C signal-pin function conflicts with its net name",
       "status": "active",

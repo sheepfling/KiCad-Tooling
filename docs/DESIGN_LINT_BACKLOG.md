@@ -399,10 +399,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 233 rules are implemented with synthetic regression coverage.
+The following 234 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 233 active rules.
+The catalog currently contains 234 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -545,6 +545,7 @@ skipped under prerelease policy.
 - `bus.i2c_signal_label_role_mismatch`
 - `bus.i2c_signal_on_named_rail`
 - `bus.i3c_signal_on_named_rail`
+- `bus.i3c_sda_scl_same_net`
 - `bus.i2c_sda_scl_same_net`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
@@ -825,6 +826,16 @@ and optional ecosystem adapters are `P3`.
   prompts inspection; function text and naming do not establish I3C use or a
   defect. Synthetic fault/control, policy, boundary, determinism, and
   digest-pinned KiCad 10.0.0/10.0.5 native fixture coverage are registered.
+- **LINT-252 I3C SDA/SCL assigned to the same net:** A default-off review
+  identifies a fitted U/IC with exactly one explicit I3C SDA and SCL pin in
+  the same optional channel, complete native inventory, and one unambiguous
+  assignment for each pin when both assignments name the same net. It skips
+  DNP, open, ambiguous, duplicate, mismatched-channel, incomplete-inventory,
+  and two-output cases that ERC can report. It does not infer I3C use or assert
+  a defect; project policy can enable review, block, turn off, or exact-ignore
+  the finding. Synthetic controls cover two independent channels, mapping
+  order, repair, policy, and three-process hash-seed stability. Repeated native
+  netlist/ERC fault/control fixtures are pinned to KiCad 10.0.0 and 10.0.5.
 - **LINT-045 mapped SPI chip-select resistor arrays:** The active-low SPI
   chip-select bias review now accepts a channel only through an exact
   project-authored component and pin map. The check verifies native identity,
@@ -3221,7 +3232,7 @@ is not a reason by itself to expand its scope or change its default policy.
   readers continue accepting version 1 as unreviewed. Catalog validation
   resolves and runs registered cases; the catalog suite rejects an unreviewed
   active rule and keeps the backlog inventory synchronized. Current catalog
-  audit: 233 covered, 0 not applicable, 0 unreviewed. The connector-peer
+  audit: 234 covered, 0 not applicable, 0 unreviewed. The connector-peer
   hash-seed regression is linked to the named-complementary-pair rule it also
   asserts, so catalog metadata covers every finding checked by that report.
   Control-input metamorphic coverage now relabels both nets, reverses net and
@@ -5574,6 +5585,42 @@ is not a reason by itself to expand its scope or change its default policy.
   KICAD_RUN_NATIVE_I3C_SIGNAL_NAMED_RAIL_FIXTURES=1 \
     .venv/bin/python -I -m pytest tests/test_i3c_signal_named_rail_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_signal_on_named_rail")'
+  ```
+
+#### LINT-252 — Review I3C SDA/SCL pins assigned to the same net
+
+- **Status:** Implemented as default-off `bus.i3c_sda_scl_same_net`. Project
+  policy can enable review, promote it to `block`, leave it `off`, or ignore
+  one exact fingerprint.
+- **Gap:** The I3C named-rail review does not catch two explicitly identified
+  I3C signal pins assigned to the same neutral-named net. Native ERC may leave
+  that topology without an error when pin electrical types do not conflict.
+- **Predicate:** For each fitted U/IC, group explicit I3C SDA/SCL functions by
+  their optional matching channel. Require one pin per role, a complete native
+  inventory, and one exact assignment per pin. Prompt when both pins share
+  the same exact net. Suppress when both native types are `output` because ERC
+  reports that conflict.
+- **Boundary:** Function names do not prove the component implements I3C or
+  establish intended device behavior. Open, multiply assigned, DNP, duplicate,
+  mismatched-channel, connector-only, and incomplete-inventory cases remain
+  unclassified. The heuristic does not establish PCB continuity, external
+  wiring, or a defect.
+- **Fixtures and quality gate:** A synthetic same-net fault and distinct-line
+  control; DNP, open, multiple-assignment, duplicate-role, channel-mismatch,
+  incomplete-inventory, multi-channel, and two-output controls; project
+  review/block/off/exact-ignore policy; mapping-order/repair metamorphic case;
+  three-process hash-seed stability; catalog reachability; focused selectors;
+  and source-hashed repeated native netlist/ERC exports on digest-pinned KiCad
+  10.0.0 and 10.0.5.
+- **Focused selection:**
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_i3c_signal_same_net.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i3c_sda_scl_same_net")'
+
+  KICAD_RUN_NATIVE_I3C_SDA_SCL_SAME_NET_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_i3c_same_net_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_sda_scl_same_net")'
   ```
 
 #### LINT-082 — UART-labeled IC pairs with separate reference nets

@@ -119,6 +119,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="i3c-signal-named-rail",
     ),
     pytest.param(
+        "bus.i3c_sda_scl_same_net",
+        "KICAD_RUN_NATIVE_I3C_SDA_SCL_SAME_NET_FIXTURES",
+        "tests.test_i3c_same_net_native_fixture_lane."
+        "test_native_i3c_sda_scl_same_net_fault_and_control_repeat",
+        id="i3c-sda-scl-same-net",
+    ),
+    pytest.param(
         "bus.spi_unconnected_data_pin",
         "KICAD_RUN_NATIVE_SPI_UNCONNECTED_DATA_FIXTURES",
         "tests.test_spi_unconnected_data_pins_native_fixture_lane."

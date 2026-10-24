@@ -15,6 +15,10 @@ pytestmark = [
 BUS_ANALYSIS_MODULES = (
     "bus_signal_roles.py",
     "i3c_signal_named_rail.py",
+    "i3c_same_net.py",
+    "design_lint_two_wire_signal_candidates.py",
+    "design_lint_serial_signal_candidates.py",
+    "design_lint_spi_signal_candidates.py",
     "i2c_unconnected_pins.py",
     "can_unconnected_direction_pins.py",
     "bus_signal_pairs.py",

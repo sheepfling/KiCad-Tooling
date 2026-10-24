@@ -22,6 +22,7 @@ import tests.design_lint_fixtures.connector_return_supply as _connector_return_s
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.i2c_unconnected_pins as _i2c_unconnected_pin_fixtures
+import tests.design_lint_fixtures.i3c_same_net as _i3c_same_net_fixtures
 import tests.design_lint_fixtures.i3c_signal_named_rail as _i3c_signal_named_rail_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
@@ -469,6 +470,9 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id
         for item in candidates(_i3c_signal_named_rail_fixtures.i3c_signal_named_rail_netlist())
+    )
+    emitted.update(
+        item.rule_id for item in candidates(_i3c_same_net_fixtures.i3c_same_net_netlist())
     )
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted == active

@@ -710,7 +710,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 233 active rules.
+The catalog currently contains 234 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 
@@ -1331,6 +1331,30 @@ Source hashes and fixture details are in the
 KICAD_RUN_NATIVE_I2C_SDA_SCL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_i2c_sda_scl_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_sda_scl_same_net")'
+```
+
+### I3C SDA/SCL same-net review
+
+`bus.i3c_sda_scl_same_net` reviews one explicit I3C SDA/SCL pair when its pins
+share one exact schematic net. It requires a fitted U/IC, matching optional
+channel identity, one pin for each role, a complete native pin inventory, and
+one unambiguous assignment per pin. The check defaults off because function
+names do not prove that the part implements I3C or establish intended
+topology. DNP, open, multiply assigned, duplicate-role, mismatched-channel,
+connector-only, and incomplete-inventory cases are skipped. If both pins are
+native outputs, the check leaves the conflict to ERC. Project policy can enable
+review, promote it to `block`, disable it, or ignore one exact fingerprint.
+This schematic check does not establish PCB continuity or external wiring.
+Source hashes and fixture details are in the
+[tooling-owned fixture README](../tests/fixtures/design_lint/i3c-sda-scl-same-net/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i3c_signal_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i3c_sda_scl_same_net")'
+
+KICAD_RUN_NATIVE_I3C_SDA_SCL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_i3c_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i3c_sda_scl_same_net")'
 ```
 
 ## Run the lint lane

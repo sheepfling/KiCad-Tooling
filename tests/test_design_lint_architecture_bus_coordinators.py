@@ -68,10 +68,22 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "design_lint_rs485_candidates.py",
         "design_lint_signal_pair_candidates.py",
         "design_lint_interfaces_usb_data_polarity.py",
+        "design_lint_two_wire_signal_candidates.py",
+        "design_lint_serial_signal_candidates.py",
+        "design_lint_spi_signal_candidates.py",
     )
 
     assert line_count(facade) < FACADE_MAX_LINES
     assert all((HWREPO / name).is_file() for name in modules)
+    grouped_candidates = tuple(
+        HWREPO / name
+        for name in (
+            "design_lint_two_wire_signal_candidates.py",
+            "design_lint_serial_signal_candidates.py",
+            "design_lint_spi_signal_candidates.py",
+        )
+    )
+    assert all(line_count(path) < FACADE_MAX_LINES for path in grouped_candidates)
 
     tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
     function = next(
@@ -95,25 +107,23 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
     assert [name for _, name in calls] == [
         "i2c_pullup_candidates",
         "i2c_peer_reference_candidates",
-        "i2c_signal_label_role_candidates",
-        "i2c_sda_scl_same_net_candidates",
-        "serial_tx_rx_label_mismatch_candidates",
-        "serial_tx_rx_same_net_candidates",
-        "serial_tx_output_sharing_candidates",
+        "two_wire_signal_candidates",
+        "serial_signal_candidates",
         "spi_peer_reference_candidates",
         "spi_bias_candidates",
-        "spi_data_polarity_label_candidates",
-        "spi_clock_select_label_mismatch_candidates",
-        "spi_data_input_output_same_net_candidates",
-        "spi_clock_control_data_same_net_candidates",
-        "spi_clock_chip_select_same_net_candidates",
-        "spi_chip_select_inputs_share_net_candidates",
-        "spi_data_outputs_share_net_candidates",
+        "spi_signal_candidates",
         "unconnected_interface_candidates",
         "can_candidates",
         "rs485_candidates",
+        "ethernet_data_label_mismatch_candidates",
+        "ethernet_management_label_mismatch_candidates",
+        "ethernet_management_signal_on_named_rail_candidates",
+        "ethernet_signal_on_named_rail_candidates",
         "complementary_signal_candidates",
         "usb_data_polarity_label_candidates",
+        "usb_signal_on_named_rail_candidates",
+        "usb_c_cc_signal_on_named_rail_candidates",
+        "usb_c_sbu_signal_on_named_rail_candidates",
         "named_differential_pair_candidates",
         "i2c_address_candidates",
         "i2c_responder_coverage_candidates",

@@ -22,11 +22,14 @@ from .design_lint_i2c_candidates import (
 )
 from .design_lint_interfaces_usb_data_polarity import usb_data_polarity_label_candidates
 from .design_lint_rs485_candidates import rs485_candidates
+from .design_lint_serial_signal_candidates import serial_signal_candidates
 from .design_lint_signal_pair_candidates import (
     complementary_signal_candidates,
     named_differential_pair_candidates,
 )
 from .design_lint_spi_candidates import spi_bias_candidates, spi_peer_reference_candidates
+from .design_lint_spi_signal_candidates import spi_signal_candidates
+from .design_lint_two_wire_signal_candidates import two_wire_signal_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
 from .i2c_address_models import (
@@ -35,27 +38,11 @@ from .i2c_address_models import (
 )
 from .i2c_peer_reference_scan import I2cPeerReferenceScan
 from .i2c_pullup_models import I2cPullupHeuristicCoverage
-from .i2c_same_net import i2c_sda_scl_same_net_candidates
-from .i2c_signal_label import i2c_signal_label_role_candidates
-from .i2c_signal_named_rail import i2c_signal_on_named_rail_candidates
-from .i3c_signal_named_rail import i3c_signal_on_named_rail_candidates
 from .models import NetlistContract
 from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .rs485_peer_reference_types import Rs485PeerReferenceScan
-from .serial_same_net import serial_tx_rx_same_net_candidates
-from .serial_signal_named_rail import serial_signal_on_named_rail_candidates
-from .serial_tx_output_sharing import serial_tx_output_sharing_candidates
-from .serial_tx_rx_label_mismatch import serial_tx_rx_label_mismatch_candidates
-from .spi_clock_data_same_net import spi_clock_control_data_same_net_candidates
-from .spi_clock_select_label_mismatch import spi_clock_select_label_mismatch_candidates
-from .spi_control_same_net import spi_clock_chip_select_same_net_candidates
-from .spi_data_label import spi_data_polarity_label_candidates
 from .spi_participants import SpiRosterContext
 from .spi_peer_reference_scan import SpiPeerReferenceScan
-from .spi_same_net import spi_data_input_output_same_net_candidates
-from .spi_shared_chip_select import spi_chip_select_inputs_share_net_candidates
-from .spi_shared_data_outputs import spi_data_outputs_share_net_candidates
-from .spi_signal_named_rail import spi_signal_on_named_rail_candidates
 from .usb_c_cc_named_rail import usb_c_cc_signal_on_named_rail_candidates
 from .usb_c_sbu_named_rail import usb_c_sbu_signal_on_named_rail_candidates
 
@@ -83,28 +70,15 @@ def bus_candidates(
             i2c_peer_reference_scan,
             component_peer_findings,
         ),
-        *i2c_signal_label_role_candidates(observed),
-        *i2c_signal_on_named_rail_candidates(observed),
-        *i3c_signal_on_named_rail_candidates(observed),
-        *i2c_sda_scl_same_net_candidates(observed),
-        *serial_tx_rx_label_mismatch_candidates(observed),
-        *serial_signal_on_named_rail_candidates(observed),
-        *serial_tx_rx_same_net_candidates(observed),
-        *serial_tx_output_sharing_candidates(observed),
+        *two_wire_signal_candidates(observed),
+        *serial_signal_candidates(observed),
         *spi_peer_reference_candidates(
             observed,
             spi_peer_reference_scan,
             component_peer_findings,
         ),
         *spi_bias_candidates(observed, spi_roster),
-        *spi_data_polarity_label_candidates(observed),
-        *spi_clock_select_label_mismatch_candidates(observed),
-        *spi_signal_on_named_rail_candidates(observed),
-        *spi_data_input_output_same_net_candidates(observed),
-        *spi_clock_control_data_same_net_candidates(observed),
-        *spi_clock_chip_select_same_net_candidates(observed),
-        *spi_chip_select_inputs_share_net_candidates(observed),
-        *spi_data_outputs_share_net_candidates(observed),
+        *spi_signal_candidates(observed),
         *unconnected_interface_candidates(observed),
         *can_candidates(observed, can_peer_reference_scan, component_peer_findings),
         *rs485_candidates(observed, rs485_peer_reference_scan, component_peer_findings),
