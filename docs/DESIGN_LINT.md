@@ -333,6 +333,37 @@ KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_FIXTURES=1 \
   -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
 ```
 
+## Review unassigned repeated signal pins on one component
+
+`component.repeated_signal_pin_unassigned` is an opt-in REVIEW prompt for a
+fitted non-connector component with complete native pin-function metadata. It
+groups explicit signal pins by exact normalized function and electrical type,
+then reports a group when at least one pin has a unique net assignment and
+another has none. A multi-net ambiguous pin suppresses the group. Separate
+channels, alternate modes, and intentionally unused pins can be valid, so the
+rule is off by default and never requires the pins to be tied. It excludes
+connectors, DNP parts, incomplete metadata, and power, return, shield, generic,
+or unsupported functions. Native unconnected-pin evidence does not establish
+why the pin is open, PCB continuity, or internal component behavior. Project
+policy can enable REVIEW, promote the finding to `block`, or ignore its exact
+fingerprint. See the
+[typed regression fixture](../tests/design_lint_fixtures/repeated_signal_pin_functions.py)
+and
+[native fault/control pair](../tests/fixtures/design_lint/repeated-signal-pin-unassigned-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_component_repeated_signal_pin_unassigned.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.repeated_signal_pin_unassigned")'
+```
+
+The exact native adapter lane runs on KiCad 10.0.0 and 10.0.5:
+
+```sh
+KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_UNASSIGNED_FIXTURES=1 \
+  .venv/bin/python -I -m pytest tests/test_component_repeated_signal_pin_unassigned.py \
+  -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_unassigned")'
+```
+
 ## Review project-mapped stateful connector contacts
 
 `connector.stateful_contact_topology_mismatch` checks a mechanical connector
@@ -524,7 +555,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 212 active rules.
+The catalog currently contains 213 active rules.
 
 ### Review project-authored courtyard-to-edge DRC coverage
 

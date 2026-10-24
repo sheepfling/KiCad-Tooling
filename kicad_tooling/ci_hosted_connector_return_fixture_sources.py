@@ -182,6 +182,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "repeated-signal-pin-functions-native/fault.kicad_sch",
         "repeated-signal-pin-control": fixture_root
         / "repeated-signal-pin-functions-native/control.kicad_sch",
+        "repeated-signal-pin-unassigned-fault": fixture_root
+        / "repeated-signal-pin-unassigned-native/fault.kicad_sch",
+        "repeated-signal-pin-unassigned-control": fixture_root
+        / "repeated-signal-pin-unassigned-native/control.kicad_sch",
         "split-named-component-return-fault": fixture_root
         / "component-return-pin-domains/fault.kicad_sch",
         "common-named-component-return-control": fixture_root
@@ -343,6 +347,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = {
     "unconnected-named-component-power-control": "65e95e66fe3af0ce5136e5763f10f4b3aec71f658f790db929793a45c1895000",
     "repeated-signal-pin-fault": "b03de491d57a86e201815bfbf6912d7c63a8619e8f7592367d53a4da472ef2fe",
     "repeated-signal-pin-control": "016f91ed152f01ff9bb0fcef924263984243a1a81c74d0a0647ebbd4e57d7e2d",
+    "repeated-signal-pin-unassigned-fault": "dce2628e41a0964ddfd5befab4afb4fab43da4ff5ef3a1247e1cbdc5e38841ae",
+    "repeated-signal-pin-unassigned-control": "f0a448cd74e6a5f0581dc9452f3e3b675e2c48537d000c931fd8197db0980089",
     "split-named-component-return-fault": "ed5cd5ae20571cf255af42b48f8a404f742312c058c0557c1035aaf4f2b17b1d",
     "common-named-component-return-control": "b58ad80dc5aa0b1bf092c4ae832301e3654d95f0627af5e483ca5f38528e2f08",
     "unconnected-generic-component-power-input-fault": "40271ae0a6551c8c7209427b30e89d9a95267aa92765eaac1a5cdf65e1ffd1a1",

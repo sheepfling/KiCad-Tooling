@@ -45,3 +45,31 @@ def repeated_signal_pin_component(
         pin_functions=functions,
         pin_electrical_types=electrical_types,
     )
+
+
+def repeated_signal_pin_with_unassigned_member() -> NetlistContract:
+    """Build a repeated READY group with one assigned and one explicitly open pin."""
+    source = repeated_signal_pin_component(split=False)
+    return source.model_copy(
+        update={
+            "nets": {"SIGNAL": ("U1.1",), "STATUS": ("U1.3",)},
+            "unconnected_nets": {"unconnected-(U1-READY-Pad2)": ("U1.2",)},
+        }
+    )
+
+
+def repeated_signal_pin_split_assignments_with_open_member() -> NetlistContract:
+    """Build a repeated function with split assigned pins and one open member."""
+    source = repeated_signal_pin_component()
+    return source.model_copy(
+        update={
+            "nets": {"SIGNAL_A": ("U1.1",), "SIGNAL_B": ("U1.2",)},
+            "unconnected_nets": {"unconnected": ("U1.3",)},
+            "pin_functions": {
+                "U1.1": "READY",
+                "U1.2": "READY",
+                "U1.3": "READY",
+                "U1.4": "Pin_4",
+            },
+        }
+    )

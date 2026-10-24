@@ -131,6 +131,20 @@ KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_FIXTURES=1 \
   -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_assignment_divergence")'
 ```
 
+The adjacent open-member heuristic has a separate focused suite and exact
+native fixture switch:
+
+```sh
+.venv/bin/python -I -B -m pytest -q tests/test_component_repeated_signal_pin_unassigned.py \
+  -m 'design_lint and component_lint and design_lint_rule(rule_id="component.repeated_signal_pin_unassigned")'
+```
+
+```sh
+KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_UNASSIGNED_FIXTURES=1 \
+  .venv/bin/python -I -B -m pytest -q tests/test_component_repeated_signal_pin_unassigned.py \
+  -m 'design_lint and component_lint and native_kicad and design_lint_rule(rule_id="component.repeated_signal_pin_unassigned")'
+```
+
 The source-bound contract-coach tests are split by inspection/reporting and
 capture/runner behavior. Select them without running unrelated tests with:
 

@@ -1801,6 +1801,47 @@
       ]
     },
     {
+      "rule_id": "component.repeated_signal_pin_unassigned",
+      "title": "Repeated signal-function pins include an unassigned member",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Within one fitted non-connector component with a complete native pin-function inventory, group explicit signal pins by exact normalized function and electrical type. If at least one matching pin has exactly one native net assignment and another has none, emit one REVIEW candidate for the group. Skip the group when any member has multiple net assignments.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Repeated same-function signal pins may include an intentionally unused alternate or mode; the opt-in prompt asks for review and never requires the pins to be tied.",
+        "Only complete non-connector fitted components, explicit non-generic signal functions, recognized signal electrical types, and unambiguous native assignments are considered. Supply, return, shield, connector, DNP, and incomplete pin inventories remain outside this predicate.",
+        "An unassigned native netlist pin does not establish why it is open, whether it should be connected, PCB copper continuity, internal component behavior, external wiring, or electrical correctness."
+      ],
+      "fault_fixtures": [
+        "tests.test_component_repeated_signal_pin_unassigned.test_open_repeated_signal_pin_requests_configurable_review_with_exact_evidence",
+        "tests.test_component_repeated_signal_pin_unassigned.test_rule_is_opt_in_and_policy_can_promote_or_ignore_the_finding",
+        "tests.test_component_repeated_signal_pin_unassigned.test_open_member_is_reported_when_assigned_peers_are_split",
+        "tests.test_component_repeated_signal_pin_unassigned.test_native_open_repeated_signal_pin_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_component_repeated_signal_pin_unassigned.test_common_and_unsupported_shapes_stay_quiet",
+        "tests.test_component_repeated_signal_pin_unassigned.test_mapping_order_is_stable_and_connection_repairs_the_finding",
+        "tests.test_component_repeated_signal_pin_unassigned.test_native_open_repeated_signal_pin_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_component_repeated_signal_pin_unassigned.test_mapping_order_is_stable_and_connection_repairs_the_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_COMPONENT_REPEATED_SIGNAL_PIN_UNASSIGNED_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/component_repeated_signal_pins.py#component_repeated_signal_pin_unassigned",
+        "kicad_tooling/hwrepo/design_lint_component_candidates.py#component_candidates"
+      ],
+      "theme": "components",
+      "implementation_owner": "kicad_tooling/hwrepo/component_repeated_signal_pins.py#component_repeated_signal_pin_unassigned"
+    },
+    {
       "rule_id": "component.peer_power_pin_assignment_divergence",
       "title": "Repeated component power pins use different nets",
       "status": "active",

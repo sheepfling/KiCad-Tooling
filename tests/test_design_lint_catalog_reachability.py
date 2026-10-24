@@ -159,6 +159,8 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.repeated_component_supply_pins(),
         _component_return_domains.component_return_pin_domains(),
         _repeated_signal_pin_fixtures.repeated_signal_pin_component(),
+        _repeated_signal_pin_fixtures.repeated_signal_pin_with_unassigned_member(),
+        _repeated_signal_pin_fixtures.repeated_signal_pin_split_assignments_with_open_member(),
         _tests_design_lint_fixtures.peer_component_power_pins(),
         _component_peer_power_input_support.generic_peer_power_input_netlist(),
         _component_peer_power_input_support.named_peer_power_input_netlist(),
